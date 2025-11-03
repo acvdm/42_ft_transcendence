@@ -1,0 +1,75 @@
+services:
+
+    nginx:
+      build: ./nginx
+      ports:
+        - "443:443"        # Point d'entrée HTTPS public
+      depends_on:
+        - gateway
+      networks:
+        - transcendence
+
+    gateway:
+      build: ./back/gateway
+      expose:
+        - "8080"            # Port interne uniquement, accessible depuis nginx  
+      depends_on:
+        - auth
+        - user
+        - game
+        - chat
+      env_file: 
+        - .env
+      networks: 
+        - transcendence 
+
+    front:
+      build: ./front
+      expose:
+        - "3000"
+      depends_on:
+        - gateway
+      networks: 
+        - transcendence
+
+    auth:
+      build: ./back/auth
+      expose:
+        - "3001"
+      env_file: 
+        - .env
+      networks: 
+        - transcendence
+
+    chat:
+      build: ./back/chat
+      expose:
+        - "3002"
+      env_file: 
+        - .env
+      networks: 
+        - transcendence
+
+    game:
+      build: ./back/game
+      expose:
+        - "3003"
+      env_file: 
+        - .env
+      networks:
+        - transcendence
+
+    user:
+      build: ./back/user
+      expose:
+        - "3004"
+      env_file: 
+        - .env
+      networks: 
+        - transcendence
+
+    
+networks:
+  transcendence:
+    name: transcendence
+    driver: bridge
