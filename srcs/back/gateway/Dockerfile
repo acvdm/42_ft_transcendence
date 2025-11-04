@@ -5,7 +5,7 @@ FROM node:20-alpine
 WORKDIR /app/gateway
 
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
-COPY package*.json ./
+COPY ./conf/package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES
 RUN npm install --production
