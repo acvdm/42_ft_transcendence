@@ -8,7 +8,7 @@ FROM node:20-alpine AS build
 WORKDIR /app/chat
 
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
-COPY package*.json ./
+COPY ./conf/package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
 RUN npm install
