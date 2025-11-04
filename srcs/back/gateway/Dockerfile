@@ -8,10 +8,14 @@ WORKDIR /app/gateway
 COPY ./conf/package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES
-RUN npm install --production
+RUN npm install
+
 
 #-----------------------COPY SOURCE CODE
 COPY . .
+
+#-----------------------COMPILE TYPESCRIPT
+RUN npm run build
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 8080
