@@ -1,5 +1,8 @@
-#-----------------------NODE AND NPM INCLUDED
-FROM node:20-alpine
+#----------------------------
+# STEP 1: BUILD APP
+#----------------------------
+        
+FROM node:20-alpine AS build
 
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/chat
@@ -7,14 +10,36 @@ WORKDIR /app/chat
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
 COPY package*.json ./
 
-#-----------------------INSTALL DEPENDENCIES
-RUN npm install --production
+#-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
+RUN npm install
 
 #-----------------------COPY SOURCE CODE
 COPY . .
 
-#-----------------------EXPOSE INTERNAL PORT
-EXPOSE 3002
+#-----------------------BUILD STATIC FILES
+RUN npm run build
 
-#-----------------------START SERVER
-CMD ["npm", "run", "start"]
+#----------------------------
+# STEP 2: FINAL IMAGE
+#----------------------------
+
+FROM node:20-alpine
+
+WORKDIR /app/chat
+
+#-----------------------COPY NECESSARY FILES FROM PREVIOUS STEP
+COPY --from=build /app/chat/package*.json ./
+COPY --from=build /app/chat/node_modules ./node_modules
+COPY --from=build /app/chat/dist ./dist
+
+#-----------------------CREATE A DIRECTORY FOR PERSISTENCE
+RUN mkdir -p /app/chat/data
+
+#-----------------------DEFINE AN ENV VAR FOR LOCAL STORAGE
+ENV DATABASE_URL="file:/app/chat/data/chat.sqlite"
+
+#-----------------------EXPOSE INTERNAL PORT
+EXPOSE 3003
+
+#-----------------------START PRODUCTION MODE
+CMD ["node", "dist/main.js"]

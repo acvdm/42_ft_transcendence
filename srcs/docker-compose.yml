@@ -40,6 +40,8 @@ services:
         - .env
       networks: 
         - transcendence
+      volumes:
+        - ./back/game/data:/app/auth/data
 
     chat:
       build: ./back/chat
@@ -49,6 +51,8 @@ services:
         - .env
       networks: 
         - transcendence
+      volumes:
+        - ./back/chat/data:/app/chat/data
 
     game:
       build: ./back/game
@@ -58,6 +62,8 @@ services:
         - .env
       networks:
         - transcendence
+      volumes:
+        - ./back/game/data:/app/game/data
 
     user:
       build: ./back/user
@@ -67,6 +73,8 @@ services:
         - .env
       networks: 
         - transcendence
+      volumes:
+        - ./back/user/data:/app/user/data
 
     
 networks:
