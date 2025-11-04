@@ -42,4 +42,4 @@ ENV DATABASE_URL="file:/app/game/data/game.sqlite"
 EXPOSE 3003
 
 #-----------------------START PRODUCTION MODE
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/index.js"]

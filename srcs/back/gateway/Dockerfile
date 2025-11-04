@@ -8,14 +8,20 @@ WORKDIR /app/gateway
 COPY ./conf/package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES
-RUN npm install --production
+RUN npm install
 
 #-----------------------COPY SOURCE CODE
 COPY . .
+
+#-----------------------COMPILE TYPESCRIPT
+RUN npm run build 
+# pas de fichiers à build pour l'instant
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 8080
 
 #-----------------------START SERVER
 CMD ["npm", "run", "start"]
+# pour le moment le fichier index.js n'existe pas
+
 

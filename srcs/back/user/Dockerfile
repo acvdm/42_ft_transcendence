@@ -42,4 +42,4 @@ ENV DATABASE_URL="file:/app/user/database.sqlite"
 EXPOSE 3004
 
 #-----------------------START PRODUCTION MODE
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/index.js"]
