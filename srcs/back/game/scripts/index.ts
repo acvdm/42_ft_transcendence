@@ -16,7 +16,7 @@ const start = async () => {
   try {
     // on attend que le serveur demaarre avant de continuer sur port 8080
     await fastify.listen({ port: 3003, host: '0.0.0.0' });
-    console.log('Auth service listening on port 3001');
+    console.log('Auth service listening on port 3003');
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
