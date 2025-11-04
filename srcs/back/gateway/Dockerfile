@@ -14,8 +14,7 @@ RUN npm install
 COPY . .
 
 #-----------------------COMPILE TYPESCRIPT
-RUN npm run build 
-# pas de fichiers à build pour l'instant
+RUN npm run build
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 8080

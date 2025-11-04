@@ -15,7 +15,7 @@ RUN mkdir -p /etc/nginx/ssl && \
         -subj "/CN=localhost"
 
 #-----------------------COPY NGINX CONFIG
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 #-----------------------EXPOSE HTTPS PORTS
 EXPOSE 443

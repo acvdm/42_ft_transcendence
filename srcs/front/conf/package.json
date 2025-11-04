@@ -2,7 +2,6 @@
 	"name": "front-service",
 	"version": "1.0.0",
 	"description": "Front part of the website",
-	"type": "module",
 	"scripts": {
 		"start": "node dist/index.js",
 		"build": "tsc",

@@ -2,7 +2,6 @@
 	"name": "pong-game",
 	"version": "1.0.0",
 	"description": "Game core",
-	"type": "module",
 	"scripts": {
 		"start": "node dist/index.js",
 		"build": "tsc",
