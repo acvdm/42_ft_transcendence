@@ -8,7 +8,7 @@ FROM node:20-alpine AS build
 WORKDIR /app/front
 
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
-COPY ./conf/package*.json ./
+COPY ./package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
 RUN npm install
@@ -33,6 +33,9 @@ FROM nginx:alpine-slim
 
 # #-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
 COPY --from=build /app/front/dist /usr/share/nginx/html
+
+# Copie la page HTML principale (qui est dans /public)
+COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 
 #-----------------------EXPOSE NGINX PORT
 EXPOSE 80
