@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2022", // version de javascript modern (pour avoir async/await)
 		"module": "ES2022", // système d'import
-		"outFile": "./dist/app.js", // où mettre le code compilé -> .ts devient .js dans ce dossier
+		"outDir": "./dist", // où mettre le code compilé -> .ts devient .js dans ce dossier
 		"rootDir": "./scripts", // où est le code source -> le typescript doit être dans src
 		"strict": true, // mode strict activé -> ts devient exigeant pour éviter les bugs
 		"esModuleInterop": true, // compatibilité -> 

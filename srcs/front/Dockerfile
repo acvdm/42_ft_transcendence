@@ -25,17 +25,21 @@ RUN npm run build
 
 FROM nginx:alpine-slim
 
-#-----------------------REMOVE NGINX DEFAULT CONFIGURATION
-RUN rm /etc/nginx/conf.d/default.conf
+# #-----------------------REMOVE NGINX DEFAULT CONFIGURATION
+# RUN rm /etc/nginx/conf.d/default.conf
 
 # #-----------------------REPLACE DEFAULT CONF
 # COPY ../nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
-# #-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
-# COPY --from=build /app/front/dist /usr/share/nginx/html
+#-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
+# Copie le JS et le CSS compilés
+COPY --from=build /app/front/dist /usr/share/nginx/html/dist
+
+# Copie la page HTML principale (qui est dans /public)
+COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 
 #-----------------------EXPOSE INTERNAL PORT
-EXPOSE 3000
+EXPOSE 80
 
 #-----------------------LAUNCH NGINX AS PID 1
 CMD ["nginx", "-g", "daemon off;"]
