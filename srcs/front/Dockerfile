@@ -11,7 +11,7 @@ WORKDIR /app/front
 COPY ./package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
-RUN npm ci
+RUN npm install
 
 #-----------------------COPY SOURCE CODE
 COPY . .

@@ -10,7 +10,6 @@ COPY ./conf/package*.json ./
 #-----------------------INSTALL DEPENDENCIES
 RUN npm install
 
-
 #-----------------------COPY SOURCE CODE
 COPY . .
 
@@ -22,4 +21,6 @@ EXPOSE 8080
 
 #-----------------------START SERVER
 CMD ["npm", "run", "start"]
+# pour le moment le fichier index.js n'existe pas
+
 

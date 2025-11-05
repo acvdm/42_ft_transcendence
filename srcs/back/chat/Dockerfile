@@ -39,7 +39,7 @@ RUN mkdir -p /app/chat/data
 ENV DATABASE_URL="file:/app/chat/data/chat.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
-EXPOSE 3003
+EXPOSE 3002
 
 #-----------------------START PRODUCTION MODE
 CMD ["node", "dist/index.js"]
