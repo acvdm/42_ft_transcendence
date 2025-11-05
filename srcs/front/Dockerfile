@@ -8,7 +8,7 @@ FROM node:20-alpine AS build
 WORKDIR /app/front
 
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
-COPY ./conf/package*.json ./
+COPY ./package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
 RUN npm ci
