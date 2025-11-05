@@ -1,11 +1,7 @@
 {
 	"name": "user-service",
 	"version": "1.0.0",
-<<<<<<< HEAD
-	"description": "User management",
-=======
 	"description": "User",
->>>>>>> origin/frontend-pages
 	"scripts": {
 		"start": "node dist/index.js",
 		"build": "tsc",
