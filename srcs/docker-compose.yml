@@ -1,15 +1,18 @@
 services:
 
     nginx:
+      container_name: nginx
       build: ./nginx
       ports:
         - "8443:443"        # Point d'entrée HTTPS public
       depends_on:
         - gateway
+        - front
       networks:
         - transcendence
 
     gateway:
+      container_name: gateway
       build: ./back/gateway
       expose:
         - "8080"            # Port interne uniquement, accessible depuis nginx  
@@ -24,15 +27,17 @@ services:
         - transcendence 
 
     front:
+      container_name: front
       build: ./front
       expose:
-        - "3000"
+        - "80"
       depends_on:
         - gateway
       networks: 
         - transcendence
 
     auth:
+      container_name: auth
       build: ./back/auth
       expose:
         - "3001"
@@ -44,6 +49,7 @@ services:
         - ./back/game/data:/app/auth/data
 
     chat:
+      container_name: chat
       build: ./back/chat
       expose:
         - "3002"
@@ -55,6 +61,7 @@ services:
         - ./back/chat/data:/app/chat/data
 
     game:
+      container_name: game
       build: ./back/game
       expose:
         - "3003"
@@ -66,6 +73,7 @@ services:
         - ./back/game/data:/app/game/data
 
     user:
+      container_name: user
       build: ./back/user
       expose:
         - "3004"
