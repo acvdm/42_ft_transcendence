@@ -1,0 +1,28 @@
+{
+	"name": "front-service",
+	"version": "1.0.0",
+	"description": "Front part of the website",
+	"private": "true",
+	"scripts": {
+		"build:js": "tsc",
+		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css",
+		"build": "npm run build:js && npm run build:css",
+		"watch": "npm-watch"
+	},
+	"watch": {
+		"build:js": {
+			"patterns": ["srcs/front/scripts"],
+			"extensions": "ts"
+		},
+		"build:css": {
+			"patterns": ["srcs/front/scripts", "srcs/front"],
+			"extensions": "ts,html"
+		}
+	},
+	"devDependencies": {
+		"@types/node": "24.10.0",
+		"typescript": "5.9.3",
+		"tailwindcss": "^3.4.0",
+		"npm-watch": "^0.11.0"
+	}
+}
