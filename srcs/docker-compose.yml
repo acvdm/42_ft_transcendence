@@ -46,7 +46,7 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/game/data:/app/auth/data
+        - ./back/game/data:/app/data
 
     chat:
       container_name: chat
@@ -58,7 +58,7 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/chat/data:/app/chat/data
+        - ./back/chat/data:/app/data
 
     game:
       container_name: game
@@ -70,7 +70,7 @@ services:
       networks:
         - transcendence
       volumes:
-        - ./back/game/data:/app/game/data
+        - ./back/game/data:/app/data
 
     user:
       container_name: user
@@ -82,10 +82,15 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/user/data:/app/user/data
+        - ./back/data:/app/data
+        - ./back/user/avatars:/app/user/avatars
 
     
 networks:
   transcendence:
     name: transcendence
     driver: bridge
+
+volumes:
+  data:
+  avatars:

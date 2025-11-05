@@ -33,10 +33,13 @@ COPY --from=build /app/user/node_modules ./node_modules
 COPY --from=build /app/user/dist ./dist
 
 #-----------------------CREATE A DIRECTORY TO UPLAOD AVATARS
-RUN mkdir -p /app/user/uploads
+RUN mkdir -p /app/user/avatars
 
-#-----------------------DEFINE AN ENV VAR FOR LOCAL STORAGE
-ENV DATABASE_URL="file:/app/user/database.sqlite"
+#-----------------------CREATE A DIRECTORY FOR DATABASE
+RUN mkdir -p /app/data
+
+#-----------------------ENV POINTING TO SHARED DB
+ENV DATABASE_URL="file:/app/data/database.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3004

@@ -33,10 +33,10 @@ COPY --from=build /app/chat/node_modules ./node_modules
 COPY --from=build /app/chat/dist ./dist
 
 #-----------------------CREATE A DIRECTORY FOR PERSISTENCE
-RUN mkdir -p /app/chat/data
+RUN mkdir -p /app/data
 
-#-----------------------DEFINE AN ENV VAR FOR LOCAL STORAGE
-ENV DATABASE_URL="file:/app/chat/data/chat.sqlite"
+#-----------------------ENV POINTING TO SHARED DB
+ENV DATABASE_URL="file:/app/data/database.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3002
