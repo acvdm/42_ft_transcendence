@@ -9,9 +9,9 @@ const appElement = document.getElementById('app');
 // Une fois qu'on aura fait les pages de base, on sera en mesure de link vers les bonnes pages
 const routes = {
     '/': HomePage,
-    '/profile': ProfilPage,
-    '/game': GamePage,
-    '/404': NotFoundPage
+    '/#profile': ProfilPage,
+    '/#game': GamePage,
+    '/#404': NotFoundPage
 };
 /*
 ** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
