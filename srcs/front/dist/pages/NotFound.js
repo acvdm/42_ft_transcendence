@@ -1,6 +1,6 @@
 // on va exportrter une fonction qui renvoie du html 
-export function NotFoundPage(): string {
-	return `
+export function NotFoundPage() {
+    return `
 		<div class="p-8 text-center">
 			<h1 class="text-6xl font-bold text-red-500 mb-4">
 				Not found, try again
@@ -13,4 +13,6 @@ export function NotFoundPage(): string {
 			</a>
 			</div>
 	`;
-};
+}
+;
+//# sourceMappingURL=NotFound.js.map

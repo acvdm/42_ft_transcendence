@@ -25,11 +25,11 @@ RUN npm run build
 
 FROM nginx:alpine-slim
 
-# #-----------------------REMOVE NGINX DEFAULT CONFIGURATION
-# RUN rm /etc/nginx/conf.d/default.conf
+#-----------------------REMOVE NGINX DEFAULT CONFIGURATION
+RUN rm /etc/nginx/conf.d/default.conf
 
-# #-----------------------REPLACE DEFAULT CONF
-# COPY ../nginx/nginx.conf /etc/nginx/conf.d/default.conf
+#-----------------------REPLACE DEFAULT CONF
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 #-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
 # Copie le JS et le CSS compilés
