@@ -4,25 +4,33 @@
 	"description": "Front part of the website",
 	"private": "true",
 	"scripts": {
-		"build:js": "tsc",
-		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css",
-		"build": "npm run build:js && npm run build:css",
-		"watch": "npm-watch"
-	},
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js",
+    "build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css",
+    "watch:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --watch",
+    "watch:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --watch",
+    "check-types": "tsc"
+  },
 	"watch": {
 		"build:js": {
-			"patterns": ["srcs/front/scripts"],
+			"patterns": [
+				"srcs/front/scripts"
+			],
 			"extensions": "ts"
 		},
 		"build:css": {
-			"patterns": ["srcs/front/scripts", "srcs/front"],
+			"patterns": [
+				"srcs/front/scripts",
+				"srcs/front"
+			],
 			"extensions": "ts,html"
 		}
 	},
 	"devDependencies": {
 		"@types/node": "24.10.0",
-		"typescript": "5.9.3",
+		"esbuild": "^0.25.12",
+		"npm-watch": "^0.11.0",
 		"tailwindcss": "^3.4.0",
-		"npm-watch": "^0.11.0"
+		"typescript": "5.9.3"
 	}
 }
