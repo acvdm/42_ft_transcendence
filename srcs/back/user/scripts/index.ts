@@ -7,7 +7,7 @@ const fastify = Fastify({ logger: true });
 
 // ------------------------- INIT DATABASE
 const db = await open({
-  filename: '/app/data/database.sqlite',
+  filename: process.env.DATABASE_URL || '/app/data/user.sqlite',
   driver: sqlite3.Database
 });
 
@@ -17,7 +17,8 @@ await db.run(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT null,
-    avatar TEXT
+    avatar TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )
 `);
 console.log('users table ready');
@@ -58,6 +59,7 @@ fastify.get('/user', async () => {
   return rows;
 });
 
+// Find a user by id
 fastify.get('/:id', async (request, reply) => {
   const { id } = request.params as any;
 

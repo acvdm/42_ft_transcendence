@@ -35,8 +35,9 @@ COPY --from=build /app/auth/dist ./dist
 #-----------------------CREATE A DIRECTORY FOR PERSISTENCE
 RUN mkdir -p /app/data
 
-#-----------------------ENV POINTING TO SHARED DB
-ENV DATABASE_URL="file:/app/data/database.sqlite"
+# #-----------------------ENV POINTING TO SHARED DB
+# ENV DATABASE_URL="/app/data/auth.sqlite"
+# plus besoin car mis dans le docker-compose + à mettre dans le index.ts
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3001
