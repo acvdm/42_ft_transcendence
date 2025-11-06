@@ -20,7 +20,7 @@ await db.run(`
   score_player2 INTEGER DEFAULT 0,
   winner_id INTEGER,
   status TEXT DEFAULT 'pending',
-  created_at DATETIME DEFAULT CURRENT_TIMSTAMP,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   finished_at DATETIME,
   )
 `);

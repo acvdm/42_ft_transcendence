@@ -18,7 +18,7 @@ await db.run(`
   user_id INTEGER NOT NULL,
   content TEXT NOT NULL,
   room TEXT DEFAULT 'general',
-  created_at DATETIME DEFAULT CURRENT_TIMSTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
 console.log('Table messages created');
