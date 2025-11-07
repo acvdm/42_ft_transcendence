@@ -7,6 +7,10 @@ module.exports = {
 	],
 	theme: {
 		extend: {},
+		colors: {
+			msn_blue: "#43B5EB"
+		}
+		
 	},
 	plugins: [],
 }
