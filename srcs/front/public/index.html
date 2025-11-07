@@ -9,7 +9,7 @@
 </head>
 
 <body class="bg-linear-to-t from-cyan-300 to-zinc-100 m-0 p-0">
-	<nav class="w-screen h-[50px] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-x1" style="background-image: url(https://wlm.vercel.app/assets/background/chat_navbar_background.png); background-size: cover;">
+	<nav class="w-screen h-[50px] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-x1/30" style="background-image: url(https://wlm.vercel.app/assets/background/chat_navbar_background.png); background-size: cover;">
 		<a href="/" class="p-2 text-blue-400 hover:underline">Main page</a>
 		<a href="/profile" class="p-2 text-blue-400 hover:underline">Profile</a>
 		<a href="/game" class="p-2 text-blue-400 hover:underline">Game</a>
@@ -17,8 +17,22 @@
 		<a href="/friends" class="p-2 text-blue-400 hover:underline">Friends</a>
 		<a href="/logout" class="p-2 text-blue-400 hover:underline">Log out</a>
 	</nav>
-	<div id="app"></div>
 	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+	
+	<div class="flex justify-center items-center min-h-[calc(100vh-250px)]">
+		<fieldset class="fieldset flex flex-col gap-2 bg-base-200 border-base-300 rounded-box w-80 border p-6 shadow-lg">
+			<legend class="fieldset-legend">   Login   </legend>
+			<label class="label">Email</label>
+			<input type="email" class="input" placeholder="Email"/>
+	
+			<label class="label">Password</label>
+			<input type="password" class="input" placeholder="Password"/>
+			<button class="btn btn-neutral mt-4">Login</button>
+			<button class="btn btn-neutral mt-4">Register</button>
+			<button class="btn btn-neutral mt-4">Play as guest</button>
+		</fieldset>
+	</div>
+	<div id="app"></div>
 	<script src="./dist/main.js" defer></script>
 </body>
 
