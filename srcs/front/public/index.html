@@ -17,8 +17,39 @@
 		<a href="/friends" class="p-2 text-blue-400 hover:underline">Friends</a>
 		<a href="/logout" class="p-2 text-blue-400 hover:underline">Log out</a>
 	</nav>
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
-	
+	<!-- Main div -->
+	<div class="min-h-screen w-screen bg-gradient-to-b from-sky-100 to-sky-200 p-6 py-10 flex justify-center">
+		<!-- Le grand cadre qui contient tous les elements -->
+		<div class="flex flex-col md:flex-row bg-white shadow-lg border border-gray-300 rounded-md w-[90%] max-w-[1200px] overflow-visible mb-10">
+
+			<!-- Le cadre/intégration du jeu -->
+			<div class="flex-1 bg-gradient-to-b from-cyan-50 to-cyan-100 border border-gray-300 shadow-inner relative rounded-md m-4 p-4">
+
+
+				<h1> Le jeu ici</h1>
+
+
+			</div>
+			<!-- La colonne de droite avec infos de jeu + livechat -->
+			<div class="flex flex-col gap-4 w-[280px] bg-sky-50 p-4 m-4">
+
+				<div class="bg-white border border-gray-300 rounded-md shadow-sm w-full p-4 flex flex-col items-center">
+
+					<h1>Trouver un adversaire -> photo de l'adversaire + nom + choix design jeu </h1>
+
+
+				</div>
+				<div class="bg-white border border-gray-300 rounded-md shadow-sm w-full p-4 flex flex-col h-full">
+
+					<h1>Intégration du live chat </h1>
+
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
 	
 	<div id="app"></div>
 	<script src="./dist/main.js" defer></script>

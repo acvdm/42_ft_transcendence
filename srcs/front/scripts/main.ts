@@ -1,5 +1,6 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { HomePage } from "./pages/HomePage";
+import { LoginPage } from "./pages/LoginPage";
+import { HomePage } from "./pages/HomePage"
 import { ProfilPage } from "./pages/ProfilePage";
 import { GamePage } from "./pages/GamePage";
 import { NotFoundPage } from "./pages/NotFound";
@@ -10,8 +11,9 @@ const appElement = document.getElementById('app');
 // 2. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
 // Une fois qu'on aura fait les pages de base, on sera en mesure de link vers les bonnes pages
 const routes: { [key: string]: () => string } = {
+	// '/': LoginPage,
 	'/': HomePage,
-	'/profile': ProfilPage,
+	'/profile': LoginPage,
 	'/game': GamePage,
 	'/404': NotFoundPage
 };
