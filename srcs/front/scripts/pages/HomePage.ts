@@ -1,18 +1,19 @@
 // on va exportrter une fonction qui renvoie du html 
 export function HomePage(): string {
 	return `
-		    <div class="flex flex-row w-full min-w-[1000px] h-[calc(100vh-50px)] p-6 gap-4">
+    <div class="flex items-center justify-center min-h-screen bg-gray-100">
+	<div class="flex flex-row w-full min-w-[1000px] h-[calc(100vh-50px)] p-6 gap-4">
 
         <!-- Game -->
 
-        <div class="flex-1 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-md flex items-center justify-center min-w-[650px]">
+        <div class="w-[1300px] h-[1086px]  bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-md flex items-center justify-center min-w-[650px]">
             <h1 class="text-lg font-semibold"> Pong 👾</h1>
         </div>
 
 
         <!-- Infos + Live chat -->
 
-        <div class="flex flex-col gap-4 w-[400px]">
+        <div class="flex flex-col gap-4 w-[600px]">
              <div class="bg-white border border-gray-300 rounded-md shadow-sm w-full p-4 flex flex-col">
                 <p class="font-semibold mb-2"> Game info</p>
                 <!-- Picture div -->
@@ -35,6 +36,7 @@ export function HomePage(): string {
                 <input type="text" placeholder="Écrire un message..." class="mt-3 bg-gray-100 rounded-md p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             </div>
         </div>
+    </div>
     </div>
 	`;
 };

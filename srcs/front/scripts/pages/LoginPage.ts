@@ -3,7 +3,7 @@ export function LoginPage(): string {
 	return `
 	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div
 		<!-- Main div -->
-	<div class="flex flex-col justify-center items-center bg-gray-100 gap-6 mt-[-50px]">
+	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
@@ -15,8 +15,8 @@ export function LoginPage(): string {
 			Sign in to Transcendence
 		</h1>
 		<!-- Login div -->
-		<div class="flex flex-col justify-center items-center bg-gray-100 gap-6">
-			<div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 bg-white w-80 p-4 shadow-sm">
+		<div class="flex flex-col justify-center items-center gap-6">
+			<div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">
 				<!-- Email -->
 				<input type="email" placeholder="Example555@hotmail.com" id="email-input"
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
