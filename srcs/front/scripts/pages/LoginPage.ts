@@ -30,7 +30,6 @@ export function LoginPage(): string {
 					<div class="flex items-center gap-1 mb-3">
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
-							<span class="inline-block w-3 h-3 bg-green-500 rounded-full"></span>
 							<select class="bg-transparent focus:outline-none text-sm" id="status-input">
 								<option>Available</option>
 								<option>Busy</option>
