@@ -25,9 +25,31 @@
         <a href="/logout" class="p-2 text-white hover:underline">Log out</a>
     </nav>
     
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 
+		<!-- Main div -->
+	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px] ">
 
+      <!-- Cadre principal -->
+    <div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-[880px] p-4 shadow-sm">
 
+            <!-- Cadre intérieur avec les infos de profil -->
+      <div class="flex flex-col justify-center gap-6">
+        <div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm flex flex-col justify-center items-center">
+          <h1 class="font-sans text-xl font-normal text-blue-950">
+            My profile
+          </h1>
+           <!-- Picture div -->
+          <div class="relative w-[170px] h-[170px] mb-4">
+            <!-- le cadre -->
+            <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+            <!-- l'image -->
+            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+          </div>
+        </div>
+      </div>
+    </div>
+	</div>
 
     
     <div id="app"></div>

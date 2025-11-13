@@ -1,6 +1,6 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
 import { LoginPage, authEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
-import { HomePage } from "./pages/HomePage"
+//import { HomePage } from "./pages/HomePage"
 import { ProfilPage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFound";
 
@@ -20,7 +20,7 @@ interface Page {
 // on associe chaque route a l'affiche et a la fonction concernée pour faire fonctionner la page
 const routes: { [key: string]: Page } = {
 	'/': {
-		render: HomePage,
+		render: ProfilPage,
 		afterRender: () => console.log('HomePage chargée')
 	},
 	'/profile': {
