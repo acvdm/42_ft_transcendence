@@ -51,7 +51,7 @@ export function LoginPage(): string {
 	`;
 };
 
-export function loginEvents() {
+function handleLogin() {
 	const button = document.getElementById('login-button'); // va chercher un element login-button
 
 	button?.addEventListener('click', () => { // ?. est un optionnal chaining, si button est null, on appelle pas addeventlisteneer, equivalent de (if !)
@@ -60,4 +60,34 @@ export function loginEvents() {
 
 		console.log("Tentative de connexion avec :", email, password);// on remplaceras ca par un fetch('/api/auth/login) etc
 	});
+}
+
+function handleRegister() {
+	const button = document.getElementById('register-button');
+	button?.addEventListener('click', () => {
+		const email = (document.getElementById('email-input') as HTMLInputElement).value;
+		const password = (document.getElementById('password-input') as HTMLInputElement).value;
+
+		console.log("Tentative de création de compte avec : ", email, password);
+	});
+}
+
+
+// Still need the username specified
+// No access to stat or profile
+// Can play in tournaments
+
+function handleGuest() {
+	const button = document.getElementById('guest-button');
+	button?.addEventListener('click', () => {
+		const email = (document.getElementById('email-input') as HTMLInputElement).value;
+
+		console.log("Tentative de création de compte avec : ", email);
+	});
+}
+
+export function authEvents() {
+	handleLogin();
+	handleRegister();
+	handleGuest();
 }

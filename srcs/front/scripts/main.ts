@@ -1,5 +1,5 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
+import { LoginPage, authEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
 import { HomePage } from "./pages/HomePage"
 import { ProfilPage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFound";
@@ -29,7 +29,7 @@ const routes: { [key: string]: Page } = {
 	},
 	'/logout': {
 		render: LoginPage,
-		afterRender: loginEvents
+		afterRender: authEvents
 	},
 	'/404': {
 		render: NotFoundPage
