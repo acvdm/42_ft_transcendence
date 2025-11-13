@@ -50,3 +50,14 @@ export function LoginPage(): string {
 	</div>
 	`;
 };
+
+export function loginEvents() {
+	const button = document.getElementById('login-button'); // va chercher un element login-button
+
+	button?.addEventListener('click', () => { // ?. est un optionnal chaining, si button est null, on appelle pas addeventlisteneer, equivalent de (if !)
+		const email = (document.getElementById('email-input') as HTMLInputElement).value; // asHTML input = assertion de type -> on previent le compilateur que email est un input et .value = propriété de l'evenemnet input
+		const password = (document.getElementById('password-input') as HTMLInputElement).value;
+
+		console.log("Tentative de connexion avec :", email, password);// on remplaceras ca par un fetch('/api/auth/login) etc
+	});
+}

@@ -1,5 +1,5 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { LoginPage } from "./pages/LoginPage";
+import { LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
 import { HomePage } from "./pages/HomePage"
 import { ProfilPage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFound";
@@ -7,13 +7,33 @@ import { NotFoundPage } from "./pages/NotFound";
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
 
-// 2. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
+// 2. ON defini a quoi ressemble une page -> fonction qui donne le html (render) et une fonction qui lance la logique de la page?
+interface Page {
+	render: () => string;
+	afterRender?: () => void;
+}
+
+
+
+// 3. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
 // Une fois qu'on aura fait les pages de base, on sera en mesure de link vers les bonnes pages
-const routes: { [key: string]: () => string } = {
-	'/': HomePage,
-	'/profile': ProfilPage,
-	'/404': NotFoundPage,
-	'/logout': LoginPage
+// on associe chaque route a l'affiche et a la fonction concernée pour faire fonctionner la page
+const routes: { [key: string]: Page } = {
+	'/': {
+		render: HomePage,
+		afterRender: () => console.log('HomePage chargée')
+	},
+	'/profile': {
+		render: ProfilPage,
+		afterRender: () => console.log('Profil page chargée -> modifications de la page de profil, photo etc')
+	},
+	'/logout': {
+		render: LoginPage,
+		afterRender: loginEvents
+	},
+	'/404': {
+		render: NotFoundPage
+	}
 };
 
 /*
@@ -34,8 +54,13 @@ const handleLocationChange = () => {
 	if (!appElement) return;
 
 	const path = window.location.pathname;
-	const renderPage = routes[path] || routes['/404']; // html = routes.count(path) ? route[path] : route[/404]
-	appElement.innerHTML = renderPage();
+	const page = routes[path] || routes['/404']; // html = routes.count(path) ? route[path] : route[/404]
+	appElement.innerHTML = page.render(); // on injecte le html
+
+	// on lance la logique js pour faire vivre la page
+	if (page.afterRender) {
+		page.afterRender();
+	}
 };
 
 /*
@@ -60,9 +85,13 @@ const navigate = (event : MouseEvent) => {
 
 // 1. gestion des clics sur toutes les liens <a> de la page
 window.addEventListener('click', (event) => {
+	
+	const target = event.target as HTMLElement;
+	const anchor = target.closest('a');
 	// on va verifier si la cible est un lien interne
-	if (event.target instanceof HTMLAnchorElement && event.target.href.startsWith(window.location.origin)) {
-		navigate(event);
+
+	if (anchor && anchor.href.startsWith(window.location.origin)) {
+		navigate(event as unknown as MouseEvent);
 	}
 });
 
