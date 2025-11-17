@@ -1,27 +1,16 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { initDatabase } from './database'
+import { Database } from 'sqlite';
 
 // Creation of Fastify server
 const fastify = Fastify({ logger: true });
 
-// ------------------------- INIT DATABASE
-const db = await open({
-  filename: process.env.DATABASE_URL || '/app/data/chat.sqlite',
-  driver: sqlite3.Database
-});
+let db: Database;
 
-// Creation of a messages table
-await db.run(`
-  CREATE TABLE IF NOT EXIST messages (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  content TEXT NOT NULL,
-  room TEXT DEFAULT 'general',
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-console.log('Table messages created');
+async function main() {
+  db = await initDatabase();
+  console.log('chat database initialised');
+}
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get
@@ -42,4 +31,8 @@ const start = async () => {
   }
 };
 
-start();
+// On initialise la DB puis on démarre le serveur
+main().then(start).catch(err => {
+  console.error("Startup error:", err);
+  process.exit(1);
+});
