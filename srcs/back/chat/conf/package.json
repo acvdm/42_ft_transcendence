@@ -8,10 +8,12 @@
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"dependencies": {
-		"fastify": "^4.24.3"
+		"fastify": "^4.24.3",
+		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
 		"@types/node": "24.10.0",
+		"@types/socket.io": "^3.0.1",
 		"typescript": "5.9.3"
 	}
 }
