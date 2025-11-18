@@ -1,7 +1,7 @@
 {
 	"name": "user-service",
 	"version": "1.0.0",
-	"description": "User",
+	"description": "User management",
 	"scripts": {
 		"start": "node dist/index.js",
 		"build": "tsc",
