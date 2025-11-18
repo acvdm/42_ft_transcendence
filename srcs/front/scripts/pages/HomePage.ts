@@ -60,7 +60,7 @@ export function afterRender(): void {
         ";)" : globalPath + "wink.gif",
         ":-S" : globalPath + "confused.gif",
         ":s" : globalPath + "confused.gif",
-        ":'(" : globalPath + "crying.gif", // NE MARCHE PAS
+        ":'(" : globalPath + "crying.gif",
         "(H)" : globalPath + "hot.gif",
         "(h)" : globalPath + "hot.gif",
         "(A)" : globalPath + "angel.gif",
@@ -68,13 +68,13 @@ export function afterRender(): void {
         ":-#" : globalPath + "silence.gif",
         "8-|" : globalPath + "nerd.gif",
         ":-*" : globalPath + "secret.gif",
-        ":^)" : globalPath + "unknown.gif", // NE MARCHE PAS
-        "<:o)" : globalPath + "party.gif", // NE MARCHE PAS -> affiche choqué
+        ":^)" : globalPath + "unknow.gif",
+        "<:o" : globalPath + "party.gif", // NE MARCHE PAS -> affiche choqué
         "|-)" : globalPath + "sleepy.gif",
         "(Y)" : globalPath + "thumbs_up.gif",
         "(y)" : globalPath + "thumbs_up.gif",
-        "(B)" : globalPath + "beer.gif", // NE MARCHE PAS
-        "(b)" : globalPath + "beer.gif", // NE MARCHE PAS
+        "(B)" : globalPath + "beer_mug.gif",
+        "(b)" : globalPath + "beer_mug.gif",
         "(X)" : globalPath + "girl.gif",
         "(x)" : globalPath + "girl.gif",
         "({)" : globalPath + "guy_hug.gif",
@@ -127,8 +127,8 @@ export function afterRender(): void {
         "(n)" : globalPath + "thumbs_down.gif",
         "(D)" : globalPath + "martini.gif",
         "(d)" : globalPath + "martini.gif",
-        "(Z)" : globalPath + "boy.gif", // NE MARCHE PAS
-        "(z)" : globalPath + "boy.gif", // NE MARCHE PAS
+        "(Z)" : globalPath + "guy.gif",
+        "(z)" : globalPath + "guy.gif",
         "(})" : globalPath + "guy_hug.gif",
         "(^)" : globalPath + "cake.gif",
         "(U)" : globalPath + "broken_heart.gif",
@@ -138,7 +138,7 @@ export function afterRender(): void {
         "(W)" : globalPath + "wilted_rose.gif",
         "(w)" : globalPath + "wilted_rose.gif",
         "(~)" : globalPath + "film.gif",
-        "(&)" : globalPath + "dog.gif", // NE MARCHE PAS -> RENVOI WINK
+        "(&)" : globalPath + "dog.gif",
         "(I)" : globalPath + "lightbulb.gif",
         "(i)" : globalPath + "lightbulb.gif",
         "(S)" : globalPath + "moon.gif",
@@ -197,7 +197,7 @@ export function afterRender(): void {
         sortedKeys.forEach(key => {
             const imgUrl = emoticons[key];
             // on cree une recherche dynamique pour trouver l'emoticone
-            const escapedKey = escapeRegex(key);
+            const escapedKey = escapeRegex(escapeHTML(key));
             const regex = new RegExp(escapedKey, "g");
 
             // on remplace par l'iamnge avec une classe tialwind pour aligner au texte
