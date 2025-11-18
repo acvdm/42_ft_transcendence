@@ -1,4 +1,4 @@
 ./srcs/env
 
-./srcs/back/chat/conf/node_modules/
-./srcs/front/node_modules/
+node_modules/
+node_modules/
