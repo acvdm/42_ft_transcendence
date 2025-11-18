@@ -1,6 +1,8 @@
+import { io, Socket } from "socket.io-client";
+
 // on va exportrter une fonction qui renvoie du html 
-export function HomePage(): string {
-	return `
+export function render(): string {
+    return `
     <div class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
         <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
@@ -28,15 +30,71 @@ export function HomePage(): string {
 
                     <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 overflow-hidden">
                         <h1 class="text-lg font-bold mb-2">Live chat </h1>
-                        <div class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm">
-                            <p><strong>Faustoche01:</strong> coucou</p>
-                            <p><strong>Faustoche03:</strong> salu sa va</p>
+                        
+                        <!-- ID ajouté pour le conteneur de messages -->
+                        <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm">
+                            <!-- Les messages statiques sont retirés, ils viendront du JS -->
                         </div>
-                        <input type="text" placeholder="Écrire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        
+                        <!-- ID ajouté pour l'input -->
+                        <input type="text" id="chat-input" placeholder="Écrire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                     </div>
                 </div>
             </div>
         </div>
     </div>
-	`;
-};
+    `;
+}; 
+
+export function afterRender(): void {
+    const socket = io("/", {
+        path: "/socket.io/", // on met le chemin que nginx va intercepter 
+    });
+
+    const messagesContainer = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('chat-input') as HTMLInputElement;
+
+    if (!messagesContainer || !messageInput) {
+        console.log("Can't find chat elements");
+        return;
+    }
+
+    // pour afficher un message
+    const addMessage = (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
+        const msgElement = document.createElement('p');
+        msgElement.innerHTML = `<strong>${author}:\n</strong> ${message}`;
+        messagesContainer.appendChild(msgElement);
+        // rajouter un scroll automatique vers le bas
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+
+    /* mise en ecoute des événements socket */
+
+    socket.on("connect", () => {
+        addMessage("Connected to chat server!");
+    });
+
+    // on va écouter l'événement chatmessage venant du serveur
+    socket.on("chatMessage", (data: any) => {
+            // le backend va renvoyer data, on suppose que c'est le message pour le moment
+            // il devrait plus renvoyer message: "" author: ""
+        addMessage(data.message || data, data.author || "Anonyme");
+    });
+
+    socket.on("disconnected", () => {
+        addMessage("Disconnected from chat server!");
+    });
+
+    /* Envoi des événements sockets */
+
+    // a partir du moiment ou on appuie sur entree-> envoi de l'input
+    messageInput.addEventListener('keyup', (event) => {
+        if (event.key == 'Enter' && messageInput.value.trim() != '') {
+            const message = messageInput.value;
+
+            // on envois le message au serveur avec emit
+            socket.emit("chatMessage", { message: message, author: "Faustoche"}); // a changer pour l'username du joueur
+            messageInput.value = ''; // on vide l'input
+        }
+    });
+}
