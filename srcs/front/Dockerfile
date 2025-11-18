@@ -38,6 +38,9 @@ COPY --from=build /app/front/dist /usr/share/nginx/html/dist
 # Copie la page HTML principale (qui est dans /public)
 COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 
+# Copie les assets (images, etc.)
+COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
+
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 80
 
