@@ -3,12 +3,14 @@ import { Database } from 'sqlite';
 //-------- TYPE
 export interface Token {
     id: number,
+    user_id: number;
     credential_id: number,
     refresh_token: string,
     expires_at: Date
 }
 
 export interface CreateTokenData {
+    user_id: number;
     credential_id: number,
     refresh_token: string,
     expires_at: Date,
@@ -21,9 +23,9 @@ export async function createToken(
     data: CreateTokenData
 ): Promise<number> { 
     const result = await db.run(`
-        INSERT INTO TOKENS (credential_id, refresh_token, expires_at)
-        VALUES (?, ?, ?)`,
-        [data.credential_id, data.refresh_token, data.expires_at]
+        INSERT INTO TOKENS (user_id, credential_id, refresh_token, expires_at)
+        VALUES (?, ?, ?, ?)`,
+        [data.user_id, data.credential_id, data.refresh_token, data.expires_at]
     );
 
     if (!result.lastID) {

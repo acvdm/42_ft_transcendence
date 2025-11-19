@@ -15,7 +15,8 @@ import { getExpirationDate } from "../utils/date.js";
 import { Database } from 'sqlite';
 
 export async function registerUser(
-    db: Database, 
+    db: Database,
+    user_id: number, 
     email: string, 
     password: string
 ) {
@@ -30,6 +31,7 @@ export async function registerUser(
 
     // 3. Insertion DB
     const credential_id = await createCredentials(db, {
+        user_id,
         email,
         pwd_hashed,
         two_fa_secret,
@@ -42,6 +44,7 @@ export async function registerUser(
 
     // 5. Insertion dans la DB tokens
     const insertTokens = await createToken(db, {
+        user_id,
         credential_id, 
         refresh_token,
         expires_at

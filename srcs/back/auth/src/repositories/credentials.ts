@@ -3,6 +3,7 @@ import { Database } from 'sqlite';
 //-------- TYPE
 export interface Credential {
     id: number;
+    user_id: number;
     email: string;
     pwd_hashed: string;
     two_fa_secret: string;
@@ -11,6 +12,7 @@ export interface Credential {
 }
 
 export interface createCredentialData {
+    user_id: number;
     email: string;
     pwd_hashed: string;
     two_fa_secret: string;
@@ -18,15 +20,15 @@ export interface createCredentialData {
 }
 
 
-//-------- CREATE
+//-------- POST / CREATE
 export async function createCredentials(
     db: Database, 
     data: createCredentialData
 ): Promise<number> {
     const result = await db.run(`
-        INSERT INTO CREDENTIALS (email, pwd_hashed, two_fa_secret, is_2fa_enabled)
-        VALUES (?, ?, ?, ?)`,
-        [data.email, data.pwd_hashed, data.two_fa_secret, 1]
+        INSERT INTO CREDENTIALS (user_id, email, pwd_hashed, two_fa_secret, is_2fa_enabled)
+        VALUES (?, ?, ?, ?, ?)`,
+        [data.user_id, data.email, data.pwd_hashed, data.two_fa_secret, 1]
     );
 
     if (!result.lastID) {
@@ -36,14 +38,14 @@ export async function createCredentials(
     return result.lastID;
 }
 
-//-------- READ
+//-------- GET / READ
 // Attention on n'envoie jamais le mdp hashé
 export async function findByEmail(
     db: Database, 
     email: string
 ): Promise<Credential | undefined> {
     return await db.get(`
-        SELECT id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE email = ?`,
+        SELECT user_id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE email = ?`,
         [email]
     );
 }
@@ -53,15 +55,15 @@ export async function findById(
     id: number
 ): Promise<Credential | undefined> {
     return await db.get(`
-        SELECT id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE id = ?`,
+        SELECT user_id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE id = ?`,
     [id]
     );
 }
 
-//-------- UPDATE
+//-------- PUT / UPDATE
 
 
 
 
-//-------- DELETE
+//-------- DELETE / DELETE
     

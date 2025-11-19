@@ -1,5 +1,6 @@
 {
 	"name": "user-service",
+	"type": "module",
 	"version": "1.0.0",
 	"description": "User",
 	"scripts": {
@@ -10,7 +11,8 @@
 	"dependencies": {
 		"fastify": "^4.24.3",
 		"sqlite3": "^5.1.6",
-		"sqlite": "^4.1.1"
+		"sqlite": "^4.1.1",
+		"axios": "^1.6.0"
 	},
 	"devDependencies": {
 		"@types/node": "24.10.0",

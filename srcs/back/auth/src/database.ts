@@ -17,6 +17,7 @@ export async function initDatabase(): Promise<Database> {
     await db.exec(`
       CREATE TABLE IF NOT EXISTS CREDENTIALS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
         email TEXT UNIQUE NOT NULL,
         pwd_hashed TEXT UNIQUE NOT NULL,
         two_fa_secret TEXT UNIQUE NOT NULL,
@@ -30,6 +31,7 @@ export async function initDatabase(): Promise<Database> {
     await db.exec(`
       CREATE TABLE IF NOT EXISTS TOKENS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
         credential_id INTEGER NOT NULL,
         refresh_token TEXT UNIQUE,
         expires_at DATETIME NOT NULL,

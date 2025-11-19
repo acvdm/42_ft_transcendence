@@ -3,9 +3,19 @@ import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateRegisterInput } from './validators/auth_validators.js';
 import { registerUser } from './services/auth_service.js';
+import fs from 'fs';
+
+
+const httpsOptions = {
+    key: fs.readFileSync('/app/server.key'),
+    cert: fs.readFileSync('/app/server.crt')
+}
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+  logger: true,
+  https: httpsOptions
+ });
 
 let db: Database; // on stocke ici la connexion SQLite, globale au module
 
@@ -26,19 +36,21 @@ fastify.get('/status', async (request, reply) => {
 fastify.post('/register', async (request, reply) => {
   try {
     // On récupère le body de la requête HTTP POST
-    const body = request.body as { alias: string; email: string; password: string };
+    const body = request.body as { user_id: number; email: string; password: string };
+    console.log("Body reçu:", request.body);
 
     // 1. Valider
     validateRegisterInput(body);
 
     // 2. Traiter (toute la logique est dans le service)
-    const result = await registerUser(db, body.email, body.password);
+    const result = await registerUser(db, body.user_id, body.email, body.password);
 
     // 3. Répondre
     return reply.status(201).send(result);
   } 
   catch (err: any) 
   {
+    console.error("❌ ERREUR AUTH REGISTER:", err);
     return reply.status(400).send({ error: err.message });
   }
 });
