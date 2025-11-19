@@ -3,7 +3,9 @@ import { open, Database } from 'sqlite';
 
 // ------------------------- INIT DATABASE
 export async function initDatabase(): Promise<Database> {
-    const db = await open({ filename: '/app/data/chat.sqlite', driver: sqlite3.Database });
+    const db = await open({ 
+      filename: '/app/data/chat.sqlite', 
+      driver: sqlite3.Database });
 
     // Table MESSAGES
     await db.exec(`

@@ -3,7 +3,9 @@ import { open, Database } from 'sqlite';
 
 // Fonction qui initialise la DB et renvoie la connexion
 export async function initDatabase(): Promise<Database> {
-    const db = await open({ filename: '/app/data/user.sqlite', driver:sqlite3.Database });
+    const db = await open({ filename: 
+        '/app/data/user.sqlite', 
+        driver:sqlite3.Database });
     
     // permet l'utilisation de foreign keys
     await db.exec('PRAGMA foreign_keys = ON;');

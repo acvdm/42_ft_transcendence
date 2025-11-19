@@ -4,6 +4,9 @@
         
 FROM node:20-alpine AS build
 
+#-----------------------INSTALL BUILD DEPENDENCIES FOR ARGON2
+RUN apk add --no-cache python3 make g++
+
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/auth
 
@@ -24,6 +27,10 @@ RUN npm run build
 #----------------------------
 
 FROM node:20-alpine
+
+
+#-----------------------INSTALL RUNTIME DEPENDENCIES FOR ARGON2
+RUN apk add --no-cache libstdc++
 
 WORKDIR /app/auth
 

@@ -36,7 +36,7 @@ COPY --from=build /app/chat/dist ./dist
 RUN mkdir -p /app/data
 
 #-----------------------ENV POINTING TO SHARED DB
-# ENV DATABASE_URL="file:/app/data/database.sqlite"
+ENV DATABASE_URL="file:/app/data/database.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3002
