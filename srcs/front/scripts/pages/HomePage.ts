@@ -4,7 +4,71 @@ import { io, Socket } from "socket.io-client";
 // on va exportrter une fonction qui renvoie du html 
 export function render(): string {
     return `
+        <div class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
+        <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
+             style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+        </div>
+
+        <div class="absolute top-[20px] bottom-0 left-0 right-0 flex justify-center p-6 overflow-y-auto">
+
+            <div class="flex flex-row min-w-[1000px] h-full gap-4">
+
+                <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
+                    <h1 class="text-lg font-semibold"> Pong 👾</h1>
+                </div>
+
+                <div class="flex flex-col gap-4 w-[600px] h-full">
+                    
+                    <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
+                        <p class="font-semibold mb-2"> Game info</p>
+                        <div class="relative w-[50px] h-[50px] mb-4">
+                            <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+                        </div>
+                        <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
+                    </div>
+
+
+                    <!-- Partie live chat -->
+
+                    <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 overflow-hidden">
+                        <h1 class="text-lg font-bold mb-2">Live chat </h1>
+                        <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
+
+                        <!-- Input element  -->
+
+                        <div class="flex flex-col">
+                          <input type="text" id="chat-input" placeholder="Écrire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+                          <!-- Insertion des emoticones, wizz etc -->
+                           <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+                              <button id="select-emoticon" class="h-6">
+                                  <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                                  <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+                                  <div><img src="/assets/chat/arrow.png" alt="Select arrow">
+                                </div>
+
+                                <!-- Menu dropdown -> il s'ouvre quand on clique -->
+
+                                <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+                                  <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+                                </div>
+
+                                </div>
+                              </button>
+                              <button id="select-animation" class="relative"><div class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Wink"></div><div><img src="/assets/chat/arrow.png" alt="Select arrow"></div></div></button>
+                              <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+                              <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+                              <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+                              <button id="change-font" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/change_font.png" alt=""></div>
+                              <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div class="w-5"><img src="/assets/chat/select_background.png" alt=""></div><div><img src="/assets/chat/arrow.png" alt=""></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     `;
 }; 
@@ -13,49 +77,30 @@ export function afterRender(): void {
 
     let globalPath = "/assets/emoticons/";
 
-    const emoticons: { [key: string]: string } = {
+    const emoticons: { [key: string]: string } = {};
+
+    // Helper pour éviter les doublons
+    function alias(keys: string[], file: string) {
+        keys.forEach(k => emoticons[k] = globalPath + file);
+    }
+
+    // Ajout des émoticônes uniques
+    Object.assign(emoticons, {
         ":-)" : globalPath + "smile.gif",
-        ":)" : globalPath + "smile.gif",
         ":-O" : globalPath + "surprised.gif",
-        ":o" : globalPath + "surprised.gif",
         ";-)" : globalPath + "wink_smile.gif",
-        ";)" : globalPath + "wink_smile.gif",
         ":-S" : globalPath + "confused.gif",
-        ":s" : globalPath + "confused.gif",
         ":'(" : globalPath + "crying.gif",
-        "(H)" : globalPath + "hot.gif",
-        "(h)" : globalPath + "hot.gif",
-        "(A)" : globalPath + "angel.gif",
-        "(a)" : globalPath + "angel.gif",
         ":-#" : globalPath + "silence.gif",
         "8-|" : globalPath + "nerd.gif",
         ":-*" : globalPath + "secret.gif",
         ":^)" : globalPath + "unknow.gif",
         "|-)" : globalPath + "sleepy.gif",
-        "(Y)" : globalPath + "thumbs_up.gif",
-        "(y)" : globalPath + "thumbs_up.gif",
-        "(B)" : globalPath + "beer_mug.gif",
-        "(b)" : globalPath + "beer_mug.gif",
-        "(X)" : globalPath + "girl.gif",
-        "(x)" : globalPath + "girl.gif",
         "({)" : globalPath + "guy_hug.gif",
         ":-[" : globalPath + "bat.gif",
-        ":[" : globalPath + "bat.gif",
-        "(L)" : globalPath + "heart.gif",
-        "(l)" : globalPath + "heart.gif",
-        "(K)" : globalPath + "kiss.gif",
-        "(k)" : globalPath + "kiss.gif",
-        "(F)" : globalPath + "rose.gif",
-        "(f)" : globalPath + "rose.gif",
-        "(P)" : globalPath + "camera.gif",
-        "(p)" : globalPath + "camera.gif",
         "(@)" : globalPath + "cat.gif",
-        "(T)" : globalPath + "phone.gif",
-        "(t)" : globalPath + "phone.gif",
         "(8)" : globalPath + "note.gif",
         "(*)" : globalPath + "star.gif",
-        "(O)" : globalPath + "clock.gif",
-        "(o)" : globalPath + "clock.gif",
         "(sn)" : globalPath + "snail.gif",
         "(pl)" : globalPath + "plate.gif",
         "(pi)" : globalPath + "pizza.gif",
@@ -64,58 +109,61 @@ export function afterRender(): void {
         "(co)" : globalPath + "computer.gif",
         "(st)" : globalPath + "storm.gif",
         "(mo)" : globalPath + "money.gif",
-        ":-D" : globalPath + "teeth_smile.gif",
-        ":D" : globalPath + "teeth_smile.gif",
-        ":-P" : globalPath + "tongue_smile.gif",
-        ":p" : globalPath + "tongue_smile.gif",
-        ":-(" : globalPath + "sad.gif",
-        ":(" : globalPath + "sad.gif",
-        ":-|" : globalPath + "disappointed.gif",
-        ":|" : globalPath + "disappointed.gif",
-        ":-$" : globalPath + "embarrassed.gif",
-        ":$" : globalPath + "embarrassed.gif", 
-        ":-@" : globalPath + "angry.gif",
-        ":@" : globalPath + "angry.gif",
-        "(6)" : globalPath + "devil_smile.gif",
         "8o|" : globalPath + "teeth.gif",
         "^o)" : globalPath + "sarcastic.gif",
         "+o(" : globalPath + "sick.gif",
         "*-)" : globalPath + "thinking.gif",
         "8-)" : globalPath + "eye_roll.gif",
-        "(C)" : globalPath + "coffee.gif",
-        "(c)" : globalPath + "coffee.gif",
-        "(N)" : globalPath + "thumbs_down.gif",
-        "(n)" : globalPath + "thumbs_down.gif",
-        "(D)" : globalPath + "martini.gif",
-        "(d)" : globalPath + "martini.gif",
-        "(Z)" : globalPath + "guy.gif",
-        "(z)" : globalPath + "guy.gif",
-        "(})" : globalPath + "guy_hug.gif",
-        "(^)" : globalPath + "cake.gif",
-        "(U)" : globalPath + "broken_heart.gif",
-        "(u)" : globalPath + "broken_heart.gif",
-        "(G)" : globalPath + "present.gif",
-        "(g)" : globalPath + "present.gif",
-        "(W)" : globalPath + "wilted_rose.gif",
-        "(w)" : globalPath + "wilted_rose.gif",
-        "(~)" : globalPath + "film.gif",
-        "(&)" : globalPath + "dog.gif",
-        "(I)" : globalPath + "lightbulb.gif",
-        "(i)" : globalPath + "lightbulb.gif",
-        "(S)" : globalPath + "moon.gif",
-        "(E)" : globalPath + "email.gif",
-        "(e)" : globalPath + "email.gif",
-        "(M)" : globalPath + "messenger.gif",
-        "(m)" : globalPath + "messenger.gif",
+        "(6)" : globalPath + "devil_smile.gif",
         "(bah)" : globalPath + "sheep.gif",
         "(||)" : globalPath + "bowl.gif",
         "(so)" : globalPath + "soccer.gif",
         "(ap)" : globalPath + "airplane.gif",
         "(ip)" : globalPath + "island.gif",
         "(mp)" : globalPath + "portable.gif",
-        "(li)" : globalPath + "lightning.gif"
-    }
+        "(li)" : globalPath + "lightning.gif",
+    });
 
+    // Alias = toutes les paires doublons
+    alias([":)", ":-)"], "smile.gif");
+    alias([":o", ":-O"], "surprised.gif");
+    alias([";)", ";-)"], "wink_smile.gif");
+    alias([":s", ":-S"], "confused.gif");
+
+    alias(["(H)", "(h)"], "hot.gif");
+    alias(["(A)", "(a)"], "angel.gif");
+
+    alias([":[" , ":-["], "bat.gif");
+
+    alias(["(L)", "(l)"], "heart.gif");
+    alias(["(K)", "(k)"], "kiss.gif");
+    alias(["(F)", "(f)"], "rose.gif");
+    alias(["(P)", "(p)"], "camera.gif");
+    alias(["(T)", "(t)"], "phone.gif");
+    alias(["(O)", "(o)"], "clock.gif");
+
+    alias([":D", ":-D"], "teeth_smile.gif");
+    alias([":p", ":-P"], "tongue_smile.gif");
+    alias([":(", ":-("], "sad.gif");
+    alias([":|", ":-|"], "disappointed.gif");
+    alias([":$", ":-$"], "embarrassed.gif");
+    alias([":@", ":-@"], "angry.gif");
+
+    alias(["(C)", "(c)"], "coffee.gif");
+    alias(["(N)", "(n)"], "thumbs_down.gif");
+    alias(["(D)", "(d)"], "martini.gif");
+    alias(["(Z)", "(z)"], "guy.gif");
+    alias(["(})", "({)"], "guy_hug.gif");
+    alias(["(U)", "(u)"], "broken_heart.gif");
+    alias(["(G)", "(g)"], "present.gif");
+    alias(["(W)", "(w)"], "wilted_rose.gif");
+
+    alias(["(E)", "(e)"], "email.gif");
+    alias(["(I)", "(i)"], "lightbulb.gif");
+    alias(["(M)", "(m)"], "messenger.gif");
+    alias(["(Y)", "(y)"], "thumbs_up.gif");
+    alias(["(B)", "(b)"], "beer_mug.gif");
+    alias(["(X)", "(x)"], "girl.gif");
 
     const socket = io("/", {
         path: "/socket.io/", // on met le chemin que nginx va intercepter 
@@ -129,7 +177,91 @@ export function afterRender(): void {
         return;
     }
 
-    // --- FONCTIONS POUR LE PARSING DES MESSAGES ---
+    // ---------------------------------------------------
+    // ----           LOGIQUE D'ÉMOTICONES            ----
+    // ---------------------------------------------------
+
+    const emoticonButton = document.getElementById('select-emoticon');
+    const emoticonDropdown = document.getElementById('emoticon-dropdown');
+    const emoticonGrid = document.getElementById('emoticon-grid');
+
+    if (emoticonButton && emoticonDropdown && emoticonGrid) {
+
+        // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
+        // + insertion d'un espace apres 
+        // @param emoticonKey -> eky de l'émoticon
+
+        const insertEmoticon = (emoticonKey: string) => {
+            const start = messageInput.selectionStart ?? messageInput.value.length;
+            const end = messageInput.selectionEnd ?? messageInput.value.length;
+
+            // on ajoute l'espace
+            const toInsert = emoticonKey + ' ';
+            const newValue = messageInput.value.substring(0, start) + toInsert + messageInput.value.substring(end);
+            messageInput.value = newValue;
+
+            const newCursorPosition = start + toInsert.length;
+            messageInput.selectionStart = newCursorPosition;
+            messageInput.selectionEnd = newCursorPosition;
+            messageInput.focus(); // quel interet de cette fonction focus
+        }
+
+
+        // remplissage de la grille des emoticones dans le menu
+        const fillEmoticonsGrid = () => {
+            emoticonGrid.innerHTML = ''; // on vide le contenu existant
+
+            // on trie par longieur 
+            const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
+            sortedKeys.forEach(key => {
+                const imgUrl = emoticons[key];
+                const emoticonItem = document.createElement('div');
+
+                // w-7 h-7 = zone cliquable + grande
+                emoticonItem.className = 'cursor-pointer w-7 h-7 flex jsutify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100';
+
+                // balise image  avec titre pour l'infobulle affichant le raccourci
+                emoticonItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[20px] h-[20px]">`;
+
+                // gestion du clic sur l'emoticaone dans le menu
+                emoticonItem.addEventListener('click', (event) => {
+                    event.stopPropagation(); // evite fermeture immediate
+                    insertEmoticon(key);
+
+                    // on cache le menu apres la selection
+                    emoticonDropdown.classList.add('hidden');
+                });
+
+                emoticonGrid.appendChild(emoticonItem);
+            });
+        };
+
+        // afficher et masquer le menu au clic du bouton 
+        emoticonButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // empeche le click de masquer 
+            emoticonDropdown.classList.toggle('hidden');
+        });
+
+        // on masque le munu si l'utilisateur clique n'importe ou aillewurs sur la page
+        document.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            // si le clic n'est ni su le bouton ni dans le drowpdown on le cache
+            if (!emoticonDropdown.contains(target) && !emoticonButton.contains(target)) {
+                emoticonDropdown.classList.add('hidden');
+            }
+        });
+
+        // initialisation = remplir la grille quand la page est chargee
+
+        fillEmoticonsGrid();
+    }
+
+
+
+    // ---------------------------------------------------
+    // ----           PARSING DES MESSAGES            ----
+    // ---------------------------------------------------
+
 
     // pour éviter les inj3etions de code hgtml script
     const escapeHTML = (text: string): string => {
@@ -171,7 +303,10 @@ export function afterRender(): void {
     };
 
 
-    // --- AFFICHAGE DES MESSAGES ---
+    // ---------------------------------------------------
+    // ----         AFFICHAGE DES MESSAGES            ----
+    // ---------------------------------------------------
+
 
     // pour afficher un message
     const addMessage = (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
