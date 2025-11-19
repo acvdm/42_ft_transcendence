@@ -211,22 +211,45 @@ export function afterRender(): void {
         const fillEmoticonsGrid = () => {
             emoticonGrid.innerHTML = ''; // on vide le contenu existant
 
-            // on trie par longieur 
+            // 1. Regrouper les clés (raccourcis) par URL d'image pour éliminer les doublons
+            const emoticonsByUrl = new Map<string, string[]>();
+            
+            // on trie par longieur (pour que l'alias le plus long soit le premier à être ajouté dans la liste des alias)
             const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
+
             sortedKeys.forEach(key => {
                 const imgUrl = emoticons[key];
+                
+                if (!emoticonsByUrl.has(imgUrl)) {
+                    emoticonsByUrl.set(imgUrl, []);
+                }
+                // Ajouter la clé textuelle à la liste des alias pour cette image
+                emoticonsByUrl.get(imgUrl)!.push(key);
+            });
+            
+            // 2. Parcourir les images uniques (les entrées de la Map) et créer les boutons
+            emoticonsByUrl.forEach((keys, imgUrl) => {
+                
+                // keys[0] est l'alias le plus long/spécifique (grâce au tri initial)
+                const primaryKey = keys[0]; 
+                // Afficher tous les alias dans l'infobulle (tooltip)
+                const tooltipTitle = keys.join(' | ');
+
                 const emoticonItem = document.createElement('div');
 
+                // CORRECTION: justify-center au lieu de jsutify-center
                 // w-7 h-7 = zone cliquable + grande
-                emoticonItem.className = 'cursor-pointer w-7 h-7 flex jsutify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100';
+                emoticonItem.className = 'cursor-pointer w-7 h-7 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100';
 
-                // balise image  avec titre pour l'infobulle affichant le raccourci
-                emoticonItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[20px] h-[20px]">`;
+                // balise image avec le titre contenant TOUS les raccourcis (alias)
+                emoticonItem.innerHTML = `<img src="${imgUrl}" alt="${primaryKey}" title="${tooltipTitle}" class="w-[20px] h-[20px]">`;
 
-                // gestion du clic sur l'emoticaone dans le menu
+                // gestion du clic sur l'emoticone dans le menu
                 emoticonItem.addEventListener('click', (event) => {
                     event.stopPropagation(); // evite fermeture immediate
-                    insertEmoticon(key);
+                    
+                    // On insère uniquement la clé principale/la plus longue dans l'input
+                    insertEmoticon(primaryKey); 
 
                     // on cache le menu apres la selection
                     emoticonDropdown.classList.add('hidden');
