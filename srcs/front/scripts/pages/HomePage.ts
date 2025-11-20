@@ -57,7 +57,24 @@ export function render(): string {
 
                                 </div>
                               </button>
-                              <button id="select-animation" class="relative"><div class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Wink"></div><div><img src="/assets/chat/arrow.png" alt="Select arrow"></div></div></button>
+                              
+                                <button id="select-animation" class="h-6">
+                                  <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                                  <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+                                  <div><img src="/assets/chat/arrow.png" alt="Select arrow">
+                                    </div>
+
+                                    <!-- Menu dropdown -> il s'ouvre quand on clique -->
+
+                                    <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+                                    <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+                                    </div>
+
+                                    </div>
+                                </button>
+
+
+
                               <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
                               <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
                               <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
@@ -76,8 +93,14 @@ export function render(): string {
 export function afterRender(): void {
 
     let globalPath = "/assets/emoticons/";
+    let animationPath = "/assets/animated/";
 
     const emoticons: { [key: string]: string } = {};
+
+    const animations: { [key: string]: string } = {
+        "(boucy_ball)" : animationPath + "bouncy_ball.png",
+    }
+
 
     // On évite les doublons en créant des alias
     function alias(keys: string[], file: string) {
@@ -174,6 +197,99 @@ export function afterRender(): void {
         console.log("Can't find chat elements");
         return;
     }
+
+
+    // ---------------------------------------------------
+    // ----            LOGIQUE D'ANIMATION            ----
+    // ---------------------------------------------------
+
+    const animationButton = document.getElementById('select-animation');
+    const animationDropdown = document.getElementById('animation-dropdown');
+    const animationGrid = document.getElementById('animation-grid');
+
+    const insertTag = (tagKey: string) => {
+        const start = messageInput.selectionStart ?? messageInput.value.length;
+        const end = messageInput.selectionEnd ?? messageInput.value.length;
+
+        const toInsert = tagKey + ' ';
+        const newValue = messageInput.value.substring(0, start) + toInsert + messageInput.value.substring(end);
+        messageInput.value = newValue;
+
+        const newCursorPosition = start + toInsert.length;
+        messageInput.selectionStart = newCursorPosition;
+        messageInput.selectionEnd = newCursorPosition;
+        messageInput.focus();
+    }
+
+    if (animationButton && animationDropdown && animationGrid) {
+        // on rempli la grille des animations
+        const fillAnimationGrid = () => {
+            animationGrid.innerHTML = '';
+
+            Object.keys(animations).forEach(key => {
+                const imgUrl = animations[key];
+                const animationItem = document.createElement('div');
+                animationItem.className = 'cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100';
+                animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
+
+                // clic sur l'anumation
+                animationItem.addEventListener('click', (event) => {
+                    event.stopPropagation();
+
+                    // envoi de l'animation via la sockettt
+                    socket.emit("sendAnimation", {
+                        animationKey: key,
+                        author: "Faustoche" // a remplacer par l'username de l'envoyeur 
+                    });
+                    animationDropdown.classList.add('hidden');
+                });
+                animationGrid.appendChild(animationItem);
+            });
+        };
+        animationButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            animationDropdown.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            if (!animationDropdown.contains(target) && !animationButton.contains(target))
+                animationDropdown.classList.add('hidden');
+        });
+        fillAnimationGrid();
+    }
+
+    socket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
+        const { animationKey, author } = data;
+        const imgUrl = animations[animationKey];
+        
+        if (imgUrl) {
+             // Utilise une mise en forme spéciale pour les animations
+            const animationHTML = `
+                <div class="p-2 border border-gray-200 rounded-md bg-gray-50 max-w-sm">
+                    <strong>${author}</strong> a envoyé une animation :<br>
+                    <img src="${imgUrl}" alt="${animationKey}" class="mt-1 w-24 h-24 object-contain">
+                </div>
+            `;
+            addCustomContent(animationHTML);
+        } else {
+            addMessage(`Animation inconnue (${animationKey}) reçue de ${author}.`, "Système");
+        }
+    });
+
+    // Nouvelle fonction pour ajouter du contenu HTML arbitraire
+    const addCustomContent = (htmlContent: string) => {
+        const msgElement = document.createElement('div');
+        msgElement.className = "mb-1";
+        msgElement.innerHTML = htmlContent;
+        messagesContainer.appendChild(msgElement);
+        // rajouter un scroll automatique vers le bas
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+
+
+
 
     // ---------------------------------------------------
     // ----           LOGIQUE D'ÉMOTICONES            ----

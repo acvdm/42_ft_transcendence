@@ -45,6 +45,15 @@ const start = async () => {
       });
 
 
+      //envoi de l'animation
+      socket.on('sendAnimation', (data: { animationKey: string, author: string }) => {
+        console.log(`Animation received: ${data.animationKey} from: ${data.author}`);
+        
+        // On renvoie l'événement à tous les AUTRES clients connectés.
+        // Ils vont écouter 'receiveWizz' pour secouer leur fenêtre.
+        io.emit('receivedAnimation', { data });
+      });
+
 
       socket.on('disconnect', () => {
         console.log('User disconnected');
