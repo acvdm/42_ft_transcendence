@@ -51,7 +51,7 @@ const start = async () => {
         
         // On renvoie l'événement à tous les AUTRES clients connectés.
         // Ils vont écouter 'receiveWizz' pour secouer leur fenêtre.
-        io.emit('receivedAnimation', { data });
+        io.emit('receivedAnimation', data);
       });
 
 

@@ -99,6 +99,18 @@ export function afterRender(): void {
 
     const animations: { [key: string]: string } = {
         "(boucy_ball)" : animationPath + "bouncy_ball.png",
+        "(bow)" : animationPath + "bow.jpg",
+        "(crying)" : animationPath + "crying.png",
+        "(dancer)" : animationPath + "dancer.png",
+        "(dancing_pig)" : animationPath + "dancing_pig.png",
+        "(frog)" : animationPath + "frog.png",
+        "(guitar_smash)" : animationPath + "guitar_smash.gif",
+        "(heart)" : animationPath + "heart.png",
+        "(kiss)" : animationPath + "kiss.gif",
+        "(knock)" : animationPath + "knock.png",
+        "(silly_face)" : animationPath + "silly_face.png",
+        "(ufo)" : animationPath + "ufo.png",
+        "(water_balloon)" : animationPath + "water_balloon.png",
     }
 
 
@@ -266,9 +278,9 @@ export function afterRender(): void {
         if (imgUrl) {
              // Utilise une mise en forme spéciale pour les animations
             const animationHTML = `
-                <div class="p-2 border border-gray-200 rounded-md bg-gray-50 max-w-sm">
-                    <strong>${author}</strong> a envoyé une animation :<br>
-                    <img src="${imgUrl}" alt="${animationKey}" class="mt-1 w-24 h-24 object-contain">
+                <div>
+                    <strong>${author}</strong> :<br>
+                    <img src="${imgUrl}" alt="${animationKey}">
                 </div>
             `;
             addCustomContent(animationHTML);
