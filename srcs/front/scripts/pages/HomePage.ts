@@ -73,12 +73,37 @@ export function render(): string {
                                     </div>
                                 </button>
 
+                                
+                                <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+                                <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+                                <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+                                
+                            
+                                <!-- Menu pour les fonts -->
+                              
+                                <div class="relative group">
+                                    <button id="change-font" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+                                        <div><img src="/assets/chat/change_font.png" alt="Font"></div>
+                                    </button>
 
+                                    <div id="font-dropdown" class="absolute hidden bottom-full left-0 mb-1 w-32 bg-white border border-gray-300 rounded-sm shadow-xl z-50">
+                                        <div class="flex flex-col text-xs text-gray-800">
+                                            <button data-color="red" class="text-left px-3 py-2 hover:bg-blue-100 text-red-500">Red</button>
+                                            <button data-color="blue" class="text-left px-3 py-2 hover:bg-blue-100 text-blue-500">Blue</button>
+                                            <button data-color="green" class="text-left px-3 py-2 hover:bg-blue-100 text-green-500">Green</button>
+                                            <button data-color="pink" class="text-left px-3 py-2 hover:bg-blue-100 text-pink-500">Pink</button>
+                                            <button data-tag="b" class="text-left px-3 py-2 hover:bg-blue-100 font-bold">Bold</button>
+                                            <button data-tag="i" class="text-left px-3 py-2 hover:bg-blue-100 italic">Italic</button>
+                                            <button data-tag="u" class="text-left px-3 py-2 hover:bg-blue-100 underline">Underline</button>
+                                            <button data-tag="s" class="text-left px-3 py-2 hover:bg-blue-100 line-through">Cross out</button>
+                                            <button data-tag="mark" class="text-left px-3 py-2 hover:bg-blue-100 bg-yellow-100">Highlight</button>
+                                        </div>
+                                    </div>
+                                </div>
 
-                              <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-                              <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-                              <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-                              <button id="change-font" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/change_font.png" alt=""></div>
+                              
+                              
+                              
                               <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div class="w-5"><img src="/assets/chat/select_background.png" alt=""></div><div><img src="/assets/chat/arrow.png" alt=""></div></div>
                         </div>
                     </div>
@@ -98,21 +123,37 @@ export function afterRender(): void {
     const emoticons: { [key: string]: string } = {};
 
     const animations: { [key: string]: string } = {
+        "(boucy_ball)" : animationPath + "bouncy_ball.gif",
+        "(bow)" : animationPath + "bow.gif",
+        "(crying)" : animationPath + "crying.gif",
+        "(dancer)" : animationPath + "dancer.gif",
+        "(dancing_pig)" : animationPath + "dancing_pig.gif",
+        "(frog)" : animationPath + "frog.gif",
+        "(guitar_smash)" : animationPath + "guitar_smash.gif",
+        "(heart)" : animationPath + "heart.gif",
+        "(kiss)" : animationPath + "kiss.gif",
+        "(knock)" : animationPath + "knock.gif",
+        "(silly_face)" : animationPath + "silly_face.gif",
+        "(ufo)" : animationPath + "ufo.gif",
+        "(water_balloon)" : animationPath + "water_balloon.gif",
+    }
+
+
+    const icons: { [key: string]: string } = {
         "(boucy_ball)" : animationPath + "bouncy_ball.png",
         "(bow)" : animationPath + "bow.jpg",
         "(crying)" : animationPath + "crying.png",
         "(dancer)" : animationPath + "dancer.png",
         "(dancing_pig)" : animationPath + "dancing_pig.png",
         "(frog)" : animationPath + "frog.png",
-        "(guitar_smash)" : animationPath + "guitar_smash.gif",
+        "(guitar_smash)" : animationPath + "guitar_smash.png",
         "(heart)" : animationPath + "heart.png",
-        "(kiss)" : animationPath + "kiss.gif",
+        "(kiss)" : animationPath + "kiss.png",
         "(knock)" : animationPath + "knock.png",
         "(silly_face)" : animationPath + "silly_face.png",
         "(ufo)" : animationPath + "ufo.png",
         "(water_balloon)" : animationPath + "water_balloon.png",
     }
-
 
     // On évite les doublons en créant des alias
     function alias(keys: string[], file: string) {
@@ -238,8 +279,8 @@ export function afterRender(): void {
         const fillAnimationGrid = () => {
             animationGrid.innerHTML = '';
 
-            Object.keys(animations).forEach(key => {
-                const imgUrl = animations[key];
+            Object.keys(icons).forEach(key => {
+                const imgUrl = icons[key];
                 const animationItem = document.createElement('div');
                 animationItem.className = 'cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100';
                 animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
@@ -298,8 +339,6 @@ export function afterRender(): void {
         // rajouter un scroll automatique vers le bas
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-
-
 
 
 
@@ -406,7 +445,6 @@ export function afterRender(): void {
     }
 
 
-
     // ---------------------------------------------------
     // ----           PARSING DES MESSAGES            ----
     // ---------------------------------------------------
@@ -431,7 +469,6 @@ export function afterRender(): void {
     const parseMessage = (message: string): string => {
         // on securise le texte avec escape html
         let formattedMessage = escapeHTML(message);
-
         // on parcours la map des emoticons pour remplacer par celui qu'on veut 
         // on trie les cles par longueur pour evciter les conflits
         const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
@@ -448,8 +485,104 @@ export function afterRender(): void {
                 `<img src="${imgUrl}" alt="${key}" class="inline-block w-[20px] h-[20px] align-middle mx-0.5" />`
             );
         });
+
+        formattedMessage = formattedMessage
+            .replace(/\[b\](.*?)\[\/b\]/g, '<strong>$1</strong>')
+            .replace(/\[i\](.*?)\[\/i\]/g, '<em>$1</em>')
+            .replace(/\[u\](.*?)\[\/u\]/g, '<u>$1</u>')
+            .replace(/\[s\](.*?)\[\/s\]/g, '<s>$1</s>')
+            .replace(/\[mark\](.*?)\[\/mark\]/g, '<mark class="bg-yellow-200 text-black px-0.5 rounded-sm">$1</mark>')
+            .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>');
+
+
         return formattedMessage;
     };
+
+    // ---------------------------------------------------
+    // ----            LOGIQUE DE POLICE              ----
+    // ---------------------------------------------------
+
+    const fontButton = document.getElementById('change-font');
+    const fontDropdown = document.getElementById('font-dropdown');
+
+    // insertion des balises autour du texte selectionne
+    const wrapSelection = (tagOrColor: string, isColor = false) => {
+        if (!messageInput) return;
+
+        const start = messageInput.selectionStart ?? messageInput.value.length;
+        const end = messageInput.selectionEnd ?? messageInput.value.length;
+        const selectedText = messageInput.value.substring(start, end);
+
+        let replacement: string;
+        let cursorOffset: number;
+
+        if (isColor) {
+            // Ex: [color=red]...[/color]
+            const openTag = `[color=${tagOrColor}]`;
+            replacement = `${openTag}${selectedText}[/color]`;
+            // Si pas de texte sélectionné, on veut le curseur juste après la balise ouvrante
+            cursorOffset = openTag.length;
+        } else {
+            // Ex: [b]...[/b]
+            const openTag = `[${tagOrColor}]`;
+            replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
+            cursorOffset = openTag.length;
+        }
+
+        messageInput.value = messageInput.value.substring(0, start) + replacement + messageInput.value.substring(end);
+
+        // LOGIQUE CURSEUR :
+        // Si on a sélectionné du texte, on met le curseur à la fin de tout le bloc
+        // Sinon (texte vide), on le met au milieu des balises
+        const newCursorPos = selectedText.length > 0 
+            ? start + replacement.length 
+            : start + cursorOffset;
+
+        messageInput.setSelectionRange(newCursorPos, newCursorPos); 
+        messageInput.focus();
+    };
+
+    if (fontButton && fontDropdown) {
+        // Ouvrir/Fermer le menu
+        fontButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fontDropdown.classList.toggle('hidden');
+            // Fermer les autres menus si ouverts
+            document.getElementById('emoticon-dropdown')?.classList.add('hidden');
+            document.getElementById('animation-dropdown')?.classList.add('hidden');
+        });
+
+        // Gérer les clics sur TOUS les boutons du menu (Tags ET Couleurs) en même temps
+        fontDropdown.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const target = e.currentTarget as HTMLElement; // Utiliser currentTarget pour être sûr d'avoir le bouton
+                
+                const tag = target.dataset.tag;
+                const color = target.dataset.color;
+
+                if (tag) {
+                    wrapSelection(tag, false);
+                } else if (color) {
+                    wrapSelection(color, true);
+                }
+                
+                // On ferme le menu après le clic
+                fontDropdown.classList.add('hidden');
+            });
+        });
+    }
+
+    // NOTE: J'ai supprimé le bloc `document.querySelectorAll('button[data-color]')` qui était ici
+    // car il est maintenant géré juste au-dessus pour éviter les conflits.
+
+    document.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        if (fontDropdown && !fontDropdown.contains(target) && !fontButton?.contains(target)) {
+            fontDropdown.classList.add('hidden');
+        }
+    });
+
 
 
     // ---------------------------------------------------
