@@ -4,7 +4,7 @@ import { io, Socket } from "socket.io-client";
 // on va exportrter une fonction qui renvoie du html 
 export function render(): string {
     return `
-        <div class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+        <div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
         <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
              style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
@@ -79,12 +79,12 @@ export function afterRender(): void {
 
     const emoticons: { [key: string]: string } = {};
 
-    // Helper pour éviter les doublons
+    // On évite les doublons en créant des alias
     function alias(keys: string[], file: string) {
         keys.forEach(k => emoticons[k] = globalPath + file);
     }
 
-    // Ajout des émoticônes uniques
+    // émoticones uniques
     Object.assign(emoticons, {
         ":-)" : globalPath + "smile.gif",
         ":-O" : globalPath + "surprised.gif",
@@ -124,31 +124,26 @@ export function afterRender(): void {
         "(li)" : globalPath + "lightning.gif",
     });
 
-    // Alias = toutes les paires doublons
+    // alias = tous les doublons
     alias([":)", ":-)"], "smile.gif");
     alias([":o", ":-O"], "surprised.gif");
     alias([";)", ";-)"], "wink_smile.gif");
     alias([":s", ":-S"], "confused.gif");
-
     alias(["(H)", "(h)"], "hot.gif");
     alias(["(A)", "(a)"], "angel.gif");
-
     alias([":[" , ":-["], "bat.gif");
-
     alias(["(L)", "(l)"], "heart.gif");
     alias(["(K)", "(k)"], "kiss.gif");
     alias(["(F)", "(f)"], "rose.gif");
     alias(["(P)", "(p)"], "camera.gif");
     alias(["(T)", "(t)"], "phone.gif");
     alias(["(O)", "(o)"], "clock.gif");
-
     alias([":D", ":-D"], "teeth_smile.gif");
     alias([":p", ":-P"], "tongue_smile.gif");
     alias([":(", ":-("], "sad.gif");
     alias([":|", ":-|"], "disappointed.gif");
     alias([":$", ":-$"], "embarrassed.gif");
     alias([":@", ":-@"], "angry.gif");
-
     alias(["(C)", "(c)"], "coffee.gif");
     alias(["(N)", "(n)"], "thumbs_down.gif");
     alias(["(D)", "(d)"], "martini.gif");
@@ -157,7 +152,6 @@ export function afterRender(): void {
     alias(["(U)", "(u)"], "broken_heart.gif");
     alias(["(G)", "(g)"], "present.gif");
     alias(["(W)", "(w)"], "wilted_rose.gif");
-
     alias(["(E)", "(e)"], "email.gif");
     alias(["(I)", "(i)"], "lightbulb.gif");
     alias(["(M)", "(m)"], "messenger.gif");
@@ -171,6 +165,10 @@ export function afterRender(): void {
 
     const messagesContainer = document.getElementById('chat-messages');
     const messageInput = document.getElementById('chat-input') as HTMLInputElement;
+    const wizzButton = document.getElementById('send-wizz');
+    const wizzContainer = document.getElementById('wizz-container');
+
+    const wizzAuthor = "Faustoche"; // à remplacer par l'username de l;envoyeur
 
     if (!messagesContainer || !messageInput) {
         console.log("Can't find chat elements");
@@ -331,7 +329,6 @@ export function afterRender(): void {
     // ---------------------------------------------------
 
 
-    // pour afficher un message
     const addMessage = (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
         const msgElement = document.createElement('p');
         msgElement.className = "mb-1";
@@ -344,7 +341,55 @@ export function afterRender(): void {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     };
 
-    /* mise en ecoute des événements socket */
+    // délcencher la secousse 
+    const shakeElement = (element: HTMLElement | null, duration: number = 500) => {
+        if (!element)
+            return;
+
+        // on applique la classe d'animation avec le css personnalisé -> keyframe
+        element.classList.add('wizz-shake');
+
+        // on retire la classe une fois que l'amination est terminé
+        setTimeout(() => {
+            element.classList.remove('wizz-shake');
+        }, duration);
+
+        // on essaie de mettre un son
+        try {
+            const wizzSound = new Audio('/assets/chat/wizz_sound.mp3');
+            wizzSound.play().catch(e => console.log("Could not play wizz sound:", e.message));
+        } catch (e) {
+            console.log("Audio API error:", (e as Error).message);
+        }
+    };
+
+    // ---------------------------------------------------
+    // ----            LOGIQUE DU WIZZ                ----
+    // ---------------------------------------------------
+
+    if (wizzButton) {
+        wizzButton.addEventListener('click', () => {
+            // on envois l'element snedWizz au serveur
+            socket.emit("sendWizz", { author: wizzAuthor});
+            // secousse pour l'expediteur et le receveur
+            if (wizzContainer) {
+                shakeElement(wizzContainer, 3000);
+            }
+        });
+    }
+
+    // reception ici du serveur au client
+    socket.on("receivedWizz", (data: { author: string }) => {
+        // on affiche le message -> xx send a nudge (poke?)
+        addMessage(`<strong>${data.author} sent a nudge</strong>`, "Admin");
+        // on declenche la secousse
+        shakeElement(wizzContainer, 3000)
+    })
+
+
+    // ---------------------------------------------------
+    // ----      MISE EN ÉCOUTE DES SOCKETS           ----
+    // ---------------------------------------------------
 
     socket.on("connect", () => {
         addMessage("Connected to chat server!");

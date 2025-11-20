@@ -35,6 +35,17 @@ const start = async () => {
         io.emit('chatMessage', data);
       });
 
+      // envoi du wiiiiizz
+      socket.on('sendWizz', (data: { author: string }) => {
+        console.log(`Wizz received from: ${data.author}`);
+        
+        // On renvoie l'événement à tous les AUTRES clients connectés.
+        // Ils vont écouter 'receiveWizz' pour secouer leur fenêtre.
+        socket.broadcast.emit('receiveWizz', { author: data.author });
+      });
+
+
+
       socket.on('disconnect', () => {
         console.log('User disconnected');
       });
