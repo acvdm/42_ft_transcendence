@@ -341,17 +341,29 @@ export function afterRender(): void {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     };
 
+    // variable pour stocket l'id du time secousse
+    let shakeTimeout: number | undefined;
+
     // délcencher la secousse 
     const shakeElement = (element: HTMLElement | null, duration: number = 500) => {
         if (!element)
             return;
 
+        // annuler le tem,ps de la secousse rpecedence
+        if (shakeTimeout)
+            clearTimeout(shakeTimeout);
+
         // on applique la classe d'animation avec le css personnalisé -> keyframe
+        element.classList.remove('wizz-shake');
+
+        // froce d'un reflow
+        void element.offsetWidth;
         element.classList.add('wizz-shake');
 
         // on retire la classe une fois que l'amination est terminé
-        setTimeout(() => {
+        shakeTimeout = window.setTimeout(() => {
             element.classList.remove('wizz-shake');
+            shakeTimeout = undefined;
         }, duration);
 
         // on essaie de mettre un son
@@ -373,7 +385,7 @@ export function afterRender(): void {
             socket.emit("sendWizz", { author: wizzAuthor});
             // secousse pour l'expediteur et le receveur
             if (wizzContainer) {
-                shakeElement(wizzContainer, 3000);
+                shakeElement(wizzContainer, 500);
             }
         });
     }
@@ -397,7 +409,7 @@ export function afterRender(): void {
 
     // on va écouter l'événement chatmessage venant du serveur
     socket.on("chatMessage", (data: any) => {
-            // le backend va renvoyer data, on suppose que c'est le message pour le moment
+            // le backend va renvoyer data, 
             // il devrait plus renvoyer message: "" author: ""
         addMessage(data.message || data, data.author || "Anonyme");
     });

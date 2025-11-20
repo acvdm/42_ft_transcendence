@@ -41,7 +41,7 @@ const start = async () => {
         
         // On renvoie l'événement à tous les AUTRES clients connectés.
         // Ils vont écouter 'receiveWizz' pour secouer leur fenêtre.
-        socket.broadcast.emit('receiveWizz', { author: data.author });
+        socket.broadcast.emit('receivedWizz', { author: data.author });
       });
 
 
