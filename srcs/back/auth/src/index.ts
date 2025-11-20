@@ -2,7 +2,7 @@ import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateRegisterInput } from './validators/auth_validators.js';
-import { registerUser } from './services/auth_service.js';
+import { loginUser, registerUser } from './services/auth_service.js';
 import fs from 'fs';
 
 
@@ -37,7 +37,7 @@ fastify.post('/register', async (request, reply) => {
   try {
     // On récupère le body de la requête HTTP POST
     const body = request.body as { user_id: number; email: string; password: string };
-    console.log("Body reçu:", request.body);
+    // console.log("Body reçu:", request.body);
 
     // 1. Valider
     validateRegisterInput(body);
@@ -52,6 +52,21 @@ fastify.post('/register', async (request, reply) => {
   {
     console.error("❌ ERREUR AUTH REGISTER:", err);
     return reply.status(400).send({ error: err.message });
+  }
+});
+
+fastify.post('/login', async (request, reply) => {
+  const body = request.body as { email: string, password: string };
+  
+  try {
+    const authResponse = await loginUser(db, body.email, body.password);
+
+    return reply.status(201).send(authResponse);
+
+  } catch (err: any)
+  {
+    console.error("❌ ERREUR AUTH LOGIN:", err);
+     return reply.status(400).send({ error: err.message });
   }
 });
 

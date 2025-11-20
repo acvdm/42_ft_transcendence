@@ -35,7 +35,8 @@ fastify.post('/register', async (request, reply) => {
 
   try {
     // 1. Créer le user localement dans user.sqlite
-    const user_id = await createUserInDB(db, body)
+    user_id = await createUserInDB(db, body)
+    console.log(`user_id ligne 39: ${user_id}`);
 
     if (!user_id)
       return reply.status(500).send('Error during profile creation');
@@ -59,16 +60,19 @@ fastify.post('/register', async (request, reply) => {
   } catch (err: any) {
     console.error("Error during registration: ", err.message);
 
+    console.log(`Ligne 62`);
+    console.log(`user_id ligne 63: ${user_id}`);
     // ROLLBACK
     if (user_id) {
-      console.warn(`Rollback: delele orphan ID ${user_id}`);
+      console.log(`Rollback: delele orphan ID ${user_id}`);
       await db.run(`DELETE FROM USERS WHERE id = ?`, [user_id]);
-      console.warn('User ID ${user_id} successfully deleted');
+      console.log('User ID ${user_id} successfully deleted');
     }
 
     reply.status(400).send({ error: err.message });
   }
 });
+
 
 // List every users
 fastify.get('/user', async () => {

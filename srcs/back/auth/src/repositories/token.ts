@@ -16,12 +16,11 @@ export interface CreateTokenData {
     expires_at: Date,
 }
 
-
-//-------- CREATE
+//-------- POST / CREATE
 export async function createToken(
     db: Database, 
     data: CreateTokenData
-): Promise<number> { 
+): Promise<undefined> { 
     const result = await db.run(`
         INSERT INTO TOKENS (user_id, credential_id, refresh_token, expires_at)
         VALUES (?, ?, ?, ?)`,
@@ -32,5 +31,18 @@ export async function createToken(
         throw new Error('Failed to create a token');
     }
 
-    return result.lastID;
+    return ;
+}
+
+//-------- PUT / UPDATE
+export async function updateToken(
+    db: Database,
+    credential_id: number,
+    refresh_token: string,
+    expires_at: Date
+){
+    await db.run(`
+        UPDATE TOKENS SET refresh_token = ?, expires_at = ? WHERE credential_id = ?`,
+        [refresh_token, expires_at, credential_id]
+    );
 }

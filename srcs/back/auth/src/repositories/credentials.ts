@@ -1,4 +1,5 @@
 import { Database } from 'sqlite';
+import { verifyPassword } from '../utils/crypto';
 
 //-------- TYPE
 export interface Credential {
@@ -43,9 +44,19 @@ export async function createCredentials(
 export async function findByEmail(
     db: Database, 
     email: string
-): Promise<Credential | undefined> {
+): Promise<number | undefined> {
     return await db.get(`
-        SELECT user_id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE email = ?`,
+        SELECT id FROM CREDENTIALS WHERE email = ?`,
+        [email]
+    );
+}
+
+export async function findUserIdByEmail (
+    db: Database,
+    email: string
+): Promise<number | undefined> {
+    return await db.get(`
+        SELECT user_id FROM CREDENTIALS WHERE email = ?`,
         [email]
     );
 }
@@ -56,9 +67,23 @@ export async function findById(
 ): Promise<Credential | undefined> {
     return await db.get(`
         SELECT user_id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE id = ?`,
-    [id]
+        [id]
     );
 }
+
+export async function getCredentialbyID(
+    db: Database,
+    credential_id: number
+): Promise<Credential | undefined> {
+
+    const credential = await db.get(`
+        SELECT * FROM CREDENTIALS WHERE id = ?`,
+        [credential_id]
+    );
+    return credential;
+}
+
+
 
 //-------- PUT / UPDATE
 
