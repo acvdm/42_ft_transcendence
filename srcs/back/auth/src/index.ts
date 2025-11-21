@@ -60,7 +60,6 @@ fastify.post('/login', async (request, reply) => {
   
   try {
     const authResponse = await loginUser(db, body.email, body.password);
-
     return reply.status(201).send(authResponse);
 
   } catch (err: any)

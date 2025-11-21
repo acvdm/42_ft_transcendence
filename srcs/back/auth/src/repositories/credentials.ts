@@ -45,20 +45,24 @@ export async function findByEmail(
     db: Database, 
     email: string
 ): Promise<number | undefined> {
-    return await db.get(`
+    const result = await db.get(`
         SELECT id FROM CREDENTIALS WHERE email = ?`,
         [email]
     );
+
+    return result?.id;
 }
 
 export async function findUserIdByEmail (
     db: Database,
     email: string
 ): Promise<number | undefined> {
-    return await db.get(`
+    const result = await db.get(`
         SELECT user_id FROM CREDENTIALS WHERE email = ?`,
         [email]
     );
+
+    return result?.user_id;
 }
 
 export async function findById(
@@ -80,6 +84,7 @@ export async function getCredentialbyID(
         SELECT * FROM CREDENTIALS WHERE id = ?`,
         [credential_id]
     );
+    console.log(`test: ${credential?.id}`); 
     return credential;
 }
 
