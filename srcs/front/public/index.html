@@ -2,35 +2,131 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tr4nsc3nd3nc3 🚧</title>
-    <link href="./dist/style.css" rel="stylesheet">
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-    </style>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>tr4nsc3nd3nc3 🚧</title>
+		<link href="./dist/style.css" rel="stylesheet">
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
 </head>
 
 <body class="m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen">
-    
-    <nav    class="w-full h-[50px] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-x1/30"
-            style="background-image: url(https://wlm.vercel.app/assets/background/chat_navbar_background.png); background-size: cover;">
-        <a href="/" class="p-2 text-white hover:underline">Home</a>
-        <a href="/profile" class="p-2 text-white hover:underline">Profile</a>
-        <a href="/stats" class="p-2 text-white hover:underline">Stats</a>
-        <a href="/friends" class="p-2 text-white hover:underline">Friends</a>
-        <a href="/logout" class="p-2 text-white hover:underline">Log out</a>
-    </nav>
-    
+		
+		<nav    class="w-full h-[50px] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-x1/30"
+						style="background-image: url(https://wlm.vercel.app/assets/background/chat_navbar_background.png); background-size: cover;">
+				<a href="/" class="p-2 text-white hover:underline">Home</a>
+				<a href="/profile" class="p-2 text-white hover:underline">Profile</a>
+				<a href="/stats" class="p-2 text-white hover:underline">Stats</a>
+				<a href="/friends" class="p-2 text-white hover:underline">Friends</a>
+				<a href="/logout" class="p-2 text-white hover:underline">Log out</a>
+		</nav>
+		
+
+
+<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+
+  <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
+       style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+  </div>
+
+  <div class="absolute top-[20px] bottom-0 left-0 right-0 flex justify-center p-6 overflow-y-auto">
+
+    <div class="flex flex-row min-w-[1000px] h-full gap-4">
+
+      <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
+        <h1 class="text-lg font-semibold"> Pong 👾</h1>
+      </div>
+
+      <div class="flex flex-col gap-4 w-[650px] h-full">
+        
+        <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
+          <p class="font-semibold mb-2"> Game info</p>
+          <div class="relative w-[50px] h-[50px] mb-4">
+            <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+          </div>
+          <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
+        </div>
+
+        <!-- Partie live chat -->
+
+        <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 overflow-hidden">
+          <h1 class="text-lg font-bold mb-2">Live chat </h1>
+          <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
+
+          <!-- Input element  -->
+
+          <div class="flex flex-col">
+            <input type="text" id="chat-input" placeholder="Écrire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+            <!-- Insertion des emoticones, wizz etc -->
+            <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1 gap-x-2" style="background-image: url('/assets/chat/chat_icons_background.png');">
+              
+              <button id="select-emoticon" class="h-6">
+                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                  <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+                  <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+                  <!-- Menu dropdown -> il s'ouvre quand on clique -->
+                  <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+                    <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+                  </div>
+
+                </div>
+              </button>
+              
+              <button id="select-animation" class="h-6">
+                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                  <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+                  <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+                  <!-- Menu dropdown -> il s'ouvre quand on clique -->
+                  <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+                    <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+                  </div>
+
+                </div>
+              </button>
+
+              <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+              <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+              <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+              <button id="change-font" class="h-6">
+                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                  <div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+                  <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+                  <!-- Menu dropdown -> il s'ouvre quand on clique -->
+                  <div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+                    <div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+                  </div>
+
+                </div>
+              </button>
+
+              <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div class="w-5"><img src="/assets/chat/select_background.png" alt=""></div><div><img src="/assets/chat/arrow.png" alt=""></div></div> 
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
 
 
-    
-
-    <div id="app"></div>
-    <script src="./dist/main.js" defer></script>
+		<div id="app"></div>
+		<script src="./dist/main.js" defer></script>
 </body>
 </html>

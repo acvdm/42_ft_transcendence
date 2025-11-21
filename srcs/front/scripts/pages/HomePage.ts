@@ -4,113 +4,6 @@ import { io, Socket } from "socket.io-client";
 // on va exportrter une fonction qui renvoie du html 
 export function render(): string {
     return `
-        <div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
-
-        <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
-             style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-        </div>
-
-        <div class="absolute top-[20px] bottom-0 left-0 right-0 flex justify-center p-6 overflow-y-auto">
-
-            <div class="flex flex-row min-w-[1000px] h-full gap-4">
-
-                <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
-                    <h1 class="text-lg font-semibold"> Pong 👾</h1>
-                </div>
-
-                <div class="flex flex-col gap-4 w-[600px] h-full">
-                    
-                    <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
-                        <p class="font-semibold mb-2"> Game info</p>
-                        <div class="relative w-[50px] h-[50px] mb-4">
-                            <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
-                        </div>
-                        <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
-                    </div>
-
-
-                    <!-- Partie live chat -->
-
-                    <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 overflow-hidden">
-                        <h1 class="text-lg font-bold mb-2">Live chat </h1>
-                        <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
-
-                        <!-- Input element  -->
-
-                        <div class="flex flex-col">
-                          <input type="text" id="chat-input" placeholder="Écrire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-
-                          <!-- Insertion des emoticones, wizz etc -->
-                           <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-                              <button id="select-emoticon" class="h-6">
-                                  <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                  <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-                                  <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                                </div>
-
-                                <!-- Menu dropdown -> il s'ouvre quand on clique -->
-
-                                <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                  <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-                                </div>
-
-                                </div>
-                              </button>
-                              
-                                <button id="select-animation" class="h-6">
-                                  <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                  <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-                                  <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                                    </div>
-
-                                    <!-- Menu dropdown -> il s'ouvre quand on clique -->
-
-                                    <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                    <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-                                    </div>
-
-                                    </div>
-                                </button>
-
-                                
-                                <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-                                <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-                                <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-                                
-                            
-                                <!-- Menu pour les fonts -->
-                              
-                                <div class="relative group">
-                                    <button id="change-font" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-                                        <div><img src="/assets/chat/change_font.png" alt="Font"></div>
-                                    </button>
-
-                                    <div id="font-dropdown" class="absolute hidden bottom-full left-0 mb-1 w-32 bg-white border border-gray-300 rounded-sm shadow-xl z-50">
-                                        <div class="flex flex-col text-xs text-gray-800">
-                                            <button data-color="red" class="text-left px-3 py-2 hover:bg-blue-100 text-red-500">Red</button>
-                                            <button data-color="blue" class="text-left px-3 py-2 hover:bg-blue-100 text-blue-500">Blue</button>
-                                            <button data-color="green" class="text-left px-3 py-2 hover:bg-blue-100 text-green-500">Green</button>
-                                            <button data-color="pink" class="text-left px-3 py-2 hover:bg-blue-100 text-pink-500">Pink</button>
-                                            <button data-tag="b" class="text-left px-3 py-2 hover:bg-blue-100 font-bold">Bold</button>
-                                            <button data-tag="i" class="text-left px-3 py-2 hover:bg-blue-100 italic">Italic</button>
-                                            <button data-tag="u" class="text-left px-3 py-2 hover:bg-blue-100 underline">Underline</button>
-                                            <button data-tag="s" class="text-left px-3 py-2 hover:bg-blue-100 line-through">Cross out</button>
-                                            <button data-tag="mark" class="text-left px-3 py-2 hover:bg-blue-100 bg-yellow-100">Highlight</button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                              
-                              
-                              
-                              <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div class="w-5"><img src="/assets/chat/select_background.png" alt=""></div><div><img src="/assets/chat/arrow.png" alt=""></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     `;
 }; 
@@ -491,7 +384,6 @@ export function afterRender(): void {
             .replace(/\[i\](.*?)\[\/i\]/g, '<em>$1</em>')
             .replace(/\[u\](.*?)\[\/u\]/g, '<u>$1</u>')
             .replace(/\[s\](.*?)\[\/s\]/g, '<s>$1</s>')
-            .replace(/\[mark\](.*?)\[\/mark\]/g, '<mark class="bg-yellow-200 text-black px-0.5 rounded-sm">$1</mark>')
             .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>');
 
 
@@ -504,6 +396,7 @@ export function afterRender(): void {
 
     const fontButton = document.getElementById('change-font');
     const fontDropdown = document.getElementById('font-dropdown');
+    const fontGrid = document.getElementById('font-grid');
 
     // insertion des balises autour du texte selectionne
     const wrapSelection = (tagOrColor: string, isColor = false) => {
@@ -517,13 +410,10 @@ export function afterRender(): void {
         let cursorOffset: number;
 
         if (isColor) {
-            // Ex: [color=red]...[/color]
             const openTag = `[color=${tagOrColor}]`;
             replacement = `${openTag}${selectedText}[/color]`;
-            // Si pas de texte sélectionné, on veut le curseur juste après la balise ouvrante
             cursorOffset = openTag.length;
         } else {
-            // Ex: [b]...[/b]
             const openTag = `[${tagOrColor}]`;
             replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
             cursorOffset = openTag.length;
@@ -531,9 +421,6 @@ export function afterRender(): void {
 
         messageInput.value = messageInput.value.substring(0, start) + replacement + messageInput.value.substring(end);
 
-        // LOGIQUE CURSEUR :
-        // Si on a sélectionné du texte, on met le curseur à la fin de tout le bloc
-        // Sinon (texte vide), on le met au milieu des balises
         const newCursorPos = selectedText.length > 0 
             ? start + replacement.length 
             : start + cursorOffset;
@@ -542,7 +429,62 @@ export function afterRender(): void {
         messageInput.focus();
     };
 
-    if (fontButton && fontDropdown) {
+    if (fontButton && fontDropdown && fontGrid) {
+        // remplissage de la grille
+        const generateFontGrid = () => {
+            fontGrid.innerHTML = ''; // on vide lke contenu
+
+            const colors = [
+                '#000000', // noir
+                '#F42F25', // rouge
+                '#F934FB', // rose
+                '#F76D2A', // orange
+                '#217F1C', // vert
+                '#3019F7', // bleu
+                '#F9CA37', // jaune
+                '#42FB37' // vert fluo
+            ];
+
+            colors.forEach(color => {
+                const colorButton = document.createElement('div');
+                colorButton.className = 'w-6 h-6 cursor-pointer border border-gray-300 hover:border-blue-500 hover:shadow-sm rounded-[2px]';
+                colorButton.style.backgroundColor = color;
+
+                colorButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    wrapSelection(color, true);
+                    fontDropdown.classList.add('hidden');
+                });
+
+                fontGrid.appendChild(colorButton);
+            });
+
+            // poiyur les styles de police
+            const styles = [
+                { tag: 'b', icon: 'font_bold.png', title: 'Bold' },
+                { tag: 'i', icon: 'font_italic.png', title: 'Italic' },
+                { tag: 'u', icon: 'font_underline.png', title: 'Underline' },
+                { tag: 's', icon: 'font_strikethrough.png', title: 'Strikethrough' }
+            ];
+
+            styles.forEach(styles => {
+                const styleButton = document.createElement('div');
+                styleButton.className = 'w-6 h-6 flex justify-center items-center cursor-pointer border border-transparent hover:bg-blue-50 hover:border-blue-200 rounded-[2px] transition-all';
+
+                styleButton.innerHTML = `<img src="/assets/chat/${styles.icon}" alt="${styles.title}" class="w-[14px] h-[14px]">`;
+
+                styleButton.addEventListener('click', (e) => { // pourquoi e pour error ici et pas event?
+                    e.stopPropagation();
+                    wrapSelection(styles.tag, false);
+                    fontDropdown.classList.add('hidden');
+                });
+
+                fontGrid.appendChild(styleButton);
+            });
+        };
+
+        generateFontGrid();
+
         // Ouvrir/Fermer le menu
         fontButton.addEventListener('click', (e) => {
             e.stopPropagation();
