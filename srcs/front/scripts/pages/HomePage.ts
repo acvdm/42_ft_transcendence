@@ -32,8 +32,8 @@ export function render(): string {
 
                     <!-- Partie live chat -->
 
-                    <div id="chat-frame" class="relative flex-1 p-10 bg-[#BC787B] rounded-sm flex flex-col overflow-hidden bg-cover bg-center transition-all duration-300">
-                      <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 overflow-hidden">
+                    <div id="chat-frame" class="relative flex-1 p-10 bg-[#BC787B] rounded-sm flex flex-col bg-cover bg-center transition-all duration-300">
+                      <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10">
                           <h1 class="text-lg font-bold mb-2">Live chat </h1>
                           <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
   
@@ -82,25 +82,18 @@ export function render(): string {
                               
                                   <!-- Menu pour les fonts -->
                                 
-                                  <div class="relative group">
-                                      <button id="change-font" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-                                          <div><img src="/assets/chat/change_font.png" alt="Font"></div>
-                                      </button>
-  
-                                      <div id="font-dropdown" class="absolute hidden bottom-full left-0 mb-1 w-32 bg-white border border-gray-300 rounded-sm shadow-xl z-50">
-                                          <div class="flex flex-col text-xs text-gray-800">
-                                              <button data-color="red" class="text-left px-3 py-2 hover:bg-blue-100 text-red-500">Red</button>
-                                              <button data-color="blue" class="text-left px-3 py-2 hover:bg-blue-100 text-blue-500">Blue</button>
-                                              <button data-color="green" class="text-left px-3 py-2 hover:bg-blue-100 text-green-500">Green</button>
-                                              <button data-color="pink" class="text-left px-3 py-2 hover:bg-blue-100 text-pink-500">Pink</button>
-                                              <button data-tag="b" class="text-left px-3 py-2 hover:bg-blue-100 font-bold">Bold</button>
-                                              <button data-tag="i" class="text-left px-3 py-2 hover:bg-blue-100 italic">Italic</button>
-                                              <button data-tag="u" class="text-left px-3 py-2 hover:bg-blue-100 underline">Underline</button>
-                                              <button data-tag="s" class="text-left px-3 py-2 hover:bg-blue-100 line-through">Cross out</button>
-                                              <button data-tag="mark" class="text-left px-3 py-2 hover:bg-blue-100 bg-yellow-100">Highlight</button>
-                                          </div>
-                                      </div>
-                                  </div>
+                                   <button id="change-font" class="h-6">
+                                        <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                                        <div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+                                        <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+                                        <!-- Menu dropdown -> il s'ouvre quand on clique -->
+                                        <div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+                                            <div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+                                        </div>
+
+                                        </div>
+                                    </button>
   
                                 
                                 <div class="relative">
@@ -110,7 +103,7 @@ export function render(): string {
                                   </button>
 
                                   <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                                      <p class="text-xs text-gray-500 mb-2 pl-1">Choisir un thème :</p>
+                                      <p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
                                       
                                       <div class="grid grid-cols-3 gap-2">
                                           
@@ -132,13 +125,11 @@ export function render(): string {
                                           
                                           
                                           <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-                                              Réinitialiser (Couleur par défaut)
+                                              Default background
                                           </button>
                                       </div>
                                   </div>
                               </div>
-
-
 
                           </div>
                       </div>
@@ -148,8 +139,6 @@ export function render(): string {
         </div>
     </div>
 
-
-    
     `;
 }; 
 
@@ -383,55 +372,47 @@ export function afterRender(): void {
     // ----          LOGIQUE DE BACKGROUND            ----
     // ---------------------------------------------------
 
-// ---------------------------------------------------
-    // ----          LOGIQUE DE BACKGROUND            ----
-    // ---------------------------------------------------
-
-    // ON RETIRE LE DOMContentLoaded ICI
-
-    // Sélection des éléments
     const bgButton = document.getElementById('select-background');
     const bgDropdown = document.getElementById('background-dropdown');
     const chatFrame = document.getElementById('chat-frame');
     const bgOptions = document.querySelectorAll('.bg-option');
 
-    // On vérifie que les éléments existent pour éviter les erreurs
     if (bgButton && bgDropdown && chatFrame) {
 
-        // 1. Ouvrir / Fermer le menu au clic sur le bouton
+        // ouverture fermeture du menu
         bgButton.addEventListener('click', (e) => {
-            e.stopPropagation(); // Empêche la fermeture immédiate
+            e.stopPropagation(); // on evite la fermeture immediate
             bgDropdown.classList.toggle('hidden');
             
-            // Optionnel : Fermer les autres menus si ouverts
+            // on ferme les autres menus sil sont ouverts 
             document.getElementById('emoticon-dropdown')?.classList.add('hidden');
             document.getElementById('animation-dropdown')?.classList.add('hidden');
             document.getElementById('font-dropdown')?.classList.add('hidden');
         });
 
-        // 2. Gérer le clic sur une option de fond
+        // on clique sur l'option de notre choix
         bgOptions.forEach(option => {
             option.addEventListener('click', () => {
                 const bgImage = option.getAttribute('data-bg');
 
                 if (bgImage === 'none') {
-                    // Si on clique sur Reset : on enlève l'image et on remet la couleur
+                    // reset au background de base -> transparent
                     chatFrame.style.backgroundImage = '';
-                    chatFrame.classList.add('bg-[#BC787B]'); // Couleur originale
-                } else if (bgImage) { // Vérification typescript
-                    // Sinon, on met l'image choisie
+                    chatFrame.classList.add('bg-transparent');
+                } else if (bgImage) {
+                    // sinon l'image de notre choix
                     chatFrame.classList.remove('bg-[#BC787B]');
                     chatFrame.style.backgroundImage = bgImage;
                     chatFrame.style.backgroundSize = 'cover'; 
                     chatFrame.style.backgroundPosition = 'center';
                 }
 
-                // Fermer le menu après sélection
+                // on ferme le m
                 bgDropdown.classList.add('hidden');
             });
         });
 
-        // 3. Fermer le menu si on clique ailleurs sur la page
+        // ou on ferme si on clique ailleurs
         document.addEventListener('click', (e) => {
             const target = e.target as HTMLElement;
             if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
