@@ -32,7 +32,7 @@ export function render(): string {
 
                     <!-- Partie live chat -->
 
-                    <div id="chat-frame" class="relative flex-1 p-10 bg-[#BC787B] rounded-sm flex flex-col bg-cover bg-center transition-all duration-300">
+                    <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-col bg-cover bg-center transition-all duration-300">
                       <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10">
                           <h1 class="text-lg font-bold mb-2">Live chat </h1>
                           <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
