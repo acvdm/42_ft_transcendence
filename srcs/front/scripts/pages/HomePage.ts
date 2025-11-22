@@ -590,7 +590,6 @@ export function afterRender(): void {
             .replace(/\[i\](.*?)\[\/i\]/g, '<em>$1</em>')
             .replace(/\[u\](.*?)\[\/u\]/g, '<u>$1</u>')
             .replace(/\[s\](.*?)\[\/s\]/g, '<s>$1</s>')
-            .replace(/\[mark\](.*?)\[\/mark\]/g, '<mark class="bg-yellow-200 text-black px-0.5 rounded-sm">$1</mark>')
             .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>');
 
 
@@ -603,6 +602,7 @@ export function afterRender(): void {
 
     const fontButton = document.getElementById('change-font');
     const fontDropdown = document.getElementById('font-dropdown');
+    const fontGrid = document.getElementById('font-grid');
 
     // insertion des balises autour du texte selectionne
     const wrapSelection = (tagOrColor: string, isColor = false) => {
@@ -616,13 +616,10 @@ export function afterRender(): void {
         let cursorOffset: number;
 
         if (isColor) {
-            // Ex: [color=red]...[/color]
             const openTag = `[color=${tagOrColor}]`;
             replacement = `${openTag}${selectedText}[/color]`;
-            // Si pas de texte sélectionné, on veut le curseur juste après la balise ouvrante
             cursorOffset = openTag.length;
         } else {
-            // Ex: [b]...[/b]
             const openTag = `[${tagOrColor}]`;
             replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
             cursorOffset = openTag.length;
@@ -630,9 +627,6 @@ export function afterRender(): void {
 
         messageInput.value = messageInput.value.substring(0, start) + replacement + messageInput.value.substring(end);
 
-        // LOGIQUE CURSEUR :
-        // Si on a sélectionné du texte, on met le curseur à la fin de tout le bloc
-        // Sinon (texte vide), on le met au milieu des balises
         const newCursorPos = selectedText.length > 0 
             ? start + replacement.length 
             : start + cursorOffset;
@@ -641,7 +635,62 @@ export function afterRender(): void {
         messageInput.focus();
     };
 
-    if (fontButton && fontDropdown) {
+    if (fontButton && fontDropdown && fontGrid) {
+        // remplissage de la grille
+        const generateFontGrid = () => {
+            fontGrid.innerHTML = ''; // on vide lke contenu
+
+            const colors = [
+                '#000000', // noir
+                '#F42F25', // rouge
+                '#F934FB', // rose
+                '#F76D2A', // orange
+                '#217F1C', // vert
+                '#3019F7', // bleu
+                '#F9CA37', // jaune
+                '#42FB37' // vert fluo
+            ];
+
+            colors.forEach(color => {
+                const colorButton = document.createElement('div');
+                colorButton.className = 'w-6 h-6 cursor-pointer border border-gray-300 hover:border-blue-500 hover:shadow-sm rounded-[2px]';
+                colorButton.style.backgroundColor = color;
+
+                colorButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    wrapSelection(color, true);
+                    fontDropdown.classList.add('hidden');
+                });
+
+                fontGrid.appendChild(colorButton);
+            });
+
+            // poiyur les styles de police
+            const styles = [
+                { tag: 'b', icon: 'font_bold.png', title: 'Bold' },
+                { tag: 'i', icon: 'font_italic.png', title: 'Italic' },
+                { tag: 'u', icon: 'font_underline.png', title: 'Underline' },
+                { tag: 's', icon: 'font_strikethrough.png', title: 'Strikethrough' }
+            ];
+
+            styles.forEach(styles => {
+                const styleButton = document.createElement('div');
+                styleButton.className = 'w-6 h-6 flex justify-center items-center cursor-pointer border border-transparent hover:bg-blue-50 hover:border-blue-200 rounded-[2px] transition-all';
+
+                styleButton.innerHTML = `<img src="/assets/chat/${styles.icon}" alt="${styles.title}" class="w-[14px] h-[14px]">`;
+
+                styleButton.addEventListener('click', (e) => { // pourquoi e pour error ici et pas event?
+                    e.stopPropagation();
+                    wrapSelection(styles.tag, false);
+                    fontDropdown.classList.add('hidden');
+                });
+
+                fontGrid.appendChild(styleButton);
+            });
+        };
+
+        generateFontGrid();
+
         // Ouvrir/Fermer le menu
         fontButton.addEventListener('click', (e) => {
             e.stopPropagation();
