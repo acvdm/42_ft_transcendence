@@ -32,10 +32,10 @@ export function render(): string {
 
                     <!-- Partie live chat -->
 
-                    <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-col bg-cover bg-center transition-all duration-300">
-                      <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10">
+                    <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-col bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
+                      <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
                           <h1 class="text-lg font-bold mb-2">Live chat </h1>
-                          <div id="chat-messages" class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
+                          <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
   
                           <!-- Input element  -->
   
@@ -278,6 +278,14 @@ export function afterRender(): void {
         return;
     }
 
+    const scrollToBottom = () => {
+        if(messagesContainer) {
+            // Un petit délai pour laisser le navigateur calculer la hauteur
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 50);
+        }
+    };
 
     // ---------------------------------------------------
     // ----            LOGIQUE D'ANIMATION            ----
@@ -364,7 +372,8 @@ export function afterRender(): void {
         msgElement.innerHTML = htmlContent;
         messagesContainer.appendChild(msgElement);
         // rajouter un scroll automatique vers le bas
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        scrollToBottom();
+        setTimeout(scrollToBottom, 200);
     }
 
 
@@ -728,7 +737,8 @@ export function afterRender(): void {
         msgElement.innerHTML = `<strong>${author}:\n</strong> ${contentEmoticons}`;
         messagesContainer.appendChild(msgElement);
         // rajouter un scroll automatique vers le bas
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        scrollToBottom();
+        setTimeout(scrollToBottom, 200);
     };
 
     // variable pour stocket l'id du time secousse
