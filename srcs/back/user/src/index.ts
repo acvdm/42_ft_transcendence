@@ -35,6 +35,7 @@ fastify.post('/register', async (request, reply) => {
       email: string;
       password: string; 
       avatar?:string;
+      status: string;
     };
 
   let user_id = null; 
@@ -42,7 +43,6 @@ fastify.post('/register', async (request, reply) => {
   try {
     // 1. Créer le user localement dans user.sqlite
     user_id = await createUserInDB(db, body)
-    console.log(`user_id ligne 39: ${user_id}`);
 
     if (!user_id)
       return reply.status(500).send('Error during profile creation');
