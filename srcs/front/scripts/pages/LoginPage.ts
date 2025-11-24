@@ -72,7 +72,7 @@ function handleRegister() {
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
 		const status = (document.getElementById('status-input') as HTMLSelectElement).value;
 
-		if (!alias || !password || !email) {
+		if (!alias || !password || !email || !status) {
 			alert("Please fill input");
 			return ;
 		}
