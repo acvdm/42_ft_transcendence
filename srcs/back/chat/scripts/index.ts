@@ -1,5 +1,17 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
+import { initDatabase } from './database'
+import { Database } from 'sqlite';
 import { Server } from 'socket.io';
+
+// Creation of Fastify server
+const fastify = Fastify({ logger: true });
+
+let db: Database;
+
+async function main() {
+  db = await initDatabase();
+  console.log('chat database initialised');
+}
 
 
 const fastify = Fastify({ logger: true });
@@ -67,4 +79,8 @@ const start = async () => {
   }
 };
 
-start();
+// On initialise la DB puis on démarre le serveur
+main().then(start).catch(err => {
+  console.error("Startup error:", err);
+  process.exit(1);
+});

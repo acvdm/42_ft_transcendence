@@ -1,8 +1,18 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import { Database } from 'sqlite';
+import { initDatabase } from './database';
 
-const fastify = Fastify({
-  logger: true
-});
+const fastify = Fastify({ logger: true });
+
+let db: Database;
+
+async function main() {
+  db = await initDatabase();
+  console.log('game database initialised');
+}
+
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get
@@ -23,4 +33,8 @@ const start = async () => {
   }
 };
 
-start();
+// On initialise la DB puis on démarre le serveur
+main().then(start).catch(err => {
+  console.error("Startup error:", err);
+  process.exit(1);
+});

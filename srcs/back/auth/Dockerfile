@@ -4,6 +4,9 @@
         
 FROM node:20-alpine AS build
 
+#-----------------------INSTALL BUILD DEPENDENCIES FOR ARGON2
+RUN apk add --no-cache python3 make g++
+
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/auth
 
@@ -25,6 +28,10 @@ RUN npm run build
 
 FROM node:20-alpine
 
+
+#-----------------------INSTALL RUNTIME DEPENDENCIES FOR ARGON2
+RUN apk add --no-cache libstdc++
+
 WORKDIR /app/auth
 
 #-----------------------COPY NECESSARY FILES FROM PREVIOUS STEP
@@ -33,10 +40,11 @@ COPY --from=build /app/auth/node_modules ./node_modules
 COPY --from=build /app/auth/dist ./dist
 
 #-----------------------CREATE A DIRECTORY FOR PERSISTENCE
-RUN mkdir -p /app/auth/data
+RUN mkdir -p /app/data
 
-#-----------------------DEFINE AN ENV VAR FOR LOCAL STORAGE
-ENV DATABASE_URL="file:/app/auth/data/auth.sqlite"
+# #-----------------------ENV POINTING TO SHARED DB
+# ENV DATABASE_URL="/app/data/auth.sqlite"
+# plus besoin car mis dans le docker-compose + à mettre dans le index.ts
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3001

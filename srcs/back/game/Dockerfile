@@ -33,10 +33,10 @@ COPY --from=build /app/game/node_modules ./node_modules
 COPY --from=build /app/game/dist ./dist
 
 #-----------------------CREATE A DIRECTORY FOR PERSISTENCE
-RUN mkdir -p /app/game/data
+RUN mkdir -p /app/data
 
-#-----------------------DEFINE AN ENV VAR FOR LOCAL STORAGE
-ENV DATABASE_URL="file:/app/game/data/game.sqlite"
+#-----------------------ENV POINTING TO SHARED DB
+# ENV DATABASE_URL="file:/app/data/database.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3003
