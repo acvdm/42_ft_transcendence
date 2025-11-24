@@ -17,7 +17,7 @@ export async function initDatabase(): Promise<Database> {
         alias TEXT UNIQUE NOT NULL,
         avatar_url TEXT,
         bio TEXT,
-        is_online INTEGER DEFAULT 0
+        status TEXT DEFAULT 'Available'
         ) 
     `);
     console.log('USERS table created');

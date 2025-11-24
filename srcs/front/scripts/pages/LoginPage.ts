@@ -52,14 +52,21 @@ export function LoginPage(): string {
 
 
 function handleLogin() {
-	const button = document.getElementById('login-button');
+	const button = document.getElementById('login-button'); // va chercher un element login-button
 
-	if (!button) {
-		console.error("Can't find login button in DOM");
-		return;
-	}
+	button?.addEventListener('click', () => { // ?. est un optionnal chaining, si button est null, on appelle pas addeventlisteneer, equivalent de (if !)
+		const email = (document.getElementById('email-input') as HTMLInputElement).value; // asHTML input = assertion de type -> on previent le compilateur que email est un input et .value = propriété de l'evenemnet input
+		const password = (document.getElementById('password-input') as HTMLInputElement).value;
+	});
+}
 
-	button.addEventListener('click', async () => {
+function handleRegister() {
+	const button = document.getElementById('register-button');
+
+	if (!button)
+		return ;
+
+	button?.addEventListener('click', async () => {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 
@@ -78,6 +85,7 @@ function handleLogin() {
                 body: JSON.stringify({ email, password })
             });
 
+			console.log("body envoyé au BACK");
             const data = await response.json();
 
             if (response.ok) {
@@ -93,8 +101,9 @@ function handleLogin() {
                 // window.history.pushState({}, '', '/');
                 // handleLocationChange(); 
             } else {
-                console.error("Erreur login :", data.error);
-                alert("Erreur: " + data.error);
+                console.error("Erreur inscription :", data);
+				console.log("Keys in data:", Object.keys(data)); 
+                alert("Error registration: " + data.errorMessage);
             }
         } catch (error) {
             console.error("Erreur réseau :", error);

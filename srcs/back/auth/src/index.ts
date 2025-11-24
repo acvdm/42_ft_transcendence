@@ -51,7 +51,10 @@ fastify.post('/register', async (request, reply) => {
   catch (err: any) 
   {
     console.error("❌ ERREUR AUTH REGISTER:", err);
-    return reply.status(400).send({ error: err.message });
+    return reply.status(400).send({ 
+      error: 'Authentication failed',
+      message: err instanceof Error ? err.message : 'Unknown error',
+    });
   }
 });
 

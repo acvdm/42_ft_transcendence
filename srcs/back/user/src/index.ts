@@ -35,6 +35,7 @@ fastify.post('/register', async (request, reply) => {
       email: string;
       password: string; 
       avatar?:string;
+      status: string
     };
 
   let user_id = null; 
@@ -42,7 +43,6 @@ fastify.post('/register', async (request, reply) => {
   try {
     // 1. Créer le user localement dans user.sqlite
     user_id = await createUserInDB(db, body)
-    console.log(`user_id ligne 39: ${user_id}`);
 
     if (!user_id)
       return reply.status(500).send('Error during profile creation');
@@ -64,18 +64,32 @@ fastify.post('/register', async (request, reply) => {
     return reply.status(201).send(authResponse.data);
 
   } catch (err: any) {
-    console.error("Error during registration: ", err.message);
+    console.error("Error during registration: ", err);
 
-    console.log(`Ligne 62`);
-    console.log(`user_id ligne 63: ${user_id}`);
+    let errorMessage = 'Undefined error';
+    // let statusCode = 400;
+
+    // Cas 1: Erreur venant d'Axios (le service auth a répondu une erreur)
+    if (axios.isAxiosError(err) && err.response?.data) {
+      const authError = err.response.data;
+      errorMessage = authError.message || authError.error || errorMessage;
+      console.error("Auth service error: ", authError);
+    } 
+    // Cas 2: Erreur locale 
+    else if (err instanceof Error) {
+      errorMessage = err.message;
+    }
+
+    console.error("Final error message: ", errorMessage);
+
     // ROLLBACK
     if (user_id) {
       console.log(`Rollback: delele orphan ID ${user_id}`);
       await db.run(`DELETE FROM USERS WHERE id = ?`, [user_id]);
       console.log('User ID ${user_id} successfully deleted');
     }
-
-    reply.status(400).send({ error: err.message });
+    console.log(errorMessage);
+    reply.status(400).send({ errorMessage });
   }
 });
 
