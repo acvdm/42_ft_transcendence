@@ -75,7 +75,7 @@ function handleRegister() {
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
 		const status = (document.getElementById('status-input') as HTMLSelectElement).value;
-		console.log("Error ligne 74");
+
 		if (!alias || !password || !email || !status) {
 			alert("Please fill input");
 			return ;
