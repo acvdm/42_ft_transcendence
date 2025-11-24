@@ -1,0 +1,87 @@
+// on va exportrter une fonction qui renvoie du html 
+export function ProfilPage(): string {
+	return `
+
+<!-- Main content -->
+  <div class="flex flex-col items-center py-8">
+
+    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
+
+      <!-- Left: My Profile -->
+      <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">
+        <h1 class="text-lg font-normal mb-4">My Profile</h1>
+
+        <!-- Profile picture -->
+        <div class="relative w-[170px] h-[170px] mb-4">
+          <img class="absolute inset-0 w-full h-full object-cover"
+            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png" alt="profile frame">
+          <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+            src="https://wlm.vercel.app/assets/usertiles/default.png" alt="user photo">
+        </div>
+
+        <!-- Profile info -->
+        <div class="text-sm text-left w-full leading-6">
+          <p><strong>FAUSToche01</strong></p>
+          <p>c00uköü les kop1</p>
+          <p>Status: <span class="text-red-600">dcdscsd</span></p>
+          <p>Email: fsdsdsfsd</p>
+          <p>Password: dfsdcsd</p>
+          <p>Background: scscsd</p>
+        </div>
+      </div>
+
+      <!-- Right: Profile editor -->
+      <div class="flex flex-col justify-between flex-1">
+
+        <!-- Upper section -->
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="text-sm">Username:</label>
+            <input type="text" value="FAUSToche01"
+              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
+          </div>
+
+          <div>
+            <label class="text-sm">Choose your message:</label>
+            <input type="text" value="c00uköü les kop1"
+              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
+          </div>
+          <div>
+            <label class="text-sm">Status:</label>
+            <div class="flex items-center gap-2 mt-1">
+              <span class="text-gray-600 text-sm">Choose your status:</span>
+              <select
+                class="border border-gray-300 rounded-sm px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
+                <option>Available</option>
+                <option selected>Busy</option>
+                <option>Away</option>
+                <option>Appear offline</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="mt-8 border-t border-gray-300 pt-4">
+          <h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! ⚠️</h2>
+          <div class="flex items-center justify-start gap-6">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">Email</span>
+              <button
+                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                Change
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm">Password</span>
+              <button
+                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                Change
+              </button>
+            </div>
+          </div>
+        </div>
+
+    
+	`;
+}

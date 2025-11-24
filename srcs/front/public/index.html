@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>TRANSCENDENCE 🚧</title>
-	<link href="./dist/style.css" rel="stylesheet">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>tr4nsc3nd3nc3 🚧</title>
+		<link href="./dist/style.css" rel="stylesheet">
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+		</style>
 </head>
-<body class="bg-gray-900 text-white">
-	<div id="app">
-		<h1 class="text-3xl font-bold text-blue-500 p-4">
-			Work in progress
-		</h1>
-	</div>
-		<script src="./dist/main.js" defer></script>
+
+<body class="m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen">
+		
+		<nav    class="w-full h-[40px] bg-[linear-gradient(to_bottom,_#5DBFED_0%,_#3CB1E8_50%,_#3db6ec_50%,_#3db6ec_100%)] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-x1/30"
+						style="background-size: cover;">
+				<a href="/" class="p-2 text-white hover:underline">Home</a>
+				<a href="/profile" class="p-2 text-white hover:underline">Profile</a>
+				<a href="/stats" class="p-2 text-white hover:underline">Stats</a>
+				<a href="/friends" class="p-2 text-white hover:underline">Friends</a>
+				<a href="/logout" class="p-2 text-white hover:underline">Log out</a>
+		</nav>
+		
+
+    <div id="app"></div>
+    <script src="./dist/main.js" defer></script>
 </body>
-</html>	
+</html>

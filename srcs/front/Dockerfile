@@ -11,7 +11,7 @@ WORKDIR /app/front
 COPY ./package*.json ./
 
 #-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
-RUN npm install
+RUN npm ci
 
 #-----------------------COPY SOURCE CODE
 COPY . .
@@ -25,11 +25,11 @@ RUN npm run build
 
 FROM nginx:alpine-slim
 
-# #-----------------------REMOVE NGINX DEFAULT CONFIGURATION
-# RUN rm /etc/nginx/conf.d/default.conf
+#-----------------------REMOVE NGINX DEFAULT CONFIGURATION
+RUN rm /etc/nginx/conf.d/default.conf
 
 # #-----------------------REPLACE DEFAULT CONF
-# COPY ./conf/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 #-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
 # Copie le JS et le CSS compilés
@@ -37,6 +37,9 @@ COPY --from=build /app/front/dist /usr/share/nginx/html/dist
 
 # Copie la page HTML principale (qui est dans /public)
 COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
+
+# Copie les assets (images, etc.)
+COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 80
