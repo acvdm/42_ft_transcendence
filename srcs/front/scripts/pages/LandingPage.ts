@@ -3,7 +3,7 @@ import { RegisterPage } from "./RegisterPage";
 
 export function LandingPage(): string {
 	return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
@@ -37,19 +37,21 @@ export function initLandingPage() {
 	const registerButton = document.getElementById('register-button');
 	const guestButton = document.getElementById('guest-button');
 
+	const handleNavigation = (path: string) => {
+		window.history.pushState({}, '', path);
+		window.dispatchEvent(new PopStateEvent('popstate'));
+	};
 
 	loginButton?.addEventListener('click', () => {
-		navigateTo(LoginPage());
+		handleNavigation('/login');
 	});
 
 	registerButton?.addEventListener('click', () => {
-		navigateTo(RegisterPage());
+		handleNavigation('/register');
 	});
-}
-
-function navigateTo(pageContent: string) {
-	const app = document.getElementById('app');
-	if (app) {
-		app.innerHTML = pageContent;
-	}
+    
+    // Ajout de la navigation pour le bouton "Play as guest" vers la page home
+    guestButton?.addEventListener('click', () => {
+		handleNavigation('/home');
+	});
 }

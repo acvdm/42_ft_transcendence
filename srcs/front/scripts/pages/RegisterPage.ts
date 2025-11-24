@@ -1,7 +1,7 @@
 // on va exportrter une fonction qui renvoie du html 
 export function RegisterPage(): string {
 	return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -30,7 +30,7 @@ export function RegisterPage(): string {
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 
 			</div>
-			<!-- Bouton de connexion/Register/Guest -->
+			<!-- Bouton de register -->
 			<div class="flex flex-col gap-2 w-48">
 				<button id="register-button"class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
 			</div>
@@ -42,7 +42,13 @@ export function RegisterPage(): string {
 
 function handleRegister() {
 	const button = document.getElementById('register-button');
-	button?.addEventListener('click', async () => {
+
+	if (!button) {
+		console.error("Can't find register button in DOM");
+		return;
+	}
+
+	button.addEventListener('click', async () => {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
