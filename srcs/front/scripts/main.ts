@@ -1,8 +1,10 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { LoginPage, authEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
+import { LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
 import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
 import { ProfilPage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFound";
+import { LandingPage, initLandingPage } from "./pages/LandingPage";
+import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -20,6 +22,10 @@ interface Page {
 // on associe chaque route a l'affiche et a la fonction concernée pour faire fonctionner la page
 const routes: { [key: string]: Page } = {
 	'/': {
+		render: LandingPage,
+		afterRender: initLandingPage
+	},
+	'/home': {
 		render: HomePage,
 		afterRender: HomePageAfterRender
 	},
@@ -27,9 +33,13 @@ const routes: { [key: string]: Page } = {
 		render: ProfilPage,
 		afterRender: () => console.log('Profil page chargée -> modifications de la page de profil, photo etc')
 	},
-	'/logout': {
+	'/register': {
+		render: RegisterPage,
+		afterRender: registerEvents
+	},
+	'/login': {
 		render: LoginPage,
-		afterRender: authEvents
+		afterRender: loginEvents
 	},
 	'/404': {
 		render: NotFoundPage
