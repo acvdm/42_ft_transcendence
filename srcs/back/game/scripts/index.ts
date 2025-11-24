@@ -2,7 +2,7 @@ import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { Database } from 'sqlite';
-import { initDatabase } from './database';
+import { initDatabase } from './database.js';
 
 const fastify = Fastify({ logger: true });
 

@@ -5,9 +5,15 @@ import { Database } from 'sqlite';
 import axios from 'axios'; // envoyer des requêtes HTTP à un autre serveur (service auth)
 import https from 'https';
 import { createUserInDB } from './repositories/users.js';
+import fs from 'fs';
+
+const httpsOptions = {
+    key: fs.readFileSync('/app/server.key'),
+    cert: fs.readFileSync('/app/server.crt')
+}
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: true, https: httpsOptions });
 
 let db: Database;
 

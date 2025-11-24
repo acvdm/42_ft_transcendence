@@ -24,10 +24,10 @@ export function generate2FASecret(): string {
 
 // Module JWT
 export function generateAccessToken(user_id: number, credential_id: number): string {
-    return ('accessToken1');
+    return ('accessToken' + user_id);
 }
 
 // Module JWT
-export function generateRefreshToken(): string {
-    return ('refreshToken1');
+export function generateRefreshToken(user_id: number): string {
+    return ('refreshToken' + user_id);
  }

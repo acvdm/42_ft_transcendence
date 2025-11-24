@@ -1,10 +1,16 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
-import { initDatabase } from './database'
+import { initDatabase } from './database.js'
 import { Database } from 'sqlite';
 import { Server } from 'socket.io';
+import fs from 'fs';
+
+const httpsOptions = {
+    key: fs.readFileSync('/app/server.key'),
+    cert: fs.readFileSync('/app/server.crt')
+}
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ logger: true, https: httpsOptions });
 
 let db: Database;
 
@@ -12,9 +18,6 @@ async function main() {
   db = await initDatabase();
   console.log('chat database initialised');
 }
-
-
-const fastify = Fastify({ logger: true });
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get

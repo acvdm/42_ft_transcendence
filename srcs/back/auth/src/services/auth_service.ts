@@ -45,7 +45,7 @@ export async function registerUser(
 
     // 4. Génération token
     const access_token = generateAccessToken(user_id, credential_id);
-    const refresh_token = generateRefreshToken();
+    const refresh_token = generateRefreshToken(user_id);
     const expires_at = getExpirationDate(30);
 
     // 5. Insertion dans la DB tokens
@@ -81,7 +81,7 @@ export async function loginUser(
         throw new Error ('Invalid password');
 
     const access_token = generateAccessToken(user_id, credential_id);
-    const refresh_token = generateRefreshToken();
+    const refresh_token = generateRefreshToken(user_id);
     const expires_at = getExpirationDate(30);
 
     await tokenRepo.updateToken(db, credential_id, refresh_token, expires_at);

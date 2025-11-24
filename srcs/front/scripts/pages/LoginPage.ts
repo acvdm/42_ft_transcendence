@@ -17,6 +17,10 @@ export function LoginPage(): string {
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
 			<div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">
+				<!-- Username -->
+				<input type="alias" placeholder="faufaudu49" id="alias-input"
+					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+
 				<!-- Email -->
 				<input type="email" placeholder="Example555@hotmail.com" id="email-input"
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
@@ -30,7 +34,7 @@ export function LoginPage(): string {
 					<div class="flex items-center gap-1 mb-3">
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
-							<select class="bg-transparent focus:outline-none text-sm" id="status-input">
+							<select id="status-input class="bg-transparent focus:outline-none text-sm">
 								<option>Available</option>
 								<option>Busy</option>
 								<option>Away</option>
@@ -57,18 +61,47 @@ function handleLogin() {
 	button?.addEventListener('click', () => { // ?. est un optionnal chaining, si button est null, on appelle pas addeventlisteneer, equivalent de (if !)
 		const email = (document.getElementById('email-input') as HTMLInputElement).value; // asHTML input = assertion de type -> on previent le compilateur que email est un input et .value = propriété de l'evenemnet input
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
-
-		console.log("Tentative de connexion avec :", email, password);// on remplaceras ca par un fetch('/api/auth/login) etc
 	});
 }
 
 function handleRegister() {
 	const button = document.getElementById('register-button');
-	button?.addEventListener('click', () => {
+	button?.addEventListener('click', async () => {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
+		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
 
-		console.log("Tentative de création de compte avec : ", email, password);
+		if (!alias || !password || !email) {
+			alert("Please fill input");
+			return ;
+		}
+
+		try {
+            // On appelle la route définie dans la Gateway qui redirige vers le service USER
+            const response = await fetch('/api/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ alias, email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log("Inscription réussie :", data);
+				// -> renvoyer sur la page HOME
+                // Ici, vous pouvez sauvegarder le token reçu et rediriger
+                // localStorage.setItem('accessToken', data.access_token);
+                // window.history.pushState({}, '', '/');
+                // handleLocationChange(); 
+            } else {
+                console.error("Erreur inscription :", data.error);
+                alert("Erreur: " + data.error);
+            }
+        } catch (error) {
+            console.error("Erreur réseau :", error);
+        }
 	});
 }
 
