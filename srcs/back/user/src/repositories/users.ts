@@ -12,6 +12,16 @@ export async function createUserInDB (
     data: CreateUser
 ): Promise<number> {
     console.log(`data status = ${data.status}`);
+
+    const check_alias = await db.get(`
+        SELECT id FROM USERS WHERE alias = ?`,
+        [data.alias]
+    );
+    if (check_alias?.id)
+        throw new Error('Alias already taken, find another one');
+
+    console.log("coucou");
+    
     const result = await db.run(`
         INSERT INTO USERS (alias, avatar_url, status)
         VALUES (?, ?, ?)`,

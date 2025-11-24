@@ -102,8 +102,9 @@ function handleRegister() {
                 // window.history.pushState({}, '', '/');
                 // handleLocationChange(); 
             } else {
-                console.error("Erreur inscription :", data.error);
-                alert("Erreur: " + data.error);
+                console.error("Erreur inscription :", data);
+				console.log("Keys in data:", Object.keys(data)); 
+                alert("Error registration: " + data.errorMessage);
             }
         } catch (error) {
             console.error("Erreur réseau :", error);
