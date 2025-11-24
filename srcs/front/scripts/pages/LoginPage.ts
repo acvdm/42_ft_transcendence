@@ -70,6 +70,7 @@ function handleRegister() {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
+		const status = (document.getElementById('status-input') as HTMLSelectElement).value;
 
 		if (!alias || !password || !email) {
 			alert("Please fill input");
@@ -83,7 +84,7 @@ function handleRegister() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ alias, email, password })
+                body: JSON.stringify({ alias, email, password, status })
             });
 
             const data = await response.json();
