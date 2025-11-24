@@ -49,12 +49,56 @@ export function LoginPage(): string {
 	`;
 };
 
-function handleLogin() {
-	const button = document.getElementById('login-button'); // va chercher un element login-button
 
-	button?.addEventListener('click', () => { // ?. est un optionnal chaining, si button est null, on appelle pas addeventlisteneer, equivalent de (if !)
-		const email = (document.getElementById('email-input') as HTMLInputElement).value; // asHTML input = assertion de type -> on previent le compilateur que email est un input et .value = propriété de l'evenemnet input
+
+function handleLogin() {
+	const button = document.getElementById('login-button');
+
+	if (!button) {
+		console.error("Can't find login button in DOM");
+		return;
+	}
+
+	button.addEventListener('click', async () => {
+		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
+
+		if (!password || !email) {
+			alert("Please fill input");
+			return ;
+		}
+
+		try {
+            // On appelle la route définie dans la Gateway qui redirige vers le service USER
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                console.log("Log réussie :", data);
+				if (data.access_token) // on sauvegarde le token si necessaire
+					localStorage.setItem('accessToken', data.access_token);
+
+				window.history.pushState({}, '', '/home'); // redirection vers homepage
+				window.dispatchEvent(new PopStateEvent('popstate')); // on declenche l'event popstate pour forcer le rechargement
+				// -> renvoyer sur la page HOME
+                // Ici, vous pouvez sauvegarder le token reçu et rediriger
+                // localStorage.setItem('accessToken', data.access_token);
+                // window.history.pushState({}, '', '/');
+                // handleLocationChange(); 
+            } else {
+                console.error("Erreur login :", data.error);
+                alert("Erreur: " + data.error);
+            }
+        } catch (error) {
+            console.error("Erreur réseau :", error);
+        }
 	});
 }
 
