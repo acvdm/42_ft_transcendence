@@ -34,7 +34,7 @@ export function LoginPage(): string {
 					<div class="flex items-center gap-1 mb-3">
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
-							<select id="status-input class="bg-transparent focus:outline-none text-sm">
+							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
 								<option>Available</option>
 								<option>Busy</option>
 								<option>Away</option>
@@ -66,12 +66,16 @@ function handleLogin() {
 
 function handleRegister() {
 	const button = document.getElementById('register-button');
+
+	if (!button)
+		return ;
+
 	button?.addEventListener('click', async () => {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
 		const status = (document.getElementById('status-input') as HTMLSelectElement).value;
-
+		console.log("Error ligne 74");
 		if (!alias || !password || !email || !status) {
 			alert("Please fill input");
 			return ;
@@ -87,6 +91,7 @@ function handleRegister() {
                 body: JSON.stringify({ alias, email, password, status })
             });
 
+			console.log("body envoyé au BACK");
             const data = await response.json();
 
             if (response.ok) {

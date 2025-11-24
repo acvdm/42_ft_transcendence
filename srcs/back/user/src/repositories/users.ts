@@ -11,6 +11,7 @@ export async function createUserInDB (
     db: Database,
     data: CreateUser
 ): Promise<number> {
+    console.log(`data status = ${data.status}`);
     const result = await db.run(`
         INSERT INTO USERS (alias, avatar_url, status)
         VALUES (?, ?, ?)`,
