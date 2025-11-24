@@ -103,7 +103,7 @@ function handleRegister() {
             } else {
                 console.error("Erreur inscription :", data);
 				console.log("Keys in data:", Object.keys(data)); 
-                alert("Error registration: " + data.errorMessage);
+                alert("Error registration: " + data.errorMessage); // data.errormessage c;est kle message d'erreur que je veux afficher
             }
         } catch (error) {
             console.error("Erreur réseau :", error);
