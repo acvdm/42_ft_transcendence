@@ -21,11 +21,10 @@ RUN npm run build
 
 #AJOUT DE TSX WATCH
 # Installation, initialisation et compilation du css avec tailwind
-RUN cd www && npx tailwindcss -i ./css/style.css -o ./css/output.css --minify
+RUN npx tailwindcss -i ./styles/input.css -o ./dist/style.css --minify
 
 # Vérification que output.css a bien été créé
-RUN test -f /app/www/css/output.css || (echo "ERROR: output.css not generated!" && exit 1)
-
+RUN test -f ./dist/style.css || (echo "ERROR: dist/style.css not generated!" && exit 1)
 # A SUPPRIMER | Seulement pour le dev
 RUN apk add --no-cache npm inotify-tools
 RUN npm install -g typescript nodemon tailwindcss@3.4.18
@@ -34,34 +33,44 @@ RUN npm install -g typescript nodemon tailwindcss@3.4.18
 
 # A SUPPRIMER ##################################################
 # Copie du script de demarage pour le hot reload
-COPY conf/start_debug.sh /etc/nginx/html/conf/start_debug.sh
-COPY conf/watch-content.sh /etc/nginx/html/conf/watch-content.sh
-RUN chmod +x /etc/nginx/html/conf/start_debug.sh /etc/nginx/html/conf/watch-content.sh
-# CMD pour le dev 
-CMD ["/etc/nginx/html/conf/start_debug.sh"]
-# A SUPPRIMER ##################################################
+# 1. On corrige la SOURCE (start_debug.sh est à la racine, watch-content.sh dans scripts/)
+# 2. On corrige la DESTINATION (vers /usr/share/... pour correspondre à votre nginx.conf)
 
+COPY start_debug.sh /usr/share/nginx/html/start_debug.sh
+COPY scripts/watch-content.sh /usr/share/nginx/html/watch-content.sh
+
+RUN chmod +x /usr/share/nginx/html/start_debug.sh /usr/share/nginx/html/watch-content.sh
+
+# CMD pour le dev 
+CMD ["/usr/share/nginx/html/start_debug.sh"]
+# A SUPPRIMER ##################################################
 #-------------------------------------
-# STEP 2: STATIC SERVER WITH NGINX
+# STEP 2: STATIC SERVER WITH NGINX (DEV VERSION)
 #-------------------------------------
 
 FROM nginx:alpine-slim
 
-#-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
-# Copie le JS et le CSS compilés
+# 1. Installer Node.js et les outils de surveillance DANS L'IMAGE FINALE
+RUN apk add --no-cache nodejs npm inotify-tools
+RUN npm install -g typescript nodemon tailwindcss@3.4.18
+
+# 2. Copier les fichiers compilés depuis le build
 COPY --from=build /app/front/dist /usr/share/nginx/html/dist
-
-# Copie la page HTML principale (qui est dans /public)
 COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
-
-# Copie les assets (images, etc.)
 COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
 
-# Copie la configuration NGINX pour remplacer celle par défaut
+# 3. Copier la config Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-#-----------------------EXPOSE INTERNAL PORT
+# 4. Copier vos scripts de dev (ATTENTION aux chemins ici)
+COPY start_debug.sh /usr/share/nginx/html/start_debug.sh
+COPY scripts/watch-content.sh /usr/share/nginx/html/watch-content.sh
+
+# 5. Rendre les scripts exécutables
+RUN chmod +x /usr/share/nginx/html/start_debug.sh /usr/share/nginx/html/watch-content.sh
+
+# 6. Exposer le port
 EXPOSE 80
 
-#-----------------------LAUNCH NGINX AS PID 1
-CMD ["nginx", "-g", "daemon off;"]
+# 7. LANCER VOTRE SCRIPT AU LIEU DE NGINX DIRECTEMENT
+CMD ["/usr/share/nginx/html/start_debug.sh"]
