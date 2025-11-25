@@ -1,7 +1,6 @@
 // on va exportrter une fonction qui renvoie du html 
 export function LoginPage(): string {
 	return `
-	<link rel="stylesheet" href="https://unpkg.com/7.css">
 	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
@@ -43,7 +42,7 @@ export function LoginPage(): string {
 			</div>
 			<!-- Bouton de connexion/Register/Guest -->
 			<div class="flex flex-col gap-2 w-48">
-				<button id="login-button">Login</button>
+				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 			</div>
 	</div>
 	</div>
