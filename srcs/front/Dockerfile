@@ -19,6 +19,8 @@ COPY . .
 #-----------------------BUILD STATIC FILES
 RUN npm run build
 
+#AJOUT DE TSX WATCH
+
 #-------------------------------------
 # STEP 2: STATIC SERVER WITH NGINX
 #-------------------------------------
