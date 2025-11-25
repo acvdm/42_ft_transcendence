@@ -89,11 +89,7 @@ function handleRegister() {
 
 				window.history.pushState({}, '', '/home'); // redirection vers homepage
 				window.dispatchEvent(new PopStateEvent('popstate')); // on declenche l'event popstate pour forcer le rechargement
-				// -> renvoyer sur la page HOME
-                // Ici, vous pouvez sauvegarder le token reçu et rediriger
-                // localStorage.setItem('accessToken', data.access_token);
-                // window.history.pushState({}, '', '/');
-                // handleLocationChange(); 
+
             } else {
                 console.error("Login error:", data);
 				if (errorElement) {

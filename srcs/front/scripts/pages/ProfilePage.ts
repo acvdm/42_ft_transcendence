@@ -51,7 +51,7 @@ export function ProfilPage(): string {
             <div class="flex items-center gap-2 mt-1">
               <span class="text-gray-600 text-sm">Choose your status:</span>
               <select
-                class="border border-gray-300 rounded-sm px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
+                class="bg-transparent rounded-sm px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
                 <option>Available</option>
                 <option selected>Busy</option>
                 <option>Away</option>
