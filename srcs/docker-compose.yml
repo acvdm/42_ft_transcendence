@@ -41,6 +41,14 @@ services:
         - gateway
       networks: 
         - transcendence
+      volumes:
+        - ./front/dist:/usr/share/nginx/html/dist
+        
+        # On remplace le fichier index.html pour pouvoir modifier le HTML
+        - ./front/public/index.html:/usr/share/nginx/html/index.html
+        
+        # Optionnel : Si vous ajoutez des images, on remplace aussi les assets
+        - ./front/public/assets:/usr/share/nginx/html/assets
 
     auth:
       container_name: auth
