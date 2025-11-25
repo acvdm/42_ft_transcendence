@@ -35,6 +35,9 @@ COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 # Copie les assets (images, etc.)
 COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
 
+# Copie la configuration NGINX pour remplacer celle par défaut
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 80
 

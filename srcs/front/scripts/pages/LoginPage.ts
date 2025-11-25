@@ -39,6 +39,9 @@ export function LoginPage(): string {
 						</div>
 					</div>
 				</div>
+				<div class="flex flex-col items-center justify-center">
+					<p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+				</div>
 			</div>
 			<!-- Bouton de connexion/Register/Guest -->
 			<div class="flex flex-col gap-2 w-48">
@@ -50,64 +53,57 @@ export function LoginPage(): string {
 };
 
 
-
 function handleLogin() {
-	const button = document.getElementById('login-button'); // va chercher un element login-button
+	const button = document.getElementById('login-button');
+	const errorElement = document.getElementById('error-message');
 
-	button?.addEventListener('click', () => { // ?. est un optionnal chaining, si button est null, on appelle pas addeventlisteneer, equivalent de (if !)
-		const email = (document.getElementById('email-input') as HTMLInputElement).value; // asHTML input = assertion de type -> on previent le compilateur que email est un input et .value = propriété de l'evenemnet input
-		const password = (document.getElementById('password-input') as HTMLInputElement).value;
-	});
-}
-
-function handleRegister() {
-	const button = document.getElementById('register-button');
-
-	if (!button)
-		return ;
-
-	button?.addEventListener('click', async () => {
+	button?.addEventListener('click', async () => { // equivalent de (if !)
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 
-		if (!password || !email) {
-			alert("Please fill input");
-			return ;
+		if (errorElement) {
+			errorElement.classList.add('hidden');
+			errorElement.textContent = '';
+		}
+
+		if (!email || !password) {
+			if (errorElement) {
+				errorElement.textContent = "Please fill all inputs";
+				errorElement.classList.remove('hidden');
+			}
+			return;
 		}
 
 		try {
-            // On appelle la route définie dans la Gateway qui redirige vers le service USER
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
+			const response = await fetch('/api/auth/login', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ email, password })
+			});
 
-			console.log("body envoyé au BACK");
-            const data = await response.json();
-
-            if (response.ok) {
-                console.log("Log réussie :", data);
-				if (data.access_token) // on sauvegarde le token si necessaire
+			const data = await response.json();
+			if (response.ok) {
+				console.log("Login success:", data);
+				if (data.access_token)
 					localStorage.setItem('accessToken', data.access_token);
-
-				window.history.pushState({}, '', '/home'); // redirection vers homepage
-				window.dispatchEvent(new PopStateEvent('popstate')); // on declenche l'event popstate pour forcer le rechargement
-				// -> renvoyer sur la page HOME
-                // Ici, vous pouvez sauvegarder le token reçu et rediriger
-                // localStorage.setItem('accessToken', data.access_token);
-                // window.history.pushState({}, '', '/');
-                // handleLocationChange(); 
-            } else {
-                console.error("Erreur inscription :", data);
-				console.log("Keys in data:", Object.keys(data)); 
-                alert("Error registration: " + data.errorMessage); // data.errormessage c;est kle message d'erreur que je veux afficher
-            }
-        } catch (error) {
-            console.error("Erreur réseau :", error);
-        }
+				window.history.pushState({}, '', '/home');
+				window.dispatchEvent(new PopStateEvent('popstate'));
+			} else {
+				console.error("Login error:", data);
+				if (errorElement) {
+					errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+					errorElement.classList.remove('hidden');
+				}
+			}
+		} catch (error) {
+			console.error("Network error:", error);
+			if (errorElement) {
+				errorElement.textContent = "Network error, please try again";
+				errorElement.classList.remove('hidden');
+			}
+		}
 	});
 }
 

@@ -46,7 +46,6 @@ export function initLandingPage() {
 		handleNavigation('/register');
 	});
     
-    // Ajout de la navigation pour le bouton "Play as guest" vers la page home
     guestButton?.addEventListener('click', () => {
 		handleNavigation('/home');
 	});
