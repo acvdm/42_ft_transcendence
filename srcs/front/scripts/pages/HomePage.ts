@@ -281,7 +281,8 @@ export function afterRender(): void {
     const wizzButton = document.getElementById('send-wizz');
     const wizzContainer = document.getElementById('wizz-container');
 
-    const wizzAuthor = "Faustoche"; // à remplacer par l'username de l;envoyeur
+    //const wizzAuthor = "Faustoche"; // à remplacer par l'username de l;envoyeur
+    const currentUsername = localStorage.getItem('username');
 
     if (!messagesContainer || !messageInput) {
         console.log("Can't find chat elements");
@@ -337,7 +338,7 @@ export function afterRender(): void {
                     // envoi de l'animation via la sockettt
                     socket.emit("sendAnimation", {
                         animationKey: key,
-                        author: "Faustoche" // a remplacer par l'username de l'envoyeur 
+                        author: currentUsername // a remplacer par l'username de l'envoyeur 
                     });
                     animationDropdown.classList.add('hidden');
                 });
@@ -738,7 +739,8 @@ export function afterRender(): void {
     // ---------------------------------------------------
 
 
-    const addMessage = (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
+
+    const addMessage = async (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
         const msgElement = document.createElement('p');
         msgElement.className = "mb-1";
 
@@ -792,7 +794,7 @@ export function afterRender(): void {
     if (wizzButton) {
         wizzButton.addEventListener('click', () => {
             // on envois l'element snedWizz au serveur
-            socket.emit("sendWizz", { author: wizzAuthor});
+            socket.emit("sendWizz", { author: currentUsername});
             // secousse pour l'expediteur et le receveur
             if (wizzContainer) {
                 shakeElement(wizzContainer, 500);
@@ -836,7 +838,7 @@ export function afterRender(): void {
             const message = messageInput.value;
 
             // on envois le message au serveur avec emit
-            socket.emit("chatMessage", { message: message, author: "Faustoche"}); // a changer pour l'username du joueur
+            socket.emit("chatMessage", { message: message, author: currentUsername}); // a changer pour l'username du joueur
             messageInput.value = ''; // on vide l'input
         }
     });

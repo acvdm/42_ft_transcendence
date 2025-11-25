@@ -90,6 +90,9 @@ function handleLogin() {
 				if (data.access_token)
 					localStorage.setItem('accessToken', data.access_token);
 
+				if (data.user_id) {
+					localStorage.setItem('userId', data.user_id.toString());
+				}
 				if (status && data.user_id) {
 					await fetch(`/api/user/${data.user_id}/status`, {
 						method: 'PATCH',

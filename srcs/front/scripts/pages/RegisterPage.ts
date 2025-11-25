@@ -83,6 +83,11 @@ function handleRegister() {
 
             if (response.ok) {
                 console.log("Inscription réussie :", data);
+
+				if (data.user_id) {
+					localStorage.setItem('userId', data.user_id.toString());
+				}
+				
 				if (data.access_token) // on sauvegarde le token si necessaire
 					localStorage.setItem('accessToken', data.access_token);
 
