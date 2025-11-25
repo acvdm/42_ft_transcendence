@@ -28,7 +28,9 @@ export function RegisterPage(): string {
 				<!-- Mot de passe -->
 				<input type="password" placeholder="Enter your password" id="password-input"
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
-
+				<div class="flex flex-col items-center justify-center">
+					<p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+				</div>
 			</div>
 			<!-- Bouton de register -->
 			<div class="flex flex-col gap-2 w-48">
@@ -42,6 +44,7 @@ export function RegisterPage(): string {
 
 function handleRegister() {
 	const button = document.getElementById('register-button');
+	const errorElement = document.getElementById('error-message');
 
 	if (!button) {
 		console.error("Can't find register button in DOM");
@@ -52,9 +55,18 @@ function handleRegister() {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
+		//const status = "available";
+
+		if (errorElement) {
+			errorElement.classList.add('hidden');
+			errorElement.textContent = '';
+		}
 
 		if (!alias || !password || !email) {
-			alert("Please fill input");
+			if (errorElement) {
+				errorElement.textContent = "Please fill all inputs";
+				errorElement.classList.remove('hidden');
+			}
 			return ;
 		}
 
@@ -83,15 +95,21 @@ function handleRegister() {
                 // window.history.pushState({}, '', '/');
                 // handleLocationChange(); 
             } else {
-                console.error("Erreur inscription :", data.error);
-                alert("Erreur: " + data.error);
+                console.error("Login error:", data);
+				if (errorElement) {
+					errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+					errorElement.classList.remove('hidden');
+				}
             }
         } catch (error) {
-            console.error("Erreur réseau :", error);
+           console.error("Network error:", error);
+			if (errorElement) {
+				errorElement.textContent = "Network error, please try again";
+				errorElement.classList.remove('hidden');
+			}
         }
 	});
 }
-
 
 export function registerEvents() {
 	handleRegister();

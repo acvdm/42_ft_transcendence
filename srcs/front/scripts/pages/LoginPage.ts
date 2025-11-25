@@ -60,6 +60,7 @@ function handleLogin() {
 	button?.addEventListener('click', async () => { // equivalent de (if !)
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
+		const status = (document.getElementById('status-input') as HTMLSelectElement).value;
 
 		if (errorElement) {
 			errorElement.classList.add('hidden');
@@ -80,7 +81,7 @@ function handleLogin() {
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ email, password })
+				body: JSON.stringify({ email, password, status })
 			});
 
 			const data = await response.json();
