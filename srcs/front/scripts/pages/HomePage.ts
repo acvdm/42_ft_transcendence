@@ -824,6 +824,7 @@ export function afterRender(): void {
             // le backend va renvoyer data, 
             // il devrait plus renvoyer message: "" author: ""
         addMessage(data.message || data, data.author || "Anonyme");
+        console.log("Username:", data.alias);
     });
 
     socket.on("disconnected", () => {
