@@ -55,7 +55,6 @@ function handleRegister() {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
-		//const status = "available";
 
 		if (errorElement) {
 			errorElement.classList.add('hidden');
