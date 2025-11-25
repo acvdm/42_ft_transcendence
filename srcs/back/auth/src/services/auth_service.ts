@@ -77,7 +77,8 @@ export async function loginUser(
     if (!credential_id)
         throw new Error('Unknown email');
 
-    if (!authenticatePassword(db, credential_id, password))
+    const isPasswordValid = await authenticatePassword(db, credential_id, password);
+    if (!isPasswordValid)
         throw new Error ('Invalid password');
 
     const access_token = generateAccessToken(user_id, credential_id);
