@@ -47,30 +47,24 @@ CMD ["/usr/share/nginx/html/start_debug.sh"]
 #-------------------------------------
 # STEP 2: STATIC SERVER WITH NGINX (DEV VERSION)
 #-------------------------------------
-
 FROM nginx:alpine-slim
 
-# 1. Installer Node.js et les outils de surveillance DANS L'IMAGE FINALE
+# 1. On installe esbuild
 RUN apk add --no-cache nodejs npm inotify-tools
-RUN npm install -g typescript nodemon tailwindcss@3.4.18
+RUN npm install -g typescript nodemon tailwindcss@3.4.18 esbuild
 
-# 2. Copier les fichiers compilés depuis le build
+# 2. On copie les fichiers compilés
 COPY --from=build /app/front/dist /usr/share/nginx/html/dist
 COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
 
-# 3. Copier la config Nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# 3. IMPORTANT : On copie les node_modules pour qu'esbuild trouve 'socket.io-client'
+COPY --from=build /app/front/node_modules /usr/share/nginx/html/node_modules
 
-# 4. Copier vos scripts de dev (ATTENTION aux chemins ici)
+# ... (reste inchangé: COPY nginx.conf, COPY scripts, etc.)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY start_debug.sh /usr/share/nginx/html/start_debug.sh
 COPY scripts/watch-content.sh /usr/share/nginx/html/watch-content.sh
-
-# 5. Rendre les scripts exécutables
 RUN chmod +x /usr/share/nginx/html/start_debug.sh /usr/share/nginx/html/watch-content.sh
-
-# 6. Exposer le port
 EXPOSE 80
-
-# 7. LANCER VOTRE SCRIPT AU LIEU DE NGINX DIRECTEMENT
 CMD ["/usr/share/nginx/html/start_debug.sh"]
