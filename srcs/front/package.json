@@ -4,10 +4,10 @@
 	"description": "Front part of the website",
 	"private": "true",
 	"scripts": {
-		"build": "tsc",
-		"watch": "tsc --watch",
-		"build:css": "tailwindcss -i ./css/style.css -o ./css/output.css --minify",
-		"watch:css": "tailwindcss -i ./css/style.css -o ./css/output.css --watch"
+		"build": "tsc && tailwindcss -i ./styles/input.css -o ./dist/style.css --minify",
+		"watch": "tsc --watch & tailwindcss -i ./styles/input.css -o ./dist/style.css --watch",
+		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --minify",
+		"watch:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --watch"
 	},
 	"devDependencies": {
 		"@types/node": "24.10.0",
