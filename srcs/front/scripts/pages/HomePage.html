@@ -27,7 +27,15 @@
                 <!-- Partie live chat -->
 
                 <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap-4 bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
-       
+                  
+                  <!-- Image à gauche -->
+                  <div class="relative w-[110px] h-[110px] flex-shrink-0">
+                      <!-- le cadre -->
+                      <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                      <!-- l'image -->
+                      <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
+                  </div>
+                  
                   <!-- Live chat à droite -->
                   <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-4 -mr-4">
                       <h1 class="text-lg font-bold mb-2">Live chat </h1>

@@ -9,15 +9,15 @@
   // scripts/pages/LoginPage.ts
   function LoginPage() {
     return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/frames/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/frames/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign in to Transcendence
@@ -34,9 +34,9 @@
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 
 				<!-- Status -> disponible, busy, not displayed -->
-				<div class="flex flex-col items-center justify-between mt-3 text-sm">
-					<div class="flex items-center gap-4 mb-3">
-						<span> Sign in as:    </span>
+				<div class="flex items-center justify-between mb-3 text-sm">
+					<div class="flex items-center gap-1 mb-3">
+						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
 								<option value="Available">Available</option>
@@ -91,18 +91,6 @@
             localStorage.setItem("accessToken", data.access_token);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
-            console.log("User id: ", data.user_id);
-            try {
-              const userRes = await fetch(`/api/user/${data.user_id}`);
-              if (userRes.ok) {
-                const userData = await userRes.json();
-                if (userData.alias) {
-                  localStorage.setItem("username", userData.alias);
-                }
-              }
-            } catch (err) {
-              console.error("Impossible de r\xE9cup\xE9rer le profil utilisateur", err);
-            }
           }
           if (status && data.user_id) {
             await fetch(`/api/user/${data.user_id}/status`, {
@@ -3524,7 +3512,15 @@
                 <!-- Partie live chat -->
 
                 <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap-4 bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
-       
+                  
+                  <!-- Image \xE0 gauche -->
+                  <div class="relative w-[110px] h-[110px] flex-shrink-0">
+                      <!-- le cadre -->
+                      <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                      <!-- l'image -->
+                      <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
+                  </div>
+                  
                   <!-- Live chat \xE0 droite -->
                   <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-4 -mr-4">
                       <h1 class="text-lg font-bold mb-2">Live chat </h1>
@@ -4330,7 +4326,6 @@
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
           }
-          localStorage.setItem("username", alias);
           if (data.access_token)
             localStorage.setItem("accessToken", data.access_token);
           window.history.pushState({}, "", "/home");

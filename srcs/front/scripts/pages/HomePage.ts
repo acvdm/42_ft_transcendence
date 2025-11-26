@@ -1,12 +1,10 @@
 import { io, Socket } from "socket.io-client";
-
 import htmlContent from "./HomePage.html";
 
 // on va exportrter une fonction qui renvoie du html 
 export function render(): string {
     return htmlContent;
 };
-
 export function afterRender(): void {
 
     let globalPath = "/assets/emoticons/";
