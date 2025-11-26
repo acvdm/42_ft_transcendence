@@ -41,16 +41,6 @@ services:
         - gateway
       networks: 
         - transcendence
-      volumes:
-        - ./front/dist:/usr/share/nginx/html/dist
-        - ./front/public/index.html:/usr/share/nginx/html/index.html
-        - ./front/public/assets:/usr/share/nginx/html/assets
-        
-        # AJOUTEZ CES LIGNES POUR LE DEVELOPPEMENT :
-        - ./front/scripts:/usr/share/nginx/html/scripts
-        - ./front/styles:/usr/share/nginx/html/styles  # ou /styles selon votre structure
-        - ./front/tsconfig.json:/usr/share/nginx/html/tsconfig.json
-        - ./front/tailwind.config.js:/usr/share/nginx/html/tailwind.config.js
 
     auth:
       container_name: auth
