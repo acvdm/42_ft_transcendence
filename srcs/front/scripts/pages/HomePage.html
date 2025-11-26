@@ -8,37 +8,31 @@
 
         <div class="flex flex-row min-w-[1000px] h-full gap-4">
 
-            <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
-                <h1 class="text-lg font-semibold"> Pong 👾</h1>
+            <div class="w-[1000px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
+                <h1 class="text-lg font-semibold"> Wanna play? 👾</h1>
+				<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
+				<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
+				<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
             </div>
 
-            <div class="flex flex-col gap-4 w-[600px] h-full">
-                
-                <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
-                    <p class="font-semibold mb-2"> Game info</p>
-                    <div class="relative w-[50px] h-[50px] mb-4">
-                        <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
-                    </div>
-                    <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
-                </div>
-
+            <div class="flex flex-row gap-4 w-[600px] h-full">
 
                 <!-- Partie live chat -->
 
-                <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap-4 bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
+                <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap- bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
                   
-                  <!-- Image à gauche -->
-                  <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                      <!-- le cadre -->
-                      <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                      <!-- l'image -->
-                      <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
-                  </div>
-                  
+					<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-5 -mr-4">
+					</div>
                   <!-- Live chat à droite -->
-                  <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-4 -mr-4">
-                      <h1 class="text-lg font-bold mb-2">Live chat </h1>
+                  <div id="room-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-5 -mr-4">
+					<!-- Image à gauche -->
+					<div class="relative w-[110px] h-[110px] flex-shrink-0">
+						<!-- le cadre -->
+						<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
+						<!-- l'image -->
+						<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
+					</div>
+
                       <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
 
                       <!-- Input element  -->
