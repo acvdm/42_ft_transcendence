@@ -87,8 +87,6 @@ function handleRegister() {
 				if (data.user_id) {
 					localStorage.setItem('userId', data.user_id.toString());
 				}
-
-				localStorage.setItem('username', alias);
 				
 				if (data.access_token) // on sauvegarde le token si necessaire
 					localStorage.setItem('accessToken', data.access_token);

@@ -4,9 +4,8 @@
 	"description": "Front part of the website",
 	"private": "true",
 	"scripts": {
-<<<<<<< HEAD
-		"build": "tsc && tailwindcss -i ./styles/input.css -o ./dist/style.css --minify",
-		"watch": "tsc --watch & tailwindcss -i ./styles/input.css -o ./dist/style.css --watch",
+		"build": "tsc && tailwindcss -i ./styles/input.css -o ./dist/style.css --minify --loader:.html=text",
+		"watch": "tsc --watch & tailwindcss -i ./styles/input.css -o ./dist/style.css --watch --loader:.html=text",
 		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --minify",
 		"watch:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --watch"
 =======
