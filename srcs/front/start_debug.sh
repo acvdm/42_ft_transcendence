@@ -9,7 +9,7 @@ echo ""
 # 1. ESBuild watch (Pour le JS/TS)
 # Compile main.ts vers main.js et surveille les changements
 echo "⚡ Starting ESBuild watcher..."
-cd /usr/share/nginx/html && esbuild ./scripts/main.ts --bundle --outfile=./dist/main.js --watch=forever > /tmp/esbuild.log 2>&1 &
+cd /usr/share/nginx/html && esbuild ./scripts/main.ts --bundle --outfile=./dist/main.js --watch=forever --loader:.html=text > /tmp/esbuild.log 2>&1 &
 ESBUILD_PID=$!
 echo "   ✓ ESBuild watcher started (PID: $ESBUILD_PID)"
 

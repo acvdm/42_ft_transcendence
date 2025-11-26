@@ -3482,10 +3482,8 @@
     connect: lookup2
   });
 
-  // scripts/pages/HomePage.ts
-  function render() {
-    return `
-<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+  // scripts/pages/HomePage.html
+  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
     <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
          style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
@@ -3628,9 +3626,11 @@
             </div>
         </div>
     </div>
-</div>
+</div>`;
 
-    `;
+  // scripts/pages/HomePage.ts
+  function render() {
+    return HomePage_default;
   }
   function afterRender() {
     let globalPath = "/assets/emoticons/";
