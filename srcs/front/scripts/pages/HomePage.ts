@@ -830,13 +830,12 @@ export function afterRender(): void {
 
     /* Envoi des événements sockets */
 
-    // a partir du moiment ou on appuie sur entree-> envoi de l'input
+    // a partir du moment ou on appuie sur entree-> envoi de l'input
     messageInput.addEventListener('keyup', (event) => {
         if (event.key == 'Enter' && messageInput.value.trim() != '') {
-            const message = messageInput.value;
-
-            // on envois le message au serveur avec emit
-            socket.emit("chatMessage", { message: message, author: "Faustoche"}); // a changer pour l'username du joueur
+            const msg_content = messageInput.value;
+            // on envoie le message au serveur avec emit
+            socket.emit("chatMessage", { sender_id: 0, recv_id: 1, msg_content: msg_content}); // changer le sender_id et recv_id par les tokens
             messageInput.value = ''; // on vide l'input
         }
     });

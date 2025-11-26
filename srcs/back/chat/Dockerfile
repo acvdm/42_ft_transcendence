@@ -4,6 +4,8 @@
         
 FROM node:20-alpine AS build
 
+RUN apk add --no-cache sqlite
+
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/chat
 
@@ -24,6 +26,8 @@ RUN npm run build
 #----------------------------
 
 FROM node:20-alpine
+
+RUN apk add --no-cache sqlite
 
 WORKDIR /app/chat
 

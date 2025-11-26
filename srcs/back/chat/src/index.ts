@@ -3,6 +3,7 @@ import { initDatabase } from './database.js'
 import { Database } from 'sqlite';
 import { Server } from 'socket.io';
 import fs from 'fs';
+import * as messRepo from "./repositories/messages.js" 
 
 const httpsOptions = {
     key: fs.readFileSync('/app/server.key'),
@@ -10,7 +11,10 @@ const httpsOptions = {
 }
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true, https: httpsOptions });
+const fastify = Fastify({ 
+  logger: true, 
+  https: httpsOptions 
+});
 
 let db: Database;
 
@@ -29,7 +33,7 @@ fastify.get('/status', async () => {
 // on demarre le serveur
 const start = async () => {
   try {
-    // on attend que le serveur demaarre avant de continuer sur port 8080
+    // on attend que le serveur demarre avant de continuer sur port 8080
     await fastify.listen({ port: 3002, host: '0.0.0.0' });
     // on attache socket.io au serveur http de fastify
     const io = new Server(fastify.server, {
@@ -38,16 +42,66 @@ const start = async () => {
       }
     });
 
+    // Besoin d'un middleware d'authentification qui vérifie la validite du token et retrouver le user
+    // io.use: exécute ce code pour chaque nouvelle tentative de connexion
+    // io.use((socket, next) => {
+    //   const token = socket.handshake.auth.token; // ici on regarde si le front a envoyé un token
+
+    //   if (!token) {
+    //     return next(new Error('Authentication required'));
+    //   }
+
+    //   try {
+    //     const user = jwt.verify(token, process.env.JWT_SECRET) as any;
+    //     socket.data.user = {
+    //       id: user.id,
+    //       alias: user.alias
+    //     };
+    //     next();
+
+    //   } catch (err) {
+    //     next (new Error('Invalid token'));
+    //   }
+    // });
+
     // 3. gestion des évenements websockets
+    // Chaque fois qu'un client se connecte à notre serveur, cela crée une instance de socket
     io.on('connection', (socket) => {
       console.log('A user is connected: ' + socket.id);
 
       // quand le server recoit un message chat message de la part du front
-      socket.on('chatMessage', (data) => {
-        console.log('Message received: ', data);
+       socket.on('chatMessage', async (data: messRepo.createMessage) => {
+        try {
+          console.log("Data recue du front: ", data);
+          
+            const messageData: messRepo.createMessage = {
+              sender_id:  (socket.data.id || data.sender_id) ?? 5,
+              recv_id: data.recv_id ?? 6,
+              msg_content: data.msg_content ?? "bla"
+            }
+            
+            console.log(`Dans index.ts Message de ${messageData.sender_id}, pour ${messageData.recv_id}: ${messageData.msg_content}`);
 
-        // on le renvoie a tout le monde uy compris l'envoyeyr
-        io.emit('chatMessage', data);
+            const saveMessageID = await messRepo.saveMessageinDB(db, messageData);
+            if (!saveMessageID) {
+              console.error('Error: message could not be saved');
+              socket.emit('error', { message: "Failed to save message "});
+              return ;
+            }
+
+            console.log(`Message saved with ID: ${saveMessageID}`);
+          
+          // on le renvoie a tout le monde y compris l'envoyeur: a changer si on veut envoyer qu'aux recv_id
+          io.emit('chatMessage', {
+            saveMessageID,
+            messageData,
+            timestamp: new Date()
+          });
+
+        } catch (err: any) {
+          console.error("Critical error in chatMessage :", err);
+          socket.emit('error', { message: "Internal server error" });
+        }  
       });
 
       // envoi du wiiiiizz
@@ -76,6 +130,7 @@ const start = async () => {
     });
 
     console.log('Live Chat listening on port 3002');
+
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
