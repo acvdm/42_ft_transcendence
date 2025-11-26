@@ -1,15 +1,15 @@
 // on va exportrter une fonction qui renvoie du html 
 export function LoginPage(): string {
 	return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/frames/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/frames/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign in to Transcendence
