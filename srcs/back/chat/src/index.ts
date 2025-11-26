@@ -73,30 +73,18 @@ const start = async () => {
        socket.on('chatMessage', async (data: messRepo.createMessage) => {
         try {
           console.log("Data recue du front: ", data);
-          
-            const messageData: messRepo.createMessage = {
-              sender_id:  (socket.data.id || data.sender_id) ?? 5,
-              recv_id: data.recv_id ?? 6,
-              msg_content: data.msg_content ?? "bla"
-            }
-            
-            console.log(`Dans index.ts Message de ${messageData.sender_id}, pour ${messageData.recv_id}: ${messageData.msg_content}`);
 
-            const saveMessageID = await messRepo.saveMessageinDB(db, messageData);
-            if (!saveMessageID) {
-              console.error('Error: message could not be saved');
-              socket.emit('error', { message: "Failed to save message "});
-              return ;
-            }
-
-            console.log(`Message saved with ID: ${saveMessageID}`);
+          const saveMessageID = await messRepo.saveMessageinDB(db, data);
+          if (!saveMessageID) {
+            console.error('Error: message could not be saved');
+            socket.emit('error', { message: "Failed to save message "});
+            return ;
+          }
+          console.log(`Message saved with ID: ${saveMessageID}`);
           
-          // on le renvoie a tout le monde y compris l'envoyeur: a changer si on veut envoyer qu'aux recv_id
-          io.emit('chatMessage', {
-            saveMessageID,
-            messageData,
-            timestamp: new Date()
-          });
+          // on le renvoie a tout le monde y compris l'envoyeur: 
+          // a changer si on veut envoyer qu'aux recv_id
+          io.emit('chatMessage', data.msg_content);
 
         } catch (err: any) {
           console.error("Critical error in chatMessage :", err);
