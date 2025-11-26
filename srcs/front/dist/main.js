@@ -91,6 +91,20 @@
             localStorage.setItem("accessToken", data.access_token);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
+<<<<<<< HEAD
+=======
+            try {
+              const userRes = await fetch(`/api/user/${data.user_id}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+              }
+            } catch (err) {
+              console.error("Impossible de r\xE9cup\xE9rer le profil utilisateur", err);
+            }
+>>>>>>> frontend-pages
           }
           if (status && data.user_id) {
             await fetch(`/api/user/${data.user_id}/status`, {
@@ -4326,6 +4340,10 @@
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
           }
+<<<<<<< HEAD
+=======
+          localStorage.setItem("username", alias);
+>>>>>>> frontend-pages
           if (data.access_token)
             localStorage.setItem("accessToken", data.access_token);
           window.history.pushState({}, "", "/home");
@@ -4352,6 +4370,7 @@
 
   // scripts/main.ts
   var appElement = document.getElementById("app");
+  var publicRoutes = ["/", "/login", "/register", "/404"];
   var routes = {
     "/": {
       render: LandingPage,
@@ -4377,28 +4396,45 @@
       render: NotFoundPage
     }
   };
+  var handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    window.history.pushState({}, "", "/");
+    const popStateEvent = new PopStateEvent("popstate");
+    window.dispatchEvent(popStateEvent);
+  };
   var handleLocationChange = () => {
     if (!appElement) return;
-    const path = window.location.pathname;
+    let path = window.location.pathname;
+    const accessToken = localStorage.getItem("accessToken");
+    if (path === "/logout") {
+      handleLogout();
+      return;
+    }
+    if (accessToken && (path === "/" || path === "/login" || path === "/register")) {
+      window.history.pushState({}, "", "/home");
+      path = "/home";
+    }
+    if (!accessToken && !publicRoutes.includes(path)) {
+      window.history.pushState({}, "", "/");
+      path = "/";
+    }
     const page = routes[path] || routes["/404"];
     appElement.innerHTML = page.render();
     if (page.afterRender) {
       page.afterRender();
     }
   };
-  var navigate = (event) => {
-    event.preventDefault();
-    const target = event.target;
-    if (target.href == window.location.href)
-      return;
-    window.history.pushState({}, "", target.href);
-    handleLocationChange();
-  };
   window.addEventListener("click", (event) => {
     const target = event.target;
     const anchor = target.closest("a");
     if (anchor && anchor.href.startsWith(window.location.origin)) {
-      navigate(event);
+      event.preventDefault();
+      const href = anchor.href;
+      if (href === window.location.href) return;
+      window.history.pushState({}, "", href);
+      handleLocationChange();
     }
   });
   window.addEventListener("popstate", () => {
