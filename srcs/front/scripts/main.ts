@@ -1,10 +1,11 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
 import { LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
-import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
+import { afterRender as HomePageAfterRender } from "./pages/HomePage"
 import { ProfilPage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFound";
 import { LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
+import HomePageHTML from "./pages/HomePage.html";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -26,7 +27,7 @@ const routes: { [key: string]: Page } = {
 		afterRender: initLandingPage
 	},
 	'/home': {
-		render: HomePage,
+		render: () => HomePageHTML,
 		afterRender: HomePageAfterRender
 	},
 	'/profile': {

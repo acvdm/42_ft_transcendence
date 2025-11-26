@@ -89,13 +89,9 @@ function handleLogin() {
 				console.log("Login success:", data);
 				if (data.access_token)
 					localStorage.setItem('accessToken', data.access_token);
-
-				if (data.status)
-					localStorage.setItem('status', data.status);
-
 				if (data.user_id) {
 					localStorage.setItem('userId', data.user_id.toString());
-
+					console.log("User id: ", data.user_id);
 					try {
 						const userRes = await fetch(`/api/user/${data.user_id}`);
 						if (userRes.ok) {

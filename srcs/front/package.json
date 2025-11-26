@@ -5,9 +5,9 @@
 	"private": "true",
 	"scripts": {
 		"build": "npm run build:js && npm run build:css",
-		"build:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js",
+		"build:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --loader:.html=text",
 		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css",
-		"watch:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --watch",
+		"watch:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --watch --loader:.html=text",
 		"watch:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --watch",
 		"check-types": "tsc"
 	},
