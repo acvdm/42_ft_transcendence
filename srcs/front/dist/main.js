@@ -91,6 +91,17 @@
             localStorage.setItem("accessToken", data.access_token);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
+            try {
+              const userRes = await fetch(`/api/user/${data.user_id}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+              }
+            } catch (err) {
+              console.error("Impossible de r\xE9cup\xE9rer le profil utilisateur", err);
+            }
           }
           if (status && data.user_id) {
             await fetch(`/api/user/${data.user_id}/status`, {
@@ -4326,6 +4337,7 @@
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
           }
+          localStorage.setItem("username", alias);
           if (data.access_token)
             localStorage.setItem("accessToken", data.access_token);
           window.history.pushState({}, "", "/home");
@@ -4381,8 +4393,9 @@
   var handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userId");
+    localStorage.removeItem("username");
     window.history.pushState({}, "", "/");
-    const popStateEvent = new popStateEvent("popstate");
+    const popStateEvent = new PopStateEvent("popstate");
     window.dispatchEvent(popStateEvent);
   };
   var handleLocationChange = () => {

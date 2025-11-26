@@ -26,9 +26,9 @@ export function LoginPage(): string {
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 
 				<!-- Status -> disponible, busy, not displayed -->
-				<div class="flex items-center justify-between mb-3 text-sm">
-					<div class="flex items-center gap-1 mb-3">
-						<span> Sign in as:</span>
+				<div class="flex flex-col items-center justify-between mt-3 text-sm">
+					<div class="flex items-center gap-4 mb-3">
+						<span> Sign in as:    </span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
 								<option value="Available">Available</option>
@@ -89,6 +89,9 @@ function handleLogin() {
 				console.log("Login success:", data);
 				if (data.access_token)
 					localStorage.setItem('accessToken', data.access_token);
+
+				if (data.status)
+					localStorage.setItem('status', data.status);
 
 				if (data.user_id) {
 					localStorage.setItem('userId', data.user_id.toString());
