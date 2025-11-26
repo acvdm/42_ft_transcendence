@@ -9,15 +9,15 @@
   // scripts/pages/LoginPage.ts
   function LoginPage() {
     return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/frames/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/frames/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign in to Transcendence
@@ -34,9 +34,9 @@
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 
 				<!-- Status -> disponible, busy, not displayed -->
-				<div class="flex items-center justify-between mb-3 text-sm">
-					<div class="flex items-center gap-1 mb-3">
-						<span> Sign in as:</span>
+				<div class="flex flex-col items-center justify-between mt-3 text-sm">
+					<div class="flex items-center gap-4 mb-3">
+						<span> Sign in as:    </span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
 								<option value="Available">Available</option>
@@ -91,6 +91,7 @@
             localStorage.setItem("accessToken", data.access_token);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
+            console.log("User id: ", data.user_id);
             try {
               const userRes = await fetch(`/api/user/${data.user_id}`);
               if (userRes.ok) {
@@ -3493,10 +3494,8 @@
     connect: lookup2
   });
 
-  // scripts/pages/HomePage.ts
-  function render() {
-    return `
-<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+  // scripts/pages/HomePage.html
+  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
     <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
          style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
@@ -3525,15 +3524,7 @@
                 <!-- Partie live chat -->
 
                 <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap-4 bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
-                  
-                  <!-- Image \xE0 gauche -->
-                  <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                      <!-- le cadre -->
-                      <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                      <!-- l'image -->
-                      <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
-                  </div>
-                  
+       
                   <!-- Live chat \xE0 droite -->
                   <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-4 -mr-4">
                       <h1 class="text-lg font-bold mb-2">Live chat </h1>
@@ -3639,9 +3630,11 @@
             </div>
         </div>
     </div>
-</div>
+</div>`;
 
-    `;
+  // scripts/pages/HomePage.ts
+  function render() {
+    return HomePage_default;
   }
   function afterRender() {
     let globalPath = "/assets/emoticons/";
@@ -4364,7 +4357,6 @@
 
   // scripts/main.ts
   var appElement = document.getElementById("app");
-  var publicRoutes = ["/", "/login", "/register", "/404"];
   var routes = {
     "/": {
       render: LandingPage,
@@ -4390,45 +4382,28 @@
       render: NotFoundPage
     }
   };
-  var handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    window.history.pushState({}, "", "/");
-    const popStateEvent = new PopStateEvent("popstate");
-    window.dispatchEvent(popStateEvent);
-  };
   var handleLocationChange = () => {
     if (!appElement) return;
-    let path = window.location.pathname;
-    const accessToken = localStorage.getItem("accessToken");
-    if (path === "/logout") {
-      handleLogout();
-      return;
-    }
-    if (accessToken && (path === "/" || path === "/login" || path === "/register")) {
-      window.history.pushState({}, "", "/home");
-      path = "/home";
-    }
-    if (!accessToken && !publicRoutes.includes(path)) {
-      window.history.pushState({}, "", "/");
-      path = "/";
-    }
+    const path = window.location.pathname;
     const page = routes[path] || routes["/404"];
     appElement.innerHTML = page.render();
     if (page.afterRender) {
       page.afterRender();
     }
   };
+  var navigate = (event) => {
+    event.preventDefault();
+    const target = event.target;
+    if (target.href == window.location.href)
+      return;
+    window.history.pushState({}, "", target.href);
+    handleLocationChange();
+  };
   window.addEventListener("click", (event) => {
     const target = event.target;
     const anchor = target.closest("a");
     if (anchor && anchor.href.startsWith(window.location.origin)) {
-      event.preventDefault();
-      const href = anchor.href;
-      if (href === window.location.href) return;
-      window.history.pushState({}, "", href);
-      handleLocationChange();
+      navigate(event);
     }
   });
   window.addEventListener("popstate", () => {
