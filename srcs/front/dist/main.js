@@ -91,7 +91,9 @@
             localStorage.setItem("accessToken", data.access_token);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
+            console.log("user_id dans handleLogin: ", data.user_id);
           }
+          console.log("yo");
           if (status && data.user_id) {
             await fetch(`/api/user/${data.user_id}/status`, {
               method: "PATCH",
@@ -3749,6 +3751,7 @@
     const wizzButton = document.getElementById("send-wizz");
     const wizzContainer = document.getElementById("wizz-container");
     const currentUsername = localStorage.getItem("username");
+    const currentUserid = localStorage.getItem("userId");
     if (!messagesContainer || !messageInput) {
       console.log("Can't find chat elements");
       return;

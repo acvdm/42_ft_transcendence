@@ -739,7 +739,6 @@ export function afterRender(): void {
     // ---------------------------------------------------
 
 
-
     const addMessage = async (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
         const msgElement = document.createElement('p');
         msgElement.className = "mb-1";
@@ -819,12 +818,13 @@ export function afterRender(): void {
         addMessage("Connected to chat server!");
     });
 
+
+
     // on va écouter l'événement chatmessage venant du serveur
     socket.on("chatMessage", (data: any) => {
             // le backend va renvoyer data, 
             // il devrait plus renvoyer message: "" author: ""
         addMessage(data.message || data, data.author || "Anonyme");
-        console.log("Username:", data.alias);
     });
 
     socket.on("disconnected", () => {
@@ -833,12 +833,16 @@ export function afterRender(): void {
 
     /* Envoi des événements sockets */
 
+    // Creer un event de creation de channel des qu'on clique sur un ami / qu'on cree une partie
+
     // a partir du moment ou on appuie sur entree-> envoi de l'input
     messageInput.addEventListener('keyup', (event) => {
         if (event.key == 'Enter' && messageInput.value.trim() != '') {
             const msg_content = messageInput.value;
             // on envoie le message au serveur avec emit
-            socket.emit("chatMessage", { sender_id: 0, recv_id: 1, msg_content: msg_content}); // changer le sender_id et recv_id par les tokens
+            const username = localStorage.getItem('username');
+            const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+            socket.emit("chatMessage", { sender_id: sender_id, channel: "general", msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
             messageInput.value = ''; // on vide l'input
         }
     });

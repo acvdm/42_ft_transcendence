@@ -24,7 +24,8 @@ export async function registerUser(
     user_id: number, 
     email: string, 
     password: string
-): Promise<authResponse | undefined> {
+): Promise<authResponse | undefined> 
+{
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
@@ -67,7 +68,8 @@ export async function loginUser(
     db: Database,
     email: string, 
     password: string
-): Promise<authResponse | undefined> {
+): Promise<authResponse | undefined> 
+{
     
     const user_id = await credRepo.findUserIdByEmail(db, email);
     if (!user_id)
@@ -98,7 +100,8 @@ export async function authenticatePassword(
     db: Database,
     credential_id: number,
     password: string
-): Promise<boolean> {
+): Promise<boolean> 
+{
     const credential =  await credRepo.getCredentialbyID(db, credential_id);
     if (!credential)
         throw new Error("Could not find any matching credential");

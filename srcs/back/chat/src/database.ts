@@ -12,12 +12,33 @@ export async function initDatabase(): Promise<Database> {
       CREATE TABLE IF NOT EXISTS MESSAGES (
         msg_id INTEGER PRIMARY KEY AUTOINCREMENT,
         sender_id INTEGER NOT NULL,
-        recv_id INTEGER NOT NULL,
         msg_content TEXT NOT NULL,
-        sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        channel_id INTEGER NOT NULL,
+        channel_name TEXT NOT NULL DEFAULT 'general',
+        sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (channel_id) REFERENCES CHANNELS(id)
       )
     `);
-    console.log('MESSAGES table created');
+    console.log('PRIVATE_MESSAGES table created');
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS CHANNELS (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL DEFAULT 'general',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('CHANNELS table created');
+
+    await db.exec(`
+      CREATE TABLE IF NOT EXISTS CHANNEL_MEMBERS (
+      channel_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (channel_id, user_id),
+      FOREIGN KEY (channel_id) REFERENCES CHANNELS(id)
+      )
+    `);
 
     return db;
 }
