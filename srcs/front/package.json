@@ -4,10 +4,34 @@
 	"description": "Front part of the website",
 	"private": "true",
 	"scripts": {
-		"build": "tsc && tailwindcss -i ./styles/input.css -o ./dist/style.css --minify --loader:.html=text",
-		"watch": "tsc --watch & tailwindcss -i ./styles/input.css -o ./dist/style.css --watch --loader:.html=text",
+<<<<<<< HEAD
+		"build": "tsc && tailwindcss -i ./styles/input.css -o ./dist/style.css --minify",
+		"watch": "tsc --watch & tailwindcss -i ./styles/input.css -o ./dist/style.css --watch",
 		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --minify",
 		"watch:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --watch"
+=======
+		"build": "npm run build:js && npm run build:css",
+		"build:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --loader:.html=text",
+		"build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css",
+		"watch:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --watch --loader:.html=text",
+		"watch:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css --watch",
+		"check-types": "tsc"
+	},
+	"watch": {
+		"build:js": {
+			"patterns": [
+				"srcs/front/scripts"
+			],
+			"extensions": "ts"
+		},
+		"build:css": {
+			"patterns": [
+				"srcs/front/scripts",
+				"srcs/front"
+			],
+			"extensions": "ts,html"
+		}
+>>>>>>> frontend-pages
 	},
 	"devDependencies": {
 		"@types/node": "24.10.0",
