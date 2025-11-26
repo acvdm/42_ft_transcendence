@@ -15,7 +15,7 @@ interface Page {
 	afterRender?: () => void;
 }
 
-
+const publicRoutes = ['/', '/login', '/register', '/404'];
 
 // 3. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
 // Une fois qu'on aura fait les pages de base, on sera en mesure de link vers les bonnes pages
@@ -46,6 +46,20 @@ const routes: { [key: string]: Page } = {
 	}
 };
 
+
+// gestion du logout
+const handleLogout = () => {
+	localStorage.removeItem('accessToken');
+	localStorage.removeItem('userId');
+	localStorage.removeItem('username');
+	// redirection vers la page d'accueil
+	window.history.pushState({}, '', '/');
+	// manuellement chargement pour recharger la vue
+	const popStateEvent = new PopStateEvent('popstate');
+	window.dispatchEvent(popStateEvent);
+
+}
+
 /*
 ** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
 ** Une fois trouvée, il injecte le contenu dans la div app
@@ -61,16 +75,35 @@ const routes: { [key: string]: Page } = {
 
 
 const handleLocationChange = () => {
-	if (!appElement) return;
+    if (!appElement) return;
 
-	const path = window.location.pathname;
-	const page = routes[path] || routes['/404']; // html = routes.count(path) ? route[path] : route[/404]
-	appElement.innerHTML = page.render(); // on injecte le html
+    let path = window.location.pathname; // difference const / let
+    const accessToken = localStorage.getItem('accessToken');
 
-	// on lance la logique js pour faire vivre la page
-	if (page.afterRender) {
-		page.afterRender();
-	}
+    // gestion de la route d deconnexion
+    if (path === '/logout') {
+        handleLogout();
+        return;
+    }
+	// si user connecter -> et que tentative d'aller sur login etc -> redirection home
+    if (accessToken && (path === '/' || path === '/login' || path === '/register')) {
+        window.history.pushState({}, '', '/home');
+        path = '/home';
+    }
+
+	// si pas connecte alors redirection landing page
+    if (!accessToken && !publicRoutes.includes(path)) {
+        window.history.pushState({}, '', '/');
+        path = '/';
+    }
+
+	// on affiche la page
+    const page = routes[path] || routes['/404'];
+    appElement.innerHTML = page.render();
+
+    if (page.afterRender) {
+        page.afterRender();
+    }
 };
 
 /*
@@ -101,7 +134,18 @@ window.addEventListener('click', (event) => {
 	// on va verifier si la cible est un lien interne
 
 	if (anchor && anchor.href.startsWith(window.location.origin)) {
-		navigate(event as unknown as MouseEvent);
+		// On convertit l'event original pour notre fonction navigate
+        // (Astuce: on passe l'event, et dans navigate on récupère la cible via l'event)
+        // Note: Ici on simplifie l'appel en passant l'event original
+        event.preventDefault();
+        const href = anchor.href;
+        
+        if (href === window.location.href) return;
+        
+        window.history.pushState({}, '', href);
+        handleLocationChange();
+
+		// pourquoi faire ça?
 	}
 });
 

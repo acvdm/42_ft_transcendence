@@ -31,10 +31,10 @@ export function LoginPage(): string {
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
-								<option>Available</option>
-								<option>Busy</option>
-								<option>Away</option>
-								<option>Appear offline</option>
+								<option value="Available">Available</option>
+								<option value="Busy">Busy</option>
+								<option value="Away">Away</option>
+								<option value="Appear offline">Appear offline</option>
 							</select>
 						</div>
 					</div>
@@ -62,6 +62,8 @@ function handleLogin() {
 		const password = (document.getElementById('password-input') as HTMLInputElement).value;
 		const status = (document.getElementById('status-input') as HTMLSelectElement).value;
 
+		console.log("Status sélectionné :", status);
+
 		if (errorElement) {
 			errorElement.classList.add('hidden');
 			errorElement.textContent = '';
@@ -78,9 +80,7 @@ function handleLogin() {
 		try {
 			const response = await fetch('/api/auth/login', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+				headers: {'Content-Type': 'application/json'},
 				body: JSON.stringify({ email, password, status })
 			});
 
@@ -89,6 +89,30 @@ function handleLogin() {
 				console.log("Login success:", data);
 				if (data.access_token)
 					localStorage.setItem('accessToken', data.access_token);
+
+				if (data.user_id) {
+					localStorage.setItem('userId', data.user_id.toString());
+
+					try {
+						const userRes = await fetch(`/api/user/${data.user_id}`);
+						if (userRes.ok) {
+							const userData = await userRes.json();
+							if (userData.alias) {
+								localStorage.setItem('username', userData.alias);
+							}
+						}
+					} catch (err) {
+						console.error("Impossible de récupérer le profil utilisateur", err);
+					}
+
+				}
+				if (status && data.user_id) {
+					await fetch(`/api/user/${data.user_id}/status`, {
+						method: 'PATCH',
+						headers: {'Content-Type': 'application/json'},
+						body: JSON.stringify({ status: status })
+					});
+				}
 				window.history.pushState({}, '', '/home');
 				window.dispatchEvent(new PopStateEvent('popstate'));
 			} else {
