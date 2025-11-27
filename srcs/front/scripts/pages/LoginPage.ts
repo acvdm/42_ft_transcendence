@@ -92,6 +92,19 @@ function handleLogin() {
 
 				if (data.user_id) {
 					localStorage.setItem('userId', data.user_id.toString());
+
+					try {
+						const userRes = await fetch(`/api/user/${data.user_id}`);
+						if (userRes.ok) {
+							const userData = await userRes.json();
+							if (userData.alias) {
+								localStorage.setItem('username', userData.alias);
+							}
+						}
+					} catch (err) {
+						console.error("Impossible de récupérer le profil utilisateur", err);
+					}
+
 				}
 				if (status && data.user_id) {
 					await fetch(`/api/user/${data.user_id}/status`, {
