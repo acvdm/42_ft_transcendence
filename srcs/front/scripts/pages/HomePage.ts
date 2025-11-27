@@ -271,7 +271,7 @@ export function afterRender(): void {
                 if (bgImage === 'none') {
                     // reset au background de base -> transparent
                     chatFrame.style.backgroundImage = '';
-                    chatFrame.classList.add('bg-transparent');
+                    chatFrame.classList.add('bg-[#3DB6EC]');
                 } else if (bgImage) {
                     // sinon l'image de notre choix
                     chatFrame.classList.remove('bg-[#BC787B]');
