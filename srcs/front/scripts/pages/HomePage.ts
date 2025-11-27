@@ -373,6 +373,7 @@ export function afterRender(): void {
         } else {
             addMessage(`Animation inconnue (${animationKey}) reçue de ${author}.`, "Système");
         }
+        console.log("erreur:", data.author)
     });
 
     // Nouvelle fonction pour ajouter du contenu HTML arbitraire
