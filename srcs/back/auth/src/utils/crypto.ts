@@ -1,4 +1,5 @@
 import argon2 from 'argon2';
+import { randomBytes } from 'crypto';
 import { Secret } from 'otpauth';
 
 export async function hashPassword(password: string): Promise<string> {
@@ -28,6 +29,11 @@ export function generateAccessToken(user_id: number, credential_id: number): str
 }
 
 // Module JWT
-export function generateRefreshToken(user_id: number): string {
-    return ('refreshToken' + user_id);
+// export function generateRefreshToken(user_id: number): string {
+//     return ('refreshToken' + user_id);
+//  }
+
+ // pour eviter le probleme de token non supprim´ apres suppresion de l'utilisateur
+ export function generateRefreshToken(user_id: number): string {
+    return (randomBytes(32).toString('hex'));
  }
