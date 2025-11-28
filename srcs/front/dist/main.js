@@ -39,10 +39,10 @@
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
-								<option value="Available">Available</option>
-								<option value="Busy">Busy</option>
-								<option value="Away">Away</option>
-								<option value="Appear offline">Appear offline</option>
+								<option value="available">Available</option>
+								<option value="busy">Busy</option>
+								<option value="away">Away</option>
+								<option value="offline">Appear offline</option>
 							</select>
 						</div>
 					</div>
@@ -65,8 +65,7 @@
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
-      const status = document.getElementById("status-input").value;
-      console.log("Status s\xE9lectionn\xE9 :", status);
+      const selectedStatus = document.getElementById("status-input").value;
       if (errorElement) {
         errorElement.classList.add("hidden");
         errorElement.textContent = "";
@@ -82,31 +81,44 @@
         const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, status })
+          body: JSON.stringify({ email, password })
+          // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
+          // On le gère juste après avec le PATCH
         });
         const data = await response.json();
         if (response.ok) {
-          console.log("Login success:", data);
-          if (data.access_token)
-            localStorage.setItem("accessToken", data.access_token);
+          if (data.access_token) localStorage.setItem("accessToken", data.access_token);
+          if (data.user_id) localStorage.setItem("userId", data.user_id.toString());
           if (data.user_id) {
-            localStorage.setItem("userId", data.user_id.toString());
-            console.log("user_id dans handleLogin: ", data.user_id);
+            try {
+              const userRes = await fetch(`/api/user/${data.user_id}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
+            try {
+              await fetch(`/api/user/${data.user_id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              console.log("Status updated to DB:", selectedStatus);
+            } catch (err) {
+              console.error("Failed to update status on login", err);
+            }
           }
-          console.log("yo");
-          if (status && data.user_id) {
-            await fetch(`/api/user/${data.user_id}/status`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status })
-            });
-          }
+          localStorage.setItem("userStatus", selectedStatus);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
           console.error("Login error:", data);
           if (errorElement) {
-            errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+            errorElement.textContent = data.errorMessage || data.message || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
@@ -3484,155 +3496,197 @@
     connect: lookup2
   });
 
-  // scripts/pages/HomePage.ts
-  function render() {
-    return `
-<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+  // scripts/pages/HomePage.html
+  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
     <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
          style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
     </div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex justify-center p-6 overflow-y-auto">
-
-        <div class="flex flex-row min-w-[1000px] h-full gap-4">
-
-            <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
-                <h1 class="text-lg font-semibold"> Pong \u{1F47E}</h1>
-            </div>
-
-            <div class="flex flex-col gap-4 w-[600px] h-full">
-                
-                <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
-                    <p class="font-semibold mb-2"> Game info</p>
-                    <div class="relative w-[50px] h-[50px] mb-4">
-                        <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
-                    </div>
-                    <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
-                </div>
-
-
-                <!-- Partie live chat -->
-
-                <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap-4 bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
-                  
-                  <!-- Image \xE0 gauche -->
-                  <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                      <!-- le cadre -->
-                      <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                      <!-- l'image -->
-                      <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
-                  </div>
-                  
-                  <!-- Live chat \xE0 droite -->
-                  <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-4 -mr-4">
-                      <h1 class="text-lg font-bold mb-2">Live chat </h1>
-                      <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
-
-                      <!-- Input element  -->
-
-                      <div class="flex flex-col">
-                        <input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-
-                        <!-- Insertion des emoticones, wizz etc -->
-                         <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-                            <button id="select-emoticon" class="h-6">
-                                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-                                <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                              </div>
-
-                              <!-- Menu dropdown -> il s'ouvre quand on clique -->
-
-                              <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-                              </div>
-
-                              </div>
+    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-4 gap-4">
+            <!-- Cadre du profil -->
+            <div class="flex flex-row w-full h-[160px] bg-gray-100 shadow-inner rounded-sm p-2 flex-shrink-0 " style="height: 125px; flex-shrink: 0;">
+                <div class="relative w-[110px] h-[110px] flex-shrink-0">
+                    <!-- l'image -->
+                    <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover" style="height: 70px; width:70;" src="/assets/profile/Rubber_Ducky.png">
+                    <!-- le cadre -->
+                    <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png">
+                 </div>
+                 <!-- username, bio et status -->
+                 <div class="flex flex-col justify-center pl-4 flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <p class="text-xl font-semibold" id="user-name">Username</p>
+                        
+                        <!-- selection du status = dynamique -->
+                        <div class="relative">
+                            <button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+                                <span id="current-status-text">(Available)</span>
+                                <img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
                             </button>
                             
-                              <button id="select-animation" class="h-6">
-                                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-                                <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                                  </div>
+                            <!-- Menu dropdown pour le status -->
+                            <div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Available</span>
+                                </button>
+                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Busy</span>
+                                </button>
+                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Away</span>
+                                </button>
+                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Offline</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="bio-wrapper">
+                        <p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+                    </div>
 
-                                  <!-- Menu dropdown -> il s'ouvre quand on clique -->
 
-                                  <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                  <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-                                  </div>
+                 </div>
+            </div>
 
-                                  </div>
-                              </button>
+            <!-- Container avec left et right qui prennent toute la hauteur restante -->
+            <div class="flex gap-4 flex-1 min-h-0">
+                <div id="left" class="flex-col w-[700px] min-w-[700px] shrink-0 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center" style="width: 700px; min-width: 700px;">
+                    <h1 class="text-lg font-semibold"> Wanna play? \u{1F47E}</h1>
+                    <button id="local-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
+                    <button id="remote-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
+                    <button id="tournament-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
+                </div>
 
-                              
-                              <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-                              <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-                              <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-                              
-                          
-                              <!-- Menu pour les fonts -->
-                            
-                               <button id="change-font" class="h-6">
+                <div id="right" class="flex flex-row gap-4 flex-1 min-w-0">
+
+                    <!-- Partie live chat -->
+
+                    <div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+                    
+                        <div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+                        </div>
+                    <!-- Live chat \xE0 droite -->
+                    <div id="room-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+                        <!-- Image \xE0 gauche -->
+                        <div class="relative w-[110px] h-[110px] flex-shrink-0">
+                            <!-- le cadre -->
+                            <img id="chat-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
+                            <!-- l'image -->
+                            <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
+                        </div>
+
+                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
+
+                        <!-- Input element  -->
+
+                        <div class="flex flex-col">
+                            <input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+                            <!-- Insertion des emoticones, wizz etc -->
+                            <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+                                <button id="select-emoticon" class="h-6">
                                     <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                    <div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-                                    <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+                                    <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+                                    <div><img src="/assets/chat/arrow.png" alt="Select arrow">
+                                </div>
+
+                                <!-- Menu dropdown -> il s'ouvre quand on clique -->
+
+                                <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+                                    <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+                                </div>
+
+                                </div>
+                                </button>
+                                
+                                <button id="select-animation" class="h-6">
+                                    <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                                    <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+                                    <div><img src="/assets/chat/arrow.png" alt="Select arrow">
+                                    </div>
 
                                     <!-- Menu dropdown -> il s'ouvre quand on clique -->
-                                    <div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-                                        <div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+
+                                    <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+                                    <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
                                     </div>
 
                                     </div>
                                 </button>
 
+                                
+                                <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+                                <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+                                <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+                                
                             
-                            <div class="relative">
-                              <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-                                  <div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-                                  <div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-                              </button>
+                                <!-- Menu pour les fonts -->
+                                
+                                <button id="change-font" class="h-6">
+                                        <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+                                        <div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+                                        <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
 
-                              <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                                  <p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-                                  
-                                  <div class="grid grid-cols-3 gap-2">
-                                      
-                                      <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                              data-bg="url('/assets/backgrounds/fish_background.jpg')"
-                                              style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-                                      </button>
+                                        <!-- Menu dropdown -> il s'ouvre quand on clique -->
+                                        <div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+                                            <div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+                                        </div>
 
-                                      <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                              data-bg="url('/assets/backgrounds/heart_background.jpg')"
-                                              style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-                                      </button>
+                                        </div>
+                                    </button>
 
-                                      <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                              data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-                                              style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-                                      </button>
+                                
+                                <div class="relative">
+                                <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+                                    <div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+                                    <div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+                                </button>
 
-                                      
-                                      
-                                      <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-                                          Default background
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
+                                <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+                                    <p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+                                    
+                                    <div class="grid grid-cols-3 gap-2">
+                                        
+                                        <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+                                                data-bg="url('/assets/backgrounds/fish_background.jpg')"
+                                                style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+                                        </button>
 
-                      </div>
-                  </div>
+                                        <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+                                                data-bg="url('/assets/backgrounds/heart_background.jpg')"
+                                                style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+                                        </button>
+
+                                        <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+                                                data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+                                                style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+                                        </button>
+
+                                        
+                                        
+                                        <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+                                            Default background
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    </div>
                 </div>
             </div>
-        </div>
     </div>
-</div>
+</div>`;
 
-    `;
+  // scripts/pages/HomePage.ts
+  function render() {
+    return HomePage_default;
   }
   function afterRender() {
     let globalPath = "/assets/emoticons/";
@@ -3751,7 +3805,11 @@
     const wizzButton = document.getElementById("send-wizz");
     const wizzContainer = document.getElementById("wizz-container");
     const currentUsername = localStorage.getItem("username");
-    const currentUserid = localStorage.getItem("userId");
+    const userConnected = document.getElementById("user-name");
+    const bioText = document.getElementById("user-bio");
+    const bioWrapper = document.getElementById("bio-wrapper");
+    if (currentUsername && userConnected)
+      userConnected.textContent = currentUsername;
     if (!messagesContainer || !messageInput) {
       console.log("Can't find chat elements");
       return;
@@ -3763,6 +3821,114 @@
         }, 50);
       }
     };
+    let currentInput = null;
+    bioText?.addEventListener("click", () => {
+      const input = document.createElement("input");
+      currentInput = input;
+      input.type = "text";
+      input.value = bioText.textContent === "Share a quick message" ? "" : bioText.textContent;
+      input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+      if (bioWrapper) {
+        bioWrapper.replaceChild(input, bioText);
+        input.focus();
+      }
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          finalize(input.value.trim() || "Share a quick message");
+        }
+      });
+      input.addEventListener("blur", () => {
+        finalize(input.value.trim() || "Share a quick message");
+      });
+    });
+    function finalize(text) {
+      if (!bioWrapper || !bioText || !currentInput) return;
+      const parsed = parseMessage(text);
+      bioText.innerHTML = parsed;
+      bioWrapper.replaceChild(bioText, currentInput);
+      currentInput = null;
+    }
+    const statusSelector = document.getElementById("status-selector");
+    const statusDropdown = document.getElementById("status-dropdown");
+    const statusText = document.getElementById("current-status-text");
+    const statusFrame = document.getElementById("user-status");
+    const statusImages = {
+      "available": "/assets/basic/status_online_small.png",
+      "busy": "/assets/basic/status_busy_small.png",
+      "away": "/assets/basic/status_away_small.png",
+      "invisible": "/assets/basic/status_offline_small.png"
+    };
+    const statusLabels = {
+      "available": "(Available)",
+      "busy": "(Busy)",
+      "away": "(Away)",
+      "invisible": "(Appear offline)"
+    };
+    const updateStatusDisplay = (status) => {
+      if (statusFrame && statusText && statusImages[status] && statusLabels[status]) {
+        statusFrame.src = statusImages[status];
+        statusText.textContent = statusLabels[status];
+        const statusOptions = document.querySelectorAll(".status-options");
+        statusOptions.forEach((option) => {
+          const optionStatus = option.dataset.status;
+          if (optionStatus === status)
+            option.classList.add("bg-blue-50");
+          else
+            option.classList.remove("bg-blue-50");
+        });
+      }
+    };
+    socket.on("userConnected", (data) => {
+      console.log("User connected with status:", data.status);
+      updateStatusDisplay(data.status);
+    });
+    const savedStatus = localStorage.getItem("userStatus") || "available";
+    updateStatusDisplay(savedStatus);
+    if (statusSelector && statusDropdown && statusText && statusFrame) {
+      statusSelector.addEventListener("click", (e) => {
+        e.stopPropagation();
+        statusDropdown.classList.toggle("hidden");
+        document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+        document.getElementById("animation-dropdown")?.classList.add("hidden");
+        document.getElementById("font-dropdown")?.classList.add("hidden");
+        document.getElementById("background-dropdown")?.classList.add("hidden");
+      });
+      const statusOptions = document.querySelectorAll(".status-option");
+      statusOptions.forEach((option) => {
+        option.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const selectedStatus = option.dataset.status;
+          if (selectedStatus && statusImages[selectedStatus]) {
+            statusFrame.src = statusImages[selectedStatus];
+            statusText.textContent = statusLabels[selectedStatus];
+            localStorage.setItem("userStatus", selectedStatus);
+            try {
+              const userId = localStorage.getItem("userId");
+              console.log("Tentative de mise \xE0 jour pour User ID:", userId, "Status:", selectedStatus);
+              const response = await fetch(`/api/users/${userId}/status`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              if (!response.ok) {
+                console.error("Failed to update status");
+              }
+            } catch (error) {
+              console.error("Error updating status:", error);
+            }
+          }
+          statusDropdown.classList.add("hidden");
+        });
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!statusDropdown.contains(target) && !statusSelector.contains(target)) {
+          statusDropdown.classList.add("hidden");
+        }
+      });
+    }
     const animationButton = document.getElementById("select-animation");
     const animationDropdown = document.getElementById("animation-dropdown");
     const animationGrid = document.getElementById("animation-grid");
@@ -3848,7 +4014,7 @@
           const bgImage = option.getAttribute("data-bg");
           if (bgImage === "none") {
             chatFrame.style.backgroundImage = "";
-            chatFrame.classList.add("bg-transparent");
+            chatFrame.classList.add("bg-[#3DB6EC]");
           } else if (bgImage) {
             chatFrame.classList.remove("bg-[#BC787B]");
             chatFrame.style.backgroundImage = bgImage;
@@ -4328,6 +4494,17 @@
           console.log("Inscription r\xE9ussie :", data);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
+            try {
+              const userRes = await fetch(`/api/user/${data.user_id}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
           }
           if (data.access_token)
             localStorage.setItem("accessToken", data.access_token);
@@ -4384,8 +4561,9 @@
   var handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("userId");
+    localStorage.removeItem("username");
     window.history.pushState({}, "", "/");
-    const popStateEvent = new popStateEvent("popstate");
+    const popStateEvent = new PopStateEvent("popstate");
     window.dispatchEvent(popStateEvent);
   };
   var handleLocationChange = () => {

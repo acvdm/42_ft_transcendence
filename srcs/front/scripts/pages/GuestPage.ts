@@ -1,4 +1,3 @@
-import { parse } from "path";
 import { io, Socket } from "socket.io-client";
 
 // on va exportrter une fonction qui renvoie du html 

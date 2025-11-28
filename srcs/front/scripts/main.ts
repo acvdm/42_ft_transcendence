@@ -17,6 +17,7 @@ interface Page {
 
 const publicRoutes = ['/', '/login', '/register', '/404'];
 
+
 // 3. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
 // Une fois qu'on aura fait les pages de base, on sera en mesure de link vers les bonnes pages
 // on associe chaque route a l'affiche et a la fonction concernée pour faire fonctionner la page
@@ -46,7 +47,6 @@ const routes: { [key: string]: Page } = {
 	}
 };
 
-
 // gestion du logout
 const handleLogout = () => {
 	localStorage.removeItem('accessToken');
@@ -59,6 +59,7 @@ const handleLogout = () => {
 	window.dispatchEvent(popStateEvent);
 
 }
+
 
 /*
 ** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
@@ -75,7 +76,7 @@ const handleLogout = () => {
 
 
 const handleLocationChange = () => {
-    if (!appElement) return;
+	if (!appElement) return;
 
     let path = window.location.pathname; // difference const / let
     const accessToken = localStorage.getItem('accessToken');
