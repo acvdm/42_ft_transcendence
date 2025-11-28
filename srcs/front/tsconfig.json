@@ -15,6 +15,7 @@
 		"removeComments": false,
 		"skipLibCheck": true, // ignore les erreurs dans les bibliothèques
 		"forceConsistentCasingInFileNames": true, // cohérence des noms de fichiers
+		"preserveWatchOutput": true
 	},
 	"include": ["scripts/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
 	"exclude": ["node_modules", "dist"] // ne pas compiler les bibliothèques externes

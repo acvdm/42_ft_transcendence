@@ -112,6 +112,24 @@ fastify.get('/:id', async (request, reply) => {
   return user;
 });
 
+//---------------------------------------
+//---- MISE À JOUR DES INFOS DU USER ----
+//---------------------------------------
+
+fastify.patch('/:id/status', async (request, reply) => {
+  const { id } = request.params as { id: number };
+  const { status } = request.body as { status: string };
+
+  try {
+    await db.run('UPDATE USERS SET status = ? WHERE id = ?', [status, id]);
+    return reply.status(200).send({ message: 'Status updated successfully' });
+  } catch (err) {
+    fastify.log.error(err);
+    return reply.status(500).send({ message: 'Failed to update status' });
+  }
+});
+
+
 // ------------------------- START SERVER
 const start = async () => {
   try {

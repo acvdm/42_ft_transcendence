@@ -1,6 +1,5 @@
 ./srcs/env
 
 node_modules/
-node_modules/
 
-/srcs/back/data/
+data/
