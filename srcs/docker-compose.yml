@@ -54,7 +54,7 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/data:/app/data
+        - auth_data:/app/data
         - ./server.crt:/app/server.crt # On injecte le MÊME certificat
         - ./server.key:/app/server.key
 
@@ -70,7 +70,7 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/data:/app/data
+        - chat_data:/app/data
         - ./server.crt:/app/server.crt # On injecte le MÊME certificat
         - ./server.key:/app/server.key
 
@@ -86,7 +86,7 @@ services:
       networks:
         - transcendence
       volumes:
-        - ./back/data:/app/data
+        - game_data:/app/data
         - ./server.crt:/app/server.crt # On injecte le MÊME certificat
         - ./server.key:/app/server.key
 
@@ -102,11 +102,10 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/data:/app/data
-        - ./back/user/avatars:/app/user/avatars
+        - user_data:/app/data
+        - user_avatars:/app/user/avatars
         - ./server.crt:/app/server.crt # On injecte le MÊME certificat
         - ./server.key:/app/server.key
-
     
 networks:
   transcendence:
@@ -114,5 +113,8 @@ networks:
     driver: bridge
 
 volumes:
-  data:
-  avatars:
+  user_avatars:
+  auth_data:
+  chat_data:
+  user_data:
+  game_data:

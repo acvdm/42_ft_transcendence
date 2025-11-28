@@ -20,6 +20,8 @@ const fastify = Fastify({
 let db: Database; // on stocke ici la connexion SQLite, globale au module
 
 async function main() {
+  console.log('Current UID:', process.getuid());
+  console.log('Current GID: ', process.getgid());
   db = await initDatabase();
   console.log('auth database initialised');
 }
