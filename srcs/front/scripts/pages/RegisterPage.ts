@@ -86,6 +86,17 @@ function handleRegister() {
 
 				if (data.user_id) {
 					localStorage.setItem('userId', data.user_id.toString());
+					try {
+						const userRes = await fetch(`/api/user/${data.user_id}`);
+						if (userRes.ok) {
+							const userData = await userRes.json();
+							if (userData.alias) {
+								localStorage.setItem('username', userData.alias);
+							}
+						}
+					} catch (err) {
+						console.error("Can't get user's profile", err);
+					}
 				}
 				
 				if (data.access_token) // on sauvegarde le token si necessaire

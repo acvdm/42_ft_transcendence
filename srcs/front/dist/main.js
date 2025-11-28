@@ -39,10 +39,10 @@
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
-								<option value="Available">Available</option>
-								<option value="Busy">Busy</option>
-								<option value="Away">Away</option>
-								<option value="Appear offline">Appear offline</option>
+								<option value="available">Available</option>
+								<option value="busy">Busy</option>
+								<option value="away">Away</option>
+								<option value="offline">Appear offline</option>
 							</select>
 						</div>
 					</div>
@@ -65,8 +65,7 @@
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
-      const status = document.getElementById("status-input").value;
-      console.log("Status s\xE9lectionn\xE9 :", status);
+      const selectedStatus = document.getElementById("status-input").value;
       if (errorElement) {
         errorElement.classList.add("hidden");
         errorElement.textContent = "";
@@ -82,15 +81,15 @@
         const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, status })
+          body: JSON.stringify({ email, password })
+          // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
+          // On le gère juste après avec le PATCH
         });
         const data = await response.json();
         if (response.ok) {
-          console.log("Login success:", data);
-          if (data.access_token)
-            localStorage.setItem("accessToken", data.access_token);
+          if (data.access_token) localStorage.setItem("accessToken", data.access_token);
+          if (data.user_id) localStorage.setItem("userId", data.user_id.toString());
           if (data.user_id) {
-            localStorage.setItem("userId", data.user_id.toString());
             try {
               const userRes = await fetch(`/api/user/${data.user_id}`);
               if (userRes.ok) {
@@ -100,22 +99,26 @@
                 }
               }
             } catch (err) {
-              console.error("Impossible de r\xE9cup\xE9rer le profil utilisateur", err);
+              console.error("Can't get user's profile", err);
+            }
+            try {
+              await fetch(`/api/user/${data.user_id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              console.log("Status updated to DB:", selectedStatus);
+            } catch (err) {
+              console.error("Failed to update status on login", err);
             }
           }
-          if (status && data.user_id) {
-            await fetch(`/api/user/${data.user_id}/status`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status })
-            });
-          }
+          localStorage.setItem("userStatus", selectedStatus);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
           console.error("Login error:", data);
           if (errorElement) {
-            errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+            errorElement.textContent = data.errorMessage || data.message || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
@@ -3501,7 +3504,7 @@
     </div>
 
     <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-4 gap-4">
-            <!-- Barre magenta en haut -->
+            <!-- Cadre du profil -->
             <div class="flex flex-row w-full h-[160px] bg-gray-100 shadow-inner rounded-sm p-2 flex-shrink-0 " style="height: 125px; flex-shrink: 0;">
                 <div class="relative w-[110px] h-[110px] flex-shrink-0">
                     <!-- l'image -->
@@ -3517,33 +3520,36 @@
                         <!-- selection du status = dynamique -->
                         <div class="relative">
                             <button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-                                <span id="current-status-text" class="text-green-600">(Available)</span>
+                                <span id="current-status-text">(Available)</span>
                                 <img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
                             </button>
                             
                             <!-- Menu dropdown pour le status -->
-                            <div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-40 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+                            <div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
                                 <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                    <span class="text-green-600">Available</span>
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Available</span>
                                 </button>
                                 <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                                    <span class="text-red-600">Busy</span>
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Busy</span>
                                 </button>
                                 <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-                                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                    <span class="text-yellow-600">Away</span>
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Away</span>
                                 </button>
                                 <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                                    <span class="text-gray-600">Invisible</span>
+                                    <span class="w-2 h-2 rounded-full"></span>
+                                    <span>Offline</span>
                                 </button>
                             </div>
                         </div>
                     </div>
-                    
-                    <p id="user-bio" class="text-sm text-gray-600 italic">Coucou les bogoss ca va ou quoi</p>
+                    <div id="bio-wrapper">
+                        <p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+                    </div>
+
+
                  </div>
             </div>
 
@@ -3569,7 +3575,7 @@
                         <!-- Image \xE0 gauche -->
                         <div class="relative w-[110px] h-[110px] flex-shrink-0">
                             <!-- le cadre -->
-                            <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
+                            <img id="chat-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
                             <!-- l'image -->
                             <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
                         </div>
@@ -3799,6 +3805,11 @@
     const wizzButton = document.getElementById("send-wizz");
     const wizzContainer = document.getElementById("wizz-container");
     const currentUsername = localStorage.getItem("username");
+    const userConnected = document.getElementById("user-name");
+    const bioText = document.getElementById("user-bio");
+    const bioWrapper = document.getElementById("bio-wrapper");
+    if (currentUsername && userConnected)
+      userConnected.textContent = currentUsername;
     if (!messagesContainer || !messageInput) {
       console.log("Can't find chat elements");
       return;
@@ -3810,6 +3821,114 @@
         }, 50);
       }
     };
+    let currentInput = null;
+    bioText?.addEventListener("click", () => {
+      const input = document.createElement("input");
+      currentInput = input;
+      input.type = "text";
+      input.value = bioText.textContent === "Share a quick message" ? "" : bioText.textContent;
+      input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+      if (bioWrapper) {
+        bioWrapper.replaceChild(input, bioText);
+        input.focus();
+      }
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          finalize(input.value.trim() || "Share a quick message");
+        }
+      });
+      input.addEventListener("blur", () => {
+        finalize(input.value.trim() || "Share a quick message");
+      });
+    });
+    function finalize(text) {
+      if (!bioWrapper || !bioText || !currentInput) return;
+      const parsed = parseMessage(text);
+      bioText.innerHTML = parsed;
+      bioWrapper.replaceChild(bioText, currentInput);
+      currentInput = null;
+    }
+    const statusSelector = document.getElementById("status-selector");
+    const statusDropdown = document.getElementById("status-dropdown");
+    const statusText = document.getElementById("current-status-text");
+    const statusFrame = document.getElementById("user-status");
+    const statusImages = {
+      "available": "/assets/basic/status_online_small.png",
+      "busy": "/assets/basic/status_busy_small.png",
+      "away": "/assets/basic/status_away_small.png",
+      "invisible": "/assets/basic/status_offline_small.png"
+    };
+    const statusLabels = {
+      "available": "(Available)",
+      "busy": "(Busy)",
+      "away": "(Away)",
+      "invisible": "(Appear offline)"
+    };
+    const updateStatusDisplay = (status) => {
+      if (statusFrame && statusText && statusImages[status] && statusLabels[status]) {
+        statusFrame.src = statusImages[status];
+        statusText.textContent = statusLabels[status];
+        const statusOptions = document.querySelectorAll(".status-options");
+        statusOptions.forEach((option) => {
+          const optionStatus = option.dataset.status;
+          if (optionStatus === status)
+            option.classList.add("bg-blue-50");
+          else
+            option.classList.remove("bg-blue-50");
+        });
+      }
+    };
+    socket.on("userConnected", (data) => {
+      console.log("User connected with status:", data.status);
+      updateStatusDisplay(data.status);
+    });
+    const savedStatus = localStorage.getItem("userStatus") || "available";
+    updateStatusDisplay(savedStatus);
+    if (statusSelector && statusDropdown && statusText && statusFrame) {
+      statusSelector.addEventListener("click", (e) => {
+        e.stopPropagation();
+        statusDropdown.classList.toggle("hidden");
+        document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+        document.getElementById("animation-dropdown")?.classList.add("hidden");
+        document.getElementById("font-dropdown")?.classList.add("hidden");
+        document.getElementById("background-dropdown")?.classList.add("hidden");
+      });
+      const statusOptions = document.querySelectorAll(".status-option");
+      statusOptions.forEach((option) => {
+        option.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const selectedStatus = option.dataset.status;
+          if (selectedStatus && statusImages[selectedStatus]) {
+            statusFrame.src = statusImages[selectedStatus];
+            statusText.textContent = statusLabels[selectedStatus];
+            localStorage.setItem("userStatus", selectedStatus);
+            try {
+              const userId = localStorage.getItem("userId");
+              console.log("Tentative de mise \xE0 jour pour User ID:", userId, "Status:", selectedStatus);
+              const response = await fetch(`/api/users/${userId}/status`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              if (!response.ok) {
+                console.error("Failed to update status");
+              }
+            } catch (error) {
+              console.error("Error updating status:", error);
+            }
+          }
+          statusDropdown.classList.add("hidden");
+        });
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!statusDropdown.contains(target) && !statusSelector.contains(target)) {
+          statusDropdown.classList.add("hidden");
+        }
+      });
+    }
     const animationButton = document.getElementById("select-animation");
     const animationDropdown = document.getElementById("animation-dropdown");
     const animationGrid = document.getElementById("animation-grid");
@@ -4375,6 +4494,17 @@
           console.log("Inscription r\xE9ussie :", data);
           if (data.user_id) {
             localStorage.setItem("userId", data.user_id.toString());
+            try {
+              const userRes = await fetch(`/api/user/${data.user_id}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
           }
           if (data.access_token)
             localStorage.setItem("accessToken", data.access_token);
