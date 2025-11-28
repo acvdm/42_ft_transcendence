@@ -129,7 +129,6 @@ fastify.patch('/:id/status', async (request, reply) => {
   }
 });
 
-
 // ------------------------- START SERVER
 const start = async () => {
   try {
