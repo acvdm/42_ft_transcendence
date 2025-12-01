@@ -20,7 +20,8 @@ export interface CreateTokenData {
 export async function createToken(
     db: Database, 
     data: CreateTokenData
-): Promise<undefined> { 
+): Promise<undefined> 
+{ 
     const result = await db.run(`
         INSERT INTO TOKENS (user_id, credential_id, refresh_token, expires_at)
         VALUES (?, ?, ?, ?)`,
@@ -40,7 +41,8 @@ export async function updateToken(
     credential_id: number,
     refresh_token: string,
     expires_at: Date
-){
+)
+{
     await db.run(`
         UPDATE TOKENS SET refresh_token = ?, expires_at = ? WHERE credential_id = ?`,
         [refresh_token, expires_at, credential_id]

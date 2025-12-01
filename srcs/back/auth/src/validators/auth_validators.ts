@@ -4,13 +4,17 @@ import { hashPassword } from '../utils/crypto.js';
 import { Database } from 'sqlite';
 
 function isValidPassword(pwd: string): boolean {
-    const hasMinLength = pwd.length >= 8;
-    const hasLowerCase = /[a-z]/.test(pwd);
-    const hasUpperCase = /[A-Z]/.test(pwd);
-    const hasDigit = /[0-9]/.test(pwd);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>']/.test(pwd);
+    const hasMinLength: boolean = pwd.length >= 8;
+    const hasLowerCase: boolean = /[a-z]/.test(pwd);
+    const hasUpperCase: boolean = /[A-Z]/.test(pwd);
+    const hasDigit: boolean = /[0-9]/.test(pwd);
+    const hasSpecialChar: boolean = /[!@#$%^&*(),.?":{}|<>']/.test(pwd);
+    
+    let maxLengthOK: boolean = false;
+    if (pwd.length <= 72)
+        maxLengthOK = true;
 
-    return hasMinLength && hasLowerCase && hasUpperCase && hasDigit && hasSpecialChar;
+    return hasMinLength && hasLowerCase && hasUpperCase && hasDigit && hasSpecialChar && maxLengthOK;
 }
 
 export function validateRegisterInput(body: any) {

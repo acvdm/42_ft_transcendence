@@ -25,7 +25,8 @@ export interface createCredentialData {
 export async function createCredentials(
     db: Database, 
     data: createCredentialData
-): Promise<number> {
+): Promise<number> 
+{
     const result = await db.run(`
         INSERT INTO CREDENTIALS (user_id, email, pwd_hashed, two_fa_secret, is_2fa_enabled)
         VALUES (?, ?, ?, ?, ?)`,
@@ -44,7 +45,8 @@ export async function createCredentials(
 export async function findByEmail(
     db: Database, 
     email: string
-): Promise<number | undefined> {
+): Promise<number | undefined> 
+{
     const result = await db.get(`
         SELECT id FROM CREDENTIALS WHERE email = ?`,
         [email]
@@ -56,7 +58,8 @@ export async function findByEmail(
 export async function findUserIdByEmail (
     db: Database,
     email: string
-): Promise<number | undefined> {
+): Promise<number | undefined> 
+{
     const result = await db.get(`
         SELECT user_id FROM CREDENTIALS WHERE email = ?`,
         [email]
@@ -68,7 +71,8 @@ export async function findUserIdByEmail (
 export async function findById(
     db: Database,
     id: number
-): Promise<Credential | undefined> {
+): Promise<Credential | undefined> 
+{
     return await db.get(`
         SELECT user_id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE id = ?`,
         [id]
@@ -78,13 +82,14 @@ export async function findById(
 export async function getCredentialbyID(
     db: Database,
     credential_id: number
-): Promise<Credential | undefined> {
-
+): Promise<Credential | undefined> 
+{
     const credential = await db.get(`
         SELECT * FROM CREDENTIALS WHERE id = ?`,
         [credential_id]
     );
-    console.log(`test: ${credential?.id}`); 
+    console.log(`test: ${credential?.id}`);
+
     return credential;
 }
 

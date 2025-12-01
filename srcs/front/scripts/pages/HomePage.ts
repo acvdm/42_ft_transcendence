@@ -134,8 +134,14 @@ export function afterRender(): void {
     const wizzButton = document.getElementById('send-wizz');
     const wizzContainer = document.getElementById('wizz-container');
 
-    //const wizzAuthor = "Faustoche"; // à remplacer par l'username de l;envoyeur
     const currentUsername = localStorage.getItem('username');
+
+    const userConnected = document.getElementById('user-name');
+    const bioText = document.getElementById('user-bio');
+    const bioWrapper = document.getElementById('bio-wrapper');
+
+    if (currentUsername && userConnected)
+        userConnected.textContent = currentUsername;
 
     if (!messagesContainer || !messageInput) {
         console.log("Can't find chat elements");
@@ -144,12 +150,157 @@ export function afterRender(): void {
 
     const scrollToBottom = () => {
         if(messagesContainer) {
-            // Un petit délai pour laisser le navigateur calculer la hauteur
+            // TIMEOUT POUR AVOIR LE TMEPS DE calculer la hauteur 
             setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 50);
         }
     };
+
+    // ---------------------------------------------------
+    // ----           LOGIQUE DE LA BIO               ----
+    // ---------------------------------------------------
+
+let currentInput: HTMLInputElement | null = null;
+
+bioText?.addEventListener('click', () => {
+    const input = document.createElement("input");
+    currentInput = input; // REF DIRECT
+
+    input.type = "text";
+    input.value = bioText.textContent === "Share a quick message" ? "" : bioText.textContent;
+
+    input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+
+    if (bioWrapper) {
+        bioWrapper.replaceChild(input, bioText);
+        input.focus();
+    }
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            finalize(input.value.trim() || "Share a quick message");
+        }
+    });
+
+    input.addEventListener("blur", () => {
+        finalize(input.value.trim() || "Share a quick message");
+    });
+});
+
+function finalize(text: string) {
+    if (!bioWrapper || !bioText || !currentInput) return;
+
+    const parsed = parseMessage(text);
+
+    bioText.innerHTML = parsed;
+    bioWrapper.replaceChild(bioText, currentInput);
+    currentInput = null;
+}
+
+
+    // ---------------------------------------------------
+    // ----      LOGIQUE DES STATUS DYNAMIQUES        ----
+    // ---------------------------------------------------
+
+    const statusSelector = document.getElementById('status-selector');
+    const statusDropdown = document.getElementById('status-dropdown');
+    const statusText = document.getElementById('current-status-text');
+    const statusFrame = document.getElementById('user-status') as HTMLImageElement;
+
+    const statusImages: { [key: string]: string } = {
+        'available': '/assets/basic/status_online_small.png',
+        'busy':      '/assets/basic/status_busy_small.png',
+        'away':      '/assets/basic/status_away_small.png',
+        'invisible': '/assets/basic/status_offline_small.png'
+    };
+
+    const statusLabels: { [key: string]: string } = {
+        'available': '(Available)',
+        'busy':      '(Busy)',
+        'away':      '(Away)',
+        'invisible': '(Appear offline)'
+    };
+
+    const updateStatusDisplay = (status: string) => {
+        if (statusFrame && statusText && statusImages[status] && statusLabels[status]) {
+            statusFrame.src = statusImages[status];
+            statusText.textContent = statusLabels[status];
+
+            const statusOptions = document.querySelectorAll('.status-options');
+            statusOptions.forEach(option => {
+                const optionStatus = (option as HTMLElement).dataset.status;
+                if (optionStatus === status)
+                    option.classList.add('bg-blue-50');
+                else
+                    option.classList.remove('bg-blue-50');
+            });
+        }
+    };
+
+    socket.on("userConnected", (data: { username: string, status: string }) => {
+    console.log("User connected with status:", data.status);
+    updateStatusDisplay(data.status);
+    });
+
+    const savedStatus = localStorage.getItem('userStatus') || 'available';
+    updateStatusDisplay(savedStatus);
+
+    if (statusSelector && statusDropdown && statusText && statusFrame) {
+        statusSelector.addEventListener('click', (e) => {
+            e.stopPropagation();
+            statusDropdown.classList.toggle('hidden');
+            
+            document.getElementById('emoticon-dropdown')?.classList.add('hidden');
+            document.getElementById('animation-dropdown')?.classList.add('hidden');
+            document.getElementById('font-dropdown')?.classList.add('hidden');
+            document.getElementById('background-dropdown')?.classList.add('hidden');
+        });
+
+        const statusOptions = document.querySelectorAll('.status-option');
+
+        statusOptions.forEach(option => {
+        option.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            const selectedStatus = (option as HTMLElement).dataset.status;
+
+            if (selectedStatus && statusImages[selectedStatus]) {
+                statusFrame.src = statusImages[selectedStatus];
+                statusText.textContent = statusLabels[selectedStatus];
+                
+                localStorage.setItem('userStatus', selectedStatus);
+
+                try {
+                    const userId = localStorage.getItem('userId');
+                    console.log("Tentative de mise à jour pour User ID:", userId, "Status:", selectedStatus); // <--- AJOUTE CECI
+                    const response = await fetch(`/api/users/${userId}/status`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: selectedStatus })
+                    });
+                    
+                    if (!response.ok) {
+                        console.error('Failed to update status');
+                    }
+                } catch (error) {
+                    console.error('Error updating status:', error);
+                }
+            }
+
+            statusDropdown.classList.add('hidden');
+        });
+    });
+
+        document.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            if (!statusDropdown.contains(target) && !statusSelector.contains(target)) {
+                statusDropdown.classList.add('hidden');
+            }
+        });
+    }
 
     // ---------------------------------------------------
     // ----            LOGIQUE D'ANIMATION            ----
@@ -593,7 +744,6 @@ export function afterRender(): void {
     // ---------------------------------------------------
 
 
-
     const addMessage = async (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
         const msgElement = document.createElement('p');
         msgElement.className = "mb-1";
@@ -673,12 +823,13 @@ export function afterRender(): void {
         addMessage("Connected to chat server!");
     });
 
+
+
     // on va écouter l'événement chatmessage venant du serveur
     socket.on("chatMessage", (data: any) => {
             // le backend va renvoyer data, 
             // il devrait plus renvoyer message: "" author: ""
         addMessage(data.message || data, data.author || "Anonyme");
-        console.log("Username:", data.alias);
     });
 
     socket.on("disconnected", () => {
@@ -687,13 +838,16 @@ export function afterRender(): void {
 
     /* Envoi des événements sockets */
 
-    // a partir du moiment ou on appuie sur entree-> envoi de l'input
+    // Creer un event de creation de channel des qu'on clique sur un ami / qu'on cree une partie
+
+    // a partir du moment ou on appuie sur entree-> envoi de l'input
     messageInput.addEventListener('keyup', (event) => {
         if (event.key == 'Enter' && messageInput.value.trim() != '') {
-            const message = messageInput.value;
-
-            // on envois le message au serveur avec emit
-            socket.emit("chatMessage", { message: message, author: currentUsername}); // a changer pour l'username du joueur
+            const msg_content = messageInput.value;
+            // on envoie le message au serveur avec emit
+            const username = localStorage.getItem('username');
+            const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+            socket.emit("chatMessage", { sender_id: sender_id, channel: "general", msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
             messageInput.value = ''; // on vide l'input
         }
     });
