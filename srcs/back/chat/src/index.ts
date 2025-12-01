@@ -5,15 +5,15 @@ import { Server } from 'socket.io';
 import fs from 'fs';
 import * as messRepo from "./repositories/messages.js" 
 
-const httpsOptions = {
-    key: fs.readFileSync('/app/server.key'),
-    cert: fs.readFileSync('/app/server.crt')
-}
+// const httpsOptions = {
+//     key: fs.readFileSync('/app/server.key'),
+//     cert: fs.readFileSync('/app/server.crt')
+// }
 
 // Creation of Fastify server
 const fastify = Fastify({ 
   logger: true, 
-  https: httpsOptions 
+  // https: httpsOptions 
 });
 
 let db: Database;

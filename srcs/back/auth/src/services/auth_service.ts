@@ -20,9 +20,9 @@ export interface accAndRefTokens {
 }
 
 export interface authResponse {
-    access_token: string;
-    refresh_token: string;
-    user_id: number 
+    access_token: string,
+    refresh_token: string,
+    user_id: number
 }
 
 async function generateTokens (
@@ -121,5 +121,6 @@ export async function authenticatePassword(
     const credential =  await credRepo.getCredentialbyID(db, credential_id);
     if (!credential)
         throw new Error("Could not find any matching credential");
+    
     return await crypt.verifyPassword(password, credential.pwd_hashed);
 }

@@ -85,6 +85,23 @@ export async function getChannelByName(
     return result ? result.id : null;
 }
 
+export async function getHistoryByChannel(
+    db: Database,
+    channel_id: number
+): Promise<Message []>
+{
+    const messages = await db.all(`
+        SELECT msg_id, sender_id, msg_content, sent_at 
+        FROM MESSAGES
+        WHERE channel_id = ?
+        ORDER BY sent_at ASC`,
+        [channel_id]
+    ) as Message[];
+
+    // Retourne messages si défini sinon un tableau vide
+    return messages || [];
+}
+
 
 
 //-------- PUT / UPDATE

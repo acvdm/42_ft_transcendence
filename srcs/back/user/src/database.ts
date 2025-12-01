@@ -14,9 +14,9 @@ export async function initDatabase(): Promise<Database> {
     await db.exec(`
        CREATE TABLE IF NOT EXISTS USERS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        alias TEXT UNIQUE NOT NULL,
+        alias TEXT UNIQUE NOT NULL CHECK (length(alias) <= 30),
         avatar_url TEXT,
-        bio TEXT,
+        bio TEXT CHECK (length(bio) < 255),
         status TEXT DEFAULT 'Available'
         ) 
     `);
