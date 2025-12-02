@@ -123,6 +123,7 @@ fastify.patch('/:id/status', async (request, reply) =>
 
 fastify.patch('/:id/bio', async (request, reply) =>
 {
+  console.log("PATCH BIO");
   const body = request.body as { id: number, bio: string };
 
   try
