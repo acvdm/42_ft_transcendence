@@ -330,7 +330,6 @@ async function finalize(text: string) {
 
                 try {
                     const userId = localStorage.getItem('userId');
-                    console.log("Tentative de mise à jour pour User ID:", userId, "Status:", selectedStatus); // <--- AJOUTE CECI
                     const response = await fetch(`/api/user/${userId}/status`, {
                         method: 'PATCH',
                         headers: {
