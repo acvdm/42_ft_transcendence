@@ -3905,7 +3905,7 @@
             try {
               const userId = localStorage.getItem("userId");
               console.log("Tentative de mise \xE0 jour pour User ID:", userId, "Status:", selectedStatus);
-              const response = await fetch(`/api/users/${userId}/status`, {
+              const response = await fetch(`/api/user/${userId}/status`, {
                 method: "PATCH",
                 headers: {
                   "Content-Type": "application/json"
