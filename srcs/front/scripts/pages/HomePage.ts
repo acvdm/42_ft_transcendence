@@ -140,6 +140,37 @@ export function afterRender(): void {
     const bioText = document.getElementById('user-bio');
     const bioWrapper = document.getElementById('bio-wrapper');
 
+    const friendItems = document.querySelectorAll('.friend-item');
+    const roomChat = document.getElementById('room-chat');
+    const chatPlaceholder = document.getElementById('chat-placeholder');
+
+    const chatHeaderAvatar = document.getElementById('chat-header-avatar');
+    const chatHeaderName = document.getElementById('chat-header-name');
+    const chatHeaderBio = document.getElementById('chat-header-bio');
+
+    if (friendItems && roomChat && chatPlaceholder) {
+        friendItems.forEach(item => {
+            item.addEventListener('click', () => {
+                chatPlaceholder.classList.add('hidden');
+                roomChat.classList.remove('hidden');
+
+                const targetUsername = (item as HTMLElement).dataset.username || "Unknown";
+                const targetBio = (item as HTMLElement).dataset.bio || "";
+                const targetAvatar = (item as HTMLElement).dataset.avatar || "/assets/profile/default.png";
+
+                if (chatHeaderName) chatHeaderName.textContent = targetUsername;
+                if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
+                if (chatHeaderAvatar) chatHeaderAvatar.src = targetAvatar;
+
+                if (messagesContainer) {
+                    messagesContainer.innerHTML = '';
+                    addMessage(`Beginning of your conversation with ${targetUsername}`, "System");
+                }
+                messageInput?.focus();
+            })
+        })
+    }
+
     if (currentUsername && userConnected)
         userConnected.textContent = currentUsername;
 
@@ -155,7 +186,7 @@ export function afterRender(): void {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 50);
         }
-    };
+    };`                                                                             `
 
     // ---------------------------------------------------
     // ----           LOGIQUE DE LA BIO               ----
