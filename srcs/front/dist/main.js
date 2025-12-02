@@ -3807,7 +3807,6 @@
     const currentUsername = localStorage.getItem("username");
     const userConnected = document.getElementById("user-name");
     const bioText = document.getElementById("user-bio");
-    console.log('Bio dans main.js: ', bioText);
     const bioWrapper = document.getElementById("bio-wrapper");
     if (currentUsername && userConnected)
       userConnected.textContent = currentUsername;
