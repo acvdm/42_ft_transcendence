@@ -188,15 +188,40 @@ bioText?.addEventListener('click', () => {
     });
 });
 
-function finalize(text: string) {
+async function finalize(text: string) {
     if (!bioWrapper || !bioText || !currentInput) return;
 
-    const parsed = parseMessage(text);
-
+    // teste filnak
+    const newBio = text.trim() || "Share a quick message";
+    const userId = localStorage.getItem('userId');
+    // maj avec emoticones
+    const parsed = parseMessage(newBio);
     bioText.innerHTML = parsed;
     bioWrapper.replaceChild(bioText, currentInput);
     currentInput = null;
+
+    // envoi a la base de donnee
+    if (userId) {
+        try {
+            const response = await fetch(`/api/user/${userId}/bio`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ bio: newBio })
+            });
+
+            if (!response.ok) {
+                console.error('Error while saving bio');
+            } else {
+                console.log('Bio saved !');
+            }
+        } catch (error) {
+            console.error('Network error :', error);
+        }
+    }
 }
+
 
 
     // ---------------------------------------------------
