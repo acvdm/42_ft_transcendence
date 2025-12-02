@@ -123,11 +123,12 @@ fastify.patch('/:id/status', async (request, reply) =>
 
 fastify.patch('/:id/bio', async (request, reply) =>
 {
-  const body = request.body as { id: number, bio: string };
-
+  const { id } = request.params as { id: number };
+  const { bio } = request.body as { bio: string };
+  
   try
   {
-    userRepo.updateBio(db, body.id, body.bio);
+    userRepo.updateBio(db, id, bio);
     return reply.status(200).send({ message: 'Bio updated successfully' });
   }
   catch (err)

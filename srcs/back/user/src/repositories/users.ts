@@ -67,9 +67,10 @@ export async function updateStatus (
 )
 {
     const user = await findUserByID(db, user_id);
-    if (!user.id)
+    if (!user?.id)
         throw new Error(`Error id: ${user_id} does not exist`);
 
+    console.log("update status dans users.ts");
     await db.run(`
         UPDATE USERS SET status = ? WHERE id = ?`,
         [status, user_id]
@@ -84,12 +85,13 @@ export async function updateBio (
 )
 {
     const user = await findUserByID(db, user_id);
-    if (!user.id)
+    if (!user?.id)
         throw new Error(`Error id: ${user_id} does not exist`);
 
     if (bio.length > 255)
         throw new Error(`Error: bio too long. Max 255 characters`);
 
+    console.log("update bio dans users.ts");
     await db.run(`
         UPDATE USERS SET bio = ? WHERE id = ?`,
         [bio, user_id]
