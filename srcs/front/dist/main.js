@@ -4297,6 +4297,19 @@
         messageInput.value = "";
       }
     });
+    const myUserId = localStorage.getItem("userId");
+    if (myUserId && bioText) {
+      fetch(`/api/user/${myUserId}`).then((response) => {
+        if (!response.ok) throw new Error("Cannot get user");
+        return response.json();
+      }).then((user) => {
+        if (user.bio) {
+          bioText.innerHTML = parseMessage(user.bio);
+        }
+      }).catch((error) => {
+        console.error("Cannot load bio:", error);
+      });
+    }
   }
 
   // scripts/pages/ProfilePage.ts

@@ -227,6 +227,7 @@ async function finalize(text: string) {
     const newBio = text.trim() || "Share a quick message";
     const userId = localStorage.getItem('userId');
 
+ 
     // maj avec emoticones
     const parsed = parseMessage(newBio);
     bioText.innerHTML = parsed;
@@ -906,4 +907,26 @@ async function finalize(text: string) {
             messageInput.value = ''; // on vide l'input
         }
     });
+
+    // ---------------------------------------------------
+    // ----           CHARGEMENT DE LA BIO            ----
+    // ---------------------------------------------------
+    
+    const myUserId = localStorage.getItem('userId'); 
+
+    if (myUserId && bioText) {
+        fetch(`/api/user/${myUserId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Cannot get user');
+                return response.json();
+            })
+            .then(user => {
+                if (user.bio) {
+                    bioText.innerHTML = parseMessage(user.bio);
+                }
+            })
+            .catch(error => {
+                console.error('Cannot load bio:', error);
+            });
+    }
 }
