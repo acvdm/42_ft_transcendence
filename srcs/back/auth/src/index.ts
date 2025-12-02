@@ -6,35 +6,25 @@ import { loginUser, registerUser } from './services/auth_service.js';
 import fs from 'fs';
 
 
-// const httpsOptions = {
-//     key: fs.readFileSync('/app/server.key'),
-//     cert: fs.readFileSync('/app/server.crt')
-// }
-
 // Creation of Fastify server
-const fastify = Fastify({ 
-  logger: true,
-  // https: httpsOptions
- });
+const fastify = Fastify({ logger: true, });
 
 let db: Database; // on stocke ici la connexion SQLite, globale au module
 
-async function main() {
-  // console.log('Current UID:', process.getuid());
-  // console.log('Current GID: ', process.getgid());
+async function main() 
+{
+
   db = await initDatabase();
   console.log('auth database initialised');
 }
 
 
-//------------ROUTES 
 
-// route status
-fastify.get('/status', async (request, reply) => {
-  return { service: 'auth', status: 'ready', port: 3001 };
-});
+//---------------------------------------
+//----------- AUTHENTICATION ------------
+//---------------------------------------
 
-// route register
+/* -- REGISTER - CREATE CREDENTIAL -- */
 fastify.post('/register', async (request, reply) => {
   try 
   {
@@ -60,7 +50,10 @@ fastify.post('/register', async (request, reply) => {
   }
 });
 
-fastify.post('/login', async (request, reply) => {
+
+/* -- LOGIN -- */ 
+fastify.post('/login', async (request, reply) => 
+{
   const body = request.body as { email: string, password: string };
   
   try {
@@ -74,8 +67,19 @@ fastify.post('/login', async (request, reply) => {
   }
 });
 
-// on demarre le serveur
-const start = async () => {
+
+
+//---------------------------------------
+//--------------- SERVER ----------------
+//---------------------------------------
+
+fastify.get('/status', async (request, reply) => 
+{
+  return { service: 'auth', status: 'ready', port: 3001 };
+});
+
+const start = async () => 
+{
   try
   {
     // on attend que le serveur demaarre avant de continuer sur port 8080

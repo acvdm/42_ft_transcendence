@@ -25,6 +25,7 @@ export async function initDatabase(): Promise<Database> {
     // TABLE FRIENDSHIPS
     await db.exec(`
         CREATE TABLE IF NOT EXISTS FRIENDSHIPS (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             friend_id INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',

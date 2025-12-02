@@ -26,6 +26,7 @@ COPY . .
 #-----------------------BUILD STATIC FILES
 RUN npm run build
 
+
 #----------------------------
 # STEP 2: FINAL IMAGE
 #----------------------------
@@ -49,9 +50,6 @@ COPY --from=build /app/auth/package*.json ./
 COPY --from=build /app/auth/node_modules ./node_modules
 COPY --from=build /app/auth/dist ./dist
 
-# #-----------------------ENV POINTING TO SHARED DB
-# ENV DATABASE_URL="/app/data/auth.sqlite"
-# plus besoin car mis dans le docker-compose + à mettre dans le index.ts
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3001

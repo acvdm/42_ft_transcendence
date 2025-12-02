@@ -91,7 +91,6 @@ export async function updateBio (
     if (bio.length > 255)
         throw new Error(`Error: bio too long. Max 255 characters`);
 
-    console.log("update bio dans users.ts");
     await db.run(`
         UPDATE USERS SET bio = ? WHERE id = ?`,
         [bio, user_id]
