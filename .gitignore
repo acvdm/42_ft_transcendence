@@ -1,5 +1,9 @@
-./srcs/env
+.env
 
 node_modules/
 
 data/
+data.old/
+
+certificate.crt 
+private_key.key

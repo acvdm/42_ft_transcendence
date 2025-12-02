@@ -799,7 +799,6 @@ async function finalize(text: string) {
     // ---------------------------------------------------
 
 
-
     const addMessage = async (message: string, author: string = "Admin") => { // pour le moment -> admin = fallback
         const msgElement = document.createElement('p');
         msgElement.className = "mb-1";
@@ -879,12 +878,13 @@ async function finalize(text: string) {
         addMessage("Connected to chat server!");
     });
 
+
+
     // on va écouter l'événement chatmessage venant du serveur
     socket.on("chatMessage", (data: any) => {
             // le backend va renvoyer data, 
             // il devrait plus renvoyer message: "" author: ""
         addMessage(data.message || data, data.author || "Anonyme");
-        console.log("Username:", data.alias);
     });
 
     socket.on("disconnected", () => {
@@ -893,13 +893,16 @@ async function finalize(text: string) {
 
     /* Envoi des événements sockets */
 
-    // a partir du moiment ou on appuie sur entree-> envoi de l'input
+    // Creer un event de creation de channel des qu'on clique sur un ami / qu'on cree une partie
+
+    // a partir du moment ou on appuie sur entree-> envoi de l'input
     messageInput.addEventListener('keyup', (event) => {
         if (event.key == 'Enter' && messageInput.value.trim() != '') {
-            const message = messageInput.value;
-
-            // on envois le message au serveur avec emit
-            socket.emit("chatMessage", { message: message, author: currentUsername}); // a changer pour l'username du joueur
+            const msg_content = messageInput.value;
+            // on envoie le message au serveur avec emit
+            const username = localStorage.getItem('username');
+            const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+            socket.emit("chatMessage", { sender_id: sender_id, channel: "general", msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
             messageInput.value = ''; // on vide l'input
         }
     });

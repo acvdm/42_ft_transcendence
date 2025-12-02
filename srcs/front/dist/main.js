@@ -4285,15 +4285,16 @@
     });
     socket.on("chatMessage", (data) => {
       addMessage(data.message || data, data.author || "Anonyme");
-      console.log("Username:", data.alias);
     });
     socket.on("disconnected", () => {
       addMessage("Disconnected from chat server!");
     });
     messageInput.addEventListener("keyup", (event) => {
       if (event.key == "Enter" && messageInput.value.trim() != "") {
-        const message = messageInput.value;
-        socket.emit("chatMessage", { message, author: currentUsername });
+        const msg_content = messageInput.value;
+        const username = localStorage.getItem("username");
+        const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+        socket.emit("chatMessage", { sender_id, channel: "general", msg_content });
         messageInput.value = "";
       }
     });
@@ -4515,6 +4516,7 @@
         return;
       }
       try {
+        console.log("coucou");
         const response = await fetch("/api/user/register", {
           method: "POST",
           headers: {
@@ -4553,7 +4555,7 @@
       } catch (error) {
         console.error("Network error:", error);
         if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
+          errorElement.textContent = "Network error, please try again REGISTER PAGE";
           errorElement.classList.remove("hidden");
         }
       }

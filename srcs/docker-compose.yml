@@ -9,8 +9,8 @@ services:
         - gateway
         - front
       volumes:
-        - ./server.crt:/etc/nginx/ssl/certificate.crt
-        - ./server.key:/etc/nginx/ssl/private_key.key
+        - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
+        - ./private_key.key:/app/private_key.key
       networks:
         - transcendence
 
@@ -26,9 +26,9 @@ services:
         - chat
       env_file: 
         - .env
-      volumes:
-        - ./server.crt:/etc/nginx/ssl/certificate.crt
-        - ./server.key:/etc/nginx/ssl/private_key.key
+      # volumes:
+      #   - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
+      #   - ./private_key.key:/app/private_key.key
       networks: 
         - transcendence 
 
@@ -65,9 +65,7 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        - auth_data:/app/data
 
     chat:
       container_name: chat
@@ -81,9 +79,9 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        - chat_data:/app/data
+        # - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
+        # - ./private_key.key:/app/private_key.key
 
     game:
       container_name: game
@@ -97,9 +95,9 @@ services:
       networks:
         - transcendence
       volumes:
-        - ./back/data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        - game_data:/app/data
+        # - ./server.crt:/app/server.crt # On injecte le MÊME certificat
+        # - ./server.key:/app/server.key
 
     user:
       container_name: user
@@ -113,11 +111,8 @@ services:
       networks: 
         - transcendence
       volumes:
-        - ./back/data:/app/data
-        - ./back/user/avatars:/app/user/avatars
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
-
+        - user_data:/app/data
+        - user_avatars:/app/user/avatars
     
 networks:
   transcendence:
@@ -125,5 +120,8 @@ networks:
     driver: bridge
 
 volumes:
-  data:
-  avatars:
+  user_avatars:
+  auth_data:
+  chat_data:
+  user_data:
+  game_data:

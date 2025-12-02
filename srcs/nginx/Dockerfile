@@ -7,7 +7,7 @@ RUN apk add --no-cache openssl
 # ARG DOMAIN=localhost
 # ENV DOMAIN=${DOMAIN}
 
-#-----------------------GENERERATE AUTO-SIGNED CERTIFICATE 
+# #-----------------------GENERERATE AUTO-SIGNED CERTIFICATE 
 # RUN mkdir -p /etc/nginx/ssl && \
 #     openssl req -x509 -nodes -days 365 \
 #         -out /etc/nginx/ssl/certificate.crt \
