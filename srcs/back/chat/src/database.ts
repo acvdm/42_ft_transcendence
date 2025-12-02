@@ -19,7 +19,7 @@ export async function initDatabase(): Promise<Database> {
         FOREIGN KEY (channel_id) REFERENCES CHANNELS(id)
       )
     `);
-    console.log('PRIVATE_MESSAGES table created');
+    console.log('MESSAGES table created');
 
     await db.exec(`
       CREATE TABLE IF NOT EXISTS CHANNELS (

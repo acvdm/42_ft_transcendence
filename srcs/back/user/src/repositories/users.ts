@@ -77,6 +77,25 @@ export async function updateStatus (
 
 }
 
+export async function updateBio (
+    db: Database,
+    user_id: number,
+    bio: string
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    if (bio.length > 255)
+        throw new Error(`Error: bio too long. Max 255 characters`);
+
+    await db.run(`
+        UPDATE USERS SET bio = ? WHERE id = ?`,
+        [bio, user_id]
+    );
+}
+
 
 
 //-------- DELETE / DELETE

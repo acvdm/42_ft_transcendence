@@ -70,6 +70,7 @@ function handleRegister() {
 		}
 
 		try {
+			console.log("coucou");
             // On appelle la route définie dans la Gateway qui redirige vers le service USER
             const response = await fetch('/api/user/register', {
                 method: 'POST',
@@ -115,7 +116,7 @@ function handleRegister() {
         } catch (error) {
            console.error("Network error:", error);
 			if (errorElement) {
-				errorElement.textContent = "Network error, please try again";
+				errorElement.textContent = "Network error, please try again REGISTER PAGE";
 				errorElement.classList.remove('hidden');
 			}
         }

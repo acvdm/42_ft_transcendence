@@ -121,6 +121,22 @@ fastify.patch('/:id/status', async (request, reply) =>
   }
 });
 
+fastify.patch('/:id/bio', async (request, reply) =>
+{
+  const body = request.body as { id: number, bio: string };
+
+  try
+  {
+    userRepo.updateBio(db, body.id, body.bio);
+    return reply.status(200).send({ message: 'Bio updated successfully' });
+  }
+  catch (err)
+  {
+    fastify.log.error(err);
+    return reply.status(500).send({ message: 'Failed to update bio' });
+  }
+});
+
 
 // ------------------------- START SERVER
 const start = async () => 

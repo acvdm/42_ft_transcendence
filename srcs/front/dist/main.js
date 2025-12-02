@@ -4483,6 +4483,7 @@
         return;
       }
       try {
+        console.log("coucou");
         const response = await fetch("/api/user/register", {
           method: "POST",
           headers: {
@@ -4521,7 +4522,7 @@
       } catch (error) {
         console.error("Network error:", error);
         if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
+          errorElement.textContent = "Network error, please try again REGISTER PAGE";
           errorElement.classList.remove("hidden");
         }
       }

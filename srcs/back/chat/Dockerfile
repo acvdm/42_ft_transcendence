@@ -28,11 +28,24 @@ RUN npm run build
 FROM node:20-alpine
 
 RUN apk add --no-cache \
+    openssl \
     sqlite \
     su-exec
 
 COPY entrypoint.sh /app/entrypoint.sh
+# COPY certificate.crt /app/certificate.crt
+# COPY private_key.key /app/private_key.key
+
+
 RUN chmod +x /app/entrypoint.sh
+
+# #-----------------------GENERERATE AUTO-SIGNED CERTIFICATE 
+# RUN mkdir -p /app/certificates && cd /app/certificates
+
+# RUN openssl req -x509 -nodes -days 365 \
+#         -out certificate.crt \
+#         -keyout private_key.key \
+#         -subj "/CN=localhost"
 
 WORKDIR /app/chat
 

@@ -8,6 +8,9 @@ services:
       depends_on:
         - gateway
         - front
+      volumes:
+        - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
+        - ./private_key.key:/app/private_key.key
       networks:
         - transcendence
 
@@ -23,6 +26,9 @@ services:
         - chat
       env_file: 
         - .env
+      # volumes:
+      #   - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
+      #   - ./private_key.key:/app/private_key.key
       networks: 
         - transcendence 
 
@@ -74,8 +80,8 @@ services:
         - transcendence
       volumes:
         - chat_data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        # - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
+        # - ./private_key.key:/app/private_key.key
 
     game:
       container_name: game
@@ -90,8 +96,8 @@ services:
         - transcendence
       volumes:
         - game_data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        # - ./server.crt:/app/server.crt # On injecte le MÊME certificat
+        # - ./server.key:/app/server.key
 
     user:
       container_name: user

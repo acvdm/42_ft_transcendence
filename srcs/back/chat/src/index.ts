@@ -2,12 +2,14 @@ import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import { initDatabase } from './database.js'
 import { Database } from 'sqlite';
 import { Server } from 'socket.io';
-import fs from 'fs';
+// import https from 'https';
+// import fs from 'fs';
 import * as messRepo from "./repositories/messages.js" 
 
+console.log("index.ts");
 // const httpsOptions = {
-//     key: fs.readFileSync('/app/server.key'),
-//     cert: fs.readFileSync('/app/server.crt')
+//     key: fs.readFileSync('/app/private_key.key'),
+//     cert: fs.readFileSync('/app/certificate.crt')
 // }
 
 // Creation of Fastify server
@@ -43,7 +45,10 @@ const start = async () =>
     {
       cors: {
         origin: "*", // important -> autorise le front a se connecter
-      }
+      },
+      // Options pour le proxy nginx
+      path: '/socket.io/',
+      transports: ['websocket', 'polling']
     });
 
     // 3. gestion des évenements websockets
@@ -61,6 +66,7 @@ const start = async () =>
       if (!channelID) {
         channelID = await messRepo.createChannel(db, channel);
       }
+      console.log("channel_id: ", channelID);
       const user_id = 2;
       const newMember = await messRepo.saveNewMemberinChannel(db, channelID, user_id);
 
@@ -77,7 +83,7 @@ const start = async () =>
             socket.emit('error', { message: "Failed to save message "});
             return ;
           }
-          console.log(`Message saved with ID: ${saveMessageID}`);
+          console.log(`Message saved with ID: ${saveMessageID}, channel: ${channelID}`);
           
           // on le renvoie a tout le monde y compris l'envoyeur: 
           // a changer si on veut envoyer qu'aux recv_id
