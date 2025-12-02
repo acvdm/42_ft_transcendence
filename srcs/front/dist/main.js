@@ -3499,175 +3499,228 @@
   // scripts/pages/HomePage.html
   var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
-    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-    </div>
+	<div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+	</div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-4 gap-4">
-        <!-- Cadre du profil -->
-        <div class="flex flex-row w-full h-[160px] bg-gray-100 shadow-inner rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
-            <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                <!-- l'image (profil principal) -->
-                <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-                     style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-                <!-- le cadre -->
-                <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
-            </div>
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-4 gap-4">
+		<!-- Cadre du profil -->
+		<div class="flex flex-row w-full h-[160px] bg-gray-100 shadow-inner rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
+			<div class="relative w-[110px] h-[110px] flex-shrink-0">
+				<!-- l'image (profil principal) -->
+				<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+					 style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+				<!-- le cadre -->
+				<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
+			</div>
 
-            <!-- username, bio et status -->
-            <div class="flex flex-col justify-center pl-4 flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <p class="text-xl font-semibold" id="user-name">Username</p>
+			<!-- username, bio et status -->
+			<div class="flex flex-col justify-center pl-4 flex-1">
+				<div class="flex items-center gap-2 mb-1">
+					<p class="text-xl font-semibold" id="user-name">Username</p>
 
-                    <!-- selection du status = dynamique -->
-                    <div class="relative">
-                        <button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-                            <span id="current-status-text">(Available)</span>
-                            <img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-                        </button>
+					<!-- selection du status = dynamique -->
+					<div class="relative">
+						<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+							<span id="current-status-text">(Available)</span>
+							<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+						</button>
 
-                        <!-- Menu dropdown pour le status -->
-                        <div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                            <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-                                <span class="w-2 h-2 rounded-full"></span>
-                                <span>Available</span>
-                            </button>
-                            <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-                                <span class="w-2 h-2 rounded-full"></span>
-                                <span>Busy</span>
-                            </button>
-                            <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-                                <span class="w-2 h-2 rounded-full"></span>
-                                <span>Away</span>
-                            </button>
-                            <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-                                <span class="w-2 h-2 rounded-full"></span>
-                                <span>Offline</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div id="bio-wrapper">
-                    <p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
-                </div>
-            </div>
-        </div>
+						<!-- Menu dropdown pour le status -->
+						<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+							<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+								<span class="w-2 h-2 rounded-full"></span>
+								<span>Available</span>
+							</button>
+							<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+								<span class="w-2 h-2 rounded-full"></span>
+								<span>Busy</span>
+							</button>
+							<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+								<span class="w-2 h-2 rounded-full"></span>
+								<span>Away</span>
+							</button>
+							<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+								<span class="w-2 h-2 rounded-full"></span>
+								<span>Offline</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<div id="bio-wrapper">
+					<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+				</div>
+			</div>
+		</div>
 
-        <!-- Container avec left et right qui prennent toute la hauteur restante -->
-        <div class="flex gap-4 flex-1 min-h-0">
-            <div id="left" class="flex-col w-[700px] min-w-[700px] shrink-0 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center" style="width: 700px; min-width: 700px;">
-                <h1 class="text-lg font-semibold"> Wanna play? \u{1F47E}</h1>
-                <button id="local-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
-                <button id="remote-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
-                <button id="tournament-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
-            </div>
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-4 flex-1 min-h-0">
+			<div id="left" class="flex-col w-[700px] min-w-[700px] shrink-0 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center" style="width: 700px; min-width: 700px;">
+				<h1 class="text-lg font-semibold"> Wanna play? \u{1F47E}</h1>
+				<button id="local-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
+				<button id="remote-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
+				<button id="tournament-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
+			</div>
 
-            <div id="right" class="flex flex-row gap-4 flex-1 min-w-0">
+			<div id="right" class="flex flex-row gap-4 flex-1 min-w-0">
 
-    <div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+	<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
 
-        <div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full">
-            <p class="text-xl text-gray-500 uppercase tracking-wide mb-2 select-none" style="width:350px; min-width: 350px;">My friends</p>
+		<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full">
+			<p class="text-xl text-gray-500 uppercase tracking-wide mb-2 select-none" style="width:350px; min-width: 350px;">My friends</p>
 
-            <div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none">
+			<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none">
 
-                <details open class="group">
-                    <summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-                        \u2B50 Contacts
-                    </summary>
+				<details open class="group">
+					<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+						\u2B50 Contacts
+					</summary>
 
-                    <div class="mt-2 ml-4 flex flex-col gap-2">
+					<div class="mt-2 ml-4 flex flex-col gap-2">
 
-                        <div class="friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition"
-                             data-username="Bliblablou"
-                             data-bio="Share a quickmessage"
-                             data-avatar="/assets/profile/Friendly_Dog.png"
-                             data-status="online">
-                            
-                            <div class="relative w-[50px] h-[50px] flex-shrink-0">
-                                <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
-                                     src="/assets/friends/online-dot.png" alt="status">
-                            </div>
+						<div class="friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition"
+							 data-username="Bliblablou"
+							 data-bio="Share a quickmessage"
+							 data-avatar="/assets/profile/Friendly_Dog.png"
+							 data-status="online">
+							
+							<div class="relative w-[50px] h-[50px] flex-shrink-0">
+								<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+									 src="/assets/friends/online-dot.png" alt="status">
+							</div>
 
-                            <div class="flex flex-col leading-tight">
-                                <span class="font-semibold text-sm text-gray-800">Bliblablou</span>
-                            </div>
-                        </div>
+							<div class="flex flex-col leading-tight">
+								<span class="font-semibold text-sm text-gray-800">Bliblablou</span>
+							</div>
+						</div>
 
-                        </div>
-                </details>
+						</div>
+				</details>
 
-                <details class="group">
-                    <summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-                        \u{1F4C1} Groups
-                    </summary>
+				<details class="group">
+					<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+						\u{1F4C1} Groups
+					</summary>
 
-                    <div class="mt-2 ml-4 flex flex-col gap-2">
-                        <div class="text-xs text-gray-600 ml-1">les bogoce</div>
-                        <div class="text-xs text-gray-600 ml-1">les cheums</div>
-                    </div>
-                </details>
-            </div>
-        </div>
+					<div class="mt-2 ml-4 flex flex-col gap-2">
+						<div class="text-xs text-gray-600 ml-1">les bogoce</div>
+						<div class="text-xs text-gray-600 ml-1">les cheums</div>
+					</div>
+				</details>
+			</div>
+		</div>
 
-        <div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
-            <img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
-            <p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
-        </div>
+		<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
+			<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
+			<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
+		</div>
 
-        <div id="room-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-            
-            <div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
-                <div class="relative w-[60px] h-[60px] flex-shrink-0">
-                    <img id="chat-header-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png" alt="chat status frame">
-                    <img id="chat-header-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[40px] h-[40px] object-cover" src="/assets/profile/Friendly_Dog.png" alt="chat user avatar">
-                </div>
-                <div>
-                    <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                        <!-- l'image (profil principal) -->
-                        <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-                            style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-                        <!-- le cadre -->
-                        <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
-                    </div>
-                    <p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800">Username</p>
-                    <p id="chat-header-bio" class="text-xs text-gray-500 italic">Share a quick message</p>
-                </div>
-            </div>
+		<div id="room-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+			
+			<div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
+				<div class="flex gap-4 items-center">
+					<div class="relative w-[80px] h-[80px] flex-shrink-0">
+						<!-- l'image (profil principal) -->
+						<img id="chat-header-avatar" 
+							class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+							src="" 
+							alt="User avatar">
+						<!-- le cadre -->
+						<img id="chat-header-status" 
+							class="absolute inset-0 w-full h-full object-contain" 
+							src="/assets/basic/status_away_small.png" 
+							alt="Status frame">
+					</div>
+					<div class="flex flex-col justify-start leading-tight">
+						<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+						<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+					</div>
+				</div>
+			</div>
 
-            <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 
-            <div class="flex flex-col">
-                <input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
 
-                <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-                    <button id="select-emoticon" class="h-6">
-                        <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                            <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-                            <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+			<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 
-                            <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-                            </div>
-                        </div>
-                    </button>
+			<div class="flex flex-col">
+				<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
 
-                    <button id="select-animation" class="h-6">
-                        <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                            <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-                            <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+				<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+					<button id="select-emoticon" class="h-6">
+						<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+							<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+							<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
 
-                            <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-                            </div>
-                        </div>
-                    </button>
+							<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+								<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+							</div>
+						</div>
+					</button>
 
-                    <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-                    <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-                    <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-        </div>
-    </div> 
+					<button id="select-animation" class="h-6">
+						<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+							<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+							<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+							<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+								<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+							</div>
+						</div>
+					</button>
+
+					<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+					<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+					<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+<!-- Menu pour les fonts -->
+								
+					<button id="change-font" class="h-6">
+						<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+						<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+						<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+						<!-- Menu dropdown -> il s'ouvre quand on clique -->
+						<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+							<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+						</div>
+
+						</div>
+					</button>
+
+					<div class="relative">
+					<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+						<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+						<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+					</button>
+
+					<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+						<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+									
+						<div class="grid grid-cols-3 gap-2">
+										
+							<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+									data-bg="url('/assets/backgrounds/fish_background.jpg')"
+									style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+							</button>
+
+							<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+									data-bg="url('/assets/backgrounds/heart_background.jpg')"
+									style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+							</button>
+
+							<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+									data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+									style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+							</button>
+
+							<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+								Default background
+							</button>
+						</div>
+					</div>
+				</div>
+		</div>
+	</div> 
 </div>
 `;
 
@@ -3799,7 +3852,7 @@
     const roomChat = document.getElementById("room-chat");
     const chatPlaceholder = document.getElementById("chat-placeholder");
     const chatHeaderAvatar = document.getElementById("chat-header-avatar");
-    const chatHeaderName = document.getElementById("chat-header-name");
+    const chatHeaderName = document.getElementById("chat-header-username");
     const chatHeaderBio = document.getElementById("chat-header-bio");
     if (friendItems && roomChat && chatPlaceholder) {
       friendItems.forEach((item) => {

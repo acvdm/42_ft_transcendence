@@ -145,7 +145,7 @@ export function afterRender(): void {
     const chatPlaceholder = document.getElementById('chat-placeholder');
 
     const chatHeaderAvatar = document.getElementById('chat-header-avatar');
-    const chatHeaderName = document.getElementById('chat-header-name');
+    const chatHeaderName = document.getElementById('chat-header-username');
     const chatHeaderBio = document.getElementById('chat-header-bio');
 
     if (friendItems && roomChat && chatPlaceholder) {
