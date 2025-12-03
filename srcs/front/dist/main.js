@@ -3576,24 +3576,7 @@
 						\u2B50 Contacts
 					</summary>
 
-					<div class="mt-2 ml-4 flex flex-col gap-2">
-
-						<div class="friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition"
-							 data-username="Bliblablou"
-							 data-bio="Share a quick message"
-							 data-avatar="/assets/profile/Friendly_Dog.png"
-							 data-status="available">
-							
-							<div class="relative w-[50px] h-[50px] flex-shrink-0">
-								<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
-									 src="/assets/friends/online-dot.png" alt="status">
-							</div>
-
-							<div class="flex flex-col leading-tight">
-								<span class="font-semibold text-sm text-gray-800">Bliblablou</span>
-							</div>
-						</div>
-
+					<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
 						</div>
 				</details>
 
@@ -3854,26 +3837,74 @@
     const chatHeaderAvatar = document.getElementById("chat-header-avatar");
     const chatHeaderName = document.getElementById("chat-header-username");
     const chatHeaderBio = document.getElementById("chat-header-bio");
-    console.log("uSERNAME:", userConnected);
-    if (friendItems && roomChat && chatPlaceholder) {
-      friendItems.forEach((item) => {
-        item.addEventListener("click", () => {
-          chatPlaceholder.classList.add("hidden");
-          roomChat.classList.remove("hidden");
-          const targetUsername = item.dataset.username || "Unknown";
-          const targetBio = item.dataset.bio || "";
-          const targetAvatar = item.dataset.avatar || "/assets/profile/default.png";
-          if (chatHeaderName) chatHeaderName.textContent = targetUsername;
-          if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
-          if (chatHeaderAvatar) chatHeaderAvatar.src = targetAvatar;
-          if (messagesContainer) {
-            messagesContainer.innerHTML = "";
-            addMessage(`Beginning of your conversation with ${targetUsername}`, "System");
-          }
-          messageInput?.focus();
-        });
+    const getStatusDot = (status) => {
+      switch (status) {
+        case "available":
+          return "/assets/friends/online-dot.png";
+        case "busy":
+          return "/assets/friends/busy-dot.png";
+        case "away":
+          return "/assets/friends/away-dot.png";
+        default:
+          return "/assets/friends/offline-dot.png";
+      }
+    };
+    const attachFriendClick = (item) => {
+      item.addEventListener("click", () => {
+        console.log("Friend clicked:", item.dataset.username);
+        if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
+        if (roomChat) roomChat.classList.remove("hidden");
+        const targetUsername = item.dataset.username || "Unknown";
+        const targetBio = item.dataset.bio || "";
+        const targetAvatar = item.dataset.avatar || "/assets/profile/default.png";
+        if (chatHeaderName) chatHeaderName.textContent = targetUsername;
+        if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
+        if (chatHeaderAvatar) chatHeaderAvatar.src = targetAvatar;
+        if (messagesContainer) {
+          messagesContainer.innerHTML = "";
+          addMessage(`Beginning of your conversation with ${targetUsername}`, "System");
+        }
+        messageInput?.focus();
       });
-    }
+    };
+    const loadFriends = async () => {
+      const userId = localStorage.getItem("userId");
+      const contactsList = document.getElementById("contacts-list");
+      if (!userId || !contactsList) return;
+      try {
+        const response = await fetch(`/api/user/${userId}/friends`);
+        if (!response.ok) throw new Error("Failed to fetch friends");
+        const friends = await response.json();
+        contactsList.innerHTML = "";
+        if (friends.length === 0) {
+          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friends yet</div>';
+          return;
+        }
+        friends.forEach((friend) => {
+          const friendItem = document.createElement("div");
+          friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          friendItem.dataset.username = friend.alias;
+          friendItem.dataset.bio = friend.bio || "Share a quick message";
+          friendItem.dataset.avatar = friend.avatar || "/assets/profile/default.png";
+          const status = friend.status || "invisible";
+          friendItem.innerHTML = `
+					<div class="relative w-[50px] h-[50px] flex-shrink-0">
+						<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+							 src="${getStatusDot(status)}" alt="status">
+					</div>
+					<div class="flex flex-col leading-tight">
+						<span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+					</div>
+				`;
+          contactsList.appendChild(friendItem);
+          attachFriendClick(friendItem);
+        });
+      } catch (error) {
+        console.error("Error loading friends:", error);
+        contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    };
+    loadFriends();
     if (currentUsername && userConnected)
       userConnected.textContent = currentUsername;
     if (!messagesContainer || !messageInput) {
@@ -3887,7 +3918,8 @@
         }, 50);
       }
     };
-    `                                                                             `;
+    `      
+	`;
     let currentInput = null;
     bioText?.addEventListener("click", () => {
       const input = document.createElement("input");
@@ -4065,11 +4097,11 @@
       const imgUrl = animations[animationKey];
       if (imgUrl) {
         const animationHTML = `
-                <div>
-                    <strong>${author} said:</strong><br>
-                    <img src="${imgUrl}" alt="${animationKey}">
-                </div>
-            `;
+				<div>
+					<strong>${author} said:</strong><br>
+					<img src="${imgUrl}" alt="${animationKey}">
+				</div>
+			`;
         addCustomContent(animationHTML);
       } else {
         addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");

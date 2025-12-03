@@ -43,13 +43,32 @@ export async function makeFriendshipRequest (
 }
 
 //-------- GET / READ
+// export async function listFriends (
+//     db: Database,
+//     user_id: number
+// ): Promise<User []>
+// {
+//     const users = await db.all(`
+//         SELECT * FROM FRIENDSHIPS WHERE id = ? AND status = 'validated'`,
+//         [user_id]
+//     ) as User[];
+
+//     return users || [];
+// }
+
+//-------- GET / READ
 export async function listFriends (
     db: Database,
     user_id: number
 ): Promise<User []>
 {
+    // On sélectionne TOUTES les colonnes de la table USERS (u.*)
+    // En joignant la table FRIENDSHIPS (f) avec la table USERS (u)
+    // Condition : On cherche les lignes où JE suis le créateur du lien (f.user_id = moi)
     const users = await db.all(`
-        SELECT * FROM FRIENDSHIPS WHERE id = ? AND status = 'validated'`,
+        SELECT u.* FROM FRIENDSHIPS f
+        JOIN USERS u ON f.friend_id = u.id
+        WHERE f.user_id = ? AND f.status = 'validated'`,
         [user_id]
     ) as User[];
 
