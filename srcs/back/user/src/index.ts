@@ -99,10 +99,10 @@ fastify.post('/register', async (request, reply) => {
 /* -- FIND USER -- */
 fastify.get('/:id', async (request, reply) => 
 {
-	const { id_string } = request.params as { id_string: string };
-	const id = Number(id_string);
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
 
-	const user = await userRepo.findUserByID(db, id);    
+	const user = await userRepo.findUserByID(db, userId);    
 	if (!user) 
 	{
 	  reply.status(404);
@@ -130,13 +130,13 @@ fastify.get('/showfriend', async (request, reply) =>
 /* -- UPDATE STATUS -- */
 fastify.patch('/:id/status', async (request, reply) => 
 {
-  const { id_string } = request.params as { id_string: string };
+  const { id } = request.params as { id: string };
   const { status } = request.body as { status: string };
-  const id = Number(id_string);
+  const userId = Number(id);
 
   try 
   {
-    userRepo.updateStatus(db, id, status);
+    userRepo.updateStatus(db, userId, status);
     return reply.status(200).send({ message: 'Status updated successfully' });
   } 
   catch (err) 
@@ -151,13 +151,13 @@ fastify.patch('/:id/status', async (request, reply) =>
 /* -- UPDATE BIO -- */
 fastify.patch('/:id/bio', async (request, reply) =>
 {
-  const { idString } = request.params as { idString: string };
-  const id = Number(idString);
+  const { id } = request.params as { id: string };
+  const userId = Number(id);
   const { bio } = request.body as { bio: string };
 
   try
   {
-    userRepo.updateBio(db, id, bio);
+    userRepo.updateBio(db, userId, bio);
     return reply.status(200).send({ message: 'Bio updated successfully' });
   }
   catch (err)
@@ -177,18 +177,18 @@ fastify.patch('/:id/bio', async (request, reply) =>
 /* -- FRIENDSHIP REQUEST -- */
 fastify.post('/:id/friendship/request', async (request, reply) =>
 {
-	const { user_id_string } = request.params as { user_id_string: string };
+	const { id } = request.params as { id: string };
 	const { alias } = request.body as { alias: string };
 
-	const user_id = Number(user_id_string);
+	const userId = Number(id);
 
 	try
 	{
-		const requestID = await friendRepo.makeFriendshipRequest(db, user_id, alias);
+		const requestID = await friendRepo.makeFriendshipRequest(db, userId, alias);
 		if (!requestID)
 			return reply.status(500).send('Error while sending friend request');
     else
-		  return reply.status(200).send(`Friend request sent from ${user_id} to ${alias}`);
+		  return reply.status(200).send(`Friend request sent from ${userId} to ${alias}`);
 	}
 	catch (err)
 	{
@@ -201,13 +201,13 @@ fastify.post('/:id/friendship/request', async (request, reply) =>
 /* -- REVIEW FRIEND REQUEST -- */
 fastify.patch('/:id/friendship/review', async (request, reply) =>
 {
-	const { asker_id_string } = request.body as { asker_id_string: number};
+	const { id } = request.body as { id: number};
 	const { status } = request.body as { status: string };
-  	const asker_id = Number(asker_id_string);
+  	const askerId = Number(id);
 
 	try
 	{
-		friendRepo.reviewFriendship(db, asker_id, status);
+		friendRepo.reviewFriendship(db, askerId, status);
 		return reply.status(200).send({ message: 'Friendship status changed successfully'});
 	}
 	catch (err)
@@ -221,12 +221,12 @@ fastify.patch('/:id/friendship/review', async (request, reply) =>
 /* -- LIST FRIENDS FOR ONE USER -- */
 fastify.get('/:id/friends', async (request, reply) => 
 {
-	const { id_string } = request.params as { id_string: string };
-	const id = Number(id_string);
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
 
 	try
 	{
-		const friends: userRepo.User [] = await friendRepo.listFriends(db, id);
+		const friends: userRepo.User [] = await friendRepo.listFriends(db, userId);
 		return reply.status(200).send(friends);
 	}
 	catch (err)
@@ -239,12 +239,12 @@ fastify.get('/:id/friends', async (request, reply) =>
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
 fastify.get('/:id/friendship/pendings', async (request, reply) =>
 {
-	const { id_string } = request.params as { id_string: string };
-	const id = Number(id_string);
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
 
 	try
 	{
-		const pending_requests: userRepo.User [] = await friendRepo.listRequests(db, id);
+		const pending_requests: userRepo.User [] = await friendRepo.listRequests(db, userId);
 		return reply.status(200).send(pending_requests);
 	}
 	catch (err)
