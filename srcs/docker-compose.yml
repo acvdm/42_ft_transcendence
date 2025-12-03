@@ -8,9 +8,6 @@ services:
       depends_on:
         - gateway
         - front
-      volumes:
-        - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
-        - ./private_key.key:/app/private_key.key
       networks:
         - transcendence
 
@@ -24,11 +21,8 @@ services:
         - user
         - game
         - chat
-      env_file: 
-        - .env
-      # volumes:
-      #   - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
-      #   - ./private_key.key:/app/private_key.key
+      # env_file: 
+      #   - .env
       networks: 
         - transcendence 
 
@@ -58,14 +52,15 @@ services:
       build: ./back/auth
       expose:
         - "3001"
-      env_file: 
-        - .env
+      # env_file: 
+      #   - .env
       environment:
         - DATABASE_URL=/app/data/auth.sqlite
       networks: 
         - transcendence
       volumes:
-        - auth_data:/app/data
+        # - auth_data:/app/data
+        - ./back/datadev:/app/data
 
     chat:
       container_name: chat
@@ -79,40 +74,39 @@ services:
       networks: 
         - transcendence
       volumes:
-        - chat_data:/app/data
-        # - ./certificate.crt:/app/certificate.crt # On injecte le MÊME certificat
-        # - ./private_key.key:/app/private_key.key
+        # - chat_data:/app/data
+        - ./back/datadev:/app/data
 
     game:
       container_name: game
       build: ./back/game
       expose:
         - "3003"
-      env_file: 
-        - .env
+      # env_file: 
+      #   - .env
       environment:
         - DATABASE_URL=/app/data/game.sqlite
       networks:
         - transcendence
       volumes:
-        - game_data:/app/data
-        # - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        # - ./server.key:/app/server.key
+        # - game_data:/app/data
+        - ./back/datadev:/app/data
 
     user:
       container_name: user
       build: ./back/user
       expose:
         - "3004"
-      env_file: 
-        - .env
+      # env_file: 
+      #   - .env
       environment:
         - DATABASE_URL=/app/data/user.sqlite
       networks: 
         - transcendence
       volumes:
-        - user_data:/app/data
-        - user_avatars:/app/user/avatars
+        # - user_data:/app/data
+        # - user_avatars:/app/user/avatars
+        - ./back/datadev:/app/data
     
 networks:
   transcendence:
@@ -120,8 +114,9 @@ networks:
     driver: bridge
 
 volumes:
-  user_avatars:
-  auth_data:
-  chat_data:
-  user_data:
-  game_data:
+  # user_avatars:
+  # auth_data:
+  # chat_data:
+  # user_data:
+  # game_data:
+  datadev:

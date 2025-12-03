@@ -70,7 +70,6 @@ function handleRegister() {
 		}
 
 		try {
-			console.log("coucou");
             // On appelle la route définie dans la Gateway qui redirige vers le service USER
             const response = await fetch('/api/user/register', {
                 method: 'POST',

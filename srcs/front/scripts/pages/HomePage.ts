@@ -219,15 +219,12 @@ bioText?.addEventListener('click', () => {
     });
 });
 
-
 async function finalize(text: string) {
     if (!bioWrapper || !bioText || !currentInput) return;
 
     // teste filnak
     const newBio = text.trim() || "Share a quick message";
     const userId = localStorage.getItem('userId');
-
- 
     // maj avec emoticones
     const parsed = parseMessage(newBio);
     bioText.innerHTML = parsed;
@@ -255,6 +252,7 @@ async function finalize(text: string) {
         }
     }
 }
+
 
 
     // ---------------------------------------------------

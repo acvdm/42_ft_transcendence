@@ -29,20 +29,20 @@ export async function initDatabase(): Promise<Database> {
             friend_id INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, friend_id)
+            PRIMARY KEY (user_id, friend_id) UNIQUE
         )
     `);
     console.log('FRIENDSHIPS table created');
 
-    // TABLE BLOCKINGS
-    await db.exec(`
-       CREATE TABLE IF NOT EXISTS BLOCKINGS (
-        blocker_id INTEGER NOT NULL,
-        blocked_id INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (blocker_id, blocked_id)) 
-    `);
-    console.log('BLOCKINGS table created');
+    // // TABLE BLOCKINGS
+    // await db.exec(`
+    //    CREATE TABLE IF NOT EXISTS BLOCKINGS (
+    //     blocker_id INTEGER NOT NULL,
+    //     blocked_id INTEGER NOT NULL,
+    //     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    //     PRIMARY KEY (blocker_id, blocked_id)) 
+    // `);
+    // console.log('BLOCKINGS table created');
 
     return db;
 }
