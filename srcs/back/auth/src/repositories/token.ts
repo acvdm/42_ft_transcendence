@@ -46,3 +46,15 @@ export async function updateToken(
         [refresh_token, expires_at, credential_id]
     );
 }
+
+//-------- GET / READ
+export async function findByRefreshToken(
+    db: Database,
+    token: string
+): Promise<Token | undefined> {
+    const result = await db.get(`
+        SELECT * FROM TOKENS WHERE refresh_token = ?`,
+    [token]
+    );
+    return result;
+}

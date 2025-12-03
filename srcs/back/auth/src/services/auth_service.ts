@@ -2,6 +2,7 @@ import * as credRepo from "../repositories/credentials.js";
 import * as tokenRepo from '../repositories/token.js';
 import * as crypt from '../utils/crypto.js'
 
+
 import { 
     generate2FASecret,
     generateAccessToken, 
@@ -103,4 +104,39 @@ export async function authenticatePassword(
     if (!credential)
         throw new Error("Could not find any matching credential");
     return await crypt.verifyPassword(password, credential.pwd_hashed);
+}
+
+// pour refresh le refresh et l'access token
+export async function refreshUser(
+    db: Database,
+    oldRefreshToken: string
+): Promise<authResponse> {
+
+    // chercher le token en DB
+    const tokenRecord = await tokenRepo.findByRefreshToken(db, oldRefreshToken);
+    if (!tokenRecord){
+        throw new Error('Refresh token not found');
+    }
+
+    // verification expiration
+    const now = new Date();
+    const expiry = new Date(tokenRecord.expires_at); // comparaison de string
+
+    if (now > expiry){
+        throw new Error('Refresh token expired');
+    }
+
+    // generation de nv secrets et des tokens
+    const newAccessToken = generateAccessToken(tokenRecord.user_id, tokenRecord.credential_id);
+    const newRefreshToken = generateRefreshToken(tokenRecord.user_id);
+    const newExpiresAt = getExpirationDate(7);
+
+    // mise a jour de la DB
+    await tokenRepo.updateToken(db, tokenRecord.credential_id, newRefreshToken, newExpiresAt);
+
+    return {
+        access_token: newAccessToken,
+        refresh_token: newRefreshToken,
+        user_id:tokenRecord.user_id
+    };
 }
