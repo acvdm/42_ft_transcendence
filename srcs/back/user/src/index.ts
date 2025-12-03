@@ -116,7 +116,7 @@ fastify.get('/showfriend', async (request, reply) =>
 {
 	const { alias } = request.body as { alias: string };
 
-	const user = await friendRepo.findUserByAlias(db, alias);
+	const user = await userRepo.findUserByAlias(db, alias);
 	if (!user)
 	{
 		reply.status(404);
