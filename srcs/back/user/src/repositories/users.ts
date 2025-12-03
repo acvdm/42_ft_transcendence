@@ -107,8 +107,9 @@ export async function rollbackDeleteUser (
 )
 {
     const user = await findUserByID(db, user_id);
-    if (!user.id)
+    if (!user.id) {
         throw new Error(`Error id: ${user_id} does not exist`);
+    }
 
     await db.run(`
         DELETE FROM USERS WHERE id = ?`, 

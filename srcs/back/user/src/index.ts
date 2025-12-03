@@ -34,8 +34,9 @@ fastify.post('/register', async (request, reply) => {
 
   try 
   {
-    if (body.alias.length > 30)
+    if (body.alias.length > 30) {
       throw new Error('Error: Alias is too long, max 30 characters');
+    }
 
     // 1. Créer le user localement dans user.sqlite
     user_id = await userRepo.createUserInDB(db, body)
