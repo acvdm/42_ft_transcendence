@@ -33,7 +33,8 @@ export async function createUserInDB (
         [data.alias, data.avatar_url]
     );
 
-    if (!result.lastID) {
+    if (!result.lastID) 
+    {
         throw new Error('Failed to create new user');
     }
 

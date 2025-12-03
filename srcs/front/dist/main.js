@@ -4074,6 +4074,7 @@
       } else {
         addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
       }
+      console.log("erreur:", data.author);
     });
     const addCustomContent = (htmlContent) => {
       const msgElement = document.createElement("div");
