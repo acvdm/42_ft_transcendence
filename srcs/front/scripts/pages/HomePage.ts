@@ -148,6 +148,7 @@ export function afterRender(): void {
     const chatHeaderName = document.getElementById('chat-header-username');
     const chatHeaderBio = document.getElementById('chat-header-bio');
 
+    console.log("uSERNAME:", userConnected);
     if (friendItems && roomChat && chatPlaceholder) {
         friendItems.forEach(item => {
             item.addEventListener('click', () => {
