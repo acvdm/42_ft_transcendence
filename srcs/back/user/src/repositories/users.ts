@@ -57,6 +57,7 @@ export async function findUserByID (
     return user;
 }
 
+
 export async function findUserByAlias (
     db: Database,
     alias: string
@@ -90,6 +91,7 @@ export async function updateStatus (
     );
 
 }
+
 
 export async function updateBio (
     db: Database,
