@@ -14,7 +14,6 @@ export interface User {
 }
 
 
-
 //-------- POST / CREATE
 export async function createUserInDB (
     db: Database,
@@ -34,7 +33,8 @@ export async function createUserInDB (
         [data.alias, data.avatar_url]
     );
 
-    if (!result.lastID) {
+    if (!result.lastID) 
+    {
         throw new Error('Failed to create new user');
     }
 
@@ -57,6 +57,19 @@ export async function findUserByID (
     return user;
 }
 
+export async function findUserByAlias (
+    db: Database,
+    alias: string
+): Promise<User>
+{
+    const user = await db.get(`
+        SELECT * FROM USERS WHERE alias = ?`,
+        [alias]
+    );
+
+    return user;
+}
+
 
 
 //-------- PUT / UPDATE
@@ -67,14 +80,34 @@ export async function updateStatus (
 )
 {
     const user = await findUserByID(db, user_id);
-    if (!user.id)
+    if (!user?.id)
         throw new Error(`Error id: ${user_id} does not exist`);
 
+    console.log("update status dans users.ts");
     await db.run(`
         UPDATE USERS SET status = ? WHERE id = ?`,
         [status, user_id]
     );
 
+}
+
+export async function updateBio (
+    db: Database,
+    user_id: number,
+    bio: string
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    if (bio.length > 255)
+        throw new Error(`Error: bio too long. Max 255 characters`);
+
+    await db.run(`
+        UPDATE USERS SET bio = ? WHERE id = ?`,
+        [bio, user_id]
+    );
 }
 
 

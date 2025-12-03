@@ -115,7 +115,7 @@ function handleRegister() {
         } catch (error) {
            console.error("Network error:", error);
 			if (errorElement) {
-				errorElement.textContent = "Network error, please try again";
+				errorElement.textContent = "Network error, please try again REGISTER PAGE";
 				errorElement.classList.remove('hidden');
 			}
         }

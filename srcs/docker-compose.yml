@@ -17,12 +17,16 @@ services:
       expose:
         - "8080"            # Port interne uniquement, accessible depuis nginx  
       depends_on:
-        - auth
-        - user
-        - game
-        - chat
-      env_file: 
-        - .env
+        auth:
+          condition: service_healthy
+        user:
+          condition: service_healthy
+        game:
+          condition: service_healthy
+        chat:
+          condition: service_healthy
+      # env_file: 
+      #   - .env
       networks: 
         - transcendence 
 
@@ -52,14 +56,19 @@ services:
       build: ./back/auth
       expose:
         - "3001"
-      env_file: 
-        - .env
+      # env_file: 
+      #   - .env
       environment:
         - DATABASE_URL=/app/data/auth.sqlite
       networks: 
         - transcendence
       volumes:
-        - auth_data:/app/data
+        # - auth_data:/app/data
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/auth.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
 
     chat:
       container_name: chat
@@ -73,40 +82,51 @@ services:
       networks: 
         - transcendence
       volumes:
-        - chat_data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        # - chat_data:/app/data
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/chat.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
 
     game:
       container_name: game
       build: ./back/game
       expose:
         - "3003"
-      env_file: 
-        - .env
+      # env_file: 
+      #   - .env
       environment:
         - DATABASE_URL=/app/data/game.sqlite
       networks:
         - transcendence
       volumes:
-        - game_data:/app/data
-        - ./server.crt:/app/server.crt # On injecte le MÊME certificat
-        - ./server.key:/app/server.key
+        # - game_data:/app/data
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/game.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
 
     user:
       container_name: user
       build: ./back/user
       expose:
         - "3004"
-      env_file: 
-        - .env
+      # env_file: 
+      #   - .env
       environment:
         - DATABASE_URL=/app/data/user.sqlite
       networks: 
         - transcendence
       volumes:
-        - user_data:/app/data
-        - user_avatars:/app/user/avatars
+        # - user_data:/app/data
+        # - user_avatars:/app/user/avatars
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/user.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
     
 networks:
   transcendence:
@@ -114,8 +134,9 @@ networks:
     driver: bridge
 
 volumes:
-  user_avatars:
-  auth_data:
-  chat_data:
-  user_data:
-  game_data:
+  # user_avatars:
+  # auth_data:
+  # chat_data:
+  # user_data:
+  # game_data:
+  datadev:

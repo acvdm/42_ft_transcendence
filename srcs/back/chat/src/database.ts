@@ -19,7 +19,7 @@ export async function initDatabase(): Promise<Database> {
         FOREIGN KEY (channel_id) REFERENCES CHANNELS(id)
       )
     `);
-    console.log('PRIVATE_MESSAGES table created');
+    console.log('MESSAGES table created');
 
     await db.exec(`
       CREATE TABLE IF NOT EXISTS CHANNELS (
@@ -30,15 +30,16 @@ export async function initDatabase(): Promise<Database> {
     `);
     console.log('CHANNELS table created');
 
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS CHANNEL_MEMBERS (
-      channel_id INTEGER NOT NULL,
-      user_id INTEGER NOT NULL,
-      joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (channel_id, user_id),
-      FOREIGN KEY (channel_id) REFERENCES CHANNELS(id)
-      )
-    `);
+    // Plutôt faire une table d'évènements 
+    // await db.exec(`
+    //   CREATE TABLE IF NOT EXISTS CHANNEL_MEMBERS (
+    //   channel_id INTEGER NOT NULL,
+    //   user_id INTEGER NOT NULL,
+    //   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    //   PRIMARY KEY (channel_id, user_id),
+    //   FOREIGN KEY (channel_id) REFERENCES CHANNELS(id)
+    //   )
+    // `);
 
     return db;
 }

@@ -3841,12 +3841,32 @@
         finalize(input.value.trim() || "Share a quick message");
       });
     });
-    function finalize(text) {
+    async function finalize(text) {
       if (!bioWrapper || !bioText || !currentInput) return;
-      const parsed = parseMessage(text);
+      const newBio = text.trim() || "Share a quick message";
+      const userId = localStorage.getItem("userId");
+      const parsed = parseMessage(newBio);
       bioText.innerHTML = parsed;
       bioWrapper.replaceChild(bioText, currentInput);
       currentInput = null;
+      if (userId) {
+        try {
+          const response = await fetch(`/api/user/${userId}/bio`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ bio: newBio })
+          });
+          if (!response.ok) {
+            console.error("Error while saving bio");
+          } else {
+            console.log("Bio saved !");
+          }
+        } catch (error) {
+          console.error("Network error :", error);
+        }
+      }
     }
     const statusSelector = document.getElementById("status-selector");
     const statusDropdown = document.getElementById("status-dropdown");
@@ -3905,7 +3925,7 @@
             try {
               const userId = localStorage.getItem("userId");
               console.log("Tentative de mise \xE0 jour pour User ID:", userId, "Status:", selectedStatus);
-              const response = await fetch(`/api/users/${userId}/status`, {
+              const response = await fetch(`/api/user/${userId}/status`, {
                 method: "PATCH",
                 headers: {
                   "Content-Type": "application/json"
@@ -4522,7 +4542,7 @@
       } catch (error) {
         console.error("Network error:", error);
         if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
+          errorElement.textContent = "Network error, please try again REGISTER PAGE";
           errorElement.classList.remove("hidden");
         }
       }

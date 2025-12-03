@@ -21,6 +21,7 @@ COPY . .
 #-----------------------BUILD STATIC FILES
 RUN npm run build
 
+
 #----------------------------
 # STEP 2: FINAL IMAGE
 #----------------------------
@@ -28,11 +29,12 @@ RUN npm run build
 FROM node:20-alpine
 
 RUN apk add --no-cache \
+    openssl \
     sqlite \
     su-exec
 
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# COPY entrypoint.sh /app/entrypoint.sh
+# RUN chmod +x /app/entrypoint.sh
 
 WORKDIR /app/chat
 
@@ -41,15 +43,12 @@ COPY --from=build /app/chat/package*.json ./
 COPY --from=build /app/chat/node_modules ./node_modules
 COPY --from=build /app/chat/dist ./dist
 
-# #-----------------------CREATE A DIRECTORY FOR PERSISTENCE
-# RUN mkdir -p /app/data
+RUN mkdir -p /app/data
 
-#-----------------------ENV POINTING TO SHARED DB
-# ENV DATABASE_URL="file:/app/data/database.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3002
 
 #-----------------------START PRODUCTION MODE
-ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
+# ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["node", "dist/index.js"]

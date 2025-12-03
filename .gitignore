@@ -3,4 +3,7 @@
 node_modules/
 
 data/
-data.old/
+zdata.old/
+
+certificate.crt 
+private_key.key
