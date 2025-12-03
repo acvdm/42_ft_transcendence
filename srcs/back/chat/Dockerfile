@@ -34,8 +34,6 @@ RUN apk add --no-cache \
     su-exec
 
 # COPY entrypoint.sh /app/entrypoint.sh
-
-
 # RUN chmod +x /app/entrypoint.sh
 
 WORKDIR /app/chat

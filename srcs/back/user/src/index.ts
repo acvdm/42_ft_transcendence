@@ -40,8 +40,9 @@ fastify.post('/register', async (request, reply) => {
   try 
   {
     if (body.alias.length > 30)
-      throw new Error('Error: Alias is too long, max 30 characters');
-
+	{
+      	throw new Error('Error: Alias is too long, max 30 characters');
+	}
     // 1. Créer le user localement dans user.sqlite
     user_id = await userRepo.createUserInDB(db, body)
 
@@ -63,8 +64,9 @@ fastify.post('/register', async (request, reply) => {
     });
 
     if (!authResponse.ok)
+	{
       throw new Error(`Error HTTP, ${authResponse.status}`);
-
+	}
     // 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
     const data = await authResponse.json();
 
@@ -95,7 +97,6 @@ fastify.post('/register', async (request, reply) => {
 
 
 /* -- FIND USER -- */
-// id
 fastify.get('/:id', async (request, reply) => 
 {
 	const { id_string } = request.params as { id_string: string };
@@ -111,14 +112,20 @@ fastify.get('/:id', async (request, reply) =>
 	return user;
 })
 
-//alias
-fastify.get('/', async (request, reply) => 
+fastify.get('/showfriend', async (request, reply) =>
 {
-	const { id_string } = request.params as { id_string: number };
-	const id = Number(id_string);
+	const { alias } = request.body as { alias: string };
 
+	const user = await friendRepo.findUserByAlias(db, alias);
+	if (!user)
+	{
+		reply.status(404);
+		return { error: 'User not found' };
+	}
 
+	return user;
 })
+
 
 /* -- UPDATE STATUS -- */
 fastify.patch('/:id/status', async (request, reply) => 
@@ -168,7 +175,7 @@ fastify.patch('/:id/bio', async (request, reply) =>
 //---------------------------------------
 
 /* -- FRIENDSHIP REQUEST -- */
-fastify.post('/:id/friendrequest', async (request, reply) =>
+fastify.post('/:id/friendship/request', async (request, reply) =>
 {
 	const { user_id_string } = request.params as { user_id_string: string };
 	const { alias } = request.body as { alias: string };
@@ -177,7 +184,7 @@ fastify.post('/:id/friendrequest', async (request, reply) =>
 
 	try
 	{
-		const requestID = await friendRepo.friendshipRequest(db, user_id, alias);
+		const requestID = await friendRepo.makeFriendshipRequest(db, user_id, alias);
 		if (!requestID)
 			return reply.status(500).send('Error while sending friend request');
     else
@@ -192,11 +199,11 @@ fastify.post('/:id/friendrequest', async (request, reply) =>
 
 
 /* -- REVIEW FRIEND REQUEST -- */
-fastify.patch('/:id/friendshipreview', async (request, reply) =>
+fastify.patch('/:id/friendship/review', async (request, reply) =>
 {
 	const { asker_id_string } = request.body as { asker_id_string: number};
 	const { status } = request.body as { status: string };
-  const asker_id = Number(asker_id_string);
+  	const asker_id = Number(asker_id_string);
 
 	try
 	{
@@ -215,7 +222,7 @@ fastify.patch('/:id/friendshipreview', async (request, reply) =>
 fastify.get('/:id/friends', async (request, reply) => 
 {
 	const { id_string } = request.params as { id_string: string };
-  const id = Number(id_string);
+	const id = Number(id_string);
 
 	try
 	{
@@ -226,6 +233,24 @@ fastify.get('/:id/friends', async (request, reply) =>
 	{
 		fastify.log.error(err);
 		return reply.status(500).send({ message: 'Failed to list friends for userId:', id});
+	}
+})
+
+/* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
+fastify.get('/:id/friendship/pendings', async (request, reply) =>
+{
+	const { id_string } = request.params as { id_string: string };
+	const id = Number(id_string);
+
+	try
+	{
+		const pending_requests: userRepo.User [] = await friendRepo.listRequests(db, id);
+		return reply.status(200).send(pending_requests);
+	}
+	catch (err)
+	{
+		fastify.log.error(err);
+		return reply.status(500).send({ message: 'Failed to list friendship requests for userId: ', id});
 	}
 })
 

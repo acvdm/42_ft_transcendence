@@ -29,7 +29,7 @@ export async function initDatabase(): Promise<Database> {
             friend_id INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, friend_id)
+            PRIMARY KEY (user_id, friend_id) UNIQUE
         )
     `);
     console.log('FRIENDSHIPS table created');

@@ -56,6 +56,19 @@ export async function findUserByID (
     return user;
 }
 
+export async function findUserByAlias (
+    db: Database,
+    alias: string
+): Promise<User>
+{
+    const user = await db.get(`
+        SELECT * FROM USERS WHERE alias = ?`,
+        [alias]
+    );
+
+    return user;
+}
+
 
 
 //-------- PUT / UPDATE

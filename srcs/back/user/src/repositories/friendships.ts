@@ -8,11 +8,11 @@ export interface Friendship {
 }
 
 //-------- POST / CREATE
-export async function friendshipRequest (
+export async function makeFriendshipRequest (
     db: Database,
     user_id: number,
     alias: string
-): Promise<Number>
+): Promise<{ user_id: number, friend_id: number}>
 {
     const friend = await db.get(`
         SELECT * FROM USERS WHERE alias = ?`,
@@ -22,7 +22,7 @@ export async function friendshipRequest (
         throw new Error(`Cannot find friend_id with alias ${alias}`);
 
     const is_blocked = await db.get(`
-        SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ?`,
+        SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'blocked'`,
         [user_id, friend.id]
     );
     if (is_blocked)
@@ -34,12 +34,12 @@ export async function friendshipRequest (
         [user_id, friend.id]
     );
 
-    if (!result.lastID)
+    if (!result || result.changes !== 1)
     {
         throw new Error(`Error while sending friendship request from ${user_id} to ${friend.id}`);
     }
 
-    return result.lastID;
+    return { user_id, friend_id: friend.id };
 }
 
 //-------- GET / READ
@@ -49,13 +49,25 @@ export async function listFriends (
 ): Promise<User []>
 {
     const users = await db.all(`
-        SELECT * FROM USERS WHERE id = ? AND status = 'validated'`,
+        SELECT * FROM FRIENDSHIPS WHERE id = ? AND status = 'validated'`,
         [user_id]
     ) as User[];
 
     return users || [];
 }
 
+export async function listRequests (
+    db: Database,
+    user_id: number
+): Promise<User []>
+{
+    const pending_requests = await db.all(`
+        SELECT * FROM FRIENDSHIPS WHERE status = 'pending'`,
+        [user_id]
+    ) as User[];
+
+    return pending_requests || [];
+}
 
 //-------- PUT / UPDATE
 export async function reviewFriendship (
