@@ -1,5 +1,5 @@
 import { Database } from 'sqlite';
-import { User } from './users.js';
+import { User } from './users';
 
 export interface Friendship {
     user_id: number,
@@ -11,18 +11,32 @@ export interface Friendship {
 export async function friendshipRequest (
     db: Database,
     user_id: number,
-    friend_id: number
+    alias: string
 ): Promise<Number>
 {
+    const friend = await db.get(`
+        SELECT * FROM USERS WHERE alias = ?`,
+        [alias]
+    ) as User;
+    if (!friend?.id)
+        throw new Error(`Cannot find friend_id with alias ${alias}`);
+
+    const is_blocked = await db.get(`
+        SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ?`,
+        [user_id, friend.id]
+    );
+    if (is_blocked)
+        throw new Error('No user found');
+
     const result = await db.run(`
         INSERT INTO FRIENDSHIPS (user_id, friend_id)
         VALUES (?, ?)`,
-        [user_id, friend_id]
+        [user_id, friend.id]
     );
 
     if (!result.lastID)
     {
-        throw new Error(`Error while sending friendship request from ${user_id} to ${friend_id}`);
+        throw new Error(`Error while sending friendship request from ${user_id} to ${friend.id}`);
     }
 
     return result.lastID;
@@ -46,13 +60,13 @@ export async function listFriends (
 //-------- PUT / UPDATE
 export async function reviewFriendship (
     db: Database,
-    friendship_id: number,
+    user_id: number,
     status: string
 )
 {
     await db.run(`
-        UPDATE FRIENDSHIPS SET status = ? WHERE id = ?`,
-        [friendship_id, status]
+        UPDATE FRIENDSHIPS SET status = ? WHERE user_id = ?`,
+        [status, user_id]
     );
 }
 

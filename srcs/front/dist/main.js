@@ -4503,7 +4503,6 @@
         return;
       }
       try {
-        console.log("coucou");
         const response = await fetch("/api/user/register", {
           method: "POST",
           headers: {

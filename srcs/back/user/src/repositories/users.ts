@@ -14,7 +14,6 @@ export interface User {
 }
 
 
-
 //-------- POST / CREATE
 export async function createUserInDB (
     db: Database,

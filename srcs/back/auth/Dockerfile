@@ -40,8 +40,8 @@ RUN apk add --no-cache \
     sqlite \
     su-exec
 
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+# COPY entrypoint.sh /app/entrypoint.sh
+# RUN chmod +x /app/entrypoint.sh
 
 WORKDIR /app/auth
 
@@ -50,10 +50,11 @@ COPY --from=build /app/auth/package*.json ./
 COPY --from=build /app/auth/node_modules ./node_modules
 COPY --from=build /app/auth/dist ./dist
 
+RUN mkdir -p /app/data
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3001
 
 #-----------------------START PRODUCTION MODE
-ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
+# ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["node", "dist/index.js"]

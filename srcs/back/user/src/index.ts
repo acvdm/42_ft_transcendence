@@ -35,6 +35,8 @@ fastify.post('/register', async (request, reply) => {
 
   let user_id = null; 
 
+  // A retirer pour production 
+  console.log('Request.body reçu: ', body);
   try 
   {
     if (body.alias.length > 30)
@@ -65,7 +67,10 @@ fastify.post('/register', async (request, reply) => {
 
     // 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
     const data = await authResponse.json();
+
+    // A retirer pour production 
     console.log('User successfully added to Database! ', data);
+
     return reply.status(201).send(data);
 
   } 
@@ -90,9 +95,11 @@ fastify.post('/register', async (request, reply) => {
 
 
 /* -- FIND USER -- */
+// id
 fastify.get('/:id', async (request, reply) => 
 {
-	const { id } = request.params as any;
+	const { id_string } = request.params as { id_string: string };
+	const id = Number(id_string);
 
 	const user = await userRepo.findUserByID(db, id);    
 	if (!user) 
@@ -104,13 +111,21 @@ fastify.get('/:id', async (request, reply) =>
 	return user;
 })
 
+//alias
+fastify.get('/', async (request, reply) => 
+{
+	const { id_string } = request.params as { id_string: number };
+	const id = Number(id_string);
 
+
+})
 
 /* -- UPDATE STATUS -- */
 fastify.patch('/:id/status', async (request, reply) => 
 {
-  const { id } = request.params as { id: number };
+  const { id_string } = request.params as { id_string: string };
   const { status } = request.body as { status: string };
+  const id = Number(id_string);
 
   try 
   {
@@ -129,7 +144,8 @@ fastify.patch('/:id/status', async (request, reply) =>
 /* -- UPDATE BIO -- */
 fastify.patch('/:id/bio', async (request, reply) =>
 {
-  const { id } = request.params as { id: number };
+  const { idString } = request.params as { idString: string };
+  const id = Number(idString);
   const { bio } = request.body as { bio: string };
 
   try
@@ -154,16 +170,18 @@ fastify.patch('/:id/bio', async (request, reply) =>
 /* -- FRIENDSHIP REQUEST -- */
 fastify.post('/:id/friendrequest', async (request, reply) =>
 {
-	const { user_id } = request.params as { user_id: number };
-	const { friend_id } = request.body as { friend_id: number };
+	const { user_id_string } = request.params as { user_id_string: string };
+	const { alias } = request.body as { alias: string };
+
+	const user_id = Number(user_id_string);
 
 	try
 	{
-		const requestID = await friendRepo.friendshipRequest(db, user_id, friend_id);
+		const requestID = await friendRepo.friendshipRequest(db, user_id, alias);
 		if (!requestID)
 			return reply.status(500).send('Error while sending friend request');
-		return reply.status(200).send(`Friend request sent from ${user_id} to ${friend_id}`);
-
+    else
+		  return reply.status(200).send(`Friend request sent from ${user_id} to ${alias}`);
 	}
 	catch (err)
 	{
@@ -174,14 +192,15 @@ fastify.post('/:id/friendrequest', async (request, reply) =>
 
 
 /* -- REVIEW FRIEND REQUEST -- */
-fastify.patch('/:id/friendrequest', async (request, reply) =>
+fastify.patch('/:id/friendshipreview', async (request, reply) =>
 {
-	const { friendship_id } = request.body as { friendship_id: number};
+	const { asker_id_string } = request.body as { asker_id_string: number};
 	const { status } = request.body as { status: string };
+  const asker_id = Number(asker_id_string);
 
 	try
 	{
-		friendRepo.reviewFriendship(db, friendship_id, status);
+		friendRepo.reviewFriendship(db, asker_id, status);
 		return reply.status(200).send({ message: 'Friendship status changed successfully'});
 	}
 	catch (err)
@@ -195,7 +214,8 @@ fastify.patch('/:id/friendrequest', async (request, reply) =>
 /* -- LIST FRIENDS FOR ONE USER -- */
 fastify.get('/:id/friends', async (request, reply) => 
 {
-	const { id } = request.params as any;
+	const { id_string } = request.params as { id_string: string };
+  const id = Number(id_string);
 
 	try
 	{
