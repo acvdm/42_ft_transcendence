@@ -78,20 +78,21 @@
         return;
       }
       try {
-        const response = await fetch("/api/auth/login", {
+        const response = await fetch("/api/auth/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
           // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
           // On le gère juste après avec le PATCH
         });
-        const data = await response.json();
-        if (response.ok) {
-          if (data.access_token) localStorage.setItem("accessToken", data.access_token);
-          if (data.user_id) localStorage.setItem("userId", data.user_id.toString());
-          if (data.user_id) {
+        const result = await response.json();
+        if (result.success) {
+          const { access_token, refresh_token, user_id } = result.data;
+          if (access_token) localStorage.setItem("accessToken", access_token);
+          if (user_id) localStorage.setItem("userId", user_id.toString());
+          if (user_id) {
             try {
-              const userRes = await fetch(`/api/user/${data.user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`);
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -102,7 +103,7 @@
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetch(`/api/user/${data.user_id}/status`, {
+              await fetch(`/api/users/${user_id}/status`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: selectedStatus })
@@ -116,9 +117,9 @@
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
-          console.error("Login error:", data);
+          console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = data.errorMessage || data.message || "Authentication failed";
+            errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
@@ -3918,7 +3919,8 @@
       currentInput = null;
       if (userId) {
         try {
-          const response = await fetch(`/api/user/${userId}/bio`, {
+          console.log("user_id: ", userId);
+          const response = await fetch(`/api/users/${userId}/bio`, {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json"
@@ -3991,7 +3993,7 @@
             localStorage.setItem("userStatus", selectedStatus);
             try {
               const userId = localStorage.getItem("userId");
-              const response = await fetch(`/api/user/${userId}/status`, {
+              const response = await fetch(`/users/${userId}/status`, {
                 method: "PATCH",
                 headers: {
                   "Content-Type": "application/json"
@@ -4354,7 +4356,7 @@
     });
     const myUserId = localStorage.getItem("userId");
     if (myUserId && bioText) {
-      fetch(`/api/user/${myUserId}`).then((response) => {
+      fetch(`/api/users/${myUserId}`).then((response) => {
         if (!response.ok) throw new Error("Cannot get user");
         return response.json();
       }).then((user) => {
@@ -4583,20 +4585,20 @@
         return;
       }
       try {
-        const response = await fetch("/api/user/register", {
+        const response = await fetch("/api/users", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ alias, email, password })
         });
-        const data = await response.json();
-        if (response.ok) {
-          console.log("Inscription r\xE9ussie :", data);
-          if (data.user_id) {
-            localStorage.setItem("userId", data.user_id.toString());
+        const result = await response.json();
+        if (result.success) {
+          const { access_token, refresh_token, user_id } = result.data.data;
+          if (user_id) {
+            localStorage.setItem("userId", user_id.toString());
             try {
-              const userRes = await fetch(`/api/user/${data.user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`);
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -4607,14 +4609,14 @@
               console.error("Can't get user's profile", err);
             }
           }
-          if (data.access_token)
-            localStorage.setItem("accessToken", data.access_token);
+          if (access_token)
+            localStorage.setItem("accessToken", access_token);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
-          console.error("Login error:", data);
+          console.error("Login error:", result.error.message);
           if (errorElement) {
-            errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+            errorElement.textContent = result.error.message || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }

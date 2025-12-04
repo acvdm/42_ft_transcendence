@@ -25,7 +25,7 @@ async function main()
 //---------------------------------------
 
 /* -- REGISTER - CREATE CREDENTIAL -- */
-fastify.post('/register', async (request, reply) => {
+fastify.post('/users/:id/credentials', async (request, reply) => {
   try 
   {
     // On récupère le body de la requête HTTP POST
@@ -38,32 +38,49 @@ fastify.post('/register', async (request, reply) => {
     const result = await registerUser(db, body.user_id, body.email, body.password);
 
     // 3. Répondre
-    return reply.status(201).send(result);
+    return reply.status(200).send({
+      success: true,
+      data: result,
+      error: null
+    });
   } 
   catch (err: any) 
   {
     console.error("❌ ERREUR AUTH REGISTER:", err);
-    return reply.status(400).send({ 
-      error: 'Authentication failed',
-      message: err instanceof Error ? err.message : 'Unknown error',
+    return reply.status(400).send({
+      success: false, 
+      data: null,
+      error: { message: err.message }
     });
   }
 });
 
 
 /* -- LOGIN -- */ 
-fastify.post('/login', async (request, reply) => 
+fastify.post('/sessions', async (request, reply) => 
 {
   const body = request.body as { email: string, password: string };
   
-  try {
-    const authResponse = await loginUser(db, body.email, body.password);
-    return reply.status(201).send(authResponse);
+  try 
+  {
+    const result = await loginUser(db, body.email, body.password);
+    console.log("route /sessions atteinte");
+
+    console.log(`result: `, result);
+    return reply.status(200).send({
+      success: true,
+      data: result,
+      error: null
+    });
 
   } catch (err: any)
   {
     console.error("❌ ERREUR AUTH LOGIN:", err);
-     return reply.status(400).send({ error: err.message });
+     return reply.status(400).send({ 
+      success: false,
+      data: null,
+      error: { message: err.message }  
+    });
   }
 });
 
@@ -73,7 +90,7 @@ fastify.post('/login', async (request, reply) =>
 //--------------- SERVER ----------------
 //---------------------------------------
 
-fastify.get('/status', async (request, reply) => 
+fastify.get('/health', async (request, reply) => 
 {
   return { service: 'auth', status: 'ready', port: 3001 };
 });

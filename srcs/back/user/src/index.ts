@@ -24,7 +24,7 @@ async function main()
 
 
 /* -- REGISTER NEW USER -- */
-fastify.post('/register', async (request, reply) => {
+fastify.post('/users', async (request, reply) => {
   
   const body = request.body as { 
       alias: string;
@@ -47,11 +47,18 @@ fastify.post('/register', async (request, reply) => {
     user_id = await userRepo.createUserInDB(db, body)
 
     if (!user_id)
-      return reply.status(500).send('Error during profile creation');
+      return reply.status(500).send({
+		success: false,
+		data: null,
+		error: { message: 'Error during profile creation'}
+  	});
     console.log(`User created locally (ID: ${user_id}. Calling auth...`);
 
+    const authURL = `http://auth:3001/users/${user_id}/credentials`;
+    console.log(`authURL: ${authURL}`);
+
     // 3. Appeler le service auth pour créer les credentials
-    const authResponse = await fetch("http://auth:3001/register", {
+    const authResponse = await fetch(authURL, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -63,18 +70,22 @@ fastify.post('/register', async (request, reply) => {
       }),
     });
 
-    if (!authResponse.ok)
-	{
-      throw new Error(`Error HTTP, ${authResponse.status}`);
-	}
     // 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
     const data = await authResponse.json();
-
-    // A retirer pour production 
-    console.log('User successfully added to Database! ', data);
-
-    return reply.status(201).send(data);
-
+    if (data.success)
+    {
+        console.log('User successfully added to Database! ', data); 
+        console.log(`BACK: ${data.data.user_id}, ${data.data.access_token}, ${data.data.refresh_token}`);   
+        return reply.status(201).send({
+    	  success: true,
+    	  data: data,
+    	  error: null
+  	    });
+    }
+    else 
+    {
+        throw new Error(`Auth error: ${data.error.message}`);    
+    }
   } 
   catch (err: any) 
   {
@@ -90,14 +101,18 @@ fastify.post('/register', async (request, reply) => {
     }
 
     console.log(errorMessage);
-    reply.status(400).send({ errorMessage });
+    reply.status(400).send({
+		  success: false,
+		  data: null, 
+		  error: { message: errorMessage} 
+	});
   }
 })
 
 
 
 /* -- FIND USER -- */
-fastify.get('/:id', async (request, reply) => 
+fastify.get('/users/:id', async (request, reply) => 
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -106,7 +121,7 @@ fastify.get('/:id', async (request, reply) =>
 	if (!user) 
 	{
 	  reply.status(404);
-	  return { error: 'User not found' };
+	  return { error: 'User not found via route /users/:id' };
 	}
 
 	return user;
@@ -128,7 +143,7 @@ fastify.get('/showfriend', async (request, reply) =>
 
 
 /* -- UPDATE STATUS -- */
-fastify.patch('/:id/status', async (request, reply) => 
+fastify.patch('/users/:id/status', async (request, reply) => 
 {
   const { id } = request.params as { id: string };
   const { status } = request.body as { status: string };
@@ -136,12 +151,15 @@ fastify.patch('/:id/status', async (request, reply) =>
 
   try 
   {
+    console.log("Try to change status in back: ", userId);
+    console.log("status selected: ", status);
     userRepo.updateStatus(db, userId, status);
     return reply.status(200).send({ message: 'Status updated successfully' });
   } 
   catch (err) 
   {
     fastify.log.error(err);
+    console.log("status selected: ", status);
     return reply.status(500).send({ message: 'Failed to update status' });
   }
 })
@@ -149,7 +167,7 @@ fastify.patch('/:id/status', async (request, reply) =>
 
 
 /* -- UPDATE BIO -- */
-fastify.patch('/:id/bio', async (request, reply) =>
+fastify.patch('/users/:id/bio', async (request, reply) =>
 {
   const { id } = request.params as { id: string };
   const userId = Number(id);
@@ -157,6 +175,7 @@ fastify.patch('/:id/bio', async (request, reply) =>
 
   try
   {
+    console.log("Try to change bio in back: ", userId);
     userRepo.updateBio(db, userId, bio);
     return reply.status(200).send({ message: 'Bio updated successfully' });
   }
@@ -175,7 +194,7 @@ fastify.patch('/:id/bio', async (request, reply) =>
 //---------------------------------------
 
 /* -- FRIENDSHIP REQUEST -- */
-fastify.post('/:id/friendship/request', async (request, reply) =>
+fastify.post('/users/:id/friendships', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const { alias } = request.body as { alias: string };
@@ -199,7 +218,7 @@ fastify.post('/:id/friendship/request', async (request, reply) =>
 
 
 /* -- REVIEW FRIEND REQUEST -- */
-fastify.patch('/:id/friendship/review', async (request, reply) =>
+fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 {
 	const { id } = request.body as { id: number};
 	const { status } = request.body as { status: string };
@@ -219,7 +238,7 @@ fastify.patch('/:id/friendship/review', async (request, reply) =>
 
 
 /* -- LIST FRIENDS FOR ONE USER -- */
-fastify.get('/:id/friends', async (request, reply) => 
+fastify.get('/users/:id/friends', async (request, reply) => 
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -237,7 +256,7 @@ fastify.get('/:id/friends', async (request, reply) =>
 })
 
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
-fastify.get('/:id/friendship/pendings', async (request, reply) =>
+fastify.get('/users/:id/friendships/pending', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -262,7 +281,7 @@ fastify.get('/:id/friendship/pendings', async (request, reply) =>
 //---------------------------------------
 
 
-fastify.get('/status', async (request, reply) => 
+fastify.get('/health', async (request, reply) => 
 {
   return { service: 'user', status: 'ready', port: 3004 };
 })

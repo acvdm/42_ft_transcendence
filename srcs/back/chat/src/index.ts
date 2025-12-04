@@ -38,20 +38,18 @@ const start = async () =>
     // Chaque fois qu'un client se connecte à notre serveur, cela crée une instance de socket
     io.on('connection', async (socket) => 
     {
-      // Lier la socket à un channel 
-      // => si channel n'existait pas, creer la ligne dans CHANNELS
-      // => ajouter le user_id dans CHANNEL_MEMBERS
+
+      // Récupérer le dm_key du front : dm_key = sort(userId1, userId2)
+      // Si le channel n'existe pas le créer dans la table, s'il existe charger les messages précédent
       const channel = "channel_" + socket.id.toString();
       socket.join(channel);
       console.log('A user is connected to: ' + channel);
 
+      // A changer
       let channelID = await messRepo.getChannelByName(db, channel);
       if (!channelID) {
         channelID = await messRepo.createChannel(db, channel);
       }
-      console.log("channel_id: ", channelID);
-      const user_id = 2;
-      const newMember = await messRepo.saveNewMemberinChannel(db, channelID, user_id);
 
       // quand le server recoit un message chat message de la part du front
       socket.on('chatMessage', async (data: messRepo.createMessage) => 

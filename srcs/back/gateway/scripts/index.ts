@@ -25,12 +25,12 @@ fastify.register(fastifyProxy, {
 
 fastify.register(fastifyProxy, {
 	upstream: 'http://user:3004', // adresse interne du réseau du docker
-	prefix: '/api/user', // toutes les requetes api/user iront au service user
-	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
+	prefix: '/api/users', // toutes les requetes api/user iront au service user
+	rewritePrefix: '/users' // on retire le prefixe avant de l'envoyer un service
 });
 
 // route de test
-fastify.get('/status', async () => ({ service: 'gateway', status:'ready' }));
+fastify.get('/health', async () => ({ service: 'gateway', status:'ready' }));
 
 const start = async () => {
 	try {

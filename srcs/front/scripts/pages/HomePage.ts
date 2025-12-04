@@ -235,7 +235,8 @@ async function finalize(text: string) {
     // envoi a la base de donnee
     if (userId) {
         try {
-            const response = await fetch(`/api/user/${userId}/bio`, {
+            console.log("user_id: ", userId);
+            const response = await fetch(`/api/users/${userId}/bio`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -330,7 +331,7 @@ async function finalize(text: string) {
 
                 try {
                     const userId = localStorage.getItem('userId');
-                    const response = await fetch(`/api/user/${userId}/status`, {
+                    const response = await fetch(`/users/${userId}/status`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
@@ -915,7 +916,7 @@ async function finalize(text: string) {
     const myUserId = localStorage.getItem('userId'); 
 
     if (myUserId && bioText) {
-        fetch(`/api/user/${myUserId}`)
+        fetch(`/api/users/${myUserId}`)
             .then(response => {
                 if (!response.ok) throw new Error('Cannot get user');
                 return response.json();

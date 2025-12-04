@@ -38,6 +38,7 @@ export async function createUserInDB (
         throw new Error('Failed to create new user');
     }
 
+    console.log("createUserinDB fonctionne");
     return result.lastID;
 }
 
