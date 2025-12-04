@@ -3627,15 +3627,33 @@
 
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
 							<div class="flex flex-row items-center justify-between">
-								<p class="text-xl text-black font-semibold text-center tracking-wide mb-2 select-none">MY FRIENDS</p>
+								<p class="text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">MY FRIENDS</p>
 								
-								<div class="ml-auto flex items-center">
+								<div class="ml-auto flex items-center mb-3 relative">
 									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
 										<img id="add-friend-icon" 
 											src="/assets/basic/1441.png" 
 											alt="Friends button" 
 											class="w-full h-full object-contain">
 									</button>
+									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
+										<p class="text-sm font-semibold mb-2">Add a friend</p>
+										<input type="text" 
+											id="friend-search-input" 
+											placeholder="Username or email..." 
+											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<div class="flex gap-2">
+											<button id="send-friend-request" 
+												class="flex-1 bg-gradient-to-b from-blue-400 to-blue-600 text-white border border-blue-700 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-blue-500 hover:to-blue-700">
+												Send Request
+											</button>
+											<button id="cancel-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Cancel
+											</button>
+										</div>
+										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
+									</div>
 								</div>
 							</div>
 
@@ -3913,6 +3931,86 @@
     const chatHeaderAvatar = document.getElementById("chat-header-avatar");
     const chatHeaderName = document.getElementById("chat-header-username");
     const chatHeaderBio = document.getElementById("chat-header-bio");
+    const addFriendButton = document.getElementById("add-friend-button");
+    const addFriendDropdown = document.getElementById("add-friend-dropdown");
+    const friendSearchInput = document.getElementById("friend-search-input");
+    const sendFriendRequestBtn = document.getElementById("send-friend-request");
+    const cancelFriendRequestBtn = document.getElementById("cancel-friend-request");
+    const friendRequestMessage = document.getElementById("friend-request-message");
+    if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+      addFriendButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addFriendDropdown.classList.toggle("hidden");
+        document.getElementById("status-dropdown")?.classList.add("hidden");
+        document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+        document.getElementById("animation-dropdown")?.classList.add("hidden");
+        document.getElementById("font-dropdown")?.classList.add("hidden");
+        document.getElementById("background-dropdown")?.classList.add("hidden");
+        if (!addFriendDropdown.classList.contains("hidden")) {
+          friendSearchInput.focus();
+        }
+      });
+      const sendFriendRequest = async () => {
+        const searchValue = friendSearchInput.value.trim();
+        if (!searchValue) {
+          showFriendMessage("Please enter a username or email", "error");
+          return;
+        }
+        const userId = localStorage.getItem("userId");
+        try {
+          const response = await fetch(`/api/${userId}/friendship/request`, {
+            // on lance la requete sur cette route
+            method: "POST",
+            // post pour creer la demande -> patch quand on l'accepte?
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              alias: searchValue
+            })
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showFriendMessage("Friend request sent!", "success");
+            friendSearchInput.value = "";
+            setTimeout(() => {
+              addFriendDropdown.classList.add("hidden");
+              friendRequestMessage?.classList.add("hidden");
+            }, 1500);
+          } else {
+            showFriendMessage(data.message || "Error sending request", "error");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          showFriendMessage("Network error", "error");
+        }
+      };
+      const showFriendMessage = (message, type) => {
+        if (friendRequestMessage) {
+          friendRequestMessage.textContent = message;
+          friendRequestMessage.classList.remove("hidden", "text-green-600", "text-red-600");
+          friendRequestMessage.classList.add(type === "success" ? "text-green-600" : "text-red-600");
+        }
+      };
+      sendFriendRequestBtn.addEventListener("click", sendFriendRequest);
+      friendSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          sendFriendRequest();
+        }
+      });
+      cancelFriendRequestBtn.addEventListener("click", () => {
+        addFriendDropdown.classList.add("hidden");
+        friendSearchInput.value = "";
+        friendRequestMessage?.classList.add("hidden");
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+          addFriendDropdown.classList.add("hidden");
+          friendRequestMessage?.classList.add("hidden");
+        }
+      });
+    }
     const getStatusDot = (status) => {
       switch (status) {
         case "available":

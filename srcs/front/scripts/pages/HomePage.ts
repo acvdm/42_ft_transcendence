@@ -151,6 +151,112 @@ export function afterRender(): void {
 	const chatHeaderBio = document.getElementById('chat-header-bio');
 
 
+	const addFriendButton = document.getElementById('add-friend-button');
+	const addFriendDropdown = document.getElementById('add-friend-dropdown');
+	const friendSearchInput = document.getElementById('friend-search-input') as HTMLInputElement;
+	const sendFriendRequestBtn = document.getElementById('send-friend-request');
+	const cancelFriendRequestBtn = document.getElementById('cancel-friend-request');
+	const friendRequestMessage = document.getElementById('friend-request-message');
+
+
+		// ---------------------------------------------------
+		// ----           LOGIQUE DES AMIS.               ----
+		// ---------------------------------------------------    
+
+
+	if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+		
+		// ouverture ou fermeture du dropdown
+		addFriendButton.addEventListener('click', (e) => {
+			e.stopPropagation();
+			addFriendDropdown.classList.toggle('hidden');
+			
+			// fermeture des autres menus
+			document.getElementById('status-dropdown')?.classList.add('hidden');
+			document.getElementById('emoticon-dropdown')?.classList.add('hidden');
+			document.getElementById('animation-dropdown')?.classList.add('hidden');
+			document.getElementById('font-dropdown')?.classList.add('hidden');
+			document.getElementById('background-dropdown')?.classList.add('hidden');
+			
+			if (!addFriendDropdown.classList.contains('hidden')) {
+				friendSearchInput.focus();
+			}
+		});
+
+		// envoi de la demande d'ami -> quel route on choisi>
+		const sendFriendRequest = async () => {
+			const searchValue = friendSearchInput.value.trim(); // onretire les espaces etc
+			
+			if (!searchValue) { // si vide alors message d;erreur
+				showFriendMessage('Please enter a username or email', 'error');
+				return;
+			}
+
+			const userId = localStorage.getItem('userId');
+
+			try {
+				const response = await fetch(`/api/${userId}/friendship/request`, { // on lance la requete sur cette route
+					method: 'POST', // post pour creer la demande -> patch quand on l'accepte?
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						alias: searchValue
+					})
+				});
+
+				const data = await response.json();
+
+				if (response.ok) {
+					showFriendMessage('Friend request sent!', 'success'); // si ok alors la friend request en envoyee
+					friendSearchInput.value = '';
+					
+					setTimeout(() => { // timeout pour pas garder le menu ouvert indefiniment
+						addFriendDropdown.classList.add('hidden');
+						friendRequestMessage?.classList.add('hidden');
+					}, 1500);
+				} else {
+					showFriendMessage(data.message || 'Error sending request', 'error');
+				}
+			} catch (error) {
+				console.error('Error:', error);
+				showFriendMessage('Network error', 'error');
+			}
+		};
+
+		// affichage pour l'utilisateur
+		const showFriendMessage = (message: string, type: 'success' | 'error') => {
+			if (friendRequestMessage) {
+				friendRequestMessage.textContent = message;
+				friendRequestMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
+				friendRequestMessage.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
+			}
+		};
+
+		// clic sur envoyer
+		sendFriendRequestBtn.addEventListener('click', sendFriendRequest);
+		
+		friendSearchInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				sendFriendRequest();
+			}
+		});
+
+		cancelFriendRequestBtn.addEventListener('click', () => {
+			addFriendDropdown.classList.add('hidden');
+			friendSearchInput.value = '';
+			friendRequestMessage?.classList.add('hidden');
+		});
+
+		document.addEventListener('click', (e) => {
+			const target = e.target as HTMLElement;
+			if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+				addFriendDropdown.classList.add('hidden');
+				friendRequestMessage?.classList.add('hidden');
+			}
+		});
+	}
+
 	// ---------------------------------------------------
 	// ----           LOGIQUE DE LA MITIE               ----
 	// ---------------------------------------------------    
