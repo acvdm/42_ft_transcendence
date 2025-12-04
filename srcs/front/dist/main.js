@@ -3503,9 +3503,9 @@
 		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
 	</div>
 
-	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-4 gap-4">
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-2 gap-2">
 		<!-- Cadre du profil -->
-		<div class="flex flex-row w-full h-[160px] bg-gray-100 shadow-inner rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
+		<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
 			<div class="relative w-[110px] h-[110px] flex-shrink-0">
 				<!-- l'image (profil principal) -->
 				<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
