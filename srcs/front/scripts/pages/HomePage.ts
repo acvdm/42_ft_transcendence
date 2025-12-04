@@ -173,7 +173,7 @@ export function afterRender(): void {
 
 			const targetUsername = item.dataset.username || "Unknown";
 			const targetBio = item.dataset.bio || "";
-			const targetAvatar = item.dataset.avatar || "/assets/profile/default.png";
+			const targetAvatar = item.dataset.avatar || "/assets/basic/default.png";
 
 			// maj header
 			if (chatHeaderName) chatHeaderName.textContent = targetUsername;
@@ -183,7 +183,7 @@ export function afterRender(): void {
 			// reset
 			if (messagesContainer) {
 				messagesContainer.innerHTML = '';
-				// ici on recupere l'historique du chat
+				// ici on recupere l'historique du chat potentiellement
 				addMessage(`Beginning of your conversation with ${targetUsername}`, "System");
 			}
 			messageInput?.focus();
@@ -217,7 +217,7 @@ export function afterRender(): void {
 				// on stocke tout
 				friendItem.dataset.username = friend.alias;
 				friendItem.dataset.bio = friend.bio || "Share a quick message";
-				friendItem.dataset.avatar = friend.avatar || "/assets/profile/default.png";
+				friendItem.dataset.avatar = friend.avatar || "/assets/basic/default.png";
 				
 				const status = friend.status || 'invisible'; 
 

@@ -3551,7 +3551,20 @@
 					<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
 				</div>
 			</div>
+
+			<!-- Notifications -->
+			<div class="flex justify-end mt-auto">
+				<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+					<img id="notification-icon" 
+						src="/assets/basic/no_notifications.png" 
+						alt="Notifications" 
+						class="w-full h-full object-contain">
+				</button>
+			</div>
+
+
 		</div>
+		
 
 		<!-- Container avec left et right qui prennent toute la hauteur restante -->
 		<div class="flex gap-4 flex-1 min-h-0">
@@ -3856,7 +3869,7 @@
         if (roomChat) roomChat.classList.remove("hidden");
         const targetUsername = item.dataset.username || "Unknown";
         const targetBio = item.dataset.bio || "";
-        const targetAvatar = item.dataset.avatar || "/assets/profile/default.png";
+        const targetAvatar = item.dataset.avatar || "/assets/basic/default.png";
         if (chatHeaderName) chatHeaderName.textContent = targetUsername;
         if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
         if (chatHeaderAvatar) chatHeaderAvatar.src = targetAvatar;
@@ -3885,7 +3898,7 @@
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
           friendItem.dataset.username = friend.alias;
           friendItem.dataset.bio = friend.bio || "Share a quick message";
-          friendItem.dataset.avatar = friend.avatar || "/assets/profile/default.png";
+          friendItem.dataset.avatar = friend.avatar || "/assets/basic/default.png";
           const status = friend.status || "invisible";
           friendItem.innerHTML = `
 					<div class="relative w-[50px] h-[50px] flex-shrink-0">
@@ -4483,6 +4496,11 @@
           </div>
         </div>
 
+
+
+        
+
+        
     
 	`;
   }
