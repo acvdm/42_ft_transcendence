@@ -3626,7 +3626,18 @@
 					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
 
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
-							<p class="text-xl text-black font-semibold text-center tracking-wide mb-2 select-none">MY FRIENDS</p>
+							<div class="flex flex-row items-center justify-between">
+								<p class="text-xl text-black font-semibold text-center tracking-wide mb-2 select-none">MY FRIENDS</p>
+								
+								<div class="ml-auto flex items-center">
+									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
+										<img id="add-friend-icon" 
+											src="/assets/basic/1441.png" 
+											alt="Friends button" 
+											class="w-full h-full object-contain">
+									</button>
+								</div>
+							</div>
 
 							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500">
 
