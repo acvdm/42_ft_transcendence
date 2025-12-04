@@ -1,7 +1,8 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
+import { render as LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
 import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
-import { ProfilPage } from "./pages/ProfilePage";
+import { render as ProfilePage } from "./pages/ProfilePage"
+// import { ProfilPage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFound";
 import { LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
@@ -31,7 +32,7 @@ const routes: { [key: string]: Page } = {
 		afterRender: HomePageAfterRender
 	},
 	'/profile': {
-		render: ProfilPage,
+		render: ProfilePage,
 		afterRender: () => console.log('Profil page chargée -> modifications de la page de profil, photo etc')
 	},
 	'/register': {
