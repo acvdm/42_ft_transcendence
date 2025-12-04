@@ -195,7 +195,7 @@ export function afterRender(): void {
 			const userId = localStorage.getItem('userId');
 
 			try {
-				const response = await fetch(`/api/${userId}/friendship/request`, { // on lance la requete sur cette route
+				const response = await fetch(`/api/user/${userId}/friendship/request`, { // on lance la requete sur cette route
 					method: 'POST', // post pour creer la demande -> patch quand on l'accepte?
 					headers: {
 						'Content-Type': 'application/json',
