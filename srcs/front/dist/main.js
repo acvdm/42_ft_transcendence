@@ -3556,7 +3556,7 @@
 			<div class="flex justify-end mt-auto">
 				<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
 					<img id="notification-icon" 
-						src="/assets/basic/no_notifications.png" 
+						src="/assets/basic/message_notif.png" 
 						alt="Notifications" 
 						class="w-full h-full object-contain">
 				</button>
@@ -3568,155 +3568,185 @@
 
 		<!-- Container avec left et right qui prennent toute la hauteur restante -->
 		<div class="flex gap-4 flex-1 min-h-0">
-			<div id="left" class="flex-col w-[700px] min-w-[700px] shrink-0 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center" style="width: 700px; min-width: 700px;">
-				<h1 class="text-lg font-semibold"> Wanna play? \u{1F47E}</h1>
-				<button id="local-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
-				<button id="remote-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
-				<button id="tournament-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
-			</div>
 
-			<div id="right" class="flex flex-row gap-4 flex-1 min-w-0">
-
-	<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-
-		<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full">
-			<p class="text-xl text-gray-500 uppercase tracking-wide mb-2 select-none" style="width:350px; min-width: 350px;">My friends</p>
-
-			<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none">
-
-				<details open class="group">
-					<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-						\u2B50 Contacts
-					</summary>
-
-					<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
-						</div>
-				</details>
-
-				<details class="group">
-					<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-						\u{1F4C1} Groups
-					</summary>
-
-					<div class="mt-2 ml-4 flex flex-col gap-2">
-						<div class="text-xs text-gray-600 ml-1">les bogoce</div>
-						<div class="text-xs text-gray-600 ml-1">les cheums</div>
+			<!-- ========= LEFT WINDOW ========= -->
+			<div class="window w-[700px] min-w-[700px] flex flex-col">
+				<div class="title-bar">
+					<div class="title-bar-text">Games</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close">x</button>
 					</div>
-				</details>
-			</div>
-		</div>
+				</div>
 
-		<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
-			<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
-			<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
-		</div>
-
-		<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-			
-			<div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
-				<div class="flex gap-4 items-center">
-					<div class="relative w-[80px] h-[80px] flex-shrink-0">
-						<!-- l'image (profil principal) -->
-						<img id="chat-header-avatar" 
-							class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
-							src="" 
-							alt="User avatar">
-						<!-- le cadre -->
-						<img id="chat-header-status" 
-							class="absolute inset-0 w-full h-full object-contain" 
-							src="/assets/basic/status_away_small.png" 
-							alt="Status frame">
-					</div>
-					<div class="flex flex-col justify-start leading-tight">
-						<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
-						<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
-					</div>
+				<div id="left" class="window-body flex-col flex-1 h-full w-[700px] min-w-[700px] shrink-0 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center" style="width: 700px; min-width: 700px;">
+					<h1 class="text-lg font-semibold"> Wanna play? \u{1F47E}</h1>
+					<button id="local-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
+					<button id="remote-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
+					<button id="tournament-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
 				</div>
 			</div>
 
 
+			<!-- ========= RIGHT WINDOW ========= -->
+			<div class="window flex flex-col flex-1 min-w-0">
+				<div class="title-bar">
+					<div class="title-bar-text">Messenger</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
 
-			<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
 
-			<div class="flex flex-col">
-				<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
 
-				<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-					<button id="select-emoticon" class="h-6">
-						<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-							<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-							<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full">
+							<p class="text-xl text-gray-500 uppercase tracking-wide mb-2 select-none" style="width:350px; min-width: 350px;">My friends</p>
 
-							<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-								<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none">
+
+								<details open class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										\u2B50 Contacts
+									</summary>
+
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
+										</div>
+								</details>
+
+								<details class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										\u{1F4C1} Groups
+									</summary>
+
+									<div class="mt-2 ml-4 flex flex-col gap-2">
+										<div class="text-xs text-gray-600 ml-1">les bogoce</div>
+										<div class="text-xs text-gray-600 ml-1">les cheums</div>
+									</div>
+								</details>
 							</div>
 						</div>
-					</button>
 
-					<button id="select-animation" class="h-6">
-						<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-							<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-							<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-							<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-								<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-							</div>
+						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
+							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
+							<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
 						</div>
-					</button>
 
-					<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-					<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-					<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+							
+							<div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
+								<div class="flex gap-4 items-center">
+									<div class="relative w-[80px] h-[80px] flex-shrink-0">
+										<!-- l'image (profil principal) -->
+										<img id="chat-header-avatar" 
+											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+											src="" 
+											alt="User avatar">
+										<!-- le cadre -->
+										<img id="chat-header-status" 
+											class="absolute inset-0 w-full h-full object-contain" 
+											src="/assets/basic/status_away_small.png" 
+											alt="Status frame">
+									</div>
+									<div class="flex flex-col justify-start leading-tight">
+										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+									</div>
+								</div>
+							</div>
+
+
+
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
 
 <!-- Menu pour les fonts -->
-								
-					<button id="change-font" class="h-6">
-						<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-						<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-						<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-						<!-- Menu dropdown -> il s'ouvre quand on clique -->
-						<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-							<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-						</div>
-
-						</div>
-					</button>
-
-					<div class="relative">
-					<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-						<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-						<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-					</button>
-
-					<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-						<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
 									
-						<div class="grid grid-cols-3 gap-2">
-										
-							<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-									data-bg="url('/assets/backgrounds/fish_background.jpg')"
-									style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-							</button>
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
 
-							<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-									data-bg="url('/assets/backgrounds/heart_background.jpg')"
-									style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-							</button>
+										<!-- Menu dropdown -> il s'ouvre quand on clique -->
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
 
-							<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-									data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-									style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-							</button>
+										</div>
+									</button>
 
-							<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-								Default background
-							</button>
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
 						</div>
-					</div>
+					</div> 
 				</div>
+			</div> 
 		</div>
-	</div> 
+
+	</div>
 </div>
 `;
 
@@ -4426,97 +4456,12 @@
     }
   }
 
+  // scripts/pages/ProfilePage.html
+  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n	<div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n			 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n	</div>\n	<div class="min-h-screen flex items-center justify-center">\n	\n		<div class="window" style="width: 900px;">\n		<div class="title-bar">\n			<div class="title-bar-text">Profil</div>\n			<div class="title-bar-controls">\n				<button aria-label="Minimize"></button>\n				<button aria-label="Maximize"></button>\n				<button aria-label="Close"></button>\n			</div>\n		</div>\n	\n		<div class="window-body">\n	\n			<!-- Main content -->\n			<div class="flex flex-col items-center py-12">\n	\n			<div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n	\n				<!-- Left: My Profile -->\n				<div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n				<h1 class="text-lg font-normal mb-4">My Profile</h1>\n	\n				<!-- Profile picture -->\n				<div class="relative w-[170px] h-[170px] mb-4">\n					<img class="absolute inset-0 w-full h-full object-cover"\n					src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n					<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n					src="https://wlm.vercel.app/assets/usertiles/default.png">\n				</div>\n	\n				<!-- Profile info -->\n				<div class="text-sm text-left w-full leading-6">\n					<p><strong>FAUSToche01</strong></p>\n					<p>c00uk\xF6\xFC les kop1</p>\n					<p>Status: <span class="text-red-600">dcdscsd</span></p>\n					<p>Email: fsdsdsfsd</p>\n					<p>Password: dfsdcsd</p>\n					<p>Background: scscsd</p>\n				</div>\n				</div>\n	\n				<!-- Right: Profile editor -->\n				<div class="flex flex-col justify-between flex-1">\n	\n				<!-- Upper section -->\n				<div class="flex flex-col gap-4">\n					<div>\n					<label class="text-sm">Username:</label>\n					<input type="text" value="FAUSToche01"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Choose your message:</label>\n					<input type="text" value="c00uk\xF6\xFC les kop1"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Status:</label>\n					<div class="flex items-center gap-2 mt-1">\n						<span class="text-gray-600 text-sm">Choose your status:</span>\n						<select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n						<option>Available</option>\n						<option selected>Busy</option>\n						<option>Away</option>\n						<option>Appear offline</option>\n						</select>\n					</div>\n					</div>\n				</div>\n	\n				<!-- Danger Zone -->\n				<div class="mt-8 border-t border-gray-300 pt-4">\n					<h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! \u26A0\uFE0F</h2>\n					<div class="flex items-center justify-start gap-6">\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Email</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Password</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					</div>\n				</div>\n	\n				</div>\n	\n			</div>\n			</div>\n	\n		</div>\n		</div>\n	\n	\n	\n	</div>\n	\n\n</div>	\n';
+
   // scripts/pages/ProfilePage.ts
-  function ProfilPage() {
-    return `
-
-<!-- Main content -->
-  <div class="flex flex-col items-center py-8">
-
-    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
-
-      <!-- Left: My Profile -->
-      <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">
-        <h1 class="text-lg font-normal mb-4">My Profile</h1>
-
-        <!-- Profile picture -->
-        <div class="relative w-[170px] h-[170px] mb-4">
-          <img class="absolute inset-0 w-full h-full object-cover"
-            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png" alt="profile frame">
-          <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-            src="https://wlm.vercel.app/assets/usertiles/default.png" alt="user photo">
-        </div>
-
-        <!-- Profile info -->
-        <div class="text-sm text-left w-full leading-6">
-          <p><strong>FAUSToche01</strong></p>
-          <p>c00uk\xF6\xFC les kop1</p>
-          <p>Status: <span class="text-red-600">dcdscsd</span></p>
-          <p>Email: fsdsdsfsd</p>
-          <p>Password: dfsdcsd</p>
-          <p>Background: scscsd</p>
-        </div>
-      </div>
-
-      <!-- Right: Profile editor -->
-      <div class="flex flex-col justify-between flex-1">
-
-        <!-- Upper section -->
-        <div class="flex flex-col gap-4">
-          <div>
-            <label class="text-sm">Username:</label>
-            <input type="text" value="FAUSToche01"
-              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-          </div>
-
-          <div>
-            <label class="text-sm">Choose your message:</label>
-            <input type="text" value="c00uk\xF6\xFC les kop1"
-              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-          </div>
-          <div>
-            <label class="text-sm">Status:</label>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="text-gray-600 text-sm">Choose your status:</span>
-              <select
-                class="bg-transparent rounded-sm px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-                <option>Available</option>
-                <option selected>Busy</option>
-                <option>Away</option>
-                <option>Appear offline</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="mt-8 border-t border-gray-300 pt-4">
-          <h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! \u26A0\uFE0F</h2>
-          <div class="flex items-center justify-start gap-6">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">Email</span>
-              <button
-                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                Change
-              </button>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm">Password</span>
-              <button
-                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                Change
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-
-        
-
-        
-    
-	`;
+  function render2() {
+    return ProfilePage_default;
   }
 
   // scripts/pages/NotFound.ts
@@ -4708,7 +4653,7 @@
       afterRender
     },
     "/profile": {
-      render: ProfilPage,
+      render: render2,
       afterRender: () => console.log("Profil page charg\xE9e -> modifications de la page de profil, photo etc")
     },
     "/register": {

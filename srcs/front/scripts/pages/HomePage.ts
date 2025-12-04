@@ -5,6 +5,7 @@ import htmlContent from "./HomePage.html";
 export function render(): string {
 	return htmlContent;
 };
+
 export function afterRender(): void {
 
 	let globalPath = "/assets/emoticons/";
