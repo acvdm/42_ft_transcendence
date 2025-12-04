@@ -29,9 +29,7 @@
 				width: 100%;
 				height: 100%;
 				border-radius: 6px;
-				background: linear-gradient(transparent 20%, rgba(255, 255, 255, 0.7) 40%, transparent 41%), 
-							linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2)), 
-							#4580c4;
+				background: none;
 				box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.87);
 			}
 			
@@ -92,33 +90,13 @@
 				border-bottom-right-radius: 5px;
 				min-width: 48px;
 			}
-			
-			/* .title-bar-controls button:hover {
-				background: radial-gradient(circle at bottom, #2aceda, transparent 65%), 
-							linear-gradient(#b6d9ee 50%, #1a6ca1 50%);
-				box-shadow: 0 0 7px 3px #5dc4f0, inset 0 0 0 1px rgba(255, 255, 255, 0.67);
-			} */
-			
-			/* .title-bar-controls button:active {
-				background: radial-gradient(circle at bottom, #0bfdfa, transparent 65%), 
-							linear-gradient(#86a7bc 50%, #092747 50%);
-			}
-			 */
+
 			.title-bar-controls button:last-child {
 				background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5)),
 							radial-gradient(circle at -60% 50%, rgba(0, 0, 0, 0.47) 5% 10%, transparent 50%), 
 							radial-gradient(circle at 160% 50%, rgba(0, 0, 0, 0.47) 5% 10%, transparent 50%),
 							linear-gradient(rgba(224, 161, 151, 0.9), #cf796a 25% 50%, #d54f36 50%);
 			}
-			
-			/* .title-bar-controls button:last-child:hover {
-				background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5)),
-							radial-gradient(circle at 50% 170%, #f4e676 10% 20%, transparent 60%),
-							radial-gradient(circle at -60% 50%, rgba(0, 0, 0, 0.67) 5% 10%, transparent 50%), 
-							radial-gradient(circle at 160% 50%, rgba(0, 0, 0, 0.67) 5% 10%, transparent 50%), 
-							linear-gradient(#fb9d8b, #ee6d56 25% 50%, #d42809 50%);
-				box-shadow: 0 0 7px 3px #e68e75, inset 0 0 0 1px rgba(255, 255, 255, 0.67);
-			} */
 			
 			/* Icônes des boutons */
 			.minimize-icon {
@@ -156,7 +134,7 @@
 				margin: 6px;
 				margin-top: 0;
 				border: 1px solid rgba(0, 0, 0, 0.7);
-				background: #f0f0f0;
+				background: transparent;
 				box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
 				min-height: 150px;
 			}
@@ -165,7 +143,7 @@
 
 <body class="m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen">
 		
-		<nav    class="w-full h-[40px] bg-[linear-gradient(to_bottom,_#5DBFED_0%,_#3CB1E8_50%,_#3db6ec_50%,_#3db6ec_100%)] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-xl/30"
+		<nav    class="w-full h-[50px] bg-[linear-gradient(to_bottom,_#5DBFED_0%,_#3CB1E8_50%,_#3db6ec_50%,_#3db6ec_100%)] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-xl/30"
 						style="background-size: cover;">
 				<a href="/home" class="text-white hover:underline">Home</a>
 				<a href="/profile" class="text-white hover:underline">Profile</a>

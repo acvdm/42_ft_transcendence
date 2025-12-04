@@ -16,7 +16,7 @@ export async function initDatabase(): Promise<Database> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         alias TEXT UNIQUE NOT NULL CHECK (length(alias) <= 30),
         avatar_url TEXT,
-        bio TEXT CHECK (length(bio) < 255),
+        bio TEXT CHECK (length(bio) < 75),
         status TEXT DEFAULT 'Available'
         ) 
     `);
