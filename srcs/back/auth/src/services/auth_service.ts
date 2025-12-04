@@ -25,7 +25,7 @@ export async function registerUser(
     user_id: number, 
     email: string, 
     password: string
-): Promise<authResponse | undefined> {
+): Promise<authResponse> {
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
@@ -68,7 +68,7 @@ export async function loginUser(
     db: Database,
     email: string, 
     password: string
-): Promise<authResponse | undefined> {
+): Promise<authResponse> {
     
     const user_id = await credRepo.findUserIdByEmail(db, email);
     if (!user_id)
