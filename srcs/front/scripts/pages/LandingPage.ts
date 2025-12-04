@@ -1,6 +1,3 @@
-import { LoginPage } from "./LoginPage";
-import { RegisterPage } from "./RegisterPage";
-
 export function LandingPage(): string {
 	return `
 	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
@@ -13,7 +10,7 @@ export function LandingPage(): string {
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			Welcome to Transcendence
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">

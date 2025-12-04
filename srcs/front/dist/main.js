@@ -6,10 +6,8 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
-  // scripts/pages/LoginPage.ts
-  function LoginPage() {
-    return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  // scripts/pages/LoginPage.html
+  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -56,8 +54,11 @@
 				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 			</div>
 	</div>
-	</div>
-	`;
+	</div>`;
+
+  // scripts/pages/LoginPage.ts
+  function render() {
+    return LoginPage_default;
   }
   function handleLogin() {
     const button = document.getElementById("login-button");
@@ -3771,7 +3772,7 @@
 `;
 
   // scripts/pages/HomePage.ts
-  function render() {
+  function render2() {
     return HomePage_default;
   }
   function afterRender() {
@@ -4480,7 +4481,7 @@
   var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n	<div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n			 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n	</div>\n	<div class="min-h-screen flex items-center justify-center">\n	\n		<div class="window" style="width: 900px;">\n		<div class="title-bar">\n			<div class="title-bar-text">Profil</div>\n			<div class="title-bar-controls">\n				<button aria-label="Minimize"></button>\n				<button aria-label="Maximize"></button>\n				<button aria-label="Close"></button>\n			</div>\n		</div>\n	\n		<div class="window-body">\n	\n			<!-- Main content -->\n			<div class="flex flex-col items-center py-12">\n	\n			<div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n	\n				<!-- Left: My Profile -->\n				<div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n				<h1 class="text-lg font-normal mb-4">My Profile</h1>\n	\n				<!-- Profile picture -->\n				<div class="relative w-[170px] h-[170px] mb-4">\n					<img class="absolute inset-0 w-full h-full object-cover"\n					src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n					<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n					src="https://wlm.vercel.app/assets/usertiles/default.png">\n				</div>\n	\n				<!-- Profile info -->\n				<div class="text-sm text-left w-full leading-6">\n					<p><strong>FAUSToche01</strong></p>\n					<p>c00uk\xF6\xFC les kop1</p>\n					<p>Status: <span class="text-red-600">dcdscsd</span></p>\n					<p>Email: fsdsdsfsd</p>\n					<p>Password: dfsdcsd</p>\n					<p>Background: scscsd</p>\n				</div>\n				</div>\n	\n				<!-- Right: Profile editor -->\n				<div class="flex flex-col justify-between flex-1">\n	\n				<!-- Upper section -->\n				<div class="flex flex-col gap-4">\n					<div>\n					<label class="text-sm">Username:</label>\n					<input type="text" value="FAUSToche01"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Choose your message:</label>\n					<input type="text" value="c00uk\xF6\xFC les kop1"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Status:</label>\n					<div class="flex items-center gap-2 mt-1">\n						<span class="text-gray-600 text-sm">Choose your status:</span>\n						<select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n						<option>Available</option>\n						<option selected>Busy</option>\n						<option>Away</option>\n						<option>Appear offline</option>\n						</select>\n					</div>\n					</div>\n				</div>\n	\n				<!-- Danger Zone -->\n				<div class="mt-8 border-t border-gray-300 pt-4">\n					<h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! \u26A0\uFE0F</h2>\n					<div class="flex items-center justify-start gap-6">\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Email</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Password</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					</div>\n				</div>\n	\n				</div>\n	\n			</div>\n			</div>\n	\n		</div>\n		</div>\n	\n	\n	\n	</div>\n	\n\n</div>	\n';
 
   // scripts/pages/ProfilePage.ts
-  function render2() {
+  function render3() {
     return ProfilePage_default;
   }
 
@@ -4514,7 +4515,7 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			Welcome to Transcendence
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -4561,7 +4562,7 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			Sign up to Transcendence
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -4669,11 +4670,11 @@
       afterRender: initLandingPage
     },
     "/home": {
-      render,
+      render: render2,
       afterRender
     },
     "/profile": {
-      render: render2,
+      render: render3,
       afterRender: () => console.log("Profil page charg\xE9e -> modifications de la page de profil, photo etc")
     },
     "/register": {
@@ -4681,7 +4682,7 @@
       afterRender: registerEvents
     },
     "/login": {
-      render: LoginPage,
+      render,
       afterRender: loginEvents
     },
     "/404": {

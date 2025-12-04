@@ -1,5 +1,5 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
+import { render as LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
 import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
 import { render as ProfilePage } from "./pages/ProfilePage"
 // import { ProfilPage } from "./pages/ProfilePage";
