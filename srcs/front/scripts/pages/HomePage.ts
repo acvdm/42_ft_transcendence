@@ -9,6 +9,7 @@ export function afterRender(): void {
 
 	let globalPath = "/assets/emoticons/";
 	let animationPath = "/assets/animated/";
+	let currentChannel: string = "general";
 
 	const emoticons: { [key: string]: string } = {};
 
@@ -141,7 +142,7 @@ export function afterRender(): void {
 	const bioWrapper = document.getElementById('bio-wrapper');
 
 	const friendItems = document.querySelectorAll('.friend-item');
-	const roomChat = document.getElementById('room-chat');
+	const channelChat = document.getElementById('channel-chat');
 	const chatPlaceholder = document.getElementById('chat-placeholder');
 
 	const chatHeaderAvatar = document.getElementById('chat-header-avatar');
@@ -165,11 +166,25 @@ export function afterRender(): void {
 	// ouverture du chat
 	const attachFriendClick = (item: HTMLElement) => {
 		item.addEventListener('click', () => {
+			const friendUsername = item.dataset.username || "Unknown";
 			console.log("Friend clicked:", item.dataset.username);
+
+			// je récupère mes ids
+			const connectedUserId = parseInt(localStorage.getItem('userId') || "0");
+			const friendId = parseInt(item.dataset.id || "0");
+
+			// je fais mon calcul
+			const ids = [connectedUserId, friendId].sort((a, b) => a - b);
+			const channelKey = `channel_${ids[0]}_${ids[1]}`;
+
+			console.log("numero de la channel:", channelKey);
+
+			const currentChannel = channelKey;
+			socket.emit("joinChannel", channelKey);
 
 			// affichage du chat
 			if (chatPlaceholder) chatPlaceholder.classList.add('hidden');
-			if (roomChat) roomChat.classList.remove('hidden');
+			if (channelChat) channelChat.classList.remove('hidden');
 
 			const targetUsername = item.dataset.username || "Unknown";
 			const targetBio = item.dataset.bio || "";
@@ -215,6 +230,7 @@ export function afterRender(): void {
 				friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
 				
 				// on stocke tout
+				friendItem.dataset.id = friend.id;
 				friendItem.dataset.username = friend.alias;
 				friendItem.dataset.bio = friend.bio || "Share a quick message";
 				friendItem.dataset.avatar = friend.avatar || "/assets/basic/default.png";
@@ -976,7 +992,10 @@ async function finalize(text: string) {
 			// on envoie le message au serveur avec emit
 			const username = localStorage.getItem('username');
 			const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
-			socket.emit("chatMessage", { sender_id: sender_id, channel: "general", msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
+			socket.emit("chatMessage", {
+				sender_id: sender_id,
+				channel: currentChannel,
+				msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
 			messageInput.value = ''; // on vide l'input
 		}
 	});

@@ -3611,7 +3611,7 @@
 			<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
 		</div>
 
-		<div id="room-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+		<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
 			
 			<div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
 				<div class="flex gap-4 items-center">
@@ -3727,6 +3727,7 @@
   function afterRender() {
     let globalPath = "/assets/emoticons/";
     let animationPath = "/assets/animated/";
+    let currentChannel = "general";
     const emoticons = {};
     const animations = {
       "(boucy_ball)": animationPath + "bouncy_ball.gif",
@@ -3845,7 +3846,7 @@
     const bioText = document.getElementById("user-bio");
     const bioWrapper = document.getElementById("bio-wrapper");
     const friendItems = document.querySelectorAll(".friend-item");
-    const roomChat = document.getElementById("room-chat");
+    const channelChat = document.getElementById("channel-chat");
     const chatPlaceholder = document.getElementById("chat-placeholder");
     const chatHeaderAvatar = document.getElementById("chat-header-avatar");
     const chatHeaderName = document.getElementById("chat-header-username");
@@ -3864,9 +3865,17 @@
     };
     const attachFriendClick = (item) => {
       item.addEventListener("click", () => {
+        const friendUsername = item.dataset.username || "Unknown";
         console.log("Friend clicked:", item.dataset.username);
+        const connectedUserId = parseInt(localStorage.getItem("userId") || "0");
+        const friendId = parseInt(item.dataset.id || "0");
+        const ids = [connectedUserId, friendId].sort((a, b) => a - b);
+        const channelKey = `channel_${ids[0]}_${ids[1]}`;
+        console.log("numero de la channel:", channelKey);
+        const currentChannel2 = channelKey;
+        socket.emit("joinChannel", channelKey);
         if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
-        if (roomChat) roomChat.classList.remove("hidden");
+        if (channelChat) channelChat.classList.remove("hidden");
         const targetUsername = item.dataset.username || "Unknown";
         const targetBio = item.dataset.bio || "";
         const targetAvatar = item.dataset.avatar || "/assets/basic/default.png";
@@ -3896,6 +3905,7 @@
         friends.forEach((friend) => {
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          friendItem.dataset.id = friend.id;
           friendItem.dataset.username = friend.alias;
           friendItem.dataset.bio = friend.bio || "Share a quick message";
           friendItem.dataset.avatar = friend.avatar || "/assets/basic/default.png";
@@ -4393,7 +4403,11 @@
         const msg_content = messageInput.value;
         const username = localStorage.getItem("username");
         const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
-        socket.emit("chatMessage", { sender_id, channel: "general", msg_content });
+        socket.emit("chatMessage", {
+          sender_id,
+          channel: currentChannel,
+          msg_content
+        });
         messageInput.value = "";
       }
     });
