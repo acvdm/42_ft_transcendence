@@ -24,80 +24,89 @@ async function main()
 
 
 /* -- REGISTER NEW USER -- */
-fastify.post('/register', async (request, reply) => {
+fastify.post('/users', async (request, reply) => {
   
-  const body = request.body as { 
-      alias: string;
-      email: string;
-      password: string; 
-      avatar?: string;
-    };
+	const body = request.body as { 
+		alias: string;
+		email: string;
+		password: string; 
+		avatar?: string;
+	};
 
-  let user_id = null; 
+	let user_id = null; 
 
-  // A retirer pour production 
-  console.log('Request.body reçu: ', body);
-  try 
-  {
-    if (body.alias.length > 30) {
-      throw new Error('Error: Alias is too long, max 30 characters');
-    }
-
-    // 1. Créer le user localement dans user.sqlite
-    user_id = await userRepo.createUserInDB(db, body)
-
-    if (!user_id)
-      return reply.status(500).send('Error during profile creation');
-    console.log(`User created locally (ID: ${user_id}. Calling auth...`);
-
-    // 3. Appeler le service auth pour créer les credentials
-    const authResponse = await fetch("http://auth:3001/register", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ 
-        user_id: user_id, 
-        email: body.email, 
-        password: body.password, 
-      }),
-    });
-
-    if (!authResponse.ok)
+	try 
 	{
-      throw new Error(`Error HTTP, ${authResponse.status}`);
+		if (body.alias.length > 30) 
+		{
+		  throw new Error('Error: Alias is too long, max 30 characters');
+		}		
+		// 1. Créer le user localement dans user.sqlite
+		user_id = await userRepo.createUserInDB(db, body)		
+		if (!user_id)
+		{
+			return reply.status(500).send({
+				success: false,
+				data: null,
+				error: { message: 'Error during profile creation'}
+			});
+		}
+
+		console.log(`User created locally (ID: ${user_id}. Calling auth...`);		
+		const authURL = `http://auth:3001/users/${user_id}/credentials`;
+
+		// 3. Appeler le service auth pour créer les credentials
+		const authResponse = await fetch(authURL, {
+			method: "POST",
+			headers: { 
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ 
+				user_id: user_id, 
+				email: body.email, 
+				password: body.password, 
+			}),
+		});
+
+		// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
+		const data = await authResponse.json();
+		if (data.success)
+		{
+		    return reply.status(201).send({
+				success: true,
+				data: data,
+				error: null
+		    });
+		}
+		else 
+		{
+		    throw new Error(`Auth error: ${data.error.message}`);    
+		}
+	} 
+	catch (err: any) 
+	{
+		const errorMessage = err.message;
+
+		// 5. Rollback
+		if (user_id) 
+		{
+		  console.log(`Rollback: delele orphan ID ${user_id}`);
+		  await userRepo.rollbackDeleteUser(db, user_id);
+		  console.log(`User ID ${user_id} successfully deleted`);
+		}	
+
+		reply.status(400).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: errorMessage} 		
+		});
 	}
-    // 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
-    const data = await authResponse.json();
-
-    // A retirer pour production 
-    console.log('User successfully added to Database! ', data);
-
-    return reply.status(201).send(data);
-
-  } 
-  catch (err: any) 
-  {
-    const errorMessage = err.message;
-    console.error("Final error message: ", errorMessage);
-
-    // 5. Rollback
-    if (user_id) 
-    {
-      console.log(`Rollback: delele orphan ID ${user_id}`);
-      await userRepo.rollbackDeleteUser(db, user_id);
-      console.log('User ID ${user_id} successfully deleted');
-    }
-
-    console.log(errorMessage);
-    reply.status(400).send({ errorMessage });
-  }
 })
 
 
 
 /* -- FIND USER -- */
-fastify.get('/:id', async (request, reply) => 
+fastify.get('/users/:id', async (request, reply) => 
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -105,8 +114,11 @@ fastify.get('/:id', async (request, reply) =>
 	const user = await userRepo.findUserByID(db, userId);    
 	if (!user) 
 	{
-	  reply.status(404);
-	  return { error: 'User not found' };
+		reply.status(404).send({
+			success: false,
+			data: null,
+			error: { message: `User not found` }
+	  	});
 	}
 
 	return user;
@@ -119,8 +131,11 @@ fastify.get('/showfriend', async (request, reply) =>
 	const user = await userRepo.findUserByAlias(db, alias);
 	if (!user)
 	{
-		reply.status(404);
-		return { error: 'User not found' };
+		reply.status(404).send({
+			success: false,
+			data: null,
+			error: { message: `User not found` }
+	  	});
 	}
 
 	return user;
@@ -128,43 +143,61 @@ fastify.get('/showfriend', async (request, reply) =>
 
 
 /* -- UPDATE STATUS -- */
-fastify.patch('/:id/status', async (request, reply) => 
+fastify.patch('/users/:id/status', async (request, reply) => 
 {
-  const { id } = request.params as { id: string };
-  const { status } = request.body as { status: string };
-  const userId = Number(id);
+	const { id } = request.params as { id: string };
+	const { status } = request.body as { status: string };
+	const userId = Number(id);
 
-  try 
-  {
-    userRepo.updateStatus(db, userId, status);
-    return reply.status(200).send({ message: 'Status updated successfully' });
-  } 
-  catch (err) 
-  {
-    fastify.log.error(err);
-    return reply.status(500).send({ message: 'Failed to update status' });
-  }
+	try 
+	{
+		userRepo.updateStatus(db, userId, status);
+		return reply.status(200).send({
+			success: true,
+			data: null,
+			error: null
+		});
+ 	} 
+	catch (err) 
+	{
+		fastify.log.error(err);
+		console.log("status selected: ", status);
+		return reply.status(500).send({
+			success: false,
+			data: null,
+			error: { message: 'Failed to update status' }
+		});
+	}
 })
 
 
 
 /* -- UPDATE BIO -- */
-fastify.patch('/:id/bio', async (request, reply) =>
+fastify.patch('/users/:id/bio', async (request, reply) =>
 {
-  const { id } = request.params as { id: string };
-  const userId = Number(id);
-  const { bio } = request.body as { bio: string };
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	const { bio } = request.body as { bio: string };
 
-  try
-  {
-    userRepo.updateBio(db, userId, bio);
-    return reply.status(200).send({ message: 'Bio updated successfully' });
-  }
-  catch (err)
-  {
-    fastify.log.error(err);
-    return reply.status(500).send({ message: 'Failed to update bio' });
-  }
+	try
+	{
+		console.log("Try to change bio in back: ", userId);
+		userRepo.updateBio(db, userId, bio);
+		return reply.status(200).send({
+			success: false,
+			data: null,
+			error: null
+		});
+	}
+	catch (err)
+	{
+		fastify.log.error(err);
+		return reply.status(500).send({
+			success: false,
+			data: null,
+			error: { message: 'Failed to update bio' }
+		});
+	}
 })
 
 
@@ -175,53 +208,72 @@ fastify.patch('/:id/bio', async (request, reply) =>
 //---------------------------------------
 
 /* -- FRIENDSHIP REQUEST -- */
-fastify.post('/:id/friendship/request', async (request, reply) =>
+fastify.post('/users/:id/friendships', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
-	const { alias } = request.body as { alias: string };
-
+	const { alias } = request.body as { alias: string };	
 	const userId = Number(id);
 
 	try
 	{
 		const requestID = await friendRepo.makeFriendshipRequest(db, userId, alias);
 		if (!requestID)
-			return reply.status(500).send('Error while sending friend request');
-    else
-		  return reply.status(200).send({message:`Friend request sent from ${userId} to ${alias}`}); // je rajoute le {message: xxxx}
+		{
+			return reply.status(500).send({
+				success: false,
+				data: null,
+				error: { message: 'Error while sending friend request' }
+			});
+		}
+		else
+			return reply.status(200).send({
+				success: true,
+				data: null,
+				error: null
+		});
 	}
 	catch (err)
 	{
 		fastify.log.error(err);
-    const errorMessage = (err instanceof Error) ? err.message : 'Unknown error'; // j'ai rajouté cette ligne // est-ce que ce qui aq ete attrape dans un catch 
-    // est vraiment une erreur javascript
-		return reply.status(500).send({ message: errorMessage });
+		return reply.status(500).send({
+			success: false,
+			data: null,
+			error: { message: err }
+		});		
 	}
 })
 
 
 /* -- REVIEW FRIEND REQUEST -- */
-fastify.patch('/:id/friendship/review', async (request, reply) =>
+fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 {
 	const { id } = request.body as { id: number};
 	const { status } = request.body as { status: string };
-  	const askerId = Number(id);
+	const askerId = Number(id);
 
 	try
 	{
 		friendRepo.reviewFriendship(db, askerId, status);
-		return reply.status(200).send({ message: 'Friendship status changed successfully'});
+		return reply.status(200).send({ 
+			success: true,
+			data: null,
+			error: null
+		});
 	}
 	catch (err)
 	{
 		fastify.log.error(err);
-		return reply.status(500).send({ message: err });
+		return reply.status(500).send({
+			success: false,
+			data: null,
+			error: { message: err }
+		});
 	}
 })
 
 
 /* -- LIST FRIENDS FOR ONE USER -- */
-fastify.get('/:id/friends', async (request, reply) => 
+fastify.get('/users/:id/friends', async (request, reply) => 
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -229,17 +281,25 @@ fastify.get('/:id/friends', async (request, reply) =>
 	try
 	{
 		const friends: userRepo.User [] = await friendRepo.listFriends(db, userId);
-		return reply.status(200).send(friends);
+		return reply.status(200).send({
+			success: true,
+			data: friends,
+			error: null
+		});
 	}
 	catch (err)
 	{
 		fastify.log.error(err);
-		return reply.status(500).send({ message: 'Failed to list friends for userId:', id});
+		return reply.status(500).send({
+			success: false,
+			data: null,
+			error: { message: 'Failed to list friends for userId:', id}
+		});
 	}
 })
 
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
-fastify.get('/:id/friendship/pendings', async (request, reply) =>
+fastify.get('/users/:id/friendships/pending', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -248,12 +308,20 @@ fastify.get('/:id/friendship/pendings', async (request, reply) =>
 	try
 	{
 		const pending_requests: userRepo.User [] = await friendRepo.listRequests(db, userId);
-		return reply.status(200).send(pending_requests);
+		return reply.status(200).send({
+			success: true,
+			data: pending_requests,
+			error: null
+		});
 	}
 	catch (err)
 	{
 		fastify.log.error(err);
-		return reply.status(500).send({ message: 'Failed to list friendship requests for userId: ', id});
+		return reply.status(500).send({
+			success: false,
+			data: null,
+			error: { message: 'Failed to list friendship requests for userId: ', id}
+		});
 	}
 })
 
@@ -265,27 +333,26 @@ fastify.get('/:id/friendship/pendings', async (request, reply) =>
 //---------------------------------------
 
 
-fastify.get('/status', async (request, reply) => 
+fastify.get('/health', async (request, reply) => 
 {
-  return { service: 'user', status: 'ready', port: 3004 };
+	return { service: 'user', status: 'ready', port: 3004 };
 })
 
 
 
 const start = async () => 
 {
-  try 
-  {
-    // on attend que le serveur demaarre avant de continuer sur port 8080
-    await fastify.listen({ port: 3004, host: '0.0.0.0' });
-    console.log('Auth service listening on port 3004');
-    console.log(fastify.printRoutes());
-  } 
-  catch (err) 
-  {
-    fastify.log.error(err);
-    process.exit(1);
-  }
+	try 
+	{
+		// on attend que le serveur demaarre avant de continuer sur port 8080
+		await fastify.listen({ port: 3004, host: '0.0.0.0' });
+		console.log('Auth service listening on port 3004');
+	} 
+	catch (err) 
+	{
+		fastify.log.error(err);
+		process.exit(1);
+	}
 }
 
 
@@ -293,6 +360,6 @@ const start = async () =>
 // On initialise la DB puis on démarre le serveur
 main().then(start).catch(err => 
 {
-  console.error("Startup error:", err);
-  process.exit(1);
+	console.error("Startup error:", err);
+	process.exit(1);
 })

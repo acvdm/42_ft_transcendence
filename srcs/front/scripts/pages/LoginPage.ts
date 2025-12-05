@@ -29,7 +29,7 @@ function handleLogin() {
 
         try {
             // 1. Authentification
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/api/auth/sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -37,17 +37,19 @@ function handleLogin() {
                 // On le gère juste après avec le PATCH
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (response.ok) {
+            if (result.success) {
+				const { access_token, refresh_token, user_id } = result.data;
+
                 // Stockage des tokens
-                if (data.access_token) localStorage.setItem('accessToken', data.access_token);
-                if (data.user_id) localStorage.setItem('userId', data.user_id.toString());
+                if (access_token) localStorage.setItem('accessToken', access_token);
+                if (user_id) localStorage.setItem('userId', user_id.toString());
 
                 // Récupération du profil (Username)
-                if (data.user_id) {
+                if (user_id) {
                     try {
-                        const userRes = await fetch(`/api/user/${data.user_id}`);
+                        const userRes = await fetch(`/api/users/${user_id}`);
                         if (userRes.ok) {
                             const userData = await userRes.json();
                             if (userData.alias) {
@@ -61,7 +63,7 @@ function handleLogin() {
                     // 2. Mise à jour du Status en DB (PATCH)
                     // On envoie le status que l'utilisateur A CHOISI (selectedStatus)
                     try {
-                        await fetch(`/api/user/${data.user_id}/status`, {
+                        await fetch(`/api/users/${user_id}/status`, {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ status: selectedStatus })
@@ -83,9 +85,9 @@ function handleLogin() {
 
             } else {
                 // Gestion d'erreur login
-                console.error("Login error:", data);
+                console.error("Login error:", result.error);
                 if (errorElement) {
-                    errorElement.textContent = data.errorMessage || data.message || "Authentication failed";
+                    errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
                     errorElement.classList.remove('hidden');
                 }
             }
