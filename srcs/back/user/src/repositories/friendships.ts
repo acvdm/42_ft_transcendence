@@ -81,7 +81,9 @@ export async function listRequests (
 ): Promise<User []>
 {
     const pending_requests = await db.all(`
-        SELECT * FROM FRIENDSHIPS WHERE status = 'pending'`,
+        SELECT u.* FROM FRIENDSHIPS f
+        JOIN USERS u ON f.friend_id = u.id
+        WHERE f.user_id = ? AND f.status = 'pending'`,
         [user_id]
     ) as User[];
 

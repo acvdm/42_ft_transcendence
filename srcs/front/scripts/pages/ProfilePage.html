@@ -35,13 +35,9 @@
 				</div>
 	
 				<!-- Profile info -->
-				<div class="text-sm text-left w-full leading-6">
-					<p><strong>FAUSToche01</strong></p>
-					<p>c00uköü les kop1</p>
-					<p>Status: <span class="text-red-600">dcdscsd</span></p>
-					<p>Email: fsdsdsfsd</p>
-					<p>Password: dfsdcsd</p>
-					<p>Background: scscsd</p>
+				<div class="text-sm text-center w-full leading-6">
+					<p id="username-profile"><strong>Username</strong></p>
+					<p id="bio-profile">c00uköü les kop1</p>
 				</div>
 				</div>
 	
@@ -52,20 +48,19 @@
 				<div class="flex flex-col gap-4">
 					<div>
 					<label class="text-sm">Username:</label>
-					<input type="text" value="FAUSToche01"
+					<input type="text" value="" placeholder="Username"
 						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
 					</div>
 	
 					<div>
-					<label class="text-sm">Choose your message:</label>
-					<input type="text" value="c00uköü les kop1"
+					<label class="text-sm">Share a quick message:</label>
+					<input type="text" value="" placeholder="Share a quick message"
 						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
 					</div>
 	
 					<div>
 					<label class="text-sm">Status:</label>
 					<div class="flex items-center gap-2 mt-1">
-						<span class="text-gray-600 text-sm">Choose your status:</span>
 						<select class="bg-transparent rounded-sm px-2 py-1 text-sm">
 						<option>Available</option>
 						<option selected>Busy</option>
@@ -78,20 +73,23 @@
 	
 				<!-- Danger Zone -->
 				<div class="mt-8 border-t border-gray-300 pt-4">
-					<h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! ⚠️</h2>
 					<div class="flex items-center justify-start gap-6">
-					<div class="flex items-center gap-2">
-						<span class="text-sm">Email</span>
-						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">
-						Change
-						</button>
+					<div class="flex items-end gap-4">
+						<div>
+						<label class="text-sm">Email:</label>
+						<input type="" value="" placeholder="email@gmail.com"
+							class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
+						</div>
+						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
 					</div>
-					<div class="flex items-center gap-2">
-						<span class="text-sm">Password</span>
-						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">
-						Change
-						</button>
 					</div>
+					<div class="flex items-end gap-4">
+						<div>
+						<label class="text-sm">Password:</label>
+						<input type="" value="" placeholder="***********"
+							class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
+						</div>
+						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
 					</div>
 				</div>
 	

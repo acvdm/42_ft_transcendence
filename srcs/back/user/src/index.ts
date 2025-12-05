@@ -243,6 +243,7 @@ fastify.get('/:id/friendship/pendings', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
+  console.log("ciyciy:", userId);
 
 	try
 	{

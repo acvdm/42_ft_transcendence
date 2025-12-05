@@ -196,8 +196,9 @@ export function afterRender(): void {
 			if (!userId) return;
 
 			try {
+				console.log("erwerewr");
 				const response = await fetch(`/api/user/${userId}/friendship/pendings`);
-				if (response.ok) return ;
+				if (!response.ok) throw new Error('Failed to fetch friends');
 
 				const requests = await response.json();
 
