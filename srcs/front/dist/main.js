@@ -3955,7 +3955,7 @@
       const handleRequest = async (askerId, action, itemDiv) => {
         const userId = localStorage.getItem("userId");
         try {
-          const response = await fetch(`/api/user/${userId}/friendship/review`, {
+          const response = await fetch(`/api/users/${userId}/friendships/review`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: askerId, status: action })
@@ -3977,8 +3977,7 @@
         const userId = localStorage.getItem("userId");
         if (!userId) return;
         try {
-          console.log("erwerewr");
-          const response = await fetch(`/api/user/${userId}/friendship/pendings`);
+          const response = await fetch(`/api/users/${userId}/friendships/pending`);
           if (!response.ok) throw new Error("Failed to fetch friends");
           const requests = await response.json();
           if (requests.length > 0) notifBadge?.classList.remove("hidden");
@@ -3988,7 +3987,8 @@
             notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
             return;
           }
-          requests.forEach((req) => {
+          console.log("Notif:", requests);
+          requests.data.forEach((req) => {
             const item = document.createElement("div");
             item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
             item.innerHTML = `
@@ -4065,7 +4065,7 @@
         }
         const userId = localStorage.getItem("userId");
         try {
-          const response = await fetch(`/api/user/${userId}/friendship/request`, {
+          const response = await fetch(`/api/users/${userId}/friendships`, {
             // on lance la requete sur cette route
             method: "POST",
             // post pour creer la demande -> patch quand on l'accepte?
@@ -4157,17 +4157,19 @@
       const contactsList = document.getElementById("contacts-list");
       if (!userId || !contactsList) return;
       try {
-        const response = await fetch(`/api/user/${userId}/friends`);
+        const response = await fetch(`/api/users/${userId}/friends`);
         if (!response.ok) throw new Error("Failed to fetch friends");
         const friends = await response.json();
         contactsList.innerHTML = "";
         if (friends.length === 0) {
-          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friends yet</div>';
+          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
           return;
         }
-        friends.forEach((friend) => {
+        console.log("friends1:", friends.friends);
+        friends.friends.forEach((friend) => {
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          console.log("friends2:", friends);
           friendItem.dataset.id = friend.id;
           friendItem.dataset.username = friend.alias;
           friendItem.dataset.bio = friend.bio || "Share a quick message";

@@ -172,7 +172,7 @@ export function afterRender(): void {
 		const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { // itemDiv en html pour afficher le code html 
 			const userId = localStorage.getItem('userId'); // je recuperer mon user id = pas le askerid!
 			try {
-				const response = await fetch(`/api/user/${userId}/friendship/review`, {
+				const response = await fetch(`/api/users/${userId}/friendships/review`, {
 					method: 'PATCH',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ id: askerId, status: action }) // id devient le asker id cas celui qui envoie la demande d'amitie
@@ -196,8 +196,7 @@ export function afterRender(): void {
 			if (!userId) return;
 
 			try {
-				console.log("erwerewr");
-				const response = await fetch(`/api/user/${userId}/friendship/pendings`);
+				const response = await fetch(`/api/users/${userId}/friendships/pending`);
 				if (!response.ok) throw new Error('Failed to fetch friends');
 
 				const requests = await response.json();
@@ -210,8 +209,8 @@ export function afterRender(): void {
 					 notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
 					 return ;
 				}
-
-				requests.forEach((req: any) => {
+				console.log("Notif:", requests);
+				requests.data.forEach((req: any) => {
 					const item = document.createElement('div');
 					item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
 
@@ -316,7 +315,7 @@ export function afterRender(): void {
 			const userId = localStorage.getItem('userId');
 
 			try {
-				const response = await fetch(`/api/user/${userId}/friendship/request`, { // on lance la requete sur cette route
+				const response = await fetch(`/api/users/${userId}/friendships`, { // on lance la requete sur cette route
 					method: 'POST', // post pour creer la demande -> patch quand on l'accepte?
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ alias: searchValue })
@@ -436,23 +435,26 @@ export function afterRender(): void {
 		if (!userId || !contactsList) return;
 
 		try {
-			const response = await fetch(`/api/user/${userId}/friends`);
+			const response = await fetch(`/api/users/${userId}/friends`);
 			if (!response.ok) throw new Error('Failed to fetch friends');
 			
 			const friends = await response.json();
 
 			// on vide la liste
 			contactsList.innerHTML = '';
-
+			
 			if (friends.length === 0) {
-				contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friends yet</div>';
+				contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
 				return;
 			}
-
-			friends.forEach((friend: any) => {
+			console.log("friends1:", friends.friends);
+			
+			friends.friends.forEach((friend: any) => {
 				const friendItem = document.createElement('div');
 				friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
 				
+				console.log("friends2:", friends);
+
 				// on stocke tout
 				friendItem.dataset.id = friend.id;
 				friendItem.dataset.username = friend.alias;
