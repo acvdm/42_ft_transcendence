@@ -21,7 +21,16 @@ fastify.addHook('onRequest', async (request, reply) => {
 	console.log(`Incoming request: ${url}`);
 
 	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
-	if (url.startsWith('/api/auth')) { 
+	const publicRoutes = [
+		"/api/user/login",
+		"/api/user/register",
+		"/api/user/refresh",
+		"/api/auth/login",
+		"/api/auth/register"
+	]
+
+	const isPublic = publicRoutes.some(route => request.url.startsWith(route));
+	if (isPublic){
 		return;
 	}
 
@@ -49,7 +58,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 // 1. On va redirigé vers les bons services quand nécéssaire
 
 fastify.register(fastifyProxy, {
-	upstream: 'https://auth:3001', // adresse interne du réseau du docker
+	upstream: 'http://auth:3001', // adresse interne du réseau du docker
 	prefix: '/api/auth', // toutes les requetes api/auth iront au service auth
 	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
 });

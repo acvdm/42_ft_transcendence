@@ -17,15 +17,9 @@ if (!cookieSecret){
     process.exit(1);
 }
 
-const httpsOptions = {
-    key: fs.readFileSync('/app/server.key'),
-    cert: fs.readFileSync('/app/server.crt')
-}
-
 // Creation of Fastify server
 const fastify = Fastify({ 
   logger: true,
-  https: httpsOptions
  });
 
 // enregistrer un plugin cookie avec cette variable
@@ -127,21 +121,16 @@ fastify.post('/refresh', async (request, reply) => {
       signed: true
     });
 
+    console.log("Refresh request valid for token:", refreshToken);
+
     return reply.send({
       access_token: authResponse.access_token,
       user_id: authResponse.user_id
     });
   } catch (err: any){
-      reply.clearCookie('refres_token');
+      reply.clearCookie('refresh_token');
       return reply.status(403).send({error: err.message});
   }
-
-
-  //TODO appeler fonction de service pour verifier la DB???
-  const newTokens = await refreshUser(db, refreshToken);
-
-  console.log("Refresh request valid for token:", refreshToken);
-  return reply.send({ message: "Refresh logic to be connected to DB" });
 });
 
 // on demarre le serveur

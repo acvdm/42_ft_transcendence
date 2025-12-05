@@ -10,7 +10,7 @@ const httpsOptions = {
 }
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true, https: httpsOptions });
+const fastify = Fastify({ logger: true});
 
 let db: Database;
 

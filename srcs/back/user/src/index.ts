@@ -3,17 +3,24 @@ import sqlite3 from 'sqlite3';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import axios from 'axios'; // envoyer des requêtes HTTP à un autre serveur (service auth)
-import https from 'https';
+// import https from 'https';
 import { createUserInDB } from './repositories/users.js';
-import fs from 'fs';
+// import fs from 'fs';
+import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 
-const httpsOptions = {
-    key: fs.readFileSync('/app/server.key'),
-    cert: fs.readFileSync('/app/server.crt')
-}
+
+// const httpsOptions = {
+//     key: fs.readFileSync('/app/server.key'),
+//     cert: fs.readFileSync('/app/server.crt')
+// }
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true, https: httpsOptions });
+const fastify = Fastify({ logger: true });
+
+// NOUVEAY on enregistre le plugin cookie 
+fastify.register(fastifyCookie, {
+  secret: process.env.COOKIE_SECRET || 'un-secret-par-defaut',
+});
 
 let db: Database;
 
@@ -48,20 +55,35 @@ fastify.post('/register', async (request, reply) => {
       return reply.status(500).send('Error during profile creation');
     console.log('User created locally (ID: ${user_id}. Calling auth...');
 
-    // 2. On crée un agent qui accepte les certificats auto-signés
-        const agent = new https.Agent({ rejectUnauthorized: false });
-
     // 3. Appeler le service auth pour créer les credentials
     const authResponse = await axios.post(
-      'https://auth:3001/register', 
-      { user_id: user_id, email: body.email, password: body.password },
-    { httpsAgent: agent}
+      'http://auth:3001/register', 
+      { user_id: user_id, email: body.email, password: body.password }
   );
 
   
     // 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
+    // MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
+    // d'abord on extrait les infos recues du service Auth
+    const { refresh_token, access_token, user_id: authUserId } = authResponse.data;
+
+    // on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
+    reply.setCookie('refresh_token', refresh_token, {
+      path: '/',
+      httpOnly: true, // invisible au JS (protection XSS)
+      secure: true, //acces au cookie uniquement via https
+      sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+      maxAge: 7 * 24 * 3600, // 7 jours en secondes
+      signed: true
+    });
+
     console.log('User successfully added to Database!');
-    return reply.status(201).send(authResponse.data);
+
+    // on envoit pas le refresh token /!\
+    return reply.status(201).send({
+      access_token: access_token,
+      user_ide: authUserId
+    });
 
   } catch (err: any) {
     console.error("Error during registration: ", err);
