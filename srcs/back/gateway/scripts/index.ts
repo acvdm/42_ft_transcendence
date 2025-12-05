@@ -30,7 +30,8 @@ fastify.addHook('onRequest', async (request, reply) => {
 		"/api/auth/refresh",
 		"/api/auth/login",
 		"/api/auth/register",
-		"/api/auth/sessions"
+		"/api/auth/sessions",
+		"/api/auth/logout"
 	]
 
 	let isPublic = publicRoutes.some(route => request.url.startsWith(route));

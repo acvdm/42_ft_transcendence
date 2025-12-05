@@ -111,6 +111,10 @@ export async function loginUser(
     };
 }
 
+export async function logoutUser(db: Database, refreshToken: string): Promise<void>{
+    await tokenRepo.deleteRefreshToken(db, refreshToken);
+}
+
 export async function authenticatePassword(
     db: Database,
     credential_id: number,

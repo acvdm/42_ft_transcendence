@@ -3,13 +3,13 @@ import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, refreshUser } from './services/auth_service.js';
+import { loginUser, registerUser, refreshUser, logoutUser } from './services/auth_service.js';
 import fs from 'fs';
 
-/* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (mnodifie la gestion du cookie)*/
+/* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
 
 //------------COOKIE 
-// on recupere le secret pour le cookie (avec une valeur en dur si ca rate en local)
+// on recupere le secret pour le cookie
 // process = objet global de Node.js qui represente le programme en cours d'execution
 const cookieSecret = process.env.COOKIE_SECRET;
 if (!cookieSecret){
@@ -20,7 +20,7 @@ if (!cookieSecret){
 // Creation of Fastify server
 const fastify = Fastify({ logger: true, });
 
-// enregistrer un plugin cookie avec cette variable
+// enregistrer un plugin cookie avec la variable d'env
 fastify.register(fastifyCookie, {
   secret: cookieSecret,
   parseOptions: {} // options par defaut
@@ -159,6 +159,42 @@ fastify.post('/refresh', async (request, reply) => {
       return reply.status(403).send({error: err.message});
   }
 });
+
+// fonction pour supprimer le refresh token de la db et supprimer le cookie du navigateur
+fastify.post('/logout', async (request, reply) => {
+	
+	const cookie = request.cookies.refresh_token;
+	if (!cookie){
+		return reply.status(200).send({message: 'Already logged out'});
+	}
+
+	// on decode le cookie (car il etait signe)
+	const unsigned = request.unsignCookie(cookie);
+
+	// si signature invalide ou nulle on nettoie qd meme le cookie client par securite
+	if (!unsigned.valid || !unsigned.value){
+		reply.clearCookie('refresh_token', { path: '/'});
+		return reply.status(200).send({ message: 'Logged out (Invalid token)'});
+	}
+
+	const refreshToken = unsigned.value;
+
+	try {
+		await logoutUser(db, refreshToken);
+		console.log("Refresh Token suppress from the database");
+	} catch (err) {
+		console.error("Error for the supression of Refresh Token in the database: ", err);
+	}
+
+	reply.clearCookie('refresh_token', {
+		path: '/',
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict'
+	});
+
+	return reply.status(200).send({ success: true, message: "Logged out succefully"});
+})
 
 //---------------------------------------
 //--------------- SERVER ----------------

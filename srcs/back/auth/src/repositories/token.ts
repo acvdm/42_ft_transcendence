@@ -60,3 +60,17 @@ export async function findByRefreshToken(
     );
     return result;
 }
+
+export async function deleteRefreshToken(db: Database, token: string): Promise<void> {
+    await db.run(`
+        DELETE FROM tokens WHERE refresh_token = ?`, 
+        [token]
+    );
+}
+
+// pour une deconnexion de tous les appareils
+export async function deleteAllTokensForUser(db: Database, userId: number): Promise<void> {
+    await db.run(`
+        DELETE FROM tokens WHERE user_id = ?`, [userId]
+    );
+}
