@@ -188,12 +188,14 @@ fastify.post('/:id/friendship/request', async (request, reply) =>
 		if (!requestID)
 			return reply.status(500).send('Error while sending friend request');
     else
-		  return reply.status(200).send(`Friend request sent from ${userId} to ${alias}`);
+		  return reply.status(200).send({message:`Friend request sent from ${userId} to ${alias}`}); // je rajoute le {message: xxxx}
 	}
 	catch (err)
 	{
 		fastify.log.error(err);
-		return reply.status(500).send({ message: err });
+    const errorMessage = (err instanceof Error) ? err.message : 'Unknown error'; // j'ai rajouté cette ligne // est-ce que ce qui aq ete attrape dans un catch 
+    // est vraiment une erreur javascript
+		return reply.status(500).send({ message: errorMessage });
 	}
 })
 

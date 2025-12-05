@@ -3571,13 +3571,22 @@
 							</div>
 	
 							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
-							<div class="ml-auto flex items-start">
+							<div class="ml-auto flex items-start relative">
 								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
 									<img id="notification-icon" 
-										src="/assets/basic/notification.png" 
+										src="/assets/basic/app.png" 
 										alt="Notifications" 
 										class="w-full h-full object-contain">
+										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 								</button>
+								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-80 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden">
+									<div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+										<h3 class="font-semibold text-sm text-gray-700">Notifications</h3>
+									</div>
+									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto">
+										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
+									</div> <!--fin du listing inside dropdown-->
+								</div> <!--fin du div dropdown-->
 							</div>
 						</div>
 
@@ -3648,7 +3657,7 @@
 												Send request
 											</button>
 											<button id="cancel-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
 												Cancel
 											</button>
 										</div>
@@ -3937,6 +3946,102 @@
     const sendFriendRequestBtn = document.getElementById("send-friend-request");
     const cancelFriendRequestBtn = document.getElementById("cancel-friend-request");
     const friendRequestMessage = document.getElementById("friend-request-message");
+    const notifButton = document.getElementById("notification-button");
+    const notifDropdown = document.getElementById("notification-dropdown");
+    const notifList = document.getElementById("notification-list");
+    const notifBadge = document.getElementById("notification-badge");
+    if (notifButton && notifDropdown && notifList) {
+      const handleRequest = async (askerId, action, itemDiv) => {
+        const userId = localStorage.getItem("userId");
+        try {
+          const response = await fetch(`/api/user/${userId}/friendship/review`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: askerId, status: action })
+            // id devient le asker id cas celui qui envoie la demande d'amitie
+          });
+          if (response.ok) {
+            itemDiv.style.opacity = "0";
+            setTimeout(() => itemDiv.remove(), 300);
+            if (action === "validated") loadFriends();
+            checkNotifications();
+          } else {
+            console.error("Failed to update request");
+          }
+        } catch (error) {
+          console.error("Network error", error);
+        }
+      };
+      const checkNotifications = async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+        try {
+          const response = await fetch(`/api/user/${userId}/friendship/pendings`);
+          if (response.ok) return;
+          const requests = await response.json();
+          if (requests.length > 0) notifBadge?.classList.remove("hidden");
+          else notifBadge?.classList.add("hidden");
+          notifList.innerHTML = "";
+          if (requests.length === 0) {
+            notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+            return;
+          }
+          requests.forEach((req) => {
+            const item = document.createElement("div");
+            item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+            item.innerHTML = `
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold truncate">${req.alias}</p>
+                            <p class="text-xs text-gray-500">Wants to be your friend</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="btn-accept bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition" title="Accept">
+                                <span class="text-xs font-bold">\u2713</span>
+                            </button>
+                            <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">
+                                <span class="text-xs font-bold">\u2715</span>
+                            </button>
+							<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">
+                                <span class="text-xs font-bold">\u2715</span>
+                            </button>
+                        </div>
+                    `;
+            const buttonAccept = item.querySelector(".btn-accept");
+            const buttonReject = item.querySelector(".btn-reject");
+            const buttonBlock = item.querySelector(".btn-block");
+            buttonAccept?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              handleRequest(req.id, "validated", item);
+            });
+            buttonReject?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              handleRequest(req.id, "rejected", item);
+            });
+            buttonBlock?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              handleRequest(req.id, "blocked", item);
+            });
+            notifList.appendChild(item);
+          });
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+        }
+      };
+      notifButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifDropdown.classList.toggle("hidden");
+        document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+        if (!notifDropdown.classList.contains("hidden")) {
+          checkNotifications();
+        }
+      });
+      document.addEventListener("click", (e) => {
+        if (!notifDropdown.contains(e.target) && !notifButton.contains(e.target))
+          notifDropdown.classList.add("hidden");
+      });
+      checkNotifications();
+      setInterval(checkNotifications, 3e4);
+    }
     if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
       addFriendButton.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -3962,12 +4067,8 @@
             // on lance la requete sur cette route
             method: "POST",
             // post pour creer la demande -> patch quand on l'accepte?
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              alias: searchValue
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ alias: searchValue })
           });
           const data = await response.json();
           if (response.ok) {

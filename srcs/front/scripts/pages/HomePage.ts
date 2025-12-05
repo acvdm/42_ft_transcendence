@@ -158,10 +158,130 @@ export function afterRender(): void {
 	const cancelFriendRequestBtn = document.getElementById('cancel-friend-request');
 	const friendRequestMessage = document.getElementById('friend-request-message');
 
+	const notifButton = document.getElementById('notification-button');
+	const notifDropdown = document.getElementById('notification-dropdown');
+	const notifList = document.getElementById('notification-list');
+	const notifBadge = document.getElementById('notification-badge');
 
-		// ---------------------------------------------------
-		// ----           LOGIQUE DES AMIS.               ----
-		// ---------------------------------------------------    
+
+	// ---------------------------------------------------
+	// ----           LOGIQUE DES AMIS.               ----
+	// ---------------------------------------------------    
+
+	if (notifButton && notifDropdown && notifList) {
+		const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { // itemDiv en html pour afficher le code html 
+			const userId = localStorage.getItem('userId'); // je recuperer mon user id = pas le askerid!
+			try {
+				const response = await fetch(`/api/user/${userId}/friendship/review`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: askerId, status: action }) // id devient le asker id cas celui qui envoie la demande d'amitie
+				});
+
+				if (response.ok) {
+					itemDiv.style.opacity = '0'; // on anime la suppression
+					setTimeout(() => itemDiv.remove(), 300); // et on rajouteu n timeout
+					if (action === 'validated') loadFriends(); // on recharge la liste d'ami une fois qu'on a cliqué sur envoyé
+					checkNotifications(); // est-ce qu'il reste des notifications?
+				} else {
+					console.error("Failed to update request");
+				}
+			} catch (error) {
+				console.error("Network error", error);
+			}
+		};
+
+		const checkNotifications = async () => {
+			const userId = localStorage.getItem('userId');
+			if (!userId) return;
+
+			try {
+				const response = await fetch(`/api/user/${userId}/friendship/pendings`);
+				if (response.ok) return ;
+
+				const requests = await response.json();
+
+				if (requests.length > 0) notifBadge?.classList.remove('hidden');
+				else notifBadge?.classList.add('hidden');
+
+				notifList.innerHTML = '';
+				if (requests.length === 0) {
+					 notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+					 return ;
+				}
+
+				requests.forEach((req: any) => {
+					const item = document.createElement('div');
+					item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+
+                    item.innerHTML = `
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold truncate">${req.alias}</p>
+                            <p class="text-xs text-gray-500">Wants to be your friend</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="btn-accept bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition" title="Accept">
+                                <span class="text-xs font-bold">✓</span>
+                            </button>
+                            <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">
+                                <span class="text-xs font-bold">✕</span>
+                            </button>
+							<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">
+                                <span class="text-xs font-bold">✕</span>
+                            </button>
+                        </div>
+                    `;
+
+					// listener click pour les 3 bouton
+					const buttonAccept = item.querySelector('.btn-accept');
+					const buttonReject = item.querySelector('.btn-reject');
+					const buttonBlock = item.querySelector('.btn-block');
+
+					buttonAccept?.addEventListener('click', (e) => {
+						e.stopPropagation();
+						handleRequest(req.id, 'validated', item);
+					});
+
+					buttonReject?.addEventListener('click', (e) => {
+						e.stopPropagation();
+						handleRequest(req.id, 'rejected', item);
+					});
+
+					buttonBlock?.addEventListener('click', (e) => {
+						e.stopPropagation();
+						handleRequest(req.id, 'blocked', item);
+					});
+
+					notifList.appendChild(item);
+				});
+			} catch (error) {
+				console.error("Error fetching notifications:", error);
+			}
+		};
+
+		notifButton.addEventListener('click', (e) => {
+			e.stopPropagation();
+			notifDropdown.classList.toggle('hidden');
+			//onferme les autres mensu
+			document.getElementById('add-friend-dropdown')?.classList.add('hidden');
+			if (!notifDropdown.classList.contains('hidden')) {
+				checkNotifications();
+			}
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!notifDropdown.contains(e.target as Node) && !notifButton.contains(e.target as Node))
+				notifDropdown.classList.add('hidden');
+		});
+
+		checkNotifications();
+		setInterval(checkNotifications, 30000);
+	}
+
+
+	// ---------------------------------------------------
+	// ----           LOGIQUE DES AMIS.               ----
+	// ---------------------------------------------------
 
 
 	if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
@@ -197,12 +317,8 @@ export function afterRender(): void {
 			try {
 				const response = await fetch(`/api/user/${userId}/friendship/request`, { // on lance la requete sur cette route
 					method: 'POST', // post pour creer la demande -> patch quand on l'accepte?
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({
-						alias: searchValue
-					})
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ alias: searchValue })
 				});
 
 				const data = await response.json();
