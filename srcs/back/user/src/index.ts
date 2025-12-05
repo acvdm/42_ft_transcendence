@@ -245,7 +245,7 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 
 
 /* -- REVIEW FRIEND REQUEST -- */
-fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
+fastify.patch('/users/:id/friendships/pendings', async (request, reply) =>
 {
 	const { id } = request.body as { id: number};
 	const { status } = request.body as { status: string };
@@ -303,6 +303,7 @@ fastify.get('/users/:id/friendships/pending', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
+  console.log("ciyciy:", userId);
 
 	try
 	{
