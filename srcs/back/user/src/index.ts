@@ -245,15 +245,17 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 
 
 /* -- REVIEW FRIEND REQUEST -- */
-fastify.patch('/users/:id/friendships/pendings', async (request, reply) =>
+fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 {
-	const { id } = request.body as { id: number};
+	const { id } = request.params as { id: string};
+	const { friendshipId } = request.params as {friendshipId: string}
 	const { status } = request.body as { status: string };
-	const askerId = Number(id);
+	const user_id = Number(id);
+	const friendship_id = Number(friendshipId);
 
 	try
 	{
-		friendRepo.reviewFriendship(db, askerId, status);
+		friendRepo.reviewFriendshipRequest(db, user_id, friendship_id, status);
 		return reply.status(200).send({ 
 			success: true,
 			data: null,
@@ -299,11 +301,11 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 })
 
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
-fastify.get('/users/:id/friendships/pending', async (request, reply) =>
+fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
-  console.log("ciyciy:", userId);
+  	console.log("ciyciy:", userId);
 
 	try
 	{

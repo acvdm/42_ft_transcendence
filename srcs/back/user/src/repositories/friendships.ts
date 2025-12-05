@@ -62,14 +62,19 @@ export async function listFriends (
     user_id: number
 ): Promise<User []>
 {
+    console.log(`Lister les amis de user ${user_id}`);
     // On sélectionne TOUTES les colonnes de la table USERS (u.*)
     // En joignant la table FRIENDSHIPS (f) avec la table USERS (u)
     // Condition : On cherche les lignes où JE suis le créateur du lien (f.user_id = moi)
     const users = await db.all(`
         SELECT u.* FROM FRIENDSHIPS f
-        JOIN USERS u ON f.friend_id = u.id
-        WHERE f.user_id = ? AND f.status = 'validated'`,
-        [user_id]
+        JOIN USERS u ON (
+            (f.user_id = ? AND f.user_id = u.id)
+            OR
+            (f.friend_id = ? AND f.friend_id = u.id)
+        )
+        WHERE f.status = 'validated'`,
+        [user_id, user_id]
     ) as User[];
 
     return users || [];
@@ -82,8 +87,8 @@ export async function listRequests (
 {
     const pending_requests = await db.all(`
         SELECT u.* FROM FRIENDSHIPS f
-        JOIN USERS u ON f.friend_id = u.id
-        WHERE f.user_id = ? AND f.status = 'pending'`,
+        JOIN USERS u ON f.user_id = u.id
+        WHERE f.friend_id = ? AND f.status = 'pending'`,
         [user_id]
     ) as User[];
 
@@ -91,15 +96,16 @@ export async function listRequests (
 }
 
 //-------- PUT / UPDATE
-export async function reviewFriendship (
+export async function reviewFriendshipRequest (
     db: Database,
     user_id: number,
+    friendship_id: number,
     status: string
 )
 {
     await db.run(`
-        UPDATE FRIENDSHIPS SET status = ? WHERE user_id = ?`,
-        [status, user_id]
+        UPDATE FRIENDSHIPS SET status = ? WHERE friend_id = ? AND id = ?`,
+        [status, user_id, friendship_id]
     );
 }
 

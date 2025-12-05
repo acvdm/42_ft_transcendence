@@ -196,7 +196,7 @@ export function afterRender(): void {
 			if (!userId) return;
 
 			try {
-				const response = await fetch(`/api/users/${userId}/friendships/pending`);
+				const response = await fetch(`/api/users/${userId}/friendships/pendings`);
 				if (!response.ok) throw new Error('Failed to fetch friends');
 
 				const requests = await response.json();
@@ -443,11 +443,11 @@ export function afterRender(): void {
 			// on vide la liste
 			contactsList.innerHTML = '';
 			
-			if (friends.length === 0) {
+			if (friends.data.length === 0) {
 				contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
 				return;
 			}
-			console.log("friends1:", friends.friends);
+			// console.log("friends1:", friends.friends);
 			
 			friends.friends.forEach((friend: any) => {
 				const friendItem = document.createElement('div');

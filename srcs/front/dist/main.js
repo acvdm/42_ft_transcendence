@@ -3977,7 +3977,7 @@
         const userId = localStorage.getItem("userId");
         if (!userId) return;
         try {
-          const response = await fetch(`/api/users/${userId}/friendships/pending`);
+          const response = await fetch(`/api/users/${userId}/friendships/pendings`);
           if (!response.ok) throw new Error("Failed to fetch friends");
           const requests = await response.json();
           if (requests.length > 0) notifBadge?.classList.remove("hidden");
@@ -4161,11 +4161,10 @@
         if (!response.ok) throw new Error("Failed to fetch friends");
         const friends = await response.json();
         contactsList.innerHTML = "";
-        if (friends.length === 0) {
+        if (friends.data.length === 0) {
           contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
           return;
         }
-        console.log("friends1:", friends.friends);
         friends.friends.forEach((friend) => {
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";

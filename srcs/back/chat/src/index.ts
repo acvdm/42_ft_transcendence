@@ -2,7 +2,8 @@ import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import { initDatabase } from './database.js'
 import { Database } from 'sqlite';
 import { Server } from 'socket.io';
-import * as messRepo from "./repositories/messages.js" 
+import * as messRepo from "./repositories/messages.js";
+import * as chanRepo from "./repositories/channels.js"; 
 
 
 // Creation of Fastify server
@@ -20,6 +21,8 @@ async function main()
 // on demarre le serveur
 const start = async () => 
 {
+	let channel;
+
 	try 
 	{
 		await fastify.listen({ port: 3002, host: '0.0.0.0' });
@@ -36,34 +39,43 @@ const start = async () =>
 		// 3. gestion des évenements websockets
 		// Chaque fois qu'un client se connecte à notre serveur, cela crée une instance de socket
 		io.on('connection', async (socket) => 
-		{	
-			// Récupérer le dm_key du front : dm_key = sort(userId1, userId2)
-			// Si le channel n'existe pas le créer dans la table, s'il existe charger les messages précédent
-			const channel = "channel_" + socket.id.toString();
-			socket.join(channel);
-			console.log('A user is connected to: ' + channel);	
-			// A changer
-			let channelID = await messRepo.getChannelByName(db, channel);
-			if (!channelID) {
-				channelID = await messRepo.createChannel(db, channel);
-			}	
-			// quand le server recoit un message chat message de la part du front
-			socket.on('chatMessage', async (data: messRepo.createMessage) => 
+		{				
+			socket.on("joinChannel", (channelKey) => 
 			{
+				console.log("ChannelKey reçu: ", channelKey);
+
+				const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+				if (!isExistingChannel)
+				{
+					let channel = chanRepo.createChannel(db, channelKey);
+				}
+				else
+				{
+					let channel = isExistingChannel;
+				}
+
+				socket.join(channelKey);
+				socket.emit("joined Channel", channelKey);
+			});
+			
+			// quand le server recoit un message chat message de la part du front
+			socket.on('chatMessage', async (data) => 
+			{
+				const { sender_id, channel_key, msg_content } = data;
 				try 
 				{
-					data.channel = channel;
-					const saveMessageID = await messRepo.saveNewMessageinDB(db, data, channelID);
+					
+					console.log(`channel: ${channel_key}`);
+					const saveMessageID = await messRepo.saveNewMessageinDB(db, data, channel_key);
 					if (!saveMessageID) 
 					{
 						console.error('Error: message could not be saved');
 						socket.emit('error', { message: "Failed to save message "});
 						return ;
-					}
-					console.log(`Message saved with ID: ${saveMessageID}, channel: ${channelID}`);			
+					}		
 					// on le renvoie a tout le monde y compris l'envoyeur: 
 					// a changer si on veut envoyer qu'aux recv_id
-					io.to(channel).emit('chatMessage', data.msg_content);
+					io.to(channel_key).emit('chatMessage', data.msg_content);
 				} 
 				catch (err: any) 
 				{

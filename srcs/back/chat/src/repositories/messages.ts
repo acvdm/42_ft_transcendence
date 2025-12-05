@@ -1,4 +1,5 @@
 import { Database } from 'sqlite';
+import { findChannelByKey } from './channels.js';
 
 //-------- TYPE
 export interface Message {
@@ -20,13 +21,18 @@ export interface createMessage {
 export async function saveNewMessageinDB(
     db: Database,
     data: createMessage,
-    channel_id: number 
+    channel_key: string 
 ): Promise<number | undefined> 
 {
+    const channel = await findChannelByKey(db, channel_key);
+    if (!channel)
+        return;
+    const channel_id = await channel.id;
+
     const result = await db.run (`
-        INSERT INTO MESSAGES (sender_id, msg_content, channel_name, channel_id)
+        INSERT INTO MESSAGES (sender_id, msg_content, channel_id)
         VALUES (?, ?, ?, ?)`,
-        [data.sender_id, data.msg_content, data.channel, channel_id]
+        [data.sender_id, data.msg_content, channel_id]
     );
 
     if (!result?.lastID)
@@ -53,37 +59,37 @@ export async function createChannel(
 }
 
 
-export async function saveNewMemberinChannel(
-    db: Database,
-    channel_id: number,
-    user_id: number
-): Promise<number | undefined> 
-{
-    const result = await db.run(`
-        INSERT INTO CHANNEL_MEMBERS (channel_id, user_id)
-        VALUES (?, ?)`,
-        [channel_id, user_id]
-    );
+// export async function saveNewMemberinChannel(
+//     db: Database,
+//     channel_id: number,
+//     user_id: number
+// ): Promise<number | undefined> 
+// {
+//     const result = await db.run(`
+//         INSERT INTO CHANNEL_MEMBERS (channel_id, user_id)
+//         VALUES (?, ?)`,
+//         [channel_id, user_id]
+//     );
 
-    if (!result?.lastID)
-        throw new Error("TABLE CHANNEL_MEMBERS [chat.sqlite]: could not add new member into room: " + channel_id);
-    return result.lastID;
-}
+//     if (!result?.lastID)
+//         throw new Error("TABLE CHANNEL_MEMBERS [chat.sqlite]: could not add new member into room: " + channel_id);
+//     return result.lastID;
+// }
 
 
 //-------- GET / READ
-export async function getChannelByName(
-    db: Database,
-    channel: string
-): Promise<number | null> 
-{
-    const result = await db.get(`
-        SELECT id FROM CHANNELS WHERE name = ?`,
-        [channel]
-    );
+// export async function getChannelByName(
+//     db: Database,
+//     channel: string
+// ): Promise<number | null> 
+// {
+//     const result = await db.get(`
+//         SELECT id FROM CHANNELS WHERE name = ?`,
+//         [channel]
+//     );
 
-    return result ? result.id : null;
-}
+//     return result ? result.id : null;
+// }
 
 export async function getHistoryByChannel(
     db: Database,
