@@ -5,7 +5,7 @@ import { Secret } from 'otpauth'; // 2FA
 
 // usine de fabrication --> ne touche pas a la bdd mais genere des chaines de caracteres, etc
 
-// recuperation de la var d'env 
+// recuperation de la var d'env qui servira a hasher le jwt
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET){
     console.error("FATAL ERROR: JWT_SECRET is not defined in .env");

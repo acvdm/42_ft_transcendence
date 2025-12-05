@@ -2,7 +2,6 @@ import Fastify from 'fastify'; // rôle de serveur HTTP
 import sqlite3 from 'sqlite3';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import axios from 'axios'; // envoyer des requêtes HTTP à un autre serveur (service auth)
 import { createUserInDB } from './repositories/users.js';
 import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 import * as friendRepo from './repositories/friendships.js';
@@ -77,42 +76,48 @@ fastify.post('/users', async (request, reply) => {
 			}),
 		});
 
+		console.log("Objet Response brut:", authResponse);
+
     	// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
     	// MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
     	// d'abord on extrait les infos recues du service Auth
-    	const { refresh_token, access_token, user_id: authUserId } = authResponse.data;
 
-    	// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
-    	reply.setCookie('refresh_token', refresh_token, {
-    	  path: '/',
-    	  httpOnly: true, // invisible au JS (protection XSS)
-    	  secure: true, //acces au cookie uniquement via https
-    	  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
-    	  maxAge: 7 * 24 * 3600, // 7 jours en secondes
-    	  signed: true
-    	});
+		// il faut creer un json pour recuperer les donnees du fetch
+		const data = await authResponse.json();
+		if (data.success)
+		{
+			const authPayload = data.data;
+			if (!authPayload || !authPayload.refresh_token)
+				throw new Error("Auth service response is missing tokens inside data object");
 
-    	console.log('User successfully added to Database!');
+    		const { refresh_token, access_token, user_id: authUserId } = authPayload;
 
-    	// on envoit pas le refresh token /!\
-    	return reply.status(201).send({
-    	  access_token: access_token,
-    	  user_ide: authUserId
-    	});
+    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refresh_token', refresh_token, {
+    		  path: '/',
+    		  httpOnly: true, // invisible au JS (protection XSS)
+    		  secure: true, //acces au cookie uniquement via https
+    		  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+    		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
+    		  signed: true
+    		});
 
-		// const data = await authResponse.json();
-		// if (data.success)
-		// {
-		//     return reply.status(201).send({
-		// 		success: true,
-		// 		data: data,
-		// 		error: null
-		//     });
-		// }
-		// else 
-		// {
-		//     throw new Error(`Auth error: ${data.error.message}`);    
-		// }
+    		console.log("data from authResponse: ", data);
+
+    		// on envoit pas le refresh token /!\
+    		return reply.status(201).send({
+				success: true,
+					data: {
+    					access_token: access_token,
+    					user_id: authUserId
+					},
+				error: null
+    		});
+		}
+		else {
+			throw new Error(`Auth error: ${data.error.message}`); 
+		}
+
 	} 
 	catch (err: any) 
 	{
@@ -145,7 +150,7 @@ fastify.get('/users/:id', async (request, reply) =>
 	const user = await userRepo.findUserByID(db, userId);    
 	if (!user) 
 	{
-		reply.status(404).send({
+		return reply.status(404).send({
 			success: false,
 			data: null,
 			error: { message: `User not found` }

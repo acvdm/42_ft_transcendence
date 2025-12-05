@@ -4635,7 +4635,10 @@
         });
         const result = await response.json();
         if (result.success) {
-          const { access_token, refresh_token, user_id } = result.data.data;
+          const { access_token, refresh_token, user_id } = result.data;
+          console.log("User ID:", user_id);
+          console.log("Access Token:", access_token);
+          console.log("Refresh Token:", refresh_token);
           if (user_id) {
             localStorage.setItem("userId", user_id.toString());
             try {

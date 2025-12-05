@@ -82,10 +82,10 @@ function handleRegister() {
             const result = await response.json();
 
             if (result.success) {
-				const { access_token, refresh_token, user_id } = result.data.data;
-				// console.log('User ID:', user_id);
-  				// console.log('Access Token:', access_token);
-  				// console.log('Refresh Token:', refresh_token);
+				const { access_token, refresh_token, user_id } = result.data;
+				console.log('User ID:', user_id);
+  				console.log('Access Token:', access_token);
+  				console.log('Refresh Token:', refresh_token);
 
 				if (user_id) {
 					// console.log(`user_id: ${user_id}`);

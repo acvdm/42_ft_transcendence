@@ -18,22 +18,30 @@ const fastify = Fastify({ logger: true });
 
 fastify.addHook('onRequest', async (request, reply) => {
 	const url = request.url;
+	const method = request.method;
+
 	console.log(`Incoming request: ${url}`);
 
 	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
 	const publicRoutes = [
-		"/api/user/login",
-		"/api/user/register",
-		"/api/user/refresh",
+		"/api/users/login",
+		"/api/users/register",
+		"/api/users/refresh",
+		"/api/auth/refresh",
 		"/api/auth/login",
-		"/api/auth/register"
+		"/api/auth/register",
+		"/api/auth/sessions"
 	]
 
-	const isPublic = publicRoutes.some(route => request.url.startsWith(route));
+	let isPublic = publicRoutes.some(route => request.url.startsWith(route));
+	
+	if (url === '/api/users' && method === 'POST'){
+		isPublic = true;
+	}
+
 	if (isPublic){
 		return;
 	}
-
 	// verification de l'acces token
 	try {
 		const authHeader = request.headers['authorization'];
