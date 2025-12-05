@@ -25,11 +25,13 @@ export async function hashPassword(password: string): Promise<string> {
 export async function verifyPassword(
     password: string, 
     pwd_hashed: string
-): Promise <boolean> {
+): Promise <boolean> 
+{
     return await argon2.verify(pwd_hashed, password);
 }
 
-export function generate2FASecret(): string {
+export function generate2FASecret(): string 
+{
     const secret = new Secret({ size: 20 }); // 20 bytes = 32 char en base32
     return secret.base32;
  }

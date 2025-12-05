@@ -6,10 +6,8 @@
       __defProp(target, name, { get: all[name], enumerable: true });
   };
 
-  // scripts/pages/LoginPage.ts
-  function LoginPage() {
-    return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  // scripts/pages/LoginPage.html
+  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -39,10 +37,10 @@
 						<span> Sign in as:</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
-								<option value="Available">Available</option>
-								<option value="Busy">Busy</option>
-								<option value="Away">Away</option>
-								<option value="Appear offline">Appear offline</option>
+								<option value="available">Available</option>
+								<option value="busy">Busy</option>
+								<option value="away">Away</option>
+								<option value="offline">Appear offline</option>
 							</select>
 						</div>
 					</div>
@@ -56,8 +54,11 @@
 				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 			</div>
 	</div>
-	</div>
-	`;
+	</div>`;
+
+  // scripts/pages/LoginPage.ts
+  function render() {
+    return LoginPage_default;
   }
   function handleLogin() {
     const button = document.getElementById("login-button");
@@ -65,8 +66,7 @@
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
-      const status = document.getElementById("status-input").value;
-      console.log("Status s\xE9lectionn\xE9 :", status);
+      const selectedStatus = document.getElementById("status-input").value;
       if (errorElement) {
         errorElement.classList.add("hidden");
         errorElement.textContent = "";
@@ -79,20 +79,21 @@
         return;
       }
       try {
-        const response = await fetch("/api/auth/login", {
+        const response = await fetch("/api/auth/sessions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, status })
+          body: JSON.stringify({ email, password })
+          // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
+          // On le gère juste après avec le PATCH
         });
-        const data = await response.json();
-        if (response.ok) {
-          console.log("Login success:", data);
-          if (data.access_token)
-            localStorage.setItem("accessToken", data.access_token);
-          if (data.user_id) {
-            localStorage.setItem("userId", data.user_id.toString());
+        const result = await response.json();
+        if (result.success) {
+          const { access_token, refresh_token, user_id } = result.data;
+          if (access_token) localStorage.setItem("accessToken", access_token);
+          if (user_id) localStorage.setItem("userId", user_id.toString());
+          if (user_id) {
             try {
-              const userRes = await fetch(`/api/user/${data.user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`);
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -100,22 +101,26 @@
                 }
               }
             } catch (err) {
-              console.error("Impossible de r\xE9cup\xE9rer le profil utilisateur", err);
+              console.error("Can't get user's profile", err);
+            }
+            try {
+              await fetch(`/api/users/${user_id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              console.log("Status updated to DB:", selectedStatus);
+            } catch (err) {
+              console.error("Failed to update status on login", err);
             }
           }
-          if (status && data.user_id) {
-            await fetch(`/api/user/${data.user_id}/status`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status })
-            });
-          }
+          localStorage.setItem("userStatus", selectedStatus);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
-          console.error("Login error:", data);
+          console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+            errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
@@ -3496,195 +3501,296 @@
   // scripts/pages/HomePage.html
   var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
 
-    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
-         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-    </div>
+	<div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+	</div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col p-4 gap-4">
-            <!-- Barre magenta en haut -->
-            <div class="flex flex-row w-full h-[160px] bg-gray-100 shadow-inner rounded-sm p-2 flex-shrink-0 " style="height: 125px; flex-shrink: 0;">
-                <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                    <!-- l'image -->
-                    <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover" style="height: 70px; width:70;" src="/assets/profile/Rubber_Ducky.png">
-                    <!-- le cadre -->
-                    <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png">
-                 </div>
-                 <!-- username, bio et status -->
-                 <div class="flex flex-col justify-center pl-4 flex-1">
-                    <div class="flex items-center gap-2 mb-1">
-                        <p class="text-xl font-semibold" id="user-name">Username</p>
-                        
-                        <!-- selection du status = dynamique -->
-                        <div class="relative">
-                            <button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-                                <span id="current-status-text" class="text-green-600">(Available)</span>
-                                <img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-                            </button>
-                            
-                            <!-- Menu dropdown pour le status -->
-                            <div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-40 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-                                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                                    <span class="text-green-600">Available</span>
-                                </button>
-                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                                    <span class="text-red-600">Busy</span>
-                                </button>
-                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-                                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                    <span class="text-yellow-600">Away</span>
-                                </button>
-                                <button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-                                    <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                                    <span class="text-gray-600">Invisible</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <p id="user-bio" class="text-sm text-gray-600 italic">Coucou les bogoss ca va ou quoi</p>
-                 </div>
-            </div>
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+		
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
 
-            <!-- Container avec left et right qui prennent toute la hauteur restante -->
-            <div class="flex gap-4 flex-1 min-h-0">
-                <div id="left" class="flex-col w-[700px] min-w-[700px] shrink-0 bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center" style="width: 700px; min-width: 700px;">
-                    <h1 class="text-lg font-semibold"> Wanna play? \u{1F47E}</h1>
-                    <button id="local-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">LOCAL</button>
-                    <button id="remote-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">REMOTE</button>
-                    <button id="tournament-game" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">TOURNAMENT</button>
-                </div>
+			<!-- ========= LEFT WINDOW ========= -->
+			<div class="window w-[700px] min-w-[700px] flex flex-col">
+				<div class="title-bar">
+					<div class="title-bar-text">Games</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
 
-                <div id="right" class="flex flex-row gap-4 flex-1 min-w-0">
+				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px">
+					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
+						<!-- Cadre du profil -->
+						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
+							<div class="relative w-[110px] h-[110px] flex-shrink-0">
+								<!-- l'image (profil principal) -->
+								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+								<!-- le cadre -->
+								<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
+							</div>
+	
+							<!-- username, bio et status -->
+							<div class="flex flex-col justify-center pl-4 flex-1">
+								<div class="flex items-center gap-2 mb-1">
+									<p class="text-xl font-semibold" id="user-name">Username</p>
+	
+									<!-- selection du status = dynamique -->
+									<div class="relative">
+										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+											<span id="current-status-text">(Available)</span>
+											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+										</button>
+	
+										<!-- Menu dropdown pour le status -->
+										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Available</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Busy</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Away</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Offline</span>
+											</button>
+										</div>
+									</div>
+								</div>
+								<div id="bio-wrapper">
+									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+								</div>
+							</div>
+	
+							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
+							<div class="ml-auto flex items-start">
+								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+									<img id="notification-icon" 
+										src="/assets/basic/notification.png" 
+										alt="Notifications" 
+										class="w-full h-full object-contain">
+								</button>
+							</div>
+						</div>
 
-                    <!-- Partie live chat -->
+					</div>	<!--FIn du premier cadre-->		
+					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
+						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
 
-                    <div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-                    
-                        <div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-                        </div>
-                    <!-- Live chat \xE0 droite -->
-                    <div id="room-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-                        <!-- Image \xE0 gauche -->
-                        <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                            <!-- le cadre -->
-                            <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
-                            <!-- l'image -->
-                            <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
-                        </div>
+						<button id="local-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							LOCAL
+						</button>
 
-                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
+						<button id="remote-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							REMOTE
+						</button>
 
-                        <!-- Input element  -->
+						<button id="tournament-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							TOURNAMENT
+						</button>
+					</div>	<!--FIn du second cadre-->	
+				</div>
+			</div>
 
-                        <div class="flex flex-col">
-                            <input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
 
-                            <!-- Insertion des emoticones, wizz etc -->
-                            <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-                                <button id="select-emoticon" class="h-6">
-                                    <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                    <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-                                    <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                                </div>
+			<!-- ========= RIGHT WINDOW ========= -->
+			<div class="window flex flex-col flex-1 min-w-0">
+				<div class="title-bar">
+					<div class="title-bar-text">Messenger</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
 
-                                <!-- Menu dropdown -> il s'ouvre quand on clique -->
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
 
-                                <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                    <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-                                </div>
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
 
-                                </div>
-                                </button>
-                                
-                                <button id="select-animation" class="h-6">
-                                    <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                    <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-                                    <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                                    </div>
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
+							<div class="flex flex-row items-center justify-between">
+								<p class="text-xl text-black font-semibold text-center tracking-wide mb-2 select-none">MY FRIENDS</p>
+								
+								<div class="ml-auto flex items-center">
+									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
+										<img id="add-friend-icon" 
+											src="/assets/basic/1441.png" 
+											alt="Friends button" 
+											class="w-full h-full object-contain">
+									</button>
+								</div>
+							</div>
 
-                                    <!-- Menu dropdown -> il s'ouvre quand on clique -->
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500">
 
-                                    <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                    <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-                                    </div>
+								<details open class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										\u2B50 Contacts
+									</summary>
 
-                                    </div>
-                                </button>
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
+										</div>
+								</details>
 
-                                
-                                <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-                                <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-                                <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-                                
-                            
-                                <!-- Menu pour les fonts -->
-                                
-                                <button id="change-font" class="h-6">
-                                        <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                        <div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-                                        <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+								<details class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										\u{1F4C1} Groups
+									</summary>
 
-                                        <!-- Menu dropdown -> il s'ouvre quand on clique -->
-                                        <div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-                                            <div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-                                        </div>
+									<div class="mt-2 ml-4 flex flex-col gap-2">
+										<div class="text-xs text-gray-600 ml-1">les bogoce</div>
+										<div class="text-xs text-gray-600 ml-1">les cheums</div>
+									</div>
+								</details>
+							</div>
+						</div>
 
-                                        </div>
-                                    </button>
+						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
+							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
+							<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
+						</div>
 
-                                
-                                <div class="relative">
-                                <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-                                    <div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-                                    <div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-                                </button>
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+							
+							<div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
+								<div class="flex gap-4 items-center">
+									<div class="relative w-[80px] h-[80px] flex-shrink-0">
+										<!-- l'image (profil principal) -->
+										<img id="chat-header-avatar" 
+											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+											src="" 
+											alt="User avatar">
+										<!-- le cadre -->
+										<img id="chat-header-status" 
+											class="absolute inset-0 w-full h-full object-contain" 
+											src="/assets/basic/status_away_small.png" 
+											alt="Status frame">
+									</div>
+									<div class="flex flex-col justify-start leading-tight">
+										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+									</div>
+								</div>
+							</div>
 
-                                <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                                    <p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-                                    
-                                    <div class="grid grid-cols-3 gap-2">
-                                        
-                                        <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                                data-bg="url('/assets/backgrounds/fish_background.jpg')"
-                                                style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-                                        </button>
 
-                                        <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                                data-bg="url('/assets/backgrounds/heart_background.jpg')"
-                                                style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-                                        </button>
 
-                                        <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                                data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-                                                style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-                                        </button>
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 
-                                        
-                                        
-                                        <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-                                            Default background
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
 
-                        </div>
-                    </div>
-                    </div>
-                </div>
-            </div>
-    </div>
-</div>`;
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+<!-- Menu pour les fonts -->
+									
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+										<!-- Menu dropdown -> il s'ouvre quand on clique -->
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+
+										</div>
+									</button>
+
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
+						</div>
+					</div> 
+				</div>
+			</div> 
+		</div>
+
+	</div>
+</div>
+`;
 
   // scripts/pages/HomePage.ts
-  function render() {
+  function render2() {
     return HomePage_default;
   }
   function afterRender() {
     let globalPath = "/assets/emoticons/";
     let animationPath = "/assets/animated/";
+    let currentChannel = "general";
     const emoticons = {};
     const animations = {
       "(boucy_ball)": animationPath + "bouncy_ball.gif",
@@ -3799,6 +3905,94 @@
     const wizzButton = document.getElementById("send-wizz");
     const wizzContainer = document.getElementById("wizz-container");
     const currentUsername = localStorage.getItem("username");
+    const userConnected = document.getElementById("user-name");
+    const bioText = document.getElementById("user-bio");
+    const bioWrapper = document.getElementById("bio-wrapper");
+    const friendItems = document.querySelectorAll(".friend-item");
+    const channelChat = document.getElementById("channel-chat");
+    const chatPlaceholder = document.getElementById("chat-placeholder");
+    const chatHeaderAvatar = document.getElementById("chat-header-avatar");
+    const chatHeaderName = document.getElementById("chat-header-username");
+    const chatHeaderBio = document.getElementById("chat-header-bio");
+    const getStatusDot = (status) => {
+      switch (status) {
+        case "available":
+          return "/assets/friends/online-dot.png";
+        case "busy":
+          return "/assets/friends/busy-dot.png";
+        case "away":
+          return "/assets/friends/away-dot.png";
+        default:
+          return "/assets/friends/offline-dot.png";
+      }
+    };
+    const attachFriendClick = (item) => {
+      item.addEventListener("click", () => {
+        const friendUsername = item.dataset.username || "Unknown";
+        console.log("Friend clicked:", item.dataset.username);
+        const connectedUserId = parseInt(localStorage.getItem("userId") || "0");
+        const friendId = parseInt(item.dataset.id || "0");
+        const ids = [connectedUserId, friendId].sort((a, b) => a - b);
+        const channelKey = `channel_${ids[0]}_${ids[1]}`;
+        console.log("numero de la channel:", channelKey);
+        const currentChannel2 = channelKey;
+        socket.emit("joinChannel", channelKey);
+        if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
+        if (channelChat) channelChat.classList.remove("hidden");
+        const targetUsername = item.dataset.username || "Unknown";
+        const targetBio = item.dataset.bio || "";
+        const targetAvatar = item.dataset.avatar || "/assets/basic/default.png";
+        if (chatHeaderName) chatHeaderName.textContent = targetUsername;
+        if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
+        if (chatHeaderAvatar) chatHeaderAvatar.src = targetAvatar;
+        if (messagesContainer) {
+          messagesContainer.innerHTML = "";
+          addMessage(`Beginning of your conversation with ${targetUsername}`, "System");
+        }
+        messageInput?.focus();
+      });
+    };
+    const loadFriends = async () => {
+      const userId = localStorage.getItem("userId");
+      const contactsList = document.getElementById("contacts-list");
+      if (!userId || !contactsList) return;
+      try {
+        const response = await fetch(`/api/user/${userId}/friends`);
+        if (!response.ok) throw new Error("Failed to fetch friends");
+        const friends = await response.json();
+        contactsList.innerHTML = "";
+        if (friends.length === 0) {
+          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friends yet</div>';
+          return;
+        }
+        friends.forEach((friend) => {
+          const friendItem = document.createElement("div");
+          friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          friendItem.dataset.id = friend.id;
+          friendItem.dataset.username = friend.alias;
+          friendItem.dataset.bio = friend.bio || "Share a quick message";
+          friendItem.dataset.avatar = friend.avatar || "/assets/basic/default.png";
+          const status = friend.status || "invisible";
+          friendItem.innerHTML = `
+					<div class="relative w-[50px] h-[50px] flex-shrink-0">
+						<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+							 src="${getStatusDot(status)}" alt="status">
+					</div>
+					<div class="flex flex-col leading-tight">
+						<span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+					</div>
+				`;
+          contactsList.appendChild(friendItem);
+          attachFriendClick(friendItem);
+        });
+      } catch (error) {
+        console.error("Error loading friends:", error);
+        contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    };
+    loadFriends();
+    if (currentUsername && userConnected)
+      userConnected.textContent = currentUsername;
     if (!messagesContainer || !messageInput) {
       console.log("Can't find chat elements");
       return;
@@ -3810,6 +4004,136 @@
         }, 50);
       }
     };
+    `      
+	`;
+    let currentInput = null;
+    bioText?.addEventListener("click", () => {
+      const input = document.createElement("input");
+      currentInput = input;
+      input.type = "text";
+      input.value = bioText.textContent === "Share a quick message" ? "" : bioText.textContent;
+      input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+      if (bioWrapper) {
+        bioWrapper.replaceChild(input, bioText);
+        input.focus();
+      }
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          finalize(input.value.trim() || "Share a quick message");
+        }
+      });
+      input.addEventListener("blur", () => {
+        finalize(input.value.trim() || "Share a quick message");
+      });
+    });
+    async function finalize(text) {
+      if (!bioWrapper || !bioText || !currentInput) return;
+      const newBio = text.trim() || "Share a quick message";
+      const userId = localStorage.getItem("userId");
+      const parsed = parseMessage(newBio);
+      bioText.innerHTML = parsed;
+      bioWrapper.replaceChild(bioText, currentInput);
+      currentInput = null;
+      if (userId) {
+        try {
+          console.log("user_id: ", userId);
+          const response = await fetch(`/api/users/${userId}/bio`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ bio: newBio })
+          });
+          if (!response.ok) {
+            console.error("Error while saving bio");
+          } else {
+            console.log("Bio saved !");
+          }
+        } catch (error) {
+          console.error("Network error :", error);
+        }
+      }
+    }
+    const statusSelector = document.getElementById("status-selector");
+    const statusDropdown = document.getElementById("status-dropdown");
+    const statusText = document.getElementById("current-status-text");
+    const statusFrame = document.getElementById("user-status");
+    const statusImages = {
+      "available": "/assets/basic/status_online_small.png",
+      "busy": "/assets/basic/status_busy_small.png",
+      "away": "/assets/basic/status_away_small.png",
+      "invisible": "/assets/basic/status_offline_small.png"
+    };
+    const statusLabels = {
+      "available": "(Available)",
+      "busy": "(Busy)",
+      "away": "(Away)",
+      "invisible": "(Appear offline)"
+    };
+    const updateStatusDisplay = (status) => {
+      if (statusFrame && statusText && statusImages[status] && statusLabels[status]) {
+        statusFrame.src = statusImages[status];
+        statusText.textContent = statusLabels[status];
+        const statusOptions = document.querySelectorAll(".status-options");
+        statusOptions.forEach((option) => {
+          const optionStatus = option.dataset.status;
+          if (optionStatus === status)
+            option.classList.add("bg-blue-50");
+          else
+            option.classList.remove("bg-blue-50");
+        });
+      }
+    };
+    socket.on("userConnected", (data) => {
+      console.log("User connected with status:", data.status);
+      updateStatusDisplay(data.status);
+    });
+    const savedStatus = localStorage.getItem("userStatus") || "available";
+    updateStatusDisplay(savedStatus);
+    if (statusSelector && statusDropdown && statusText && statusFrame) {
+      statusSelector.addEventListener("click", (e) => {
+        e.stopPropagation();
+        statusDropdown.classList.toggle("hidden");
+        document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+        document.getElementById("animation-dropdown")?.classList.add("hidden");
+        document.getElementById("font-dropdown")?.classList.add("hidden");
+        document.getElementById("background-dropdown")?.classList.add("hidden");
+      });
+      const statusOptions = document.querySelectorAll(".status-option");
+      statusOptions.forEach((option) => {
+        option.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const selectedStatus = option.dataset.status;
+          if (selectedStatus && statusImages[selectedStatus]) {
+            statusFrame.src = statusImages[selectedStatus];
+            statusText.textContent = statusLabels[selectedStatus];
+            localStorage.setItem("userStatus", selectedStatus);
+            try {
+              const userId = localStorage.getItem("userId");
+              const response = await fetch(`/api/users/${userId}/status`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              if (!response.ok) {
+                console.error("Failed to update status");
+              }
+            } catch (error) {
+              console.error("Error updating status:", error);
+            }
+          }
+          statusDropdown.classList.add("hidden");
+        });
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!statusDropdown.contains(target) && !statusSelector.contains(target)) {
+          statusDropdown.classList.add("hidden");
+        }
+      });
+    }
     const animationButton = document.getElementById("select-animation");
     const animationDropdown = document.getElementById("animation-dropdown");
     const animationGrid = document.getElementById("animation-grid");
@@ -3860,11 +4184,11 @@
       const imgUrl = animations[animationKey];
       if (imgUrl) {
         const animationHTML = `
-                <div>
-                    <strong>${author} said:</strong><br>
-                    <img src="${imgUrl}" alt="${animationKey}">
-                </div>
-            `;
+				<div>
+					<strong>${author} said:</strong><br>
+					<img src="${imgUrl}" alt="${animationKey}">
+				</div>
+			`;
         addCustomContent(animationHTML);
       } else {
         addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
@@ -4134,106 +4458,44 @@
     });
     socket.on("chatMessage", (data) => {
       addMessage(data.message || data, data.author || "Anonyme");
-      console.log("Username:", data.alias);
     });
     socket.on("disconnected", () => {
       addMessage("Disconnected from chat server!");
     });
     messageInput.addEventListener("keyup", (event) => {
       if (event.key == "Enter" && messageInput.value.trim() != "") {
-        const message = messageInput.value;
-        socket.emit("chatMessage", { message, author: currentUsername });
+        const msg_content = messageInput.value;
+        const username = localStorage.getItem("username");
+        const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+        socket.emit("chatMessage", {
+          sender_id,
+          channel: currentChannel,
+          msg_content
+        });
         messageInput.value = "";
       }
     });
+    const myUserId = localStorage.getItem("userId");
+    if (myUserId && bioText) {
+      fetch(`/api/users/${myUserId}`).then((response) => {
+        if (!response.ok) throw new Error("Cannot get user");
+        return response.json();
+      }).then((user) => {
+        if (user.bio) {
+          bioText.innerHTML = parseMessage(user.bio);
+        }
+      }).catch((error) => {
+        console.error("Cannot load bio:", error);
+      });
+    }
   }
 
+  // scripts/pages/ProfilePage.html
+  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n	<div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n			 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n	</div>\n	<div class="min-h-screen flex items-center justify-center">\n	\n		<div class="window" style="width: 900px;">\n		<div class="title-bar">\n			<div class="title-bar-text">Profil</div>\n			<div class="title-bar-controls">\n				<button aria-label="Minimize"></button>\n				<button aria-label="Maximize"></button>\n				<button aria-label="Close"></button>\n			</div>\n		</div>\n	\n		<div class="window-body">\n	\n			<!-- Main content -->\n			<div class="flex flex-col items-center py-12">\n	\n			<div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n	\n				<!-- Left: My Profile -->\n				<div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n				<h1 class="text-lg font-normal mb-4">My Profile</h1>\n	\n				<!-- Profile picture -->\n				<div class="relative w-[170px] h-[170px] mb-4">\n					<img class="absolute inset-0 w-full h-full object-cover"\n					src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n					<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n					src="https://wlm.vercel.app/assets/usertiles/default.png">\n				</div>\n	\n				<!-- Profile info -->\n				<div class="text-sm text-left w-full leading-6">\n					<p><strong>FAUSToche01</strong></p>\n					<p>c00uk\xF6\xFC les kop1</p>\n					<p>Status: <span class="text-red-600">dcdscsd</span></p>\n					<p>Email: fsdsdsfsd</p>\n					<p>Password: dfsdcsd</p>\n					<p>Background: scscsd</p>\n				</div>\n				</div>\n	\n				<!-- Right: Profile editor -->\n				<div class="flex flex-col justify-between flex-1">\n	\n				<!-- Upper section -->\n				<div class="flex flex-col gap-4">\n					<div>\n					<label class="text-sm">Username:</label>\n					<input type="text" value="FAUSToche01"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Choose your message:</label>\n					<input type="text" value="c00uk\xF6\xFC les kop1"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Status:</label>\n					<div class="flex items-center gap-2 mt-1">\n						<span class="text-gray-600 text-sm">Choose your status:</span>\n						<select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n						<option>Available</option>\n						<option selected>Busy</option>\n						<option>Away</option>\n						<option>Appear offline</option>\n						</select>\n					</div>\n					</div>\n				</div>\n	\n				<!-- Danger Zone -->\n				<div class="mt-8 border-t border-gray-300 pt-4">\n					<h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! \u26A0\uFE0F</h2>\n					<div class="flex items-center justify-start gap-6">\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Email</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Password</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					</div>\n				</div>\n	\n				</div>\n	\n			</div>\n			</div>\n	\n		</div>\n		</div>\n	\n	\n	\n	</div>\n	\n\n</div>	\n';
+
   // scripts/pages/ProfilePage.ts
-  function ProfilPage() {
-    return `
-
-<!-- Main content -->
-  <div class="flex flex-col items-center py-8">
-
-    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
-
-      <!-- Left: My Profile -->
-      <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">
-        <h1 class="text-lg font-normal mb-4">My Profile</h1>
-
-        <!-- Profile picture -->
-        <div class="relative w-[170px] h-[170px] mb-4">
-          <img class="absolute inset-0 w-full h-full object-cover"
-            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png" alt="profile frame">
-          <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-            src="https://wlm.vercel.app/assets/usertiles/default.png" alt="user photo">
-        </div>
-
-        <!-- Profile info -->
-        <div class="text-sm text-left w-full leading-6">
-          <p><strong>FAUSToche01</strong></p>
-          <p>c00uk\xF6\xFC les kop1</p>
-          <p>Status: <span class="text-red-600">dcdscsd</span></p>
-          <p>Email: fsdsdsfsd</p>
-          <p>Password: dfsdcsd</p>
-          <p>Background: scscsd</p>
-        </div>
-      </div>
-
-      <!-- Right: Profile editor -->
-      <div class="flex flex-col justify-between flex-1">
-
-        <!-- Upper section -->
-        <div class="flex flex-col gap-4">
-          <div>
-            <label class="text-sm">Username:</label>
-            <input type="text" value="FAUSToche01"
-              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-          </div>
-
-          <div>
-            <label class="text-sm">Choose your message:</label>
-            <input type="text" value="c00uk\xF6\xFC les kop1"
-              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-          </div>
-          <div>
-            <label class="text-sm">Status:</label>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="text-gray-600 text-sm">Choose your status:</span>
-              <select
-                class="bg-transparent rounded-sm px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-                <option>Available</option>
-                <option selected>Busy</option>
-                <option>Away</option>
-                <option>Appear offline</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="mt-8 border-t border-gray-300 pt-4">
-          <h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! \u26A0\uFE0F</h2>
-          <div class="flex items-center justify-start gap-6">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">Email</span>
-              <button
-                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                Change
-              </button>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm">Password</span>
-              <button
-                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                Change
-              </button>
-            </div>
-          </div>
-        </div>
-
-    
-	`;
+  function render3() {
+    return ProfilePage_default;
   }
 
   // scripts/pages/NotFound.ts
@@ -4266,7 +4528,7 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			Welcome to Transcendence
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -4313,7 +4575,7 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			Sign up to Transcendence
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -4364,34 +4626,45 @@
         return;
       }
       try {
-        const response = await fetch("/api/user/register", {
+        const response = await fetch("/api/users", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({ alias, email, password })
         });
-        const data = await response.json();
-        if (response.ok) {
-          console.log("Inscription r\xE9ussie :", data);
-          if (data.user_id) {
-            localStorage.setItem("userId", data.user_id.toString());
+        const result = await response.json();
+        if (result.success) {
+          const { access_token, refresh_token, user_id } = result.data.data;
+          if (user_id) {
+            localStorage.setItem("userId", user_id.toString());
+            try {
+              const userRes = await fetch(`/api/users/${user_id}`);
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
           }
-          if (data.access_token)
-            localStorage.setItem("accessToken", data.access_token);
+          if (access_token)
+            localStorage.setItem("accessToken", access_token);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
-          console.error("Login error:", data);
+          console.error("Login error:", result.error.message);
           if (errorElement) {
-            errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+            errorElement.textContent = result.error.message || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
       } catch (error) {
         console.error("Network error:", error);
         if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
+          errorElement.textContent = "Network error, please try again REGISTER PAGE";
           errorElement.classList.remove("hidden");
         }
       }
@@ -4410,11 +4683,11 @@
       afterRender: initLandingPage
     },
     "/home": {
-      render,
+      render: render2,
       afterRender
     },
     "/profile": {
-      render: ProfilPage,
+      render: render3,
       afterRender: () => console.log("Profil page charg\xE9e -> modifications de la page de profil, photo etc")
     },
     "/register": {
@@ -4422,7 +4695,7 @@
       afterRender: registerEvents
     },
     "/login": {
-      render: LoginPage,
+      render,
       afterRender: loginEvents
     },
     "/404": {

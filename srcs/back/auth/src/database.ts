@@ -1,10 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 
-
-// Mode verbose
-const sqlite3Verbose = sqlite3.verbose();
-
 // Fonction qui initialise la DB et renvoie la connexion
 export async function initDatabase(): Promise<Database> {
    const db = await open({ 
@@ -18,7 +14,7 @@ export async function initDatabase(): Promise<Database> {
       CREATE TABLE IF NOT EXISTS CREDENTIALS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
-        email TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL CHECK (length(email) < 75),
         pwd_hashed TEXT UNIQUE NOT NULL,
         two_fa_secret TEXT UNIQUE NOT NULL,
         is_2fa_enabled INTEGER DEFAULT 1,
@@ -41,4 +37,5 @@ export async function initDatabase(): Promise<Database> {
     console.log('TOKENS table created');
 
     return db; // On renvoie la connexion
+
 }

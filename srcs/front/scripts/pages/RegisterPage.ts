@@ -12,7 +12,7 @@ export function RegisterPage(): string {
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			Sign up to Transcendence
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -71,7 +71,7 @@ function handleRegister() {
 
 		try {
             // On appelle la route définie dans la Gateway qui redirige vers le service USER
-            const response = await fetch('/api/user/register', {
+            const response = await fetch('/api/users', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -79,32 +79,48 @@ function handleRegister() {
                 body: JSON.stringify({ alias, email, password })
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (response.ok) {
-                console.log("Inscription réussie :", data);
+            if (result.success) {
+				const { access_token, refresh_token, user_id } = result.data.data;
+				// console.log('User ID:', user_id);
+  				// console.log('Access Token:', access_token);
+  				// console.log('Refresh Token:', refresh_token);
 
-				if (data.user_id) {
-					localStorage.setItem('userId', data.user_id.toString());
+				if (user_id) {
+					// console.log(`user_id: ${user_id}`);
+					localStorage.setItem('userId', user_id.toString());
+					try {
+						
+						const userRes = await fetch(`/api/users/${user_id}`);
+						// console.log(`${userRes}`);
+						if (userRes.ok) {
+							const userData = await userRes.json();
+							if (userData.alias) {
+								localStorage.setItem('username', userData.alias);
+							}
+						}
+					} catch (err) {
+						console.error("Can't get user's profile", err);
+					}
 				}
-				
-				if (data.access_token) // on sauvegarde le token si necessaire
-					localStorage.setItem('accessToken', data.access_token);
+				if (access_token) // on sauvegarde le token si necessaire
+					localStorage.setItem('accessToken', access_token);
 
 				window.history.pushState({}, '', '/home'); // redirection vers homepage
 				window.dispatchEvent(new PopStateEvent('popstate')); // on declenche l'event popstate pour forcer le rechargement
 
             } else {
-                console.error("Login error:", data);
+                console.error("Login error:", result.error.message);
 				if (errorElement) {
-					errorElement.textContent = data.errorMessage || data.error || "Authentication failed";
+					errorElement.textContent = result.error.message || "Authentication failed";
 					errorElement.classList.remove('hidden');
 				}
             }
         } catch (error) {
            console.error("Network error:", error);
 			if (errorElement) {
-				errorElement.textContent = "Network error, please try again";
+				errorElement.textContent = "Network error, please try again REGISTER PAGE";
 				errorElement.classList.remove('hidden');
 			}
         }

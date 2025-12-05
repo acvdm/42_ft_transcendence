@@ -14,10 +14,28 @@ import { getExpirationDate } from "../utils/date.js";
 import { Database } from 'sqlite';
 
 
+export interface accAndRefTokens {
+    access_token: string,
+    refresh_token: string,
+    expires_at: Date
+}
+
 export interface authResponse {
-    access_token: string;
-    refresh_token: string;
-    user_id: number 
+    access_token: string,
+    refresh_token: string,
+    user_id: number
+}
+
+async function generateTokens (
+    user_id: number,
+    credential_id: number
+): Promise<accAndRefTokens>
+{
+    const access_token = generateAccessToken(user_id, credential_id);
+    const refresh_token = generateRefreshToken(user_id);
+    const expires_at = getExpirationDate(30);
+
+    return { access_token, refresh_token, expires_at}
 }
 
 export async function registerUser(
@@ -45,22 +63,23 @@ export async function registerUser(
     });
 
     // 4. Génération token
-    const access_token = generateAccessToken(user_id, credential_id);
-    const refresh_token = generateRefreshToken(user_id);
-    const expires_at = getExpirationDate(30);
+    // const access_token = generateAccessToken(user_id, credential_id);
+    // const refresh_token = generateRefreshToken(user_id);
+    // const expires_at = getExpirationDate(30);
+    const tokens = await generateTokens(user_id, credential_id);
 
     // 5. Insertion dans la DB tokens
     await tokenRepo.createToken(db, {
         user_id,
         credential_id, 
-        refresh_token,
-        expires_at
+        refresh_token: tokens.refresh_token,
+        expires_at: tokens.expires_at
     });
 
-    return {
-        access_token,
-        refresh_token,
-        user_id
+    return { 
+        access_token: tokens.access_token, 
+        refresh_token: tokens.refresh_token, 
+        user_id 
     };
 }
 
@@ -82,16 +101,13 @@ export async function loginUser(
     if (!isPasswordValid)
         throw new Error ('Invalid password');
 
-    const access_token = generateAccessToken(user_id, credential_id);
-    const refresh_token = generateRefreshToken(user_id);
-    const expires_at = getExpirationDate(30);
+    const tokens = await generateTokens(user_id, credential_id);
+    await tokenRepo.updateToken(db, credential_id, tokens.refresh_token, tokens.expires_at);
 
-    await tokenRepo.updateToken(db, credential_id, refresh_token, expires_at);
-
-    return {
-        access_token,
-        refresh_token,
-        user_id
+    return { 
+        access_token: tokens.access_token, 
+        refresh_token: tokens.refresh_token, 
+        user_id: user_id 
     };
 }
 
@@ -99,10 +115,12 @@ export async function authenticatePassword(
     db: Database,
     credential_id: number,
     password: string
-): Promise<boolean> {
+): Promise<boolean> 
+{
     const credential =  await credRepo.getCredentialbyID(db, credential_id);
     if (!credential)
         throw new Error("Could not find any matching credential");
+    
     return await crypt.verifyPassword(password, credential.pwd_hashed);
 }
 
