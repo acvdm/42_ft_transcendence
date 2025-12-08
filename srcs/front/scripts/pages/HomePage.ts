@@ -1192,6 +1192,90 @@ async function finalize(text: string) {
 
 
 	// ---------------------------------------------------
+	// ----          CHARGEMENT USER DATA             ----
+	// ---------------------------------------------------
+
+	const loadUserData = async () => {
+		let token = localStorage.getItem('accessToken');
+		const userId = localStorage.getItem('userId');
+
+		if (!token || !userId) {
+			console.warn("No token found, redirectiong to login");
+			window.history.pushState({}, '', '/login');
+			window.dispatchEvent(new PopStateEvent('popstate'));
+			return;
+		}
+
+		try {
+			// appel normal
+			let response = await fetch(`/api/users/${userId}`, {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			// si 401 on essaie de refresh le token
+			if (response.status == 401) {
+				console.warn("Session has expire (401). Cleaning and redirection...");
+
+				const refreshRes = await fetch('/api/auth/refresh', {
+					method: 'POST'
+				});
+
+				if (refreshRes.ok) {
+					// nouveau token recupere
+					const data = await refreshRes.json();
+					console.log("Token refreshed with success !");
+
+					localStorage.setItem('accessToken', data.access_token);
+					token = data.access_token;
+
+					// on reessaie la requete initiale avec le nouveau token
+					response = await fetch(`/api/users/${userId}`, {
+						headers: { 'Authorization': `Bearer ${token}`}
+					});
+
+				} else {
+					console.error("Refresh failed. Forced deconnexion");
+					throw new Error('Session completely expired');
+				}
+			}
+
+			if (!response.ok)
+				throw new Error('Failed to fetch user profile');
+
+			// mise a jour de l'interface
+			const userData = await response.json();
+
+			// mise a jour UI (nom, bio, ...)
+			if (userConnected && userData.alias) {
+				userConnected.textContent = userData.alias;
+				localStorage.setItem('username', userData.alias);
+			}
+			if (bioText && userData.bio){
+				bioText.innerHTML = parseMessage(userData.bio);
+			}
+			// mise a jour du statut
+			if (userData.status) {
+				updateStatusDisplay(userData.status);
+				localStorage.setItem('userStatus', userData.status);
+			}
+
+			// sil y a un avatar plus tard ajouter portion de code
+		} catch (error) {
+			console.error("Error during loading user data: ", error);
+			// nettoyage final
+			localStorage.removeItem('accessToken');
+			localStorage.removeItem('userId');
+			localStorage.removeItem('username');
+			window.history.pushState({}, '', '/login');
+			window.dispatchEvent(new PopStateEvent('popstate'));
+		}
+	};
+
+	loadUserData();
+
+	// ---------------------------------------------------
 	// ----      MISE EN ÉCOUTE DES SOCKETS           ----
 	// ---------------------------------------------------
 
@@ -1256,21 +1340,21 @@ async function finalize(text: string) {
 	// ----           CHARGEMENT DE LA BIO            ----
 	// ---------------------------------------------------
 
-	const myUserId = localStorage.getItem('userId'); 
+	// const myUserId = localStorage.getItem('userId'); 
 
-	if (myUserId && bioText) {
-		fetch(`/api/users/${myUserId}`)
-			.then(response => {
-				if (!response.ok) throw new Error('Cannot get user');
-				return response.json();
-			})
-			.then(user => {
-				if (user.bio) {
-					bioText.innerHTML = parseMessage(user.bio);
-				}
-			})
-			.catch(error => {
-				console.error('Cannot load bio:', error);
-			});
-	}
+	// if (myUserId && bioText) {
+	// 	fetch(`/api/users/${myUserId}`)
+	// 		.then(response => {
+	// 			if (!response.ok) throw new Error('Cannot get user');
+	// 			return response.json();
+	// 		})
+	// 		.then(user => {
+	// 			if (user.bio) {
+	// 				bioText.innerHTML = parseMessage(user.bio);
+	// 			}
+	// 		})
+	// 		.catch(error => {
+	// 			console.error('Cannot load bio:', error);
+	// 		});
+	// }
 }

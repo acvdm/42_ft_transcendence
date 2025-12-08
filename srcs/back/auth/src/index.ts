@@ -140,7 +140,9 @@ fastify.post('/refresh', async (request, reply) => {
   
   // lire le cookie signe
   const cookie = request.cookies.refresh_token;
+  // verification de la signature
   const result = request.unsignCookie(cookie || '');
+
   if (!result.valid || !result.value) {
     return reply.status(401).send({ error: "Invalid or missing refresh token"});
   }
@@ -148,6 +150,7 @@ fastify.post('/refresh', async (request, reply) => {
   const refreshToken = result.value;
 
   try {
+	// appeler le service pour verifier la DB et generer nouveaux tokens
     const authResponse = await refreshUser(db, refreshToken);
 
     reply.setCookie('refresh_token', authResponse.refresh_token, {

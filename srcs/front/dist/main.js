@@ -4660,6 +4660,63 @@
       addMessage(`<strong>${data.author} sent a nudge</strong>`, "Admin");
       shakeElement(wizzContainer, 3e3);
     });
+    const loadUserData = async () => {
+      let token = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("userId");
+      if (!token || !userId) {
+        console.warn("No token found, redirectiong to login");
+        window.history.pushState({}, "", "/login");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        return;
+      }
+      try {
+        let response = await fetch(`/api/users/${userId}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (response.status == 401) {
+          console.warn("Session has expire (401). Cleaning and redirection...");
+          const refreshRes = await fetch("/api/auth/refresh", {
+            method: "POST"
+          });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            console.log("Token refreshed with success !");
+            localStorage.setItem("accessToken", data.access_token);
+            token = data.access_token;
+            response = await fetch(`/api/users/${userId}`, {
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+          } else {
+            console.error("Refresh failed. Forced deconnexion");
+            throw new Error("Session completely expired");
+          }
+        }
+        if (!response.ok)
+          throw new Error("Failed to fetch user profile");
+        const userData = await response.json();
+        if (userConnected && userData.alias) {
+          userConnected.textContent = userData.alias;
+          localStorage.setItem("username", userData.alias);
+        }
+        if (bioText && userData.bio) {
+          bioText.innerHTML = parseMessage(userData.bio);
+        }
+        if (userData.status) {
+          updateStatusDisplay(userData.status);
+          localStorage.setItem("userStatus", userData.status);
+        }
+      } catch (error) {
+        console.error("Error during loading user data: ", error);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("username");
+        window.history.pushState({}, "", "/login");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
+    };
+    loadUserData();
     socket.on("connect", () => {
       addMessage("Connected to chat server!");
     });
@@ -4695,19 +4752,6 @@
         messageInput.value = "";
       }
     });
-    const myUserId = localStorage.getItem("userId");
-    if (myUserId && bioText) {
-      fetch(`/api/users/${myUserId}`).then((response) => {
-        if (!response.ok) throw new Error("Cannot get user");
-        return response.json();
-      }).then((user) => {
-        if (user.bio) {
-          bioText.innerHTML = parseMessage(user.bio);
-        }
-      }).catch((error) => {
-        console.error("Cannot load bio:", error);
-      });
-    }
   }
 
   // scripts/pages/ProfilePage.html
