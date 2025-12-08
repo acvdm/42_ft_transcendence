@@ -3952,27 +3952,6 @@
     const notifList = document.getElementById("notification-list");
     const notifBadge = document.getElementById("notification-badge");
     if (notifButton && notifDropdown && notifList) {
-      const handleRequest = async (askerId, action, itemDiv) => {
-        const userId = localStorage.getItem("userId");
-        try {
-          const response = await fetch(`/api/users/${userId}/friendships/review`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: askerId, status: action })
-            // id devient le asker id cas celui qui envoie la demande d'amitie
-          });
-          if (response.ok) {
-            itemDiv.style.opacity = "0";
-            setTimeout(() => itemDiv.remove(), 300);
-            if (action === "validated") loadFriends();
-            checkNotifications();
-          } else {
-            console.error("Failed to update request");
-          }
-        } catch (error) {
-          console.error("Network error", error);
-        }
-      };
       const checkNotifications = async () => {
         const userId = localStorage.getItem("userId");
         if (!userId) return;
@@ -3988,27 +3967,22 @@
             notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
             return;
           }
-          console.log("Notif:", requests);
           pendingList.forEach((req) => {
             const item = document.createElement("div");
+            console.log("REQ:", req);
+            item.dataset.friendshipId = req.friendshipId;
             item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
             item.innerHTML = `
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold truncate">${req.alias}</p>
-                            <p class="text-xs text-gray-500">Wants to be your friend</p>
-                        </div>
-                        <div class="flex gap-1">
-                            <button class="btn-accept bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition" title="Accept">
-                                <span class="text-xs font-bold">\u2713</span>
-                            </button>
-                            <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">
-                                <span class="text-xs font-bold">\u2715</span>
-                            </button>
-							<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">
-                                <span class="text-xs font-bold">\u2715</span>
-                            </button>
-                        </div>
-                    `;
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-semibold truncate">${req.alias}</p>
+						<p class="text-xs text-gray-500">Wants to be your friend</p>
+					</div>
+					<div class="flex gap-1">
+						<button class="btn-accept bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition" title="Accept">\u2713</button>
+						<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">\u2715</button>
+						<button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">\u{1F6AB}</button>
+					</div>
+				`;
             const buttonAccept = item.querySelector(".btn-accept");
             const buttonReject = item.querySelector(".btn-reject");
             const buttonBlock = item.querySelector(".btn-block");
@@ -4029,6 +4003,27 @@
         } catch (error) {
           console.error("Error fetching notifications:", error);
         }
+        const handleRequest = async (askerId, action, itemDiv) => {
+          const userId2 = localStorage.getItem("userId");
+          try {
+            const response = await fetch(`/api/users/${userId2}/friendships/${itemDiv.dataset.friendshipId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: askerId, status: action })
+              // id devient le asker id cas celui qui envoie la demande d'amitie
+            });
+            if (response.ok) {
+              itemDiv.style.opacity = "0";
+              setTimeout(() => itemDiv.remove(), 300);
+              if (action === "validated") loadFriends();
+              checkNotifications();
+            } else {
+              console.error("Failed to update request");
+            }
+          } catch (error) {
+            console.error("Network error", error);
+          }
+        };
       };
       notifButton.addEventListener("click", (e) => {
         e.stopPropagation();

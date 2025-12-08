@@ -82,20 +82,28 @@ export async function listFriends (
     return users || [];
 }
 
-export async function listRequests (
+export async function listRequests(
     db: Database,
     user_id: number
-): Promise<Friendship []>
-{
+): Promise<Friendship[]> {
     const pending_requests = await db.all(`
-        SELECT * FROM FRIENDSHIPS f
+        SELECT 
+            f.id AS friendshipId,
+            f.user_id AS requesterId,
+            f.friend_id AS receiverId,
+            f.status AS status,
+            
+            u.id AS userId,
+            u.alias AS alias
+        FROM FRIENDSHIPS f
         JOIN USERS u ON f.user_id = u.id
-        WHERE f.friend_id = ? AND f.status = 'pending'`,
-        [user_id]
-    ) as Friendship[];
+        WHERE f.friend_id = ?
+          AND f.status = 'pending'
+    `, [user_id]);
 
     return pending_requests || [];
 }
+
 
 //-------- PUT / UPDATE
 export async function reviewFriendshipRequest (
@@ -112,3 +120,4 @@ export async function reviewFriendshipRequest (
 }
 
 //-------- DELETE / DELETE
+
