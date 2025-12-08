@@ -50,12 +50,26 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 		validateRegisterInput(body);
 
 		// 2. Traiter (toute la logique est dans le service)
-		const result = await registerUser(db, body.user_id, body.email, body.password);
+		const authResponse = await registerUser(db, body.user_id, body.email, body.password);
 
-		// 3. Répondre
+		// 3. Cookie
+		reply.setCookie('refresh_token', authResponse.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: true,
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
+		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
+
+		// 4. Répondre
 		return reply.status(200).send({
 			success: true,
-			data: result,
+			refresh_token: authResponse.refresh_token,
+			access_token: authResponse.access_token,
+			user_id: authResponse.user_id,
 			error: null
 		});
 	} 
@@ -78,7 +92,7 @@ fastify.post('/sessions', async (request, reply) =>
 	try 
 	{
 		const result = await loginUser(db, body.email, body.password);
-		console.log("/!\ route /sessions atteinte");	
+		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
 
 		reply.setCookie('refresh_token', result.refresh_token, {
@@ -105,12 +119,14 @@ fastify.post('/sessions', async (request, reply) =>
 	}
 });
 
+
+// dupliquye le session ?
 fastify.post('/login', async (request, reply) => {
   const body = request.body as { email: string, password: string };
   
   try {
     const authResponse = await loginUser(db, body.email, body.password);
-	console.log("/!\ route /login atteinte");
+	console.log("✅ route /login atteinte");
 
     // on met le refresh token dans le cookie, pas dans le body
     // et on prepare l'en-tete HTTP qui sera attache a la reponse finale
@@ -177,7 +193,7 @@ fastify.post('/refresh', async (request, reply) => {
 // fonction pour supprimer le refresh token de la db et supprimer le cookie du navigateur
 fastify.post('/logout', async (request, reply) => {
 	
-	console.log("/!\ route /logout atteinte");	
+	console.log("✅ route /logout atteinte");	
 
 	const cookie = request.cookies.refresh_token;
 	if (!cookie){
@@ -197,7 +213,7 @@ fastify.post('/logout', async (request, reply) => {
 
 	try {
 		await logoutUser(db, refreshToken);
-		console.log("Refresh Token suppress from the database");
+		console.log("✅ Refresh Token suppress from the database");
 	} catch (err) {
 		console.error("Error for the supression of Refresh Token in the database: ", err);
 	}
@@ -209,7 +225,7 @@ fastify.post('/logout', async (request, reply) => {
 		sameSite: 'strict'
 	});
 
-	return reply.status(200).send({ success: true, message: "Logged out succefully"});
+	return reply.status(200).send({ success: true, message: "✅ Logged out succefully"});
 })
 
 //---------------------------------------
