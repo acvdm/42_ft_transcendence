@@ -40,7 +40,7 @@ const start = async () =>
 		// Chaque fois qu'un client se connecte à notre serveur, cela crée une instance de socket
 		io.on('connection', async (socket) => 
 		{				
-			socket.on("joinChannel", (channelKey) => 
+			socket.on("joinChannel", async (channelKey) => 
 			{
 				console.log("ChannelKey reçu: ", channelKey);
 

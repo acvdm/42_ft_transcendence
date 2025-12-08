@@ -2,6 +2,7 @@ import { Database } from 'sqlite';
 import { User } from './users';
 
 export interface Friendship {
+    id: number,
     user_id: number,
     friend_id: number,
     status: string
@@ -63,15 +64,16 @@ export async function listFriends (
 ): Promise<User []>
 {
     console.log(`Lister les amis de user ${user_id}`);
-    // On sélectionne TOUTES les colonnes de la table USERS (u.*)
-    // En joignant la table FRIENDSHIPS (f) avec la table USERS (u)
-    // Condition : On cherche les lignes où JE suis le créateur du lien (f.user_id = moi)
+
+    // On récupère l'autre personne dans la relation:
+    // - Si je suis user_id, je veux friend_id,
+    // - Si je suis friend_id, je veux user_id
     const users = await db.all(`
         SELECT u.* FROM FRIENDSHIPS f
         JOIN USERS u ON (
-            (f.user_id = ? AND f.user_id = u.id)
+            (f.user_id = ? AND f.friend_id = u.id)
             OR
-            (f.friend_id = ? AND f.friend_id = u.id)
+            (f.friend_id = ? AND f.user_id = u.id)
         )
         WHERE f.status = 'validated'`,
         [user_id, user_id]
@@ -83,14 +85,14 @@ export async function listFriends (
 export async function listRequests (
     db: Database,
     user_id: number
-): Promise<User []>
+): Promise<Friendship []>
 {
     const pending_requests = await db.all(`
-        SELECT u.* FROM FRIENDSHIPS f
+        SELECT * FROM FRIENDSHIPS f
         JOIN USERS u ON f.user_id = u.id
         WHERE f.friend_id = ? AND f.status = 'pending'`,
         [user_id]
-    ) as User[];
+    ) as Friendship[];
 
     return pending_requests || [];
 }

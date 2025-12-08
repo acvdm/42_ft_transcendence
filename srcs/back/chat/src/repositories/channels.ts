@@ -24,7 +24,7 @@ export async function findChannelByKey (
 export async function createChannel (
     db: Database,
     channelKey: number
-): Promise<number> 
+): Promise<number | undefined> 
 {
     const result = await db.run(`
         INSERT INTO CHANNELS (channel_key)
@@ -32,7 +32,7 @@ export async function createChannel (
         [channelKey]
     );
 
-    if (result.lastID)
+    if (!result.lastID)
         throw new Error('Failed to create new channel');
 
     return result.lastID;

@@ -309,7 +309,7 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 
 	try
 	{
-		const pending_requests: userRepo.User [] = await friendRepo.listRequests(db, userId);
+		const pending_requests: friendRepo.Friendship [] = await friendRepo.listRequests(db, userId);
 		return reply.status(200).send({
 			success: true,
 			data: pending_requests,

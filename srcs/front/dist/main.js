@@ -3980,6 +3980,7 @@
           const response = await fetch(`/api/users/${userId}/friendships/pendings`);
           if (!response.ok) throw new Error("Failed to fetch friends");
           const requests = await response.json();
+          const pendingList = requests.data;
           if (requests.length > 0) notifBadge?.classList.remove("hidden");
           else notifBadge?.classList.add("hidden");
           notifList.innerHTML = "";
@@ -3988,7 +3989,7 @@
             return;
           }
           console.log("Notif:", requests);
-          requests.data.forEach((req) => {
+          pendingList.forEach((req) => {
             const item = document.createElement("div");
             item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
             item.innerHTML = `
@@ -4159,16 +4160,16 @@
       try {
         const response = await fetch(`/api/users/${userId}/friends`);
         if (!response.ok) throw new Error("Failed to fetch friends");
-        const friends = await response.json();
+        const responseData = await response.json();
+        const friendList = responseData.data;
         contactsList.innerHTML = "";
-        if (friends.data.length === 0) {
+        if (!friendList || friendList.length === 0) {
           contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
           return;
         }
-        friends.friends.forEach((friend) => {
+        friendList.forEach((friend) => {
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
-          console.log("friends2:", friends);
           friendItem.dataset.id = friend.id;
           friendItem.dataset.username = friend.alias;
           friendItem.dataset.bio = friend.bio || "Share a quick message";
