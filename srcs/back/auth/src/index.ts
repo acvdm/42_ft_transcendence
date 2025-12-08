@@ -78,8 +78,18 @@ fastify.post('/sessions', async (request, reply) =>
 	try 
 	{
 		const result = await loginUser(db, body.email, body.password);
-		console.log("route /sessions atteinte");	
+		console.log("/!\ route /sessions atteinte");	
 		console.log(`result: `, result);
+
+		reply.setCookie('refresh_token', result.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
 		return reply.status(200).send({
 			success: true,
 			data: result,
@@ -100,6 +110,7 @@ fastify.post('/login', async (request, reply) => {
   
   try {
     const authResponse = await loginUser(db, body.email, body.password);
+	console.log("/!\ route /login atteinte");
 
     // on met le refresh token dans le cookie, pas dans le body
     // et on prepare l'en-tete HTTP qui sera attache a la reponse finale
@@ -163,6 +174,8 @@ fastify.post('/refresh', async (request, reply) => {
 // fonction pour supprimer le refresh token de la db et supprimer le cookie du navigateur
 fastify.post('/logout', async (request, reply) => {
 	
+	console.log("/!\ route /logout atteinte");	
+
 	const cookie = request.cookies.refresh_token;
 	if (!cookie){
 		return reply.status(200).send({message: 'Already logged out'});

@@ -102,7 +102,18 @@ export async function loginUser(
         throw new Error ('Invalid password');
 
     const tokens = await generateTokens(user_id, credential_id);
-    await tokenRepo.updateToken(db, credential_id, tokens.refresh_token, tokens.expires_at);
+    // await tokenRepo.updateToken(db, credential_id, tokens.refresh_token, tokens.expires_at);
+
+    // on delete l'ancien token
+    await tokenRepo.deleteTokenByCredentialId(db, credential_id);
+
+    // on cree une nouvelle ligne
+    await tokenRepo.createToken(db, {
+        user_id,
+        credential_id,
+        refresh_token: tokens.refresh_token,
+        expires_at: tokens.expires_at
+    })
 
     return { 
         access_token: tokens.access_token, 

@@ -74,3 +74,9 @@ export async function deleteAllTokensForUser(db: Database, userId: number): Prom
         DELETE FROM tokens WHERE user_id = ?`, [userId]
     );
 }
+
+export async function deleteTokenByCredentialId(db: Database, credential_id: number) : Promise<void> {
+    await db.run(`
+        DELETE FROM tokens WHERE credential_id = ?`, [credential_id]
+    );
+}

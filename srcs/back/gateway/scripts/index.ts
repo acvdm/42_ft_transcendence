@@ -41,6 +41,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 	}
 
 	if (isPublic){
+		console.log(`Public route allowed: ${method} ${url}`);
 		return;
 	}
 	// verification de l'acces token

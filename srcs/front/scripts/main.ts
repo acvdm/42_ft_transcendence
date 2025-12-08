@@ -49,16 +49,36 @@ const routes: { [key: string]: Page } = {
 };
 
 // gestion du logout
-const handleLogout = () => {
-	localStorage.removeItem('accessToken');
-	localStorage.removeItem('userId');
-	localStorage.removeItem('username');
-	// redirection vers la page d'accueil
-	window.history.pushState({}, '', '/');
-	// manuellement chargement pour recharger la vue
-	const popStateEvent = new PopStateEvent('popstate');
-	window.dispatchEvent(popStateEvent);
+const handleLogout = async () => {
 
+	try {
+		// appel au backend
+		await fetch('/api/auth/logout', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			// force l'envoi du cookie HttpOnly au serveur
+			credentials: 'include',
+			body: JSON.stringify({}) // force le format JSON
+		});
+
+		console.log("Deconnection from the backend server succeed");
+	} catch (error) {
+		console.error("Error during the deconnection from the server: ", error);
+	} finally {
+		// on nettoie le client
+		localStorage.removeItem('accessToken');
+		localStorage.removeItem('userId');
+		localStorage.removeItem('username');
+		localStorage.removeItem('userStatus');
+	
+		// redirection vers la page d'accueil
+		window.history.pushState({}, '', '/');
+		// manuellement chargement pour recharger la vue
+		const popStateEvent = new PopStateEvent('popstate');
+		window.dispatchEvent(popStateEvent);
+	}
 }
 
 

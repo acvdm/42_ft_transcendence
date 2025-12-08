@@ -1005,7 +1005,7 @@ async function finalize(text: string) {
 	// ---------------------------------------------------
 	// ----           CHARGEMENT DE LA BIO            ----
 	// ---------------------------------------------------
-	
+
 	const myUserId = localStorage.getItem('userId'); 
 
 	if (myUserId && bioText) {

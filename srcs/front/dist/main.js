@@ -88,12 +88,19 @@
         });
         const result = await response.json();
         if (result.success) {
-          const { access_token, refresh_token, user_id } = result.data;
+          const { access_token, user_id } = result.data;
           if (access_token) localStorage.setItem("accessToken", access_token);
           if (user_id) localStorage.setItem("userId", user_id.toString());
-          if (user_id) {
+          if (user_id && access_token) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  // AJOUT du TOKEN (badge d acces)-> on va le chercher dans le localStorage
+                  "Authorization": `Bearer ${access_token}`
+                }
+              });
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -106,7 +113,11 @@
             try {
               await fetch(`/api/users/${user_id}/status`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  // Ajout du token
+                  "Authorization": `Bearer ${access_token}`
+                },
                 body: JSON.stringify({ status: selectedStatus })
               });
               console.log("Status updated to DB:", selectedStatus);
@@ -4634,15 +4645,19 @@
           body: JSON.stringify({ alias, email, password })
         });
         const result = await response.json();
-        if (result.success) {
-          const { access_token, refresh_token, user_id } = result.data;
+        if (response.ok) {
+          const { access_token, user_id } = result;
           console.log("User ID:", user_id);
           console.log("Access Token:", access_token);
-          console.log("Refresh Token:", refresh_token);
-          if (user_id) {
+          if (access_token)
+            localStorage.setItem("accessToken", access_token);
+          if (user_id)
             localStorage.setItem("userId", user_id.toString());
+          if (user_id) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`, {
+                headers: { "Authorization": `Bearer ${access_token}` }
+              });
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -4653,8 +4668,6 @@
               console.error("Can't get user's profile", err);
             }
           }
-          if (access_token)
-            localStorage.setItem("accessToken", access_token);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
@@ -4705,13 +4718,30 @@
       render: NotFoundPage
     }
   };
-  var handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    window.history.pushState({}, "", "/");
-    const popStateEvent = new PopStateEvent("popstate");
-    window.dispatchEvent(popStateEvent);
+  var handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        // force l'envoi du cookie HttpOnly au serveur
+        credentials: "include",
+        body: JSON.stringify({})
+        // force le format JSON
+      });
+      console.log("Deconnection from the backend server succeed");
+    } catch (error) {
+      console.error("Error during the deconnection from the server: ", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      window.history.pushState({}, "", "/");
+      const popStateEvent = new PopStateEvent("popstate");
+      window.dispatchEvent(popStateEvent);
+    }
   };
   var handleLocationChange = () => {
     if (!appElement) return;
