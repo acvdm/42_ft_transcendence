@@ -42,11 +42,8 @@ const start = async () =>
 		{				
 			socket.on("joinChannel", async (channelKey) => 
 			{
-				console.log("ChannelKey reçu: ", channelKey);
-
 				try 
 				{
-					console.log("Entrée dans le try");
 					const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
 					if (!isExistingChannel?.id)
 					{
@@ -55,7 +52,6 @@ const start = async () =>
 					}
 					else
 					{
-						console.log("le channel existe deja");
 						let channel = isExistingChannel;
 						socket.join(channelKey);
 						if (isExistingChannel?.id)

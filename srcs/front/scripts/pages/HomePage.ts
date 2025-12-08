@@ -408,9 +408,7 @@ export function afterRender(): void {
 			const ids = [connectedUserId, friendId].sort((a, b) => a - b);
 			const channelKey = `channel_${ids[0]}_${ids[1]}`;
 
-			console.log("numero de la channel:", channelKey);
-
-			const currentChannel = channelKey;
+			currentChannel = channelKey;
 			socket.emit("joinChannel", channelKey);
 
 			// affichage du chat
@@ -1203,8 +1201,6 @@ async function finalize(text: string) {
 
 	socket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) =>
 	{
-		console.log("channelKey & msg_history: ", data);
-
 		if (messagesContainer) 
 		{
 			messagesContainer.innerHTML = '';
@@ -1217,7 +1213,7 @@ async function finalize(text: string) {
 			}
 			else
 			{
-				console.log("Aucun msg dans l'historique");
+				console.log("No former message in this channel");
 			}
 
 		}
@@ -1244,14 +1240,12 @@ async function finalize(text: string) {
 		if (event.key == 'Enter' && messageInput.value.trim() != '') {
 			const msg_content = messageInput.value;
 			// on envoie le message au serveur avec emit
-			const username = localStorage.getItem('username');
+			const sender_alias = localStorage.getItem('username');
 			const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
 			// console.log("FRONT: currentChannel: ", currentChannel);
-			const channel_key = "channel_1_2";
-			console.log("currentChannel: ", currentChannel);
 			socket.emit("chatMessage", {
 				sender_id: sender_id,
-				sender_alias: localStorage.getItem('username'),
+				sender_alias: sender_alias,
 				channel: currentChannel,
 				msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
 			messageInput.value = ''; // on vide l'input

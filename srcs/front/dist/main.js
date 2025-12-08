@@ -4130,8 +4130,7 @@
         const friendId = parseInt(item.dataset.id || "0");
         const ids = [connectedUserId, friendId].sort((a, b) => a - b);
         const channelKey = `channel_${ids[0]}_${ids[1]}`;
-        console.log("numero de la channel:", channelKey);
-        const currentChannel2 = channelKey;
+        currentChannel = channelKey;
         socket.emit("joinChannel", channelKey);
         if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
         if (channelChat) channelChat.classList.remove("hidden");
@@ -4654,7 +4653,6 @@
       addMessage("Connected to chat server!");
     });
     socket.on("msg_history", (data) => {
-      console.log("channelKey & msg_history: ", data);
       if (messagesContainer) {
         messagesContainer.innerHTML = "";
         if (data.msg_history && data.msg_history.length > 0) {
@@ -4662,7 +4660,7 @@
             addMessage(msg.msg_content, msg.sender_alias);
           });
         } else {
-          console.log("Aucun msg dans l'historique");
+          console.log("No former message in this channel");
         }
       }
     });
@@ -4675,13 +4673,11 @@
     messageInput.addEventListener("keyup", (event) => {
       if (event.key == "Enter" && messageInput.value.trim() != "") {
         const msg_content = messageInput.value;
-        const username = localStorage.getItem("username");
+        const sender_alias = localStorage.getItem("username");
         const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
-        const channel_key = "channel_1_2";
-        console.log("currentChannel: ", currentChannel);
         socket.emit("chatMessage", {
           sender_id,
-          sender_alias: localStorage.getItem("username"),
+          sender_alias,
           channel: currentChannel,
           msg_content
         });
