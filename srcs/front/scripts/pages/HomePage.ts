@@ -207,7 +207,7 @@ export function afterRender(): void {
 						<p class="text-xs text-gray-500">Wants to be your friend</p>
 					</div>
 					<div class="flex gap-1">
-						<button class="btn-accept bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
+						<button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
 						<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">✕</button>
 						<button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">🚫</button>
 					</div>
@@ -1201,14 +1201,35 @@ async function finalize(text: string) {
 		addMessage("Connected to chat server!");
 	});
 
+	socket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) =>
+	{
+		console.log("channelKey & msg_history: ", data);
 
+		if (messagesContainer) 
+		{
+			messagesContainer.innerHTML = '';
+			if (data.msg_history && data.msg_history.length > 0) 
+			{
+				data.msg_history.forEach((msg) =>
+				{
+					addMessage(msg.msg_content, msg.sender_alias);
+				});
+			}
+			else
+			{
+				console.log("Aucun msg dans l'historique");
+			}
+
+		}
+	});
 
 	// on va écouter l'événement chatmessage venant du serveur
-	socket.on("chatMessage", (data: any) => {
+	socket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
 			// le backend va renvoyer data, 
 			// il devrait plus renvoyer message: "" author: ""
-		addMessage(data.message || data, data.author || "Anonyme");
+		addMessage(data.msg_content, data.sender_alias);
 	});
+
 
 	socket.on("disconnected", () => {
 		addMessage("Disconnected from chat server!");
@@ -1225,8 +1246,12 @@ async function finalize(text: string) {
 			// on envoie le message au serveur avec emit
 			const username = localStorage.getItem('username');
 			const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+			// console.log("FRONT: currentChannel: ", currentChannel);
+			const channel_key = "channel_1_2";
+			console.log("currentChannel: ", currentChannel);
 			socket.emit("chatMessage", {
 				sender_id: sender_id,
+				sender_alias: localStorage.getItem('username'),
 				channel: currentChannel,
 				msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
 			messageInput.value = ''; // on vide l'input

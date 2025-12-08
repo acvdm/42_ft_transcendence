@@ -44,29 +44,49 @@ const start = async () =>
 			{
 				console.log("ChannelKey reçu: ", channelKey);
 
-				const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
-				if (!isExistingChannel)
+				try 
 				{
-					let channel = chanRepo.createChannel(db, channelKey);
+					console.log("Entrée dans le try");
+					const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+					if (!isExistingChannel?.id)
+					{
+						let channel = chanRepo.createChannel(db, channelKey);
+						socket.join(channelKey);
+					}
+					else
+					{
+						console.log("le channel existe deja");
+						let channel = isExistingChannel;
+						socket.join(channelKey);
+						if (isExistingChannel?.id)
+						{
+							const msg_history = await messRepo.getHistoryByChannel(db, channel.id);
+							socket.emit("msg_history", { channelKey, msg_history });
+						}
+					}
+
 				}
-				else
+				catch (err)
 				{
-					let channel = isExistingChannel;
+					console.log("error catched");
 				}
 
-				socket.join(channelKey);
-				socket.emit("joined Channel", channelKey);
 			});
 			
 			// quand le server recoit un message chat message de la part du front
 			socket.on('chatMessage', async (data) => 
 			{
-				const { sender_id, channel_key, msg_content } = data;
+				// const { sender_id, channel_key, msg_content } = data;
+				console.log("channel_key:", data.channel);
+
+				const channel_key = data.channel;
+				const sender_id = data.sender_id;
+				const sender_alias = data.sender_alias;
+				const msg_content = data.msg_content;
+				console.log("sender_alias: ", sender_alias);
 				try 
 				{
-					
-					console.log(`channel: ${channel_key}`);
-					const saveMessageID = await messRepo.saveNewMessageinDB(db, data, channel_key);
+					const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);
 					if (!saveMessageID) 
 					{
 						console.error('Error: message could not be saved');
@@ -75,7 +95,7 @@ const start = async () =>
 					}		
 					// on le renvoie a tout le monde y compris l'envoyeur: 
 					// a changer si on veut envoyer qu'aux recv_id
-					io.to(channel_key).emit('chatMessage', data.msg_content);
+					io.to(channel_key).emit('chatMessage', { channel_key, msg_content, sender_alias });
 				} 
 				catch (err: any) 
 				{

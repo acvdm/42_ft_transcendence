@@ -10,13 +10,18 @@ export async function findChannelByKey (
     channelKey: string
 ): Promise <Channel | undefined>    
 {
+
+    console.log("entrée dans findChannelByKey avec channel_key: ", channelKey);
     const channel = await db.get(`
         SELECT * FROM CHANNELS WHERE channel_key = ?`,
         [channelKey]
     );
 
     if (!channel?.id)
+    {
+        console.log('channel existe pas');
         return ;
+    }
     
     return channel;
 }

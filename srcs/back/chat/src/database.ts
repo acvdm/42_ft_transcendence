@@ -12,6 +12,7 @@ export async function initDatabase(): Promise<Database> {
 		CREATE TABLE IF NOT EXISTS MESSAGES (
         	msg_id INTEGER PRIMARY KEY AUTOINCREMENT,
         	sender_id INTEGER NOT NULL,
+			sender_alias TEXT NOT NULL,
         	msg_content TEXT NOT NULL,
         	channel_id INTEGER NOT NULL,
         	channel_name TEXT NOT NULL DEFAULT 'general',
@@ -24,7 +25,7 @@ export async function initDatabase(): Promise<Database> {
     await db.exec(`
 		CREATE TABLE IF NOT EXISTS CHANNELS (
         	id INTEGER PRIMARY KEY AUTOINCREMENT,
-        	name TEXT UNIQUE NOT NULL DEFAULT 'general' CHECK (length(name) < 255),
+        	name TEXT NOT NULL DEFAULT 'general' CHECK (length(name) < 255),
 			channel_key TEXT UNIQUE,
         	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       	)
