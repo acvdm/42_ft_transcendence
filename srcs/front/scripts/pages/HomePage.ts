@@ -207,7 +207,7 @@ export function afterRender(): void {
 						<p class="text-xs text-gray-500">Wants to be your friend</p>
 					</div>
 					<div class="flex gap-1">
-						<button class="btn-accept bg-blue-500 text-white p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
+						<button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
 						<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">✕</button>
 						<button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">🚫</button>
 					</div>
