@@ -25,11 +25,11 @@ export async function initDatabase(): Promise<Database> {
     // TABLE FRIENDSHIPS
     await db.exec(`
         CREATE TABLE IF NOT EXISTS FRIENDSHIPS (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             friend_id INTEGER NOT NULL,
             status TEXT DEFAULT 'pending',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (user_id, friend_id)
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     `);
     console.log('FRIENDSHIPS table created');

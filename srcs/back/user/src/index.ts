@@ -299,32 +299,31 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 })
 
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
-fastify.get('/users/:id/friendships/pending', async (request, reply) =>
+fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 {
-	const { id } = request.params as { id: string };
-	const userId = Number(id);
-  console.log("ciyciy:", userId);
+    const { id } = request.params as { id: string };
+    const userId = Number(id);
+      console.log("ciyciy:", userId);
 
-	try
-	{
-		const pending_requests: userRepo.User [] = await friendRepo.listRequests(db, userId);
-		return reply.status(200).send({
-			success: true,
-			data: pending_requests,
-			error: null
-		});
-	}
-	catch (err)
-	{
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: 'Failed to list friendship requests for userId: ', id}
-		});
-	}
+    try
+    {
+        const pending_requests: friendRepo.Friendship [] = await friendRepo.listRequests(db, userId);
+        return reply.status(200).send({
+            success: true,
+            data: pending_requests,
+            error: null
+        });
+    }
+    catch (err)
+    {
+        fastify.log.error(err);
+        return reply.status(500).send({
+            success: false,
+            data: null,
+            error: { message: 'Failed to list friendship requests for userId: ', id}
+        });
+    }
 })
-
 
 
 

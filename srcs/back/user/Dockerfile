@@ -4,7 +4,10 @@
         
 FROM node:20-alpine AS build
 
-RUN apk add --no-cache sqlite
+# Build tools required for sqlite3 (node-gyp) ///////////// j'ai modifie ici
+RUN apk add --no-cache python3 make g++ \
+    && ln -sf /usr/bin/python3 /usr/bin/python
+
 
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/user
