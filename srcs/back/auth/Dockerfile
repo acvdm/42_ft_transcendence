@@ -6,7 +6,6 @@ FROM node:20-alpine AS build
 
 #-----------------------INSTALL BUILD DEPENDENCIES FOR ARGON2
 RUN apk add --no-cache \
-    python3 \
     make \
     g++ \
     sqlite

@@ -91,7 +91,7 @@ fastify.register(fastifyProxy,
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://user:3004', // adresse interne du réseau du docker
-	prefix: '/api/users', // toutes les requetes api/user iront au service user
+	prefix: '/api/users', // toutes les requetes api/users iront au service user
 	rewritePrefix: '/users' // on retire le prefixe avant de l'envoyer un service
 });
 

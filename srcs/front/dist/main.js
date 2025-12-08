@@ -3583,13 +3583,22 @@
 							</div>
 	
 							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
-							<div class="ml-auto flex items-start">
+							<div class="ml-auto flex items-start relative">
 								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
 									<img id="notification-icon" 
 										src="/assets/basic/notification.png" 
 										alt="Notifications" 
 										class="w-full h-full object-contain">
+										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 								</button>
+								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-80 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden">
+									<div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+										<h3 class="font-semibold text-sm text-gray-700">Notifications</h3>
+									</div>
+									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto">
+										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
+									</div> <!--fin du listing inside dropdown-->
+								</div> <!--fin du div dropdown-->
 							</div>
 						</div>
 
@@ -3639,19 +3648,37 @@
 
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
 							<div class="flex flex-row items-center justify-between">
-								<p class="text-xl text-black font-semibold text-center tracking-wide mb-2 select-none">MY FRIENDS</p>
+								<p class="text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">MY FRIENDS</p>
 								
-								<div class="ml-auto flex items-center">
+								<div class="ml-auto flex items-center mb-3 relative">
 									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
 										<img id="add-friend-icon" 
 											src="/assets/basic/1441.png" 
 											alt="Friends button" 
 											class="w-full h-full object-contain">
 									</button>
+									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
+										<p class="text-sm font-semibold mb-2 text-center">Add a friend</p>
+										<input type="text" 
+											id="friend-search-input" 
+											placeholder="Type in username or email" 
+											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<div class="flex gap-2">
+											<button id="send-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Send request
+											</button>
+											<button id="cancel-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Cancel
+											</button>
+										</div>
+										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
+									</div>
 								</div>
 							</div>
 
-							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500">
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
 
 								<details open class="group">
 									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
@@ -3737,7 +3764,7 @@
 									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
 									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
 
-<!-- Menu pour les fonts -->
+									<!-- Menu pour les fonts -->
 									
 									<button id="change-font" class="h-6">
 										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
@@ -3925,6 +3952,175 @@
     const chatHeaderAvatar = document.getElementById("chat-header-avatar");
     const chatHeaderName = document.getElementById("chat-header-username");
     const chatHeaderBio = document.getElementById("chat-header-bio");
+    const addFriendButton = document.getElementById("add-friend-button");
+    const addFriendDropdown = document.getElementById("add-friend-dropdown");
+    const friendSearchInput = document.getElementById("friend-search-input");
+    const sendFriendRequestBtn = document.getElementById("send-friend-request");
+    const cancelFriendRequestBtn = document.getElementById("cancel-friend-request");
+    const friendRequestMessage = document.getElementById("friend-request-message");
+    const notifButton = document.getElementById("notification-button");
+    const notifDropdown = document.getElementById("notification-dropdown");
+    const notifList = document.getElementById("notification-list");
+    const notifBadge = document.getElementById("notification-badge");
+    if (notifButton && notifDropdown && notifList) {
+      const checkNotifications = async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+        try {
+          const response = await fetch(`/api/users/${userId}/friendships/pendings`);
+          if (!response.ok) throw new Error("Failed to fetch friends");
+          const requests = await response.json();
+          const pendingList = requests.data;
+          if (requests.length > 0) notifBadge?.classList.remove("hidden");
+          else notifBadge?.classList.add("hidden");
+          notifList.innerHTML = "";
+          if (requests.length === 0) {
+            notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+            return;
+          }
+          pendingList.forEach((req) => {
+            const item = document.createElement("div");
+            console.log("REQ:", req);
+            item.dataset.friendshipId = req.friendshipId;
+            item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+            item.innerHTML = `
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-semibold truncate">${req.alias}</p>
+						<p class="text-xs text-gray-500">Wants to be your friend</p>
+					</div>
+					<div class="flex gap-1">
+						<button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">\u2713</button>
+						<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">\u2715</button>
+						<button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">\u{1F6AB}</button>
+					</div>
+				`;
+            const buttonAccept = item.querySelector(".btn-accept");
+            const buttonReject = item.querySelector(".btn-reject");
+            const buttonBlock = item.querySelector(".btn-block");
+            buttonAccept?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              handleRequest(req.id, "validated", item);
+            });
+            buttonReject?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              handleRequest(req.id, "rejected", item);
+            });
+            buttonBlock?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              handleRequest(req.id, "blocked", item);
+            });
+            notifList.appendChild(item);
+          });
+        } catch (error) {
+          console.error("Error fetching notifications:", error);
+        }
+        const handleRequest = async (askerId, action, itemDiv) => {
+          const userId2 = localStorage.getItem("userId");
+          try {
+            const response = await fetch(`/api/users/${userId2}/friendships/${itemDiv.dataset.friendshipId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: askerId, status: action })
+              // id devient le asker id cas celui qui envoie la demande d'amitie
+            });
+            if (response.ok) {
+              itemDiv.style.opacity = "0";
+              setTimeout(() => itemDiv.remove(), 300);
+              if (action === "validated") loadFriends();
+              checkNotifications();
+            } else {
+              console.error("Failed to update request");
+            }
+          } catch (error) {
+            console.error("Network error", error);
+          }
+        };
+      };
+      notifButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifDropdown.classList.toggle("hidden");
+        document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+        if (!notifDropdown.classList.contains("hidden")) {
+          checkNotifications();
+        }
+      });
+      document.addEventListener("click", (e) => {
+        if (!notifDropdown.contains(e.target) && !notifButton.contains(e.target))
+          notifDropdown.classList.add("hidden");
+      });
+      checkNotifications();
+      setInterval(checkNotifications, 3e4);
+    }
+    if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+      addFriendButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addFriendDropdown.classList.toggle("hidden");
+        document.getElementById("status-dropdown")?.classList.add("hidden");
+        document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+        document.getElementById("animation-dropdown")?.classList.add("hidden");
+        document.getElementById("font-dropdown")?.classList.add("hidden");
+        document.getElementById("background-dropdown")?.classList.add("hidden");
+        if (!addFriendDropdown.classList.contains("hidden")) {
+          friendSearchInput.focus();
+        }
+      });
+      const sendFriendRequest = async () => {
+        const searchValue = friendSearchInput.value.trim();
+        if (!searchValue) {
+          showFriendMessage("Please enter a username or email", "error");
+          return;
+        }
+        const userId = localStorage.getItem("userId");
+        try {
+          const response = await fetch(`/api/users/${userId}/friendships`, {
+            // on lance la requete sur cette route
+            method: "POST",
+            // post pour creer la demande -> patch quand on l'accepte?
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ alias: searchValue })
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showFriendMessage("Friend request sent!", "success");
+            friendSearchInput.value = "";
+            setTimeout(() => {
+              addFriendDropdown.classList.add("hidden");
+              friendRequestMessage?.classList.add("hidden");
+            }, 1500);
+          } else {
+            showFriendMessage(data.message || "Error sending request", "error");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          showFriendMessage("Network error", "error");
+        }
+      };
+      const showFriendMessage = (message, type) => {
+        if (friendRequestMessage) {
+          friendRequestMessage.textContent = message;
+          friendRequestMessage.classList.remove("hidden", "text-green-600", "text-red-600");
+          friendRequestMessage.classList.add(type === "success" ? "text-green-600" : "text-red-600");
+        }
+      };
+      sendFriendRequestBtn.addEventListener("click", sendFriendRequest);
+      friendSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          sendFriendRequest();
+        }
+      });
+      cancelFriendRequestBtn.addEventListener("click", () => {
+        addFriendDropdown.classList.add("hidden");
+        friendSearchInput.value = "";
+        friendRequestMessage?.classList.add("hidden");
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+          addFriendDropdown.classList.add("hidden");
+          friendRequestMessage?.classList.add("hidden");
+        }
+      });
+    }
     const getStatusDot = (status) => {
       switch (status) {
         case "available":
@@ -3945,8 +4141,7 @@
         const friendId = parseInt(item.dataset.id || "0");
         const ids = [connectedUserId, friendId].sort((a, b) => a - b);
         const channelKey = `channel_${ids[0]}_${ids[1]}`;
-        console.log("numero de la channel:", channelKey);
-        const currentChannel2 = channelKey;
+        currentChannel = channelKey;
         socket.emit("joinChannel", channelKey);
         if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
         if (channelChat) channelChat.classList.remove("hidden");
@@ -3968,15 +4163,16 @@
       const contactsList = document.getElementById("contacts-list");
       if (!userId || !contactsList) return;
       try {
-        const response = await fetch(`/api/user/${userId}/friends`);
+        const response = await fetch(`/api/users/${userId}/friends`);
         if (!response.ok) throw new Error("Failed to fetch friends");
-        const friends = await response.json();
+        const responseData = await response.json();
+        const friendList = responseData.data;
         contactsList.innerHTML = "";
-        if (friends.length === 0) {
-          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friends yet</div>';
+        if (!friendList || friendList.length === 0) {
+          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
           return;
         }
-        friends.forEach((friend) => {
+        friendList.forEach((friend) => {
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
           friendItem.dataset.id = friend.id;
@@ -4467,8 +4663,20 @@
     socket.on("connect", () => {
       addMessage("Connected to chat server!");
     });
+    socket.on("msg_history", (data) => {
+      if (messagesContainer) {
+        messagesContainer.innerHTML = "";
+        if (data.msg_history && data.msg_history.length > 0) {
+          data.msg_history.forEach((msg) => {
+            addMessage(msg.msg_content, msg.sender_alias);
+          });
+        } else {
+          console.log("No former message in this channel");
+        }
+      }
+    });
     socket.on("chatMessage", (data) => {
-      addMessage(data.message || data, data.author || "Anonyme");
+      addMessage(data.msg_content, data.sender_alias);
     });
     socket.on("disconnected", () => {
       addMessage("Disconnected from chat server!");
@@ -4476,10 +4684,11 @@
     messageInput.addEventListener("keyup", (event) => {
       if (event.key == "Enter" && messageInput.value.trim() != "") {
         const msg_content = messageInput.value;
-        const username = localStorage.getItem("username");
+        const sender_alias = localStorage.getItem("username");
         const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
         socket.emit("chatMessage", {
           sender_id,
+          sender_alias,
           channel: currentChannel,
           msg_content
         });
@@ -4502,11 +4711,30 @@
   }
 
   // scripts/pages/ProfilePage.html
-  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n	<div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n			 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n	</div>\n	<div class="min-h-screen flex items-center justify-center">\n	\n		<div class="window" style="width: 900px;">\n		<div class="title-bar">\n			<div class="title-bar-text">Profil</div>\n			<div class="title-bar-controls">\n				<button aria-label="Minimize"></button>\n				<button aria-label="Maximize"></button>\n				<button aria-label="Close"></button>\n			</div>\n		</div>\n	\n		<div class="window-body">\n	\n			<!-- Main content -->\n			<div class="flex flex-col items-center py-12">\n	\n			<div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n	\n				<!-- Left: My Profile -->\n				<div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n				<h1 class="text-lg font-normal mb-4">My Profile</h1>\n	\n				<!-- Profile picture -->\n				<div class="relative w-[170px] h-[170px] mb-4">\n					<img class="absolute inset-0 w-full h-full object-cover"\n					src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n					<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n					src="https://wlm.vercel.app/assets/usertiles/default.png">\n				</div>\n	\n				<!-- Profile info -->\n				<div class="text-sm text-left w-full leading-6">\n					<p><strong>FAUSToche01</strong></p>\n					<p>c00uk\xF6\xFC les kop1</p>\n					<p>Status: <span class="text-red-600">dcdscsd</span></p>\n					<p>Email: fsdsdsfsd</p>\n					<p>Password: dfsdcsd</p>\n					<p>Background: scscsd</p>\n				</div>\n				</div>\n	\n				<!-- Right: Profile editor -->\n				<div class="flex flex-col justify-between flex-1">\n	\n				<!-- Upper section -->\n				<div class="flex flex-col gap-4">\n					<div>\n					<label class="text-sm">Username:</label>\n					<input type="text" value="FAUSToche01"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Choose your message:</label>\n					<input type="text" value="c00uk\xF6\xFC les kop1"\n						class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n					</div>\n	\n					<div>\n					<label class="text-sm">Status:</label>\n					<div class="flex items-center gap-2 mt-1">\n						<span class="text-gray-600 text-sm">Choose your status:</span>\n						<select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n						<option>Available</option>\n						<option selected>Busy</option>\n						<option>Away</option>\n						<option>Appear offline</option>\n						</select>\n					</div>\n					</div>\n				</div>\n	\n				<!-- Danger Zone -->\n				<div class="mt-8 border-t border-gray-300 pt-4">\n					<h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! \u26A0\uFE0F</h2>\n					<div class="flex items-center justify-start gap-6">\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Email</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					<div class="flex items-center gap-2">\n						<span class="text-sm">Password</span>\n						<button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">\n						Change\n						</button>\n					</div>\n					</div>\n				</div>\n	\n				</div>\n	\n			</div>\n			</div>\n	\n		</div>\n		</div>\n	\n	\n	\n	</div>\n	\n\n</div>	\n';
+  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width: 900px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Profil</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body">\n                <div class="flex flex-col items-center py-12">\n                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n                            <h1 class="text-lg font-normal mb-4">My Profile</h1>\n            \n                            <div class="relative w-[170px] h-[170px] mb-4">\n                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                                src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                                \n                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                                src="https://wlm.vercel.app/assets/usertiles/default.png">\n            \n                                <button id="edit-picture-button" class="absolute bottom-4 right-4 z-20 p-1.5 rounded-sm shadow-sm hover:bg-gray-100 cursor-pointer transition-colors">\u{1F58D}\uFE0F</button>\n                            </div>\n\n\n							<!-- Modal Window -->\n                            <div id="picture-modal" class="fixed inset-0 bg-white bg-opacity-50 z-50 hidden items-center justify-center">\n                                <div class="window" style="width: 500px;">\n                                    <div class="title-bar">\n                                        <div class="title-bar-text">Edit Picture</div>\n                                        <div class="title-bar-controls">\n                                            <button aria-label="Minimize"></button>\n                                            <button aria-label="Maximize"></button>\n                                            <button id="close-modal" aria-label="Close"></button>\n                                        </div>\n                                    </div>\n                                    <div class="window-body">\n                                        <div class="p-8 text-center">\n                                            <p class="text-lg">CHANGEMENT DE LA PHOTO</p>\n                                        </div>\n                                    </div>\n                                </div>\n                            </div>\n\n\n\n                            <div class="text-sm text-center w-full leading-6">\n                                <p id="username-profile"><strong>Username</strong></p>\n                                <p id="bio-profile">c00uk\xF6\xFC les kop1</p>\n                            </div>\n                        </div>\n            \n                        <div class="flex flex-col justify-between flex-1">\n                            <div class="flex flex-col gap-4">\n                                <div>\n                                    <label class="text-sm">Username:</label>\n                                    <input type="text" value="" placeholder="Username" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                </div>\n                                <div>\n                                    <label class="text-sm">Share a quick message:</label>\n                                    <input type="text" value="" placeholder="Share a quick message" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                </div>\n                                <div>\n                                    <label class="text-sm">Status:</label>\n                                    <div class="flex items-center gap-2 mt-1">\n                                        <select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n                                            <option>Available</option>\n                                            <option selected>Busy</option>\n                                            <option>Away</option>\n                                            <option>Appear offline</option>\n                                        </select>\n                                    </div>\n                                </div>\n                            </div>\n            \n                            <div class="mt-8 border-t border-gray-300 pt-4">\n                                <div class="flex items-center justify-start gap-6">\n                                    <div class="flex items-end gap-4">\n                                        <div>\n                                            <label class="text-sm">Email:</label>\n                                            <input type="email" value="" placeholder="email@gmail.com" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                        </div>\n                                        <button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    </div>\n                                </div>\n                                <div class="flex items-end gap-4 mt-2">\n                                    <div>\n                                        <label class="text-sm">Password:</label>\n                                        <input type="password" value="" placeholder="***********" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                    </div>\n                                    <button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/ProfilePage.ts
   function render3() {
     return ProfilePage_default;
+  }
+  function afterRender2() {
+    const editProfilePic = document.getElementById("edit-picture-button");
+    const modal = document.getElementById("picture-modal");
+    const closeModal = document.getElementById("close-modal");
+    editProfilePic?.addEventListener("click", () => {
+      modal?.classList.remove("hidden");
+      modal?.classList.add("flex");
+    });
+    closeModal?.addEventListener("click", () => {
+      modal?.classList.add("hidden");
+      modal?.classList.remove("flex");
+    });
+    modal?.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    });
   }
 
   // scripts/pages/NotFound.ts
@@ -4704,7 +4932,7 @@
     },
     "/profile": {
       render: render3,
-      afterRender: () => console.log("Profil page charg\xE9e -> modifications de la page de profil, photo etc")
+      afterRender: afterRender2
     },
     "/register": {
       render: RegisterPage,

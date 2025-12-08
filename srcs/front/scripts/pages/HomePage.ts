@@ -151,6 +151,236 @@ export function afterRender(): void {
 	const chatHeaderBio = document.getElementById('chat-header-bio');
 
 
+	const addFriendButton = document.getElementById('add-friend-button');
+	const addFriendDropdown = document.getElementById('add-friend-dropdown');
+	const friendSearchInput = document.getElementById('friend-search-input') as HTMLInputElement;
+	const sendFriendRequestBtn = document.getElementById('send-friend-request');
+	const cancelFriendRequestBtn = document.getElementById('cancel-friend-request');
+	const friendRequestMessage = document.getElementById('friend-request-message');
+
+	const notifButton = document.getElementById('notification-button');
+	const notifDropdown = document.getElementById('notification-dropdown');
+	const notifList = document.getElementById('notification-list');
+	const notifBadge = document.getElementById('notification-badge');
+
+
+	// ---------------------------------------------------
+	// ----           LOGIQUE DES AMIS.               ----
+	// ---------------------------------------------------    
+
+	if (notifButton && notifDropdown && notifList) {
+		const checkNotifications = async () => {
+		const userId = localStorage.getItem('userId');
+		if (!userId) return;
+
+		try {
+			const response = await fetch(`/api/users/${userId}/friendships/pendings`);
+			if (!response.ok) throw new Error('Failed to fetch friends');
+
+			const requests = await response.json();
+			const pendingList = requests.data;   // <--- LA VRAIE LISTE
+
+			// --- Badge ---
+			if (requests.length > 0) notifBadge?.classList.remove('hidden');
+			else notifBadge?.classList.add('hidden');
+
+			// --- Liste ---
+			notifList.innerHTML = '';
+
+			if (requests.length === 0) {
+				notifList.innerHTML =
+					'<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+				return;
+			}
+
+			pendingList.forEach((req) => {
+				const item = document.createElement('div');
+				console.log("REQ:", req);
+
+				item.dataset.friendshipId = req.friendshipId;
+				item.className =
+					"flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+
+				item.innerHTML = `
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-semibold truncate">${req.alias}</p>
+						<p class="text-xs text-gray-500">Wants to be your friend</p>
+					</div>
+					<div class="flex gap-1">
+						<button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
+						<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">✕</button>
+						<button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">🚫</button>
+					</div>
+				`;
+
+
+				const buttonAccept = item.querySelector('.btn-accept');
+				const buttonReject = item.querySelector('.btn-reject');
+				const buttonBlock  = item.querySelector('.btn-block');
+
+				buttonAccept?.addEventListener('click', (e) => {
+					e.stopPropagation();
+					handleRequest(req.id, 'validated', item);
+				});
+
+				buttonReject?.addEventListener('click', (e) => {
+					e.stopPropagation();
+					handleRequest(req.id, 'rejected', item);
+				});
+
+				buttonBlock?.addEventListener('click', (e) => {
+					e.stopPropagation();
+					handleRequest(req.id, 'blocked', item);
+				});
+
+				notifList.appendChild(item);
+			});
+
+		} catch (error) {
+			console.error("Error fetching notifications:", error);
+		}
+		const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { // itemDiv en html pour afficher le code html 
+
+		const userId = localStorage.getItem('userId'); // je recuperer mon user id = pas le askerid!
+		//const friendshipId = itemDiv.dataset.id;
+
+
+		try {
+				const response = await fetch(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id: askerId, status: action }) // id devient le asker id cas celui qui envoie la demande d'amitie
+				});
+
+				if (response.ok) {
+					itemDiv.style.opacity = '0'; // on anime la suppression
+					setTimeout(() => itemDiv.remove(), 300); // et on rajouteu n timeout
+					if (action === 'validated') loadFriends(); // on recharge la liste d'ami une fois qu'on a cliqué sur envoyé
+					checkNotifications(); // est-ce qu'il reste des notifications?
+				} else {
+					console.error("Failed to update request");
+				}
+			} catch (error) {
+				console.error("Network error", error);
+			}
+		};
+	};
+
+
+		notifButton.addEventListener('click', (e) => {
+			e.stopPropagation();
+			notifDropdown.classList.toggle('hidden');
+			//onferme les autres mensu
+			document.getElementById('add-friend-dropdown')?.classList.add('hidden');
+			if (!notifDropdown.classList.contains('hidden')) {
+				checkNotifications();
+			}
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!notifDropdown.contains(e.target as Node) && !notifButton.contains(e.target as Node))
+				notifDropdown.classList.add('hidden');
+		});
+
+		checkNotifications();
+		setInterval(checkNotifications, 30000);
+	}
+
+
+	// ---------------------------------------------------
+	// ----           LOGIQUE DES AMIS.               ----
+	// ---------------------------------------------------
+
+
+	if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+		
+		// ouverture ou fermeture du dropdown
+		addFriendButton.addEventListener('click', (e) => {
+			e.stopPropagation();
+			addFriendDropdown.classList.toggle('hidden');
+			
+			// fermeture des autres menus
+			document.getElementById('status-dropdown')?.classList.add('hidden');
+			document.getElementById('emoticon-dropdown')?.classList.add('hidden');
+			document.getElementById('animation-dropdown')?.classList.add('hidden');
+			document.getElementById('font-dropdown')?.classList.add('hidden');
+			document.getElementById('background-dropdown')?.classList.add('hidden');
+			
+			if (!addFriendDropdown.classList.contains('hidden')) {
+				friendSearchInput.focus();
+			}
+		});
+
+		// envoi de la demande d'ami -> quel route on choisi>
+		const sendFriendRequest = async () => {
+			const searchValue = friendSearchInput.value.trim(); // onretire les espaces etc
+			
+			if (!searchValue) { // si vide alors message d;erreur
+				showFriendMessage('Please enter a username or email', 'error');
+				return;
+			}
+
+			const userId = localStorage.getItem('userId');
+
+			try {
+				const response = await fetch(`/api/users/${userId}/friendships`, { // on lance la requete sur cette route
+					method: 'POST', // post pour creer la demande -> patch quand on l'accepte?
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ alias: searchValue })
+				});
+
+				const data = await response.json();
+
+				if (response.ok) {
+					showFriendMessage('Friend request sent!', 'success'); // si ok alors la friend request en envoyee
+					friendSearchInput.value = '';
+					
+					setTimeout(() => { // timeout pour pas garder le menu ouvert indefiniment
+						addFriendDropdown.classList.add('hidden');
+						friendRequestMessage?.classList.add('hidden');
+					}, 1500);
+				} else {
+					showFriendMessage(data.message || 'Error sending request', 'error');
+				}
+			} catch (error) {
+				console.error('Error:', error);
+				showFriendMessage('Network error', 'error');
+			}
+		};
+
+		// affichage pour l'utilisateur
+		const showFriendMessage = (message: string, type: 'success' | 'error') => {
+			if (friendRequestMessage) {
+				friendRequestMessage.textContent = message;
+				friendRequestMessage.classList.remove('hidden', 'text-green-600', 'text-red-600');
+				friendRequestMessage.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
+			}
+		};
+
+		// clic sur envoyer
+		sendFriendRequestBtn.addEventListener('click', sendFriendRequest);
+		
+		friendSearchInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				sendFriendRequest();
+			}
+		});
+
+		cancelFriendRequestBtn.addEventListener('click', () => {
+			addFriendDropdown.classList.add('hidden');
+			friendSearchInput.value = '';
+			friendRequestMessage?.classList.add('hidden');
+		});
+
+		document.addEventListener('click', (e) => {
+			const target = e.target as HTMLElement;
+			if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+				addFriendDropdown.classList.add('hidden');
+				friendRequestMessage?.classList.add('hidden');
+			}
+		});
+	}
+
 	// ---------------------------------------------------
 	// ----           LOGIQUE DE LA MITIE               ----
 	// ---------------------------------------------------    
@@ -178,9 +408,7 @@ export function afterRender(): void {
 			const ids = [connectedUserId, friendId].sort((a, b) => a - b);
 			const channelKey = `channel_${ids[0]}_${ids[1]}`;
 
-			console.log("numero de la channel:", channelKey);
-
-			const currentChannel = channelKey;
+			currentChannel = channelKey;
 			socket.emit("joinChannel", channelKey);
 
 			// affichage du chat
@@ -213,23 +441,24 @@ export function afterRender(): void {
 		if (!userId || !contactsList) return;
 
 		try {
-			const response = await fetch(`/api/user/${userId}/friends`);
+			const response = await fetch(`/api/users/${userId}/friends`);
 			if (!response.ok) throw new Error('Failed to fetch friends');
 			
-			const friends = await response.json();
-
+			const responseData = await response.json();
+			const friendList = responseData.data;
 			// on vide la liste
 			contactsList.innerHTML = '';
-
-			if (friends.length === 0) {
-				contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friends yet</div>';
+			
+			if (!friendList || friendList.length === 0) {
+				contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
 				return;
 			}
 
-			friends.forEach((friend: any) => {
+			friendList.forEach((friend: any) => {
 				const friendItem = document.createElement('div');
 				friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
-				
+
+
 				// on stocke tout
 				friendItem.dataset.id = friend.id;
 				friendItem.dataset.username = friend.alias;
@@ -970,14 +1199,33 @@ async function finalize(text: string) {
 		addMessage("Connected to chat server!");
 	});
 
+	socket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) =>
+	{
+		if (messagesContainer) 
+		{
+			messagesContainer.innerHTML = '';
+			if (data.msg_history && data.msg_history.length > 0) 
+			{
+				data.msg_history.forEach((msg) =>
+				{
+					addMessage(msg.msg_content, msg.sender_alias);
+				});
+			}
+			else
+			{
+				console.log("No former message in this channel");
+			}
 
+		}
+	});
 
 	// on va écouter l'événement chatmessage venant du serveur
-	socket.on("chatMessage", (data: any) => {
+	socket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
 			// le backend va renvoyer data, 
 			// il devrait plus renvoyer message: "" author: ""
-		addMessage(data.message || data, data.author || "Anonyme");
+		addMessage(data.msg_content, data.sender_alias);
 	});
+
 
 	socket.on("disconnected", () => {
 		addMessage("Disconnected from chat server!");
@@ -992,10 +1240,12 @@ async function finalize(text: string) {
 		if (event.key == 'Enter' && messageInput.value.trim() != '') {
 			const msg_content = messageInput.value;
 			// on envoie le message au serveur avec emit
-			const username = localStorage.getItem('username');
+			const sender_alias = localStorage.getItem('username');
 			const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+			// console.log("FRONT: currentChannel: ", currentChannel);
 			socket.emit("chatMessage", {
 				sender_id: sender_id,
+				sender_alias: sender_alias,
 				channel: currentChannel,
 				msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
 			messageInput.value = ''; // on vide l'input
