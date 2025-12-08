@@ -25,7 +25,7 @@ export async function initDatabase(): Promise<Database> {
 		CREATE TABLE IF NOT EXISTS CHANNELS (
         	id INTEGER PRIMARY KEY AUTOINCREMENT,
         	name TEXT UNIQUE NOT NULL DEFAULT 'general' CHECK (length(name) < 255),
-			dm_key TEXT UNIQUE,
+			channel_key TEXT UNIQUE,
         	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       	)
     `);
