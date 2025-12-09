@@ -3698,7 +3698,7 @@
 
 						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
 							
-							<div class="flex items-center gap-4 border-b border-gray-200 pb-2 mb-2">
+							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
 										<!-- l'image (profil principal) -->
@@ -3717,6 +3717,35 @@
 										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
 									</div>
 								</div>
+								
+								<div class="relative self-start mt-2">
+									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
+										<img src="/assets/chat/meatball.png"
+											 alt="options"
+											 class="w-6 h-6 object-contain"
+											 style="width: 24px; height: 24px; display: block;">
+									</button>
+
+
+
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden">
+										<button id="button-view-profile" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
+											View my friend's profile
+										</button>
+										<button id="button-invite-game" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
+											Invite to play
+										</button>
+										<button id="button-report-user" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
+											Report user
+										</button>
+										<button id="button-block-user" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
+											Report user
+										</button>
+									</div>
+
+								</div> <!-- fin de la div menu ...-->
+
+
 							</div>
 
 
@@ -3818,6 +3847,32 @@
     let globalPath = "/assets/emoticons/";
     let animationPath = "/assets/animated/";
     let currentChannel = "general";
+    const statusImages = {
+      "available": "/assets/basic/status_online_small.png",
+      "busy": "/assets/basic/status_busy_small.png",
+      "away": "/assets/basic/status_away_small.png",
+      "invisible": "/assets/basic/status_offline_small.png",
+      "offline": "/assets/basic/status_offline_small.png"
+      // Sécurité au cas où
+    };
+    const statusLabels = {
+      "available": "(Available)",
+      "busy": "(Busy)",
+      "away": "(Away)",
+      "invisible": "(Appear offline)"
+    };
+    const getStatusDot = (status) => {
+      switch (status) {
+        case "available":
+          return "/assets/friends/online-dot.png";
+        case "busy":
+          return "/assets/friends/busy-dot.png";
+        case "away":
+          return "/assets/friends/away-dot.png";
+        default:
+          return "/assets/friends/offline-dot.png";
+      }
+    };
     const emoticons = {};
     const animations = {
       "(boucy_ball)": animationPath + "bouncy_ball.gif",
@@ -3950,8 +4005,29 @@
     const notifButton = document.getElementById("notification-button");
     const notifDropdown = document.getElementById("notification-dropdown");
     const notifList = document.getElementById("notification-list");
-    const notifBadge = document.getElementById("notification-badge");
     if (notifButton && notifDropdown && notifList) {
+      const handleRequest = async (askerId, action, itemDiv) => {
+        const userId = localStorage.getItem("userId");
+        try {
+          const response = await fetch(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: askerId, status: action })
+          });
+          if (response.ok) {
+            itemDiv.style.opacity = "0";
+            setTimeout(() => {
+              itemDiv.remove();
+              if (action === "validated") loadFriends();
+              checkNotifications();
+            }, 300);
+          } else {
+            console.error("Failed to update request");
+          }
+        } catch (error) {
+          console.error("Network error", error);
+        }
+      };
       const checkNotifications = async () => {
         const userId = localStorage.getItem("userId");
         if (!userId) return;
@@ -3960,8 +4036,12 @@
           if (!response.ok) throw new Error("Failed to fetch friends");
           const requests = await response.json();
           const pendingList = requests.data;
-          if (pendingList.length > 0) notifBadge?.classList.remove("hidden");
-          else notifBadge?.classList.add("hidden");
+          const notifIcon = document.getElementById("notification-icon");
+          if (pendingList.length > 0) {
+            if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+          } else {
+            if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
+          }
           notifList.innerHTML = "";
           if (pendingList.length === 0) {
             notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
@@ -3969,20 +4049,19 @@
           }
           pendingList.forEach((req) => {
             const item = document.createElement("div");
-            console.log("REQ:", req);
             item.dataset.friendshipId = req.friendshipId;
             item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
             item.innerHTML = `
-					<div class="flex-1 min-w-0">
-						<p class="text-sm font-semibold truncate">${req.alias}</p>
-						<p class="text-xs text-gray-500">Wants to be your friend</p>
-					</div>
-					<div class="flex gap-1">
-						<button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">\u2713</button>
-						<button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">\u2715</button>
-						<button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">\u{1F6AB}</button>
-					</div>
-				`;
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold truncate">${req.alias}</p>
+                            <p class="text-xs text-gray-500">Wants to be your friend</p>
+                        </div>
+                        <div class="flex gap-1">
+                            <button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">\u2713</button>
+                            <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">\u2715</button>
+                            <button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">\u{1F6AB}</button>
+                        </div>
+                    `;
             const buttonAccept = item.querySelector(".btn-accept");
             const buttonReject = item.querySelector(".btn-reject");
             const buttonBlock = item.querySelector(".btn-block");
@@ -4003,29 +4082,6 @@
         } catch (error) {
           console.error("Error fetching notifications:", error);
         }
-        const handleRequest = async (askerId, action, itemDiv) => {
-          const userId2 = localStorage.getItem("userId");
-          try {
-            const response = await fetch(`/api/users/${userId2}/friendships/${itemDiv.dataset.friendshipId}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: askerId, status: action })
-              // id devient le asker id cas celui qui envoie la demande d'amitie
-            });
-            if (response.ok) {
-              itemDiv.style.opacity = "0";
-              setTimeout(() => {
-                itemDiv.remove();
-                if (action === "validated") loadFriends();
-                checkNotifications();
-              }, 300);
-            } else {
-              console.error("Failed to update request");
-            }
-          } catch (error) {
-            console.error("Network error", error);
-          }
-        };
       };
       notifButton.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -4112,18 +4168,6 @@
         }
       });
     }
-    const getStatusDot = (status) => {
-      switch (status) {
-        case "available":
-          return "/assets/friends/online-dot.png";
-        case "busy":
-          return "/assets/friends/busy-dot.png";
-        case "away":
-          return "/assets/friends/away-dot.png";
-        default:
-          return "/assets/friends/offline-dot.png";
-      }
-    };
     const attachFriendClick = (item) => {
       item.addEventListener("click", () => {
         const friendUsername = item.dataset.username || "Unknown";
@@ -4133,17 +4177,24 @@
         const ids = [connectedUserId, friendId].sort((a, b) => a - b);
         const channelKey = `channel_${ids[0]}_${ids[1]}`;
         console.log("numero de la channel:", channelKey);
-        const currentChannel2 = channelKey;
+        currentChannel = channelKey;
         socket.emit("joinChannel", channelKey);
         if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
         if (channelChat) channelChat.classList.remove("hidden");
         const targetUsername = item.dataset.username || "Unknown";
         const targetBio = item.dataset.bio || "";
         const targetAvatar = item.dataset.avatar || "/assets/basic/default.png";
+        const targetStatus = item.dataset.status || "invisible";
         const chatHeaderAvatar2 = document.getElementById("chat-header-avatar");
+        const chatHeaderStatus = document.getElementById("chat-header-status");
         if (chatHeaderName) chatHeaderName.textContent = targetUsername;
         if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
         if (chatHeaderAvatar2) chatHeaderAvatar2.src = targetAvatar;
+        if (chatHeaderStatus && statusImages[targetStatus]) {
+          chatHeaderStatus.src = statusImages[targetStatus];
+        } else if (chatHeaderStatus) {
+          chatHeaderStatus.src = statusImages["invisible"];
+        }
         if (messagesContainer) {
           messagesContainer.innerHTML = "";
           addMessage(`Beginning of your conversation with ${targetUsername}`, "System");
@@ -4168,20 +4219,21 @@
         friendList.forEach((friend) => {
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          const status = friend.status || "invisible";
           friendItem.dataset.id = friend.id;
           friendItem.dataset.username = friend.alias;
+          friendItem.dataset.status = status;
           friendItem.dataset.bio = friend.bio || "Share a quick message";
           friendItem.dataset.avatar = friend.avatar_url || friend.avatar || "/assets/basic/default.png";
-          const status = friend.status || "invisible";
           friendItem.innerHTML = `
-					<div class="relative w-[50px] h-[50px] flex-shrink-0">
-						<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
-							 src="${getStatusDot(status)}" alt="status">
-					</div>
-					<div class="flex flex-col leading-tight">
-						<span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
-					</div>
-				`;
+                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
+                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                             src="${getStatusDot(status)}" alt="status">
+                    </div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+                    </div>
+                `;
           contactsList.appendChild(friendItem);
           attachFriendClick(friendItem);
         });
@@ -4204,8 +4256,6 @@
         }, 50);
       }
     };
-    `      
-	`;
     let currentInput = null;
     bioText?.addEventListener("click", () => {
       const input = document.createElement("input");
@@ -4258,18 +4308,6 @@
     const statusDropdown = document.getElementById("status-dropdown");
     const statusText = document.getElementById("current-status-text");
     const statusFrame = document.getElementById("user-status");
-    const statusImages = {
-      "available": "/assets/basic/status_online_small.png",
-      "busy": "/assets/basic/status_busy_small.png",
-      "away": "/assets/basic/status_away_small.png",
-      "invisible": "/assets/basic/status_offline_small.png"
-    };
-    const statusLabels = {
-      "available": "(Available)",
-      "busy": "(Busy)",
-      "away": "(Away)",
-      "invisible": "(Appear offline)"
-    };
     const updateStatusDisplay = (status) => {
       if (statusFrame && statusText && statusImages[status] && statusLabels[status]) {
         statusFrame.src = statusImages[status];
@@ -4284,10 +4322,6 @@
         });
       }
     };
-    socket.on("userConnected", (data) => {
-      console.log("User connected with status:", data.status);
-      updateStatusDisplay(data.status);
-    });
     const savedStatus = localStorage.getItem("userStatus") || "available";
     window.addEventListener("storage", (e) => {
       if (e.key === "userStatus" && e.newValue) {
@@ -4389,11 +4423,11 @@
       const imgUrl = animations[animationKey];
       if (imgUrl) {
         const animationHTML = `
-				<div>
-					<strong>${author} said:</strong><br>
-					<img src="${imgUrl}" alt="${animationKey}">
-				</div>
-			`;
+                <div>
+                    <strong>${author} said:</strong><br>
+                    <img src="${imgUrl}" alt="${animationKey}">
+                </div>
+            `;
         addCustomContent(animationHTML);
       } else {
         addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
@@ -4440,6 +4474,56 @@
         if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
           bgDropdown.classList.add("hidden");
         }
+      });
+    }
+    const chatOptionsButton = document.getElementById("chat-options-button");
+    const chatOptionsDropdown = document.getElementById("chat-options-dropdown");
+    if (chatOptionsButton && chatOptionsDropdown) {
+      chatOptionsButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        chatOptionsDropdown.classList.toggle("hidden");
+        document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+        document.getElementById("animation-dropdown")?.classList.add("hidden");
+        document.getElementById("font-dropdown")?.classList.add("hidden");
+        document.getElementById("background-dropdown")?.classList.add("hidden");
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!chatOptionsDropdown.contains(target) && !chatOptionsButton.contains(target)) {
+          chatOptionsDropdown.classList.add("hidden");
+        }
+      });
+      document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+        console.log(`Inviting ${currentChatUser} to play...`);
+        chatOptionsDropdown.classList.add("hidden");
+      });
+      document.getElementById("button-view-profile")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+        console.log(`Checking ${currentChatUser} profile...`);
+        chatOptionsDropdown.classList.add("hidden");
+      });
+      document.getElementById("button-report-user")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+        console.log(`Reporting ${currentChatUser} ...`);
+        chatOptionsDropdown.classList.add("hidden");
+      });
+      document.getElementById("button-block-user")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+        const connectedUserId = localStorage.getItem("userId");
+        if (!currentChatUser || !connectedUserId) return;
+        if (confirm(`Are you sure you want to block ${currentChatUser}?`)) {
+          try {
+            console.log(`Blocking user ${currentChatUser} ...`);
+          } catch (error) {
+            console.error("Eroor blocking user:", error);
+          }
+        }
+        chatOptionsDropdown.classList.add("hidden");
       });
     }
     const emoticonButton = document.getElementById("select-emoticon");
@@ -4694,10 +4778,45 @@
         if (avatarSrc && userProfileImg) {
           userProfileImg.src = avatarSrc;
         }
+        if (user.alias && userConnected) {
+          userConnected.textContent = user.alias;
+          localStorage.setItem("username", user.alias);
+        }
       }).catch((error) => {
         console.error("Cannot load user profile:", error);
       });
     }
+    const updateFriendUI = (username, newStatus) => {
+      const friendItems2 = document.querySelectorAll(".friend-item");
+      friendItems2.forEach((item) => {
+        const el = item;
+        if (el.dataset.username === username) {
+          el.dataset.status = newStatus;
+          const statusImg = el.querySelector('img[alt="status"]');
+          if (statusImg) {
+            statusImg.src = getStatusDot(newStatus);
+          }
+        }
+      });
+      const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+      if (currentChatUser === username) {
+        const chatHeaderStatus = document.getElementById("chat-header-status");
+        if (chatHeaderStatus && statusImages[newStatus]) {
+          chatHeaderStatus.src = statusImages[newStatus];
+        }
+      }
+    };
+    socket.on("friendStatusUpdate", (data) => {
+      console.log(`Status update for ${data.username}: ${data.status}`);
+      updateFriendUI(data.username, data.status);
+    });
+    socket.on("userConnected", (data) => {
+      if (data.username === currentUsername) {
+        updateStatusDisplay(data.status);
+      } else {
+        updateFriendUI(data.username, data.status);
+      }
+    });
   }
 
   // scripts/pages/ProfilePage.html
