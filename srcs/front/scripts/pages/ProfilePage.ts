@@ -35,6 +35,8 @@ export function afterRender(): void {
 
     const userId = localStorage.getItem('userId');
 
+    const userStatus = localStorage.getItem('')
+
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
 

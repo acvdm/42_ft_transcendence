@@ -1064,7 +1064,7 @@ async function finalize(text: string) {
 
 				styleButton.innerHTML = `<img src="/assets/chat/${styles.icon}" alt="${styles.title}" class="w-[14px] h-[14px]">`;
 
-				styleButton.addEventListener('click', (e) => { // pourquoi e pour error ici et pas event?
+				styleButton.addEventListener('click', (e) => {
 					e.stopPropagation();
 					wrapSelection(styles.tag, false);
 					fontDropdown.classList.add('hidden');
@@ -1085,7 +1085,6 @@ async function finalize(text: string) {
 			document.getElementById('animation-dropdown')?.classList.add('hidden');
 		});
 
-		// Gérer les clics sur TOUS les boutons du menu (Tags ET Couleurs) en même temps
 		fontDropdown.querySelectorAll('button').forEach(btn => {
 			btn.addEventListener('click', (e) => {
 				e.stopPropagation();
@@ -1105,9 +1104,6 @@ async function finalize(text: string) {
 			});
 		});
 	}
-
-	// NOTE: J'ai supprimé le bloc `document.querySelectorAll('button[data-color]')` qui était ici
-	// car il est maintenant géré juste au-dessus pour éviter les conflits.
 
 	document.addEventListener('click', (event) => {
 		const target = event.target as HTMLElement;

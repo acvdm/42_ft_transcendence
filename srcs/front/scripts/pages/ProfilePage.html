@@ -21,16 +21,18 @@
             
                         <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">
                             <h1 class="text-lg font-normal mb-4">My Profile</h1>
-            
-                            <div class="relative w-[170px] h-[170px] mb-4">
-                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+
+                            <div class="relative w-[170px] h-[170px] mb-1">
+                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
                                 src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
                                 
-                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10"
                                 src="https://wlm.vercel.app/assets/usertiles/default.png">
-            
-                                <button id="edit-picture-button" class="absolute bottom-6 right-6 z-30 p-1.5 rounded-sm shadow-sm hover:bg-gray-100 cursor-pointer transition-colors bg-white/80 backdrop-blur-sm">🖉</button>
                             </div>
+
+                            <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">
+                                Change my profile picture
+                            </button>
 
                             <div class="text-sm text-center w-full leading-6">
                                 <p id="username-profile"><strong>Username</strong></p>
@@ -98,8 +100,8 @@
             </div>
             <div class="window-body p-6">
                 <div class="mb-6">
-                    <h2 class="text-xl mb-1">Choose your picture</h2>
-                    <p class="text-gray-500 text-sm">Select how you want to appear on transcendence.</p>
+                    <h2 class="text-xl mb-1">Select a picture</h2>
+                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
                 </div>
                 
                 <div class="flex flex-row gap-6">
@@ -135,7 +137,7 @@
                             src="https://wlm.vercel.app/assets/usertiles/default.png">
                         </div>
 
-                        <div class="flex flex-col gap-2 w-full mt-2">
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
                             <input type="file" id="file-input" accept="image/*" hidden>
 
                             <button id="browse-button" 
@@ -144,30 +146,33 @@
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
                             BROWSE
                             </button>
+                            
                             <button id="delete-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
                             DELETE
                             </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-end gap-2">
-                    <button id="validation-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            OK
-                    </button>
-                    <button id="cancel-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            CANCEL
-                    </button>
-                </div>
+               
             </div>
         </div>
     </div>
