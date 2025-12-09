@@ -11,11 +11,12 @@ export async function initDatabase(): Promise<Database> {
     await db.exec('PRAGMA foreign_keys = ON;');
 
     // Table USERS
+    // j'ajoute un avatar par default ici!
     await db.exec(`
        CREATE TABLE IF NOT EXISTS USERS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         alias TEXT UNIQUE NOT NULL CHECK (length(alias) <= 30),
-        avatar_url TEXT,
+        avatar_url TEXT DEFAULT '/assets/basic/default.png', 
         bio TEXT CHECK (length(bio) < 75),
         status TEXT DEFAULT 'Available'
         ) 

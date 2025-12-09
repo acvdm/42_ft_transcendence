@@ -27,10 +27,12 @@ export async function createUserInDB (
     if (check_alias?.id)
         throw new Error('Alias already taken, find another one');
     
+    const avatarDefault = data.avatar_url || '/assets/basic/default.png'; // je rajoute ca pour avoir une image par default
+
     const result = await db.run(`
         INSERT INTO USERS (alias, avatar_url)
         VALUES (?, ?)`,
-        [data.alias, data.avatar_url]
+        [data.alias, avatarDefault]
     );
 
     if (!result.lastID) 
