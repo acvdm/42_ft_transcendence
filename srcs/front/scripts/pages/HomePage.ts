@@ -181,13 +181,13 @@ export function afterRender(): void {
 			const pendingList = requests.data;   // <--- LA VRAIE LISTE
 
 			// --- Badge ---
-			if (requests.length > 0) notifBadge?.classList.remove('hidden');
+			if (pendingList.length > 0) notifBadge?.classList.remove('hidden');
 			else notifBadge?.classList.add('hidden');
 
 			// --- Liste ---
 			notifList.innerHTML = '';
 
-			if (requests.length === 0) {
+			if (pendingList.length === 0) {
 				notifList.innerHTML =
 					'<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
 				return;
@@ -254,9 +254,11 @@ export function afterRender(): void {
 
 				if (response.ok) {
 					itemDiv.style.opacity = '0'; // on anime la suppression
-					setTimeout(() => itemDiv.remove(), 300); // et on rajouteu n timeout
-					if (action === 'validated') loadFriends(); // on recharge la liste d'ami une fois qu'on a cliqué sur envoyé
-					checkNotifications(); // est-ce qu'il reste des notifications?
+					setTimeout(() => {
+						itemDiv.remove();
+						if (action === 'validated') loadFriends(); // on recharge la liste d'ami une fois qu'on a cliqué sur envoyé
+						checkNotifications(); // est-ce qu'il reste des notifications?
+					}, 300);
 				} else {
 					console.error("Failed to update request");
 				}
@@ -624,6 +626,11 @@ async function finalize(text: string) {
 	});
 
 	const savedStatus = localStorage.getItem('userStatus') || 'available';
+	window.addEventListener('storage', (e) => {
+		if (e.key === 'userStatus' && e.newValue) {
+			updateStatusDisplay(e.newValue);
+		}
+	});
 	updateStatusDisplay(savedStatus);
 
 	if (statusSelector && statusDropdown && statusText && statusFrame) {

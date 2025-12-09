@@ -193,6 +193,35 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 	{
 		fastify.log.error(err);
 		return reply.status(500).send({
+			success: false, // c'est true ici non?
+			data: null,
+			error: { message: 'Failed to update bio' }
+		});
+	}
+})
+
+
+/* -- UPDATE ALIAS -- */
+fastify.patch('/users/:id/alias', async (request, reply) =>
+{
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	const { alias } = request.body as { alias: string };
+
+	try
+	{
+		console.log("Try to change alias in back: ", userId);
+		userRepo.updateAlias(db, userId, alias);
+		return reply.status(200).send({
+			success: true,
+			data: {alias: alias},
+			error: null
+		});
+	}
+	catch (err)
+	{
+		fastify.log.error(err);
+		return reply.status(500).send({
 			success: false,
 			data: null,
 			error: { message: 'Failed to update bio' }

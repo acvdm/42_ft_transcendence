@@ -16,11 +16,17 @@ export function render(): string {
 export function afterRender(): void {
 
     const mainAvatar = document.getElementById('current-avatar') as HTMLImageElement;
+    const statusFrame = document.getElementById('current-statut') as HTMLImageElement;
     const usernameDisplay = document.getElementById('username-profile');
     const bioDisplay = document.getElementById('bio-profile');
     const modal = document.getElementById('picture-modal');
     
-    // buoutons
+    // Inputs pour username et bio
+    const usernameInput = document.querySelector('input[placeholder="Username"]') as HTMLInputElement;
+    const bioInput = document.querySelector('input[placeholder="Share a quick message"]') as HTMLInputElement;
+    const statusSelect = document.querySelector('select') as HTMLSelectElement;
+    
+    // boutons
     const editButton = document.getElementById('edit-picture-button');
     const closeButton = document.getElementById('close-modal');
     const cancelButton = document.getElementById('cancel-button');
@@ -35,10 +41,31 @@ export function afterRender(): void {
 
     const userId = localStorage.getItem('userId');
 
-    const userStatus = localStorage.getItem('')
-
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
+
+    // Mapping des status vers les images de frame
+    const statusImages: { [key: string]: string } = {
+        'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
+        'busy':      'https://wlm.vercel.app/assets/status/status_frame_busy_large.png',
+        'away':      'https://wlm.vercel.app/assets/status/status_frame_away_large.png',
+        'invisible': 'https://wlm.vercel.app/assets/status/status_frame_offline_large.png'
+    };
+
+    // Mapping des valeurs du select vers les valeurs de la DB
+    const statusMapping: { [key: string]: string } = {
+        'Available': 'available',
+        'Busy': 'busy',
+        'Away': 'away',
+        'Appear offline': 'invisible'
+    };
+
+    const reverseStatusMapping: { [key: string]: string } = {
+        'available': 'Available',
+        'busy': 'Busy',
+        'away': 'Away',
+        'invisible': 'Appear offline'
+    };
 
 
     // ============================================================
@@ -86,20 +113,151 @@ export function afterRender(): void {
                     selectedImageSrc = user.avatar_url; 
                 }
 
-                // maj pseudo et bio sur la page principale
-                if (user.alias && usernameDisplay)
-                    usernameDisplay.innerText = user.alias;
+                // maj pseudo et bio sur la page principale ET dans les inputs
+                if (user.alias) {
+                    if (usernameDisplay) usernameDisplay.innerText = user.alias;
+                    if (usernameInput) usernameInput.value = user.alias;
+                }
 
-                if (user.bio && bioDisplay)
-                    bioDisplay.innerText = user.bio;
+                if (user.bio) {
+                    if (bioDisplay) bioDisplay.innerText = user.bio;
+                    if (bioInput) bioInput.value = user.bio;
+                }
+
+                // maj du status
+                if (user.status) {
+                    const statusValue = reverseStatusMapping[user.status] || 'Appear offline';
+                    if (statusSelect) statusSelect.value = statusValue;
+                    updateStatusFrame(user.status);
+                }
             }
         } catch (error) {
             console.error("Erreur while charging profile:", error);
         }
     };
 
+    // Fonction pour mettre à jour la frame du status
+    const updateStatusFrame = (status: string) => {
+        if (statusFrame && statusImages[status]) {
+            statusFrame.src = statusImages[status];
+        }
+    };
+
     // on recharge la page
     loadUserData();
+
+
+    // ============================================================
+    // ========== MAJ USERNAME ET BIO EN TEMPS RÉEL ===============
+    // ============================================================
+
+    // Mise à jour du username
+    const updateUsername = async (newUsername: string) => {
+        if (!userId || !newUsername.trim()) return;
+
+        try {
+            const response = await fetch(`api/users/${userId}/alias`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alias: newUsername })
+            });
+
+            if (response.ok) {
+                if (usernameDisplay) usernameDisplay.innerText = newUsername;
+                console.log("Username mis à jour");
+            } else {
+                console.error("Erreur lors de la mise à jour du username");
+                alert("Erreur lors de la sauvegarde du username");
+            }
+        } catch (error) {
+            console.error("Erreur réseau:", error);
+            alert("Erreur lors de la sauvegarde du username");
+        }
+    };
+
+    // Mise à jour de la bio
+    const updateBio = async (newBio: string) => {
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`api/users/${userId}/bio`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bio: newBio })
+            });
+
+            if (response.ok) {
+                if (bioDisplay) bioDisplay.innerText = newBio || "c00uköü les kop1";
+                console.log("Bio mise à jour");
+            } else {
+                console.error("Erreur lors de la mise à jour de la bio");
+                alert("Erreur lors de la sauvegarde de la bio");
+            }
+        } catch (error) {
+            console.error("Erreur réseau:", error);
+            alert("Erreur lors de la sauvegarde de la bio");
+        }
+    };
+
+    // Mise à jour du status
+    // Mise à jour du status
+    const updateStatus = async (newStatus: string) => {
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`api/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                updateStatusFrame(newStatus);
+                localStorage.setItem('userStatus', newStatus); // ← AJOUT ICI
+                console.log("Status mis à jour:", newStatus);
+            } else {
+                console.error("Erreur lors de la mise à jour du status");
+                alert("Erreur lors de la sauvegarde du status");
+            }
+        } catch (error) {
+            console.error("Erreur réseau:", error);
+            alert("Erreur lors de la sauvegarde du status");
+        }
+    };
+
+    // Event listeners pour les inputs
+    usernameInput?.addEventListener('blur', () => {
+        const newUsername = usernameInput.value.trim();
+        if (newUsername) {
+            updateUsername(newUsername);
+        }
+    });
+
+    usernameInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            usernameInput.blur();
+        }
+    });
+
+    bioInput?.addEventListener('blur', () => {
+        const newBio = bioInput.value.trim();
+        updateBio(newBio);
+    });
+
+    bioInput?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            bioInput.blur();
+        }
+    });
+
+    // Event listener pour le select du status
+    statusSelect?.addEventListener('change', () => {
+        const selectedValue = statusSelect.value;
+        const statusKey = statusMapping[selectedValue];
+        if (statusKey) {
+            updateStatus(statusKey);
+        }
+    });
 
 
     // ============================================================
@@ -156,7 +314,7 @@ export function afterRender(): void {
 
     // bouton delete qui reset l'image en par defaut
     deleteButton?.addEventListener('click', () => {
-        const defaultAvatar = "https://wlm.vercel.app/assets/usertiles/default.png"; // charger la version locale
+        const defaultAvatar = "https://wlm.vercel.app/assets/usertiles/default.png";
         selectedImageSrc = defaultAvatar;
         if (previewAvatar) previewAvatar.src = defaultAvatar;
     });
@@ -198,4 +356,4 @@ export function afterRender(): void {
             console.error("Network error:", error);
         }
     });
-};
+}

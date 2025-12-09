@@ -150,3 +150,33 @@ export async function updateAvatar(
         [avatar_url, user_id]
     );
 }
+
+// update de l'username
+
+export async function updateAlias (
+    db: Database,
+    user_id: number,
+    alias: string
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    if (alias.length > 30)
+        throw new Error(`Error: bio too long. Max 75 characters`);
+
+    const existingUser = await db.get(`
+        SELECT id FROM USERS WHERE alias = ? AND id != ?`,
+        [alias, user_id]
+    );
+
+    if (existingUser)
+        throw new Error('Alias already taken, be original.');
+
+    console.log("update username dans users.ts");
+    await db.run(`
+        UPDATE USERS SET alias = ? WHERE id = ?`,
+        [alias, user_id]
+    );
+}

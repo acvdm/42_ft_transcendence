@@ -3960,10 +3960,10 @@
           if (!response.ok) throw new Error("Failed to fetch friends");
           const requests = await response.json();
           const pendingList = requests.data;
-          if (requests.length > 0) notifBadge?.classList.remove("hidden");
+          if (pendingList.length > 0) notifBadge?.classList.remove("hidden");
           else notifBadge?.classList.add("hidden");
           notifList.innerHTML = "";
-          if (requests.length === 0) {
+          if (pendingList.length === 0) {
             notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
             return;
           }
@@ -4014,9 +4014,11 @@
             });
             if (response.ok) {
               itemDiv.style.opacity = "0";
-              setTimeout(() => itemDiv.remove(), 300);
-              if (action === "validated") loadFriends();
-              checkNotifications();
+              setTimeout(() => {
+                itemDiv.remove();
+                if (action === "validated") loadFriends();
+                checkNotifications();
+              }, 300);
             } else {
               console.error("Failed to update request");
             }
@@ -4287,6 +4289,11 @@
       updateStatusDisplay(data.status);
     });
     const savedStatus = localStorage.getItem("userStatus") || "available";
+    window.addEventListener("storage", (e) => {
+      if (e.key === "userStatus" && e.newValue) {
+        updateStatusDisplay(e.newValue);
+      }
+    });
     updateStatusDisplay(savedStatus);
     if (statusSelector && statusDropdown && statusText && statusFrame) {
       statusSelector.addEventListener("click", (e) => {
@@ -4702,9 +4709,13 @@
   }
   function afterRender2() {
     const mainAvatar = document.getElementById("current-avatar");
+    const statusFrame = document.getElementById("current-statut");
     const usernameDisplay = document.getElementById("username-profile");
     const bioDisplay = document.getElementById("bio-profile");
     const modal = document.getElementById("picture-modal");
+    const usernameInput = document.querySelector('input[placeholder="Username"]');
+    const bioInput = document.querySelector('input[placeholder="Share a quick message"]');
+    const statusSelect = document.querySelector("select");
     const editButton = document.getElementById("edit-picture-button");
     const closeButton = document.getElementById("close-modal");
     const cancelButton = document.getElementById("cancel-button");
@@ -4715,8 +4726,25 @@
     const previewAvatar = document.getElementById("modal-preview-avatar");
     const fileInput = document.getElementById("file-input");
     const userId = localStorage.getItem("userId");
-    const userStatus = localStorage.getItem("");
     let selectedImageSrc = mainAvatar?.src || "";
+    const statusImages = {
+      "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
+      "busy": "https://wlm.vercel.app/assets/status/status_frame_busy_large.png",
+      "away": "https://wlm.vercel.app/assets/status/status_frame_away_large.png",
+      "invisible": "https://wlm.vercel.app/assets/status/status_frame_offline_large.png"
+    };
+    const statusMapping = {
+      "Available": "available",
+      "Busy": "busy",
+      "Away": "away",
+      "Appear offline": "invisible"
+    };
+    const reverseStatusMapping = {
+      "available": "Available",
+      "busy": "Busy",
+      "away": "Away",
+      "invisible": "Appear offline"
+    };
     const closeModalFunc = () => {
       if (!modal) return;
       modal.classList.add("hidden");
@@ -4740,16 +4768,118 @@
             mainAvatar.src = user.avatar_url;
             selectedImageSrc = user.avatar_url;
           }
-          if (user.alias && usernameDisplay)
-            usernameDisplay.innerText = user.alias;
-          if (user.bio && bioDisplay)
-            bioDisplay.innerText = user.bio;
+          if (user.alias) {
+            if (usernameDisplay) usernameDisplay.innerText = user.alias;
+            if (usernameInput) usernameInput.value = user.alias;
+          }
+          if (user.bio) {
+            if (bioDisplay) bioDisplay.innerText = user.bio;
+            if (bioInput) bioInput.value = user.bio;
+          }
+          if (user.status) {
+            const statusValue = reverseStatusMapping[user.status] || "Appear offline";
+            if (statusSelect) statusSelect.value = statusValue;
+            updateStatusFrame(user.status);
+          }
         }
       } catch (error) {
         console.error("Erreur while charging profile:", error);
       }
     };
+    const updateStatusFrame = (status) => {
+      if (statusFrame && statusImages[status]) {
+        statusFrame.src = statusImages[status];
+      }
+    };
     loadUserData();
+    const updateUsername = async (newUsername) => {
+      if (!userId || !newUsername.trim()) return;
+      try {
+        const response = await fetch(`api/users/${userId}/alias`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ alias: newUsername })
+        });
+        if (response.ok) {
+          if (usernameDisplay) usernameDisplay.innerText = newUsername;
+          console.log("Username mis \xE0 jour");
+        } else {
+          console.error("Erreur lors de la mise \xE0 jour du username");
+          alert("Erreur lors de la sauvegarde du username");
+        }
+      } catch (error) {
+        console.error("Erreur r\xE9seau:", error);
+        alert("Erreur lors de la sauvegarde du username");
+      }
+    };
+    const updateBio = async (newBio) => {
+      if (!userId) return;
+      try {
+        const response = await fetch(`api/users/${userId}/bio`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bio: newBio })
+        });
+        if (response.ok) {
+          if (bioDisplay) bioDisplay.innerText = newBio || "c00uk\xF6\xFC les kop1";
+          console.log("Bio mise \xE0 jour");
+        } else {
+          console.error("Erreur lors de la mise \xE0 jour de la bio");
+          alert("Erreur lors de la sauvegarde de la bio");
+        }
+      } catch (error) {
+        console.error("Erreur r\xE9seau:", error);
+        alert("Erreur lors de la sauvegarde de la bio");
+      }
+    };
+    const updateStatus = async (newStatus) => {
+      if (!userId) return;
+      try {
+        const response = await fetch(`api/users/${userId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (response.ok) {
+          updateStatusFrame(newStatus);
+          localStorage.setItem("userStatus", newStatus);
+          console.log("Status mis \xE0 jour:", newStatus);
+        } else {
+          console.error("Erreur lors de la mise \xE0 jour du status");
+          alert("Erreur lors de la sauvegarde du status");
+        }
+      } catch (error) {
+        console.error("Erreur r\xE9seau:", error);
+        alert("Erreur lors de la sauvegarde du status");
+      }
+    };
+    usernameInput?.addEventListener("blur", () => {
+      const newUsername = usernameInput.value.trim();
+      if (newUsername) {
+        updateUsername(newUsername);
+      }
+    });
+    usernameInput?.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        usernameInput.blur();
+      }
+    });
+    bioInput?.addEventListener("blur", () => {
+      const newBio = bioInput.value.trim();
+      updateBio(newBio);
+    });
+    bioInput?.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        bioInput.blur();
+      }
+    });
+    statusSelect?.addEventListener("change", () => {
+      const selectedValue = statusSelect.value;
+      const statusKey = statusMapping[selectedValue];
+      if (statusKey) {
+        updateStatus(statusKey);
+      }
+    });
     editButton?.addEventListener("click", openModalFunc);
     closeButton?.addEventListener("click", closeModalFunc);
     cancelButton?.addEventListener("click", () => {
