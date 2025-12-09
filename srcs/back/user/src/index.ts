@@ -76,22 +76,27 @@ fastify.post('/users', async (request, reply) => {
 			}),
 		});
 
-		console.log("Objet Response brut:", authResponse);
+		const authJson = await authResponse.json();
 
+		console.log("Objet Response brut:", authResponse);
+		console.log("Reponse de l'Auth:", authJson);
     	// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
     	// MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
     	// d'abord on extrait les infos recues du service Auth
 
 		// il faut creer un json pour recuperer les donnees du fetch
-		const data = await authResponse.json();
-		if (data.success)
+		// const data = await authResponse.json();
+		if (authJson.success)
 		{
-			const authPayload = data.data;
-			if (!authPayload || !authPayload.refresh_token)
-				throw new Error("Auth service response is missing tokens inside data object");
+			// const authPayload = data; //.data MODIF
+			// if (!authPayload || !authPayload.refresh_token)
+			// 	throw new Error("Auth service response is missing tokens inside data object");
 
-    		const { refresh_token, access_token, user_id: authUserId } = authPayload;
+    		const { refresh_token, access_token, user_id } = authJson;//.data?
 
+			if (!access_token || !user_id) {
+				throw new Error("Tokens manquants dans la reponse de l'Auth")
+			}
     		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
     		reply.setCookie('refresh_token', refresh_token, {
     		  path: '/',
@@ -102,20 +107,20 @@ fastify.post('/users', async (request, reply) => {
     		  signed: true
     		});
 
-    		console.log("data from authResponse: ", data);
+    		// console.log("data from authResponse: ", data);
 
     		// on envoit pas le refresh token /!\
     		return reply.status(201).send({
-				success: true,
-					data: {
+				// success: true,
+					// data: {
     					access_token: access_token,
-    					user_id: authUserId
-					},
-				error: null
+    					user_id: user_id
+					// },
+				// error: null
     		});
 		}
 		else {
-			throw new Error(`Auth error: ${data.error.message}`); 
+			throw new Error(`Auth error: ${authJson.error.message}`); 
 		}
 
 	} 

@@ -57,7 +57,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: true,
+			sameSite: 'strict',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -120,7 +120,7 @@ fastify.post('/sessions', async (request, reply) =>
 });
 
 
-// dupliquye le session ?
+// duplique le /sessions ?
 fastify.post('/login', async (request, reply) => {
   const body = request.body as { email: string, password: string };
   

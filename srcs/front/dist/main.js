@@ -4917,6 +4917,7 @@
           body: JSON.stringify({ alias, email, password })
         });
         const result = await response.json();
+        console.log("RECEPTION DU BACKEND:", result);
         if (response.ok) {
           const { access_token, user_id } = result;
           console.log("User ID:", user_id);
