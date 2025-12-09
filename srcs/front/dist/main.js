@@ -4355,6 +4355,7 @@
           animationItem.addEventListener("click", (event) => {
             event.stopPropagation();
             socket.emit("sendAnimation", {
+              channel_key: currentChannel,
               animationKey: key,
               author: currentUsername
               // a remplacer par l'username de l'envoyeur 
@@ -4375,9 +4376,9 @@
       });
       fillAnimationGrid();
     }
-    socket.on("receivedAnimation", (data) => {
-      const { animationKey, author } = data;
+    socket.on("receivedAnimation", (animationKey, author) => {
       const imgUrl = animations[animationKey];
+      console.log(`animation key: ${animationKey}, author: ${author}`);
       if (imgUrl) {
         const animationHTML = `
 				<div>
@@ -4389,7 +4390,7 @@
       } else {
         addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
       }
-      console.log("erreur:", data.author);
+      console.log("erreur:", author);
     });
     const addCustomContent = (htmlContent) => {
       const msgElement = document.createElement("div");
@@ -4639,7 +4640,7 @@
     };
     if (wizzButton) {
       wizzButton.addEventListener("click", () => {
-        socket.emit("sendWizz", { author: currentUsername });
+        socket.emit("sendWizz", { channelKey: currentChannel, sender_alias: currentUsername });
         if (wizzContainer) {
           shakeElement(wizzContainer, 500);
         }
@@ -4665,6 +4666,7 @@
       }
     });
     socket.on("chatMessage", (data) => {
+      console.log("add message");
       addMessage(data.msg_content, data.sender_alias);
     });
     socket.on("disconnected", () => {
@@ -4675,10 +4677,11 @@
         const msg_content = messageInput.value;
         const sender_alias = localStorage.getItem("username");
         const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+        console.log("key chat Message");
         socket.emit("chatMessage", {
           sender_id,
           sender_alias,
-          channel: currentChannel,
+          channel_key: currentChannel,
           msg_content
         });
         messageInput.value = "";

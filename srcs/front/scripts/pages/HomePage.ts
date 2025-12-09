@@ -717,6 +717,7 @@ async function finalize(text: string) {
 
 					// envoi de l'animation via la sockettt
 					socket.emit("sendAnimation", {
+						channel_key: currentChannel,
 						animationKey: key,
 						author: currentUsername // a remplacer par l'username de l'envoyeur 
 					});
@@ -738,9 +739,11 @@ async function finalize(text: string) {
 		fillAnimationGrid();
 	}
 
-	socket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
-		const { animationKey, author } = data;
+	socket.on("receivedAnimation", (animationKey: string, author: string) => {
+		// const animationKey = data.animationKey;
+		// const author = data.author;
 		const imgUrl = animations[animationKey];
+		console.log(`animation key: ${animationKey}, author: ${author}`);
 		
 		if (imgUrl) {
 			 // Utilise une mise en forme spéciale pour les animations
@@ -754,7 +757,7 @@ async function finalize(text: string) {
 		} else {
 			addMessage(`Animation inconnue (${animationKey}) reçue de ${author}.`, "Système");
 		}
-		console.log("erreur:", data.author)
+		console.log("erreur:", author)
 	});
 
 	// Nouvelle fonction pour ajouter du contenu HTML arbitraire
@@ -1174,7 +1177,7 @@ async function finalize(text: string) {
 	if (wizzButton) {
 		wizzButton.addEventListener('click', () => {
 			// on envois l'element snedWizz au serveur
-			socket.emit("sendWizz", { author: currentUsername});
+			socket.emit("sendWizz", { channelKey: currentChannel, sender_alias: currentUsername});
 			// secousse pour l'expediteur et le receveur
 			if (wizzContainer) {
 				shakeElement(wizzContainer, 500);
@@ -1223,6 +1226,7 @@ async function finalize(text: string) {
 	socket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
 			// le backend va renvoyer data, 
 			// il devrait plus renvoyer message: "" author: ""
+		console.log("add message");
 		addMessage(data.msg_content, data.sender_alias);
 	});
 
@@ -1243,10 +1247,11 @@ async function finalize(text: string) {
 			const sender_alias = localStorage.getItem('username');
 			const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
 			// console.log("FRONT: currentChannel: ", currentChannel);
+			console.log("key chat Message");
 			socket.emit("chatMessage", {
 				sender_id: sender_id,
 				sender_alias: sender_alias,
-				channel: currentChannel,
+				channel_key: currentChannel,
 				msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
 			messageInput.value = ''; // on vide l'input
 		}

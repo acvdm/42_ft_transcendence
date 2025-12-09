@@ -6,6 +6,7 @@ export interface Message {
     msg_id: number;
     sender_id: number;
     sender_alias: string;
+    channel_key: string,
     msg_content: string;
     sent_at: string;
 }
@@ -27,6 +28,7 @@ export async function saveNewMessageinDB(
     msg_content: string 
 ): Promise<number | undefined> 
 {
+    console.log(`channelKey dans saveNewMessageinDB: ${channel_key}`);
     const channel = await findChannelByKey(db, channel_key);
     if (!channel?.id)
     {
@@ -43,6 +45,8 @@ export async function saveNewMessageinDB(
 
     if (!result?.lastID)
         throw new Error("Table MESSAGES [chat.sqlite]: Could not save message");
+
+    console.log(`message ${result.lastID} saved in ${channel_key}`);
     return result.lastID;
 }
 
@@ -65,38 +69,7 @@ export async function createChannel(
 }
 
 
-// export async function saveNewMemberinChannel(
-//     db: Database,
-//     channel_id: number,
-//     user_id: number
-// ): Promise<number | undefined> 
-// {
-//     const result = await db.run(`
-//         INSERT INTO CHANNEL_MEMBERS (channel_id, user_id)
-//         VALUES (?, ?)`,
-//         [channel_id, user_id]
-//     );
-
-//     if (!result?.lastID)
-//         throw new Error("TABLE CHANNEL_MEMBERS [chat.sqlite]: could not add new member into room: " + channel_id);
-//     return result.lastID;
-// }
-
-
-//-------- GET / READ
-// export async function getChannelByName(
-//     db: Database,
-//     channel: string
-// ): Promise<number | null> 
-// {
-//     const result = await db.get(`
-//         SELECT id FROM CHANNELS WHERE name = ?`,
-//         [channel]
-//     );
-
-//     return result ? result.id : null;
-// }
-
+//-------- GET
 export async function getHistoryByChannel(
     db: Database,
     channel_id: number

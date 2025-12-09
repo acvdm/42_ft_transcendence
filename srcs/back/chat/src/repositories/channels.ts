@@ -23,12 +23,13 @@ export async function findChannelByKey (
         return ;
     }
     
+    console.log(`channel ${channelKey} existe`);
     return channel;
 }
 
 export async function createChannel (
     db: Database,
-    channelKey: number
+    channelKey: string
 ): Promise<number | undefined> 
 {
     const result = await db.run(`
@@ -39,6 +40,8 @@ export async function createChannel (
 
     if (!result.lastID)
         throw new Error('Failed to create new channel');
+
+    console.log(`channel : ${channelKey} créé avec ID: ${result.lastID}`);
 
     return result.lastID;
 }
