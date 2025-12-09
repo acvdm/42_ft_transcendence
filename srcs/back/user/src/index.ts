@@ -201,6 +201,33 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 })
 
 
+// pour la route pour update la vatar
+
+/* -- UPDATE AVATAR -- */
+fastify.patch('/users/:id/avatar', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const userId = Number(id);
+    const { avatar } = request.body as { avatar: string };
+
+    try {
+        if (!avatar) throw new Error("No avatar provided");
+
+        await userRepo.updateAvatar(db, userId, avatar);
+        
+        return reply.status(200).send({
+            success: true,
+            data: { avatar: avatar },
+            error: null
+        });
+    } catch (err: any) {
+        fastify.log.error(err);
+        return reply.status(500).send({
+            success: false,
+            data: null,
+            error: { message: err.message || 'Failed to update avatar' }
+        });
+    }
+});
 
 
 //---------------------------------------

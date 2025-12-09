@@ -132,3 +132,21 @@ export async function rollbackDeleteUser (
         [user_id]
     );
 }
+
+
+// update de l'avatar
+
+export async function updateAvatar(
+    db: Database,
+    user_id: number,
+    avatar_url: string
+) {
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    await db.run(
+        `UPDATE USERS SET avatar_url = ? WHERE id = ?`,
+        [avatar_url, user_id]
+    );
+}

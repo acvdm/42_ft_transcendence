@@ -420,7 +420,7 @@ export function afterRender(): void {
 			const targetUsername = item.dataset.username || "Unknown";
 			const targetBio = item.dataset.bio || "";
 			const targetAvatar = item.dataset.avatar || "/assets/basic/default.png";
-
+			const chatHeaderAvatar = document.getElementById('chat-header-avatar') as HTMLElement;
 			// maj header
 			if (chatHeaderName) chatHeaderName.textContent = targetUsername;
 			if (chatHeaderBio) chatHeaderBio.textContent = targetBio;
@@ -465,7 +465,7 @@ export function afterRender(): void {
 				friendItem.dataset.id = friend.id;
 				friendItem.dataset.username = friend.alias;
 				friendItem.dataset.bio = friend.bio || "Share a quick message";
-				friendItem.dataset.avatar = friend.avatar || "/assets/basic/default.png";
+				friendItem.dataset.avatar = friend.avatar_url || friend.avatar || "/assets/basic/default.png";
 				
 				const status = friend.status || 'invisible'; 
 
@@ -511,9 +511,10 @@ export function afterRender(): void {
 	`
 	
 	// ---------------------------------------------------
-	// ----           LOGIQUE DE LA BIO               ----
+	// ----           LOGIQUE DE LA BIO et de la PHOTO              ----
 	// ---------------------------------------------------
 
+	
 let currentInput: HTMLInputElement | null = null;
 
 bioText?.addEventListener('click', () => {
@@ -1238,20 +1239,26 @@ async function finalize(text: string) {
 	// ---------------------------------------------------
 	
 	const myUserId = localStorage.getItem('userId'); 
+    const userProfileImg = document.getElementById('user-profile') as HTMLImageElement;
 
-	if (myUserId && bioText) {
-		fetch(`/api/users/${myUserId}`)
-			.then(response => {
-				if (!response.ok) throw new Error('Cannot get user');
-				return response.json();
-			})
-			.then(user => {
-				if (user.bio) {
-					bioText.innerHTML = parseMessage(user.bio);
-				}
-			})
-			.catch(error => {
-				console.error('Cannot load bio:', error);
-			});
-	}
+    if (myUserId) {
+        fetch(`/api/users/${myUserId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Cannot get user');
+                return response.json();
+            })
+            .then(user => {
+                if (user.bio && bioText) {
+                    bioText.innerHTML = parseMessage(user.bio);
+                }
+
+                const avatarSrc = user.avatar_url || user.avatar; 
+                if (avatarSrc && userProfileImg) {
+                    userProfileImg.src = avatarSrc;
+                }
+            })
+            .catch(error => {
+                console.error('Cannot load user profile:', error);
+            });
+    }
 }
