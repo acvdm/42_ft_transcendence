@@ -5054,6 +5054,12 @@
     };
     const updateBio = async (newBio) => {
       if (!userId) return false;
+      const trimmedBio = newBio.trim();
+      if (trimmedBio.length > 75) {
+        console.error("Error: bio is limited to 75 caracters");
+        alert(`Bio cannot exceed 75 caracters. Please, stop talking too much`);
+        return false;
+      }
       try {
         const response = await fetchWithAuth(`api/users/${userId}/bio`, {
           method: "PATCH",
@@ -5112,13 +5118,23 @@
       };
       changeButton.addEventListener("click", enableEditMode);
       input.addEventListener("input", () => {
-        const currentValue = input.value.trim();
-        const isChanged = fieldName === "password" ? currentValue.length > 0 : currentValue !== initialValue && currentValue.length > 0;
-        if (isChanged) {
+        const currentValue = input.value;
+        let isChanged = false;
+        let isValid = true;
+        if (fieldName === "bio") {
+          if (currentValue.length > 75)
+            isValid = false;
+          const trimmedValue = currentValue.trim();
+          const initialTrimmedValue = initialValue.trim();
+          isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
+        } else if (fieldName === "password")
+          isChanged = currentValue.length > 0;
+        else
+          isChanged = currentValue.trim() !== initialValue.trim() && currentValue.trim().length > 0;
+        if (isChanged && isValid)
           confirmButton.classList.remove("hidden");
-        } else {
+        else
           confirmButton.classList.add("hidden");
-        }
       });
       confirmButton.addEventListener("click", async () => {
         const newValue = input.value.trim();

@@ -229,6 +229,14 @@ export function afterRender(): void {
     // maj bio
     const updateBio = async (newBio: string) => {
         if (!userId) return false;
+
+        const trimmedBio = newBio.trim();
+        if (trimmedBio.length > 75) {
+            console.error("Error: bio is limited to 75 caracters");
+            alert(`Bio cannot exceed 75 caracters. Please, stop talking too much`);
+            return false;
+        }
+
         try {
             const response = await fetchWithAuth(`api/users/${userId}/bio`, {
                 method: 'PATCH',
@@ -318,18 +326,30 @@ export function afterRender(): void {
 
         // detection saisie
         input.addEventListener('input', () => {
-            const currentValue = input.value.trim();
+            const currentValue = input.value;
             // mdp : n'importe auelle changement active le truc
             // dinon vnouvelle valeur differente ou non vide par rapport a l'ancienne
-            const isChanged = fieldName === 'password' 
-                ? currentValue.length > 0 
-                : currentValue !== initialValue && currentValue.length > 0;
+            let isChanged = false;
+            let isValid = true;
 
-            if (isChanged) {
+            if (fieldName === 'bio') {
+                if (currentValue.length > 75)
+                    isValid = false;
+
+                const trimmedValue = currentValue.trim();
+                const initialTrimmedValue = initialValue.trim();
+    
+                isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
+            } else if (fieldName === 'password')
+                isChanged = currentValue.length > 0;
+            else
+                isChanged = currentValue.trim() !== initialValue.trim() && currentValue.trim().length > 0;
+
+            if (isChanged && isValid)
                 confirmButton.classList.remove('hidden');
-            } else {
+            else
                 confirmButton.classList.add('hidden');
-            }
+
         });
 
         confirmButton.addEventListener('click', async () => {

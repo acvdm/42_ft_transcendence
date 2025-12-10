@@ -106,7 +106,7 @@ export async function updateBio (
     if (!user?.id)
         throw new Error(`Error id: ${user_id} does not exist`);
 
-    if (bio.length > 75)
+    if (bio.length > 76)
         throw new Error(`Error: bio too long. Max 75 characters`);
 
     console.log("update bio dans users.ts");
