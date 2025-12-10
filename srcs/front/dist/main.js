@@ -4016,20 +4016,44 @@
   // scripts/pages/api.ts
   async function fetchWithAuth(url2, options = {}) {
     const token = localStorage.getItem("accessToken");
-    const headers = new Headers(options.headers || {});
-    if (!headers.has("Content-Type") && options.body) {
-      headers.set("Content-Type", "application/json");
-    }
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-    const config = {
-      ...options,
-      headers
+    const getHeaders = (currentToken) => {
+      const headers = new Headers(options.headers || {});
+      if (!headers.has("Content-Type") && options.body) {
+        headers.set("Content-Type", "application/json");
+      }
+      if (currentToken) {
+        headers.set("Authorization", `Bearer ${currentToken}`);
+      }
+      return headers;
     };
-    const response = await fetch(url2, config);
+    let response = await fetch(url2, {
+      ...options,
+      headers: getHeaders(token)
+    });
     if (response.status === 401) {
-      console.warn("Session expir\xE9e, redirection...");
+      console.warn("Token expired (401). Atempt to refresh...");
+      try {
+        const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          const newToken = data.access_token;
+          console.log("\u2705 Token refreshed with succeed !");
+          localStorage.setItem("accessToken", newToken);
+          response = await fetch(url2, {
+            ...options,
+            headers: getHeaders(newToken)
+            // on utilise le nouveau token
+          });
+        } else {
+          console.error("Refresh impossible. Deconnection.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("userId");
+          window.history.pushState({}, "", "/login");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        }
+      } catch (err) {
+        console.error("Network error during the refresh of the token", err);
+      }
     }
     return response;
   }
