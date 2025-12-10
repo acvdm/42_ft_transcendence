@@ -1,4 +1,5 @@
 import htmlContent from "./ProfilePage.html";
+import { fetchWithAuth } from "./api";
 
 // interface qui va servir à typer la réponse API de l'utilisateur
 interface UserData {
@@ -101,7 +102,7 @@ export function afterRender(): void {
         
         try {
             // on recuperer les infos user
-            const response = await fetch(`api/users/${userId}`);
+            const response = await fetchWithAuth(`api/users/${userId}`);
             
             if (response.ok) {
                 const user: UserData = await response.json();
@@ -156,7 +157,7 @@ export function afterRender(): void {
         if (!userId || !newUsername.trim()) return;
 
         try {
-            const response = await fetch(`api/users/${userId}/alias`, {
+            const response = await fetchWithAuth(`api/users/${userId}/alias`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alias: newUsername })
@@ -180,7 +181,7 @@ export function afterRender(): void {
         if (!userId) return;
 
         try {
-            const response = await fetch(`api/users/${userId}/bio`, {
+            const response = await fetchWithAuth(`api/users/${userId}/bio`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ bio: newBio })
@@ -205,7 +206,7 @@ export function afterRender(): void {
         if (!userId) return;
 
         try {
-            const response = await fetch(`api/users/${userId}/status`, {
+            const response = await fetchWithAuth(`api/users/${userId}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -334,7 +335,7 @@ export function afterRender(): void {
             console.log("avatar charge");
             
             // envoit de l'url au backend
-            const response = await fetch(`api/users/${userId}/avatar`, {
+            const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ avatar: selectedImageSrc })
