@@ -40,16 +40,24 @@ function handleLogin() {
             const result = await response.json();
 
             if (result.success) {
-				const { access_token, refresh_token, user_id } = result.data;
+				const { access_token, user_id } = result.data;
 
                 // Stockage des tokens
                 if (access_token) localStorage.setItem('accessToken', access_token);
                 if (user_id) localStorage.setItem('userId', user_id.toString());
 
-                // Récupération du profil (Username)
-                if (user_id) {
+                // Récupération du profil (Username) (on verrifie qu'on a bien un access token)
+                if (user_id && access_token) {
                     try {
-                        const userRes = await fetch(`/api/users/${user_id}`);
+                        const userRes = await fetch(`/api/users/${user_id}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                // AJOUT du TOKEN (badge d acces)-> on va le chercher dans le localStorage
+                                'Authorization': `Bearer ${access_token}`
+                            }
+                        });
+
                         if (userRes.ok) {
                             const userData = await userRes.json();
                             if (userData.alias) {
@@ -65,7 +73,10 @@ function handleLogin() {
                     try {
                         await fetch(`/api/users/${user_id}/status`, {
                             method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json',
+                                // Ajout du token
+                                'Authorization': `Bearer ${access_token}`
+                             },
                             body: JSON.stringify({ status: selectedStatus })
                         });
                         console.log("Status updated to DB:", selectedStatus);

@@ -22,6 +22,9 @@ export async function makeFriendshipRequest (
     if (!friend?.id)
         throw new Error(`Cannot find friend_id with alias ${alias}`);
 
+    if (friend.id == user_id)
+        throw new Error(`You cannot add yourself as a friend. Loser`);
+
     const is_blocked = await db.get(`
         SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'blocked'`,
         [user_id, friend.id]
@@ -42,20 +45,6 @@ export async function makeFriendshipRequest (
 
     return { user_id, friend_id: friend.id };
 }
-
-//-------- GET / READ
-// export async function listFriends (
-//     db: Database,
-//     user_id: number
-// ): Promise<User []>
-// {
-//     const users = await db.all(`
-//         SELECT * FROM FRIENDSHIPS WHERE id = ? AND status = 'validated'`,
-//         [user_id]
-//     ) as User[];
-
-//     return users || [];
-// }
 
 //-------- GET / READ
 export async function listFriends (

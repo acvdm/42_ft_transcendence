@@ -1,0 +1,4 @@
+node_modules
+dist
+conf/node_modules
+.git

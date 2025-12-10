@@ -424,10 +424,8 @@ export function afterRender(): void {
             const ids = [connectedUserId, friendId].sort((a, b) => a - b);
             const channelKey = `channel_${ids[0]}_${ids[1]}`;
 
-            console.log("numero de la channel:", channelKey);
-
-            currentChannel = channelKey; // Utilise la variable du scope principal
-            socket.emit("joinChannel", channelKey);
+			currentChannel = channelKey;
+			socket.emit("joinChannel", channelKey);
 
             // affichage du chat
             if (chatPlaceholder) chatPlaceholder.classList.add('hidden');
@@ -1288,6 +1286,90 @@ export function afterRender(): void {
     })
 
 
+	// ---------------------------------------------------
+	// ----          CHARGEMENT USER DATA             ----
+	// ---------------------------------------------------
+
+	const loadUserData = async () => {
+		let token = localStorage.getItem('accessToken');
+		const userId = localStorage.getItem('userId');
+
+		if (!token || !userId) {
+			console.warn("No token found, redirectiong to login");
+			window.history.pushState({}, '', '/login');
+			window.dispatchEvent(new PopStateEvent('popstate'));
+			return;
+		}
+
+		try {
+			// appel normal
+			let response = await fetch(`/api/users/${userId}`, {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+
+			// si 401 on essaie de refresh le token
+			if (response.status == 401) {
+				console.warn("Session has expire (401). Cleaning and redirection...");
+
+				const refreshRes = await fetch('/api/auth/refresh', {
+					method: 'POST'
+				});
+
+				if (refreshRes.ok) {
+					// nouveau token recupere
+					const data = await refreshRes.json();
+					console.log("Token refreshed with success !");
+
+					localStorage.setItem('accessToken', data.access_token);
+					token = data.access_token;
+
+					// on reessaie la requete initiale avec le nouveau token
+					response = await fetch(`/api/users/${userId}`, {
+						headers: { 'Authorization': `Bearer ${token}`}
+					});
+
+				} else {
+					console.error("Refresh failed. Forced deconnexion");
+					throw new Error('Session completely expired');
+				}
+			}
+
+			if (!response.ok)
+				throw new Error('Failed to fetch user profile');
+
+			// mise a jour de l'interface
+			const userData = await response.json();
+
+			// mise a jour UI (nom, bio, ...)
+			if (userConnected && userData.alias) {
+				userConnected.textContent = userData.alias;
+				localStorage.setItem('username', userData.alias);
+			}
+			if (bioText && userData.bio){
+				bioText.innerHTML = parseMessage(userData.bio);
+			}
+			// mise a jour du statut
+			if (userData.status) {
+				updateStatusDisplay(userData.status);
+				localStorage.setItem('userStatus', userData.status);
+			}
+
+			// sil y a un avatar plus tard ajouter portion de code
+		} catch (error) {
+			console.error("Error during loading user data: ", error);
+			// nettoyage final
+			localStorage.removeItem('accessToken');
+			localStorage.removeItem('userId');
+			localStorage.removeItem('username');
+			window.history.pushState({}, '', '/login');
+			window.dispatchEvent(new PopStateEvent('popstate'));
+		}
+	};
+
+	loadUserData();
+
     // ---------------------------------------------------
     // ----      MISE EN ÉCOUTE DES SOCKETS           ----
     // ---------------------------------------------------
@@ -1296,14 +1378,33 @@ export function afterRender(): void {
         addMessage("Connected to chat server!");
     });
 
+	socket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) =>
+	{
+		if (messagesContainer) 
+		{
+			messagesContainer.innerHTML = '';
+			if (data.msg_history && data.msg_history.length > 0) 
+			{
+				data.msg_history.forEach((msg) =>
+				{
+					addMessage(msg.msg_content, msg.sender_alias);
+				});
+			}
+			else
+			{
+				console.log("No former message in this channel");
+			}
 
+		}
+	});
 
-    // on va écouter l'événement chatmessage venant du serveur
-    socket.on("chatMessage", (data: any) => {
-            // le backend va renvoyer data, 
-            // il devrait plus renvoyer message: "" author: ""
-        addMessage(data.message || data, data.author || "Anonyme");
-    });
+	// on va écouter l'événement chatmessage venant du serveur
+	socket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
+			// le backend va renvoyer data, 
+			// il devrait plus renvoyer message: "" author: ""
+		addMessage(data.msg_content, data.sender_alias);
+	});
+
 
     socket.on("disconnected", () => {
         addMessage("Disconnected from chat server!");
@@ -1313,27 +1414,28 @@ export function afterRender(): void {
 
     // Creer un event de creation de channel des qu'on clique sur un ami / qu'on cree une partie
 
-    // a partir du moment ou on appuie sur entree-> envoi de l'input
-    messageInput.addEventListener('keyup', (event) => {
-        if (event.key == 'Enter' && messageInput.value.trim() != '') {
-            const msg_content = messageInput.value;
-            // on envoie le message au serveur avec emit
-            const username = localStorage.getItem('username');
-            const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
-            socket.emit("chatMessage", {
-                sender_id: sender_id,
-                channel: currentChannel,
-                msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
-            messageInput.value = ''; // on vide l'input
-        }
-    });
+	// a partir du moment ou on appuie sur entree-> envoi de l'input
+	messageInput.addEventListener('keyup', (event) => {
+		if (event.key == 'Enter' && messageInput.value.trim() != '') {
+			const msg_content = messageInput.value;
+			// on envoie le message au serveur avec emit
+			const sender_alias = localStorage.getItem('username');
+			const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+			// console.log("FRONT: currentChannel: ", currentChannel);
+			socket.emit("chatMessage", {
+				sender_id: sender_id,
+				sender_alias: sender_alias,
+				channel: currentChannel,
+				msg_content: msg_content }); // changer le sender_id et recv_id par les tokens
+			messageInput.value = ''; // on vide l'input
+		}
+	});
 
-    // ---------------------------------------------------
-    // ----           CHARGEMENT DE LA BIO            ----
-    // ---------------------------------------------------
-    
-    const myUserId = localStorage.getItem('userId'); 
-    const userProfileImg = document.getElementById('user-profile') as HTMLImageElement;
+	// ---------------------------------------------------
+	// ----           CHARGEMENT DE LA BIO            ----
+	// ---------------------------------------------------
+
+	// const myUserId = localStorage.getItem('userId'); 
 
     if (myUserId) {
         fetch(`/api/users/${myUserId}`)

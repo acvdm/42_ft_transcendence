@@ -5,6 +5,7 @@ import { findChannelByKey } from './channels.js';
 export interface Message {
     msg_id: number;
     sender_id: number;
+    sender_alias: string;
     msg_content: string;
     sent_at: string;
 }
@@ -20,19 +21,24 @@ export interface createMessage {
 //-------- POST / CREATE
 export async function saveNewMessageinDB(
     db: Database,
-    data: createMessage,
-    channel_key: string 
+    channel_key: string,
+    sender_id: number,
+    sender_alias: string,
+    msg_content: string 
 ): Promise<number | undefined> 
 {
     const channel = await findChannelByKey(db, channel_key);
-    if (!channel)
+    if (!channel?.id)
+    {
+        console.log("channel non trouvé dans saveNewMessage");
         return;
+    }
     const channel_id = await channel.id;
 
     const result = await db.run (`
-        INSERT INTO MESSAGES (sender_id, msg_content, channel_id)
+        INSERT INTO MESSAGES (sender_id, sender_alias, msg_content, channel_id)
         VALUES (?, ?, ?, ?)`,
-        [data.sender_id, data.msg_content, channel_id]
+        [sender_id, sender_alias, msg_content, channel_id]
     );
 
     if (!result?.lastID)
@@ -97,7 +103,7 @@ export async function getHistoryByChannel(
 ): Promise<Message []>
 {
     const messages = await db.all(`
-        SELECT msg_id, sender_id, msg_content, sent_at 
+        SELECT msg_id, sender_alias, msg_content, sent_at 
         FROM MESSAGES
         WHERE channel_id = ?
         ORDER BY sent_at ASC`,

@@ -48,3 +48,35 @@ export async function updateToken(
         [refresh_token, expires_at, credential_id]
     );
 }
+
+//-------- GET / READ
+export async function findByRefreshToken(
+    db: Database,
+    token: string
+): Promise<Token | undefined> {
+    const result = await db.get(`
+        SELECT * FROM TOKENS WHERE refresh_token = ?`,
+    [token]
+    );
+    return result;
+}
+
+export async function deleteRefreshToken(db: Database, token: string): Promise<void> {
+    await db.run(`
+        DELETE FROM tokens WHERE refresh_token = ?`, 
+        [token]
+    );
+}
+
+// pour une deconnexion de tous les appareils
+export async function deleteAllTokensForUser(db: Database, userId: number): Promise<void> {
+    await db.run(`
+        DELETE FROM tokens WHERE user_id = ?`, [userId]
+    );
+}
+
+export async function deleteTokenByCredentialId(db: Database, credential_id: number) : Promise<void> {
+    await db.run(`
+        DELETE FROM tokens WHERE credential_id = ?`, [credential_id]
+    );
+}

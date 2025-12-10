@@ -88,12 +88,19 @@
         });
         const result = await response.json();
         if (result.success) {
-          const { access_token, refresh_token, user_id } = result.data;
+          const { access_token, user_id } = result.data;
           if (access_token) localStorage.setItem("accessToken", access_token);
           if (user_id) localStorage.setItem("userId", user_id.toString());
-          if (user_id) {
+          if (user_id && access_token) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  // AJOUT du TOKEN (badge d acces)-> on va le chercher dans le localStorage
+                  "Authorization": `Bearer ${access_token}`
+                }
+              });
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -106,7 +113,11 @@
             try {
               await fetch(`/api/users/${user_id}/status`, {
                 method: "PATCH",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                  "Content-Type": "application/json",
+                  // Ajout du token
+                  "Authorization": `Bearer ${access_token}`
+                },
                 body: JSON.stringify({ status: selectedStatus })
               });
               console.log("Status updated to DB:", selectedStatus);
@@ -4742,11 +4753,80 @@
       addMessage(`<strong>${data.author} sent a nudge</strong>`, "Admin");
       shakeElement(wizzContainer, 3e3);
     });
+    const loadUserData = async () => {
+      let token = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("userId");
+      if (!token || !userId) {
+        console.warn("No token found, redirectiong to login");
+        window.history.pushState({}, "", "/login");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+        return;
+      }
+      try {
+        let response = await fetch(`/api/users/${userId}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (response.status == 401) {
+          console.warn("Session has expire (401). Cleaning and redirection...");
+          const refreshRes = await fetch("/api/auth/refresh", {
+            method: "POST"
+          });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            console.log("Token refreshed with success !");
+            localStorage.setItem("accessToken", data.access_token);
+            token = data.access_token;
+            response = await fetch(`/api/users/${userId}`, {
+              headers: { "Authorization": `Bearer ${token}` }
+            });
+          } else {
+            console.error("Refresh failed. Forced deconnexion");
+            throw new Error("Session completely expired");
+          }
+        }
+        if (!response.ok)
+          throw new Error("Failed to fetch user profile");
+        const userData = await response.json();
+        if (userConnected && userData.alias) {
+          userConnected.textContent = userData.alias;
+          localStorage.setItem("username", userData.alias);
+        }
+        if (bioText && userData.bio) {
+          bioText.innerHTML = parseMessage(userData.bio);
+        }
+        if (userData.status) {
+          updateStatusDisplay(userData.status);
+          localStorage.setItem("userStatus", userData.status);
+        }
+      } catch (error) {
+        console.error("Error during loading user data: ", error);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("username");
+        window.history.pushState({}, "", "/login");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      }
+    };
+    loadUserData();
     socket.on("connect", () => {
       addMessage("Connected to chat server!");
     });
+    socket.on("msg_history", (data) => {
+      if (messagesContainer) {
+        messagesContainer.innerHTML = "";
+        if (data.msg_history && data.msg_history.length > 0) {
+          data.msg_history.forEach((msg) => {
+            addMessage(msg.msg_content, msg.sender_alias);
+          });
+        } else {
+          console.log("No former message in this channel");
+        }
+      }
+    });
     socket.on("chatMessage", (data) => {
-      addMessage(data.message || data, data.author || "Anonyme");
+      addMessage(data.msg_content, data.sender_alias);
     });
     socket.on("disconnected", () => {
       addMessage("Disconnected from chat server!");
@@ -4754,10 +4834,11 @@
     messageInput.addEventListener("keyup", (event) => {
       if (event.key == "Enter" && messageInput.value.trim() != "") {
         const msg_content = messageInput.value;
-        const username = localStorage.getItem("username");
+        const sender_alias = localStorage.getItem("username");
         const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
         socket.emit("chatMessage", {
           sender_id,
+          sender_alias,
           channel: currentChannel,
           msg_content
         });
@@ -5200,12 +5281,20 @@
           body: JSON.stringify({ alias, email, password })
         });
         const result = await response.json();
-        if (result.success) {
-          const { access_token, refresh_token, user_id } = result.data.data;
-          if (user_id) {
+        console.log("RECEPTION DU BACKEND:", result);
+        if (response.ok) {
+          const { access_token, user_id } = result;
+          console.log("User ID:", user_id);
+          console.log("Access Token:", access_token);
+          if (access_token)
+            localStorage.setItem("accessToken", access_token);
+          if (user_id)
             localStorage.setItem("userId", user_id.toString());
+          if (user_id) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`);
+              const userRes = await fetch(`/api/users/${user_id}`, {
+                headers: { "Authorization": `Bearer ${access_token}` }
+              });
               if (userRes.ok) {
                 const userData = await userRes.json();
                 if (userData.alias) {
@@ -5216,8 +5305,6 @@
               console.error("Can't get user's profile", err);
             }
           }
-          if (access_token)
-            localStorage.setItem("accessToken", access_token);
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
@@ -5268,13 +5355,30 @@
       render: NotFoundPage
     }
   };
-  var handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("username");
-    window.history.pushState({}, "", "/");
-    const popStateEvent = new PopStateEvent("popstate");
-    window.dispatchEvent(popStateEvent);
+  var handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        // force l'envoi du cookie HttpOnly au serveur
+        credentials: "include",
+        body: JSON.stringify({})
+        // force le format JSON
+      });
+      console.log("Deconnection from the backend server succeed");
+    } catch (error) {
+      console.error("Error during the deconnection from the server: ", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      window.history.pushState({}, "", "/");
+      const popStateEvent = new PopStateEvent("popstate");
+      window.dispatchEvent(popStateEvent);
+    }
   };
   var handleLocationChange = () => {
     if (!appElement) return;
