@@ -98,7 +98,7 @@ fastify.post('/users', async (request, reply) => {
 		reply.status(400).send({			  
 			success: false,			  
 			data: null, 			  
-			error: { message: errorMessage} 		
+			error: { message: (err as Error).message } 		
 		});
 	}
 })
@@ -165,7 +165,7 @@ fastify.patch('/users/:id/status', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: 'Failed to update status' }
+			error: { message: (err as Error).message }
 		});
 	}
 })
@@ -181,8 +181,7 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 
 	try
 	{
-		console.log("Try to change bio in back: ", userId);
-		userRepo.updateBio(db, userId, bio);
+		await userRepo.updateBio(db, userId, bio);
 		return reply.status(200).send({
 			success: false,
 			data: null,
@@ -195,11 +194,67 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: 'Failed to update bio' }
+			error: { message: (err as Error).message }
 		});
 	}
 })
 
+/* -- UPDATE EMAIL -- */
+fastify.patch('/users/:id/email', async (request, reply) =>
+{
+	console.log("arrivée route patch email");
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	const { email } = request.body as { email: string };
+
+	const formerEmail = await userRepo.findEmailById(db, userId);
+
+	try
+	{
+		
+		await userRepo.updateEmail(db, userId, email);
+		console.log("mail updated in userRepo");
+		const authURL = `http://auth:3001/users/${userId}/credentials`;
+
+		// 3. Appeler le service auth pour créer les credentials
+		const authResponse = await fetch(authURL, {
+			method: "PATCH",
+			headers: { 
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ 
+				email: email
+			}),
+		});
+
+		const data = await authResponse.json();
+		if (data.success)
+		{
+		    return reply.status(201).send({
+				success: true,
+				data: data,
+				error: null
+		    });
+		}
+		else 
+		{
+		    throw new Error(`Auth error: ${data.error.message}`);    
+		}
+	} 
+	catch (err: any) 
+	{
+		const errorMessage = err.message;
+
+		// 5. Rollback
+		await userRepo.rollbackChangeEmail(db, userId, formerEmail);
+
+		reply.status(400).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
+		});
+	}
+})
 
 
 
@@ -217,19 +272,10 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 	try
 	{
 		const requestID = await friendRepo.makeFriendshipRequest(db, userId, alias);
-		if (!requestID)
-		{
-			return reply.status(500).send({
-				success: false,
-				data: null,
-				error: { message: 'Error while sending friend request' }
-			});
-		}
-		else
-			return reply.status(200).send({
-				success: true,
-				data: null,
-				error: null
+		return reply.status(200).send({
+			success: true,
+			data: null,
+			error: null
 		});
 	}
 	catch (err)
@@ -238,7 +284,7 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: err }
+			error: { message: (err as Error).message }
 		});		
 	}
 })
@@ -268,7 +314,7 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: err }
+			error: { message: (err as Error).message }
 		});
 	}
 })
@@ -295,7 +341,7 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: 'Failed to list friends for userId:', id}
+			error: { message: (err as Error).message }
 		});
 	}
 })
@@ -322,7 +368,7 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: 'Failed to list friendship requests for userId: ', id}
+			error: { message: (err as Error).message }
 		});
 	}
 })

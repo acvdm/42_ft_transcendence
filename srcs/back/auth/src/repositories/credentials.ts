@@ -96,7 +96,17 @@ export async function getCredentialbyID(
 
 
 //-------- PUT / UPDATE
-
+export async function changeEmail (
+    db: Database,
+    user_id: number,
+    email: string
+)
+{
+    await db.run(`
+        UPDATE FROM CREDENTIALS SET email = ? WHERE user_id = ?`,
+        [email, user_id]
+    );
+}
 
 
 

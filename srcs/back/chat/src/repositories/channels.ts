@@ -45,3 +45,12 @@ export async function createChannel (
 
     return result.lastID;
 }
+
+export async function addEventInChannel (
+    db: Database,
+    channelKey: string,
+    user_id: number
+) 
+{
+
+}

@@ -4077,7 +4077,8 @@
               friendRequestMessage?.classList.add("hidden");
             }, 1500);
           } else {
-            showFriendMessage(data.message || "Error sending request", "error");
+            console.log("message error: ", data.error);
+            showFriendMessage(data.error.message || "Error sending request", "error");
           }
         } catch (error) {
           console.error("Error:", error);
@@ -4240,8 +4241,9 @@
             },
             body: JSON.stringify({ bio: newBio })
           });
+          const data = await response.json();
           if (!response.ok) {
-            console.error("Error while saving bio");
+            console.error(data.error.message);
           } else {
             console.log("Bio saved !");
           }
@@ -4313,8 +4315,9 @@
                 },
                 body: JSON.stringify({ status: selectedStatus })
               });
+              const data = await response.json();
               if (!response.ok) {
-                console.error("Failed to update status");
+                console.error(data.error.message);
               }
             } catch (error) {
               console.error("Error updating status:", error);

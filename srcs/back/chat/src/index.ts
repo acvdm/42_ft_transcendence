@@ -30,6 +30,7 @@ async function joinChannel(
 		if (!isExistingChannel?.id)
 		{
 			let channel = await chanRepo.createChannel(db, channelKey);
+			// await chanRepo.addEventInChannel(db, channelKey, "join");
 			socket.join(channelKey);
 		}
 		else
