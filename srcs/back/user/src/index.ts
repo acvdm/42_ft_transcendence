@@ -265,7 +265,7 @@ fastify.patch('/users/:id/alias', async (request, reply) =>
 		return reply.status(500).send({
 			success: false,
 			data: null,
-			error: { message: 'Failed to update bio' }
+			error: { message: 'Failed to update alias' }
 		});
 	}
 })

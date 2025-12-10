@@ -166,7 +166,7 @@ export async function updateAlias (
         throw new Error(`Error id: ${user_id} does not exist`);
 
     if (alias.length > 30)
-        throw new Error(`Error: bio too long. Max 75 characters`);
+        throw new Error(`Error: alias too long. Max 30 characters`);
 
     const existingUser = await db.get(`
         SELECT id FROM USERS WHERE alias = ? AND id != ?`,

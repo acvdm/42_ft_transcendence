@@ -50,6 +50,7 @@ export class UserProfile {
                 localStorage.setItem('username', userData.alias);
             }
             if (this.bioText && userData.bio) {
+				this.bioText.dataset.raw = userData.bio;
                 this.bioText.innerHTML = parseMessage(userData.bio);
             }
             if (this.userProfileImg) {
@@ -71,7 +72,7 @@ export class UserProfile {
 
         this.bioText.addEventListener('click', () => {
             const input = document.createElement("input");
-            const currentText = this.bioText?.textContent === "Share a quick message" ? "" : this.bioText?.textContent || "";
+            const currentText = this.bioText?.dataset.raw || "";
             
             input.type = "text";
             input.value = currentText;
@@ -85,8 +86,9 @@ export class UserProfile {
             const finalize = async (text: string) => {
                 if (!this.bioWrapper || !this.bioText) return;
                 
-                // teste filnak (texte final)
+                // texte final
                 const newBio = text.trim() || "Share a quick message";
+				this.bioText.dataset.raw = newBio;
                 const userId = localStorage.getItem('userId');
                 
                 // maj avec emoticones

@@ -24,7 +24,6 @@ export function afterRender(): void {
     const chat = new Chat();
     chat.init();
 
-    // 3. Liaison : Quand on clique sur un ami, on dit au Chat de changer de channel
     window.addEventListener('friendSelected', (e: any) => {
         const friend = e.detail;
         

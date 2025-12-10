@@ -277,8 +277,6 @@ export class FriendList {
         const socket = SocketService.getInstance().socket;
         if (!socket) return;
         
-        // Écoute de l'événement socket pour les changements de statut des amis
-        // (Assure-toi que ton backend envoie bien cet événement avec { username, status })
         socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`Status update for ${data.username}: ${data.status}`);
             this.updateFriendUI(data.username, data.status);
@@ -292,7 +290,7 @@ export class FriendList {
         });
     }
 
-    // Fonction pour mettre à jour l'interface d'un ami spécifique
+
     private updateFriendUI(username: string, newStatus: string) {
         //  Mettre à jour la liste d'amis (le point de couleur)
         const friendItems = document.querySelectorAll('.friend-item');
@@ -301,7 +299,6 @@ export class FriendList {
             if (el.dataset.username === username) {
                 // Mise à jour du dataset
                 el.dataset.status = newStatus;
-                // Mise à jour visuelle du point (dot)
                 const statusImg = el.querySelector('img[alt="status"]') as HTMLImageElement;
                 if (statusImg) {
                     statusImg.src = getStatusDot(newStatus);
