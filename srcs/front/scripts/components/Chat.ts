@@ -113,7 +113,7 @@ export class Chat {
                 this.socket.emit("chatMessage", {
                     sender_id: sender_id,
                     sender_alias: sender_alias,
-                    channel: this.currentChannel,
+                    channel_key: this.currentChannel,
                     msg_content: msg_content 
                 });
                 this.messageInput.value = ''; // on vide l'input
@@ -131,7 +131,7 @@ export class Chat {
             wizzButton.addEventListener('click', () => {
                 const currentUsername = localStorage.getItem('username');
                 // on envois l'element snedWizz au serveur
-                this.socket.emit("sendWizz", { author: currentUsername });
+                this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
                 // secousse pour l'expediteur et le receveur
                 this.shakeElement(this.wizzContainer, 500);
             });
@@ -268,14 +268,19 @@ export class Chat {
                 animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
 
                 // clic sur l'anumation
+                console.log("Envoi d'un message");
                 animationItem.addEventListener('click', (event) => {
                     event.stopPropagation();
                     const currentUsername = localStorage.getItem('username');
                     // envoi de l'animation via la sockettt
+                    console.log("Envoi d'un message");
+
                     this.socket.emit("sendAnimation", {
                         animationKey: key,
-                        author: currentUsername 
+                        author: currentUsername,
+                        channel_key: this.currentChannel
                     });
+                    console.log("Envoi d'un message");
                     animationDropdown.classList.add('hidden');
                 });
                 animationGrid.appendChild(animationItem);

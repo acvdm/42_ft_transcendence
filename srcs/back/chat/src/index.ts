@@ -105,9 +105,9 @@ const start = async () =>
 			
 			socket.on('chatMessage', async (data) => { await chatMessage(io, data) });	
 
-			socket.on('sendWizz', async (data) => { io.to(data.channelKey).emit('receivedWizz', data.sender_alias) });
+			socket.on('sendWizz', async (data) => { io.to(data.channelKey).emit('receivedWizz', { author: data.author }); });
 
-			socket.on('sendAnimation', async (data) => {io.to(data.channel_key).emit('receivedAnimation', data.animationKey, data.author); });
+			socket.on('sendAnimation', async (data) => {io.to(data.channel_key).emit('receivedAnimation', { animationKey: data.animationKey, author: data.author }); });
 
 			socket.on('disconnect', () => { console.log('User disconnected') });	
 		});	
