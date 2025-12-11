@@ -277,7 +277,7 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	const userId = Number(id);
 	const { email } = request.body as { email: string };
 
-	const formerEmail = await authRepo.findEmailById(db, userId);
+	const formerEmail = await userRepo.findEmailById(db, userId);
 
 	try
 	{
