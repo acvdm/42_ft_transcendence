@@ -59,7 +59,7 @@ export async function registerUser(
         email,
         pwd_hashed,
         two_fa_secret,
-        is_2fa_enabled: 1
+        is_2fa_enabled: 0
     });
 
     // 4. Génération token
@@ -101,6 +101,9 @@ export async function loginUser(
     if (!isPasswordValid)
         throw new Error ('Invalid password');
 
+    // VERIFIER SI 2FA ENABLE
+    // CAS 1 = si desactive -> generer les tokens 
+    // CAS 2 + active-> genere un TMP Token (duree de 5 min ), renvoit JSON
     const tokens = await generateTokens(user_id, credential_id);
     // await tokenRepo.updateToken(db, credential_id, tokens.refresh_token, tokens.expires_at);
 

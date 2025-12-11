@@ -4,6 +4,7 @@ import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateRegisterInput } from './validators/auth_validators.js';
 import { loginUser, registerUser, refreshUser, logoutUser } from './services/auth_service.js';
+import * as credRepo from "./repositories/credentials.js";
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -42,7 +43,7 @@ async function main()
 /* -- REGISTER - CREATE CREDENTIAL -- */
 fastify.post('/users/:id/credentials', async (request, reply) => 
 {
-	try 
+	try
 	{
 		const body = request.body as { user_id: number; email: string; password: string };
 
@@ -119,39 +120,7 @@ fastify.post('/sessions', async (request, reply) =>
 	}
 });
 
-
-// duplique le /sessions ?
-fastify.post('/login', async (request, reply) => {
-  const body = request.body as { email: string, password: string };
-  
-  try {
-    const authResponse = await loginUser(db, body.email, body.password);
-	console.log("✅ route /login atteinte");
-
-    // on met le refresh token dans le cookie, pas dans le body
-    // et on prepare l'en-tete HTTP qui sera attache a la reponse finale
-    // le navigateur lira cette en tete et enregistrera le cookie
-    reply.setCookie('refresh_token', authResponse.refresh_token, { // refresh_token dans la fonction loginUser
-      path: '/',
-      httpOnly: true, // invisible au JS (protection XSS)
-      secure: true, //acces au cookie uniquement via https
-      sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
-      maxAge: 7 * 24 * 3600, // 7 jours en secondes
-      signed: true // signe avec cookie secret
-    });
-
-    // envoi de l'access token dans le json et pas dans l'authResponse
-    return reply.status(200).send({
-      access_token:authResponse.access_token,
-      user_id: authResponse.user_id
-    });
-
-  } catch (err: any) {
-    console.error("❌ ERREUR AUTH LOGIN:", err);
-     return reply.status(400).send({ error: err.message });
-  }
-});
-
+/* -- REFRESH THE ACCESS TOKEN -- */
 fastify.post('/refresh', async (request, reply) => {
   
   // lire le cookie signe
@@ -190,7 +159,9 @@ fastify.post('/refresh', async (request, reply) => {
   }
 });
 
-// fonction pour supprimer le refresh token de la db et supprimer le cookie du navigateur
+
+/* -- LOGOUT -- */
+// pour supprimer le refresh token de la db et supprimer le cookie du navigateur
 fastify.post('/logout', async (request, reply) => {
 	
 	console.log("✅ route /logout atteinte");	
@@ -227,6 +198,57 @@ fastify.post('/logout', async (request, reply) => {
 
 	return reply.status(200).send({ success: true, message: "✅ Logged out succefully"});
 })
+
+
+
+//---------------------------------------
+//---------------- 2FA ------------------
+//---------------------------------------
+
+/* 
+/2fa/generate
+route appellee quand utilisateur clique sur "Active le 2FA"
+Besoin de generer un secret -> otpauth ou crypto
+met a jour ligne de l'utilisateur en BDD
+two_2fa_secret mais & 2fa_enable reste a false
+generer url code et transforme en image base64 avec la lib qrcode
+renvoie image en base64 au front
+*/
+
+fastify.post('/2fa/generate', async (request, reply) => {
+	
+	console.log("✅ route /2fa/generate atteinte");
+
+	credRepo.update2FASecret()
+	
+
+
+})
+
+/*
+/2fa/enable
+route appellee quand l'utilisateur scanne le qr code et entre son premier code 
+recevoir le code
+recuperer le 2fa secret
+verifier la validation
+reponse 2fa active
+*/ 
+
+/*
+/2fa/disable
+update la BDD
+*/
+
+/*
+/2fa/verify
+recoit temp_token et le code
+verifie et valide
+recupere le secret en BDD et verifie le code TOTP
+genere lles vrais tokens
+renvoit cookie et json final
+*/
+
+
 
 //---------------------------------------
 //--------------- SERVER ----------------

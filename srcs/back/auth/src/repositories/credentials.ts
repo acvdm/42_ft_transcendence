@@ -93,11 +93,31 @@ export async function getCredentialbyID(
     return credential;
 }
 
-
+export async function getEmailbyID(
+    db: Database,
+    user_id: number
+) : Promise<string | undefined> {
+    const row = await db.get(`
+        SELECT email FROM CREDENTIALS WHERE id = ?`,
+        [user_id]
+    );
+    return row?.email;
+}
 
 //-------- PUT / UPDATE
-
-
+// sauvegarde le secret mais laisse le 2FA desactive
+export async function update2FASecret(
+    db: Database,
+    userId: number,
+    secret: string
+) : Promise<void> {
+    await db.run(
+        `UPDATE CREDENTIALS
+        SET two_fa_secret = ?, is_2fa_enable = 0
+        WHERE user_id = ?`,
+        [secret, userId]
+    );
+}
 
 
 //-------- DELETE / DELETE
