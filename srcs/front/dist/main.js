@@ -4569,7 +4569,7 @@
       if (!this.messageInput) return;
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
-          const msg_content = this.messageInput.value;
+          const msg_content = this.messageInput?.value;
           const sender_alias = localStorage.getItem("username");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
           this.socket.emit("chatMessage", {
