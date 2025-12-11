@@ -507,7 +507,7 @@
                              src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
                         
                         <img id="friend-modal-avatar" 
-                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[100px] h-[100px] object-cover z-10 bg-gray-200"
+                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
                              src="https://wlm.vercel.app/assets/usertiles/default.png">
                     </div>
 
@@ -542,7 +542,7 @@
                 </fieldset>
 
                 <div class="flex justify-end mt-4">
-                     <button id="close-friend-modal-btn" 
+                     <button id="close-friend-modal-button" 
                         class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                             px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                             active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
@@ -4187,10 +4187,10 @@
       const addFriendButton = document.getElementById("add-friend-button");
       const addFriendDropdown = document.getElementById("add-friend-dropdown");
       const friendSearchInput = document.getElementById("friend-search-input");
-      const sendFriendRequestBtn = document.getElementById("send-friend-request");
-      const cancelFriendRequestBtn = document.getElementById("cancel-friend-request");
+      const sendFriendRequestButton = document.getElementById("send-friend-request");
+      const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
       const friendRequestMessage = document.getElementById("friend-request-message");
-      if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+      if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
         addFriendButton.addEventListener("click", (e) => {
           e.stopPropagation();
           addFriendDropdown.classList.toggle("hidden");
@@ -4230,13 +4230,13 @@
             this.showFriendMessage("Network error", "error", friendRequestMessage);
           }
         };
-        sendFriendRequestBtn.addEventListener("click", sendFriendRequest);
+        sendFriendRequestButton.addEventListener("click", sendFriendRequest);
         friendSearchInput.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
             sendFriendRequest();
           }
         });
-        cancelFriendRequestBtn.addEventListener("click", () => {
+        cancelFriendRequestButton.addEventListener("click", () => {
           addFriendDropdown.classList.add("hidden");
           friendSearchInput.value = "";
           friendRequestMessage?.classList.add("hidden");
@@ -4991,6 +4991,58 @@
     }
   };
 
+  // scripts/components/FriendProfileModal.ts
+  var FriendProfileModal = class {
+    constructor() {
+      this.modal = document.getElementById("friend-profile-modal");
+      this.closeButton = document.getElementById("close-friend-modal");
+      this.closeButtonBottom = document.getElementById("close-friend-modal-button");
+      this.avatar = document.getElementById("friend-modal-avatar");
+      this.status = document.getElementById("friend-modal-status");
+      this.username = document.getElementById("friend-modal-username");
+      this.bio = document.getElementById("friend-modal-bio");
+      this.stats = {
+        games: document.getElementById("friend-stat-games"),
+        wins: document.getElementById("friend-stat-wins"),
+        losses: document.getElementById("friend-stat-losses"),
+        rank: document.getElementById("friend-stat-rank")
+      };
+      this.initListeners();
+    }
+    initListeners() {
+      const close = () => this.modal?.classList.add("hidden");
+      this.closeButton?.addEventListener("click", close);
+      this.closeButtonBottom?.addEventListener("click", close);
+      this.modal?.addEventListener("click", (e) => {
+        if (e.target === this.modal) close();
+      });
+    }
+    // on appelle cette methode dans homepage
+    async open(friendId) {
+      if (!this.modal || !friendId) return;
+      try {
+        if (this.username) this.username.innerText = "Loading...";
+        const userRes = await fetchWithAuth(`api/users/${friendId}`);
+        if (userRes.ok) {
+          const user = await userRes.json();
+          this.updateUI(user);
+          this.modal.classList.remove("hidden");
+          this.modal.classList.add("flex");
+        }
+      } catch (error) {
+        console.error("Error modal:", error);
+      }
+    }
+    updateUI(user) {
+      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "https://wlm.vercel.app/assets/usertiles/default.png";
+      if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
+      if (this.username) this.username.innerText = user.alias;
+      if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
+      if (this.stats.games) this.stats.games.innerText = user.games_played || "0";
+      if (this.stats.wins) this.stats.wins.innerText = user.wins || "0";
+    }
+  };
+
   // scripts/pages/HomePage.ts
   function render2() {
     return HomePage_default;
@@ -5004,11 +5056,13 @@
     userProfile.init();
     const chat = new Chat();
     chat.init();
+    const friendProfileModal = new FriendProfileModal();
+    let currentChatFriendId = null;
     window.addEventListener("friendSelected", (e) => {
       const friend = e.detail;
+      currentChatFriendId = friend.id;
       const myId = parseInt(localStorage.getItem("userId") || "0");
-      const friendId = friend.id;
-      const ids = [myId, friendId].sort((a, b) => a - b);
+      const ids = [myId, friend.id].sort((a, b) => a - b);
       const channelKey = `channel_${ids[0]}_${ids[1]}`;
       const chatPlaceholder = document.getElementById("chat-placeholder");
       const channelChat = document.getElementById("channel-chat");
@@ -5019,12 +5073,19 @@
       const headerStatus = document.getElementById("chat-header-status");
       const headerBio = document.getElementById("chat-header-bio");
       if (headerName) headerName.textContent = friend.alias;
-      if (headerBio) headerBio.textContent = friend.bio;
+      if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
       if (headerAvatar) headerAvatar.src = friend.avatar || friend.avatar_url;
       if (headerStatus) {
         headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
       }
       chat.joinChannel(channelKey);
+    });
+    const viewProfileButton = document.getElementById("button-view-profile");
+    viewProfileButton?.addEventListener("click", () => {
+      document.getElementById("chat-options-dropdown")?.classList.add("hidden");
+      if (currentChatFriendId) {
+        friendProfileModal.open(currentChatFriendId);
+      }
     });
   }
 

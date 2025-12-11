@@ -304,22 +304,17 @@ export function afterRender(): void {
     const setupField = (elements: FieldElements, fieldName: string) => {
         const { display, input, changeButton, confirmButton } = elements;
         
-        // stockage de la valeur initiale
         let initialValue = display.innerText;
         
-        // Limite de caractères pour la bio
         const MAX_BIO_LENGTH = 70;
         
-        // NOUVEAU : Récupérer l'élément de compteur si c'est la bio
         const charCountElement = fieldName === 'bio' 
             ? elements.container.querySelector('.char-count') as HTMLSpanElement
             : null;
 
-        // Fonction de mise à jour du compteur
         const updateCharCount = (currentLength: number) => {
             if (charCountElement) {
                 charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
-                // Appliquer un style si la limite est dépassée
                 if (currentLength > MAX_BIO_LENGTH) {
                     charCountElement.classList.add('text-red-500');
                     charCountElement.classList.remove('text-gray-500');
@@ -347,7 +342,6 @@ export function afterRender(): void {
                 input.value = '';
             }
 
-            // Afficher le compteur pour la bio et l'initialiser
             if (fieldName === 'bio' && charCountElement) {
                 charCountElement.classList.remove('hidden');
                 const initialLength = initialValue.length;
@@ -375,7 +369,6 @@ export function afterRender(): void {
                  input.placeholder = newValue; // maj placeholder
             }
 
-            // Masquer le compteur
             if (fieldName === 'bio' && charCountElement) {
                 charCountElement.classList.add('hidden');
             }
@@ -395,29 +388,21 @@ export function afterRender(): void {
             const trimmedValue = currentValue.trim();
 
             if (fieldName === 'bio') {
-                // 1. Mise à jour du compteur
                 updateCharCount(currentValue.length);
 
-                // 2. Validation de la longueur
                 if (currentValue.length > MAX_BIO_LENGTH) {
                     isValid = false;
                 }
                 
-                // 3. Vérification si la bio a été modifiée et n'est pas vide
                 const initialTrimmedValue = initialValue.trim();
                 isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
 
             } else if (fieldName === 'password') {
                 isChanged = currentValue.length > 0;
             } else {
-                // Autres champs
                 isChanged = trimmedValue !== initialValue.trim() && trimmedValue.length > 0;
             }
 
-
-            // Le bouton de confirmation est visible si:
-            // 1. La valeur est changée ET
-            // 2. La valeur est valide (ne dépasse pas la limite)
             if (isChanged && isValid) {
                 confirmButton.classList.remove('hidden');
             } else {
@@ -443,7 +428,7 @@ export function afterRender(): void {
                 //     updateSuccessful = await updatePassword(newValue);
                 //     break;
                 default:
-                    updateSuccessful = true; // Aucune action spécifique
+                    updateSuccessful = true;
             }
 
             if (updateSuccessful) {
@@ -453,16 +438,12 @@ export function afterRender(): void {
 
         // focus/unfocus quand on clic
         input.addEventListener('blur', (e) => {
-            // Si on sort du champ sans cliquer sur Confirm
             if (e.relatedTarget !== confirmButton) {
                 const isConfirmedVisible = !confirmButton.classList.contains('hidden');
 
                 if (isConfirmedVisible) {
-                    // Si le bouton Confirm était visible, c'est qu'on a fait une modification, 
-                    // mais si on sort sans confirmer, on annule et on revient à la valeur initiale.
                     disableEditMode(fieldName === 'password' ? display.innerText : initialValue);
                 } else {
-                    // Si le bouton Confirm n'était pas visible, on désactive juste le mode édition
                     disableEditMode(fieldName === 'password' ? display.innerText : initialValue);
                 }
             }
