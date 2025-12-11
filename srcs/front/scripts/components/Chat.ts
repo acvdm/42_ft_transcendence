@@ -426,6 +426,8 @@ export class Chat {
                 console.log("Report clicked");
                 chatOptionsDropdown.classList.add('hidden');
             });
+
+            ////////////// ICI POUR LA LOGIQUE DE BLOCK/BLOCAGE D'UN AMI
             document.getElementById('button-block-user')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const currentChatUser = document.getElementById('chat-header-username')?.textContent;
