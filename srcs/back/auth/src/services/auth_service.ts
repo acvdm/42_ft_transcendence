@@ -90,6 +90,7 @@ export async function changeEmailInCredential (
     if (existing)
         throw new Error('Email already in use');
 
+    console.log("email pas deja utilise");
     await credRepo.changeEmail(db, user_id, email);
 }
 

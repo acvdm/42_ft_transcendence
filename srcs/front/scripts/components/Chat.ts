@@ -105,7 +105,7 @@ export class Chat {
         // a partir du moment ou on appuie sur entree-> envoi de l'input
         this.messageInput.addEventListener('keyup', (event) => {
             if (event.key == 'Enter' && this.messageInput?.value.trim() != '') {
-                const msg_content = this.messageInput?.value;
+                const msg_content = this.messageInput.value;
                 // on envoie le message au serveur avec emit
                 const sender_alias = localStorage.getItem('username');
                 const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
@@ -113,7 +113,7 @@ export class Chat {
                 this.socket.emit("chatMessage", {
                     sender_id: sender_id,
                     sender_alias: sender_alias,
-                    channel: this.currentChannel,
+                    channel_key: this.currentChannel,
                     msg_content: msg_content 
                 });
                 this.messageInput.value = ''; // on vide l'input

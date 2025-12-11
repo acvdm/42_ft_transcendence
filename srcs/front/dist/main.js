@@ -4705,13 +4705,13 @@
       if (!this.messageInput) return;
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
-          const msg_content = this.messageInput?.value;
+          const msg_content = this.messageInput.value;
           const sender_alias = localStorage.getItem("username");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
           this.socket.emit("chatMessage", {
             sender_id,
             sender_alias,
-            channel: this.currentChannel,
+            channel_key: this.currentChannel,
             msg_content
           });
           this.messageInput.value = "";
@@ -5226,7 +5226,7 @@
         const response = await fetchWithAuth(`api/users/${userId}/email`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ alias: newEmail })
+          body: JSON.stringify({ email: newEmail })
         });
         if (response.ok) {
           const user = await response.json();

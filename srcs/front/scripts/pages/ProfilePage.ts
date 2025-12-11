@@ -271,7 +271,7 @@ export function afterRender(): void {
             const response = await fetchWithAuth(`api/users/${userId}/email`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ alias: newEmail })
+                body: JSON.stringify({ email: newEmail })
             });
             if (response.ok) {
                 const user: UserData = await response.json();

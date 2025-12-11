@@ -102,8 +102,9 @@ export async function changeEmail (
     email: string
 )
 {
+    console.log(`change email dans credential.ts pour ${user_id}, ${email}`);
     await db.run(`
-        UPDATE FROM CREDENTIALS SET email = ? WHERE user_id = ?`,
+        UPDATE CREDENTIALS SET email = ? WHERE user_id = ?`,
         [email, user_id]
     );
 }

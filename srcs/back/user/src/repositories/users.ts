@@ -129,40 +129,40 @@ export async function updateBio (
     );
 }
 
-export async function updateEmail (
-    db: Database,
-    user_id: number,
-    email: string
-)
-{
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new Error(`Error id: ${user_id} does not exist`);
+// export async function updateEmail (
+//     db: Database,
+//     user_id: number,
+//     email: string
+// )
+// {
+//     const user = await findUserByID(db, user_id);
+//     if (!user?.id)
+//         throw new Error(`Error id: ${user_id} does not exist`);
 
-    const emailAlreadyUsed = await db.get(`
-        SELECT * FROM USERS WHERE email = ?`,
-        [email]
-    )
-    if (emailAlreadyUsed)
-        throw new Error(`This email is already taken`)
+//     const emailAlreadyUsed = await db.get(`
+//         SELECT * FROM USERS WHERE email = ?`,
+//         [email]
+//     )
+//     if (emailAlreadyUsed)
+//         throw new Error(`This email is already taken`)
 
-    await db.run(`
-        UPDATE USERS SET email = ? WHERE id = ?`,
-        [email, user_id]
-    );
-}
+//     await db.run(`
+//         UPDATE USERS SET email = ? WHERE id = ?`,
+//         [email, user_id]
+//     );
+// }
 
-export async function rollbackChangeEmail (
-    db: Database,
-    user_id: number,
-    email: string
-)
-{
-    await db.run(`
-        UPDATE USERS SET email = ? WHERE id = ?`,
-        [email, user_id]
-    );
-}
+// export async function rollbackChangeEmail (
+//     db: Database,
+//     user_id: number,
+//     email: string
+// )
+// {
+//     await db.run(`
+//         UPDATE USERS SET email = ? WHERE id = ?`,
+//         [email, user_id]
+//     );
+// }
 
 
 //-------- DELETE / DELETE

@@ -125,11 +125,16 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 {
 	try 
 	{
-		const body = request.body as { user_id: number; email: string };
+		console.log("arrivee dans credentials PATCH");
+		const { id } = request.params as { id: string };
+		const body = request.body as { email: string };
+		const userId = Number(id);
 
+		console.log("email: ", body.email);
 		validateNewEmail(body);
 
-		const result = await changeEmailInCredential(db, body.user_id, body.email);
+		const result = await changeEmailInCredential(db, userId, body.email);
+		console.log("change email in credential passé");
 
 		// 3. Répondre
 		return reply.status(200).send({
