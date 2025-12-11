@@ -251,7 +251,7 @@ fastify.patch('/users/:id/alias', async (request, reply) =>
 	try
 	{
 		console.log("Try to change alias in back: ", userId);
-		userRepo.updateAlias(db, userId, alias);
+		await userRepo.updateAlias(db, userId, alias);
 		return reply.status(200).send({
 			success: true,
 			data: {alias: alias},

@@ -5294,18 +5294,22 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ alias: newUsername })
         });
+        const result = await response.json();
         if (response.ok) {
           if (usernameDisplay) usernameDisplay.innerText = newUsername;
-          console.log("Username mis \xE0 jour");
+          console.log("Username updated");
           return true;
         } else {
-          console.error("Erreur lors de la mise \xE0 jour du username");
-          alert("Erreur lors de la sauvegarde du username");
+          console.error("Error while updating username");
+          if (result.error && result.error.message)
+            alert(result.error.message);
+          else
+            alert("Error while saving username");
           return false;
         }
       } catch (error) {
         console.error("Erreur r\xE9seau:", error);
-        alert("Erreur lors de la sauvegarde du username");
+        alert("Error while saving username");
         return false;
       }
     };
