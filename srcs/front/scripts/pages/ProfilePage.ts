@@ -229,11 +229,13 @@ export function afterRender(): void {
     // maj bio
     const updateBio = async (newBio: string) => {
         if (!userId) return false;
+        
+        const MAX_BIO_LENGTH = 76;
+        const trimmedBio = newBio.trim(); 
 
-        const trimmedBio = newBio.trim();
-        if (trimmedBio.length > 75) {
-            console.error("Error: bio is limited to 75 caracters");
-            alert(`Bio cannot exceed 75 caracters. Please, stop talking too much`);
+        if (trimmedBio.length > MAX_BIO_LENGTH) {
+            console.error("Erreur: Bio dépasse la limite de 75 caractères.");
+            alert(`La biographie ne doit pas dépasser ${MAX_BIO_LENGTH} caractères.`);
             return false;
         }
 
@@ -241,10 +243,11 @@ export function afterRender(): void {
             const response = await fetchWithAuth(`api/users/${userId}/bio`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bio: newBio })
+                body: JSON.stringify({ bio: trimmedBio })
             });
             if (response.ok) {
-                if (bioDisplay) bioDisplay.innerHTML = parseMessage(newBio) || "Share a quick message";
+                // IMPORTANT : Affiche la version nettoyée (trimmedBio) ou le message par défaut
+                if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
                 console.log("Bio mise à jour");
                 return true;
             } else {
@@ -281,6 +284,29 @@ export function afterRender(): void {
         // stockage de la valeur initiale
         let initialValue = display.innerText;
         
+        // Limite de caractères pour la bio
+        const MAX_BIO_LENGTH = 75;
+        
+        // NOUVEAU : Récupérer l'élément de compteur si c'est la bio
+        const charCountElement = fieldName === 'bio' 
+            ? elements.container.querySelector('.char-count') as HTMLSpanElement
+            : null;
+
+        // Fonction de mise à jour du compteur
+        const updateCharCount = (currentLength: number) => {
+            if (charCountElement) {
+                charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
+                // Appliquer un style si la limite est dépassée
+                if (currentLength > MAX_BIO_LENGTH) {
+                    charCountElement.classList.add('text-red-500');
+                    charCountElement.classList.remove('text-gray-500');
+                } else {
+                    charCountElement.classList.remove('text-red-500');
+                    charCountElement.classList.add('text-gray-500');
+                }
+            }
+        };
+
         // eidtion du champs concerné
         const enableEditMode = () => {
             initialValue = fieldName === 'password' ? '' : display.innerText; // si mdp alors le champs est vide
@@ -297,6 +323,14 @@ export function afterRender(): void {
                 // placeholder = *******
                 input.value = '';
             }
+
+            // Afficher le compteur pour la bio et l'initialiser
+            if (fieldName === 'bio' && charCountElement) {
+                charCountElement.classList.remove('hidden');
+                const initialLength = initialValue.length;
+                updateCharCount(initialLength);
+            }
+
 
             changeButton.classList.add('hidden');
             // on affiche confirme quand on commence a taper/modifier
@@ -317,6 +351,11 @@ export function afterRender(): void {
                  display.innerText = newValue;
                  input.placeholder = newValue; // maj placeholder
             }
+
+            // Masquer le compteur
+            if (fieldName === 'bio' && charCountElement) {
+                charCountElement.classList.add('hidden');
+            }
             
             changeButton.classList.remove('hidden');
             confirmButton.classList.add('hidden');
@@ -327,29 +366,40 @@ export function afterRender(): void {
         // detection saisie
         input.addEventListener('input', () => {
             const currentValue = input.value;
-            // mdp : n'importe auelle changement active le truc
-            // dinon vnouvelle valeur differente ou non vide par rapport a l'ancienne
+            
             let isChanged = false;
             let isValid = true;
+            const trimmedValue = currentValue.trim();
 
             if (fieldName === 'bio') {
-                if (currentValue.length > 75)
+                // 1. Mise à jour du compteur
+                updateCharCount(currentValue.length);
+
+                // 2. Validation de la longueur
+                if (currentValue.length > MAX_BIO_LENGTH) {
                     isValid = false;
-
-                const trimmedValue = currentValue.trim();
+                }
+                
+                // 3. Vérification si la bio a été modifiée et n'est pas vide
                 const initialTrimmedValue = initialValue.trim();
-    
                 isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
-            } else if (fieldName === 'password')
+
+            } else if (fieldName === 'password') {
                 isChanged = currentValue.length > 0;
-            else
-                isChanged = currentValue.trim() !== initialValue.trim() && currentValue.trim().length > 0;
+            } else {
+                // Autres champs
+                isChanged = trimmedValue !== initialValue.trim() && trimmedValue.length > 0;
+            }
 
-            if (isChanged && isValid)
+
+            // Le bouton de confirmation est visible si:
+            // 1. La valeur est changée ET
+            // 2. La valeur est valide (ne dépasse pas la limite)
+            if (isChanged && isValid) {
                 confirmButton.classList.remove('hidden');
-            else
+            } else {
                 confirmButton.classList.add('hidden');
-
+            }
         });
 
         confirmButton.addEventListener('click', async () => {
@@ -380,13 +430,16 @@ export function afterRender(): void {
 
         // focus/unfocus quand on clic
         input.addEventListener('blur', (e) => {
+            // Si on sort du champ sans cliquer sur Confirm
             if (e.relatedTarget !== confirmButton) {
-                const currentValue = input.value.trim();
                 const isConfirmedVisible = !confirmButton.classList.contains('hidden');
 
                 if (isConfirmedVisible) {
+                    // Si le bouton Confirm était visible, c'est qu'on a fait une modification, 
+                    // mais si on sort sans confirmer, on annule et on revient à la valeur initiale.
                     disableEditMode(fieldName === 'password' ? display.innerText : initialValue);
                 } else {
+                    // Si le bouton Confirm n'était pas visible, on désactive juste le mode édition
                     disableEditMode(fieldName === 'password' ? display.innerText : initialValue);
                 }
             }
