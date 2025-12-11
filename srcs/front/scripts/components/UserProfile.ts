@@ -59,8 +59,9 @@ export class UserProfile {
                 this.userProfileImg.src = userData.avatar_url || userData.avatar;
             }
             if (userData.status) {
-                this.updateStatusDisplay(userData.status);
-                localStorage.setItem('userStatus', userData.status);
+                const normalizedStatus = userData.status.toLowerCase();
+                this.updateStatusDisplay(normalizedStatus);
+                localStorage.setItem('userStatus', normalizedStatus);
             }
 
         } catch (error) {
@@ -229,18 +230,20 @@ export class UserProfile {
     }
 
     private loadSavedStatus() {
-        const savedStatus = localStorage.getItem('userStatus') || 'available';
+        const rawStatus = localStorage.getItem('userStatus') || 'available';
+        const savedStatus = rawStatus.toLowerCase();
         this.updateStatusDisplay(savedStatus);
         
         window.addEventListener('storage', (e) => {
             if (e.key === 'userStatus' && e.newValue) {
-                this.updateStatusDisplay(e.newValue);
+                this.updateStatusDisplay(e.newValue.toLowerCase());
             }
         });
     }
 
     public updateStatusDisplay(status: string) {
         if (this.statusFrame && statusImages[status]) {
+            console.log("Status:", this.statusFrame);
             this.statusFrame.src = statusImages[status];
         }
         if (this.statusText && statusLabels[status]) {

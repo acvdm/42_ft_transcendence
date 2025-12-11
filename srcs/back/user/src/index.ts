@@ -277,12 +277,12 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	const userId = Number(id);
 	const { email } = request.body as { email: string };
 
-	const formerEmail = await userRepo.findEmailById(db, userId);
+	const formerEmail = await authRepo.findEmailById(db, userId);
 
 	try
 	{
 		
-		await userRepo.updateEmail(db, userId, email);
+		//await userRepo.updateEmail(db, userId, email);
 		console.log("mail updated in userRepo");
 		const authURL = `http://auth:3001/users/${userId}/credentials`;
 
@@ -316,7 +316,7 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 		const errorMessage = err.message;
 
 		// 5. Rollback
-		await userRepo.rollbackChangeEmail(db, userId, formerEmail);
+		//await userRepo.rollbackChangeEmail(db, userId, formerEmail);
 
 		reply.status(400).send({			  
 			success: false,			  

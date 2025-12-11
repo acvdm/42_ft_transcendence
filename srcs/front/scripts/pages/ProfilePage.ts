@@ -59,6 +59,7 @@ export function afterRender(): void {
 
     const statusImages: { [key: string]: string } = {
         'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
+        'online': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
         'busy':      'https://wlm.vercel.app/assets/status/status_frame_busy_large.png',
         'away':      'https://wlm.vercel.app/assets/status/status_frame_away_large.png',
         'invisible': 'https://wlm.vercel.app/assets/status/status_frame_offline_large.png'
@@ -73,6 +74,7 @@ export function afterRender(): void {
 
     const reverseStatusMapping: { [key: string]: string } = {
         'available': 'Available',
+        'online': 'Available',
         'busy': 'Busy',
         'away': 'Away',
         'invisible': 'Appear offline'
@@ -162,9 +164,10 @@ export function afterRender(): void {
 
                 // maj du status
                 if (user.status) {
-                    const statusValue = reverseStatusMapping[user.status] || 'Appear offline';
+                    const normalizedStatus = user.status.toLowerCase();
+                    const statusValue = reverseStatusMapping[normalizedStatus] || 'Appear offline';
                     if (statusSelect) statusSelect.value = statusValue;
-                    updateStatusFrame(user.status);
+                    updateStatusFrame(normalizedStatus);
                 }
 
                 //logique change/confirme
@@ -261,9 +264,30 @@ export function afterRender(): void {
         }
     };
 
-    //maj email /////////// to complete avec la partie de Anne le chat
     const updateEmail = async (newEmail: string) => {
-       
+        if (!userId || !newEmail.trim()) return false;
+
+        try {
+            const response = await fetchWithAuth(`api/users/${userId}/email`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alias: newEmail })
+            });
+            if (response.ok) {
+                const user: UserData = await response.json();
+                user.email = newEmail;
+                console.log("Email mis à jour");
+                return true;
+            } else {
+                console.error("Erreur lors de la mise à jour du Email");
+                alert("Erreur lors de la sauvegarde du Email");
+                return false;
+            }
+        } catch (error) {
+            console.error("Erreur réseau:", error);
+            alert("Erreur lors de la sauvegarde du Email");
+            return false;
+        }
     };
 
     //maj password /////////// to complete avec la partie de Anne le chat
@@ -412,9 +436,9 @@ export function afterRender(): void {
                 case 'bio':
                     updateSuccessful = await updateBio(newValue);
                     break;
-                // case 'email':
-                //     updateSuccessful = await updateEmail(newValue);
-                //     break;
+                case 'email':
+                    updateSuccessful = await updateEmail(newValue);
+                    break;
                 // case 'password':
                 //     updateSuccessful = await updatePassword(newValue);
                 //     break;

@@ -106,6 +106,11 @@ function handleRegister() {
 							if (userData.alias) {
 								localStorage.setItem('username', userData.alias);
 							}
+
+							if (userData.status) {
+								const statusSaved = userData.status === 'online' ? 'available' : userData.status;
+								localStorage.setItem('userStatus', statusSaved);
+							}
 						}
 					} catch (err) {
 						console.error("Can't get user's profile", err);

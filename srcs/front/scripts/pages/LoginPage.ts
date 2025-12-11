@@ -53,7 +53,6 @@ function handleLogin() {
                             method: 'GET',
                             headers: {
                                 'Content-Type': 'application/json',
-                                // AJOUT du TOKEN (badge d acces)-> on va le chercher dans le localStorage
                                 'Authorization': `Bearer ${access_token}`
                             }
                         });
@@ -68,8 +67,6 @@ function handleLogin() {
                         console.error("Can't get user's profile", err);
                     }
 
-                    // 2. Mise à jour du Status en DB (PATCH)
-                    // On envoie le status que l'utilisateur A CHOISI (selectedStatus)
                     try {
                         await fetch(`/api/users/${user_id}/status`, {
                             method: 'PATCH',
@@ -85,12 +82,7 @@ function handleLogin() {
                     }
                 }
 
-                // 3. Sauvegarde Locale CORRECTE pour HomePage
-                // IMPORTANT : Utiliser 'userStatus' (pas 'user-status')
-                // IMPORTANT : Utiliser selectedStatus (ce qu'il a choisi) et non data.status (le vieux status de la DB)
                 localStorage.setItem('userStatus', selectedStatus);
-
-                // 4. Redirection
                 window.history.pushState({}, '', '/home');
                 window.dispatchEvent(new PopStateEvent('popstate'));
 
