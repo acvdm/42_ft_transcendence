@@ -7,7 +7,7 @@ export interface Credential {
     user_id: number;
     email: string;
     pwd_hashed: string;
-    two_fa_secret: string;
+    two_fa_secret: string | null;
     is_2fa_enabled: number;
     created_at: string;
 }
@@ -16,7 +16,7 @@ export interface createCredentialData {
     user_id: number;
     email: string;
     pwd_hashed: string;
-    two_fa_secret: string;
+    two_fa_secret: string | null;
     is_2fa_enabled: number;
 }
 
@@ -104,7 +104,19 @@ export async function getEmailbyID(
     return row?.email;
 }
 
+export async function get2FASecret(
+    db: Database, 
+    userId: number
+): Promise<string | null> {
+    const row = await db.get(
+        `SELECT two_fa_secret FROM CREDENTIALS WHERE user_id = ?`,
+        [userId]
+    );
+    return row?.two_2fa_secret || null;
+}
+
 //-------- PUT / UPDATE
+
 // sauvegarde le secret mais laisse le 2FA desactive
 export async function update2FASecret(
     db: Database,
@@ -113,9 +125,20 @@ export async function update2FASecret(
 ) : Promise<void> {
     await db.run(
         `UPDATE CREDENTIALS
-        SET two_fa_secret = ?, is_2fa_enable = 0
+        SET two_fa_secret = ?, is_2fa_enabled = 0
         WHERE user_id = ?`,
         [secret, userId]
+    );
+}
+
+// active le 2FA en DB (passe a true)
+export async function activate2FA(
+    db: Database, 
+    userId: number
+): Promise<void> {
+    await db.run(
+        `UPDATE CREDENTIALS SET is_2fa_enabled = 1 WHERE user_id = ?`,
+        [userId]
     );
 }
 

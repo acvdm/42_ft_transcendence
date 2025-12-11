@@ -5,6 +5,7 @@ import { Database } from 'sqlite';
 import { validateRegisterInput } from './validators/auth_validators.js';
 import { loginUser, registerUser, refreshUser, logoutUser } from './services/auth_service.js';
 import * as credRepo from "./repositories/credentials.js";
+import { generate2FASecret } from './utils/crypto.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -219,11 +220,38 @@ fastify.post('/2fa/generate', async (request, reply) => {
 	
 	console.log("✅ route /2fa/generate atteinte");
 
-	credRepo.update2FASecret()
-	
+	try {
+		const userIdHeader = request.headers['x-user-id'];
+		if (!userIdHeader)
+		{
+			//callback pour test
+			// return reply.status(401).send({ error: "Unauthorized: Missing User ID" });
+             // Pour test direct (A SUPPRIMER EN PROD) :
+             const body = request.body as { user_id: number };
+             const userId = body.user_id;
 
+		}
 
-})
+		const userId = parseInt(userIdHeader as string);
+
+		const result = await generate2FASecret(db, userId);
+
+		console.log(`✅ 2FA generated for user ${userId}`);
+
+		return reply.status(200).send({
+			sucess: true,
+			data: result, // contient { qrCodeUrl, manualSecret }
+			error: null
+		});
+	} catch (err: any) {
+		console.error("Error generating 2FA:", err);
+		return reply.status(500).send({
+			sucess: false,
+			data: null,
+			error: { message: err.message || "failed to generate 2FA" }
+		});
+	}
+});
 
 /*
 /2fa/enable
@@ -233,6 +261,11 @@ recuperer le 2fa secret
 verifier la validation
 reponse 2fa active
 */ 
+
+fastify.post('/2fa/enable', async (request, reply) => {
+
+
+});
 
 /*
 /2fa/disable

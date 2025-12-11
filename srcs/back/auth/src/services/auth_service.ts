@@ -1,6 +1,8 @@
 import * as credRepo from "../repositories/credentials.js";
 import * as tokenRepo from '../repositories/token.js';
 import * as crypt from '../utils/crypto.js'
+import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
+import * as QRCode from 'qrcode';
 
 
 import { 
@@ -26,6 +28,11 @@ export interface authResponse {
     user_id: number
 }
 
+export interface TwoFAGenerateResponse {
+    qrCodeUrl: string; // image en base64
+    manualSecret: string; // code texte au cas ou la camera ne marche pas
+}
+
 async function generateTokens (
     user_id: number,
     credential_id: number
@@ -37,6 +44,7 @@ async function generateTokens (
 
     return { access_token, refresh_token, expires_at}
 }
+
 
 export async function registerUser(
     db: Database,
@@ -51,14 +59,13 @@ export async function registerUser(
 
     // 2. Hashage, génération 2fa
     const pwd_hashed = await hashPassword(password);
-    const two_fa_secret = generate2FASecret();
 
     // 3. Insertion DB
     const credential_id = await credRepo.createCredentials(db, {
         user_id,
         email,
         pwd_hashed,
-        two_fa_secret,
+        two_fa_secret: null,
         is_2fa_enabled: 0
     });
 
@@ -142,7 +149,7 @@ export async function authenticatePassword(
     return await crypt.verifyPassword(password, credential.pwd_hashed);
 }
 
-// pour refresh le refresh et l'access token
+// JWT pour refresh le refresh et l'access token
 export async function refreshUser(
     db: Database,
     oldRefreshToken: string
@@ -176,3 +183,40 @@ export async function refreshUser(
         user_id:tokenRecord.user_id
     };
 }
+
+// 2FA verification
+// fonction qui prend le code a 6 chiffres envoye par l'utilisateur 
+// et verifie s'il matche avec le secret en base
+
+export async function verifyTwoFA(
+    db: Database,
+    userId: number,
+    token: string // code envoye
+) : Promise<boolean> {
+
+    // Recuperer le secret en DB
+    const secretStr = await credRepo.get2FaSecret(db, userId);
+    if (!secretStr)
+        throw new Error("2FA not initiated");
+
+    // Creer l'objet TOTP pour verifier
+    const totp = new TOTP({
+        issuer: "Transcendence",
+        label: "Transcendence", 
+        algorithm: "SHA1", // fonction qui melange le secret et l'heure
+        digits: 6, // code final a 6 chiffres
+        period: 30, // code change toutes les 30 secondes
+        secret: Secret.fromBase32(secretStr) // Reconvertir la string en objet Secret (il avait ete convertie en string pour etre mise en DB)
+    }); 
+
+    // Valider le code
+    // delta renvoit l'ecart de temps (0 = parfait, -1 = code d'il y a 30s, null = invalide)
+    const delta = totp.validate({ token, window: 1}); // window = marge d'erreur -> serveur accepte le code actuel mais regarde aussi 1 periode avant et apres
+    if (delta === null) {
+        return false;
+    }
+
+    await credRepo.activate2FA(db, userId);
+    
+    return true;
+};
