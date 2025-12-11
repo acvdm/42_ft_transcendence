@@ -1,13 +1,30 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
+import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential } from './services/auth_service.js';
+import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser } from './services/auth_service.js';
 import fs from 'fs';
 
+/* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
+
+//------------COOKIE 
+// on recupere le secret pour le cookie
+// process = objet global de Node.js qui represente le programme en cours d'execution
+const cookieSecret = process.env.COOKIE_SECRET;
+if (!cookieSecret){
+    console.error("FATAL ERROR: COOKIE_SECRET is not defined in .env");
+    process.exit(1);
+}
 
 // Creation of Fastify server
 const fastify = Fastify({ logger: true, });
+
+// enregistrer un plugin cookie avec la variable d'env
+fastify.register(fastifyCookie, {
+  secret: cookieSecret,
+  parseOptions: {} // options par defaut
+});
 
 let db: Database; // on stocke ici la connexion SQLite, globale au module
 
@@ -16,7 +33,6 @@ async function main()
 	db = await initDatabase();
 	console.log('auth database initialised');
 }
-
 
 
 //---------------------------------------
@@ -34,12 +50,26 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 		validateRegisterInput(body);
 
 		// 2. Traiter (toute la logique est dans le service)
-		const result = await registerUser(db, body.user_id, body.email, body.password);
+		const authResponse = await registerUser(db, body.user_id, body.email, body.password);
 
-		// 3. Répondre
+		// 3. Cookie
+		reply.setCookie('refresh_token', authResponse.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
+		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
+
+		// 4. Répondre
 		return reply.status(200).send({
 			success: true,
-			data: result,
+			refresh_token: authResponse.refresh_token,
+			access_token: authResponse.access_token,
+			user_id: authResponse.user_id,
 			error: null
 		});
 	} 
@@ -62,8 +92,18 @@ fastify.post('/sessions', async (request, reply) =>
 	try 
 	{
 		const result = await loginUser(db, body.email, body.password);
-		console.log("route /sessions atteinte");	
+		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
+
+		reply.setCookie('refresh_token', result.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
 		return reply.status(200).send({
 			success: true,
 			data: result,
@@ -108,6 +148,113 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 	}
 });
 
+// duplique le /sessions ?
+fastify.post('/login', async (request, reply) => {
+  const body = request.body as { email: string, password: string };
+  
+  try {
+    const authResponse = await loginUser(db, body.email, body.password);
+	console.log("✅ route /login atteinte");
+
+    // on met le refresh token dans le cookie, pas dans le body
+    // et on prepare l'en-tete HTTP qui sera attache a la reponse finale
+    // le navigateur lira cette en tete et enregistrera le cookie
+    reply.setCookie('refresh_token', authResponse.refresh_token, { // refresh_token dans la fonction loginUser
+      path: '/',
+      httpOnly: true, // invisible au JS (protection XSS)
+      secure: true, //acces au cookie uniquement via https
+      sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+      maxAge: 7 * 24 * 3600, // 7 jours en secondes
+      signed: true // signe avec cookie secret
+    });
+
+    // envoi de l'access token dans le json et pas dans l'authResponse
+    return reply.status(200).send({
+      access_token:authResponse.access_token,
+      user_id: authResponse.user_id
+    });
+
+  } catch (err: any) {
+    console.error("❌ ERREUR AUTH LOGIN:", err);
+     return reply.status(400).send({ error: err.message });
+  }
+});
+
+fastify.post('/refresh', async (request, reply) => {
+  
+  // lire le cookie signe
+  const cookie = request.cookies.refresh_token;
+  // verification de la signature
+  const result = request.unsignCookie(cookie || '');
+
+  if (!result.valid || !result.value) {
+    return reply.status(401).send({ error: "Invalid or missing refresh token"});
+  }
+
+  const refreshToken = result.value;
+
+  try {
+	// appeler le service pour verifier la DB et generer nouveaux tokens
+    const authResponse = await refreshUser(db, refreshToken);
+
+    reply.setCookie('refresh_token', authResponse.refresh_token, {
+      path: '/',
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 7* 24 * 3600,
+      signed: true
+    });
+
+    console.log("Refresh request valid for token:", refreshToken);
+
+    return reply.send({
+      access_token: authResponse.access_token,
+      user_id: authResponse.user_id
+    });
+  } catch (err: any){
+      reply.clearCookie('refresh_token');
+      return reply.status(403).send({error: err.message});
+  }
+});
+
+// fonction pour supprimer le refresh token de la db et supprimer le cookie du navigateur
+fastify.post('/logout', async (request, reply) => {
+	
+	console.log("✅ route /logout atteinte");	
+
+	const cookie = request.cookies.refresh_token;
+	if (!cookie){
+		return reply.status(200).send({message: 'Already logged out'});
+	}
+
+	// on decode le cookie (car il etait signe)
+	const unsigned = request.unsignCookie(cookie);
+
+	// si signature invalide ou nulle on nettoie qd meme le cookie client par securite
+	if (!unsigned.valid || !unsigned.value){
+		reply.clearCookie('refresh_token', { path: '/'});
+		return reply.status(200).send({ message: 'Logged out (Invalid token)'});
+	}
+
+	const refreshToken = unsigned.value;
+
+	try {
+		await logoutUser(db, refreshToken);
+		console.log("✅ Refresh Token suppress from the database");
+	} catch (err) {
+		console.error("Error for the supression of Refresh Token in the database: ", err);
+	}
+
+	reply.clearCookie('refresh_token', {
+		path: '/',
+		httpOnly: true,
+		secure: true,
+		sameSite: 'strict'
+	});
+
+	return reply.status(200).send({ success: true, message: "✅ Logged out succefully"});
+})
 
 //---------------------------------------
 //--------------- SERVER ----------------

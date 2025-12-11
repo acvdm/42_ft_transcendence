@@ -1,0 +1,312 @@
+import SocketService from "../services/SocketService";
+import { getStatusDot, statusImages } from "./Data";
+import { fetchWithAuth } from "../pages/api";
+
+export class FriendList {
+    private container: HTMLElement | null;
+    private userId: string | null;
+
+    constructor() {
+        this.container = document.getElementById('contacts-list');
+        this.userId = localStorage.getItem('userId');
+    }
+
+    public init() {
+        this.loadFriends();
+        this.setupFriendRequests();
+        this.setupNotifications();
+        this.listenToUpdates();
+    }
+
+    private async loadFriends() {
+        const contactsList = this.container;
+        if (!this.userId || !contactsList) return;
+
+        try {
+            const response = await fetchWithAuth(`/api/users/${this.userId}/friends`);
+            if (!response.ok) throw new Error('Failed to fetch friends');
+            
+            const responseData = await response.json();
+            const friendList = responseData.data;
+            // on vide la liste
+            contactsList.innerHTML = '';
+            
+            if (!friendList || friendList.length === 0) {
+                contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+                return;
+            }
+
+            friendList.forEach((friend: any) => {
+                const friendItem = document.createElement('div');
+                friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+
+                const status = friend.status || 'invisible'; 
+
+                // on stocke tout
+                friendItem.dataset.id = friend.id;
+                friendItem.dataset.username = friend.alias;
+                friendItem.dataset.status = status;
+                friendItem.dataset.bio = friend.bio || "Share a quick message";
+                friendItem.dataset.avatar = friend.avatar_url || friend.avatar || "/assets/basic/default.png";
+                
+
+                friendItem.innerHTML = `
+                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
+                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                             src="${getStatusDot(status)}" alt="status">
+                    </div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+                    </div>
+                `;
+
+                // on ajoute a la liste
+                contactsList.appendChild(friendItem);
+                
+                // ouverture du chat
+                friendItem.addEventListener('click', () => {
+                     // On envoie un signal au composant Chat pour qu'il s'ouvre
+                    const event = new CustomEvent('friendSelected', { detail: friend });
+                    window.dispatchEvent(event);
+                });
+            });
+
+        } catch (error) {
+            console.error("Error loading friends:", error);
+            contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+        }
+    }
+
+    private setupFriendRequests() {
+        const addFriendButton = document.getElementById('add-friend-button');
+        const addFriendDropdown = document.getElementById('add-friend-dropdown');
+        const friendSearchInput = document.getElementById('friend-search-input') as HTMLInputElement;
+        const sendFriendRequestBtn = document.getElementById('send-friend-request');
+        const cancelFriendRequestBtn = document.getElementById('cancel-friend-request');
+        const friendRequestMessage = document.getElementById('friend-request-message');
+
+        if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+        
+            // ouverture ou fermeture du dropdown
+            addFriendButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addFriendDropdown.classList.toggle('hidden');
+                
+                // fermeture des autres menus (Status, etc) géré globalement
+                document.getElementById('status-dropdown')?.classList.add('hidden');
+                
+                if (!addFriendDropdown.classList.contains('hidden')) {
+                    friendSearchInput.focus();
+                }
+            });
+    
+            // envoi de la demande d'ami -> quel route on choisi>
+            const sendFriendRequest = async () => {
+                const searchValue = friendSearchInput.value.trim(); // onretire les espaces etc
+                
+                if (!searchValue) { // si vide alors message d;erreur
+                    this.showFriendMessage('Please enter a username or email', 'error', friendRequestMessage);
+                    return;
+                }
+    
+                const userId = localStorage.getItem('userId');
+    
+                try {
+                    const response = await fetchWithAuth(`/api/users/${userId}/friendships`, { // on lance la requete sur cette route
+                        method: 'POST', // post pour creer la demande
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ alias: searchValue })
+                    });
+    
+                    const data = await response.json();
+    
+                    if (response.ok) {
+                        this.showFriendMessage('Friend request sent!', 'success', friendRequestMessage); // si ok alors la friend request en envoyee
+                        friendSearchInput.value = '';
+                        
+                        setTimeout(() => { // timeout pour pas garder le menu ouvert indefiniment
+                            addFriendDropdown.classList.add('hidden');
+                            friendRequestMessage?.classList.add('hidden');
+                        }, 1500);
+                    } else {
+                        this.showFriendMessage(data.message || 'Error sending request', 'error', friendRequestMessage);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    this.showFriendMessage('Network error', 'error', friendRequestMessage);
+                }
+            };
+    
+            // clic sur envoyer
+            sendFriendRequestBtn.addEventListener('click', sendFriendRequest);
+            
+            friendSearchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    sendFriendRequest();
+                }
+            });
+    
+            cancelFriendRequestBtn.addEventListener('click', () => {
+                addFriendDropdown.classList.add('hidden');
+                friendSearchInput.value = '';
+                friendRequestMessage?.classList.add('hidden');
+            });
+            
+            document.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+                    addFriendDropdown.classList.add('hidden');
+                    friendRequestMessage?.classList.add('hidden');
+                }
+            });
+        }
+    }
+
+    // affichage pour l'utilisateur
+    private showFriendMessage(message: string, type: 'success' | 'error', element: HTMLElement | null) {
+        if (element) {
+            element.textContent = message;
+            element.classList.remove('hidden', 'text-green-600', 'text-red-600');
+            element.classList.add(type === 'success' ? 'text-green-600' : 'text-red-600');
+        }
+    };
+
+    private setupNotifications() {
+        const notifButton = document.getElementById('notification-button');
+        const notifDropdown = document.getElementById('notification-dropdown');
+        const notifList = document.getElementById('notification-list');
+
+        if (notifButton && notifDropdown && notifList) {
+             // On définit handleRequest AVANT de l'utiliser dans checkNotifications
+             const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { 
+                const userId = localStorage.getItem('userId'); 
+                try {
+                    const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: askerId, status: action }) 
+                    });
+                    if (response.ok) {
+                        itemDiv.style.opacity = '0'; 
+                        setTimeout(() => {
+                            itemDiv.remove();
+                            if (action === 'validated') this.loadFriends(); 
+                            checkNotifications(); 
+                        }, 300);
+                    } else {
+                        console.error("Failed to update request");
+                    }
+                } catch (error) {
+                    console.error("Network error", error);
+                }
+            };
+
+            const checkNotifications = async () => {
+                const userId = localStorage.getItem('userId');
+                if (!userId) return;
+                try {
+                    const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+                    if (!response.ok) throw new Error('Failed to fetch friends');
+    
+                    const requests = await response.json();
+                    const pendingList = requests.data;
+                    const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+                    
+                    if (pendingList.length > 0) {
+                        if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+                    } else {
+                        if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
+                    }
+    
+                    notifList.innerHTML = '';
+                    if (pendingList.length === 0) {
+                        notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+                        return;
+                    }
+
+                    pendingList.forEach((req: any) => {
+                        const item = document.createElement('div');
+                        item.dataset.friendshipId = req.friendshipId;
+                        item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+    
+                        item.innerHTML = `
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold truncate">${req.alias}</p>
+                                <p class="text-xs text-gray-500">Wants to be your friend</p>
+                            </div>
+                            <div class="flex gap-1">
+                                <button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
+                                <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">✕</button>
+                                <button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">🚫</button>
+                            </div>
+                        `;
+                        const buttonAccept = item.querySelector('.btn-accept');
+                        const buttonReject = item.querySelector('.btn-reject');
+                        const buttonBlock  = item.querySelector('.btn-block');
+    
+                        buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); handleRequest(req.id, 'validated', item); });
+                        buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); handleRequest(req.id, 'rejected', item); });
+                        buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); handleRequest(req.id, 'blocked', item); });
+    
+                        notifList.appendChild(item);
+                    });
+                } catch (error) {
+                    console.error("Error fetching notifications:", error);
+                }
+            };
+            
+            notifButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notifDropdown.classList.toggle('hidden');
+                document.getElementById('add-friend-dropdown')?.classList.add('hidden');
+                if (!notifDropdown.classList.contains('hidden')) {
+                    checkNotifications();
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (!notifDropdown.contains(e.target as Node) && !notifButton.contains(e.target as Node))
+                    notifDropdown.classList.add('hidden');
+            });
+
+            checkNotifications();
+            setInterval(checkNotifications, 30000);
+        }
+    }
+
+    private listenToUpdates() {
+        const socket = SocketService.getInstance().socket;
+        if (!socket) return;
+        
+        // Écoute de l'événement socket pour les changements de statut des amis
+        // (Assure-toi que ton backend envoie bien cet événement avec { username, status })
+        socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
+            console.log(`Status update for ${data.username}: ${data.status}`);
+            this.updateFriendUI(data.username, data.status);
+        });
+
+        socket.on("userConnected", (data: { username: string, status: string }) => {
+             const currentUsername = localStorage.getItem('username');
+             if (data.username !== currentUsername) {
+                this.updateFriendUI(data.username, data.status);
+             }
+        });
+    }
+
+    // Fonction pour mettre à jour l'interface d'un ami spécifique
+    private updateFriendUI(username: string, newStatus: string) {
+        //  Mettre à jour la liste d'amis (le point de couleur)
+        const friendItems = document.querySelectorAll('.friend-item');
+        friendItems.forEach((item) => {
+            const el = item as HTMLElement;
+            if (el.dataset.username === username) {
+                // Mise à jour du dataset
+                el.dataset.status = newStatus;
+                // Mise à jour visuelle du point (dot)
+                const statusImg = el.querySelector('img[alt="status"]') as HTMLImageElement;
+                if (statusImg) {
+                    statusImg.src = getStatusDot(newStatus);
+                }
+            }
+        });
+    }
+}

@@ -1,8 +1,7 @@
 // j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
 import { render as LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
 import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
-import { render as ProfilePage } from "./pages/ProfilePage"
-// import { ProfilPage } from "./pages/ProfilePage";
+import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./pages/ProfilePage"
 import { NotFoundPage } from "./pages/NotFound";
 import { LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
@@ -33,7 +32,7 @@ const routes: { [key: string]: Page } = {
 	},
 	'/profile': {
 		render: ProfilePage,
-		afterRender: () => console.log('Profil page chargée -> modifications de la page de profil, photo etc')
+		afterRender: ProfilePageAfterRender
 	},
 	'/register': {
 		render: RegisterPage,
@@ -49,16 +48,36 @@ const routes: { [key: string]: Page } = {
 };
 
 // gestion du logout
-const handleLogout = () => {
-	localStorage.removeItem('accessToken');
-	localStorage.removeItem('userId');
-	localStorage.removeItem('username');
-	// redirection vers la page d'accueil
-	window.history.pushState({}, '', '/');
-	// manuellement chargement pour recharger la vue
-	const popStateEvent = new PopStateEvent('popstate');
-	window.dispatchEvent(popStateEvent);
+const handleLogout = async () => {
 
+	try {
+		// appel au backend
+		await fetch('/api/auth/logout', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			// force l'envoi du cookie HttpOnly au serveur
+			credentials: 'include',
+			body: JSON.stringify({}) // force le format JSON
+		});
+
+		console.log("Deconnection from the backend server succeed");
+	} catch (error) {
+		console.error("Error during the deconnection from the server: ", error);
+	} finally {
+		// on nettoie le client
+		localStorage.removeItem('accessToken');
+		localStorage.removeItem('userId');
+		localStorage.removeItem('username');
+		localStorage.removeItem('userStatus');
+	
+		// redirection vers la page d'accueil
+		window.history.pushState({}, '', '/');
+		// manuellement chargement pour recharger la vue
+		const popStateEvent = new PopStateEvent('popstate');
+		window.dispatchEvent(popStateEvent);
+	}
 }
 
 
@@ -160,4 +179,3 @@ window.addEventListener('popstate', () => {
 document.addEventListener('DOMContentLoaded', () => {
 	handleLocationChange();
 });
-

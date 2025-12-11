@@ -27,10 +27,12 @@ export async function createUserInDB (
     if (check_alias?.id)
         throw new Error('Alias already taken, find another one');
     
+    const avatarDefault = data.avatar_url || '/assets/basic/default.png'; // je rajoute ca pour avoir une image par default
+
     const result = await db.run(`
         INSERT INTO USERS (alias, avatar_url)
         VALUES (?, ?)`,
-        [data.alias, data.avatar_url]
+        [data.alias, avatarDefault]
     );
 
     if (!result.lastID) 
@@ -177,5 +179,53 @@ export async function rollbackDeleteUser (
     await db.run(`
         DELETE FROM USERS WHERE id = ?`, 
         [user_id]
+    );
+}
+
+
+// update de l'avatar
+
+export async function updateAvatar(
+    db: Database,
+    user_id: number,
+    avatar_url: string
+) {
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    await db.run(
+        `UPDATE USERS SET avatar_url = ? WHERE id = ?`,
+        [avatar_url, user_id]
+    );
+}
+
+// update de l'username
+
+export async function updateAlias (
+    db: Database,
+    user_id: number,
+    alias: string
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    if (alias.length > 30)
+        throw new Error(`Error: bio too long. Max 75 characters`);
+
+    const existingUser = await db.get(`
+        SELECT id FROM USERS WHERE alias = ? AND id != ?`,
+        [alias, user_id]
+    );
+
+    if (existingUser)
+        throw new Error('Alias already taken, be original.');
+
+    console.log("update username dans users.ts");
+    await db.run(`
+        UPDATE USERS SET alias = ? WHERE id = ?`,
+        [alias, user_id]
     );
 }

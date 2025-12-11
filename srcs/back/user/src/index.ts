@@ -2,12 +2,20 @@ import Fastify from 'fastify'; // rôle de serveur HTTP
 import sqlite3 from 'sqlite3';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import * as userRepo from './repositories/users.js';
+import { createUserInDB } from './repositories/users.js';
+import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 import * as friendRepo from './repositories/friendships.js';
 import fs from 'fs';
+import * as userRepo from './repositories/users.js';
+
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true});
+const fastify = Fastify({ logger: true });
+
+// NOUVEAY on enregistre le plugin cookie 
+fastify.register(fastifyCookie, {
+  secret: process.env.COOKIE_SECRET || 'un-secret-par-defaut',
+});
 
 let db: Database;
 
@@ -68,20 +76,53 @@ fastify.post('/users', async (request, reply) => {
 			}),
 		});
 
-		// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
-		const data = await authResponse.json();
-		if (data.success)
+		const authJson = await authResponse.json();
+
+		console.log("Objet Response brut:", authResponse);
+		console.log("Reponse de l'Auth:", authJson);
+    	// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
+    	// MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
+    	// d'abord on extrait les infos recues du service Auth
+
+		// il faut creer un json pour recuperer les donnees du fetch
+		// const data = await authResponse.json();
+		if (authJson.success)
 		{
-		    return reply.status(201).send({
-				success: true,
-				data: data,
-				error: null
-		    });
+			// const authPayload = data; //.data MODIF
+			// if (!authPayload || !authPayload.refresh_token)
+			// 	throw new Error("Auth service response is missing tokens inside data object");
+
+    		const { refresh_token, access_token, user_id } = authJson;//.data?
+
+			if (!access_token || !user_id) {
+				throw new Error("Tokens manquants dans la reponse de l'Auth")
+			}
+    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refresh_token', refresh_token, {
+    		  path: '/',
+    		  httpOnly: true, // invisible au JS (protection XSS)
+    		  secure: true, //acces au cookie uniquement via https
+    		  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+    		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
+    		  signed: true
+    		});
+
+    		// console.log("data from authResponse: ", data);
+
+    		// on envoit pas le refresh token /!\
+    		return reply.status(201).send({
+				// success: true,
+					// data: {
+    					access_token: access_token,
+    					user_id: user_id
+					// },
+				// error: null
+    		});
 		}
-		else 
-		{
-		    throw new Error(`Auth error: ${data.error.message}`);    
+		else {
+			throw new Error(`Auth error: ${authJson.error.message}`); 
 		}
+
 	} 
 	catch (err: any) 
 	{
@@ -114,7 +155,7 @@ fastify.get('/users/:id', async (request, reply) =>
 	const user = await userRepo.findUserByID(db, userId);    
 	if (!user) 
 	{
-		reply.status(404).send({
+		return reply.status(404).send({
 			success: false,
 			data: null,
 			error: { message: `User not found` }
@@ -192,6 +233,35 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 	{
 		fastify.log.error(err);
 		return reply.status(500).send({
+			success: false, // c'est true ici non?
+			data: null,
+			error: { message: 'Failed to update bio' }
+		});
+	}
+})
+
+
+/* -- UPDATE ALIAS -- */
+fastify.patch('/users/:id/alias', async (request, reply) =>
+{
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	const { alias } = request.body as { alias: string };
+
+	try
+	{
+		console.log("Try to change alias in back: ", userId);
+		userRepo.updateAlias(db, userId, alias);
+		return reply.status(200).send({
+			success: true,
+			data: {alias: alias},
+			error: null
+		});
+	}
+	catch (err)
+	{
+		fastify.log.error(err);
+		return reply.status(500).send({
 			success: false,
 			data: null,
 			error: { message: (err as Error).message }
@@ -256,6 +326,33 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	}
 })
 
+// pour la route pour update la vatar
+
+/* -- UPDATE AVATAR -- */
+fastify.patch('/users/:id/avatar', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const userId = Number(id);
+    const { avatar } = request.body as { avatar: string };
+
+    try {
+        if (!avatar) throw new Error("No avatar provided");
+
+        await userRepo.updateAvatar(db, userId, avatar);
+        
+        return reply.status(200).send({
+            success: true,
+            data: { avatar: avatar },
+            error: null
+        });
+    } catch (err: any) {
+        fastify.log.error(err);
+        return reply.status(500).send({
+            success: false,
+            data: null,
+            error: { message: err.message || 'Failed to update avatar' }
+        });
+    }
+});
 
 
 //---------------------------------------

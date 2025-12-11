@@ -99,36 +99,27 @@
 			}
 			
 			/* Icônes des boutons */
-			.minimize-icon {
-				width: 8px;
-				height: 2px;
-				background: #000;
-				position: absolute;
-				left: 50%;
-				top: 13px;
-				transform: translateX(-50%);
+			.title-bar-controls button[aria-label="Minimize"]::before {
+			content: "";
+			background: url("./assets/windows/minimize.png") no-repeat center 10px;
+			position: absolute;
+			inset: 0;
 			}
-			
-			.maximize-icon {
-				width: 8px;
-				height: 8px;
-				border: 2px solid #000;
-				position: absolute;
-				left: 50%;
-				top: 50%;
-				transform: translate(-50%, -50%);
+
+			.title-bar-controls button[aria-label="Maximize"]::before {
+			content: "";
+			background: url("./assets/windows/maximize.png") no-repeat center;
+			position: absolute;
+			inset: 0;
 			}
-			
-			.close-icon {
-				position: absolute;
-				left: 50%;
-				top: 50%;
-				transform: translate(-50%, -50%);
-				font-size: 16px;
-				font-weight: bold;
-				color: #000;
-				line-height: 1;
+
+			.title-bar-controls button[aria-label="Close"]::before {
+			content: "";
+			background: url("./assets/windows/close.png") no-repeat center;
+			position: absolute;
+			inset: 0;
 			}
+
 			
 			.window-body {
 				margin: 6px;

@@ -80,19 +80,26 @@ function handleRegister() {
             });
 
             const result = await response.json();
+			console.log("RECEPTION DU BACKEND:", result);
 
-            if (result.success) {
-				const { access_token, refresh_token, user_id } = result.data.data;
-				// console.log('User ID:', user_id);
-  				// console.log('Access Token:', access_token);
-  				// console.log('Refresh Token:', refresh_token);
+			if (response.ok) // on verifie que HTTP entre 200-299 
+			{
+				// pas besoin du refresh_token car dans le cookie
+				const { access_token, user_id } = result; // on enleve le data, on recupere depuis la racine de lobjet
+				console.log('User ID:', user_id);
+  				console.log('Access Token:', access_token);
+
+				if (access_token)
+					localStorage.setItem('accessToken', access_token);
+				if (user_id) 
+					localStorage.setItem('userId', user_id.toString());
 
 				if (user_id) {
 					// console.log(`user_id: ${user_id}`);
-					localStorage.setItem('userId', user_id.toString());
 					try {
-						
-						const userRes = await fetch(`/api/users/${user_id}`);
+						const userRes = await fetch(`/api/users/${user_id}`, {
+							headers: { 'Authorization': `Bearer ${access_token}` }
+						});
 						// console.log(`${userRes}`);
 						if (userRes.ok) {
 							const userData = await userRes.json();
@@ -104,9 +111,7 @@ function handleRegister() {
 						console.error("Can't get user's profile", err);
 					}
 				}
-				if (access_token) // on sauvegarde le token si necessaire
-					localStorage.setItem('accessToken', access_token);
-
+				
 				window.history.pushState({}, '', '/home'); // redirection vers homepage
 				window.dispatchEvent(new PopStateEvent('popstate')); // on declenche l'event popstate pour forcer le rechargement
 
