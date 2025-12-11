@@ -27,7 +27,11 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 
         try {
             // appel au refresh
-            const refreshRes = await fetch('/api/auth/refresh', {method: 'POST'});
+            const refreshRes = await fetch('/api/auth/refresh', 
+                {
+                    method: 'POST',
+                    credentials: 'include'
+                });
 
             if (refreshRes.ok) {
                 const data = await refreshRes.json();

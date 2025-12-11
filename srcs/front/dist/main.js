@@ -4033,7 +4033,13 @@
     if (response.status === 401) {
       console.warn("Token expired (401). Atempt to refresh...");
       try {
-        const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+        const refreshRes = await fetch(
+          "/api/auth/refresh",
+          {
+            method: "POST",
+            credentials: "include"
+          }
+        );
         if (refreshRes.ok) {
           const data = await refreshRes.json();
           const newToken = data.access_token;
