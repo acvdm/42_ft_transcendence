@@ -16,6 +16,7 @@ export class FriendList {
         this.setupFriendRequests();
         this.setupNotifications();
         this.listenToUpdates();
+        this.setupBlockListener();
     }
 
     private async loadFriends() {
@@ -74,6 +75,30 @@ export class FriendList {
             console.error("Error loading friends:", error);
             contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
         }
+    }
+
+
+    private setupBlockListener() {
+        window.addEventListener('friendBlocked', (e: any) => {
+            const blockedUsername = e.detail?.username;
+            if (!blockedUsername || !this.container) return;
+
+            // element html qui correspond
+            const friendToRemove = this.container.querySelector(`.friend-item[data-username="${blockedUsername}"]`);
+
+            if (friendToRemove) {
+                // suppression
+                (friendToRemove as HTMLElement).style.opacity = '0';
+                setTimeout(() => {
+                    friendToRemove.remove();
+
+                    // message par defaut
+                    if (this.container && this.container.children.length === 0) {
+                        this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+                    }
+                }, 300);
+            }
+        });
     }
 
     private setupFriendRequests() {
@@ -225,17 +250,29 @@ export class FriendList {
                     pendingList.forEach((req: any) => {
                         const item = document.createElement('div');
                         item.dataset.friendshipId = req.friendshipId;
-                        item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+                        item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
     
                         item.innerHTML = `
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${req.alias}</p>
-                                <p class="text-xs text-gray-500">Wants to be your friend</p>
+                            <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                                <img src="${req.avatar_url || '/assets/basic/logo.png'}" 
+                                    class="w-full h-full object-cover rounded"
+                                    alt="avatar">
                             </div>
-                            <div class="flex gap-1">
-                                <button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
-                                <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">✕</button>
-                                <button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">🚫</button>
+                            <div class="flex-1 min-w-0 pr-4">
+                                <p class="text-sm text-gray-800">
+                                    <span class="font-semibold">${req.alias}</span> wants to be your friend
+                                </p>
+                            </div>
+                            <div class="flex gap-2 flex-shrink-0">
+                                <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                                    <span class="text-green-600 font-bold text-sm">✓</span>
+                                </button>
+                                <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                                    <span class="text-red-600 font-bold text-sm">✕</span>
+                                </button>
+                                <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                                    <span class="text-gray-600 text-xs">🚫</span>
+                                </button>
                             </div>
                         `;
                         const buttonAccept = item.querySelector('.btn-accept');

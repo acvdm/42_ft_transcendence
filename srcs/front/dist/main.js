@@ -230,15 +230,20 @@
 										class="w-full h-full object-contain">
 										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 								</button>
-								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-80 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden">
-									<div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
-										<h3 class="font-semibold text-sm text-gray-700">Notifications</h3>
+								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+											Notifications
+										</h3>
 									</div>
-									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto">
+									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
 										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
 									</div> <!--fin du listing inside dropdown-->
 								</div> <!--fin du div dropdown-->
 							</div>
+
+
+							
 						</div>
 
 					</div>	<!--FIn du premier cadre-->		
@@ -389,7 +394,7 @@
 											Report user
 										</button>
 										<button id="button-block-user" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
-											Report user
+											Block user
 										</button>
 									</div>
 
@@ -4140,6 +4145,7 @@
       this.setupFriendRequests();
       this.setupNotifications();
       this.listenToUpdates();
+      this.setupBlockListener();
     }
     async loadFriends() {
       const contactsList = this.container;
@@ -4182,6 +4188,22 @@
         console.error("Error loading friends:", error);
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
       }
+    }
+    setupBlockListener() {
+      window.addEventListener("friendBlocked", (e) => {
+        const blockedUsername = e.detail?.username;
+        if (!blockedUsername || !this.container) return;
+        const friendToRemove = this.container.querySelector(`.friend-item[data-username="${blockedUsername}"]`);
+        if (friendToRemove) {
+          friendToRemove.style.opacity = "0";
+          setTimeout(() => {
+            friendToRemove.remove();
+            if (this.container && this.container.children.length === 0) {
+              this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+            }
+          }, 300);
+        }
+      });
     }
     setupFriendRequests() {
       const addFriendButton = document.getElementById("add-friend-button");
@@ -4307,16 +4329,28 @@
             pendingList.forEach((req) => {
               const item = document.createElement("div");
               item.dataset.friendshipId = req.friendshipId;
-              item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+              item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
               item.innerHTML = `
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${req.alias}</p>
-                                <p class="text-xs text-gray-500">Wants to be your friend</p>
+                            <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                                <img src="${req.avatar_url || "/assets/basic/logo.png"}" 
+                                    class="w-full h-full object-cover rounded"
+                                    alt="avatar">
                             </div>
-                            <div class="flex gap-1">
-                                <button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">\u2713</button>
-                                <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">\u2715</button>
-                                <button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">\u{1F6AB}</button>
+                            <div class="flex-1 min-w-0 pr-4">
+                                <p class="text-sm text-gray-800">
+                                    <span class="font-semibold">${req.alias}</span> wants to be your friend
+                                </p>
+                            </div>
+                            <div class="flex gap-2 flex-shrink-0">
+                                <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                                    <span class="text-green-600 font-bold text-sm">\u2713</span>
+                                </button>
+                                <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                                    <span class="text-red-600 font-bold text-sm">\u2715</span>
+                                </button>
+                                <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                                    <span class="text-gray-600 text-xs">\u{1F6AB}</span>
+                                </button>
                             </div>
                         `;
               const buttonAccept = item.querySelector(".btn-accept");
@@ -4614,6 +4648,7 @@
   var Chat = class {
     constructor() {
       this.currentChannel = "general";
+      this.currentFriendshipId = null;
       this.socket = SocketService_default.getInstance().socket;
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
@@ -4626,8 +4661,9 @@
       this.setupWizz();
       this.setupTools();
     }
-    joinChannel(channelKey) {
+    joinChannel(channelKey, friendshipId) {
       this.currentChannel = channelKey;
+      this.currentFriendshipId = friendshipId || null;
       this.socket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
@@ -4937,11 +4973,47 @@
           console.log("Report clicked");
           chatOptionsDropdown.classList.add("hidden");
         });
-        document.getElementById("button-block-user")?.addEventListener("click", (e) => {
+        document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
           e.stopPropagation();
+          if (!this.currentFriendshipId) {
+            console.error("Cannot block: no friendship id associated to this conv");
+            chatOptionsDropdown.classList.add("hidden");
+            return;
+          }
           const currentChatUser = document.getElementById("chat-header-username")?.textContent;
-          if (currentChatUser && confirm(`Block ${currentChatUser}?`)) {
-            console.log(`Blocking ${currentChatUser}`);
+          if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
+            try {
+              const response = await fetchWithAuth(`api/friendship/${this.currentFriendshipId}`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: "blocked" })
+              });
+              if (response.ok) {
+                console.log(`User ${currentChatUser} blocked successfully`);
+                const event = new CustomEvent("friendBlocked", {
+                  detail: { username: currentChatUser }
+                });
+                window.dispatchEvent(event);
+                if (this.messagesContainer) {
+                  this.messagesContainer.innerHTML = "";
+                  const infoMsg = document.createElement("div");
+                  infoMsg.className = "text-center text-gray-400 text-sm mt-10";
+                  infoMsg.innerText = "Conversation deleted (User blocked).";
+                  this.messagesContainer.appendChild(infoMsg);
+                }
+                if (this.messageInput) {
+                  this.messageInput.value = "";
+                  this.messageInput.disabled = true;
+                  this.messageInput.placeholder = "You blocked this user.";
+                }
+                this.currentChannel = "";
+                this.currentFriendshipId = null;
+              } else {
+                console.error("Network error while blocking");
+                alert("Error while blocking");
+              }
+            } catch (error) {
+              console.error("Networik error:", error);
+            }
           }
           chatOptionsDropdown.classList.add("hidden");
         });
@@ -5060,7 +5132,9 @@
     let currentChatFriendId = null;
     window.addEventListener("friendSelected", (e) => {
       const friend = e.detail;
+      const friendshipId = friend.friendshipId || friend.friendship_id;
       currentChatFriendId = friend.id;
+      console.log("Objet friend re\xE7u :", friend);
       const myId = parseInt(localStorage.getItem("userId") || "0");
       const ids = [myId, friend.id].sort((a, b) => a - b);
       const channelKey = `channel_${ids[0]}_${ids[1]}`;
@@ -5078,7 +5152,7 @@
       if (headerStatus) {
         headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
       }
-      chat.joinChannel(channelKey);
+      chat.joinChannel(channelKey, friendshipId);
     });
     const viewProfileButton = document.getElementById("button-view-profile");
     viewProfileButton?.addEventListener("click", () => {

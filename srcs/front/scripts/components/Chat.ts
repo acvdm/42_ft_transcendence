@@ -1,6 +1,7 @@
 import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
+import { fetchWithAuth } from "../pages/api";
 
 export class Chat {
     private socket: any;
@@ -8,6 +9,7 @@ export class Chat {
     private messageInput: HTMLInputElement | null;
     private wizzContainer: HTMLElement | null;
     private currentChannel: string = "general";
+    private currentFriendshipId: number | null = null;
     private shakeTimeout: number | undefined;
 
     constructor() {
@@ -26,14 +28,18 @@ export class Chat {
         this.setupTools(); // Animations, Fonts, Emoticons, Backgrounds
     }
 
-    public joinChannel(channelKey: string) {
+    public joinChannel(channelKey: string, friendshipId?: number) {
         this.currentChannel = channelKey;
+        this.currentFriendshipId = friendshipId || null;
+
         this.socket.emit("joinChannel", channelKey);
         
         // Reset affichage
         if (this.messagesContainer) {
             this.messagesContainer.innerHTML = '';
         }
+
+        //if (this.messageInput) this.messageInput.disabled = false;
     }
 
     // ---------------------------------------------------
@@ -428,11 +434,56 @@ export class Chat {
             });
 
             ////////////// ICI POUR LA LOGIQUE DE BLOCK/BLOCAGE D'UN AMI
-            document.getElementById('button-block-user')?.addEventListener('click', (e) => {
+            document.getElementById('button-block-user')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
+
+                if (!this.currentFriendshipId) { // est-ce qu'on a bien un id d'amitié entre les deux
+                    console.error("Cannot block: no friendship id associated to this conv");
+                    chatOptionsDropdown.classList.add('hidden'); // on retire le dropdown
+                    return ;
+                }
+
                 const currentChatUser = document.getElementById('chat-header-username')?.textContent;
-                if (currentChatUser && confirm(`Block ${currentChatUser}?`)) {
-                    console.log(`Blocking ${currentChatUser}`);
+                if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
+                    try {
+                        const response = await fetchWithAuth(`api/friendship/${this.currentFriendshipId}`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ status: 'blocked' })
+                        });
+
+                        if (response.ok) {
+                            console.log(`User ${currentChatUser} blocked successfully`);
+                            const event = new CustomEvent('friendBlocked', { 
+                                detail: { username: currentChatUser } 
+                            });
+                            window.dispatchEvent(event);
+
+                            // disparaission de laconversation
+                            if (this.messagesContainer) {
+                                this.messagesContainer.innerHTML = '';
+                                
+                                const infoMsg = document.createElement('div');
+                                infoMsg.className = "text-center text-gray-400 text-sm mt-10";
+                                infoMsg.innerText = "Conversation deleted (User blocked).";
+                                this.messagesContainer.appendChild(infoMsg);
+                            }
+
+                            // on vide l'input
+                            if (this.messageInput) {
+                                this.messageInput.value = "";
+                                this.messageInput.disabled = true;
+                                this.messageInput.placeholder = "You blocked this user.";
+                            }
+
+                            this.currentChannel = "";
+                            this.currentFriendshipId = null;
+                        } else {
+                            console.error("Network error while blocking");
+                            alert("Error while blocking");
+                        }
+                    } catch (error) {
+                        console.error("Networik error:", error);
+                    }
                 }
                 chatOptionsDropdown.classList.add('hidden');
             });

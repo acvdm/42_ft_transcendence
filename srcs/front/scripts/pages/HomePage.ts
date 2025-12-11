@@ -16,6 +16,7 @@ export function afterRender(): void {
     socketService.connect();
 
     const friendList = new FriendList();
+    
     friendList.init();
 
     const userProfile = new UserProfile();
@@ -32,8 +33,10 @@ export function afterRender(): void {
     window.addEventListener('friendSelected', (e: any) => {
         const friend = e.detail;
         
+        const friendshipId = friend.friendshipId || friend.friendship_id;
         currentChatFriendId = friend.id;
 
+        console.log("Objet friend reçu :", friend);
         const myId = parseInt(localStorage.getItem('userId') || "0");
         const ids = [myId, friend.id].sort((a, b) => a - b);
         const channelKey = `channel_${ids[0]}_${ids[1]}`;
@@ -54,8 +57,7 @@ export function afterRender(): void {
         if (headerStatus) {
             headerStatus.src = statusImages[friend.status] || statusImages['invisible'];
         }
-
-        chat.joinChannel(channelKey);
+        chat.joinChannel(channelKey, friendshipId);
     });
 
     // ouverture de la modale
