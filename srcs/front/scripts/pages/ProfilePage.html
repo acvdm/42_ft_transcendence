@@ -33,52 +33,63 @@
                             <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">
                                 Change my profile picture
                             </button>
-
+                            <div>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <label class="text-sm">Status:</label>
+                                    <select class="bg-transparent rounded-sm px-2 py-1 text-sm">
+                                        <option>Available</option>
+                                        <option selected>Busy</option>
+                                        <option>Away</option>
+                                        <option>Appear offline</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="text-sm text-center w-full leading-6">
-                                <p id="username-profile"><strong>Username</strong></p>
-                                <p id="bio-profile">c00uköü les kop1</p>
+                                <p id="username-profile" class="text-xl font-semibold"><strong></strong></p>
+                                <p id="bio-profile" class="text-lg font-semibold" style="word-break: break-all; overflow-wrap: anywhere; white-space: normal;"></p>
                             </div>
                         </div>
             
                         <div class="flex flex-col justify-between flex-1">
                             <div class="flex flex-col gap-4">
-                                <div>
-                                    <label class="text-sm">Username:</label>
-                                    <input type="text" value="" placeholder="Username" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
+                                <label class="text-sm">Username:</label>
+                                <div class="flex flex-row gap-2" data-field="alias">
+                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px">Wait...</p>
+                                    <input type="text" value="" placeholder="Username" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden" style="width:350px" disabled/>
+                                    
+                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                 </div>
-                                <div>
-                                    <label class="text-sm">Share a quick message:</label>
-                                    <input type="text" value="" placeholder="Share a quick message" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
-                                </div>
-                                <div>
-                                    <label class="text-sm">Status:</label>
-                                    <div class="flex items-center gap-2 mt-1">
-                                        <select class="bg-transparent rounded-sm px-2 py-1 text-sm">
-                                            <option>Available</option>
-                                            <option selected>Busy</option>
-                                            <option>Away</option>
-                                            <option>Appear offline</option>
-                                        </select>
-                                    </div>
+                                <label class="text-sm">Share a quick message:</label>
+                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
+                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Share a quick message</p>
+                                    <input type="text" value="" placeholder="Share a quick message" class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden" style="width:350px; overflow: hidden;" disabled/>
+                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                 </div>
                             </div>
             
                             <div class="mt-8 border-t border-gray-300 pt-4">
-                                <div class="flex items-center justify-start gap-6">
-                                    <div class="flex items-end gap-4">
-                                        <div>
-                                            <label class="text-sm">Email:</label>
-                                            <input type="email" value="" placeholder="email@gmail.com" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
-                                        </div>
-                                        <button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                <div class="flex flex-col gap-4">
+                                    <label class="text-sm">Email:</label>
+                                    <div class="flex flex-row gap-2" data-field="email">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px">Wait...</p>
+                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                        
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                     </div>
-                                </div>
-                                <div class="flex items-end gap-4 mt-2">
-                                    <div>
-                                        <label class="text-sm">Password:</label>
-                                        <input type="password" value="" placeholder="***********" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>
+
+                                    <label class="text-sm">Password:</label>
+                                    <div class="flex flex-row gap-2" data-field="password">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px">Wait...</p>
+                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                        
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                     </div>
-                                    <button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                    <button class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>
                                 </div>
                             </div>
                         </div>
@@ -171,8 +182,6 @@
                         </div>
                     </div>
                 </div>
-
-               
             </div>
         </div>
     </div>

@@ -3,6 +3,7 @@ let animationPath = "/assets/animated/";
 
 export const statusImages: { [key: string]: string } = {
     'available': '/assets/basic/status_online_small.png',
+    'online': '/assets/basic/status_online_small.png',
     'busy':      '/assets/basic/status_busy_small.png',
     'away':      '/assets/basic/status_away_small.png',
     'invisible': '/assets/basic/status_offline_small.png',

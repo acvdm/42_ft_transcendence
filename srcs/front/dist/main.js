@@ -97,7 +97,6 @@
                 method: "GET",
                 headers: {
                   "Content-Type": "application/json",
-                  // AJOUT du TOKEN (badge d acces)-> on va le chercher dans le localStorage
                   "Authorization": `Bearer ${access_token}`
                 }
               });
@@ -218,6 +217,7 @@
 								</div>
 								<div id="bio-wrapper">
 									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
 								</div>
 							</div>
 	
@@ -359,7 +359,7 @@
 										<!-- le cadre -->
 										<img id="chat-header-status" 
 											class="absolute inset-0 w-full h-full object-contain" 
-											src="/assets/basic/status_away_small.png" 
+											src="/assets/basic/status_online_small.png" 
 											alt="Status frame">
 									</div>
 									<div class="flex flex-col justify-start leading-tight">
@@ -486,8 +486,98 @@
 		</div>
 
 	</div>
-</div>
-`;
+
+
+
+
+
+    <div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">My friend</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button id="close-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6">
+                <div class="mb-6">
+                    <h2 id="friend-username" class="text-xl mb-1">'s profile</h2>
+                </div>
+                
+                <div class="flex flex-row gap-6">
+					<div class="flex flex-col items-center gap-4 w-[200px]">
+                        <div class="relative w-[170px] h-[170px]">
+                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
+                            
+                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                        </div>
+
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
+                            <input type="file" id="file-input" accept="image/*" hidden>
+
+                            <button id="browse-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            BROWSE
+                            </button>
+                            
+                            <button id="delete-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            DELETE
+                            </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
+                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!--fin de la modale pour voir le profil de ses amis -->
+
+
+</div> <!-- fin du main container -->`;
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -3884,6 +3974,7 @@
   var animationPath = "/assets/animated/";
   var statusImages = {
     "available": "/assets/basic/status_online_small.png",
+    "online": "/assets/basic/status_online_small.png",
     "busy": "/assets/basic/status_busy_small.png",
     "away": "/assets/basic/status_away_small.png",
     "invisible": "/assets/basic/status_offline_small.png",
@@ -4299,7 +4390,6 @@
         }
       });
     }
-    // Fonction pour mettre à jour l'interface d'un ami spécifique
     updateFriendUI(username, newStatus) {
       const friendItems = document.querySelectorAll(".friend-item");
       friendItems.forEach((item) => {
@@ -4349,6 +4439,7 @@
       this.userProfileImg = document.getElementById("user-profile");
       this.statusSelector = document.getElementById("status-selector");
       this.statusDropdown = document.getElementById("status-dropdown");
+      this.charCountElement = document.querySelector("#bio-wrapper .char-count");
     }
     init() {
       this.loadUserData();
@@ -4372,14 +4463,16 @@
           localStorage.setItem("username", userData.alias);
         }
         if (this.bioText && userData.bio) {
+          this.bioText.dataset.raw = userData.bio;
           this.bioText.innerHTML = parseMessage(userData.bio);
         }
         if (this.userProfileImg) {
           this.userProfileImg.src = userData.avatar_url || userData.avatar;
         }
         if (userData.status) {
-          this.updateStatusDisplay(userData.status);
-          localStorage.setItem("userStatus", userData.status);
+          const normalizedStatus = userData.status.toLowerCase();
+          this.updateStatusDisplay(normalizedStatus);
+          localStorage.setItem("userStatus", normalizedStatus);
         }
       } catch (error) {
         console.error("Error loading user profile:", error);
@@ -4387,45 +4480,86 @@
     }
     // LOGIQUE DE LA BIO et de la PHOTO
     setupBioEdit() {
-      if (!this.bioText) return;
+      if (!this.bioText || !this.bioWrapper) return;
+      const updateCharCount = (currentLength) => {
+        if (this.charCountElement) {
+          this.charCountElement.innerText = `${currentLength}/70`;
+          if (currentLength > 70) {
+            this.charCountElement.classList.remove("text-gray-500");
+            this.charCountElement.classList.add("text-red-500");
+          } else {
+            this.charCountElement.classList.remove("text-red-500");
+            this.charCountElement.classList.add("text-gray-500");
+          }
+        }
+      };
       this.bioText.addEventListener("click", () => {
         const input = document.createElement("input");
-        const currentText = this.bioText?.textContent === "Share a quick message" ? "" : this.bioText?.textContent || "";
+        const currentText = this.bioText.dataset.raw || "";
         input.type = "text";
         input.value = currentText;
         input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
-        if (this.bioWrapper && this.bioText) {
-          this.bioWrapper.replaceChild(input, this.bioText);
-          input.focus();
+        this.bioWrapper.replaceChild(input, this.bioText);
+        if (this.charCountElement) {
+          this.charCountElement.classList.remove("hidden");
+          updateCharCount(currentText.length);
         }
+        input.focus();
+        input.addEventListener("input", () => {
+          const currentLength = input.value.length;
+          updateCharCount(currentLength);
+        });
         const finalize = async (text) => {
           if (!this.bioWrapper || !this.bioText) return;
+          if (this.charCountElement) {
+            this.charCountElement.classList.add("hidden");
+          }
           const newBio = text.trim() || "Share a quick message";
           const userId = localStorage.getItem("userId");
-          const parsed = parseMessage(newBio);
-          this.bioText.innerHTML = parsed;
-          if (this.bioWrapper.contains(input)) {
+          const trimmedBio = newBio.trim();
+          if (trimmedBio.length > 70) {
+            console.error("Error: Cannot exceed 70 characters.");
+            alert(`Your message cannot exceed 70 characters. Stop talking!`);
             this.bioWrapper.replaceChild(this.bioText, input);
+            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || "Share a quick message");
+            return false;
           }
-          if (userId) {
-            try {
-              const response = await fetchWithAuth(`/api/users/${userId}/bio`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ bio: newBio })
-              });
-              if (!response.ok) console.error("Error while saving bio");
-              else console.log("Bio saved!");
-            } catch (error) {
-              console.error("Network error:", error);
+          try {
+            const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ bio: trimmedBio })
+            });
+            if (response.ok) {
+              this.bioText.dataset.raw = trimmedBio;
+              this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+              this.bioWrapper.replaceChild(this.bioText, input);
+              console.log("Message updated");
+              return true;
+            } else {
+              console.error("Error while updating your message");
+              this.bioWrapper.replaceChild(this.bioText, input);
+              return false;
             }
+          } catch (error) {
+            console.error("Network error:", error);
+            this.bioWrapper.replaceChild(this.bioText, input);
+            return false;
           }
         };
         input.addEventListener("keydown", (e) => {
           if (e.key === "Enter") finalize(input.value);
         });
         input.addEventListener("blur", () => {
-          finalize(input.value);
+          if (input.value.trim().length <= 70) {
+            finalize(input.value);
+          } else {
+            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            if (this.charCountElement) {
+              this.charCountElement.classList.add("hidden");
+            }
+            this.bioWrapper.replaceChild(this.bioText, input);
+          }
         });
       });
     }
@@ -4469,16 +4603,18 @@
       }
     }
     loadSavedStatus() {
-      const savedStatus = localStorage.getItem("userStatus") || "available";
+      const rawStatus = localStorage.getItem("userStatus") || "available";
+      const savedStatus = rawStatus.toLowerCase();
       this.updateStatusDisplay(savedStatus);
       window.addEventListener("storage", (e) => {
         if (e.key === "userStatus" && e.newValue) {
-          this.updateStatusDisplay(e.newValue);
+          this.updateStatusDisplay(e.newValue.toLowerCase());
         }
       });
     }
     updateStatusDisplay(status) {
       if (this.statusFrame && statusImages[status]) {
+        console.log("Status:", this.statusFrame);
         this.statusFrame.src = statusImages[status];
       }
       if (this.statusText && statusLabels[status]) {
@@ -4909,7 +5045,7 @@
   }
 
   // scripts/pages/ProfilePage.html
-  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width: 900px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Profil</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body bg-white">\n                <div class="flex flex-col items-center py-12">\n                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n                            <h1 class="text-lg font-normal mb-4">My Profile</h1>\n\n                            <div class="relative w-[170px] h-[170px] mb-1">\n                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"\n                                src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                                \n                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10"\n                                src="https://wlm.vercel.app/assets/usertiles/default.png">\n                            </div>\n\n                            <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">\n                                Change my profile picture\n                            </button>\n\n                            <div class="text-sm text-center w-full leading-6">\n                                <p id="username-profile"><strong>Username</strong></p>\n                                <p id="bio-profile">c00uk\xF6\xFC les kop1</p>\n                            </div>\n                        </div>\n            \n                        <div class="flex flex-col justify-between flex-1">\n                            <div class="flex flex-col gap-4">\n                                <div>\n                                    <label class="text-sm">Username:</label>\n                                    <input type="text" value="" placeholder="Username" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                </div>\n                                <div>\n                                    <label class="text-sm">Share a quick message:</label>\n                                    <input type="text" value="" placeholder="Share a quick message" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                </div>\n                                <div>\n                                    <label class="text-sm">Status:</label>\n                                    <div class="flex items-center gap-2 mt-1">\n                                        <select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n                                            <option>Available</option>\n                                            <option selected>Busy</option>\n                                            <option>Away</option>\n                                            <option>Appear offline</option>\n                                        </select>\n                                    </div>\n                                </div>\n                            </div>\n            \n                            <div class="mt-8 border-t border-gray-300 pt-4">\n                                <div class="flex items-center justify-start gap-6">\n                                    <div class="flex items-end gap-4">\n                                        <div>\n                                            <label class="text-sm">Email:</label>\n                                            <input type="email" value="" placeholder="email@gmail.com" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                        </div>\n                                        <button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    </div>\n                                </div>\n                                <div class="flex items-end gap-4 mt-2">\n                                    <div>\n                                        <label class="text-sm">Password:</label>\n                                        <input type="password" value="" placeholder="***********" class="w-full border border-gray-300 rounded-sm p-2 text-sm"/>\n                                    </div>\n                                    <button class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Change Picture</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button id="close-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6">\n                <div class="mb-6">\n                    <h2 class="text-xl mb-1">Select a picture</h2>\n                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>\n                </div>\n                \n                <div class="flex flex-row gap-6">\n                    <div class="flex-1">\n                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">\n                            <div id="modal-grid" class="grid grid-cols-4 gap-2">\n                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center gap-4 w-[200px]">\n                        <div class="relative w-[170px] h-[170px]">\n                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                            \n                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                            src="https://wlm.vercel.app/assets/usertiles/default.png">\n                        </div>\n\n                        <div class="flex flex-col gap-2 w-full mt-2 h-64">\n                            <input type="file" id="file-input" accept="image/*" hidden>\n\n                            <button id="browse-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            BROWSE\n                            </button>\n                            \n                            <button id="delete-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            DELETE\n                            </button>\n\n                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">\n                                <button id="validation-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        OK\n                                </button>\n                                <button id="cancel-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        CANCEL\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n\n               \n            </div>\n        </div>\n    </div>\n</div>';
+  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width: 900px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Profil</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body bg-white">\n                <div class="flex flex-col items-center py-12">\n                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n                            <h1 class="text-lg font-normal mb-4">My Profile</h1>\n\n                            <div class="relative w-[170px] h-[170px] mb-1">\n                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"\n                                src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                                \n                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10"\n                                src="https://wlm.vercel.app/assets/usertiles/default.png">\n                            </div>\n\n                            <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">\n                                Change my profile picture\n                            </button>\n                            <div>\n                                <div class="flex items-center gap-2 mt-1">\n                                    <label class="text-sm">Status:</label>\n                                    <select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n                                        <option>Available</option>\n                                        <option selected>Busy</option>\n                                        <option>Away</option>\n                                        <option>Appear offline</option>\n                                    </select>\n                                </div>\n                            </div>\n                            <div class="text-sm text-center w-full leading-6">\n                                <p id="username-profile" class="text-xl font-semibold"><strong></strong></p>\n                                <p id="bio-profile" class="text-lg font-semibold" style="word-break: break-all; overflow-wrap: anywhere; white-space: normal;"></p>\n                            </div>\n                        </div>\n            \n                        <div class="flex flex-col justify-between flex-1">\n                            <div class="flex flex-col gap-4">\n                                <label class="text-sm">Username:</label>\n                                <div class="flex flex-row gap-2" data-field="alias">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px">Wait...</p>\n                                    <input type="text" value="" placeholder="Username" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden" style="width:350px" disabled/>\n                                    \n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n                                <label class="text-sm">Share a quick message:</label>\n                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Share a quick message</p>\n                                    <input type="text" value="" placeholder="Share a quick message" class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden" style="width:350px; overflow: hidden;" disabled/>\n                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>\n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n                            </div>\n            \n                            <div class="mt-8 border-t border-gray-300 pt-4">\n                                <div class="flex flex-col gap-4">\n                                    <label class="text-sm">Email:</label>\n                                    <div class="flex flex-row gap-2" data-field="email">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px">Wait...</p>\n                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n\n                                    <label class="text-sm">Password:</label>\n                                    <div class="flex flex-row gap-2" data-field="password">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px">Wait...</p>\n                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n                                    <button class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Change Picture</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button id="close-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6">\n                <div class="mb-6">\n                    <h2 class="text-xl mb-1">Select a picture</h2>\n                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>\n                </div>\n                \n                <div class="flex flex-row gap-6">\n                    <div class="flex-1">\n                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">\n                            <div id="modal-grid" class="grid grid-cols-4 gap-2">\n                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center gap-4 w-[200px]">\n                        <div class="relative w-[170px] h-[170px]">\n                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                            \n                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                            src="https://wlm.vercel.app/assets/usertiles/default.png">\n                        </div>\n\n                        <div class="flex flex-col gap-2 w-full mt-2 h-64">\n                            <input type="file" id="file-input" accept="image/*" hidden>\n\n                            <button id="browse-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            BROWSE\n                            </button>\n                            \n                            <button id="delete-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            DELETE\n                            </button>\n\n                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">\n                                <button id="validation-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        OK\n                                </button>\n                                <button id="cancel-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        CANCEL\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/ProfilePage.ts
   function render3() {
@@ -4921,8 +5057,6 @@
     const usernameDisplay = document.getElementById("username-profile");
     const bioDisplay = document.getElementById("bio-profile");
     const modal = document.getElementById("picture-modal");
-    const usernameInput = document.querySelector('input[placeholder="Username"]');
-    const bioInput = document.querySelector('input[placeholder="Share a quick message"]');
     const statusSelect = document.querySelector("select");
     const editButton = document.getElementById("edit-picture-button");
     const closeButton = document.getElementById("close-modal");
@@ -4933,10 +5067,12 @@
     const gridContainer = document.getElementById("modal-grid");
     const previewAvatar = document.getElementById("modal-preview-avatar");
     const fileInput = document.getElementById("file-input");
+    const fieldContainers = document.querySelectorAll(".flex.flex-row.gap-2[data-field]");
     const userId = localStorage.getItem("userId");
     let selectedImageSrc = mainAvatar?.src || "";
     const statusImages3 = {
       "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
+      "online": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
       "busy": "https://wlm.vercel.app/assets/status/status_frame_busy_large.png",
       "away": "https://wlm.vercel.app/assets/status/status_frame_away_large.png",
       "invisible": "https://wlm.vercel.app/assets/status/status_frame_offline_large.png"
@@ -4949,6 +5085,7 @@
     };
     const reverseStatusMapping = {
       "available": "Available",
+      "online": "Available",
       "busy": "Busy",
       "away": "Away",
       "invisible": "Appear offline"
@@ -4976,19 +5113,49 @@
             mainAvatar.src = user.avatar_url;
             selectedImageSrc = user.avatar_url;
           }
-          if (user.alias) {
-            if (usernameDisplay) usernameDisplay.innerText = user.alias;
-            if (usernameInput) usernameInput.value = user.alias;
-          }
-          if (user.bio) {
-            if (bioDisplay) bioDisplay.innerText = user.bio;
-            if (bioInput) bioInput.value = user.bio;
-          }
+          fieldContainers.forEach((container) => {
+            const fieldName = container.dataset.field;
+            const display = container.querySelector(".field-display");
+            const input = container.querySelector(".field-input");
+            if (fieldName && display && input) {
+              let value2 = user[fieldName];
+              if (fieldName === "alias" && user.alias) {
+                value2 = user.alias;
+                if (usernameDisplay)
+                  usernameDisplay.innerText = value2;
+              } else if (fieldName === "bio" && user.bio) {
+                value2 = user.bio;
+                if (bioDisplay)
+                  bioDisplay.innerHTML = parseMessage(value2);
+              } else if (fieldName === "email" && user.email) {
+                value2 = user.email;
+              } else if (fieldName === "password") {
+                value2 = "********";
+              }
+              if (value2) {
+                display.innerText = value2;
+                if (fieldName !== "password") {
+                  input.placeholder = value2;
+                }
+              }
+            }
+          });
           if (user.status) {
-            const statusValue = reverseStatusMapping[user.status] || "Appear offline";
+            const normalizedStatus = user.status.toLowerCase();
+            const statusValue = reverseStatusMapping[normalizedStatus] || "Appear offline";
             if (statusSelect) statusSelect.value = statusValue;
-            updateStatusFrame(user.status);
+            updateStatusFrame(normalizedStatus);
           }
+          fieldContainers.forEach((container) => {
+            const display = container.querySelector(".field-display");
+            const input = container.querySelector(".field-input");
+            const changeButton = container.querySelector(".change-button");
+            const confirmButton = container.querySelector(".confirm-button");
+            if (display && input && changeButton && confirmButton) {
+              const fieldElements = { container, display, input, changeButton, confirmButton };
+              setupField(fieldElements, container.dataset.field);
+            }
+          });
         }
       } catch (error) {
         console.error("Erreur while charging profile:", error);
@@ -5001,7 +5168,7 @@
     };
     loadUserData();
     const updateUsername = async (newUsername) => {
-      if (!userId || !newUsername.trim()) return;
+      if (!userId || !newUsername.trim()) return false;
       try {
         const response = await fetchWithAuth(`api/users/${userId}/alias`, {
           method: "PATCH",
@@ -5011,34 +5178,194 @@
         if (response.ok) {
           if (usernameDisplay) usernameDisplay.innerText = newUsername;
           console.log("Username mis \xE0 jour");
+          return true;
         } else {
           console.error("Erreur lors de la mise \xE0 jour du username");
           alert("Erreur lors de la sauvegarde du username");
+          return false;
         }
       } catch (error) {
         console.error("Erreur r\xE9seau:", error);
         alert("Erreur lors de la sauvegarde du username");
+        return false;
       }
     };
     const updateBio = async (newBio) => {
-      if (!userId) return;
+      if (!userId) return false;
+      const MAX_BIO_LENGTH = 70;
+      const trimmedBio = newBio.trim();
+      if (trimmedBio.length > MAX_BIO_LENGTH) {
+        console.error("Erreur: Bio d\xE9passe la limite de 70 caract\xE8res.");
+        alert(`La biographie ne doit pas d\xE9passer ${MAX_BIO_LENGTH} caract\xE8res.`);
+        return false;
+      }
       try {
         const response = await fetchWithAuth(`api/users/${userId}/bio`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bio: newBio })
+          body: JSON.stringify({ bio: trimmedBio })
         });
         if (response.ok) {
-          if (bioDisplay) bioDisplay.innerText = newBio || "c00uk\xF6\xFC les kop1";
+          if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
           console.log("Bio mise \xE0 jour");
+          return true;
         } else {
           console.error("Erreur lors de la mise \xE0 jour de la bio");
           alert("Erreur lors de la sauvegarde de la bio");
+          return false;
         }
       } catch (error) {
         console.error("Erreur r\xE9seau:", error);
         alert("Erreur lors de la sauvegarde de la bio");
+        return false;
       }
+    };
+    const updateEmail = async (newEmail) => {
+      if (!userId || !newEmail.trim()) return false;
+      try {
+        const response = await fetchWithAuth(`api/users/${userId}/email`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ alias: newEmail })
+        });
+        if (response.ok) {
+          const user = await response.json();
+          user.email = newEmail;
+          console.log("Email mis \xE0 jour");
+          return true;
+        } else {
+          console.error("Erreur lors de la mise \xE0 jour du Email");
+          alert("Erreur lors de la sauvegarde du Email");
+          return false;
+        }
+      } catch (error) {
+        console.error("Erreur r\xE9seau:", error);
+        alert("Erreur lors de la sauvegarde du Email");
+        return false;
+      }
+    };
+    const updatePassword = async (newPassword) => {
+    };
+    const setupField = (elements, fieldName) => {
+      const { display, input, changeButton, confirmButton } = elements;
+      let initialValue = display.innerText;
+      const MAX_BIO_LENGTH = 70;
+      const charCountElement = fieldName === "bio" ? elements.container.querySelector(".char-count") : null;
+      const updateCharCount = (currentLength) => {
+        if (charCountElement) {
+          charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
+          if (currentLength > MAX_BIO_LENGTH) {
+            charCountElement.classList.add("text-red-500");
+            charCountElement.classList.remove("text-gray-500");
+          } else {
+            charCountElement.classList.remove("text-red-500");
+            charCountElement.classList.add("text-gray-500");
+          }
+        }
+      };
+      const enableEditMode = () => {
+        initialValue = fieldName === "password" ? "" : display.innerText;
+        display.classList.add("hidden");
+        input.classList.remove("hidden");
+        input.disabled = false;
+        if (fieldName !== "password") {
+          input.value = "";
+          input.placeholder = initialValue;
+        } else {
+          input.value = "";
+        }
+        if (fieldName === "bio" && charCountElement) {
+          charCountElement.classList.remove("hidden");
+          const initialLength = initialValue.length;
+          updateCharCount(initialLength);
+        }
+        changeButton.classList.add("hidden");
+        confirmButton.classList.add("hidden");
+        input.focus();
+      };
+      const disableEditMode = (newValue) => {
+        display.classList.remove("hidden");
+        input.classList.add("hidden");
+        input.disabled = true;
+        if (fieldName === "password") {
+          display.innerText = "********";
+        } else {
+          display.innerText = newValue;
+          input.placeholder = newValue;
+        }
+        if (fieldName === "bio" && charCountElement) {
+          charCountElement.classList.add("hidden");
+        }
+        changeButton.classList.remove("hidden");
+        confirmButton.classList.add("hidden");
+      };
+      changeButton.addEventListener("click", enableEditMode);
+      input.addEventListener("input", () => {
+        const currentValue = input.value;
+        let isChanged = false;
+        let isValid = true;
+        const trimmedValue = currentValue.trim();
+        if (fieldName === "bio") {
+          updateCharCount(currentValue.length);
+          if (currentValue.length > MAX_BIO_LENGTH) {
+            isValid = false;
+          }
+          const initialTrimmedValue = initialValue.trim();
+          isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
+        } else if (fieldName === "password") {
+          isChanged = currentValue.length > 0;
+        } else {
+          isChanged = trimmedValue !== initialValue.trim() && trimmedValue.length > 0;
+        }
+        if (isChanged && isValid) {
+          confirmButton.classList.remove("hidden");
+        } else {
+          confirmButton.classList.add("hidden");
+        }
+      });
+      confirmButton.addEventListener("click", async () => {
+        const newValue = input.value.trim();
+        let updateSuccessful = false;
+        switch (fieldName) {
+          case "alias":
+            updateSuccessful = await updateUsername(newValue);
+            break;
+          case "bio":
+            updateSuccessful = await updateBio(newValue);
+            break;
+          case "email":
+            updateSuccessful = await updateEmail(newValue);
+            break;
+          // case 'password':
+          //     updateSuccessful = await updatePassword(newValue);
+          //     break;
+          default:
+            updateSuccessful = true;
+        }
+        if (updateSuccessful) {
+          disableEditMode(newValue);
+        }
+      });
+      input.addEventListener("blur", (e) => {
+        if (e.relatedTarget !== confirmButton) {
+          const isConfirmedVisible = !confirmButton.classList.contains("hidden");
+          if (isConfirmedVisible) {
+            disableEditMode(fieldName === "password" ? display.innerText : initialValue);
+          } else {
+            disableEditMode(fieldName === "password" ? display.innerText : initialValue);
+          }
+        }
+      });
+      input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          const isConfirmedVisible = !confirmButton.classList.contains("hidden");
+          if (isConfirmedVisible) {
+            confirmButton.click();
+          } else {
+            input.blur();
+          }
+        }
+      });
     };
     const updateStatus = async (newStatus) => {
       if (!userId) return;
@@ -5061,26 +5388,6 @@
         alert("Erreur lors de la sauvegarde du status");
       }
     };
-    usernameInput?.addEventListener("blur", () => {
-      const newUsername = usernameInput.value.trim();
-      if (newUsername) {
-        updateUsername(newUsername);
-      }
-    });
-    usernameInput?.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        usernameInput.blur();
-      }
-    });
-    bioInput?.addEventListener("blur", () => {
-      const newBio = bioInput.value.trim();
-      updateBio(newBio);
-    });
-    bioInput?.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        bioInput.blur();
-      }
-    });
     statusSelect?.addEventListener("change", () => {
       const selectedValue = statusSelect.value;
       const statusKey = statusMapping[selectedValue];
@@ -5307,6 +5614,10 @@
                 const userData = await userRes.json();
                 if (userData.alias) {
                   localStorage.setItem("username", userData.alias);
+                }
+                if (userData.status) {
+                  const statusSaved = userData.status === "online" ? "available" : userData.status;
+                  localStorage.setItem("userStatus", statusSaved);
                 }
               }
             } catch (err) {
