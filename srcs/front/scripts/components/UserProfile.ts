@@ -11,6 +11,7 @@ export class UserProfile {
     private userProfileImg: HTMLImageElement | null;
     private statusSelector: HTMLElement | null;
     private statusDropdown: HTMLElement | null;
+    private charCountElement: HTMLSpanElement | null;
 
     constructor() {
         this.bioText = document.getElementById('user-bio');
@@ -21,6 +22,7 @@ export class UserProfile {
         this.userProfileImg = document.getElementById('user-profile') as HTMLImageElement;
         this.statusSelector = document.getElementById('status-selector');
         this.statusDropdown = document.getElementById('status-dropdown');
+        this.charCountElement = document.querySelector<HTMLSpanElement>('#bio-wrapper .char-count');
     }
 
     public init() {
@@ -68,58 +70,115 @@ export class UserProfile {
 
     // LOGIQUE DE LA BIO et de la PHOTO
     private setupBioEdit() {
-        if (!this.bioText) return;
+        if (!this.bioText || !this.bioWrapper) return;
+
+        // on mets a jour le compteur
+        const updateCharCount = (currentLength: number) => {
+            if (this.charCountElement) {
+                this.charCountElement.innerText = `${currentLength}/70`;
+                // rouge si la limite est depaassse
+                if (currentLength > 70) {
+                    this.charCountElement.classList.remove('text-gray-500');
+                    this.charCountElement.classList.add('text-red-500');
+                } else {
+                    this.charCountElement.classList.remove('text-red-500');
+                    this.charCountElement.classList.add('text-gray-500');
+                }
+            }
+        };
+
 
         this.bioText.addEventListener('click', () => {
             const input = document.createElement("input");
-            const currentText = this.bioText?.dataset.raw || "";
+            const currentText = this.bioText!.dataset.raw || ""; 
             
             input.type = "text";
             input.value = currentText;
             input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
 
-            if (this.bioWrapper && this.bioText) {
-                this.bioWrapper.replaceChild(input, this.bioText);
-                input.focus();
+            this.bioWrapper!.replaceChild(input, this.bioText!);
+            
+            // affichage du compteur et initialiastion a la longueuyr actuelle de mon texte
+            if (this.charCountElement) {
+                this.charCountElement.classList.remove('hidden');
+                updateCharCount(currentText.length);
             }
+            
+            input.focus();
+
+            // on ecoute l'input pour connaitre le nombre de caracteres
+            input.addEventListener('input', () => {
+                const currentLength = input.value.length;
+                updateCharCount(currentLength);
+            });
+
 
             const finalize = async (text: string) => {
                 if (!this.bioWrapper || !this.bioText) return;
                 
-                // texte final
-                const newBio = text.trim() || "Share a quick message";
-				this.bioText.dataset.raw = newBio;
-                const userId = localStorage.getItem('userId');
-                
-                // maj avec emoticones
-                const parsed = parseMessage(newBio);
-                this.bioText.innerHTML = parsed;
-                
-                if (this.bioWrapper.contains(input)) {
-                    this.bioWrapper.replaceChild(this.bioText, input);
+                // on cache le compteur quand on en a plus bexoin
+                if (this.charCountElement) {
+                    this.charCountElement.classList.add('hidden');
                 }
 
-                // envoi a la base de donnee
-                if (userId) {
-                    try {
-                        const response = await fetchWithAuth(`/api/users/${userId}/bio`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ bio: newBio })
-                        });
-                        if (!response.ok) console.error('Error while saving bio');
-                        else console.log('Bio saved!');
-                    } catch (error) {
-                        console.error('Network error:', error);
+                const newBio = text.trim() || "Share a quick message";
+                const userId = localStorage.getItem('userId');
+                
+                const trimmedBio = newBio.trim(); 
+
+                // check de lal ongueyr
+                if (trimmedBio.length > 70) {
+                    console.error("Error: Cannot exceed 70 characters.");
+                    alert(`Your message cannot exceed 70 characters. Stop talking!`);
+                    
+                    // on revient a l'ancienne biuo
+                    this.bioWrapper!.replaceChild(this.bioText!, input);
+                    this.bioText!.innerHTML = parseMessage(this.bioText!.dataset.raw || "Share a quick message");
+                    
+                    return false;
+                }
+                
+                // si la longueur est ok, zou ça passe à l'api
+                try {
+                    const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bio: trimmedBio })
+                    });
+                    
+                    if (response.ok) {
+                        this.bioText!.dataset.raw = trimmedBio;
+                        this.bioText!.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+                        this.bioWrapper!.replaceChild(this.bioText!, input);
+                        console.log("Message updated");
+                        return true;
+                    } else {
+                        console.error("Error while updating your message");
+                        this.bioWrapper!.replaceChild(this.bioText!, input); // si erreur api on remet l'ancienne bio
+                        return false;
                     }
+                } catch (error) {
+                    console.error("Network error:", error);
+                    this.bioWrapper!.replaceChild(this.bioText!, input);
+                    return false;
                 }
             };
 
             input.addEventListener("keydown", (e) => {
                 if (e.key === "Enter") finalize(input.value);
             });
+            
             input.addEventListener("blur", () => {
-                finalize(input.value);
+                if (input.value.trim().length <= 70) {
+                    finalize(input.value);
+                } else {
+                    alert(`Your message cannot exceed 70 characters. Stop talking!`);
+                    
+                    if (this.charCountElement) {
+                        this.charCountElement.classList.add('hidden');
+                    }
+                    this.bioWrapper!.replaceChild(this.bioText!, input);
+                }
             });
         });
     }

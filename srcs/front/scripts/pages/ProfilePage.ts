@@ -230,11 +230,11 @@ export function afterRender(): void {
     const updateBio = async (newBio: string) => {
         if (!userId) return false;
         
-        const MAX_BIO_LENGTH = 76;
+        const MAX_BIO_LENGTH = 70;
         const trimmedBio = newBio.trim(); 
 
         if (trimmedBio.length > MAX_BIO_LENGTH) {
-            console.error("Erreur: Bio dépasse la limite de 75 caractères.");
+            console.error("Erreur: Bio dépasse la limite de 70 caractères.");
             alert(`La biographie ne doit pas dépasser ${MAX_BIO_LENGTH} caractères.`);
             return false;
         }
@@ -246,7 +246,6 @@ export function afterRender(): void {
                 body: JSON.stringify({ bio: trimmedBio })
             });
             if (response.ok) {
-                // IMPORTANT : Affiche la version nettoyée (trimmedBio) ou le message par défaut
                 if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
                 console.log("Bio mise à jour");
                 return true;
@@ -285,7 +284,7 @@ export function afterRender(): void {
         let initialValue = display.innerText;
         
         // Limite de caractères pour la bio
-        const MAX_BIO_LENGTH = 75;
+        const MAX_BIO_LENGTH = 70;
         
         // NOUVEAU : Récupérer l'élément de compteur si c'est la bio
         const charCountElement = fieldName === 'bio' 
