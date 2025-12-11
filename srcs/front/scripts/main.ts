@@ -99,8 +99,7 @@ const handleLogout = async () => {
 const handleLocationChange = () => {
 	if (!appElement) return;
 
-	const savedTheme = localStorage.getItem('userTheme') || 'basic';
-	applyTheme(savedTheme);
+	
     let path = window.location.pathname; // difference const / let
     const accessToken = localStorage.getItem('accessToken');
 
@@ -128,6 +127,8 @@ const handleLocationChange = () => {
     if (page.afterRender) {
         page.afterRender();
     }
+	const savedTheme = localStorage.getItem('userTheme') || 'basic';
+	applyTheme(savedTheme);
 };
 
 /*

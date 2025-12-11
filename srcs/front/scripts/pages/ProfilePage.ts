@@ -36,8 +36,13 @@ export function applyTheme(themeKey: string) {
 
     const body = document.getElementById('app-body');
     if (body) {
-        // couleur du theme
-        body.className = `m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen bg-gradient-to-b ${theme.bgColor}`;
+        // ON DEGAGE les trucs deja implantes
+        body.className = "m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen";
+        
+        // passage par css 
+        body.style.background = theme.bgColor;
+        body.style.backgroundRepeat = "no-repeat";
+        body.style.backgroundAttachment = "fixed"; 
     }
 }
 
@@ -106,30 +111,30 @@ export function afterRender(): void {
     };
 
 
-    // --- GESTION DU THEME ---
+    // ============================================================
+    // ========================= THÈMES ===========================
+    // ============================================================
+
     const themeButton = document.getElementById('theme-button');
     const themeModal = document.getElementById('theme-modal');
     const closeThemeModal = document.getElementById('close-theme-modal');
     const themeGrid = document.getElementById('theme-grid');
-
-    // Charger le thème actuel au chargement de la page
-    const currentTheme = localStorage.getItem('userTheme') || 'basic';
+    const currentTheme = localStorage.getItem('userTheme') || 'basic'; // theme actuel via localsotirage -> le stocker dans la db?
     applyTheme(currentTheme);
 
-    // Ouvrir la modale
+    // ouverture modale 
     themeButton?.addEventListener('click', () => {
         themeModal?.classList.remove('hidden');
         themeModal?.classList.add('flex');
     });
 
-    // Fermer la modale
     const closeThemeFunc = () => {
         themeModal?.classList.add('hidden');
         themeModal?.classList.remove('flex');
     };
     closeThemeModal?.addEventListener('click', closeThemeFunc);
 
-    // Générer la grille des thèmes
+    // rajouter la personnalisation sur la modale pour avoir un apercu du theme
     if (themeGrid && themeGrid.children.length === 0) {
         Object.entries(appThemes).forEach(([key, theme]) => {
             const div = document.createElement('div');
@@ -149,7 +154,6 @@ export function afterRender(): void {
         });
     }
 
-    // Fermeture en cliquant dehors
     themeModal?.addEventListener('click', (e) => {
         if (e.target === themeModal) closeThemeFunc();
     });
