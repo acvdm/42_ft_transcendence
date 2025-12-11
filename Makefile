@@ -28,4 +28,5 @@ clean:
 re: clean up
 
 prune:	clean
+	rm -r ./srcs/back/datadev/
 	@docker system prune -a --volumes -f

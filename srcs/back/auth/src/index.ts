@@ -2,8 +2,8 @@ import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import { validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, refreshUser, logoutUser } from './services/auth_service.js';
+import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
+import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -119,6 +119,34 @@ fastify.post('/sessions', async (request, reply) =>
 	}
 });
 
+
+// CHANGE EMAIL
+fastify.patch('/users/:id/credentials', async (request, reply) => 
+{
+	try 
+	{
+		const body = request.body as { user_id: number; email: string };
+
+		validateNewEmail(body);
+
+		const result = await changeEmailInCredential(db, body.user_id, body.email);
+
+		// 3. Répondre
+		return reply.status(200).send({
+			success: true,
+			data: result,
+			error: null
+		});
+	} 
+	catch (err: any) 
+	{
+		return reply.status(400).send({
+			success: false, 
+			data: null,
+			error: { message: err.message }
+		});
+	}
+});
 
 // duplique le /sessions ?
 fastify.post('/login', async (request, reply) => {

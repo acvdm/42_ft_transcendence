@@ -74,6 +74,19 @@ export async function findUserByAlias (
     return user;
 }
 
+export async function findEmailById (
+    db: Database,
+    user_id: number
+): Promise<string>
+{
+    const email = await db.get(`
+        SELECT email FROM USERS WHERE id = ?`,
+        [user_id]
+    );
+
+    return email.email;
+}
+
 
 
 //-------- PUT / UPDATE
@@ -87,7 +100,6 @@ export async function updateStatus (
     if (!user?.id)
         throw new Error(`Error id: ${user_id} does not exist`);
 
-    console.log("update status dans users.ts");
     await db.run(`
         UPDATE USERS SET status = ? WHERE id = ?`,
         [status, user_id]
@@ -106,16 +118,51 @@ export async function updateBio (
     if (!user?.id)
         throw new Error(`Error id: ${user_id} does not exist`);
 
-    if (bio.length > 76)
+    console.log(`bio length = ${bio.length}`);
+    if (bio.length > 75)
         throw new Error(`Error: bio too long. Max 75 characters`);
 
-    console.log("update bio dans users.ts");
+    // console.log("update bio dans users.ts");
     await db.run(`
         UPDATE USERS SET bio = ? WHERE id = ?`,
         [bio, user_id]
     );
 }
 
+export async function updateEmail (
+    db: Database,
+    user_id: number,
+    email: string
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new Error(`Error id: ${user_id} does not exist`);
+
+    const emailAlreadyUsed = await db.get(`
+        SELECT * FROM USERS WHERE email = ?`,
+        [email]
+    )
+    if (emailAlreadyUsed)
+        throw new Error(`This email is already taken`)
+
+    await db.run(`
+        UPDATE USERS SET email = ? WHERE id = ?`,
+        [email, user_id]
+    );
+}
+
+export async function rollbackChangeEmail (
+    db: Database,
+    user_id: number,
+    email: string
+)
+{
+    await db.run(`
+        UPDATE USERS SET email = ? WHERE id = ?`,
+        [email, user_id]
+    );
+}
 
 
 //-------- DELETE / DELETE

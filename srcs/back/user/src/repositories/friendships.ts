@@ -20,10 +20,10 @@ export async function makeFriendshipRequest (
         [alias]
     ) as User;
     if (!friend?.id)
-        throw new Error(`Cannot find friend_id with alias ${alias}`);
+        throw new Error(`Cannot find user with alias ${alias}`);
 
     if (friend.id == user_id)
-        throw new Error(`You cannot add yourself as a friend. Loser`);
+        throw new Error(`You cannot add yourself as a friend. Loser.`);
 
     const is_blocked = await db.get(`
         SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'blocked'`,
@@ -31,6 +31,28 @@ export async function makeFriendshipRequest (
     );
     if (is_blocked)
         throw new Error('No user found');
+
+    const already_friends = await db.get(`
+        SELECT * FROM FRIENDSHIPS 
+        WHERE 
+            status = 'validated'
+            AND (
+                (user_id = ? AND friend_id = ?)
+                OR
+                (user_id = ? AND friend_id = ?)
+            )
+        `,
+        [user_id, friend.id, friend.id, user_id]
+    );
+    if (already_friends)
+        throw new Error(`${friend.alias} is already your friend`);
+
+    const request_already_sent = await db.get(`
+       SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'pending'`,
+       [user_id, friend.id]
+    );
+    if (request_already_sent)
+        throw new Error('A request has already been sent to this user. Wait for them to accept it');
 
     const result = await db.run(`
         INSERT INTO FRIENDSHIPS (user_id, friend_id)

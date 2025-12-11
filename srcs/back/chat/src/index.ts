@@ -1,7 +1,7 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import { initDatabase } from './database.js'
 import { Database } from 'sqlite';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
 
@@ -18,6 +18,68 @@ async function main()
 }
 
 
+
+async function joinChannel(
+	socket: Socket,
+	io: Server, 
+	channelKey: string
+) {
+	try 
+	{
+		const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+		if (!isExistingChannel?.id)
+		{
+			let channel = await chanRepo.createChannel(db, channelKey);
+			// await chanRepo.addEventInChannel(db, channelKey, "join");
+			socket.join(channelKey);
+		}
+		else
+		{
+			let channel = isExistingChannel;
+			socket.join(channelKey);
+			if (isExistingChannel?.id)
+			{
+				const msg_history = await messRepo.getHistoryByChannel(db, channel.id);
+				io.to(channelKey).emit("msg_history", { channelKey, msg_history });
+			}
+		}
+	}
+	catch (err)
+	{
+		console.log("error catched: ", err);
+	}
+}
+
+
+
+async function chatMessage(
+	io: Server, 
+	data: messRepo.Message
+) {
+	const channelKey = data.channel_key;
+	const sender_id = data.sender_id;
+	const sender_alias = data.sender_alias;
+	const msg_content = data.msg_content;
+
+	try 
+	{
+		const saveMessageID = await messRepo.saveNewMessageinDB(db, channelKey, sender_id, sender_alias, msg_content);
+		if (!saveMessageID) 
+		{
+			console.error('Error: message could not be saved');
+			io.emit('error', { message: "Failed to save message "});
+			return ;
+		}
+		io.emit('chatMessage', { channelKey, msg_content, sender_alias });
+	} 
+	catch (err: any) 
+	{
+		console.error("Critical error in chatMessage :", err);
+		io.to(channelKey).emit('error', { message: "Internal server error" });
+	}  	
+}
+
+
 // on demarre le serveur
 const start = async () => 
 {
@@ -26,7 +88,6 @@ const start = async () =>
 	try 
 	{
 		await fastify.listen({ port: 3002, host: '0.0.0.0' });
-		// on attache socket.io au serveur http de fastify
 		const io = new Server(fastify.server, 
 		{
 			cors: {
@@ -36,89 +97,20 @@ const start = async () =>
 			path: '/socket.io/',
 			transports: ['websocket', 'polling']
 		});	
-		// 3. gestion des évenements websockets
-		// Chaque fois qu'un client se connecte à notre serveur, cela crée une instance de socket
+
+		// gestion des évenements websockets
 		io.on('connection', async (socket) => 
-		{				
-			socket.on("joinChannel", async (channelKey) => 
-			{
-				try 
-				{
-					const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
-					if (!isExistingChannel?.id)
-					{
-						let channel = chanRepo.createChannel(db, channelKey);
-						socket.join(channelKey);
-					}
-					else
-					{
-						let channel = isExistingChannel;
-						socket.join(channelKey);
-						if (isExistingChannel?.id)
-						{
-							const msg_history = await messRepo.getHistoryByChannel(db, channel.id);
-							socket.emit("msg_history", { channelKey, msg_history });
-						}
-					}
-
-				}
-				catch (err)
-				{
-					console.log("error catched");
-				}
-
-			});
+		{		
+			socket.on("joinChannel", async (channelKey) => { await joinChannel(socket, io, channelKey) });
 			
-			// quand le server recoit un message chat message de la part du front
-			socket.on('chatMessage', async (data) => 
-			{
-				// const { sender_id, channel_key, msg_content } = data;
-				console.log("channel_key:", data.channel);
+			socket.on('chatMessage', async (data) => { await chatMessage(io, data) });	
 
-				const channel_key = data.channel;
-				const sender_id = data.sender_id;
-				const sender_alias = data.sender_alias;
-				const msg_content = data.msg_content;
-				console.log("sender_alias: ", sender_alias);
-				try 
-				{
-					const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);
-					if (!saveMessageID) 
-					{
-						console.error('Error: message could not be saved');
-						socket.emit('error', { message: "Failed to save message "});
-						return ;
-					}		
-					// on le renvoie a tout le monde y compris l'envoyeur: 
-					// a changer si on veut envoyer qu'aux recv_id
-					io.to(channel_key).emit('chatMessage', { channel_key, msg_content, sender_alias });
-				} 
-				catch (err: any) 
-				{
-					console.error("Critical error in chatMessage :", err);
-					socket.emit('error', { message: "Internal server error" });
-				}  
-			});	
-			// envoi du wiiiiizz
-			socket.on('sendWizz', (data: { author: string }) => 
-			{
-				console.log(`Wizz received from: ${data.author}`);			
-				// On renvoie l'événement à tous les AUTRES clients connectés.
-				// Ils vont écouter 'receiveWizz' pour secouer leur fenêtre.
-				socket.broadcast.emit('receivedWizz', { author: data.author });
-			});	
-			//envoi de l'animation
-			socket.on('sendAnimation', (data: { animationKey: string, author: string }) => 
-			{
-				console.log(`Animation received: ${data.animationKey} from: ${data.author}`);
-				io.emit('receivedAnimation', data);
-			});	
-			socket.on('disconnect', () => 
-			{
-				console.log('User disconnected');
-			});	
+			socket.on('sendWizz', async (data) => { io.to(data.channelKey).emit('receivedWizz', data.sender_alias) });
+
+			socket.on('sendAnimation', async (data) => {io.to(data.channel_key).emit('receivedAnimation', data.animationKey, data.author); });
+
+			socket.on('disconnect', () => { console.log('User disconnected') });	
 		});	
-		console.log('Live Chat listening on port 3002');	
 	} 
 	catch (err) 
 	{
@@ -126,6 +118,7 @@ const start = async () =>
 		process.exit(1);
 	}
 };
+
 
 
 //---------------------------------------

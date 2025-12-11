@@ -63,9 +63,6 @@ export async function registerUser(
     });
 
     // 4. Génération token
-    // const access_token = generateAccessToken(user_id, credential_id);
-    // const refresh_token = generateRefreshToken(user_id);
-    // const expires_at = getExpirationDate(30);
     const tokens = await generateTokens(user_id, credential_id);
 
     // 5. Insertion dans la DB tokens
@@ -81,6 +78,19 @@ export async function registerUser(
         refresh_token: tokens.refresh_token, 
         user_id 
     };
+}
+
+export async function changeEmailInCredential (
+    db: Database,
+    user_id: number,
+    email: string
+)
+{
+    const existing = await credRepo.findByEmail(db, email);
+    if (existing)
+        throw new Error('Email already in use');
+
+    await credRepo.changeEmail(db, user_id, email);
 }
 
 export async function loginUser(
