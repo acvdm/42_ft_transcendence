@@ -1,6 +1,6 @@
-<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
-    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
          style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
     </div>
 
@@ -33,6 +33,11 @@
                             <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">
                                 Change my profile picture
                             </button>
+
+                            <button id="theme-button" class="text-xs underline text-purple-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">
+                                🎨 Customize Theme
+                            </button>
+
                             <div>
                                 <div class="flex items-center gap-2 mt-1">
                                     <label class="text-sm">Status:</label>
@@ -185,4 +190,20 @@
             </div>
         </div>
     </div>
+
+    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 500px;">
+            <div class="title-bar">
+                <div class="title-bar-text">Select a Theme</div>
+                <div class="title-bar-controls">
+                    <button id="close-theme-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-4">
+                <div id="theme-grid" class="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
+                    </div>
+            </div>
+        </div>
+    </div>
+
 </div>

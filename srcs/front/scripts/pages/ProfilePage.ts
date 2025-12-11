@@ -1,6 +1,7 @@
 import htmlContent from "./ProfilePage.html";
 import { fetchWithAuth } from "./api";
 import { parseMessage } from "../components/ChatUtils";
+import { appThemes } from "../components/Data";
 
 // interface qui va servir à typer la réponse API de l'utilisateur
 interface UserData {
@@ -14,6 +15,30 @@ interface UserData {
 
 export function render(): string {
     return htmlContent;
+}
+
+export function applyTheme(themeKey: string) {
+    const theme = appThemes[themeKey] || appThemes['basic'];
+    localStorage.setItem('userTheme', themeKey);
+
+    const navbar = document.getElementById('main-navbar');
+    if (navbar) {
+        navbar.style.background = theme.navColor;
+    }
+
+    const headerIds = ['profile-header', 'home-header'];
+    headerIds.forEach(id => {
+        const header = document.getElementById(id);
+        if (header) {
+            header.style.backgroundImage = `url(${theme.headerUrl})`;
+        }
+    });
+
+    const body = document.getElementById('app-body');
+    if (body) {
+        // couleur du theme
+        body.className = `m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen bg-gradient-to-b ${theme.bgColor}`;
+    }
 }
 
 interface FieldElements {
@@ -79,6 +104,55 @@ export function afterRender(): void {
         'away': 'Away',
         'invisible': 'Appear offline'
     };
+
+
+    // --- GESTION DU THEME ---
+    const themeButton = document.getElementById('theme-button');
+    const themeModal = document.getElementById('theme-modal');
+    const closeThemeModal = document.getElementById('close-theme-modal');
+    const themeGrid = document.getElementById('theme-grid');
+
+    // Charger le thème actuel au chargement de la page
+    const currentTheme = localStorage.getItem('userTheme') || 'basic';
+    applyTheme(currentTheme);
+
+    // Ouvrir la modale
+    themeButton?.addEventListener('click', () => {
+        themeModal?.classList.remove('hidden');
+        themeModal?.classList.add('flex');
+    });
+
+    // Fermer la modale
+    const closeThemeFunc = () => {
+        themeModal?.classList.add('hidden');
+        themeModal?.classList.remove('flex');
+    };
+    closeThemeModal?.addEventListener('click', closeThemeFunc);
+
+    // Générer la grille des thèmes
+    if (themeGrid && themeGrid.children.length === 0) {
+        Object.entries(appThemes).forEach(([key, theme]) => {
+            const div = document.createElement('div');
+            div.className = "cursor-pointer border border-gray-300 hover:border-blue-500 p-2 rounded flex flex-col items-center gap-2 transition-all hover:bg-gray-50";
+            
+            div.innerHTML = `
+                <div class="w-full h-16 bg-cover bg-center rounded border border-gray-200" style="background-image: url('${theme.headerUrl}')"></div>
+                <span class="text-xs font-bold">${theme.name}</span>
+            `;
+
+            div.addEventListener('click', () => {
+                applyTheme(key);
+                closeThemeFunc();
+            });
+
+            themeGrid.appendChild(div);
+        });
+    }
+
+    // Fermeture en cliquant dehors
+    themeModal?.addEventListener('click', (e) => {
+        if (e.target === themeModal) closeThemeFunc();
+    });
 
 
     // ============================================================

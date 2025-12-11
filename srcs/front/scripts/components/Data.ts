@@ -1,6 +1,61 @@
 let globalPath = "/assets/emoticons/";
 let animationPath = "/assets/animated/";
 
+export interface Theme {
+    name: string;
+    headerUrl: string;
+    navColor: string;
+    bgColor: string;
+}
+
+export const appThemes: { [key: string]: Theme } = {
+    'basic': {
+        name: 'Classic Blue',
+        headerUrl: 'https://wlm.vercel.app/assets/background/background.jpg',
+        navColor: 'linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)',
+        bgColor: 'from-white via-white to-[#7ED5F4]'
+    },
+    'bamboo': {
+        name: 'Zen Bamboo',
+        headerUrl: '/assets/headers/bamboo_header.jpg',
+        navColor: 'linear-gradient(to bottom, #86A668 0%, #5F8C35 50%, #4A7026 100%)',
+        bgColor: 'from-white via-white to-green-100'
+    },
+    'love': {
+        name: 'Lovely Pink',
+        headerUrl: '/assets/headers/love_header.jpg',
+        navColor: 'linear-gradient(to bottom, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)',
+        bgColor: 'from-white via-white to-pink-100'
+    },
+    'punk': {
+        name: 'Cyber Punk',
+        headerUrl: '/assets/headers/punk_header.jpg',
+        navColor: 'linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)',
+        bgColor: 'from-gray-100 via-gray-200 to-purple-200'
+    },
+    'football': {
+        name: 'Stadium',
+        headerUrl: '/assets/headers/football_header.png',
+        navColor: 'linear-gradient(to bottom, #2C3E50 0%, #000000 100%)',
+        bgColor: 'from-white via-white to-gray-300'
+    },
+    'space': {
+        name: 'Mesmerizing',
+        headerUrl: '/assets/headers/mesmerizing_header.png',
+        navColor: 'linear-gradient(to bottom, #1e3c72 0%, #2a5298 100%)',
+        bgColor: 'from-white via-blue-50 to-indigo-200'
+    },
+    'sunset': {
+        name: 'Dawn',
+        headerUrl: '/assets/headers/dawn_header.png',
+        navColor: 'linear-gradient(to bottom, #ff7e5f 0%, #feb47b 100%)',
+        bgColor: 'from-white via-orange-50 to-orange-100'
+    }
+};
+
+
+
+
 export const statusImages: { [key: string]: string } = {
     'available': '/assets/basic/status_online_small.png',
     'online': '/assets/basic/status_online_small.png',
