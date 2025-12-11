@@ -4243,7 +4243,7 @@
                 friendRequestMessage?.classList.add("hidden");
               }, 1500);
             } else {
-              this.showFriendMessage(data.message || "Error sending request", "error", friendRequestMessage);
+              this.showFriendMessage(data.error.message || "Error sending request", "error", friendRequestMessage);
             }
           } catch (error) {
             console.error("Error:", error);
@@ -5228,14 +5228,15 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: newEmail })
         });
+        const data = await response.json();
         if (response.ok) {
           const user = await response.json();
           user.email = newEmail;
           console.log("Email mis \xE0 jour");
           return true;
         } else {
-          console.error("Erreur lors de la mise \xE0 jour du Email");
-          alert("Erreur lors de la sauvegarde du Email");
+          console.error(data.error.message);
+          alert(data.error.message);
           return false;
         }
       } catch (error) {

@@ -129,7 +129,7 @@ export class FriendList {
                             friendRequestMessage?.classList.add('hidden');
                         }, 1500);
                     } else {
-                        this.showFriendMessage(data.message || 'Error sending request', 'error', friendRequestMessage);
+                        this.showFriendMessage(data.error.message || 'Error sending request', 'error', friendRequestMessage);
                     }
                 } catch (error) {
                     console.error('Error:', error);
