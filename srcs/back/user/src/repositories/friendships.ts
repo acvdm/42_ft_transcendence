@@ -150,6 +150,7 @@ export async function listRequests(
 
     return rows.map((row:any) =>
     {
+        console.log("Row friendhsip id:", row.friendship_id);
         const requester: User =
         {
             id: row.requester_id,

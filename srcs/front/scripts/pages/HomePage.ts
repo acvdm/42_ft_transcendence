@@ -33,7 +33,7 @@ export function afterRender(): void {
     window.addEventListener('friendSelected', (e: any) => {
         const friend = e.detail;
         
-        const friendshipId = friend.friendshipId;
+        const friendshipId = friend.friendshipId || friend.friendshship_id || friend.id ;
         currentChatFriendId = friend.id;
 
         console.log("Ami sélectionné:", friend.alias, "Friendship ID:", friendshipId);
@@ -62,6 +62,7 @@ export function afterRender(): void {
         if (headerStatus) {
             headerStatus.src = statusImages[friend.status] || statusImages['invisible'];
         }
+        console.log("friendship homepage:", friendshipId);
         chat.joinChannel(channelKey, friendshipId);
     });
 

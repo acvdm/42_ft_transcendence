@@ -436,7 +436,7 @@ export class Chat {
             ////////////// ICI POUR LA LOGIQUE DE BLOCK/BLOCAGE D'UN AMI
             document.getElementById('button-block-user')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
-
+                console.log("friendhsop id:", this.currentFriendshipId);
                 if (!this.currentFriendshipId) { // est-ce qu'on a bien un id d'amitié entre les deux
                     console.error("Cannot block: no friendship id associated to this conv");
                     chatOptionsDropdown.classList.add('hidden'); // on retire le dropdown

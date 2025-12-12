@@ -428,6 +428,7 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 
 	try
 	{
+		console.log("Status depuis index.ts:", status);
 		friendRepo.reviewFriendshipRequest(db, user_id, friendship_id, status);
 		return reply.status(200).send({ 
 			success: true,

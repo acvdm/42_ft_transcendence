@@ -5064,6 +5064,7 @@
         });
         document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
           e.stopPropagation();
+          console.log("friendhsop id:", this.currentFriendshipId);
           if (!this.currentFriendshipId) {
             console.error("Cannot block: no friendship id associated to this conv");
             chatOptionsDropdown.classList.add("hidden");
@@ -5222,7 +5223,7 @@
     let currentChatFriendId = null;
     window.addEventListener("friendSelected", (e) => {
       const friend = e.detail;
-      const friendshipId = friend.friendshipId;
+      const friendshipId = friend.friendshipId || friend.friendshship_id || friend.id;
       currentChatFriendId = friend.id;
       console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
       const myId = parseInt(localStorage.getItem("userId") || "0");
@@ -5245,6 +5246,7 @@
       if (headerStatus) {
         headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
       }
+      console.log("friendship homepage:", friendshipId);
       chat.joinChannel(channelKey, friendshipId);
     });
     const viewProfileButton = document.getElementById("button-view-profile");
