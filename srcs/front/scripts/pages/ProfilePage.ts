@@ -12,6 +12,7 @@ interface UserData {
     status?: string;
     email?: string;
     theme?: string;
+    is2faEnabled?: boolean;
 }
 
 export function render(): string {
@@ -66,6 +67,8 @@ export function afterRender(): void {
     
     // username et bio
     const statusSelect = document.querySelector('select') as HTMLSelectElement;
+    const fieldContainers = document.querySelectorAll<HTMLElement>('.flex.flex-row.gap-2[data-field]');
+
     
     // boutons
     const editButton = document.getElementById('edit-picture-button');
@@ -75,18 +78,26 @@ export function afterRender(): void {
     const browseButton = document.getElementById('browse-button');
     const deleteButton = document.getElementById('delete-button');
 
-    // modale
+    // modale avatar
     const gridContainer = document.getElementById('modal-grid');
     const previewAvatar = document.getElementById('modal-preview-avatar') as HTMLImageElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     
-    // container des champs modifiables via l'id data-field
-    const fieldContainers = document.querySelectorAll<HTMLElement>('.flex.flex-row.gap-2[data-field]');
+    // modale 2fa
+    const button2faToggle = document.getElementById('2fa-modal-button') as HTMLImageElement;
+    const modal2fa = document.getElementById('2fa-modal') as HTMLImageElement;
+    const close2faButton = document.getElementById('close-2fa-modal');
+    const cancel2faButton = document.getElementById('cancel-2fa-modal');
+    const confirm2faButton = document.getElementById('confirm-2fa-modal');
+    const input2fa = document.getElementById('2fa-input-code') as HTMLInputElement;
+    const qrCodeImg = document.getElementById('2fa-qr-code') as HTMLImageElement;
+
 
     const userId = localStorage.getItem('userId');
 
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
+    let is2faEnabled = false;
 
     const statusImages: { [key: string]: string } = {
         'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
@@ -162,6 +173,133 @@ export function afterRender(): void {
 
 
     // ============================================================
+    // ==================== GESTION DU 2FA --======================
+    // ============================================================
+    
+    const update2faButton = (enabled: boolean) => {
+        is2faEnabled = enabled;
+        if (enabled)
+        {
+            button2faToggle.innerText = "Disable 2FA authentication";
+            button2faToggle.classList.remove('bg-green-600');
+            button2faToggle.classList.add('bg-red-600');
+        } 
+        else
+        {
+            button2faToggle.innerText = "Enable 2FA authentication";
+            button2faToggle.classList.remove('bg-red-600');
+            button2faToggle.classList.add('bg-green-600');
+        }
+    };
+
+    const close2fa = () => {
+        if (modal2fa)
+        {
+            modal2fa.classList.add('hidden');
+            modal2fa.classList.remove('flex');
+            if (input2fa) input2fa.value = ""; // on reset le tout
+            if (qrCodeImg) qrCodeImg.src = "";
+        }
+    };
+
+    const open2faGenerate = async () => {
+        if (!userId) return;
+
+        try {
+            if (modal2fa) {
+                modal2fa.classList.remove('hidden');
+                modal2fa.classList.add('flex');
+            }
+
+            //fetch pour le qr code
+            const response = await fetchWithAuth(`api/auth/2fa/generate`, {
+                method: 'GET'
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const objectURL = URL.createObjectURL(blob);
+                if (qrCodeImg) qrCodeImg.src = objectURL;
+            } else {
+                console.error("Failed to generate QR code");
+                alert("Error generating 2FA QR code");
+                close2fa();
+            }
+        } catch (error) {
+            console.error("Network error 2FA generate:", error);
+            close2fa();
+        }
+    };
+
+    const enable2fa = async () => {
+        const code = input2fa.value.trim();
+        if (!code || code.length < 6) {
+            alert("Please enter a valid 6-digit code.");
+            return;
+        }
+
+        try {
+            const response = await fetchWithAuth(`api/auth/2fa/enable`, {
+                method: 'POST', // ou patch?? a tester
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            });
+
+            if (response.ok) {
+                // Succès !
+                update2faButton(true);
+                close2fa();
+                alert("2FA is now enabled!");
+            } else {
+                const result = await response.json();
+                alert(result.message || "Invalid code. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error enabling 2FA:", error);
+            alert("An error occurred.");
+        }
+    };
+
+    // on desactive le 2fa si l'utilisateur veut
+    const disable2fa = async () => {
+        if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) return;
+
+        try {
+            const response = await fetchWithAuth(`api/auth/2fa/disable`, {
+                method: 'POST' // ou patch?? a tester
+            });
+
+            if (response.ok) {
+                update2faButton(false);
+                alert("2FA disabled.");
+            } else {
+                alert("Error disabling 2FA.");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    button2faToggle?.addEventListener('click', () => {
+        if (is2faEnabled) {
+            disable2fa();
+        } else {
+            open2faGenerate();
+        }
+    });
+
+    close2faButton?.addEventListener('click', close2fa);
+    cancel2faButton?.addEventListener('click', close2fa);
+    confirm2faButton?.addEventListener('click', enable2fa);
+    
+    // si on clique dehors 
+    modal2fa?.addEventListener('click', (e) => {
+        if (e.target === modal2fa) close2fa();
+    });
+
+
+
+    // ============================================================
     // ========================= MODALE ===========================
     // ============================================================
 
@@ -209,6 +347,10 @@ export function afterRender(): void {
                     mainAvatar.src = user.avatar_url;
                     // maj de selected image pour que la modale ait l'image mis a jour
                     selectedImageSrc = user.avatar_url; 
+                }
+
+                if (user.is2faEnabled !== undefined) {
+                    update2faButton(user.is2faEnabled);
                 }
 
                 // initialisation des champs
