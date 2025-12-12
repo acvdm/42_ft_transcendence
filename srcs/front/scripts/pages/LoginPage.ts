@@ -1,17 +1,75 @@
 import htmlContent from "./LoginPage.html";
+import { fetchWithAuth } from "./api";
 
 export function render(): string {
 	return htmlContent;
 };
 
+
+async function init2faLogin(access_token: string, user_id: number, selectedStatus: string) {
+    if (access_token) localStorage.setItem('accessToken', access_token);
+    if (user_id) localStorage.setItem('userId', user_id.toString());
+
+    // Récupération du profil
+    if (user_id && access_token) {
+        try {
+            const userRes = await fetch(`/api/users/${user_id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`
+                }
+            });
+
+            if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias)
+                    localStorage.setItem('username', userData.alias);
+                if (userData.theme)
+                    localStorage.setItem('userTheme', userData.theme);
+            }
+        } catch (err) {
+            console.error("Can't get user's profile", err);
+        }
+
+        // Mise à jour du status
+        try {
+            await fetch(`/api/users/${user_id}/status`, {
+                method: 'PATCH',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${access_token}`
+                },
+                body: JSON.stringify({ status: selectedStatus })
+            });
+        } catch (err) {
+            console.error("Failed to update status on login", err);
+        }
+    }
+
+    localStorage.setItem('userStatus', selectedStatus);
+    window.history.pushState({}, '', '/home');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
 function handleLogin() {
     const button = document.getElementById('login-button');
     const errorElement = document.getElementById('error-message');
 
+    // les elements du 2fa
+    const modal2fa = document.getElementById('2fa-modal');
+    const input2fa = document.getElementById('2fa-input-code') as HTMLInputElement;
+    const confirm2fa = document.getElementById('confirm-2fa-button');
+    const close2fa = document.getElementById('close-2fa-modal');
+    const error2fa = document.getElementById('2fa-error-message');
+
+    let tempToken: string | null = null;
+    let cachedStatus = 'available';
+
+
     button?.addEventListener('click', async () => {
         const email = (document.getElementById('email-input') as HTMLInputElement).value;
         const password = (document.getElementById('password-input') as HTMLInputElement).value;
-        // Ceci récupère la valeur en minuscule ("available", "busy"...)
         const selectedStatus = (document.getElementById('status-input') as HTMLSelectElement).value;
 
         if (errorElement) {
@@ -28,19 +86,31 @@ function handleLogin() {
         }
 
         try {
-            // 1. Authentification
+            // Authentification
             const response = await fetch('/api/auth/sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
-                // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
-                // On le gère juste après avec le PATCH
             });
 
             const result = await response.json();
 
+            // cas 1: 2fa required
+            if (result.require_2fa) {
+                tempToken = result.temp_token;
+                if (modal2fa) {
+                    modal2fa.classList.remove('hidden');
+                    modal2fa.classList.add('flex');
+                    input2fa.value = '';
+                    input2fa.focus();
+                }
+                return; // attente de validation du code
+            }
+
+
             if (result.success) {
 				const { access_token, user_id } = result.data;
+                await init2faLogin(access_token, user_id, cachedStatus);
 
                 // Stockage des tokens
                 if (access_token) localStorage.setItem('accessToken', access_token);
@@ -49,12 +119,8 @@ function handleLogin() {
                 // Récupération du profil (Username) (on verrifie qu'on a bien un access token)
                 if (user_id && access_token) {
                     try {
-                        const userRes = await fetch(`/api/users/${user_id}`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${access_token}`
-                            }
+                        const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+                            method: 'GET'
                         });
 
                         if (userRes.ok) {
@@ -69,12 +135,8 @@ function handleLogin() {
                     }
 
                     try {
-                        await fetch(`/api/users/${user_id}/status`, {
+                        await fetchWithAuth(`/api/users/${user_id}/status`, {
                             method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json',
-                                // Ajout du token
-                                'Authorization': `Bearer ${access_token}`
-                             },
                             body: JSON.stringify({ status: selectedStatus })
                         });
                         console.log("Status updated to DB:", selectedStatus);
@@ -103,7 +165,68 @@ function handleLogin() {
             }
         }
     });
+
+
+    confirm2fa?.addEventListener('click', async () => {
+        const code = input2fa.value.trim();
+
+        if (error2fa) error2fa.classList.add('hidden');
+
+        if (!code || !tempToken) return;
+
+        try {
+            // ici pas de fetch with auth car token temporaire
+            const response = await fetch('/api/auth/2fa/verify', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tempToken}`
+                },
+                body: JSON.stringify({ code })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // reussite du 2fa -> rvraim tokens
+                const { access_token, user_id } = result; // structure de retour de verify
+                
+                // fermeutr modale
+                if (modal2fa) modal2fa.classList.add('hidden');
+            
+                await init2faLogin(access_token, user_id, cachedStatus);
+            } else {
+                if (error2fa) {
+                    error2fa.textContent = "Invalid code.";
+                    error2fa.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error("2FA Error:", error);
+            if (error2fa) {
+                error2fa.textContent = "Error during verification.";
+                error2fa.classList.remove('hidden');
+            }
+        }
+    });
+
+    const closeFunc = () => {
+        if (modal2fa) {
+            modal2fa.classList.add('hidden');
+            modal2fa.classList.remove('flex');
+            tempToken = null; // reset du toekn
+        }
+    };
+
+    close2fa?.addEventListener('click', closeFunc);
+    modal2fa?.addEventListener('click', (e) => {
+        if (e.target === modal2fa) closeFunc();
+    });
 }
+
+
+
+
 
 export function loginEvents() {
     handleLogin();

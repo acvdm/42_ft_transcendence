@@ -54,15 +54,167 @@
 				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 			</div>
 	</div>
-	</div>`;
+
+
+
+	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Two-Factor Authentication</div>
+                <div class="title-bar-controls">
+                    <button id="close-2fa-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col items-center gap-4">
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Security Check</h2>
+                    <p class="text-xs text-gray-600 mb-4">Please enter the code from Google authenticator.</p>
+                </div>
+
+                <div class="w-full flex flex-col gap-2 mt-2">
+                    <input type="text" id="2fa-input-code" placeholder="------" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                </div>
+
+                <div class="flex flex-col items-center justify-center">
+                    <p id="2fa-error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+                </div>
+
+                <div class="flex justify-center gap-4 mt-4 w-full">
+                    <button id="confirm-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+                        VERIFY
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>`;
+
+  // scripts/pages/api.ts
+  var isRefreshing = false;
+  var refreshSubscribers = [];
+  function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+  }
+  function onRefreshed(token) {
+    refreshSubscribers.forEach((cb) => cb(token));
+    refreshSubscribers = [];
+  }
+  async function fetchWithAuth(url2, options = {}) {
+    const token = localStorage.getItem("accessToken");
+    const getHeaders = (currentToken) => {
+      const headers = new Headers(options.headers || {});
+      if (!headers.has("Content-Type") && options.body) {
+        headers.set("Content-Type", "application/json");
+      }
+      if (currentToken) {
+        headers.set("Authorization", `Bearer ${currentToken}`);
+      }
+      return headers;
+    };
+    let response = await fetch(url2, {
+      ...options,
+      headers: getHeaders(token)
+    });
+    if (response.status === 401) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        console.warn("Token expired (401). Atempt to refresh...");
+        try {
+          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            const newToken = data.access_token;
+            localStorage.setItem("accessToken", newToken);
+            isRefreshing = false;
+            onRefreshed(newToken);
+            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
+          } else {
+            isRefreshing = false;
+            refreshSubscribers = [];
+            console.error("Refresh impossible. Deconnection.");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("userId");
+            window.history.pushState({}, "", "/login");
+            window.dispatchEvent(new PopStateEvent("popstate"));
+            throw new Error("Session expired");
+          }
+        } catch (error) {
+          isRefreshing = false;
+          throw error;
+        }
+      } else {
+        console.log("Token expired. Waiting the refreshing of the other token...");
+        return new Promise((resolve) => {
+          subscribeTokenRefresh(async (newToken) => {
+            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
+          });
+        });
+      }
+    }
+    return response;
+  }
 
   // scripts/pages/LoginPage.ts
   function render() {
     return LoginPage_default;
   }
+  async function init2faLogin(access_token, user_id, selectedStatus) {
+    if (access_token) localStorage.setItem("accessToken", access_token);
+    if (user_id) localStorage.setItem("userId", user_id.toString());
+    if (user_id && access_token) {
+      try {
+        const userRes = await fetch(`/api/users/${user_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access_token}`
+          }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.alias)
+            localStorage.setItem("username", userData.alias);
+          if (userData.theme)
+            localStorage.setItem("userTheme", userData.theme);
+        }
+      } catch (err) {
+        console.error("Can't get user's profile", err);
+      }
+      try {
+        await fetch(`/api/users/${user_id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access_token}`
+          },
+          body: JSON.stringify({ status: selectedStatus })
+        });
+      } catch (err) {
+        console.error("Failed to update status on login", err);
+      }
+    }
+    localStorage.setItem("userStatus", selectedStatus);
+    window.history.pushState({}, "", "/home");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }
   function handleLogin() {
     const button = document.getElementById("login-button");
     const errorElement = document.getElementById("error-message");
+    const modal2fa = document.getElementById("2fa-modal");
+    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2fa = document.getElementById("confirm-2fa-button");
+    const close2fa = document.getElementById("close-2fa-modal");
+    const error2fa = document.getElementById("2fa-error-message");
+    let tempToken = null;
+    let cachedStatus = "available";
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -83,22 +235,27 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
-          // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
-          // On le gère juste après avec le PATCH
         });
         const result = await response.json();
+        if (result.require_2fa) {
+          tempToken = result.temp_token;
+          if (modal2fa) {
+            modal2fa.classList.remove("hidden");
+            modal2fa.classList.add("flex");
+            input2fa.value = "";
+            input2fa.focus();
+          }
+          return;
+        }
         if (result.success) {
           const { access_token, user_id } = result.data;
+          await init2faLogin(access_token, user_id, cachedStatus);
           if (access_token) localStorage.setItem("accessToken", access_token);
           if (user_id) localStorage.setItem("userId", user_id.toString());
           if (user_id && access_token) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`, {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${access_token}`
-                }
+              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+                method: "GET"
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
@@ -111,13 +268,8 @@
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetch(`/api/users/${user_id}/status`, {
+              await fetchWithAuth(`/api/users/${user_id}/status`, {
                 method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                  // Ajout du token
-                  "Authorization": `Bearer ${access_token}`
-                },
                 body: JSON.stringify({ status: selectedStatus })
               });
               console.log("Status updated to DB:", selectedStatus);
@@ -142,6 +294,49 @@
           errorElement.classList.remove("hidden");
         }
       }
+    });
+    confirm2fa?.addEventListener("click", async () => {
+      const code = input2fa.value.trim();
+      if (error2fa) error2fa.classList.add("hidden");
+      if (!code || !tempToken) return;
+      try {
+        const response = await fetch("/api/auth/2fa/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tempToken}`
+          },
+          body: JSON.stringify({ code })
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          const { access_token, user_id } = result;
+          if (modal2fa) modal2fa.classList.add("hidden");
+          await init2faLogin(access_token, user_id, cachedStatus);
+        } else {
+          if (error2fa) {
+            error2fa.textContent = "Invalid code.";
+            error2fa.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("2FA Error:", error);
+        if (error2fa) {
+          error2fa.textContent = "Error during verification.";
+          error2fa.classList.remove("hidden");
+        }
+      }
+    });
+    const closeFunc = () => {
+      if (modal2fa) {
+        modal2fa.classList.add("hidden");
+        modal2fa.classList.remove("flex");
+        tempToken = null;
+      }
+    };
+    close2fa?.addEventListener("click", closeFunc);
+    modal2fa?.addEventListener("click", (e) => {
+      if (e.target === modal2fa) closeFunc();
     });
   }
   function loginEvents() {
@@ -4161,71 +4356,6 @@
   alias(["(B)", "(b)"], "beer_mug.gif");
   alias(["(X)", "(x)"], "girl.gif");
 
-  // scripts/pages/api.ts
-  var isRefreshing = false;
-  var refreshSubscribers = [];
-  function subscribeTokenRefresh(cb) {
-    refreshSubscribers.push(cb);
-  }
-  function onRefreshed(token) {
-    refreshSubscribers.forEach((cb) => cb(token));
-    refreshSubscribers = [];
-  }
-  async function fetchWithAuth(url2, options = {}) {
-    const token = localStorage.getItem("accessToken");
-    const getHeaders = (currentToken) => {
-      const headers = new Headers(options.headers || {});
-      if (!headers.has("Content-Type") && options.body) {
-        headers.set("Content-Type", "application/json");
-      }
-      if (currentToken) {
-        headers.set("Authorization", `Bearer ${currentToken}`);
-      }
-      return headers;
-    };
-    let response = await fetch(url2, {
-      ...options,
-      headers: getHeaders(token)
-    });
-    if (response.status === 401) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        console.warn("Token expired (401). Atempt to refresh...");
-        try {
-          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            const newToken = data.access_token;
-            localStorage.setItem("accessToken", newToken);
-            isRefreshing = false;
-            onRefreshed(newToken);
-            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
-          } else {
-            isRefreshing = false;
-            refreshSubscribers = [];
-            console.error("Refresh impossible. Deconnection.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("userId");
-            window.history.pushState({}, "", "/login");
-            window.dispatchEvent(new PopStateEvent("popstate"));
-            throw new Error("Session expired");
-          }
-        } catch (error) {
-          isRefreshing = false;
-          throw error;
-        }
-      } else {
-        console.log("Token expired. Waiting the refreshing of the other token...");
-        return new Promise((resolve) => {
-          subscribeTokenRefresh(async (newToken) => {
-            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
-          });
-        });
-      }
-    }
-    return response;
-  }
-
   // scripts/components/FriendList.ts
   var FriendList = class {
     constructor() {
@@ -5259,7 +5389,7 @@
   }
 
   // scripts/pages/ProfilePage.html
-  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width: 900px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Profil</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body bg-white">\n                <div class="flex flex-col items-center py-12">\n                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n                            <h1 class="text-lg font-normal mb-4">My Profile</h1>\n\n                            <div class="relative w-[170px] h-[170px] mb-1">\n                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"\n                                src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                                \n                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10"\n                                src="https://wlm.vercel.app/assets/usertiles/default.png">\n                            </div>\n\n                            <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">\n                                Change my profile picture\n                            </button>\n\n                            <button id="theme-button" class="text-xs underline text-purple-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">\n                                \u{1F3A8} Customize Theme\n                            </button>\n\n                            <div>\n                                <div class="flex items-center gap-2 mt-1">\n                                    <label class="text-sm">Status:</label>\n                                    <select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n                                        <option>Available</option>\n                                        <option selected>Busy</option>\n                                        <option>Away</option>\n                                        <option>Appear offline</option>\n                                    </select>\n                                </div>\n                            </div>\n                            <div class="text-sm text-center w-full leading-6">\n                                <p id="username-profile" class="text-xl font-semibold"><strong></strong></p>\n                                <p id="bio-profile" class="text-lg font-semibold" style="word-break: break-all; overflow-wrap: anywhere; white-space: normal;"></p>\n                            </div>\n                        </div>\n            \n                        <div class="flex flex-col justify-between flex-1">\n                            <div class="flex flex-col gap-4">\n\n\n                                <label class="text-sm">Username:</label>\n                                <div class="flex flex-row gap-2" data-field="alias">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>\n                                    <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>\n                                    \n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n\n\n\n                                <label class="text-sm">Share a quick message:</label>\n                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>\n                                    <input\n                                        type="text"\n                                        value=""\n                                        placeholder="Share a quick message"\n                                        class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"\n                                        style="width:350px; overflow: hidden;" disabled/>\n                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>\n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n                            </div>\n            \n                            <div class="mt-8 border-t border-gray-300 pt-4">\n                                <div class="flex flex-col gap-4">\n                                    <label class="text-sm">Email:</label>\n                                    <div class="flex flex-row gap-2" data-field="email">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>\n                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n\n                                    <label class="text-sm">Password:</label>\n                                    <div class="flex flex-row gap-2" data-field="password">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>\n                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n                                    <button id="2fa-modal-button" class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n\n    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Two-Factor Authentication</div>\n                <div class="title-bar-controls">\n                    <button id="close-2fa-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6 flex flex-col items-center gap-4">\n                <div class="text-center">\n                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>\n                    <p class="text-xs text-gray-600 mb-4">Open your Authenticator app (Google Auth, Authy) and scan this code.</p>\n                </div>\n\n                <div class="border border-gray-300 p-2 bg-white shadow-inner">\n                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">\n                </div>\n\n                <div class="w-full flex flex-col gap-2 mt-2">\n                    <label class="text-sm">Enter the 6-digit code:</label>\n                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" \n                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">\n                </div>\n\n                <div class="flex justify-center gap-4 mt-4 w-full">\n                    <button id="confirm-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">\n                        VALIDATE\n                    </button>\n                    <button id="cancel-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        CANCEL\n                    </button>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n\n\n    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Change Picture</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button id="close-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6">\n                <div class="mb-6">\n                    <h2 class="text-xl mb-1">Select a picture</h2>\n                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>\n                </div>\n                \n                <div class="flex flex-row gap-6">\n                    <div class="flex-1">\n                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">\n                            <div id="modal-grid" class="grid grid-cols-4 gap-2">\n                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center gap-4 w-[200px]">\n                        <div class="relative w-[170px] h-[170px]">\n                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                            \n                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                            src="https://wlm.vercel.app/assets/usertiles/default.png">\n                        </div>\n\n                        <div class="flex flex-col gap-2 w-full mt-2 h-64">\n                            <input type="file" id="file-input" accept="image/*" hidden>\n\n                            <button id="browse-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            BROWSE\n                            </button>\n                            \n                            <button id="delete-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            DELETE\n                            </button>\n\n                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">\n                                <button id="validation-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        OK\n                                </button>\n                                <button id="cancel-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        CANCEL\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 500px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Select a Theme</div>\n                <div class="title-bar-controls">\n                    <button id="close-theme-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-4">\n                <div id="theme-grid" class="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">\n                    </div>\n            </div>\n        </div>\n    </div>\n\n</div>\n\n';
+  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width: 900px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Profil</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body bg-white">\n                <div class="flex flex-col items-center py-12">\n                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">\n                            <h1 class="text-lg font-normal mb-4">My Profile</h1>\n\n                            <div class="relative w-[170px] h-[170px] mb-1">\n                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"\n                                src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                                \n                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10"\n                                src="https://wlm.vercel.app/assets/usertiles/default.png">\n                            </div>\n\n                            <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">\n                                Change my profile picture\n                            </button>\n\n                            <button id="theme-button" class="text-xs underline text-purple-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">\n                                \u{1F3A8} Customize Theme\n                            </button>\n\n                            <div>\n                                <div class="flex items-center gap-2 mt-1">\n                                    <label class="text-sm">Status:</label>\n                                    <select class="bg-transparent rounded-sm px-2 py-1 text-sm">\n                                        <option>Available</option>\n                                        <option selected>Busy</option>\n                                        <option>Away</option>\n                                        <option>Appear offline</option>\n                                    </select>\n                                </div>\n                            </div>\n                            <div class="text-sm text-center w-full leading-6">\n                                <p id="username-profile" class="text-xl font-semibold"><strong></strong></p>\n                                <p id="bio-profile" class="text-lg font-semibold" style="word-break: break-all; overflow-wrap: anywhere; white-space: normal;"></p>\n                            </div>\n                        </div>\n            \n                        <div class="flex flex-col justify-between flex-1">\n                            <div class="flex flex-col gap-4">\n\n\n                                <label class="text-sm">Username:</label>\n                                <div class="flex flex-row gap-2" data-field="alias">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>\n                                    <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>\n                                    \n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n\n\n\n                                <label class="text-sm">Share a quick message:</label>\n                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>\n                                    <input\n                                        type="text"\n                                        value=""\n                                        placeholder="Share a quick message"\n                                        class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"\n                                        style="width:350px; overflow: hidden;" disabled/>\n                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>\n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n                            </div>\n            \n                            <div class="mt-8 border-t border-gray-300 pt-4">\n                                <div class="flex flex-col gap-4">\n                                    <label class="text-sm">Email:</label>\n                                    <div class="flex flex-row gap-2" data-field="email">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>\n                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n\n                                    <label class="text-sm">Password:</label>\n                                    <div class="flex flex-row gap-2" data-field="password">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>\n                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n                                    <button id="2fa-modal-button" class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n\n    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Two-Factor Authentication</div>\n                <div class="title-bar-controls">\n                    <button id="close-2fa-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6 flex flex-col items-center gap-4">\n                <div class="text-center">\n                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>\n                    <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>\n                </div>\n\n                <div class="border border-gray-300 p-2 bg-white shadow-inner">\n                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">\n                </div>\n\n                <div class="w-full flex flex-col gap-2 mt-2">\n                    <label class="text-sm">Enter the 6-digit code:</label>\n                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" \n                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">\n                </div>\n\n                <div class="flex justify-center gap-4 mt-4 w-full">\n                    <button id="confirm-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">\n                        VALIDATE\n                    </button>\n                    <button id="cancel-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        CANCEL\n                    </button>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n\n\n    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Change Picture</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button id="close-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6">\n                <div class="mb-6">\n                    <h2 class="text-xl mb-1">Select a picture</h2>\n                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>\n                </div>\n                \n                <div class="flex flex-row gap-6">\n                    <div class="flex-1">\n                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">\n                            <div id="modal-grid" class="grid grid-cols-4 gap-2">\n                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center gap-4 w-[200px]">\n                        <div class="relative w-[170px] h-[170px]">\n                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                            \n                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                            src="https://wlm.vercel.app/assets/usertiles/default.png">\n                        </div>\n\n                        <div class="flex flex-col gap-2 w-full mt-2 h-64">\n                            <input type="file" id="file-input" accept="image/*" hidden>\n\n                            <button id="browse-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            BROWSE\n                            </button>\n                            \n                            <button id="delete-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            DELETE\n                            </button>\n\n                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">\n                                <button id="validation-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        OK\n                                </button>\n                                <button id="cancel-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        CANCEL\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 500px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Select a Theme</div>\n                <div class="title-bar-controls">\n                    <button id="close-theme-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-4">\n                <div id="theme-grid" class="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">\n                    </div>\n            </div>\n        </div>\n    </div>\n\n</div>\n\n';
 
   // scripts/pages/ProfilePage.ts
   function render3() {
@@ -5307,8 +5437,8 @@
     const button2faToggle = document.getElementById("2fa-modal-button");
     const modal2fa = document.getElementById("2fa-modal");
     const close2faButton = document.getElementById("close-2fa-modal");
-    const cancel2faButton = document.getElementById("cancel-2fa-modal");
-    const confirm2faButton = document.getElementById("confirm-2fa-modal");
+    const cancel2faButton = document.getElementById("cancel-2fa-button");
+    const confirm2faButton = document.getElementById("confirm-2fa-button");
     const input2fa = document.getElementById("2fa-input-code");
     const qrCodeImg = document.getElementById("2fa-qr-code");
     const userId = localStorage.getItem("userId");
@@ -5396,12 +5526,13 @@
           modal2fa.classList.add("flex");
         }
         const response = await fetchWithAuth(`api/auth/2fa/generate`, {
-          method: "GET"
+          method: "POST"
         });
         if (response.ok) {
-          const blob = await response.blob();
-          const objectURL = URL.createObjectURL(blob);
-          if (qrCodeImg) qrCodeImg.src = objectURL;
+          const result = await response.json();
+          if (result.data && result.data.qrCodeUrl) {
+            if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+          }
         } else {
           console.error("Failed to generate QR code");
           alert("Error generating 2FA QR code");

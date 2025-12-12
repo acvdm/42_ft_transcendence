@@ -45,4 +45,45 @@
 				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 			</div>
 	</div>
-	</div>
+
+
+
+	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Two-Factor Authentication</div>
+                <div class="title-bar-controls">
+                    <button id="close-2fa-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col items-center gap-4">
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Security Check</h2>
+                    <p class="text-xs text-gray-600 mb-4">Please enter the code from Google authenticator.</p>
+                </div>
+
+                <div class="w-full flex flex-col gap-2 mt-2">
+                    <input type="text" id="2fa-input-code" placeholder="------" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                </div>
+
+                <div class="flex flex-col items-center justify-center">
+                    <p id="2fa-error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+                </div>
+
+                <div class="flex justify-center gap-4 mt-4 w-full">
+                    <button id="confirm-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+                        VERIFY
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>

@@ -87,8 +87,8 @@ export function afterRender(): void {
     const button2faToggle = document.getElementById('2fa-modal-button') as HTMLImageElement;
     const modal2fa = document.getElementById('2fa-modal') as HTMLImageElement;
     const close2faButton = document.getElementById('close-2fa-modal');
-    const cancel2faButton = document.getElementById('cancel-2fa-modal');
-    const confirm2faButton = document.getElementById('confirm-2fa-modal');
+    const cancel2faButton = document.getElementById('cancel-2fa-button');
+    const confirm2faButton = document.getElementById('confirm-2fa-button');
     const input2fa = document.getElementById('2fa-input-code') as HTMLInputElement;
     const qrCodeImg = document.getElementById('2fa-qr-code') as HTMLImageElement;
 
@@ -213,13 +213,14 @@ export function afterRender(): void {
 
             //fetch pour le qr code
             const response = await fetchWithAuth(`api/auth/2fa/generate`, {
-                method: 'GET'
+                method: 'POST'
             });
 
             if (response.ok) {
-                const blob = await response.blob();
-                const objectURL = URL.createObjectURL(blob);
-                if (qrCodeImg) qrCodeImg.src = objectURL;
+                const result = await response.json();
+                if (result.data && result.data.qrCodeUrl) {
+                    if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+                }
             } else {
                 console.error("Failed to generate QR code");
                 alert("Error generating 2FA QR code");
