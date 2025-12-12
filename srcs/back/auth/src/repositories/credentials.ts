@@ -7,7 +7,7 @@ export interface Credential {
     user_id: number;
     email: string;
     pwd_hashed: string;
-    two_fa_secret: string;
+    two_fa_secret: string | null;
     is_2fa_enabled: number;
     created_at: string;
 }
@@ -16,7 +16,7 @@ export interface createCredentialData {
     user_id: number;
     email: string;
     pwd_hashed: string;
-    two_fa_secret: string;
+    two_fa_secret: string | null;
     is_2fa_enabled: number;
 }
 
@@ -93,22 +93,107 @@ export async function getCredentialbyID(
     return credential;
 }
 
+export async function getCredentialbyUserID(
+    db: Database,
+    user_id: number
+): Promise<Credential | undefined> 
+{
+    const credential = await db.get(`
+        SELECT * FROM CREDENTIALS WHERE user_id = ?`,
+        [user_id]
+    );
+    return credential;
+}
 
+export async function getEmailbyID(
+    db: Database,
+    user_id: number
+) : Promise<string | undefined> 
+{
+    const row = await db.get(`
+        SELECT email FROM CREDENTIALS WHERE id = ?`,
+        [user_id]
+    );
+    return row?.email;
+}
+
+export async function get2FASecret(
+    db: Database, 
+    user_id: number
+): Promise<string | null> 
+{
+    const row = await db.get(`
+        SELECT two_fa_secret FROM CREDENTIALS WHERE user_id = ?`,
+        [user_id]
+    );
+    return row?.two_fa_secret || null;
+}
+
+export async function is2FAEnabled(
+    db: Database,
+    user_id: number
+): Promise<boolean>
+{
+    const row = await db.get(`
+        SELECT is_2fa_enabled FROM CREDENTIALS WHERE user_id = ?`,
+        [user_id]
+    );
+    return row?.is_2fa_enabled === 1;
+}
 
 //-------- PUT / UPDATE
+
+// sauvegarde le secret mais laisse le 2FA desactive
+export async function update2FASecret(
+    db: Database,
+    user_id: number,
+    secret: string
+) : Promise<void> 
+{
+    await db.run(`
+        UPDATE CREDENTIALS
+        SET two_fa_secret = ?, is_2fa_enabled = 0
+        WHERE user_id = ?`,
+        [secret, user_id]
+    );
+}
+
 export async function changeEmail (
     db: Database,
     user_id: number,
     email: string
 )
-{
-    console.log(`change email dans credential.ts pour ${user_id}, ${email}`);
+{ // MODIFICATION 'FROM' enleve Sqlite naime pas FROM dans un UPDATE
     await db.run(`
         UPDATE CREDENTIALS SET email = ? WHERE user_id = ?`,
         [email, user_id]
     );
 }
 
+// active le 2FA en DB (passe a true)
+export async function activate2FA(
+    db: Database, 
+    user_id: number
+): Promise<void> 
+{
+    await db.run(
+        `UPDATE CREDENTIALS SET is_2fa_enabled = 1 WHERE user_id = ?`,
+        [user_id]
+    );
+}
+
+export async function disable2FA(
+    db: Database,
+    user_id: number
+): Promise<void>
+{
+    await db.run(
+        `UPDATE CREDENTIALS
+        SET is_2fa_enabled = 0, two_fa_secret = NULL
+        WHERE user_id = ?`,
+        [user_id]
+    );
+}
 
 
 //-------- DELETE / DELETE

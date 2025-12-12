@@ -1,13 +1,15 @@
 import * as credRepo from "../repositories/credentials.js";
 import * as tokenRepo from '../repositories/token.js';
 import * as crypt from '../utils/crypto.js'
-
+import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
+import * as QRCode from 'qrcode';
 
 import { 
     generate2FASecret,
     generateAccessToken, 
     generateRefreshToken, 
-    hashPassword 
+    hashPassword,
+    generateTempToken 
 } from "../utils/crypto.js";
 
 import { getExpirationDate } from "../utils/date.js";
@@ -26,6 +28,23 @@ export interface authResponse {
     user_id: number
 }
 
+//   /!\   NOUVEAU TYPE DE RETOUR POSSIBLE  /!\ 
+export interface LoginResponse {
+	// Cas classique
+	access_token?: string;
+	refresh_token?: string;
+	user_id?: number;
+
+	// Cas 2FA requis
+	require_2fa?: boolean;
+	temp_token?: string; // Token temporaire special donne pour entrer le code de verification
+}
+
+export interface TwoFAGenerateResponse {
+    qrCodeUrl: string; // image en base64
+    manualSecret: string; // code texte au cas ou la camera ne marche pas
+}
+
 async function generateTokens (
     user_id: number,
     credential_id: number
@@ -38,12 +57,14 @@ async function generateTokens (
     return { access_token, refresh_token, expires_at}
 }
 
+
 export async function registerUser(
     db: Database,
     user_id: number, 
     email: string, 
     password: string
-): Promise<authResponse> {
+): Promise<authResponse> 
+{
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
@@ -51,15 +72,14 @@ export async function registerUser(
 
     // 2. Hashage, génération 2fa
     const pwd_hashed = await hashPassword(password);
-    const two_fa_secret = generate2FASecret();
 
     // 3. Insertion DB
     const credential_id = await credRepo.createCredentials(db, {
         user_id,
         email,
         pwd_hashed,
-        two_fa_secret,
-        is_2fa_enabled: 1
+        two_fa_secret: null,
+        is_2fa_enabled: 0
     });
 
     // 4. Génération token
@@ -97,7 +117,8 @@ export async function loginUser(
     db: Database,
     email: string, 
     password: string
-): Promise<authResponse> {
+): Promise<LoginResponse> 
+{
     
     const user_id = await credRepo.findUserIdByEmail(db, email);
     if (!user_id)
@@ -111,6 +132,20 @@ export async function loginUser(
     if (!isPasswordValid)
         throw new Error ('Invalid password');
 
+    // VERIFIER SI 2FA ENABLE
+    const is2FA = await credRepo.is2FAEnabled(db, user_id);
+
+    // 2FA active -> on ne donne pas les acces (refresk/access token) mais un tocken temporaire pour acceder a la page pour entrer le num
+    if (is2FA) {
+        const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
+
+        return {
+            require_2fa: true,
+            temp_token: tempToken
+        };
+    }
+
+    // 2FA desactive
     const tokens = await generateTokens(user_id, credential_id);
     // await tokenRepo.updateToken(db, credential_id, tokens.refresh_token, tokens.expires_at);
 
@@ -149,7 +184,8 @@ export async function authenticatePassword(
     return await crypt.verifyPassword(password, credential.pwd_hashed);
 }
 
-// pour refresh le refresh et l'access token
+// JWT pour refresh le refresh et l'access token
+
 export async function refreshUser(
     db: Database,
     oldRefreshToken: string
@@ -181,5 +217,104 @@ export async function refreshUser(
         access_token: newAccessToken,
         refresh_token: newRefreshToken,
         user_id:tokenRecord.user_id
+    };
+}
+
+// 2FA verification
+// fonction qui prend le code a 6 chiffres envoye par l'utilisateur 
+// et verifie s'il matche avec le secret en base
+// permet d'active le 2FA pour le profil de l'utilisateur
+
+export async function verifyAndEnable2FA(
+    db: Database,
+    userId: number,
+    token: string // code envoye par lutilisateur
+) : Promise<boolean> {
+
+    // 1. Recuperer le secret en DB
+    const secretStr = await credRepo.get2FASecret(db, userId);
+    if (!secretStr)
+        throw new Error("2FA not initiated");
+
+    // 2. Creer l'objet TOTP pour verifier
+    const totp = new TOTP({
+        issuer: "Transcendence",
+        label: "Transcendence", 
+        algorithm: "SHA1", // fonction qui melange le secret et l'heure
+        digits: 6, // code final a 6 chiffres
+        period: 30, // code change toutes les 30 secondes
+        secret: Secret.fromBase32(secretStr) // Reconvertir la string en objet Secret (il avait ete convertie en string pour etre mise en DB)
+    }); 
+
+    // 3. Valider le code
+    // delta renvoit l'ecart de temps (0 = parfait, -1 = code d'il y a 30s, null = invalide)
+    const delta = totp.validate({ token, window: 1}); // window = marge d'erreur -> serveur accepte le code actuel mais regarde aussi 1 periode avant et apres
+    if (delta === null) {
+        return false;
+    }
+
+    await credRepo.activate2FA(db, userId);
+    
+    return true;
+};
+
+// finalizeLogin
+// verifie le code entre au moment du login
+// si ok -> genere les vrais tokens
+// enregistre le refresh token en BDD
+
+export async function finalizeLogin2FA(
+    db: Database, 
+    userId: number, 
+    code: string
+): Promise<authResponse | null> // renvoit null si le code est invalide
+{
+    // 1. recuperer le secret en bdd
+    const secretStr = await credRepo.get2FASecret(db, userId);
+    if (!secretStr)
+        throw new Error("2FA not configured for this user");
+
+    // 2. verifier le code totp
+    const totp = new TOTP({
+        issuer: "Transcendence",
+        label: "Transcendence",
+        algorithm: "SHA1",
+        digits: 6,
+        period: 30,
+        secret: Secret.fromBase32(secretStr)
+    });
+
+    const delta = totp.validate({ token: code, window: 1});
+
+    if (delta === null) {
+        return null;
+    }
+
+    // a partir d'ici --> login reussi
+
+    // 3. recuperer le credential id necessaire pour la table TOKENS
+    const credential = await credRepo.getCredentialbyUserID(db, userId);
+    if (!credential)
+        throw new Error("Credential not found");
+
+
+    // 4. generer les vrais tokens (access + refresh)
+    const tokens = await generateTokens(userId, credential.id);
+
+    // 5. nettoyage : on supprime les vieux tokens de cet utilisateur
+    await tokenRepo.deleteTokenByCredentialId(db, credential.id);
+
+    // 6. sauvegarde: on enregistre le nouveau refresh token
+    await tokenRepo.createToken(db, {
+        user_id: userId,
+        credential_id: credential.id,
+        refresh_token: tokens.refresh_token,
+        expires_at: tokens.expires_at
+    });
+
+    return {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        user_id: userId
     };
 }
