@@ -4252,28 +4252,40 @@
           contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
           return;
         }
-        friendList.forEach((friend) => {
+        friendList.forEach((friendship) => {
+          const user = friendship.user;
+          const friend = friendship.friend_id;
+          if (!user || !friend) {
+            console.log(`Invalid friendship data`);
+            return;
+          }
+          const selectedFriend = user.id === this.userId ? friend : user;
+          const status = selectedFriend.status || "invisible";
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
-          const status = friend.status || "invisible";
-          friendItem.dataset.id = friend.id;
-          friendItem.dataset.friendshipId = friend.friendshipId;
-          friendItem.dataset.username = friend.alias;
+          friendItem.dataset.id = selectedFriend.id;
+          friendItem.dataset.friendshipId = friendship.id;
+          friendItem.dataset.username = selectedFriend.alias;
           friendItem.dataset.status = status;
-          friendItem.dataset.bio = friend.bio || "Share a quick message";
-          friendItem.dataset.avatar = friend.avatar_url || friend.avatar || "/assets/basic/default.png";
+          friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+          friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
           friendItem.innerHTML = `
                     <div class="relative w-[50px] h-[50px] flex-shrink-0">
                         <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
-                        <span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+                        <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
                     </div>
                 `;
           contactsList.appendChild(friendItem);
           friendItem.addEventListener("click", () => {
-            const event = new CustomEvent("friendSelected", { detail: friend });
+            const event = new CustomEvent("friendSelected", {
+              detail: {
+                friend: selectedFriend,
+                friendshipId: friendship.id
+              }
+            });
             window.dispatchEvent(event);
           });
         });
@@ -4753,6 +4765,7 @@
     joinChannel(channelKey, friendshipId) {
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
+      console.log("**** join channel friendshipId:", this.currentFriendshipId);
       this.socket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
@@ -5222,13 +5235,12 @@
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
     window.addEventListener("friendSelected", (e) => {
-      const friend = e.detail;
-      const friendshipId = friend.friendshipId || friend.friendshship_id || friend.id;
-      currentChatFriendId = friend.id;
+      const { friend, friendshipId } = e.detail;
       console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
       const myId = parseInt(localStorage.getItem("userId") || "0");
       const ids = [myId, friend.id].sort((a, b) => a - b);
       const channelKey = `channel_${ids[0]}_${ids[1]}`;
+      console.log("channelKey: ", channelKey);
       const chatPlaceholder = document.getElementById("chat-placeholder");
       const channelChat = document.getElementById("channel-chat");
       if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
@@ -5238,7 +5250,6 @@
       const headerStatus = document.getElementById("chat-header-status");
       const headerBio = document.getElementById("chat-header-bio");
       if (headerName) headerName.textContent = friend.alias;
-      if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
       if (headerAvatar) {
         const avatarSrc = friend.avatar || friend.avatar_url || "/assets/profile/default.png";
         headerAvatar.src = avatarSrc;

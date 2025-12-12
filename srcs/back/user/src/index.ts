@@ -456,10 +456,10 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 
 	try
 	{
-		const friends: userRepo.User [] = await friendRepo.listFriends(db, userId);
+		const friendships: friendRepo.Friendship[] = await friendRepo.listFriends(db, userId);
 		return reply.status(200).send({
 			success: true,
-			data: friends,
+			data: friendships,
 			error: null
 		});
 	}

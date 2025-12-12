@@ -39,19 +39,28 @@ export class FriendList {
                 return;
             }
 
-            friendList.forEach((friend: any) => {
+            friendList.forEach((friendship: any) => {
+                const user = friendship.user;
+                const friend = friendship.friend_id;
+
+                if (!user || !friend)
+                {
+                    console.log(`Invalid friendship data`);
+                    return;
+                }
+                const selectedFriend = (user.id === this.userId) ? friend : user;
+                const status = selectedFriend.status || 'invisible';
+
                 const friendItem = document.createElement('div');
                 friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
 
-                const status = friend.status || 'invisible'; 
-
                 // on stocke tout
-                friendItem.dataset.id = friend.id;
-                friendItem.dataset.friendshipId = friend.friendshipId;
-                friendItem.dataset.username = friend.alias;
+                friendItem.dataset.id = selectedFriend.id;
+                friendItem.dataset.friendshipId = friendship.id;
+                friendItem.dataset.username = selectedFriend.alias;
                 friendItem.dataset.status = status;
-                friendItem.dataset.bio = friend.bio || "Share a quick message";
-                friendItem.dataset.avatar = friend.avatar_url || friend.avatar || "/assets/basic/default.png";
+                friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+                friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
                 
 
                 friendItem.innerHTML = `
@@ -60,7 +69,7 @@ export class FriendList {
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
-                        <span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+                        <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
                     </div>
                 `;
 
@@ -69,7 +78,12 @@ export class FriendList {
                 
                 // ouverture du chat
                 friendItem.addEventListener('click', () => {
-                    const event = new CustomEvent('friendSelected', { detail: friend });
+                    const event = new CustomEvent('friendSelected', { 
+                        detail: {
+                            friend: selectedFriend,
+                            friendshipId: friendship.id
+                        } 
+                    });
                     window.dispatchEvent(event);
                 });
             });
