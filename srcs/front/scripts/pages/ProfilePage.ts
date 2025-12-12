@@ -471,6 +471,10 @@ export function afterRender(): void {
 
         // on revient au mode de base
         const disableEditMode = (newValue: string) => {
+            if (fieldName !== 'password') {
+                initialValue = newValue;
+            }
+
             display.classList.remove('hidden');
             input.classList.add('hidden');
             input.disabled = true;

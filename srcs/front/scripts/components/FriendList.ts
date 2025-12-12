@@ -254,7 +254,7 @@ export class FriendList {
     
                         item.innerHTML = `
                             <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                                <img src="${req.avatar_url || '/assets/basic/logo.png'}" 
+                                <img src="/assets/basic/logo.png" 
                                     class="w-full h-full object-cover rounded"
                                     alt="avatar">
                             </div>

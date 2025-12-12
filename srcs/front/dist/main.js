@@ -384,22 +384,55 @@
 
 
 
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden" style="width: 150px">
-										<button id="button-view-profile" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
-											View profile
-										</button>
-										<button id="button-invite-game" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
-											Invite to play
-										</button>
-										<button id="button-report-user" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
-											Report user
-										</button>
-										<button id="button-block-user" class="w-full text-left px-4 py-2 hover: bg-blue-50 text-sm text-gray-700 transition">
-											Block user
-										</button>
-									</div>
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
+    
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/view_profile.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
+												View profile
+											</button>
+										</div>
 
-								</div> <!-- fin de la div menu ...-->
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/game_notification.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
+												Invite to play
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/report.png" 
+													class="w-5 h-5 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-report-user" class="text-left text-sm text-gray-700 flex-1">
+												Report user
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/block.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
+												Block user
+											</button>
+										</div>
+
+									</div> <!-- fin de la div menu -->
+
+								</div>
 
 
 							</div>
@@ -4391,7 +4424,7 @@
               item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
               item.innerHTML = `
                             <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                                <img src="${req.avatar_url || "/assets/basic/logo.png"}" 
+                                <img src="/assets/basic/logo.png" 
                                     class="w-full h-full object-cover rounded"
                                     alt="avatar">
                             </div>
@@ -5548,6 +5581,9 @@
         input.focus();
       };
       const disableEditMode = (newValue) => {
+        if (fieldName !== "password") {
+          initialValue = newValue;
+        }
         display.classList.remove("hidden");
         input.classList.add("hidden");
         input.disabled = true;
