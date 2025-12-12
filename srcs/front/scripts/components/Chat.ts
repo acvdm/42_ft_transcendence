@@ -48,7 +48,7 @@ export class Chat {
 
     private setupSocketEvents() {
         this.socket.on("connect", () => {
-            this.addMessage("Connected to chat server!", "System");
+            this.addMessage("You can now chat with your friend!", "System");
         });
 
         // on va écouter l'événement chatMessage venant du serveur

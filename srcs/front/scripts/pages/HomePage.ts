@@ -53,7 +53,12 @@ export function afterRender(): void {
 
         if (headerName) headerName.textContent = friend.alias;
         if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
-        if (headerAvatar) headerAvatar.src = friend.avatar || friend.avatar_url;
+
+        if (headerAvatar) {
+            const avatarSrc = friend.avatar || friend.avatar_url || '/assets/profile/default.png';
+            headerAvatar.src = avatarSrc;
+        }
+
         if (headerStatus) {
             headerStatus.src = statusImages[friend.status] || statusImages['invisible'];
         }
