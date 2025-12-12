@@ -1,6 +1,8 @@
 import SocketService from "../services/SocketService";
 import { getStatusDot, statusImages } from "./Data";
 import { fetchWithAuth } from "../pages/api";
+import { Friendship } from '../../../back/user/src/repositories/friendships';
+
 
 export class FriendList {
     private container: HTMLElement | null;
@@ -179,12 +181,14 @@ export class FriendList {
         if (notifButton && notifDropdown && notifList) {
              // On définit handleRequest AVANT de l'utiliser dans checkNotifications
              const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { 
-                const userId = localStorage.getItem('userId'); 
+                const userId = localStorage.getItem('userId');
+                if (!itemDiv.dataset.friendshipId)
+                    return;
                 try {
                     const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: askerId, status: action }) 
+                        body: JSON.stringify({ status: action }) 
                     });
                     if (response.ok) {
                         itemDiv.style.opacity = '0'; 
@@ -206,7 +210,7 @@ export class FriendList {
                 if (!userId) return;
                 try {
                     const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
-                    if (!response.ok) throw new Error('Failed to fetch friends');
+                    if (!response.ok) throw new Error('Failed to fetch pendings');
     
                     const requests = await response.json();
                     const pendingList = requests.data;
@@ -224,14 +228,16 @@ export class FriendList {
                         return;
                     }
 
-                    pendingList.forEach((req: any) => {
+                    // Modif ligne 231 la req est de type Friendship
+                    pendingList.forEach((req: Friendship) => {
                         const item = document.createElement('div');
-                        item.dataset.friendshipId = req.friendshipId;
+                        item.dataset.friendshipId = req.id.toString();
                         item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
     
+                        // Modif ligne 240 de ${req.alias} à ${req.user?.alias}
                         item.innerHTML = `
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${req.alias}</p>
+                                <p class="text-sm font-semibold truncate">${req.user?.alias}</p>
                                 <p class="text-xs text-gray-500">Wants to be your friend</p>
                             </div>
                             <div class="flex gap-1">

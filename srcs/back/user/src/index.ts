@@ -398,10 +398,10 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 
 	try
 	{
-		const requestID = await friendRepo.makeFriendshipRequest(db, userId, alias);
+		const friendship = await friendRepo.makeFriendshipRequest(db, userId, alias);
 		return reply.status(200).send({
 			success: true,
-			data: null,
+			data: friendship,
 			error: null
 		});
 	}
@@ -476,9 +476,9 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
 fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 {
+	console.log("pendings");
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
-  	console.log("ciyciy:", userId);
 
 	try
 	{

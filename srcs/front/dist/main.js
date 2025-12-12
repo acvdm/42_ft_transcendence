@@ -4285,11 +4285,13 @@
       if (notifButton && notifDropdown && notifList) {
         const handleRequest = async (askerId, action, itemDiv) => {
           const userId = localStorage.getItem("userId");
+          if (!itemDiv.dataset.friendshipId)
+            return;
           try {
             const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: askerId, status: action })
+              body: JSON.stringify({ status: action })
             });
             if (response.ok) {
               itemDiv.style.opacity = "0";
@@ -4310,7 +4312,7 @@
           if (!userId) return;
           try {
             const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
-            if (!response.ok) throw new Error("Failed to fetch friends");
+            if (!response.ok) throw new Error("Failed to fetch pendings");
             const requests = await response.json();
             const pendingList = requests.data;
             const notifIcon = document.getElementById("notification-icon");
@@ -4326,11 +4328,11 @@
             }
             pendingList.forEach((req) => {
               const item = document.createElement("div");
-              item.dataset.friendshipId = req.friendshipId;
+              item.dataset.friendshipId = req.id.toString();
               item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
               item.innerHTML = `
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${req.alias}</p>
+                                <p class="text-sm font-semibold truncate">${req.user?.alias}</p>
                                 <p class="text-xs text-gray-500">Wants to be your friend</p>
                             </div>
                             <div class="flex gap-1">
