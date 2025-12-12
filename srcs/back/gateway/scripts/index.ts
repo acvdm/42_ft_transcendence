@@ -69,28 +69,28 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://auth:3001', // adresse interne du réseau du docker
+	upstream: 'https://auth:3001', // adresse interne du réseau du docker
 	prefix: '/api/auth', // toutes les requetes api/auth iront au service auth
 	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://chat:3002', // adresse interne du réseau du docker
+	upstream: 'https://chat:3002', // adresse interne du réseau du docker
 	prefix: '/api/chat', // toutes les requetes api/chat iront au service chat
 	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://game:3003', // adresse interne du réseau du docker
+	upstream: 'https://game:3003', // adresse interne du réseau du docker
 	prefix: '/api/game', // toutes les requetes api/game iront au service game
 	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://user:3004', // adresse interne du réseau du docker
+	upstream: 'https://user:3004', // adresse interne du réseau du docker
 	prefix: '/api/users', // toutes les requetes api/users iront au service user
 	rewritePrefix: '/users' // on retire le prefixe avant de l'envoyer un service
 });

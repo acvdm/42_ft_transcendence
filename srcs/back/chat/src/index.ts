@@ -7,7 +7,10 @@ import * as chanRepo from "./repositories/channels.js";
 
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+	logger: true,
+	trustProxy: true, 
+});
 
 let db: Database;
 
@@ -17,7 +20,15 @@ async function main()
 	console.log('chat database initialised');
 }
 
-
+// Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
+fastify.addHook('onRequest', async (request, reply) => 
+{
+	const protocol = request.headers['x-forwarded-proto'] || 'http';
+	if (protocol !== 'https') 
+	{
+		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+	}
+});
 
 async function joinChannel(
 	socket: Socket,
@@ -95,7 +106,7 @@ const start = async () =>
 			},
 			// Options pour le proxy nginx
 			path: '/socket.io/',
-			transports: ['websocket', 'polling']
+			transports: ['websocket', 'polling'],
 		});	
 
 		// gestion des évenements websockets

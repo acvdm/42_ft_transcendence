@@ -1,8 +1,6 @@
 import Fastify from 'fastify'; // rôle de serveur HTTP
-import sqlite3 from 'sqlite3';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import { createUserInDB } from './repositories/users.js';
 import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 import * as friendRepo from './repositories/friendships.js';
 import fs from 'fs';
@@ -10,11 +8,25 @@ import * as userRepo from './repositories/users.js';
 
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+	logger: true,
+	trustProxy: true // Indique à fastify que le trafic provient d'un proxy
+ });
 
-// NOUVEAY on enregistre le plugin cookie 
+// NOUVEAU on enregistre le plugin cookie 
 fastify.register(fastifyCookie, {
   secret: process.env.COOKIE_SECRET || 'un-secret-par-defaut',
+  parseOptions: {}
+});
+
+// Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
+fastify.addHook('onRequest', async (request, reply) => 
+{
+	const protocol = request.headers['x-forwarded-proto'] || 'http';
+	if (protocol !== 'https') 
+	{
+		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+  	}
 });
 
 let db: Database;
@@ -61,7 +73,7 @@ fastify.post('/users', async (request, reply) => {
 		}
 
 		console.log(`User created locally (ID: ${user_id}. Calling auth...`);		
-		const authURL = `http://auth:3001/users/${user_id}/credentials`;
+		const authURL = `https://auth:3001/users/${user_id}/credentials`;
 
 		// 3. Appeler le service auth pour créer les credentials
 		const authResponse = await fetch(authURL, {
@@ -281,7 +293,7 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	{
 		
 		console.log("mail updated in userRepo");
-		const authURL = `http://auth:3001/users/${userId}/credentials`;
+		const authURL = `https://auth:3001/users/${userId}/credentials`;
 
 		const authResponse = await fetch(authURL, {
 			method: "PATCH",
@@ -319,7 +331,6 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	}
 })
 
-// pour la route pour update la vatar
 
 /* -- UPDATE AVATAR -- */
 fastify.patch('/users/:id/avatar', async (request, reply) => {

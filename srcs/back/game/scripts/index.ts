@@ -4,7 +4,10 @@ import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+	logger: true,
+	trustProxy: true,
+});
 
 let db: Database;
 
@@ -14,6 +17,15 @@ async function main()
 	console.log('game database initialised');
 }
 
+// Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
+fastify.addHook('onRequest', async (request, reply) => 
+{
+	const protocol = request.headers['x-forwarded-proto'] || 'http';
+	if (protocol !== 'https') 
+	{
+		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+	}
+});
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get

@@ -12,18 +12,32 @@ import fs from 'fs';
 // on recupere le secret pour le cookie
 // process = objet global de Node.js qui represente le programme en cours d'execution
 const cookieSecret = process.env.COOKIE_SECRET;
-if (!cookieSecret){
+if (!cookieSecret)
+{
     console.error("FATAL ERROR: COOKIE_SECRET is not defined in .env");
     process.exit(1);
 }
 
 // Creation of Fastify server
-const fastify = Fastify({ logger: true, });
+const fastify = Fastify({ 
+	logger: true,
+	trustProxy: true, // Traiter les en-têtes X-Forwarded envoyé par NGINX
+});
 
 // enregistrer un plugin cookie avec la variable d'env
-fastify.register(fastifyCookie, {
-  secret: cookieSecret,
-  parseOptions: {} // options par defaut
+fastify.register(fastifyCookie, 
+{
+	secret: cookieSecret,
+	parseOptions: {} // options par defaut
+});
+
+fastify.addHook('onRequest', async (request, reply) => 
+{
+	const protocol = request.headers['x-forwarded-proto'] || 'http';
+	if (protocol !== 'https') 
+	{
+		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+	}
 });
 
 let db: Database; // on stocke ici la connexion SQLite, globale au module
