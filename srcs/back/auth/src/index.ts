@@ -2,10 +2,10 @@ import Fastify from 'fastify'; // on importe la bibliothèque fastify
 import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import { validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, refreshUser, logoutUser, verifyTwoFA } from './services/auth_service.js';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
+import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
+import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser, verifyAndEnable2FA } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -85,6 +85,34 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 	}
 });
 
+// CHANGE EMAIL
+fastify.patch('/users/:id/credentials', async (request, reply) => 
+{
+	try 
+	{
+		const body = request.body as { user_id: number; email: string };
+
+		validateNewEmail(body);
+
+		const result = await changeEmailInCredential(db, body.user_id, body.email);
+
+		// 3. Répondre
+		return reply.status(200).send({
+			success: true,
+			data: result,
+			error: null
+		});
+	} 
+	catch (err: any) 
+	{
+		return reply.status(400).send({
+			success: false, 
+			data: null,
+			error: { message: err.message }
+		});
+	}
+});
+
 
 /* -- LOGIN -- */ 
 fastify.post('/sessions', async (request, reply) => 
@@ -121,11 +149,47 @@ fastify.post('/sessions', async (request, reply) =>
 	}
 });
 
+// // duplique le /sessions ?
+// fastify.post('/login', async (request, reply) => {
+//   const body = request.body as { email: string, password: string };
+  
+//   try {
+//     const authResponse = await loginUser(db, body.email, body.password);
+// 	console.log("✅ route /login atteinte");
+
+//     // on met le refresh token dans le cookie, pas dans le body
+//     // et on prepare l'en-tete HTTP qui sera attache a la reponse finale
+//     // le navigateur lira cette en tete et enregistrera le cookie
+//     reply.setCookie('refresh_token', authResponse.refresh_token, { // refresh_token dans la fonction loginUser
+//       path: '/',
+//       httpOnly: true, // invisible au JS (protection XSS)
+//       secure: true, //acces au cookie uniquement via https
+//       sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+//       maxAge: 7 * 24 * 3600, // 7 jours en secondes
+//       signed: true // signe avec cookie secret
+//     });
+
+//     // envoi de l'access token dans le json et pas dans l'authResponse
+//     return reply.status(200).send({
+//       access_token:authResponse.access_token,
+//       user_id: authResponse.user_id
+//     });
+
+//   } catch (err: any) {
+//     console.error("❌ ERREUR AUTH LOGIN:", err);
+//      return reply.status(400).send({ error: err.message });
+//   }
+// });
+
+
+
 /* -- REFRESH THE ACCESS TOKEN -- */
+
 fastify.post('/refresh', async (request, reply) => {
   
   // lire le cookie signe
   const cookie = request.cookies.refresh_token;
+  
   // verification de la signature
   const result = request.unsignCookie(cookie || '');
 
@@ -210,8 +274,7 @@ fastify.post('/logout', async (request, reply) => {
 /2fa/generate
 route appellee quand utilisateur clique sur "Active le 2FA"
 Besoin de generer un secret -> otpauth ou crypto
-met a jour ligne de l'utilisateur en BDD
-two_2fa_secret mais & 2fa_enable reste a false
+met a jour ligne de l'utilisateur en BDD two_fa_secret mais & 2fa_enable reste a false
 generer url code et transforme en image base64 avec la lib qrcode
 renvoie image en base64 au front
 */
@@ -267,7 +330,33 @@ fastify.post('/2fa/enable', async (request, reply) => {
 	try {
 		const userIdHeader = request.headers['x-user-id'];
 		if (!userIdHeader)
-			return reply.status 
+			return reply.status(401).send({error: "Unauthorized"});
+
+		const userId = parseInt(userIdHeader as string);
+
+		// recuperation du code a 6 chiffres envoye par l'utilisateur
+		const body = request.body as { code: string };
+		if (!body.code)
+			return reply.status(400).send({ error: "Code required"});
+
+		const isSuccess = await verifyAndEnable2FA(db, userId, body.code);
+		if (!isSuccess)
+		{
+			// mauvais code
+			return reply.status(400).send({
+				success: false,
+				error: { message: "Invalid 2FA Code. Please try again."}
+			});
+		}
+
+		console.log(`✅ 2FA is now ENABLED for user ${userId}`);
+		return reply.status(200).send({
+			success: true,
+			data: {message: "2FA enabled successfully" },
+			error: null
+		});
+	} catch (err: any) {
+		return reply.status(500).send({ success: false, error: { message: err.message}});
 	}
 
 });
@@ -276,6 +365,29 @@ fastify.post('/2fa/enable', async (request, reply) => {
 /2fa/disable
 update la BDD
 */
+
+fastify.post('/2fa/disable', async (request, reply) => {
+	
+	try {
+		const userIdHeader = request.headers['x-user-id'];
+		if (!userIdHeader)
+			return reply.status(401).send({error: "Unauthorized"});
+
+		const userId = parseInt(userIdHeader as string);
+
+		await credRepo.disable2FA(db, userId);
+
+		console.log(`✅ 2FA disabled for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: { message: "2FA disabled successfully"},
+			error: null
+		});
+	} catch (err: any) {
+		return reply.status(500).send({ success: false, error: { message: err.message } });
+	}
+});
 
 /*
 /2fa/verify

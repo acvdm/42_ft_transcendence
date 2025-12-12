@@ -5,6 +5,7 @@ import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./
 import { NotFoundPage } from "./pages/NotFound";
 import { LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
+import { applyTheme } from "./pages/ProfilePage";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -98,6 +99,7 @@ const handleLogout = async () => {
 const handleLocationChange = () => {
 	if (!appElement) return;
 
+	
     let path = window.location.pathname; // difference const / let
     const accessToken = localStorage.getItem('accessToken');
 
@@ -125,6 +127,8 @@ const handleLocationChange = () => {
     if (page.afterRender) {
         page.afterRender();
     }
+	const savedTheme = localStorage.getItem('userTheme') || 'basic';
+	applyTheme(savedTheme);
 };
 
 /*

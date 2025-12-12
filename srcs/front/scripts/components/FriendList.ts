@@ -16,6 +16,7 @@ export class FriendList {
         this.setupFriendRequests();
         this.setupNotifications();
         this.listenToUpdates();
+        this.setupBlockListener();
     }
 
     private async loadFriends() {
@@ -65,7 +66,6 @@ export class FriendList {
                 
                 // ouverture du chat
                 friendItem.addEventListener('click', () => {
-                     // On envoie un signal au composant Chat pour qu'il s'ouvre
                     const event = new CustomEvent('friendSelected', { detail: friend });
                     window.dispatchEvent(event);
                 });
@@ -77,22 +77,46 @@ export class FriendList {
         }
     }
 
+
+    private setupBlockListener() {
+        window.addEventListener('friendBlocked', (e: any) => {
+            const blockedUsername = e.detail?.username;
+            if (!blockedUsername || !this.container) return;
+
+            // element html qui correspond
+            const friendToRemove = this.container.querySelector(`.friend-item[data-username="${blockedUsername}"]`);
+
+            if (friendToRemove) {
+                // suppression
+                (friendToRemove as HTMLElement).style.opacity = '0';
+                setTimeout(() => {
+                    friendToRemove.remove();
+
+                    // message par defaut
+                    if (this.container && this.container.children.length === 0) {
+                        this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+                    }
+                }, 300);
+            }
+        });
+    }
+
     private setupFriendRequests() {
         const addFriendButton = document.getElementById('add-friend-button');
         const addFriendDropdown = document.getElementById('add-friend-dropdown');
         const friendSearchInput = document.getElementById('friend-search-input') as HTMLInputElement;
-        const sendFriendRequestBtn = document.getElementById('send-friend-request');
-        const cancelFriendRequestBtn = document.getElementById('cancel-friend-request');
+        const sendFriendRequestButton = document.getElementById('send-friend-request');
+        const cancelFriendRequestButton = document.getElementById('cancel-friend-request');
         const friendRequestMessage = document.getElementById('friend-request-message');
 
-        if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestBtn && cancelFriendRequestBtn) {
+        if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
         
             // ouverture ou fermeture du dropdown
             addFriendButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 addFriendDropdown.classList.toggle('hidden');
                 
-                // fermeture des autres menus (Status, etc) géré globalement
+                // fermeture des autres menus
                 document.getElementById('status-dropdown')?.classList.add('hidden');
                 
                 if (!addFriendDropdown.classList.contains('hidden')) {
@@ -138,7 +162,7 @@ export class FriendList {
             };
     
             // clic sur envoyer
-            sendFriendRequestBtn.addEventListener('click', sendFriendRequest);
+            sendFriendRequestButton.addEventListener('click', sendFriendRequest);
             
             friendSearchInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
@@ -146,7 +170,7 @@ export class FriendList {
                 }
             });
     
-            cancelFriendRequestBtn.addEventListener('click', () => {
+            cancelFriendRequestButton.addEventListener('click', () => {
                 addFriendDropdown.classList.add('hidden');
                 friendSearchInput.value = '';
                 friendRequestMessage?.classList.add('hidden');
@@ -177,7 +201,6 @@ export class FriendList {
         const notifList = document.getElementById('notification-list');
 
         if (notifButton && notifDropdown && notifList) {
-             // On définit handleRequest AVANT de l'utiliser dans checkNotifications
              const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { 
                 const userId = localStorage.getItem('userId'); 
                 try {
@@ -227,17 +250,29 @@ export class FriendList {
                     pendingList.forEach((req: any) => {
                         const item = document.createElement('div');
                         item.dataset.friendshipId = req.friendshipId;
-                        item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+                        item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
     
                         item.innerHTML = `
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${req.alias}</p>
-                                <p class="text-xs text-gray-500">Wants to be your friend</p>
+                            <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                                <img src="${req.avatar_url || '/assets/basic/logo.png'}" 
+                                    class="w-full h-full object-cover rounded"
+                                    alt="avatar">
                             </div>
-                            <div class="flex gap-1">
-                                <button class="btn-accept bg-blue-500 text-gray-600 p-1.5 rounded hover:bg-blue-600 transition" title="Accept">✓</button>
-                                <button class="btn-reject bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Decline">✕</button>
-                                <button class="btn-block bg-gray-200 text-gray-600 p-1.5 rounded hover:bg-gray-300 transition" title="Block">🚫</button>
+                            <div class="flex-1 min-w-0 pr-4">
+                                <p class="text-sm text-gray-800">
+                                    <span class="font-semibold">${req.alias}</span> wants to be your friend
+                                </p>
+                            </div>
+                            <div class="flex gap-2 flex-shrink-0">
+                                <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                                    <span class="text-green-600 font-bold text-sm">✓</span>
+                                </button>
+                                <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                                    <span class="text-red-600 font-bold text-sm">✕</span>
+                                </button>
+                                <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                                    <span class="text-gray-600 text-xs">🚫</span>
+                                </button>
                             </div>
                         `;
                         const buttonAccept = item.querySelector('.btn-accept');
@@ -277,8 +312,6 @@ export class FriendList {
         const socket = SocketService.getInstance().socket;
         if (!socket) return;
         
-        // Écoute de l'événement socket pour les changements de statut des amis
-        // (Assure-toi que ton backend envoie bien cet événement avec { username, status })
         socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`Status update for ${data.username}: ${data.status}`);
             this.updateFriendUI(data.username, data.status);
@@ -292,16 +325,14 @@ export class FriendList {
         });
     }
 
-    // Fonction pour mettre à jour l'interface d'un ami spécifique
+
     private updateFriendUI(username: string, newStatus: string) {
-        //  Mettre à jour la liste d'amis (le point de couleur)
+        //  maj point de connexion
         const friendItems = document.querySelectorAll('.friend-item');
         friendItems.forEach((item) => {
             const el = item as HTMLElement;
             if (el.dataset.username === username) {
-                // Mise à jour du dataset
                 el.dataset.status = newStatus;
-                // Mise à jour visuelle du point (dot)
                 const statusImg = el.querySelector('img[alt="status"]') as HTMLImageElement;
                 if (statusImg) {
                     statusImg.src = getStatusDot(newStatus);

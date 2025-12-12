@@ -1,6 +1,7 @@
 import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
+import { fetchWithAuth } from "../pages/api";
 
 export class Chat {
     private socket: any;
@@ -8,6 +9,7 @@ export class Chat {
     private messageInput: HTMLInputElement | null;
     private wizzContainer: HTMLElement | null;
     private currentChannel: string = "general";
+    private currentFriendshipId: number | null = null;
     private shakeTimeout: number | undefined;
 
     constructor() {
@@ -26,14 +28,18 @@ export class Chat {
         this.setupTools(); // Animations, Fonts, Emoticons, Backgrounds
     }
 
-    public joinChannel(channelKey: string) {
+    public joinChannel(channelKey: string, friendshipId?: number) {
         this.currentChannel = channelKey;
+        this.currentFriendshipId = friendshipId || null;
+
         this.socket.emit("joinChannel", channelKey);
         
         // Reset affichage
         if (this.messagesContainer) {
             this.messagesContainer.innerHTML = '';
         }
+
+        //if (this.messageInput) this.messageInput.disabled = false;
     }
 
     // ---------------------------------------------------
@@ -42,7 +48,7 @@ export class Chat {
 
     private setupSocketEvents() {
         this.socket.on("connect", () => {
-            this.addMessage("Connected to chat server!", "System");
+            this.addMessage("You can now chat with your friend!", "System");
         });
 
         // on va écouter l'événement chatMessage venant du serveur
@@ -113,7 +119,7 @@ export class Chat {
                 this.socket.emit("chatMessage", {
                     sender_id: sender_id,
                     sender_alias: sender_alias,
-                    channel: this.currentChannel,
+                    channel_key: this.currentChannel,
                     msg_content: msg_content 
                 });
                 this.messageInput.value = ''; // on vide l'input
@@ -131,7 +137,7 @@ export class Chat {
             wizzButton.addEventListener('click', () => {
                 const currentUsername = localStorage.getItem('username');
                 // on envois l'element snedWizz au serveur
-                this.socket.emit("sendWizz", { author: currentUsername });
+                this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
                 // secousse pour l'expediteur et le receveur
                 this.shakeElement(this.wizzContainer, 500);
             });
@@ -268,14 +274,19 @@ export class Chat {
                 animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
 
                 // clic sur l'anumation
+                console.log("Envoi d'un message");
                 animationItem.addEventListener('click', (event) => {
                     event.stopPropagation();
                     const currentUsername = localStorage.getItem('username');
                     // envoi de l'animation via la sockettt
+                    console.log("Envoi d'un message");
+
                     this.socket.emit("sendAnimation", {
                         animationKey: key,
-                        author: currentUsername 
+                        author: currentUsername,
+                        channel_key: this.currentChannel
                     });
+                    console.log("Envoi d'un message");
                     animationDropdown.classList.add('hidden');
                 });
                 animationGrid.appendChild(animationItem);
@@ -421,11 +432,58 @@ export class Chat {
                 console.log("Report clicked");
                 chatOptionsDropdown.classList.add('hidden');
             });
-            document.getElementById('button-block-user')?.addEventListener('click', (e) => {
+
+            ////////////// ICI POUR LA LOGIQUE DE BLOCK/BLOCAGE D'UN AMI
+            document.getElementById('button-block-user')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
+
+                if (!this.currentFriendshipId) { // est-ce qu'on a bien un id d'amitié entre les deux
+                    console.error("Cannot block: no friendship id associated to this conv");
+                    chatOptionsDropdown.classList.add('hidden'); // on retire le dropdown
+                    return ;
+                }
+
                 const currentChatUser = document.getElementById('chat-header-username')?.textContent;
-                if (currentChatUser && confirm(`Block ${currentChatUser}?`)) {
-                    console.log(`Blocking ${currentChatUser}`);
+                if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
+                    try {
+                        const response = await fetchWithAuth(`api/friendship/${this.currentFriendshipId}`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ status: 'blocked' })
+                        });
+
+                        if (response.ok) {
+                            console.log(`User ${currentChatUser} blocked successfully`);
+                            const event = new CustomEvent('friendBlocked', { 
+                                detail: { username: currentChatUser } 
+                            });
+                            window.dispatchEvent(event);
+
+                            // disparaission de laconversation
+                            if (this.messagesContainer) {
+                                this.messagesContainer.innerHTML = '';
+                                
+                                const infoMsg = document.createElement('div');
+                                infoMsg.className = "text-center text-gray-400 text-sm mt-10";
+                                infoMsg.innerText = "Conversation deleted (User blocked).";
+                                this.messagesContainer.appendChild(infoMsg);
+                            }
+
+                            // on vide l'input
+                            if (this.messageInput) {
+                                this.messageInput.value = "";
+                                this.messageInput.disabled = true;
+                                this.messageInput.placeholder = "You blocked this user.";
+                            }
+
+                            this.currentChannel = "";
+                            this.currentFriendshipId = null;
+                        } else {
+                            console.error("Network error while blocking");
+                            alert("Error while blocking");
+                        }
+                    } catch (error) {
+                        console.error("Networik error:", error);
+                    }
                 }
                 chatOptionsDropdown.classList.add('hidden');
             });

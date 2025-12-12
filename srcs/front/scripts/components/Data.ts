@@ -1,8 +1,64 @@
 let globalPath = "/assets/emoticons/";
 let animationPath = "/assets/animated/";
 
+export interface Theme {
+    name: string;
+    headerUrl: string;
+    navColor: string;
+    bgColor: string;
+}
+
+
+export const appThemes: { [key: string]: Theme } = {
+    'basic': {
+        name: 'Classic Blue',
+        headerUrl: 'https://wlm.vercel.app/assets/background/background.jpg',
+        navColor: 'linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)',
+        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)'
+    },
+    'bamboo': {
+        name: 'Zen Bamboo',
+        headerUrl: '/assets/headers/bamboo_header.jpg',
+        navColor: 'linear-gradient(to bottom, #86A668 0%, #5F8C35 50%, #4A7026 100%)',
+        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #dcfce7 100%)'
+    },
+    'love': {
+        name: 'Lovely Pink',
+        headerUrl: '/assets/headers/love_header.jpg',
+        navColor: 'linear-gradient(to bottom, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)',
+        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #fce7f3 100%)'
+    },
+    'punk': {
+        name: 'Cyber Punk',
+        headerUrl: '/assets/headers/punk_header.jpg',
+        navColor: 'linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)',
+        bgColor: 'linear-gradient(to bottom, #f3e8ff 0%, #d8b4fe 50%, #a855f7 100%)'
+    },
+    'football': {
+        name: 'Stadium',
+        headerUrl: '/assets/headers/football_header.png',
+        navColor: 'linear-gradient(to bottom, #2C3E50 0%, #000000 100%)',
+        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #e5e7eb 50%, #9ca3af 100%)'
+    },
+    'space': {
+        name: 'Mesmerizing',
+        headerUrl: '/assets/headers/mesmerizing_header.png',
+        navColor: 'linear-gradient(to bottom, #1e3c72 0%, #2a5298 100%)',
+        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #e0e7ff 50%, #a5b4fc 100%)'
+    },
+    'sunset': {
+        name: 'Dawn',
+        headerUrl: '/assets/headers/dawn_header.png',
+        navColor: 'linear-gradient(to bottom, #ff7e5f 0%, #feb47b 100%)',
+        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffedd5 50%, #fdba74 100%)'
+    }
+};
+
+
+
 export const statusImages: { [key: string]: string } = {
     'available': '/assets/basic/status_online_small.png',
+    'online': '/assets/basic/status_online_small.png',
     'busy':      '/assets/basic/status_busy_small.png',
     'away':      '/assets/basic/status_away_small.png',
     'invisible': '/assets/basic/status_offline_small.png',

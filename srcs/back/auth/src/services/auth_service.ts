@@ -70,9 +70,6 @@ export async function registerUser(
     });
 
     // 4. Génération token
-    // const access_token = generateAccessToken(user_id, credential_id);
-    // const refresh_token = generateRefreshToken(user_id);
-    // const expires_at = getExpirationDate(30);
     const tokens = await generateTokens(user_id, credential_id);
 
     // 5. Insertion dans la DB tokens
@@ -88,6 +85,19 @@ export async function registerUser(
         refresh_token: tokens.refresh_token, 
         user_id 
     };
+}
+
+export async function changeEmailInCredential (
+    db: Database,
+    user_id: number,
+    email: string
+)
+{
+    const existing = await credRepo.findByEmail(db, email);
+    if (existing)
+        throw new Error('Email already in use');
+
+    await credRepo.changeEmail(db, user_id, email);
 }
 
 export async function loginUser(
@@ -188,14 +198,14 @@ export async function refreshUser(
 // fonction qui prend le code a 6 chiffres envoye par l'utilisateur 
 // et verifie s'il matche avec le secret en base
 
-export async function verifyTwoFA(
+export async function verifyAndEnable2FA(
     db: Database,
     userId: number,
-    token: string // code envoye
+    token: string // code envoye par lutilisateur
 ) : Promise<boolean> {
 
     // Recuperer le secret en DB
-    const secretStr = await credRepo.get2FaSecret(db, userId);
+    const secretStr = await credRepo.get2FASecret(db, userId);
     if (!secretStr)
         throw new Error("2FA not initiated");
 

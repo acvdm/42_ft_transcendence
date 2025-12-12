@@ -1,5 +1,7 @@
 import htmlContent from "./ProfilePage.html";
 import { fetchWithAuth } from "./api";
+import { parseMessage } from "../components/ChatUtils";
+import { appThemes } from "../components/Data";
 
 // interface qui va servir à typer la réponse API de l'utilisateur
 interface UserData {
@@ -8,23 +10,60 @@ interface UserData {
     avatar_url?: string;
     bio?: string;
     status?: string;
+    email?: string;
 }
 
 export function render(): string {
     return htmlContent;
 }
 
+export function applyTheme(themeKey: string) {
+    const theme = appThemes[themeKey] || appThemes['basic'];
+    localStorage.setItem('userTheme', themeKey);
+
+    const navbar = document.getElementById('main-navbar');
+    if (navbar) {
+        navbar.style.background = theme.navColor;
+    }
+
+    const headerIds = ['profile-header', 'home-header'];
+    headerIds.forEach(id => {
+        const header = document.getElementById(id);
+        if (header) {
+            header.style.backgroundImage = `url(${theme.headerUrl})`;
+        }
+    });
+
+    const body = document.getElementById('app-body');
+    if (body) {
+        // ON DEGAGE les trucs deja implantes
+        body.className = "m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen";
+        
+        // passage par css 
+        body.style.background = theme.bgColor;
+        body.style.backgroundRepeat = "no-repeat";
+        body.style.backgroundAttachment = "fixed"; 
+    }
+}
+
+interface FieldElements {
+    container: HTMLElement;
+    display: HTMLParagraphElement;
+    input: HTMLInputElement;
+    changeButton: HTMLButtonElement;
+    confirmButton: HTMLButtonElement;
+}
+
 export function afterRender(): void {
 
+    
     const mainAvatar = document.getElementById('current-avatar') as HTMLImageElement;
     const statusFrame = document.getElementById('current-statut') as HTMLImageElement;
     const usernameDisplay = document.getElementById('username-profile');
     const bioDisplay = document.getElementById('bio-profile');
     const modal = document.getElementById('picture-modal');
     
-    // Inputs pour username et bio
-    const usernameInput = document.querySelector('input[placeholder="Username"]') as HTMLInputElement;
-    const bioInput = document.querySelector('input[placeholder="Share a quick message"]') as HTMLInputElement;
+    // username et bio
     const statusSelect = document.querySelector('select') as HTMLSelectElement;
     
     // boutons
@@ -39,21 +78,23 @@ export function afterRender(): void {
     const gridContainer = document.getElementById('modal-grid');
     const previewAvatar = document.getElementById('modal-preview-avatar') as HTMLImageElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    
+    // container des champs modifiables via l'id data-field
+    const fieldContainers = document.querySelectorAll<HTMLElement>('.flex.flex-row.gap-2[data-field]');
 
     const userId = localStorage.getItem('userId');
 
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
 
-    // Mapping des status vers les images de frame
     const statusImages: { [key: string]: string } = {
         'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
+        'online': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
         'busy':      'https://wlm.vercel.app/assets/status/status_frame_busy_large.png',
         'away':      'https://wlm.vercel.app/assets/status/status_frame_away_large.png',
         'invisible': 'https://wlm.vercel.app/assets/status/status_frame_offline_large.png'
     };
 
-    // Mapping des valeurs du select vers les valeurs de la DB
     const statusMapping: { [key: string]: string } = {
         'Available': 'available',
         'Busy': 'busy',
@@ -63,10 +104,59 @@ export function afterRender(): void {
 
     const reverseStatusMapping: { [key: string]: string } = {
         'available': 'Available',
+        'online': 'Available',
         'busy': 'Busy',
         'away': 'Away',
         'invisible': 'Appear offline'
     };
+
+
+    // ============================================================
+    // ========================= THÈMES ===========================
+    // ============================================================
+
+    const themeButton = document.getElementById('theme-button');
+    const themeModal = document.getElementById('theme-modal');
+    const closeThemeModal = document.getElementById('close-theme-modal');
+    const themeGrid = document.getElementById('theme-grid');
+    const currentTheme = localStorage.getItem('userTheme') || 'basic'; // theme actuel via localsotirage -> le stocker dans la db?
+    applyTheme(currentTheme);
+
+    // ouverture modale 
+    themeButton?.addEventListener('click', () => {
+        themeModal?.classList.remove('hidden');
+        themeModal?.classList.add('flex');
+    });
+
+    const closeThemeFunc = () => {
+        themeModal?.classList.add('hidden');
+        themeModal?.classList.remove('flex');
+    };
+    closeThemeModal?.addEventListener('click', closeThemeFunc);
+
+    // rajouter la personnalisation sur la modale pour avoir un apercu du theme
+    if (themeGrid && themeGrid.children.length === 0) {
+        Object.entries(appThemes).forEach(([key, theme]) => {
+            const div = document.createElement('div');
+            div.className = "cursor-pointer border border-gray-300 hover:border-blue-500 p-2 rounded flex flex-col items-center gap-2 transition-all hover:bg-gray-50";
+            
+            div.innerHTML = `
+                <div class="w-full h-16 bg-cover bg-center rounded border border-gray-200" style="background-image: url('${theme.headerUrl}')"></div>
+                <span class="text-xs font-bold">${theme.name}</span>
+            `;
+
+            div.addEventListener('click', () => {
+                applyTheme(key);
+                closeThemeFunc();
+            });
+
+            themeGrid.appendChild(div);
+        });
+    }
+
+    themeModal?.addEventListener('click', (e) => {
+        if (e.target === themeModal) closeThemeFunc();
+    });
 
 
     // ============================================================
@@ -114,30 +204,70 @@ export function afterRender(): void {
                     selectedImageSrc = user.avatar_url; 
                 }
 
-                // maj pseudo et bio sur la page principale ET dans les inputs
-                if (user.alias) {
-                    if (usernameDisplay) usernameDisplay.innerText = user.alias;
-                    if (usernameInput) usernameInput.value = user.alias;
-                }
+                // initialisation des champs
+                fieldContainers.forEach(container => {
+                    const fieldName = container.dataset.field;
+                    const display = container.querySelector('.field-display') as HTMLParagraphElement;
+                    const input = container.querySelector('.field-input') as HTMLInputElement;
 
-                if (user.bio) {
-                    if (bioDisplay) bioDisplay.innerText = user.bio;
-                    if (bioInput) bioInput.value = user.bio;
-                }
+                    if (fieldName && display && input) {
+                        let value = user[fieldName as keyof UserData] as string | undefined;
+
+                        if (fieldName === 'alias' && user.alias) {
+                            value = user.alias;
+                            if (usernameDisplay)
+                                usernameDisplay.innerText = value;
+                        } else if (fieldName === 'bio' && user.bio) {
+                            value = user.bio;
+                            if (bioDisplay)
+                                bioDisplay.innerHTML = parseMessage(value);
+                        } else if (fieldName === 'email' && user.email) {
+                            value = user.email;
+                        } else if (fieldName === 'password') {
+                            // on ne met pas la vraie valeur dans le champs pour des questions de securité
+                            value = "********"; 
+                        }
+
+
+                        if (value) {
+                            display.innerText = value;
+                            if (fieldName !== 'password') {
+                                // idem que le placeholder au debut
+                                input.placeholder = value;
+                            }
+                        }
+                    }
+                });
+
 
                 // maj du status
                 if (user.status) {
-                    const statusValue = reverseStatusMapping[user.status] || 'Appear offline';
+                    const normalizedStatus = user.status.toLowerCase();
+                    const statusValue = reverseStatusMapping[normalizedStatus] || 'Appear offline';
                     if (statusSelect) statusSelect.value = statusValue;
-                    updateStatusFrame(user.status);
+                    updateStatusFrame(normalizedStatus);
                 }
+
+                //logique change/confirme
+                fieldContainers.forEach(container => {
+                    const display = container.querySelector('.field-display') as HTMLParagraphElement;
+                    const input = container.querySelector('.field-input') as HTMLInputElement;
+                    const changeButton = container.querySelector('.change-button') as HTMLButtonElement;
+                    const confirmButton = container.querySelector('.confirm-button') as HTMLButtonElement;
+                    
+                    if (display && input && changeButton && confirmButton) {
+                        const fieldElements: FieldElements = { container, display, input, changeButton, confirmButton };
+                        setupField(fieldElements, container.dataset.field as string);
+                    }
+                });
+
             }
         } catch (error) {
             console.error("Erreur while charging profile:", error);
         }
     };
 
-    // Fonction pour mettre à jour la frame du status
+    // update de la frame du statut
     const updateStatusFrame = (status: string) => {
         if (statusFrame && statusImages[status]) {
             statusFrame.src = statusImages[status];
@@ -149,13 +279,12 @@ export function afterRender(): void {
 
 
     // ============================================================
-    // ========== MAJ USERNAME ET BIO EN TEMPS RÉEL ===============
+    // =========== FONCTIONS DE MISE À JOUR CIBLÉES ===============
     // ============================================================
 
-    // Mise à jour du username
+    // maj username
     const updateUsername = async (newUsername: string) => {
-        if (!userId || !newUsername.trim()) return;
-
+        if (!userId || !newUsername.trim()) return false;
         try {
             const response = await fetchWithAuth(`api/users/${userId}/alias`, {
                 method: 'PATCH',
@@ -163,44 +292,263 @@ export function afterRender(): void {
                 body: JSON.stringify({ alias: newUsername })
             });
 
+            const result = await response.json();
+
             if (response.ok) {
                 if (usernameDisplay) usernameDisplay.innerText = newUsername;
-                console.log("Username mis à jour");
+                console.log("Username updated");
+                return true;
             } else {
-                console.error("Erreur lors de la mise à jour du username");
-                alert("Erreur lors de la sauvegarde du username");
+                console.error("Error while updating username");
+                if (result.error && result.error.message)
+                    alert(result.error.message);
+                else
+                    alert("Error while saving username")
+                return false;
             }
         } catch (error) {
             console.error("Erreur réseau:", error);
-            alert("Erreur lors de la sauvegarde du username");
+            alert("Error while saving username");
+            return false;
         }
     };
 
-    // Mise à jour de la bio
+    // maj bio
     const updateBio = async (newBio: string) => {
-        if (!userId) return;
+        if (!userId) return false;
+        
+        const MAX_BIO_LENGTH = 70;
+        const trimmedBio = newBio.trim(); 
+
+        if (trimmedBio.length > MAX_BIO_LENGTH) {
+            console.error("Erreur: Bio dépasse la limite de 70 caractères.");
+            alert(`La biographie ne doit pas dépasser ${MAX_BIO_LENGTH} caractères.`);
+            return false;
+        }
 
         try {
             const response = await fetchWithAuth(`api/users/${userId}/bio`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bio: newBio })
+                body: JSON.stringify({ bio: trimmedBio })
             });
-
             if (response.ok) {
-                if (bioDisplay) bioDisplay.innerText = newBio || "c00uköü les kop1";
+                if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
                 console.log("Bio mise à jour");
+                return true;
             } else {
                 console.error("Erreur lors de la mise à jour de la bio");
                 alert("Erreur lors de la sauvegarde de la bio");
+                return false;
             }
         } catch (error) {
             console.error("Erreur réseau:", error);
             alert("Erreur lors de la sauvegarde de la bio");
+            return false;
         }
     };
 
-    // Mise à jour du status
+    const updateEmail = async (newEmail: string) => {
+        if (!userId || !newEmail.trim()) return false;
+
+        try {
+            const response = await fetchWithAuth(`api/users/${userId}/email`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alias: newEmail })
+            });
+            if (response.ok) {
+                const user: UserData = await response.json();
+                user.email = newEmail;
+                console.log("Email mis à jour");
+                return true;
+            } else {
+                console.error("Erreur lors de la mise à jour du Email");
+                alert("Erreur lors de la sauvegarde du Email");
+                return false;
+            }
+        } catch (error) {
+            console.error("Erreur réseau:", error);
+            alert("Erreur lors de la sauvegarde du Email");
+            return false;
+        }
+    };
+
+    //maj password /////////// to complete avec la partie de Anne le chat
+    const updatePassword = async (newPassword: string) => {
+
+    };
+
+
+    // ============================================================
+    // ============ LOGIQUE CHANGE / CONFIRM GÉNÉRIQUE ============
+    // ============================================================
+    
+    // comportement d'un champs 
+    const setupField = (elements: FieldElements, fieldName: string) => {
+        const { display, input, changeButton, confirmButton } = elements;
+        
+        let initialValue = display.innerText;
+        
+        const MAX_BIO_LENGTH = 70;
+        
+        const charCountElement = fieldName === 'bio' 
+            ? elements.container.querySelector('.char-count') as HTMLSpanElement
+            : null;
+
+        const updateCharCount = (currentLength: number) => {
+            if (charCountElement) {
+                charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
+                if (currentLength > MAX_BIO_LENGTH) {
+                    charCountElement.classList.add('text-red-500');
+                    charCountElement.classList.remove('text-gray-500');
+                } else {
+                    charCountElement.classList.remove('text-red-500');
+                    charCountElement.classList.add('text-gray-500');
+                }
+            }
+        };
+
+        // eidtion du champs concerné
+        const enableEditMode = () => {
+            initialValue = fieldName === 'password' ? '' : display.innerText; // si mdp alors le champs est vide
+            
+            display.classList.add('hidden');
+            input.classList.remove('hidden');
+            input.disabled = false;
+            
+            // valuer initialise = placeholder
+            if (fieldName !== 'password') {
+                input.value = '';
+                input.placeholder = initialValue;
+            } else {
+                // placeholder = *******
+                input.value = '';
+            }
+
+            if (fieldName === 'bio' && charCountElement) {
+                charCountElement.classList.remove('hidden');
+                const initialLength = initialValue.length;
+                updateCharCount(initialLength);
+            }
+
+
+            changeButton.classList.add('hidden');
+            // on affiche confirme quand on commence a taper/modifier
+            confirmButton.classList.add('hidden'); 
+            input.focus();
+        };
+
+        // on revient au mode de base
+        const disableEditMode = (newValue: string) => {
+            display.classList.remove('hidden');
+            input.classList.add('hidden');
+            input.disabled = true;
+
+            // maj affichage
+            if (fieldName === 'password') {
+                 display.innerText = "********"; // on cache avec des etoiles
+            } else {
+                 display.innerText = newValue;
+                 input.placeholder = newValue; // maj placeholder
+            }
+
+            if (fieldName === 'bio' && charCountElement) {
+                charCountElement.classList.add('hidden');
+            }
+            
+            changeButton.classList.remove('hidden');
+            confirmButton.classList.add('hidden');
+        };
+
+        changeButton.addEventListener('click', enableEditMode);
+
+        // detection saisie
+        input.addEventListener('input', () => {
+            const currentValue = input.value;
+            
+            let isChanged = false;
+            let isValid = true;
+            const trimmedValue = currentValue.trim();
+
+            if (fieldName === 'bio') {
+                updateCharCount(currentValue.length);
+
+                if (currentValue.length > MAX_BIO_LENGTH) {
+                    isValid = false;
+                }
+                
+                const initialTrimmedValue = initialValue.trim();
+                isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
+
+            } else if (fieldName === 'password') {
+                isChanged = currentValue.length > 0;
+            } else {
+                isChanged = trimmedValue !== initialValue.trim() && trimmedValue.length > 0;
+            }
+
+            if (isChanged && isValid) {
+                confirmButton.classList.remove('hidden');
+            } else {
+                confirmButton.classList.add('hidden');
+            }
+        });
+
+        confirmButton.addEventListener('click', async () => {
+            const newValue = input.value.trim();
+            let updateSuccessful = false;
+
+            switch (fieldName) {
+                case 'alias':
+                    updateSuccessful = await updateUsername(newValue);
+                    break;
+                case 'bio':
+                    updateSuccessful = await updateBio(newValue);
+                    break;
+                case 'email':
+                    updateSuccessful = await updateEmail(newValue);
+                    break;
+                // case 'password':
+                //     updateSuccessful = await updatePassword(newValue);
+                //     break;
+                default:
+                    updateSuccessful = true;
+            }
+
+            if (updateSuccessful) {
+                disableEditMode(newValue);
+            }
+        });
+
+        // focus/unfocus quand on clic
+        input.addEventListener('blur', (e) => {
+            if (e.relatedTarget !== confirmButton) {
+                const isConfirmedVisible = !confirmButton.classList.contains('hidden');
+
+                if (isConfirmedVisible) {
+                    disableEditMode(fieldName === 'password' ? display.innerText : initialValue);
+                } else {
+                    disableEditMode(fieldName === 'password' ? display.innerText : initialValue);
+                }
+            }
+        });
+        
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const isConfirmedVisible = !confirmButton.classList.contains('hidden');
+                if (isConfirmedVisible) {
+                    confirmButton.click();
+                } else {
+                    input.blur();
+                }
+            }
+        });
+    };
+
+    // ============================================================
+    // ========== Mise à jour du status (ancienne logique) ========
+    // ============================================================
+
     // Mise à jour du status
     const updateStatus = async (newStatus: string) => {
         if (!userId) return;
@@ -214,7 +562,7 @@ export function afterRender(): void {
 
             if (response.ok) {
                 updateStatusFrame(newStatus);
-                localStorage.setItem('userStatus', newStatus); // ← AJOUT ICI
+                localStorage.setItem('userStatus', newStatus); 
                 console.log("Status mis à jour:", newStatus);
             } else {
                 console.error("Erreur lors de la mise à jour du status");
@@ -226,32 +574,6 @@ export function afterRender(): void {
         }
     };
 
-    // Event listeners pour les inputs
-    usernameInput?.addEventListener('blur', () => {
-        const newUsername = usernameInput.value.trim();
-        if (newUsername) {
-            updateUsername(newUsername);
-        }
-    });
-
-    usernameInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            usernameInput.blur();
-        }
-    });
-
-    bioInput?.addEventListener('blur', () => {
-        const newBio = bioInput.value.trim();
-        updateBio(newBio);
-    });
-
-    bioInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            bioInput.blur();
-        }
-    });
-
-    // Event listener pour le select du status
     statusSelect?.addEventListener('change', () => {
         const selectedValue = statusSelect.value;
         const statusKey = statusMapping[selectedValue];
@@ -278,7 +600,6 @@ export function afterRender(): void {
     modal?.addEventListener('click', (e) => {
         if (e.target === modal) closeModalFunc();
     });
-
 
     // afficgage de la grille
     if (gridContainer) {
