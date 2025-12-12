@@ -102,9 +102,10 @@
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
-                if (userData.alias) {
+                if (userData.alias)
                   localStorage.setItem("username", userData.alias);
-                }
+                if (userData.theme)
+                  localStorage.setItem("userTheme", userData.theme);
               }
             } catch (err) {
               console.error("Can't get user's profile", err);
@@ -3967,8 +3968,8 @@
     "love": {
       name: "Lovely Pink",
       headerUrl: "/assets/headers/love_header.jpg",
-      navColor: "linear-gradient(to bottom, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)",
-      bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #fce7f3 100%)"
+      navColor: "linear-gradient(to bottom, #5A0908 0%, #A81D1D 99%, #FF7878 100%)",
+      bgColor: "linear-gradient(to bottom, #FF7878 0%, #ffffff 50%, #5A0908 100%)"
     },
     "punk": {
       name: "Cyber Punk",
@@ -5303,6 +5304,7 @@
             `;
         div.addEventListener("click", () => {
           applyTheme(key);
+          updateTheme(key);
           closeThemeFunc();
         });
         themeGrid.appendChild(div);
@@ -5330,6 +5332,10 @@
         const response = await fetchWithAuth(`api/users/${userId}`);
         if (response.ok) {
           const user = await response.json();
+          if (user.theme) {
+            localStorage.setItem("userTheme", user.theme);
+            applyTheme(user.theme);
+          }
           if (user.avatar_url && mainAvatar) {
             mainAvatar.src = user.avatar_url;
             selectedImageSrc = user.avatar_url;
@@ -5468,6 +5474,24 @@
         console.error("Erreur r\xE9seau:", error);
         alert("Erreur lors de la sauvegarde du Email");
         return false;
+      }
+    };
+    const updateTheme = async (newTheme) => {
+      if (!userId) return;
+      try {
+        const response = await fetchWithAuth(`api/users/${userId}/theme`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme: newTheme })
+        });
+        if (response.ok) {
+          console.log("Theme saved to database:", newTheme);
+          localStorage.setItem("userTheme", newTheme);
+        } else {
+          console.error("Failed to save theme to database");
+        }
+      } catch (error) {
+        console.error("Network error while saving theme:", error);
       }
     };
     const updatePassword = async (newPassword) => {
@@ -5946,8 +5970,12 @@
     if (page.afterRender) {
       page.afterRender();
     }
-    const savedTheme = localStorage.getItem("userTheme") || "basic";
-    applyTheme(savedTheme);
+    if (publicRoutes.includes(path))
+      applyTheme("basic");
+    else {
+      const savedTheme = localStorage.getItem("userTheme") || "basic";
+      applyTheme(savedTheme);
+    }
   };
   window.addEventListener("click", (event) => {
     const target = event.target;

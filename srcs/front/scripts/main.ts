@@ -127,8 +127,13 @@ const handleLocationChange = () => {
     if (page.afterRender) {
         page.afterRender();
     }
-	const savedTheme = localStorage.getItem('userTheme') || 'basic';
-	applyTheme(savedTheme);
+
+	if (publicRoutes.includes(path))
+		applyTheme('basic');
+	else {
+		const savedTheme = localStorage.getItem('userTheme') || 'basic';
+		applyTheme(savedTheme);
+	}
 };
 
 /*

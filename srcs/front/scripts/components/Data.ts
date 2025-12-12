@@ -25,8 +25,8 @@ export const appThemes: { [key: string]: Theme } = {
     'love': {
         name: 'Lovely Pink',
         headerUrl: '/assets/headers/love_header.jpg',
-        navColor: 'linear-gradient(to bottom, #FF9A9E 0%, #FECFEF 99%, #FECFEF 100%)',
-        bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #fce7f3 100%)'
+        navColor: 'linear-gradient(to bottom, #5A0908 0%, #A81D1D 99%, #FF7878 100%)',
+        bgColor: 'linear-gradient(to bottom, #FF7878 0%, #ffffff 50%, #5A0908 100%)'
     },
     'punk': {
         name: 'Cyber Punk',

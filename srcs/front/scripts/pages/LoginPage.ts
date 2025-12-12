@@ -59,9 +59,10 @@ function handleLogin() {
 
                         if (userRes.ok) {
                             const userData = await userRes.json();
-                            if (userData.alias) {
+                            if (userData.alias)
                                 localStorage.setItem('username', userData.alias);
-                            }
+                            if (userData.theme)
+                                localStorage.setItem('userTheme', userData.theme);
                         }
                     } catch (err) {
                         console.error("Can't get user's profile", err);

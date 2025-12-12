@@ -11,6 +11,7 @@ interface UserData {
     bio?: string;
     status?: string;
     email?: string;
+    theme?: string;
 }
 
 export function render(): string {
@@ -147,6 +148,7 @@ export function afterRender(): void {
 
             div.addEventListener('click', () => {
                 applyTheme(key);
+                updateTheme(key);
                 closeThemeFunc();
             });
 
@@ -197,6 +199,11 @@ export function afterRender(): void {
             if (response.ok) {
                 const user: UserData = await response.json();
 
+                // maj theme
+                if (user.theme) {
+                    localStorage.setItem('userTheme', user.theme);
+                    applyTheme(user.theme);
+                }
                 // maj avatar si on arrive a le recuperer
                 if (user.avatar_url && mainAvatar) {
                     mainAvatar.src = user.avatar_url;
@@ -372,6 +379,28 @@ export function afterRender(): void {
             console.error("Erreur réseau:", error);
             alert("Erreur lors de la sauvegarde du Email");
             return false;
+        }
+    };
+
+    const updateTheme = async (newTheme: string) => {
+        if (!userId) return;
+
+        try {
+            const response = await fetchWithAuth(`api/users/${userId}/theme`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ theme: newTheme })
+            });
+
+            if (response.ok) {
+                console.log("Theme saved to database:", newTheme);
+                // On met à jour le localStorage ici aussi pour être sûr
+                localStorage.setItem('userTheme', newTheme);
+            } else {
+                console.error("Failed to save theme to database");
+            }
+        } catch (error) {
+            console.error("Network error while saving theme:", error);
         }
     };
 

@@ -74,4 +74,7 @@ export function afterRender(): void {
             friendProfileModal.open(currentChatFriendId);
         }
     });
+
+
+    
 }
