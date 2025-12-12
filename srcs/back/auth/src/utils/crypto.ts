@@ -104,3 +104,14 @@ export async function  generate2FASecret(
     };
 }
 
+export function generateTempToken(
+    userId: number 
+): string {
+    
+    const payload = {
+        sub: userId,
+        scope: '2fa_login', 
+    };
+    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '5m'});
+}
+

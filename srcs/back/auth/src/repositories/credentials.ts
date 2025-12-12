@@ -93,6 +93,18 @@ export async function getCredentialbyID(
     return credential;
 }
 
+export async function getCredentialbyUserID(
+    db: Database,
+    user_id: number
+): Promise<Credential | undefined> 
+{
+    const credential = await db.get(`
+        SELECT * FROM CREDENTIALS WHERE user_id = ?`,
+        [user_id]
+    );
+    return credential;
+}
+
 export async function getEmailbyID(
     db: Database,
     user_id: number
@@ -110,11 +122,23 @@ export async function get2FASecret(
     user_id: number
 ): Promise<string | null> 
 {
-    const row = await db.get(
-        `SELECT two_fa_secret FROM CREDENTIALS WHERE user_id = ?`,
+    const row = await db.get(`
+        SELECT two_fa_secret FROM CREDENTIALS WHERE user_id = ?`,
         [user_id]
     );
     return row?.two_fa_secret || null;
+}
+
+export async function is2FAEnabled(
+    db: Database,
+    user_id: number
+): Promise<boolean>
+{
+    const row = await db.get(`
+        SELECT is_2fa_enabled FROM CREDENTIALS WHERE user_id = ?`,
+        [user_id]
+    );
+    return row?.is_2fa_enabled === 1;
 }
 
 //-------- PUT / UPDATE
@@ -126,8 +150,8 @@ export async function update2FASecret(
     secret: string
 ) : Promise<void> 
 {
-    await db.run(
-        `UPDATE CREDENTIALS
+    await db.run(`
+        UPDATE CREDENTIALS
         SET two_fa_secret = ?, is_2fa_enabled = 0
         WHERE user_id = ?`,
         [secret, user_id]

@@ -5,10 +5,11 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
 import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser, verifyAndEnable2FA } from './services/auth_service.js';
+import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
+
 
 //------------COOKIE 
 // on recupere le secret pour le cookie
@@ -23,6 +24,7 @@ if (!cookieSecret){
 const fastify = Fastify({ logger: true, });
 
 // enregistrer un plugin cookie avec la variable d'env
+// probablement a modifier si changement vers https
 fastify.register(fastifyCookie, {
   secret: cookieSecret,
   parseOptions: {} // options par defaut
@@ -125,6 +127,20 @@ fastify.post('/sessions', async (request, reply) =>
 		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
 
+		if (result.require_2fa) {
+			console.log(`🔐 2FA required for user`);
+			return reply.status(200).send({
+				sucess: true,
+				require_2fa: true,
+				temp_token: result.temp_token // LE FRONT DOIT STOCKER CA
+			});
+		}
+
+		if (!result.refresh_token || !result.access_token || !result.user_id) {
+			throw new Error("Login failed: missing tokens from login response");
+		}
+
+		// Cas ou Login reussi direct
 		reply.setCookie('refresh_token', result.refresh_token, {
 			path: '/',
 			httpOnly: true,
@@ -139,7 +155,8 @@ fastify.post('/sessions', async (request, reply) =>
 			data: result,
 			error: null
 		});	
-	} catch (err: any)
+	} 
+	catch (err: any)
 	{
 		return reply.status(400).send({ 
 			success: false,
@@ -397,6 +414,54 @@ recupere le secret en BDD et verifie le code TOTP
 genere lles vrais tokens
 renvoit cookie et json final
 */
+
+fastify.post('/2fa/verify', async (request, reply) => {
+	
+	try {
+		const userIdHeader = request.headers['x-user-id'];
+		if (!userIdHeader)
+			return reply.status(401).send({error: "Unauthorized"});
+
+		const userId = parseInt(userIdHeader as string);
+
+		// recuperation du code
+		const body = request.body as { code: string };
+		if (!body.code)
+			return reply.status(400).send({ error: "Code required" });
+
+		// appel du service
+		const result = await finalizeLogin2FA(db, userId, body.code);
+		if (!result) 
+		{
+			return reply.status(401).send({
+				success: false,
+				error: { message: "Invalid 2FA code"}
+			});
+		}
+
+		console.log(`✅ 2FA Login successful for user ${userId}`);
+
+		// on renvoie les vrai acces (cookie + JSON)
+		reply.setCookie('refresh_token', result.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
+		return reply.status(200).send({
+			success: true,
+			access_token: result.access_token,
+			user_id: result.user_id	
+		});
+
+	} catch (err: any) {
+		return reply.status(500).send({ success: false, error: { message: err.message } });
+	}
+});
+
 
 
 
