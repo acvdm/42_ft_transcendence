@@ -33,10 +33,10 @@ export function afterRender(): void {
     window.addEventListener('friendSelected', (e: any) => {
         const friend = e.detail;
         
-        const friendshipId = friend.friendshipId || friend.friendship_id;
+        const friendshipId = friend.friendshipId;
         currentChatFriendId = friend.id;
 
-        console.log("Objet friend reçu :", friend);
+        console.log("Ami sélectionné:", friend.alias, "Friendship ID:", friendshipId);
         const myId = parseInt(localStorage.getItem('userId') || "0");
         const ids = [myId, friend.id].sort((a, b) => a - b);
         const channelKey = `channel_${ids[0]}_${ids[1]}`;

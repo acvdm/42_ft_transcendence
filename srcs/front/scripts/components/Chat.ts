@@ -446,7 +446,8 @@ export class Chat {
                 const currentChatUser = document.getElementById('chat-header-username')?.textContent;
                 if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
                     try {
-                        const response = await fetchWithAuth(`api/friendship/${this.currentFriendshipId}`, {
+                        const userId = localStorage.getItem('userId');
+                        const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: 'blocked' })
                         });

@@ -4257,6 +4257,7 @@
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
           const status = friend.status || "invisible";
           friendItem.dataset.id = friend.id;
+          friendItem.dataset.friendshipId = friend.friendshipId;
           friendItem.dataset.username = friend.alias;
           friendItem.dataset.status = status;
           friendItem.dataset.bio = friend.bio || "Share a quick message";
@@ -5071,7 +5072,8 @@
           const currentChatUser = document.getElementById("chat-header-username")?.textContent;
           if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
             try {
-              const response = await fetchWithAuth(`api/friendship/${this.currentFriendshipId}`, {
+              const userId = localStorage.getItem("userId");
+              const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: "blocked" })
               });
@@ -5220,9 +5222,9 @@
     let currentChatFriendId = null;
     window.addEventListener("friendSelected", (e) => {
       const friend = e.detail;
-      const friendshipId = friend.friendshipId || friend.friendship_id;
+      const friendshipId = friend.friendshipId;
       currentChatFriendId = friend.id;
-      console.log("Objet friend re\xE7u :", friend);
+      console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
       const myId = parseInt(localStorage.getItem("userId") || "0");
       const ids = [myId, friend.id].sort((a, b) => a - b);
       const channelKey = `channel_${ids[0]}_${ids[1]}`;

@@ -47,6 +47,7 @@ export class FriendList {
 
                 // on stocke tout
                 friendItem.dataset.id = friend.id;
+                friendItem.dataset.friendshipId = friend.friendshipId;
                 friendItem.dataset.username = friend.alias;
                 friendItem.dataset.status = status;
                 friendItem.dataset.bio = friend.bio || "Share a quick message";
