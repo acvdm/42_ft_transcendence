@@ -277,16 +277,12 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	const userId = Number(id);
 	const { email } = request.body as { email: string };
 
-	// const formerEmail = await userRepo.findEmailById(db, userId);
-
 	try
 	{
 		
-		//await userRepo.updateEmail(db, userId, email);
 		console.log("mail updated in userRepo");
 		const authURL = `http://auth:3001/users/${userId}/credentials`;
 
-		// 3. Appeler le service auth pour créer les credentials
 		const authResponse = await fetch(authURL, {
 			method: "PATCH",
 			headers: { 
@@ -315,9 +311,6 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	{
 		const errorMessage = err.message;
 
-		// 5. Rollback
-		//await userRepo.rollbackChangeEmail(db, userId, formerEmail);
-
 		reply.status(400).send({			  
 			success: false,			  
 			data: null, 			  
@@ -334,8 +327,10 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
     const userId = Number(id);
     const { avatar } = request.body as { avatar: string };
 
-    try {
-        if (!avatar) throw new Error("No avatar provided");
+    try 
+	{
+        if (!avatar) 
+			throw new Error("No avatar provided");
 
         await userRepo.updateAvatar(db, userId, avatar);
         
@@ -344,12 +339,47 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
             data: { avatar: avatar },
             error: null
         });
-    } catch (err: any) {
+    } 
+	catch (err: any) 
+	{
         fastify.log.error(err);
         return reply.status(500).send({
             success: false,
             data: null,
-            error: { message: err.message || 'Failed to update avatar' }
+            error: { message: (err as Error).message }
+        });
+    }
+});
+
+/* -- UPDATE THEME -- */
+fastify.patch('/users/:id/theme', async (request, reply) => 
+{
+    const { id } = request.params as { id: string };
+    const userId = Number(id);
+    const { theme } = request.body as { theme: string };
+
+    try 
+	{
+        if (!theme) 
+			throw new Error("No theme provided");
+
+        await userRepo.updateTheme(db, userId, theme);
+        
+        return reply.status(200).send(
+		{
+            success: true,
+            data: { theme: theme },
+            error: null
+        });
+    } 
+	catch (err: any) 
+	{
+        fastify.log.error(err);
+
+        return reply.status(500).send({
+            success: false,
+            data: null,
+            error: { message: (err as Error).message }
         });
     }
 });

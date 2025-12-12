@@ -1,8 +1,8 @@
 import { Database } from 'sqlite';
 
 export interface CreateUser {
-    alias: string;
-    avatar_url?: string;
+    alias: string,
+    avatar_url?: string
 }
 
 export interface User {
@@ -10,7 +10,8 @@ export interface User {
     alias: string,
     avatar_url?: string,
     bio: string,
-    status: string
+    status: string,
+    theme: string
 }
 
 
@@ -126,6 +127,22 @@ export async function updateBio (
     await db.run(`
         UPDATE USERS SET bio = ? WHERE id = ?`,
         [bio, user_id]
+    );
+}
+
+export async function updateTheme (
+    db: Database,
+    userId: number,
+    theme: string
+)
+{
+    const user = await findUserByID(db, userId);
+    if (!user?.id)
+        throw new Error(`Error id: ${userId} does not exist`);
+
+    await db.run(`
+        UPDATE USERS SET theme = ? WHERE id = ?`,
+        [theme, userId]
     );
 }
 
