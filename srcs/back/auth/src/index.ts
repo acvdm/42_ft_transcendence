@@ -3,7 +3,7 @@ import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, refreshUser, logoutUser } from './services/auth_service.js';
+import { loginUser, registerUser, refreshUser, logoutUser, verifyTwoFA } from './services/auth_service.js';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
 import fs from 'fs';
@@ -263,7 +263,12 @@ reponse 2fa active
 */ 
 
 fastify.post('/2fa/enable', async (request, reply) => {
-
+	
+	try {
+		const userIdHeader = request.headers['x-user-id'];
+		if (!userIdHeader)
+			return reply.status 
+	}
 
 });
 
