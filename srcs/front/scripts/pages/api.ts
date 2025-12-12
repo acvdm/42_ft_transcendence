@@ -1,5 +1,25 @@
 // srcs/front/scripts/api.ts
 
+// variable globale pour savoir si un refresh est en cours
+let isRefreshing = false;
+// creation dune liste vide, qui ne peut accepter que des fonctions en parametre et ces fonctions doivent accepter des token en parametre
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+// fonction pour ajouter une requete a la file d'attente
+function subscribeTokenRefresh(cb: (token: string) => void) {
+    refreshSubscribers.push(cb);
+}
+
+// fonction pour liberer la file d'attente avec le nouveau token
+// cb = fonction de rappel, represente une des fonctions stockees dans le tableau
+// cb(token) on appel la fonciton en lui donnat le token tout neuf, 
+// la fonction lance fetch avec le nouveau token et debloque la promesse qui mettait la requete en pause
+function onRefreshed(token: string){
+    refreshSubscribers.forEach(cb => cb(token));
+    refreshSubscribers = [];
+}
+
+
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
     const token = localStorage.getItem('accessToken');
 
@@ -21,42 +41,49 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
         headers: getHeaders(token)
     });
 
-    // 3. Gestion de l'expiration
+    // 3. Gestion de l'expiration avec mutex
     if (response.status === 401) {
-        console.warn("Token expired (401). Atempt to refresh...");
-
-        try {
-            // appel au refresh
-            const refreshRes = await fetch('/api/auth/refresh', 
-                {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-
-            if (refreshRes.ok) {
-                const data = await refreshRes.json();
-                const newToken = data.access_token;
-
-                console.log("✅ Token refreshed with succeed !");
-
-                // mise a jour du stockage
-                localStorage.setItem('accessToken', newToken);
-
-                // 4. Rejouer la requete initiale 
-                response = await fetch(url, {
-                    ...options,
-                    headers: getHeaders(newToken) // on utilise le nouveau token
-                }); 
-            } else {
-                console.error("Refresh impossible. Deconnection.");
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('userId');
-                window.history.pushState({}, '', '/login');
-                window.dispatchEvent(new PopStateEvent('popstate'));
+        
+        if (!isRefreshing) {
+            // PREMIER REFRESH
+            isRefreshing = true;
+            console.warn("Token expired (401). Atempt to refresh...");
+            try {
+                const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
+                if (refreshRes.ok) {
+                    const data = await refreshRes.json();
+                    const newToken = data.access_token;
+                    localStorage.setItem('accessToken', newToken);
+                    isRefreshing = false;
+                    onRefreshed(newToken); // on previent tous les appels de foncitons qui attendaient
+                    return await fetch(url, { ...options, headers: getHeaders(newToken)});
+                } else {
+                    // echec total du refresh -> logout pour tout le monde
+                    isRefreshing = false;
+                    refreshSubscribers = []; // on vide la file dattente
+                    console.error("Refresh impossible. Deconnection.");
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('userId');
+                    window.history.pushState({}, '', '/login');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    throw new Error("Session expired");
+                }
+            } catch (error) {
+                isRefreshing = false;
+                throw error;
             }
-        } catch (err) {
-            console.error("Network error during the refresh of the token", err);
         }
+        else {
+            // requete qui suit ==> doit attendre
+            console.log("Token expired. Waiting the refreshing of the other token...");
+            // on cree une promesse qui ne se resoud que qund la premiere requete sera traitee
+            return new Promise((resolve) => {
+                subscribeTokenRefresh(async (newToken) => {
+                    // le token est arrive, on rejoue la requete
+                    resolve(await fetch(url, {...options, headers: getHeaders(newToken) }));
+                });
+            });
+        } 
     }
     return response;
 }

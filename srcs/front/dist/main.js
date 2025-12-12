@@ -4129,6 +4129,15 @@
   alias(["(X)", "(x)"], "girl.gif");
 
   // scripts/pages/api.ts
+  var isRefreshing = false;
+  var refreshSubscribers = [];
+  function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+  }
+  function onRefreshed(token) {
+    refreshSubscribers.forEach((cb) => cb(token));
+    refreshSubscribers = [];
+  }
   async function fetchWithAuth(url2, options = {}) {
     const token = localStorage.getItem("accessToken");
     const getHeaders = (currentToken) => {
@@ -4146,34 +4155,39 @@
       headers: getHeaders(token)
     });
     if (response.status === 401) {
-      console.warn("Token expired (401). Atempt to refresh...");
-      try {
-        const refreshRes = await fetch(
-          "/api/auth/refresh",
-          {
-            method: "POST",
-            credentials: "include"
+      if (!isRefreshing) {
+        isRefreshing = true;
+        console.warn("Token expired (401). Atempt to refresh...");
+        try {
+          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            const newToken = data.access_token;
+            localStorage.setItem("accessToken", newToken);
+            isRefreshing = false;
+            onRefreshed(newToken);
+            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
+          } else {
+            isRefreshing = false;
+            refreshSubscribers = [];
+            console.error("Refresh impossible. Deconnection.");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("userId");
+            window.history.pushState({}, "", "/login");
+            window.dispatchEvent(new PopStateEvent("popstate"));
+            throw new Error("Session expired");
           }
-        );
-        if (refreshRes.ok) {
-          const data = await refreshRes.json();
-          const newToken = data.access_token;
-          console.log("\u2705 Token refreshed with succeed !");
-          localStorage.setItem("accessToken", newToken);
-          response = await fetch(url2, {
-            ...options,
-            headers: getHeaders(newToken)
-            // on utilise le nouveau token
-          });
-        } else {
-          console.error("Refresh impossible. Deconnection.");
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("userId");
-          window.history.pushState({}, "", "/login");
-          window.dispatchEvent(new PopStateEvent("popstate"));
+        } catch (error) {
+          isRefreshing = false;
+          throw error;
         }
-      } catch (err) {
-        console.error("Network error during the refresh of the token", err);
+      } else {
+        console.log("Token expired. Waiting the refreshing of the other token...");
+        return new Promise((resolve) => {
+          subscribeTokenRefresh(async (newToken) => {
+            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
+          });
+        });
       }
     }
     return response;
