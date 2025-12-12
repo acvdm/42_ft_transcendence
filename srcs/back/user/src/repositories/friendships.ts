@@ -124,9 +124,17 @@ export async function reviewFriendshipRequest (
     status: string
 )
 {
+    const allowedStatuses = ['pending', 'validated', 'rejected', 'blocked'];
+    if (!allowedStatuses.includes(status))
+    {
+        throw new Error(`Invalid status: ${status}`);
+    }
+    
     await db.run(`
-        UPDATE FRIENDSHIPS SET status = ? WHERE friend_id = ? AND id = ?`,
-        [status, user_id, friendship_id]
+        UPDATE FRIENDSHIPS
+        SET status = ? 
+        WHERE id = ? AND (user_id = ? OR friend_id = ?)`,
+        [status, friendship_id, user_id, user_id]
     );
 }
 

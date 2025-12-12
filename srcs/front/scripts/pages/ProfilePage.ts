@@ -355,16 +355,17 @@ export function afterRender(): void {
             const response = await fetchWithAuth(`api/users/${userId}/email`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ alias: newEmail })
+                body: JSON.stringify({ email: newEmail })
             });
+            const data = await response.json();
             if (response.ok) {
                 const user: UserData = await response.json();
                 user.email = newEmail;
                 console.log("Email mis à jour");
                 return true;
             } else {
-                console.error("Erreur lors de la mise à jour du Email");
-                alert("Erreur lors de la sauvegarde du Email");
+                console.error(data.error.message);
+                alert(data.error.message);
                 return false;
             }
         } catch (error) {

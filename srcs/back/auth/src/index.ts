@@ -125,11 +125,13 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 {
 	try 
 	{
-		const body = request.body as { user_id: number; email: string };
+		const { id } = request.params as { id: string };
+		const body = request.body as { email: string };
+		const userId = Number(id);
 
 		validateNewEmail(body);
 
-		const result = await changeEmailInCredential(db, body.user_id, body.email);
+		const result = await changeEmailInCredential(db, userId, body.email);
 
 		// 3. Répondre
 		return reply.status(200).send({
@@ -143,7 +145,7 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 		return reply.status(400).send({
 			success: false, 
 			data: null,
-			error: { message: err.message }
+			error: {  message: (err as Error).message}
 		});
 	}
 });
