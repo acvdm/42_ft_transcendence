@@ -566,71 +566,68 @@
 
 	</div>
 
-
-
-
 <div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">User Profile</div>
-                <div class="title-bar-controls">
-                    <button id="close-friend-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6">
-                
-                <div class="flex flex-row gap-6 mb-6">
-                    <div class="relative w-[130px] h-[130px] flex-shrink-0">
-                        <img id="friend-modal-status" 
-                             class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                             src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
-                        
-                        <img id="friend-modal-avatar" 
-                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                             src="https://wlm.vercel.app/assets/usertiles/default.png">
-                    </div>
-
-                    <div class="flex flex-col justify-center gap-2 flex-1 min-w-0">
-                        <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
-                        <div class="bg-gray-50 border border-gray-200 rounded p-2 h-full max-h-[80px] overflow-y-auto">
-                            <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <fieldset class="border border-gray-300 p-4 rounded-sm">
-                    <legend class="text-sm px-2 text-gray-600">Statistics</legend>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div class="flex justify-between border-b border-gray-100 pb-1">
-                            <span>Games Played:</span>
-                            <span id="friend-stat-games" class="font-bold">0</span>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-100 pb-1">
-                            <span>Wins:</span>
-                            <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-100 pb-1">
-                            <span>Losses:</span>
-                            <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
-                        </div>
-                        <div class="flex justify-between border-b border-gray-100 pb-1">
-                            <span>Rank:</span>
-                            <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
-                        </div>
-                    </div>
-                </fieldset>
-
-                <div class="flex justify-end mt-4">
-                     <button id="close-friend-modal-button" 
-                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                        Close
-                    </button>
-                </div>
+    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">User Profile</div>
+            <div class="title-bar-controls">
+                <button id="close-friend-modal" aria-label="Close"></button>
             </div>
         </div>
-    </div>`;
+        <div class="window-body p-6">
+            
+            <div class="flex flex-row gap-6 mb-6 items-center">
+                
+                <div class="relative w-[130px] h-[130px] flex-shrink-0">
+                    <img id="friend-modal-status" 
+                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
+                    
+                    <img id="friend-modal-avatar" 
+                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
+                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                </div>
+
+                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
+                    
+                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
+                </div>
+            </div>
+
+            <fieldset class="border border-gray-300 p-4 rounded-sm">
+                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Games Played:</span>
+                        <span id="friend-stat-games" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Wins:</span>
+                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Losses:</span>
+                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Rank:</span>
+                        <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end mt-4">
+                    <button id="close-friend-modal-button" 
+                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>`;
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);

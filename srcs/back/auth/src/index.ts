@@ -328,7 +328,7 @@ fastify.post('/2fa/generate', async (request, reply) => {
 	} catch (err: any) {
 		console.error("Error generating 2FA:", err);
 		return reply.status(500).send({
-			sucess: false,
+			success: false,
 			data: null,
 			error: { message: err.message || "failed to generate 2FA" }
 		});
