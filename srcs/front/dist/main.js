@@ -57,7 +57,7 @@
 
 
 
-	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+	<!-- <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
                 <div class="title-bar-text">Two-Factor Authentication</div>
@@ -90,131 +90,20 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
 
 
 
 </div>`;
 
-  // scripts/pages/api.ts
-  var isRefreshing = false;
-  var refreshSubscribers = [];
-  function subscribeTokenRefresh(cb) {
-    refreshSubscribers.push(cb);
-  }
-  function onRefreshed(token) {
-    refreshSubscribers.forEach((cb) => cb(token));
-    refreshSubscribers = [];
-  }
-  async function fetchWithAuth(url2, options = {}) {
-    const token = localStorage.getItem("accessToken");
-    const getHeaders = (currentToken) => {
-      const headers = new Headers(options.headers || {});
-      if (!headers.has("Content-Type") && options.body) {
-        headers.set("Content-Type", "application/json");
-      }
-      if (currentToken) {
-        headers.set("Authorization", `Bearer ${currentToken}`);
-      }
-      return headers;
-    };
-    let response = await fetch(url2, {
-      ...options,
-      headers: getHeaders(token)
-    });
-    if (response.status === 401) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        console.warn("Token expired (401). Atempt to refresh...");
-        try {
-          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            const newToken = data.access_token;
-            localStorage.setItem("accessToken", newToken);
-            isRefreshing = false;
-            onRefreshed(newToken);
-            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
-          } else {
-            isRefreshing = false;
-            refreshSubscribers = [];
-            console.error("Refresh impossible. Deconnection.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("userId");
-            window.history.pushState({}, "", "/login");
-            window.dispatchEvent(new PopStateEvent("popstate"));
-            throw new Error("Session expired");
-          }
-        } catch (error) {
-          isRefreshing = false;
-          throw error;
-        }
-      } else {
-        console.log("Token expired. Waiting the refreshing of the other token...");
-        return new Promise((resolve) => {
-          subscribeTokenRefresh(async (newToken) => {
-            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
-          });
-        });
-      }
-    }
-    return response;
-  }
-
   // scripts/pages/LoginPage.ts
   function render() {
     return LoginPage_default;
   }
-  async function init2faLogin(access_token, user_id, selectedStatus) {
-    if (access_token) localStorage.setItem("accessToken", access_token);
-    if (user_id) localStorage.setItem("userId", user_id.toString());
-    if (user_id && access_token) {
-      try {
-        const userRes = await fetch(`/api/users/${user_id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
-          }
-        });
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          if (userData.alias)
-            localStorage.setItem("username", userData.alias);
-          if (userData.theme)
-            localStorage.setItem("userTheme", userData.theme);
-        }
-      } catch (err) {
-        console.error("Can't get user's profile", err);
-      }
-      try {
-        await fetch(`/api/users/${user_id}/status`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
-          },
-          body: JSON.stringify({ status: selectedStatus })
-        });
-      } catch (err) {
-        console.error("Failed to update status on login", err);
-      }
-    }
-    localStorage.setItem("userStatus", selectedStatus);
-    window.history.pushState({}, "", "/home");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }
   function handleLogin() {
     const button = document.getElementById("login-button");
     const errorElement = document.getElementById("error-message");
-    const modal2fa = document.getElementById("2fa-modal");
-    const input2fa = document.getElementById("2fa-input-code");
-    const confirm2fa = document.getElementById("confirm-2fa-button");
-    const close2fa = document.getElementById("close-2fa-modal");
-    const error2fa = document.getElementById("2fa-error-message");
-    let tempToken = null;
-    let cachedStatus = "available";
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -235,41 +124,40 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
+          // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
+          // On le gère juste après avec le PATCH
         });
         const result = await response.json();
-        if (result.require_2fa) {
-          tempToken = result.temp_token;
-          if (modal2fa) {
-            modal2fa.classList.remove("hidden");
-            modal2fa.classList.add("flex");
-            input2fa.value = "";
-            input2fa.focus();
-          }
-          return;
-        }
         if (result.success) {
           const { access_token, user_id } = result.data;
-          await init2faLogin(access_token, user_id, cachedStatus);
           if (access_token) localStorage.setItem("accessToken", access_token);
           if (user_id) localStorage.setItem("userId", user_id.toString());
           if (user_id && access_token) {
             try {
-              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
-                method: "GET"
+              const userRes = await fetch(`/api/users/${user_id}`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${access_token}`
+                }
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
-                if (userData.alias)
+                if (userData.alias) {
                   localStorage.setItem("username", userData.alias);
-                if (userData.theme)
-                  localStorage.setItem("userTheme", userData.theme);
+                }
               }
             } catch (err) {
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetchWithAuth(`/api/users/${user_id}/status`, {
+              await fetch(`/api/users/${user_id}/status`, {
                 method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  // Ajout du token
+                  "Authorization": `Bearer ${access_token}`
+                },
                 body: JSON.stringify({ status: selectedStatus })
               });
               console.log("Status updated to DB:", selectedStatus);
@@ -294,49 +182,6 @@
           errorElement.classList.remove("hidden");
         }
       }
-    });
-    confirm2fa?.addEventListener("click", async () => {
-      const code = input2fa.value.trim();
-      if (error2fa) error2fa.classList.add("hidden");
-      if (!code || !tempToken) return;
-      try {
-        const response = await fetch("/api/auth/2fa/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${tempToken}`
-          },
-          body: JSON.stringify({ code })
-        });
-        const result = await response.json();
-        if (response.ok && result.success) {
-          const { access_token, user_id } = result;
-          if (modal2fa) modal2fa.classList.add("hidden");
-          await init2faLogin(access_token, user_id, cachedStatus);
-        } else {
-          if (error2fa) {
-            error2fa.textContent = "Invalid code.";
-            error2fa.classList.remove("hidden");
-          }
-        }
-      } catch (error) {
-        console.error("2FA Error:", error);
-        if (error2fa) {
-          error2fa.textContent = "Error during verification.";
-          error2fa.classList.remove("hidden");
-        }
-      }
-    });
-    const closeFunc = () => {
-      if (modal2fa) {
-        modal2fa.classList.add("hidden");
-        modal2fa.classList.remove("flex");
-        tempToken = null;
-      }
-    };
-    close2fa?.addEventListener("click", closeFunc);
-    modal2fa?.addEventListener("click", (e) => {
-      if (e.target === modal2fa) closeFunc();
     });
   }
   function loginEvents() {
@@ -4190,38 +4035,80 @@
     "bamboo": {
       name: "Zen Bamboo",
       headerUrl: "/assets/headers/bamboo_header.jpg",
-      navColor: "linear-gradient(to bottom, #86A668 0%, #5F8C35 50%, #4A7026 100%)",
-      bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #dcfce7 100%)"
+      navColor: "linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)",
+      bgColor: "linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)"
     },
-    "love": {
-      name: "Lovely Pink",
-      headerUrl: "/assets/headers/love_header.jpg",
-      navColor: "linear-gradient(to bottom, #5A0908 0%, #A81D1D 99%, #FF7878 100%)",
-      bgColor: "linear-gradient(to bottom, #FF7878 0%, #ffffff 50%, #5A0908 100%)"
+    "cherry": {
+      name: "Cherry Blossom",
+      headerUrl: "/assets/headers/blossoms_header.jpg",
+      navColor: "linear-gradient(to bottom, #F48FB1 0%, #EC407A 50%, #C2185B 100%)",
+      bgColor: "linear-gradient(to bottom, #FFBBB4 0%, #ffffff 50%, #FFBBB4 100%)"
+    },
+    "mountain": {
+      name: "Misty Mountains",
+      headerUrl: "/assets/headers/dawn_header.png",
+      navColor: "linear-gradient(to bottom, #5C6BC0 0%, #3949AB 50%, #283593 100%)",
+      bgColor: "linear-gradient(to bottom, #6F94BF 0%, #ffffff 50%, #6F94BF 100%)"
     },
     "punk": {
       name: "Cyber Punk",
       headerUrl: "/assets/headers/punk_header.jpg",
       navColor: "linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)",
-      bgColor: "linear-gradient(to bottom, #f3e8ff 0%, #d8b4fe 50%, #a855f7 100%)"
+      bgColor: "linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)"
+    },
+    "dotted": {
+      name: "Spring Dots",
+      headerUrl: "/assets/headers/dott_header.png",
+      navColor: "linear-gradient(to bottom, #9CCC65 0%, #7CB342 50%, #558B2F 100%)",
+      bgColor: "linear-gradient(to bottom, #8BC72C 0%, #ffffff 50%, #8BC72C 100%)"
+    },
+    "sunset": {
+      name: "Golden Sunset",
+      headerUrl: "/assets/headers/field_header.png",
+      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
+      bgColor: "linear-gradient(to bottom, #F7A624 0%, #ffffff 50%, #F7A624 100%)"
     },
     "football": {
       name: "Stadium",
       headerUrl: "/assets/headers/football_header.png",
-      navColor: "linear-gradient(to bottom, #2C3E50 0%, #000000 100%)",
-      bgColor: "linear-gradient(to bottom, #ffffff 0%, #e5e7eb 50%, #9ca3af 100%)"
+      navColor: "linear-gradient(to bottom, #66BB6A 0%, #43A047 50%, #2E7D32 100%)",
+      bgColor: "linear-gradient(to bottom, #73AD4E 0%, #ffffff 50%, #73AD4E 100%)"
     },
-    "space": {
-      name: "Mesmerizing",
-      headerUrl: "/assets/headers/mesmerizing_header.png",
-      navColor: "linear-gradient(to bottom, #1e3c72 0%, #2a5298 100%)",
-      bgColor: "linear-gradient(to bottom, #ffffff 0%, #e0e7ff 50%, #a5b4fc 100%)"
+    "spring": {
+      name: "Spring Garden",
+      headerUrl: "/assets/headers/hill_header.png",
+      navColor: "linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)",
+      bgColor: "linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)"
     },
-    "sunset": {
-      name: "Dawn",
-      headerUrl: "/assets/headers/dawn_header.png",
-      navColor: "linear-gradient(to bottom, #ff7e5f 0%, #feb47b 100%)",
-      bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffedd5 50%, #fdba74 100%)"
+    "love": {
+      name: "Lovely Heart",
+      headerUrl: "/assets/headers/love_header.jpg",
+      navColor: "linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)",
+      bgColor: "linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)"
+    },
+    "diary": {
+      name: "Dear Diary",
+      headerUrl: "/assets/headers/diary_header.jpg",
+      navColor: "linear-gradient(to bottom, #D658A4 0%, #BA3083 50%, #D90082 100%)",
+      bgColor: "linear-gradient(to bottom, #E297B6 0%, #ffffff 50%, #E297B6 100%)"
+    },
+    "branches": {
+      name: "Winter Branches",
+      headerUrl: "/assets/headers/silhouette_header.jpg",
+      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
+      bgColor: "linear-gradient(to bottom, #F79B34 0%, #ffffff 50%, #F79B34 100%)"
+    },
+    "purple": {
+      name: "Purple Dreams",
+      headerUrl: "/assets/headers/spring_header.png",
+      navColor: "linear-gradient(to bottom, #9C27B0 0%, #7B1FA2 50%, #6A1B9A 100%)",
+      bgColor: "linear-gradient(to bottom, #663A92 0%, #ffffff 50%, #663A92 100%)"
+    },
+    "abstract": {
+      name: "Abstract Flow",
+      headerUrl: "/assets/headers/weird_header.jpg",
+      navColor: "linear-gradient(to bottom, #FF6B9D 0%, #FF1744 50%, #D50000 100%)",
+      bgColor: "linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)"
     }
   };
   var statusImages = {
@@ -4355,6 +4242,71 @@
   alias(["(Y)", "(y)"], "thumbs_up.gif");
   alias(["(B)", "(b)"], "beer_mug.gif");
   alias(["(X)", "(x)"], "girl.gif");
+
+  // scripts/pages/api.ts
+  var isRefreshing = false;
+  var refreshSubscribers = [];
+  function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+  }
+  function onRefreshed(token) {
+    refreshSubscribers.forEach((cb) => cb(token));
+    refreshSubscribers = [];
+  }
+  async function fetchWithAuth(url2, options = {}) {
+    const token = localStorage.getItem("accessToken");
+    const getHeaders = (currentToken) => {
+      const headers = new Headers(options.headers || {});
+      if (!headers.has("Content-Type") && options.body) {
+        headers.set("Content-Type", "application/json");
+      }
+      if (currentToken) {
+        headers.set("Authorization", `Bearer ${currentToken}`);
+      }
+      return headers;
+    };
+    let response = await fetch(url2, {
+      ...options,
+      headers: getHeaders(token)
+    });
+    if (response.status === 401) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        console.warn("Token expired (401). Atempt to refresh...");
+        try {
+          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            const newToken = data.access_token;
+            localStorage.setItem("accessToken", newToken);
+            isRefreshing = false;
+            onRefreshed(newToken);
+            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
+          } else {
+            isRefreshing = false;
+            refreshSubscribers = [];
+            console.error("Refresh impossible. Deconnection.");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("userId");
+            window.history.pushState({}, "", "/login");
+            window.dispatchEvent(new PopStateEvent("popstate"));
+            throw new Error("Session expired");
+          }
+        } catch (error) {
+          isRefreshing = false;
+          throw error;
+        }
+      } else {
+        console.log("Token expired. Waiting the refreshing of the other token...");
+        return new Promise((resolve) => {
+          subscribeTokenRefresh(async (newToken) => {
+            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
+          });
+        });
+      }
+    }
+    return response;
+  }
 
   // scripts/components/FriendList.ts
   var FriendList = class {
