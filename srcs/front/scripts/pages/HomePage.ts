@@ -33,6 +33,7 @@ export function afterRender(): void {
     window.addEventListener('friendSelected', (e: any) => {
         const { friend, friendshipId } = e.detail;
 
+        currentChatFriendId = friend.id;
         console.log("Ami sélectionné:", friend.alias, "Friendship ID:", friendshipId);
         const myId = parseInt(localStorage.getItem('userId') || "0");
         const ids = [myId, friend.id].sort((a, b) => a - b);
@@ -69,6 +70,7 @@ export function afterRender(): void {
     
     viewProfileButton?.addEventListener('click', () => {
         document.getElementById('chat-options-dropdown')?.classList.add('hidden');
+        console.log("current chat friend id:", currentChatFriendId);
         if (currentChatFriendId) { // est-ce que l'ami exsite?
             friendProfileModal.open(currentChatFriendId);
         }

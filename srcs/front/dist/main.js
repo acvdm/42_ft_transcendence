@@ -5324,6 +5324,7 @@
     let currentChatFriendId = null;
     window.addEventListener("friendSelected", (e) => {
       const { friend, friendshipId } = e.detail;
+      currentChatFriendId = friend.id;
       console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
       const myId = parseInt(localStorage.getItem("userId") || "0");
       const ids = [myId, friend.id].sort((a, b) => a - b);
@@ -5351,6 +5352,7 @@
     const viewProfileButton = document.getElementById("button-view-profile");
     viewProfileButton?.addEventListener("click", () => {
       document.getElementById("chat-options-dropdown")?.classList.add("hidden");
+      console.log("current chat friend id:", currentChatFriendId);
       if (currentChatFriendId) {
         friendProfileModal.open(currentChatFriendId);
       }
