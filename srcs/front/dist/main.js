@@ -4518,11 +4518,17 @@
             pendingList.forEach((req) => {
               const item = document.createElement("div");
               item.dataset.friendshipId = req.id.toString();
-              item.className = "flex items-center p-3 border-b border-gray-100 gap-3 hover:bg-gray-50 transition";
+              item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
               item.innerHTML = `
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-semibold truncate">${req.user?.alias}</p>
-                                <p class="text-xs text-gray-500">Wants to be your friend</p>
+                            <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                                <img src="/assets/basic/logo.png" 
+                                    class="w-full h-full object-cover rounded"
+                                    alt="avatar">
+                            </div>
+                            <div class="flex-1 min-w-0 pr-4">
+                                <p class="text-sm text-gray-800">
+                                    <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                                </p>
                             </div>
                             <div class="flex gap-2 flex-shrink-0">
                                 <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
