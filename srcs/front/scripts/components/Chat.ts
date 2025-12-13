@@ -31,6 +31,7 @@ export class Chat {
     public joinChannel(channelKey: string, friendshipId?: number) {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
+        console.log("**** join channel friendshipId:", this.currentFriendshipId);
 
         this.socket.emit("joinChannel", channelKey);
         
