@@ -19,29 +19,49 @@
                 <div class="flex flex-col items-center py-12">
                     <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
             
-                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">
-                            <h1 class="text-lg font-normal mb-4">My Profile</h1>
+                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
+                            <h1 class="text-lg font-normal mb-4 text-gray-700">My profile</h1>
 
-                            <div class="relative w-[170px] h-[170px] mb-1">
+                            <div class="relative w-[170px] h-[170px] mb-3">
                                 <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                                src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                                src="/assets/basic/status_frame_offline_large.png">
                                 
-                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10"
-                                src="https://wlm.vercel.app/assets/usertiles/default.png">
+                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"
+                                src="/assets/basic/default.png">
                             </div>
 
-                            <button id="edit-picture-button" class="text-xs underline text-blue-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">
-                                Change my profile picture
-                            </button>
+                            <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">
+                                
+                                <button id="edit-picture-button" 
+                                        title="Change Avatar"
+                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                            bg-gradient-to-b from-white to-gray-200
+                                            rounded-[3px] shadow-sm
+                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                            active:translate-y-[1px] active:shadow-inner transition-all group">
+                                    <img src="/assets/basic/camera.png" 
+                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                        alt="Avatar">
+                                </button>
 
-                            <button id="theme-button" class="text-xs underline text-purple-600 hover:underline mb-4 cursor-pointer bg-transparent border-none">
-                                🎨 Customize Theme
-                            </button>
+                                <button id="theme-button" 
+                                        title="Customize Theme"
+                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                            bg-gradient-to-b from-white to-gray-200 
+                                            rounded-[3px] shadow-sm
+                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                            active:translate-y-[1px] active:shadow-inner transition-all group">
+                                    <img src="/assets/basic/headers.png" 
+                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                        alt="Theme">
+                                </button>
 
-                            <div>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <label class="text-sm">Status:</label>
-                                    <select class="bg-transparent rounded-sm px-2 py-1 text-sm">
+                            </div>
+
+                            <div class="w-full px-4 mb-4 mt-4">
+                                <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
+                                    <label class="text-xs text-gray-500 pl-1">Status:</label>
+                                    <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
                                         <option>Available</option>
                                         <option selected>Busy</option>
                                         <option>Away</option>
@@ -49,9 +69,10 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="text-sm text-center w-full leading-6">
-                                <p id="username-profile" class="text-xl font-semibold"><strong></strong></p>
-                                <p id="bio-profile" class="text-lg font-semibold" style="word-break: break-all; overflow-wrap: anywhere; white-space: normal;"></p>
+
+                            <div class="text-sm text-center w-full leading-6 mt-2">
+                                <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
+                                <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
                             </div>
                         </div>
             
@@ -249,15 +270,18 @@
     </div>
 
     <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 500px;">
-            <div class="title-bar">
+        <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
+            
+            <div class="title-bar flex-none">
                 <div class="title-bar-text">Select a Theme</div>
                 <div class="title-bar-controls">
                     <button id="close-theme-modal" aria-label="Close"></button>
                 </div>
             </div>
-            <div class="window-body p-4">
-                <div id="theme-grid" class="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
+
+            <div class="window-body p-4 flex-1 overflow-y-auto">
+                
+                <div id="theme-grid" class="grid grid-cols-2 gap-4">
                     </div>
             </div>
         </div>

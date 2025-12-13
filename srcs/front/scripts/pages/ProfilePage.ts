@@ -134,6 +134,8 @@ export function afterRender(): void {
     const currentTheme = localStorage.getItem('userTheme') || 'basic'; // theme actuel via localsotirage -> le stocker dans la db?
     applyTheme(currentTheme);
 
+    let selectedThemeElement: HTMLElement | null = null;
+
     // ouverture modale 
     themeButton?.addEventListener('click', () => {
         themeModal?.classList.remove('hidden');
@@ -150,17 +152,46 @@ export function afterRender(): void {
     if (themeGrid && themeGrid.children.length === 0) {
         Object.entries(appThemes).forEach(([key, theme]) => {
             const div = document.createElement('div');
-            div.className = "cursor-pointer border border-gray-300 hover:border-blue-500 p-2 rounded flex flex-col items-center gap-2 transition-all hover:bg-gray-50";
+            // Mise à jour des classes pour la sélection
+            div.className = `theme-item cursor-pointer border-2 rounded overflow-hidden transition-all hover:shadow-lg`;
+            div.dataset.themeKey = key; // Stocker la clé pour la sélection
             
+            // Appliquer la bordure bleue si c'est le thème actuel
+            if (key === currentTheme) {
+                div.classList.add('border-blue-500', 'shadow-blue-500/50'); // Bordure initiale pour le thème actif
+                selectedThemeElement = div; // Définir comme élément sélectionné
+            } else {
+                div.classList.add('border-gray-300', 'hover:border-blue-500'); // Bordure par défaut
+            }
+
             div.innerHTML = `
-                <div class="w-full h-16 bg-cover bg-center rounded border border-gray-200" style="background-image: url('${theme.headerUrl}')"></div>
-                <span class="text-xs font-bold">${theme.name}</span>
+                <div class="relative">
+                    <div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
+                    
+                    <div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
+                </div>
+                
+                <div class="p-2 bg-white text-center border-t border-gray-200">
+                    <span class="text-sm font-bold text-gray-800">${theme.name}</span>
+                </div>
             `;
 
-            div.addEventListener('click', () => {
-                applyTheme(key);
-                updateTheme(key);
-                closeThemeFunc();
+            div.addEventListener('click', function(this: HTMLDivElement) {
+                const themeKey = this.dataset.themeKey as string;
+
+                // 1. Mise à jour de l'affichage de sélection (bordures)
+                if (selectedThemeElement) {
+                    selectedThemeElement.classList.remove('border-blue-500', 'shadow-lg');
+                    selectedThemeElement.classList.add('border-gray-300', 'hover:border-blue-500');
+                }
+                this.classList.remove('border-gray-300', 'hover:border-blue-500');
+                this.classList.add('border-blue-500', 'shadow-lg');
+                selectedThemeElement = this;
+
+                // 2. Application et sauvegarde du thème
+                applyTheme(themeKey);
+                updateTheme(themeKey);
+                closeThemeFunc(); // Fermer la modale après la sélection
             });
 
             themeGrid.appendChild(div);
