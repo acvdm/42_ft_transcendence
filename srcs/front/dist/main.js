@@ -4108,6 +4108,61 @@
       bgColor: "linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)"
     }
   };
+  var ballEmoticons = {
+    "smile": globalPath + "smile.gif",
+    "surprised": globalPath + "surprised.gif",
+    "wink": globalPath + "wink_smile.gif",
+    "confused": globalPath + "confused.gif",
+    "crying": globalPath + "crying.gif",
+    "hot": globalPath + "hot.gif",
+    "angel": globalPath + "angel.gif",
+    "teeth_smile": globalPath + "teeth_smile.gif",
+    "tongue": globalPath + "tongue_smile.gif",
+    "sad": globalPath + "sad.gif",
+    "disappointed": globalPath + "disappointed.gif",
+    "embarrassed": globalPath + "embarrassed.gif",
+    "angry": globalPath + "angry.gif",
+    "nerd": globalPath + "nerd.gif",
+    "sleepy": globalPath + "sleepy.gif",
+    "teeth": globalPath + "teeth.gif",
+    "sarcastic": globalPath + "sarcastic.gif",
+    "sick": globalPath + "sick.gif",
+    "thinking": globalPath + "thinking.gif",
+    "eye_roll": globalPath + "eye_roll.gif",
+    "devil": globalPath + "devil_smile.gif"
+  };
+  var gameBackgrounds = {
+    "classic": "#E8F4F8",
+    // Bleu pastel clair
+    "mint": "#D4F1E8",
+    // Vert menthe
+    "lavender": "#E6E6FA",
+    // Lavande
+    "peach": "#FFE5D9",
+    // Pêche
+    "rose": "#FFE1E9",
+    // Rose
+    "lemon": "#FFFACD",
+    // Citron
+    "sky": "#B0E0E6",
+    // Bleu ciel
+    "coral": "#FFCCCB",
+    // Corail
+    "lilac": "#DCD0FF",
+    // Lilas
+    "sage": "#C8E6C9",
+    // Vert sauge
+    "cream": "#FFF8DC",
+    // Crème
+    "powder": "#B0C4DE",
+    // Bleu poudré
+    "blush": "#FFC0CB",
+    // Rose poudré
+    "seafoam": "#B2DFDB",
+    // Vert d'eau
+    "apricot": "#FFDAB9"
+    // Abricot
+  };
   var statusImages = {
     "available": "/assets/basic/status_online_small.png",
     "online": "/assets/basic/status_online_small.png",
@@ -5354,6 +5409,15 @@
         friendProfileModal.open(currentChatFriendId);
       }
     });
+    const localGameButton = document.getElementById("local-game");
+    if (localGameButton) {
+      localGameButton.addEventListener("click", () => {
+        console.log("Lancement d'une partie locale...");
+        window.history.pushState({}, "", "/game");
+        const navEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(navEvent);
+      });
+    }
   }
 
   // scripts/pages/ProfilePage.html
@@ -6179,6 +6243,132 @@
     handleRegister();
   }
 
+  // scripts/pages/LocalGame.html
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[700px] min-w-[700px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 1500px; min-width: 1500px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-300 items-center justify-between px-24 bg-gray-50" style="height: 60px;"> \n                        \n                        <span class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-3xl font-bold text-gray-900">0 - 0</span>\n\n                        <span class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px] shadow-sm active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px] shadow-sm active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+
+  // scripts/pages/GamePage.ts
+  function render4() {
+    return LocalGame_default;
+  }
+  function initGamePage(mode) {
+    const modal = document.getElementById("game-setup-modal");
+    const startButton = document.getElementById("start-game-btn");
+    const nameInput = document.getElementById("opponent-name");
+    const errorMsg = document.getElementById("error-message");
+    const player2Display = document.getElementById("player2-name-display");
+    const ballButton = document.getElementById("ball-selector-button");
+    const ballDropdown = document.getElementById("ball-selector-dropdown");
+    const ballGrid = document.getElementById("ball-grid");
+    const selectedBallImg = document.getElementById("selected-ball-img");
+    const ballValueInput = document.getElementById("ball-value");
+    const bgButton = document.getElementById("bg-selector-button");
+    const bgDropdown = document.getElementById("bg-selector-dropdown");
+    const bgGrid = document.getElementById("bg-grid");
+    const selectedBgPreview = document.getElementById("selected-bg-preview");
+    const bgValueInput = document.getElementById("bg-value");
+    const gameField = document.getElementById("left");
+    if (!modal || !startButton || !nameInput) {
+      return;
+    }
+    if (mode === "local") {
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    } else {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+    if (ballButton && ballDropdown && ballGrid) {
+      const uniqueUrls = /* @__PURE__ */ new Set();
+      ballGrid.innerHTML = "";
+      Object.keys(ballEmoticons).forEach((key) => {
+        const imgUrl = ballEmoticons[key];
+        if (!uniqueUrls.has(imgUrl)) {
+          uniqueUrls.add(imgUrl);
+          const div = document.createElement("div");
+          div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded border border-transparent hover:border-blue-300 flex justify-center items-center";
+          div.innerHTML = `<img src="${imgUrl}" alt="${key}" class="w-6 h-6 object-contain pointer-events-none">`;
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectedBallImg.src = imgUrl;
+            ballValueInput.value = imgUrl;
+            ballDropdown.classList.add("hidden");
+          });
+          ballGrid.appendChild(div);
+        }
+      });
+      ballButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        ballDropdown.classList.toggle("hidden");
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!ballDropdown.contains(target) && !ballButton.contains(target)) {
+          ballDropdown.classList.add("hidden");
+        }
+      });
+    }
+    if (bgButton && bgDropdown && bgGrid) {
+      bgGrid.innerHTML = "";
+      Object.keys(gameBackgrounds).forEach((key) => {
+        const color = gameBackgrounds[key];
+        const div = document.createElement("div");
+        div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full";
+        div.style.padding = "4px";
+        div.style.display = "flex";
+        div.style.justifyContent = "center";
+        div.style.alignItems = "center";
+        div.style.width = "36px";
+        div.style.height = "36px";
+        const colorCircle = document.createElement("div");
+        colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
+        colorCircle.style.backgroundColor = color;
+        div.appendChild(colorCircle);
+        div.addEventListener("click", (e) => {
+          e.stopPropagation();
+          selectedBgPreview.style.backgroundColor = color;
+          bgValueInput.value = color;
+          if (gameField) {
+            gameField.style.backgroundColor = color;
+          }
+          bgDropdown.classList.add("hidden");
+        });
+        bgGrid.appendChild(div);
+      });
+      bgButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        bgDropdown.classList.toggle("hidden");
+      });
+      document.addEventListener("click", (e) => {
+        const target = e.target;
+        if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
+          bgDropdown.classList.add("hidden");
+        }
+      });
+    }
+    startButton.addEventListener("click", () => {
+      const opponentName = nameInput.value.trim();
+      if (opponentName === "") {
+        if (errorMsg) errorMsg.classList.remove("hidden");
+        nameInput.classList.add("border-red-500");
+        return;
+      }
+      const selectedBall = ballValueInput ? ballValueInput.value : "classic";
+      const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
+      if (player2Display) {
+        player2Display.textContent = opponentName;
+      }
+      if (gameField) {
+        gameField.style.backgroundColor = selectedBg;
+      }
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    });
+    nameInput.addEventListener("input", () => {
+      if (errorMsg) errorMsg.classList.add("hidden");
+      nameInput.classList.remove("border-red-500");
+    });
+  }
+
   // scripts/main.ts
   var appElement = document.getElementById("app");
   var publicRoutes = ["/", "/login", "/register", "/404"];
@@ -6202,6 +6392,12 @@
     "/login": {
       render,
       afterRender: loginEvents
+    },
+    "/game": {
+      render: render4,
+      // La fonction HTML
+      afterRender: () => initGamePage("local")
+      // La fonction TS, on force le mode 'local' pour l'instant
     },
     "/404": {
       render: NotFoundPage

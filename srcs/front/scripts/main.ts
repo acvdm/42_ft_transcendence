@@ -6,6 +6,7 @@ import { NotFoundPage } from "./pages/NotFound";
 import { LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { applyTheme } from "./pages/ProfilePage";
+import { render as GamePage, initGamePage } from "./pages/GamePage";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -43,6 +44,10 @@ const routes: { [key: string]: Page } = {
 		render: LoginPage,
 		afterRender: loginEvents
 	},
+	'/game': {
+        render: GamePage, // La fonction HTML
+        afterRender: () => initGamePage('local') // La fonction TS, on force le mode 'local' pour l'instant
+    },
 	'/404': {
 		render: NotFoundPage
 	}

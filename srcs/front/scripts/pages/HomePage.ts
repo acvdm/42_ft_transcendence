@@ -63,6 +63,7 @@ export function afterRender(): void {
         }
         console.log("friendship homepage:", friendshipId);
         chat.joinChannel(channelKey, friendshipId);
+
     });
 
     // ouverture de la modale
@@ -76,6 +77,23 @@ export function afterRender(): void {
         }
     });
 
+
+
+    // on fait en sorte que le bouton soit cliquable pour amener sur la page de jeu local
+    const localGameButton = document.getElementById('local-game');
+
+    if (localGameButton) {
+        localGameButton.addEventListener('click', () => {
+            console.log("Lancement d'une partie locale...");
+
+            // on envoit sur la page game -> voir si on personnalise l'url selon la type de game
+            window.history.pushState({}, '', '/game');
+
+            // detection du changement
+            const navEvent = new PopStateEvent('popstate');
+            window.dispatchEvent(navEvent);
+        });
+    }
 
     
 }
