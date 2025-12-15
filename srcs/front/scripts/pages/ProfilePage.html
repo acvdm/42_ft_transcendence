@@ -137,6 +137,9 @@
 
 
 
+        <!-- MODALE POUR LE 2FA -->
+
+
     <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
@@ -180,6 +183,8 @@
     </div>
 
 
+
+        <!-- MODALE POUR L'AVATAR -->
 
 
     <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
@@ -269,6 +274,10 @@
         </div>
     </div>
 
+
+    <!-- MODALE POUR LE THÈME-->
+
+
     <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
             
@@ -286,6 +295,49 @@
             </div>
         </div>
     </div>
+
+
+
+    <!-- MODALE POUR LE MOT DE PASSE -->
+
+    <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Security</div>
+                <div class="title-bar-controls">
+                    <button id="close-password-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col gap-4">
+                <h2 class="text-lg font-bold mb-2">Change Password</h2>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">Current Password:</label>
+                    <input type="password" id="pwd-current" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">New Password:</label>
+                    <input type="password" id="pwd-new" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">Confirm New Password:</label>
+                    <input type="password" id="pwd-confirm" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <p id="pwd-error" class="text-red-500 text-xs hidden"></p>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="cancel-password-button" class="bg-gray-100 border border-gray-400 px-4 py-1 text-sm hover:bg-gray-200">Cancel</button>
+                    <button id="save-password-button" class="bg-gray-100 border border-gray-400 px-4 py-1 text-sm font-bold hover:bg-gray-200">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 
 </div>
 

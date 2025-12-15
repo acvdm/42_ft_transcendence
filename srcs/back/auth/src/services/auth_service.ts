@@ -113,6 +113,31 @@ export async function changeEmailInCredential (
     await credRepo.changeEmail(db, user_id, email);
 }
 
+///////////// RAJOUTER PAR FAUSTINE
+
+export async function changePasswordInCredential (
+    db: Database,
+    userId: number,
+    oldPwd: string,
+    newPwd: string
+): Promise<void> {
+    const credential = await credRepo.getCredentialbyUserID(db, userId);
+    if (!credential)
+        throw new Error('User not found');
+
+    const isValidPwd = await crypt.verifyPassword(oldPwd, credential.pwd_hashed);
+    if (!isValidPwd)
+        throw new Error('Invalid current password');
+
+    const newHashedPwd = await crypt.hashPassword(newPwd);
+
+    await credRepo.changePwd(db, credential.id, newHashedPwd);
+}
+
+///////////// RAJOUTER PAR FAUSTINE
+
+
+
 export async function loginUser(
     db: Database,
     email: string, 

@@ -278,7 +278,6 @@ export function afterRender(): void {
             });
 
             if (response.ok) {
-                // Succès !
                 update2faButton(true);
                 close2fa();
                 alert("2FA is now enabled!");
@@ -387,6 +386,8 @@ export function afterRender(): void {
 
                 // initialisation des champs
                 fieldContainers.forEach(container => {
+
+
                     const fieldName = container.dataset.field;
                     const display = container.querySelector('.field-display') as HTMLParagraphElement;
                     const input = container.querySelector('.field-input') as HTMLInputElement;
@@ -409,7 +410,6 @@ export function afterRender(): void {
                             value = "********"; 
                         }
 
-
                         if (value) {
                             display.innerText = value;
                             if (fieldName !== 'password') {
@@ -431,6 +431,8 @@ export function afterRender(): void {
 
                 //logique change/confirme
                 fieldContainers.forEach(container => {
+                    if (container.dataset.field === 'password') return;
+
                     const display = container.querySelector('.field-display') as HTMLParagraphElement;
                     const input = container.querySelector('.field-input') as HTMLInputElement;
                     const changeButton = container.querySelector('.change-button') as HTMLButtonElement;
@@ -533,7 +535,7 @@ export function afterRender(): void {
         if (!userId || !newEmail.trim()) return false;
 
         try {
-            const response = await fetchWithAuth(`api/users/${userId}/email`, {
+            const response = await fetchWithAuth(`api/users/${userId}/credentials`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: newEmail })
@@ -576,11 +578,6 @@ export function afterRender(): void {
         } catch (error) {
             console.error("Network error while saving theme:", error);
         }
-    };
-
-    //maj password /////////// to complete avec la partie de Anne le chat
-    const updatePassword = async (newPassword: string) => {
-
     };
 
 
@@ -716,9 +713,6 @@ export function afterRender(): void {
                 case 'email':
                     updateSuccessful = await updateEmail(newValue);
                     break;
-                // case 'password':
-                //     updateSuccessful = await updatePassword(newValue);
-                //     break;
                 default:
                     updateSuccessful = true;
             }
@@ -788,6 +782,114 @@ export function afterRender(): void {
         if (statusKey) {
             updateStatus(statusKey);
         }
+    });
+
+
+
+
+
+
+    // ============================================================
+    // ============= CLOGIQUE DE CHANGEMENT DE MDP ================
+    // ============================================================
+
+    const pwdModal = document.getElementById('password-modal');
+    const closePwdButton = document.getElementById('close-password-modal');
+    const cancelPwdButton = document.getElementById('cancel-password-button');
+    const savePwdButton = document.getElementById('save-password-button');
+    
+    const currentPwdInput = document.getElementById('pwd-current') as HTMLInputElement;
+    const newPwdInput = document.getElementById('pwd-new') as HTMLInputElement;
+    const confirmPwdInput = document.getElementById('pwd-confirm') as HTMLInputElement;
+    const pwdError = document.getElementById('pwd-error');
+
+    const passwordContainer = document.querySelector('div[data-field="password"]');
+    const openPwdModalButton = passwordContainer?.querySelector('.change-button');
+
+    const resetPwdForm = () => {
+        if (currentPwdInput) currentPwdInput.value = '';
+        if (newPwdInput) newPwdInput.value = '';
+        if (confirmPwdInput) confirmPwdInput.value = '';
+        if (pwdError) {
+            pwdError.innerText = '';
+            pwdError.classList.add('hidden');
+        }
+    };
+
+    const closePwdModal = () => {
+        pwdModal?.classList.add('hidden');
+        pwdModal?.classList.remove('flex');
+        resetPwdForm();
+    };
+
+    openPwdModalButton?.addEventListener('click', () => {
+        pwdModal?.classList.remove('hidden');
+        pwdModal?.classList.add('flex');
+    });
+
+    closePwdButton?.addEventListener('click', closePwdModal);
+    cancelPwdButton?.addEventListener('click', closePwdModal);
+
+    savePwdButton?.addEventListener('click', async () => {
+        const oldPass = currentPwdInput.value;
+        const newPass = newPwdInput.value;
+        const confirmPass = confirmPwdInput.value;
+
+        // on verifie que tous les chanps sont remplis
+        if (!oldPass || !newPass || !confirmPass) {
+            if (pwdError) {
+                pwdError.innerText = "All inpuys are required.";
+                pwdError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            if (pwdError) {
+                pwdError.innerText = "These are not the same. Try again";
+                pwdError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (newPass.length < 8) {
+            if (pwdError) {
+                pwdError.innerText = "Password must be at least 8 characters.";
+                pwdError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        try {
+            const response = await fetchWithAuth(`api/users/${userId}/password`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPass, newPass })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("Password updated successfully!");
+                closePwdModal();
+            } else {
+                if (pwdError) {
+                    // on recuperer l'erreur du backe
+                    pwdError.innerText = result.error?.message || "Error updating password";
+                    pwdError.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            if (pwdError) {
+                pwdError.innerText = "Network error.";
+                pwdError.classList.remove('hidden');
+            }
+        }
+    });
+
+    pwdModal?.addEventListener('click', (e) => {
+        if (e.target === pwdModal) closePwdModal();
     });
 
 

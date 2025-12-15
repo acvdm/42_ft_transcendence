@@ -5421,7 +5421,350 @@
   }
 
   // scripts/pages/ProfilePage.html
-  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width: 900px;">\n            <div class="title-bar">\n                <div class="title-bar-text">Profil</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body bg-white">\n                <div class="flex flex-col items-center py-12">\n                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">\n                            <h1 class="text-lg font-normal mb-4 text-gray-700">My profile</h1>\n\n                            <div class="relative w-[170px] h-[170px] mb-3">\n                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"\n                                src="/assets/basic/status_frame_offline_large.png">\n                                \n                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"\n                                src="/assets/basic/default.png">\n                            </div>\n\n                            <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">\n                                \n                                <button id="edit-picture-button" \n                                        title="Change Avatar"\n                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1\n                                            bg-gradient-to-b from-white to-gray-200\n                                            rounded-[3px] shadow-sm\n                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400\n                                            active:translate-y-[1px] active:shadow-inner transition-all group">\n                                    <img src="/assets/basic/camera.png" \n                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" \n                                        alt="Avatar">\n                                </button>\n\n                                <button id="theme-button" \n                                        title="Customize Theme"\n                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1\n                                            bg-gradient-to-b from-white to-gray-200 \n                                            rounded-[3px] shadow-sm\n                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400\n                                            active:translate-y-[1px] active:shadow-inner transition-all group">\n                                    <img src="/assets/basic/headers.png" \n                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" \n                                        alt="Theme">\n                                </button>\n\n                            </div>\n\n                            <div class="w-full px-4 mb-4 mt-4">\n                                <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">\n                                    <label class="text-xs text-gray-500 pl-1">Status:</label>\n                                    <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">\n                                        <option>Available</option>\n                                        <option selected>Busy</option>\n                                        <option>Away</option>\n                                        <option>Appear offline</option>\n                                    </select>\n                                </div>\n                            </div>\n\n                            <div class="text-sm text-center w-full leading-6 mt-2">\n                                <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>\n                                <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>\n                            </div>\n                        </div>\n            \n                        <div class="flex flex-col justify-between flex-1">\n                            <div class="flex flex-col gap-4">\n\n\n                                <label class="text-sm">Username:</label>\n                                <div class="flex flex-row gap-2" data-field="alias">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>\n                                    <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>\n                                    \n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n\n\n\n                                <label class="text-sm">Share a quick message:</label>\n                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">\n                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>\n                                    <input\n                                        type="text"\n                                        value=""\n                                        placeholder="Share a quick message"\n                                        class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"\n                                        style="width:350px; overflow: hidden;" disabled/>\n                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>\n                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                </div>\n                            </div>\n            \n                            <div class="mt-8 border-t border-gray-300 pt-4">\n                                <div class="flex flex-col gap-4">\n                                    <label class="text-sm">Email:</label>\n                                    <div class="flex flex-row gap-2" data-field="email">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>\n                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n\n                                    <label class="text-sm">Password:</label>\n                                    <div class="flex flex-row gap-2" data-field="password">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>\n                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>\n                                    </div>\n                                    <button id="2fa-modal-button" class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n\n    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Two-Factor Authentication</div>\n                <div class="title-bar-controls">\n                    <button id="close-2fa-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6 flex flex-col items-center gap-4">\n                <div class="text-center">\n                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>\n                    <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>\n                </div>\n\n                <div class="border border-gray-300 p-2 bg-white shadow-inner">\n                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">\n                </div>\n\n                <div class="w-full flex flex-col gap-2 mt-2">\n                    <label class="text-sm">Enter the 6-digit code:</label>\n                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" \n                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">\n                </div>\n\n                <div class="flex justify-center gap-4 mt-4 w-full">\n                    <button id="confirm-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">\n                        VALIDATE\n                    </button>\n                    <button id="cancel-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        CANCEL\n                    </button>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n\n\n    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">Change Picture</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button id="close-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6">\n                <div class="mb-6">\n                    <h2 class="text-xl mb-1">Select a picture</h2>\n                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>\n                </div>\n                \n                <div class="flex flex-row gap-6">\n                    <div class="flex-1">\n                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">\n                            <div id="modal-grid" class="grid grid-cols-4 gap-2">\n                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center gap-4 w-[200px]">\n                        <div class="relative w-[170px] h-[170px]">\n                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">\n                            \n                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                            src="https://wlm.vercel.app/assets/usertiles/default.png">\n                        </div>\n\n                        <div class="flex flex-col gap-2 w-full mt-2 h-64">\n                            <input type="file" id="file-input" accept="image/*" hidden>\n\n                            <button id="browse-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            BROWSE\n                            </button>\n                            \n                            <button id="delete-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            DELETE\n                            </button>\n\n                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">\n                                <button id="validation-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        OK\n                                </button>\n                                <button id="cancel-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        CANCEL\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">\n            \n            <div class="title-bar flex-none">\n                <div class="title-bar-text">Select a Theme</div>\n                <div class="title-bar-controls">\n                    <button id="close-theme-modal" aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body p-4 flex-1 overflow-y-auto">\n                \n                <div id="theme-grid" class="grid grid-cols-2 gap-4">\n                    </div>\n            </div>\n        </div>\n    </div>\n\n</div>\n\n';
+  var ProfilePage_default = `<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="window" style="width: 900px;">
+            <div class="title-bar">
+                <div class="title-bar-text">Profil</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button aria-label="Close"></button>
+                </div>
+            </div>
+    
+            <div class="window-body bg-white">
+                <div class="flex flex-col items-center py-12">
+                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
+            
+                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
+                            <h1 class="text-lg font-normal mb-4 text-gray-700">My profile</h1>
+
+                            <div class="relative w-[170px] h-[170px] mb-3">
+                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                                src="/assets/basic/status_frame_offline_large.png">
+                                
+                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"
+                                src="/assets/basic/default.png">
+                            </div>
+
+                            <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">
+                                
+                                <button id="edit-picture-button" 
+                                        title="Change Avatar"
+                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                            bg-gradient-to-b from-white to-gray-200
+                                            rounded-[3px] shadow-sm
+                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                            active:translate-y-[1px] active:shadow-inner transition-all group">
+                                    <img src="/assets/basic/camera.png" 
+                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                        alt="Avatar">
+                                </button>
+
+                                <button id="theme-button" 
+                                        title="Customize Theme"
+                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                            bg-gradient-to-b from-white to-gray-200 
+                                            rounded-[3px] shadow-sm
+                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                            active:translate-y-[1px] active:shadow-inner transition-all group">
+                                    <img src="/assets/basic/headers.png" 
+                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                        alt="Theme">
+                                </button>
+
+                            </div>
+
+                            <div class="w-full px-4 mb-4 mt-4">
+                                <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
+                                    <label class="text-xs text-gray-500 pl-1">Status:</label>
+                                    <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
+                                        <option>Available</option>
+                                        <option selected>Busy</option>
+                                        <option>Away</option>
+                                        <option>Appear offline</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-sm text-center w-full leading-6 mt-2">
+                                <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
+                                <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
+                            </div>
+                        </div>
+            
+                        <div class="flex flex-col justify-between flex-1">
+                            <div class="flex flex-col gap-4">
+
+
+                                <label class="text-sm">Username:</label>
+                                <div class="flex flex-row gap-2" data-field="alias">
+                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
+                                    <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
+                                    
+                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                </div>
+
+
+
+                                <label class="text-sm">Share a quick message:</label>
+                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
+                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
+                                    <input
+                                        type="text"
+                                        value=""
+                                        placeholder="Share a quick message"
+                                        class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"
+                                        style="width:350px; overflow: hidden;" disabled/>
+                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                </div>
+                            </div>
+            
+                            <div class="mt-8 border-t border-gray-300 pt-4">
+                                <div class="flex flex-col gap-4">
+                                    <label class="text-sm">Email:</label>
+                                    <div class="flex flex-row gap-2" data-field="email">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                        
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                    </div>
+
+                                    <label class="text-sm">Password:</label>
+                                    <div class="flex flex-row gap-2" data-field="password">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                        
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                    </div>
+                                    <button id="2fa-modal-button" class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+        <!-- MODALE POUR LE 2FA -->
+
+
+    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Two-Factor Authentication</div>
+                <div class="title-bar-controls">
+                    <button id="close-2fa-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col items-center gap-4">
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
+                    <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
+                </div>
+
+                <div class="border border-gray-300 p-2 bg-white shadow-inner">
+                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">
+                </div>
+
+                <div class="w-full flex flex-col gap-2 mt-2">
+                    <label class="text-sm">Enter the 6-digit code:</label>
+                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                </div>
+
+                <div class="flex justify-center gap-4 mt-4 w-full">
+                    <button id="confirm-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+                        VALIDATE
+                    </button>
+                    <button id="cancel-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                        CANCEL
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+        <!-- MODALE POUR L'AVATAR -->
+
+
+    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button id="close-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl mb-1">Select a picture</h2>
+                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                </div>
+                
+                <div class="flex flex-row gap-6">
+                    <div class="flex-1">
+                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
+                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4 w-[200px]">
+                        <div class="relative w-[170px] h-[170px]">
+                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                            
+                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                        </div>
+
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
+                            <input type="file" id="file-input" accept="image/*" hidden>
+
+                            <button id="browse-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            BROWSE
+                            </button>
+                            
+                            <button id="delete-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            DELETE
+                            </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODALE POUR LE TH\xC8ME-->
+
+
+    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
+            
+            <div class="title-bar flex-none">
+                <div class="title-bar-text">Select a Theme</div>
+                <div class="title-bar-controls">
+                    <button id="close-theme-modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="window-body p-4 flex-1 overflow-y-auto">
+                
+                <div id="theme-grid" class="grid grid-cols-2 gap-4">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- MODALE POUR LE MOT DE PASSE -->
+
+    <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Security</div>
+                <div class="title-bar-controls">
+                    <button id="close-password-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col gap-4">
+                <h2 class="text-lg font-bold mb-2">Change Password</h2>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">Current Password:</label>
+                    <input type="password" id="pwd-current" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">New Password:</label>
+                    <input type="password" id="pwd-new" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">Confirm New Password:</label>
+                    <input type="password" id="pwd-confirm" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <p id="pwd-error" class="text-red-500 text-xs hidden"></p>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="cancel-password-button" class="bg-gray-100 border border-gray-400 px-4 py-1 text-sm hover:bg-gray-200">Cancel</button>
+                    <button id="save-password-button" class="bg-gray-100 border border-gray-400 px-4 py-1 text-sm font-bold hover:bg-gray-200">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>
+
+`;
 
   // scripts/pages/ProfilePage.ts
   function render3() {
@@ -5718,6 +6061,7 @@
             updateStatusFrame(normalizedStatus);
           }
           fieldContainers.forEach((container) => {
+            if (container.dataset.field === "password") return;
             const display = container.querySelector(".field-display");
             const input = container.querySelector(".field-input");
             const changeButton = container.querySelector(".change-button");
@@ -5798,7 +6142,7 @@
     const updateEmail = async (newEmail) => {
       if (!userId || !newEmail.trim()) return false;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/email`, {
+        const response = await fetchWithAuth(`api/users/${userId}/credentials`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: newEmail })
@@ -5837,8 +6181,6 @@
       } catch (error) {
         console.error("Network error while saving theme:", error);
       }
-    };
-    const updatePassword = async (newPassword) => {
     };
     const setupField = (elements, fieldName) => {
       const { display, input, changeButton, confirmButton } = elements;
@@ -5933,9 +6275,6 @@
           case "email":
             updateSuccessful = await updateEmail(newValue);
             break;
-          // case 'password':
-          //     updateSuccessful = await updatePassword(newValue);
-          //     break;
           default:
             updateSuccessful = true;
         }
@@ -5991,6 +6330,88 @@
       if (statusKey) {
         updateStatus(statusKey);
       }
+    });
+    const pwdModal = document.getElementById("password-modal");
+    const closePwdButton = document.getElementById("close-password-modal");
+    const cancelPwdButton = document.getElementById("cancel-password-button");
+    const savePwdButton = document.getElementById("save-password-button");
+    const currentPwdInput = document.getElementById("pwd-current");
+    const newPwdInput = document.getElementById("pwd-new");
+    const confirmPwdInput = document.getElementById("pwd-confirm");
+    const pwdError = document.getElementById("pwd-error");
+    const passwordContainer = document.querySelector('div[data-field="password"]');
+    const openPwdModalButton = passwordContainer?.querySelector(".change-button");
+    const resetPwdForm = () => {
+      if (currentPwdInput) currentPwdInput.value = "";
+      if (newPwdInput) newPwdInput.value = "";
+      if (confirmPwdInput) confirmPwdInput.value = "";
+      if (pwdError) {
+        pwdError.innerText = "";
+        pwdError.classList.add("hidden");
+      }
+    };
+    const closePwdModal = () => {
+      pwdModal?.classList.add("hidden");
+      pwdModal?.classList.remove("flex");
+      resetPwdForm();
+    };
+    openPwdModalButton?.addEventListener("click", () => {
+      pwdModal?.classList.remove("hidden");
+      pwdModal?.classList.add("flex");
+    });
+    closePwdButton?.addEventListener("click", closePwdModal);
+    cancelPwdButton?.addEventListener("click", closePwdModal);
+    savePwdButton?.addEventListener("click", async () => {
+      const oldPass = currentPwdInput.value;
+      const newPass = newPwdInput.value;
+      const confirmPass = confirmPwdInput.value;
+      if (!oldPass || !newPass || !confirmPass) {
+        if (pwdError) {
+          pwdError.innerText = "All inpuys are required.";
+          pwdError.classList.remove("hidden");
+        }
+        return;
+      }
+      if (newPass !== confirmPass) {
+        if (pwdError) {
+          pwdError.innerText = "These are not the same. Try again";
+          pwdError.classList.remove("hidden");
+        }
+        return;
+      }
+      if (newPass.length < 8) {
+        if (pwdError) {
+          pwdError.innerText = "Password must be at least 8 characters.";
+          pwdError.classList.remove("hidden");
+        }
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/users/${userId}/password`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ oldPass, newPass })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert("Password updated successfully!");
+          closePwdModal();
+        } else {
+          if (pwdError) {
+            pwdError.innerText = result.error?.message || "Error updating password";
+            pwdError.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        if (pwdError) {
+          pwdError.innerText = "Network error.";
+          pwdError.classList.remove("hidden");
+        }
+      }
+    });
+    pwdModal?.addEventListener("click", (e) => {
+      if (e.target === pwdModal) closePwdModal();
     });
     editButton?.addEventListener("click", openModalFunc);
     closeButton?.addEventListener("click", closeModalFunc);
@@ -6244,7 +6665,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[700px] min-w-[700px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 1500px; min-width: 1500px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-300 items-center justify-between px-24 bg-gray-50" style="height: 60px;"> \n                        \n                        <span class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-3xl font-bold text-gray-900">0 - 0</span>\n\n                        <span class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px] shadow-sm active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px] shadow-sm active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-300 items-center justify-between px-24 bg-gray-50" style="height: 60px;"> \n                        \n                        <span class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-3xl font-bold text-gray-900">0 - 0</span>\n\n                        <span class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
 
   // scripts/pages/GamePage.ts
   function render4() {

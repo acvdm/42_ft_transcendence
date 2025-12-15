@@ -170,6 +170,23 @@ export async function changeEmail (
     );
 }
 
+
+////////////// RAJOUTER PAR FAUSTINE
+
+export async function changePwd (
+    db: Database,
+    credentialId: number,
+    newHashedPwd: string
+)
+{ // MODIFICATION 'FROM' enleve Sqlite naime pas FROM dans un UPDATE
+    await db.run(
+        'UPDATE credentials SET pwd_hashed = ? WHERE id = ?',
+        [newHashedPwd, credentialId]
+    );
+}
+
+/////////////// RAJOUTER PAR FAUSTINE
+
 // active le 2FA en DB (passe a true)
 export async function activate2FA(
     db: Database, 
