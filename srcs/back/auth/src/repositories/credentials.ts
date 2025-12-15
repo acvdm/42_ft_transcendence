@@ -30,7 +30,7 @@ export async function createCredentials(
     const result = await db.run(`
         INSERT INTO CREDENTIALS (user_id, email, pwd_hashed, two_fa_secret, is_2fa_enabled)
         VALUES (?, ?, ?, ?, ?)`,
-        [data.user_id, data.email, data.pwd_hashed, data.two_fa_secret, 1]
+        [data.user_id, data.email, data.pwd_hashed, data.two_fa_secret, 0]
     );
 
     if (!result.lastID) {

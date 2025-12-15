@@ -154,14 +154,14 @@ export async function loginUser(
     const is2FA = await credRepo.is2FAEnabled(db, user_id);
 
     // 2FA active -> on ne donne pas les acces (refresk/access token) mais un tocken temporaire pour acceder a la page pour entrer le num
-    // if (is2FA) {
-    //     const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
+    if (is2FA) {
+        const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
 
-    //     return {
-    //         require_2fa: true,
-    //         temp_token: tempToken
-    //     };
-    // }
+        return {
+            require_2fa: true,
+            temp_token: tempToken
+        };
+    }
 
     // 2FA desactive
     const tokens = await generateTokens(user_id, credential_id);
