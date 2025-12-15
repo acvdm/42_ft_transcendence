@@ -3,7 +3,7 @@ import { createToken, CreateTokenData } from '../repositories/token.js';
 import { hashPassword } from '../utils/crypto.js';
 import { Database } from 'sqlite';
 
-function isValidPassword(pwd: string): boolean 
+export function isValidPassword(pwd: string): boolean 
 {
     const hasMinLength: boolean = pwd.length >= 8;
     const hasLowerCase: boolean = /[a-z]/.test(pwd);

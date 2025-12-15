@@ -4,7 +4,7 @@ import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
-import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
+import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
 import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, authenticatePassword } from './services/auth_service.js';
 import fs from 'fs';
 
@@ -141,6 +141,10 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
 		if (! isOldPwdValid)
 			throw new Error('Invalid Password');
 
+		const isvalidNewPass = await isValidPassword(body.newPass);
+		if (!isvalidNewPass)
+			throw new Error('Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character');
+		
 		if (body.newPass !== body.confirmPass)
 			throw new Error('Passwords do not match');
 

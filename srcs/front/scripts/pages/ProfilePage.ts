@@ -837,7 +837,7 @@ export function afterRender(): void {
         // on verifie que tous les chanps sont remplis
         if (!oldPass || !newPass || !confirmPass) {
             if (pwdError) {
-                pwdError.innerText = "All inpuys are required.";
+                pwdError.innerText = "All inputs are required.";
                 pwdError.classList.remove('hidden');
             }
             return;
@@ -860,9 +860,6 @@ export function afterRender(): void {
         }
 
         try {
-            console.log("oldPWD: ", oldPass);
-            console.log("newPWD: ", newPass);
-            console.log("confirmPWD: ", confirmPass);
             const response = await fetchWithAuth(`api/users/${userId}/password`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
