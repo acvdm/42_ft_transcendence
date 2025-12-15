@@ -203,6 +203,10 @@ export function afterRender(): void {
     });
 
 
+    /* AJOUT CASSAMDRE variable pour stocker la methode choisir */
+    let current2FAMethod: 'APP' | 'EMAIL' = 'APP'; // app par defaut si pas specifie
+
+
     // ============================================================
     // ==================== GESTION DU 2FA --======================
     // ============================================================

@@ -5988,6 +5988,7 @@
     themeModal?.addEventListener("click", (e) => {
       if (e.target === themeModal) closeThemeFunc();
     });
+    let current2FAMethod = "APP";
     const update2faButton = (enabled) => {
       is2faEnabled = enabled;
       if (enabled) {
