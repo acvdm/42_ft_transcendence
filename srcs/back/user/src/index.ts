@@ -281,7 +281,7 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	{
 		
 		console.log("mail updated in userRepo");
-		const authURL = `http://auth:3001/users/${userId}/credentials`;
+		const authURL = `http://auth:3001/users/${userId}/credentials/email`;
 
 		const authResponse = await fetch(authURL, {
 			method: "PATCH",
@@ -290,6 +290,57 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 			},
 			body: JSON.stringify({ 
 				email: email
+			}),
+		});
+
+		const data = await authResponse.json();
+		if (data.success)
+		{
+		    return reply.status(201).send({
+				success: true,
+				data: data,
+				error: null
+		    });
+		}
+		else 
+		{
+		    throw new Error(`Auth error: ${data.error.message}`);    
+		}
+	} 
+	catch (err: any) 
+	{
+		const errorMessage = err.message;
+
+		reply.status(400).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
+		});
+	}
+})
+
+/* -- UPDATE PASSWORD -- */
+fastify.patch('/users/:id/password', async (request, reply) =>
+{
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	const { oldPass } = request.body as { oldPass: string };
+	const { newPass } = request.body as { newPass: string };
+	const { confirmPass } = request.body as { confirmPass: string };
+
+	try
+	{
+		const authURL = `http://auth:3001/users/${userId}/credentials/password`;
+
+		const authResponse = await fetch(authURL, {
+			method: "PATCH",
+			headers: { 
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ 
+				oldPass: oldPass,
+				newPass: newPass,
+				confirmPass: confirmPass
 			}),
 		});
 

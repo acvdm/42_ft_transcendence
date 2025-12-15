@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
 import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA } from './services/auth_service.js';
+import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, authenticatePassword } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -88,7 +88,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 });
 
 // CHANGE EMAIL
-fastify.patch('/users/:id/credentials', async (request, reply) => 
+fastify.patch('/users/:id/credentials/email', async (request, reply) => 
 {
 	try 
 	{
@@ -120,31 +120,37 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 
 ////////////////// RAJOUTER PAR FAUSTINE
 
-fastify.patch('/users/:id/password', async (request, reply) => 
+fastify.patch('/users/:id/credentials/password', async (request, reply) => 
 {
 	try 
 	{
 		const { id } = request.params as { id: string };
 		const userId = Number(id);
 		const body = request.body as { 
-			oldPwd: string;
-			newPwd: string;
+			oldPass: string;
+			newPass: string;
+			confirmPass: string
 		};
 
-		if (body.newPwd) {
-            if (!body.oldPwd) {
-                throw new Error("Current password is required to set a new one.");
-            }
+		const credential = await credRepo.getCredentialbyUserID(db, userId);
+		if (!credential)
+			throw new Error('Cannot find credential_id with userId');
+		const credentialId = credential?.id;
 
-            await changePasswordInCredential(db, userId, body.oldPwd, body.newPwd);
+		const isOldPwdValid = await authenticatePassword(db, credentialId, body.oldPass);
+		if (! isOldPwdValid)
+			throw new Error('Invalid Password');
 
-            return reply.status(200).send({
-                success: true,
-                message: "Password updated successfully"
-            });
-        }
-		throw new Error('Missing password data');
-	} 
+		if (body.newPass !== body.confirmPass)
+			throw new Error('Passwords do not match');
+
+        await changePasswordInCredential(db, credentialId, body.newPass);
+        return reply.status(200).send({
+            success: true,
+			data: null,
+            message: "Password updated successfully"
+        });
+    }
 	catch (err: any) 
 	{
 		return reply.status(400).send({

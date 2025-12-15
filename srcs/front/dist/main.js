@@ -6386,10 +6386,13 @@
         return;
       }
       try {
+        console.log("oldPWD: ", oldPass);
+        console.log("newPWD: ", newPass);
+        console.log("confirmPWD: ", confirmPass);
         const response = await fetchWithAuth(`api/users/${userId}/password`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ oldPass, newPass })
+          body: JSON.stringify({ oldPass, newPass, confirmPass })
         });
         const result = await response.json();
         if (response.ok) {
