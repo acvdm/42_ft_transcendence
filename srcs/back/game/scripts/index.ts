@@ -3,10 +3,15 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
+import * as fs from 'fs';
 
 const fastify = Fastify({ 
 	logger: true,
 	trustProxy: true,
+	https: {
+		key: fs.readFileSync('/app/certs/service.key'),
+		cert: fs.readFileSync('/app/certs/service.crt')
+	}
 });
 
 let db: Database;
@@ -17,15 +22,15 @@ async function main()
 	console.log('game database initialised');
 }
 
-// Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
-fastify.addHook('onRequest', async (request, reply) => 
-{
-	const protocol = request.headers['x-forwarded-proto'] || 'http';
-	if (protocol !== 'https') 
-	{
-		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
-	}
-});
+// // Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
+// fastify.addHook('onRequest', async (request, reply) => 
+// {
+// 	const protocol = request.headers['x-forwarded-proto'] || 'http';
+// 	if (protocol !== 'https') 
+// 	{
+// 		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+// 	}
+// });
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get

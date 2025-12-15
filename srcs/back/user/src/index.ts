@@ -10,8 +10,12 @@ import * as userRepo from './repositories/users.js';
 // Creation of Fastify server
 const fastify = Fastify({ 
 	logger: true,
-	trustProxy: true // Indique à fastify que le trafic provient d'un proxy
- });
+	trustProxy: true, // Indique à fastify que le trafic provient d'un proxy
+  	https: {
+  	  key: fs.readFileSync('/app/certs/service.key'),
+  	  cert: fs.readFileSync('/app/certs/service.crt')
+  	}
+});
 
 // NOUVEAU on enregistre le plugin cookie 
 fastify.register(fastifyCookie, {

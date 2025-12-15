@@ -4,12 +4,17 @@ import { Database } from 'sqlite';
 import { Server, Socket } from 'socket.io';
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
+import * as fs from 'fs';
 
 
 // Creation of Fastify server
 const fastify = Fastify({ 
 	logger: true,
-	trustProxy: true, 
+	trustProxy: true,
+	https: {
+		key: fs.readFileSync('/app/certs/service.key'),
+		cert: fs.readFileSync('/app/certs/service.crt')
+	} 
 });
 
 let db: Database;
@@ -20,15 +25,15 @@ async function main()
 	console.log('chat database initialised');
 }
 
-// Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
-fastify.addHook('onRequest', async (request, reply) => 
-{
-	const protocol = request.headers['x-forwarded-proto'] || 'http';
-	if (protocol !== 'https') 
-	{
-		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
-	}
-});
+// // Vérification HTTPS (optionnel, mais utile pour plus de sécurité)
+// fastify.addHook('onRequest', async (request, reply) => 
+// {
+// 	const protocol = request.headers['x-forwarded-proto'] || 'http';
+// 	if (protocol !== 'https') 
+// 	{
+// 		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+// 	}
+// });
 
 async function joinChannel(
 	socket: Socket,

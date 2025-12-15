@@ -4,7 +4,7 @@ import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
 import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser } from './services/auth_service.js';
-import fs from 'fs';
+import * as fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
 
@@ -22,6 +22,10 @@ if (!cookieSecret)
 const fastify = Fastify({ 
 	logger: true,
 	trustProxy: true, // Traiter les en-têtes X-Forwarded envoyé par NGINX
+	https: {
+		key: fs.readFileSync('/app/certs/service.key'),
+		cert: fs.readFileSync('/app/certs/service.crt')
+	}
 });
 
 // enregistrer un plugin cookie avec la variable d'env
@@ -31,14 +35,14 @@ fastify.register(fastifyCookie,
 	parseOptions: {} // options par defaut
 });
 
-fastify.addHook('onRequest', async (request, reply) => 
-{
-	const protocol = request.headers['x-forwarded-proto'] || 'http';
-	if (protocol !== 'https') 
-	{
-		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
-	}
-});
+// fastify.addHook('onRequest', async (request, reply) => 
+// {
+// 	const protocol = request.headers['x-forwarded-proto'] || 'http';
+// 	if (protocol !== 'https') 
+// 	{
+// 		return reply.status(400).send({ error: 'Insecure connection, please use HTTPS' });
+// 	}
+// });
 
 let db: Database; // on stocke ici la connexion SQLite, globale au module
 

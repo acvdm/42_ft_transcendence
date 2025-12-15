@@ -1,6 +1,8 @@
 import Fastify from 'fastify';
 import fastifyProxy from '@fastify/http-proxy';
 import jwt from 'jsonwebtoken';
+import * as fs from 'fs';
+
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET){
@@ -8,7 +10,14 @@ if (!JWT_SECRET){
 	process.exit(1);
 }
 
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({ 
+	logger: true,
+	trustProxy: true,
+  	https: {
+    	key: fs.readFileSync('/app/certs/service.key'),
+    	cert: fs.readFileSync('/app/certs/service.crt')
+  }	
+});
 
 // SECURITE
 // code qui s'execute avant chaque requete
