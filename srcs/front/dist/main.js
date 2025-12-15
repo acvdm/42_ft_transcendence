@@ -57,7 +57,7 @@
 
 
 
-	<!-- <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
                 <div class="title-bar-text">Two-Factor Authentication</div>
@@ -90,20 +90,132 @@
                 </div>
             </div>
         </div>
-    </div> -->
+    </div>
 
 
 
 
 </div>`;
 
+  // scripts/pages/api.ts
+  var isRefreshing = false;
+  var refreshSubscribers = [];
+  function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+  }
+  function onRefreshed(token) {
+    refreshSubscribers.forEach((cb) => cb(token));
+    refreshSubscribers = [];
+  }
+  async function fetchWithAuth(url2, options = {}) {
+    const token = localStorage.getItem("accessToken");
+    const getHeaders = (currentToken) => {
+      const headers = new Headers(options.headers || {});
+      if (!headers.has("Content-Type") && options.body) {
+        headers.set("Content-Type", "application/json");
+      }
+      if (currentToken) {
+        headers.set("Authorization", `Bearer ${currentToken}`);
+      }
+      return headers;
+    };
+    let response = await fetch(url2, {
+      ...options,
+      headers: getHeaders(token)
+    });
+    if (response.status === 401) {
+      if (!isRefreshing) {
+        isRefreshing = true;
+        console.warn("Token expired (401). Atempt to refresh...");
+        try {
+          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+          if (refreshRes.ok) {
+            const data = await refreshRes.json();
+            const newToken = data.access_token;
+            localStorage.setItem("accessToken", newToken);
+            isRefreshing = false;
+            onRefreshed(newToken);
+            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
+          } else {
+            isRefreshing = false;
+            refreshSubscribers = [];
+            console.error("Refresh impossible. Deconnection.");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("userId");
+            window.history.pushState({}, "", "/login");
+            window.dispatchEvent(new PopStateEvent("popstate"));
+            throw new Error("Session expired");
+          }
+        } catch (error) {
+          isRefreshing = false;
+          throw error;
+        }
+      } else {
+        console.log("Token expired. Waiting the refreshing of the other token...");
+        return new Promise((resolve) => {
+          subscribeTokenRefresh(async (newToken) => {
+            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
+          });
+        });
+      }
+    }
+    return response;
+  }
+
   // scripts/pages/LoginPage.ts
   function render() {
     return LoginPage_default;
   }
+  async function init2faLogin(access_token, user_id, selectedStatus) {
+    if (access_token) localStorage.setItem("accessToken", access_token);
+    if (user_id) localStorage.setItem("userId", user_id.toString());
+    if (user_id && access_token) {
+      try {
+        const userRes = await fetch(`/api/users/${user_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access_token}`
+          }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.alias)
+            localStorage.setItem("username", userData.alias);
+          if (userData.theme)
+            localStorage.setItem("userTheme", userData.theme);
+        }
+      } catch (err) {
+        console.error("Can't get user's profile", err);
+      }
+      try {
+        await fetch(`/api/users/${user_id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access_token}`
+          },
+          body: JSON.stringify({ status: selectedStatus })
+        });
+      } catch (err) {
+        console.error("Failed to update status on login", err);
+      }
+    }
+    localStorage.setItem("userStatus", selectedStatus);
+    window.history.pushState({}, "", "/home");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }
   function handleLogin() {
+    console.log("handleLogin");
     const button = document.getElementById("login-button");
     const errorElement = document.getElementById("error-message");
+    const modal2fa = document.getElementById("2fa-modal");
+    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2fa = document.getElementById("confirm-2fa-button");
+    const close2fa = document.getElementById("close-2fa-modal");
+    const error2fa = document.getElementById("2fa-error-message");
+    let tempToken = null;
+    let cachedStatus = "available";
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -124,40 +236,42 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
-          // Note: Pas besoin d'envoyer le status ici si ton back-end login ne le gère pas
-          // On le gère juste après avec le PATCH
         });
         const result = await response.json();
+        if (result.require_2fa) {
+          console.log("2FA require");
+          tempToken = result.temp_token;
+          if (modal2fa) {
+            modal2fa.classList.remove("hidden");
+            modal2fa.classList.add("flex");
+            input2fa.value = "";
+            input2fa.focus();
+          }
+          return;
+        }
         if (result.success) {
           const { access_token, user_id } = result.data;
+          await init2faLogin(access_token, user_id, cachedStatus);
           if (access_token) localStorage.setItem("accessToken", access_token);
           if (user_id) localStorage.setItem("userId", user_id.toString());
           if (user_id && access_token) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`, {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${access_token}`
-                }
+              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+                method: "GET"
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
-                if (userData.alias) {
+                if (userData.alias)
                   localStorage.setItem("username", userData.alias);
-                }
+                if (userData.theme)
+                  localStorage.setItem("userTheme", userData.theme);
               }
             } catch (err) {
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetch(`/api/users/${user_id}/status`, {
+              await fetchWithAuth(`/api/users/${user_id}/status`, {
                 method: "PATCH",
-                headers: {
-                  "Content-Type": "application/json",
-                  // Ajout du token
-                  "Authorization": `Bearer ${access_token}`
-                },
                 body: JSON.stringify({ status: selectedStatus })
               });
               console.log("Status updated to DB:", selectedStatus);
@@ -182,6 +296,49 @@
           errorElement.classList.remove("hidden");
         }
       }
+    });
+    confirm2fa?.addEventListener("click", async () => {
+      const code = input2fa.value.trim();
+      if (error2fa) error2fa.classList.add("hidden");
+      if (!code || !tempToken) return;
+      try {
+        const response = await fetch("/api/auth/2fa/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tempToken}`
+          },
+          body: JSON.stringify({ code })
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          const { access_token, user_id } = result;
+          if (modal2fa) modal2fa.classList.add("hidden");
+          await init2faLogin(access_token, user_id, cachedStatus);
+        } else {
+          if (error2fa) {
+            error2fa.textContent = "Invalid code.";
+            error2fa.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("2FA Error:", error);
+        if (error2fa) {
+          error2fa.textContent = "Error during verification.";
+          error2fa.classList.remove("hidden");
+        }
+      }
+    });
+    const closeFunc = () => {
+      if (modal2fa) {
+        modal2fa.classList.add("hidden");
+        modal2fa.classList.remove("flex");
+        tempToken = null;
+      }
+    };
+    close2fa?.addEventListener("click", closeFunc);
+    modal2fa?.addEventListener("click", (e) => {
+      if (e.target === modal2fa) closeFunc();
     });
   }
   function loginEvents() {
@@ -4294,71 +4451,6 @@
   alias(["(Y)", "(y)"], "thumbs_up.gif");
   alias(["(B)", "(b)"], "beer_mug.gif");
   alias(["(X)", "(x)"], "girl.gif");
-
-  // scripts/pages/api.ts
-  var isRefreshing = false;
-  var refreshSubscribers = [];
-  function subscribeTokenRefresh(cb) {
-    refreshSubscribers.push(cb);
-  }
-  function onRefreshed(token) {
-    refreshSubscribers.forEach((cb) => cb(token));
-    refreshSubscribers = [];
-  }
-  async function fetchWithAuth(url2, options = {}) {
-    const token = localStorage.getItem("accessToken");
-    const getHeaders = (currentToken) => {
-      const headers = new Headers(options.headers || {});
-      if (!headers.has("Content-Type") && options.body) {
-        headers.set("Content-Type", "application/json");
-      }
-      if (currentToken) {
-        headers.set("Authorization", `Bearer ${currentToken}`);
-      }
-      return headers;
-    };
-    let response = await fetch(url2, {
-      ...options,
-      headers: getHeaders(token)
-    });
-    if (response.status === 401) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        console.warn("Token expired (401). Atempt to refresh...");
-        try {
-          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            const newToken = data.access_token;
-            localStorage.setItem("accessToken", newToken);
-            isRefreshing = false;
-            onRefreshed(newToken);
-            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
-          } else {
-            isRefreshing = false;
-            refreshSubscribers = [];
-            console.error("Refresh impossible. Deconnection.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("userId");
-            window.history.pushState({}, "", "/login");
-            window.dispatchEvent(new PopStateEvent("popstate"));
-            throw new Error("Session expired");
-          }
-        } catch (error) {
-          isRefreshing = false;
-          throw error;
-        }
-      } else {
-        console.log("Token expired. Waiting the refreshing of the other token...");
-        return new Promise((resolve) => {
-          subscribeTokenRefresh(async (newToken) => {
-            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
-          });
-        });
-      }
-    }
-    return response;
-  }
 
   // scripts/components/FriendList.ts
   var FriendList = class {

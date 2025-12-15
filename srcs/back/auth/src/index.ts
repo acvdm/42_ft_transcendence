@@ -353,10 +353,10 @@ fastify.post('/2fa/generate', async (request, reply) => {
 		if (!userIdHeader)
 		{
 			//callback pour test
-			// return reply.status(401).send({ error: "Unauthorized: Missing User ID" });
+			return reply.status(401).send({ error: "Unauthorized: Missing User ID" });
              // Pour test direct (A SUPPRIMER EN PROD) :
-             const body = request.body as { user_id: number };
-             const userId = body.user_id;
+            //  const body = request.body as { user_id: number };
+            //  const userId = body.user_id;
 
 		}
 
