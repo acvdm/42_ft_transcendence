@@ -17,7 +17,9 @@ export async function initDatabase(): Promise<Database> {
         email TEXT UNIQUE NOT NULL CHECK (length(email) < 75),
         pwd_hashed TEXT UNIQUE NOT NULL,
         two_fa_secret TEXT,
-        is_2fa_enabled INTEGER DEFAULT 0,
+        two_fa_method TEXT DEFAULT 'NONE' CHECK(two_fa_method IN ('NONE', 'APP', 'EMAIL')),
+        email_otp TEXT,
+        email_otp_expires_at DATETIME,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
@@ -39,3 +41,5 @@ export async function initDatabase(): Promise<Database> {
     return db; // On renvoie la connexion
 
 }
+
+// is_2fa_enabled 

@@ -5,7 +5,6 @@ import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
 import * as QRCode from 'qrcode';
 
 import { 
-    generate2FASecret,
     generateAccessToken, 
     generateRefreshToken, 
     hashPassword,
@@ -79,7 +78,9 @@ export async function registerUser(
         email,
         pwd_hashed,
         two_fa_secret: null,
-        is_2fa_enabled: 0
+        two_fa_method: 'NONE',
+        email_otp: null,
+        email_otp_expires_at: null
     });
 
     // 4. Génération token
@@ -157,27 +158,49 @@ export async function loginUser(
     if (!isPasswordValid)
         throw new Error ('Invalid password');
 
-    // VERIFIER SI 2FA ENABLE
-    const is2FA = await credRepo.is2FAEnabled(db, user_id);
+    // QUELLE EST LA METHODE 2FA ACTIVE
 
-    // 2FA active -> on ne donne pas les acces (refresk/access token) mais un tocken temporaire pour acceder a la page pour entrer le num
-    if (is2FA) {
+    // const is2FA = await credRepo.is2FAEnabled(db, user_id);
+    const method = await credRepo.get2FAMethod(db, user_id);
+
+    // CAS 1 : application (Google Authenticator)
+    if (method === 'APP') {
+        // 2FA active -> on ne donne pas les acces (refresk/access token) 
+        // mais un tocken temporaire pour acceder a la page pour entrer le num
         const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
-
         return {
-            require_2fa: true,
+            require_2fa: true, 
             temp_token: tempToken
         };
     }
 
-    // 2FA desactive
+    // CAS 2 : email
+    if (method === 'EMAIL')
+    {
+        // generer le code
+        const code = crypt.generateRandomCode(6);
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Valide 10 min
+        // sauvegarder en DB
+        await credRepo.saveEmailCode(db, user_id, code, expiresAt);
+
+        console.log(`[EMAIL] Code pour ${email}: ${code}`);
+        /* IMPLEMENTATION DU CODE ENVOYE PAR EMAIL PLUS TARD */
+
+        const tempToken = generateTempToken(user_id);
+        return {
+            require_2fa: true,
+            temp_token: tempToken
+        };
+
+    }
+
+    // CAS 3: pas de 2FA
     const tokens = await generateTokens(user_id, credential_id);
-    // await tokenRepo.updateToken(db, credential_id, tokens.refresh_token, tokens.expires_at);
 
     // on delete l'ancien token
     await tokenRepo.deleteTokenByCredentialId(db, credential_id);
 
-    // on cree une nouvelle ligne
+    // on cree une nouvelle ligne en db
     await tokenRepo.createToken(db, {
         user_id,
         credential_id,
@@ -192,9 +215,11 @@ export async function loginUser(
     };
 }
 
+
 export async function logoutUser(db: Database, refreshToken: string): Promise<void>{
     await tokenRepo.deleteRefreshToken(db, refreshToken);
 }
+
 
 export async function authenticatePassword(
     db: Database,
@@ -208,6 +233,7 @@ export async function authenticatePassword(
     
     return await crypt.verifyPassword(password, credential.pwd_hashed);
 }
+
 
 // JWT pour refresh le refresh et l'access token
 
@@ -246,41 +272,118 @@ export async function refreshUser(
 }
 
 // 2FA verification
-// fonction qui prend le code a 6 chiffres envoye par l'utilisateur 
-// et verifie s'il matche avec le secret en base
-// permet d'active le 2FA pour le profil de l'utilisateur
+// fonction qui genere le secret pour le QR code et le code pour le QRcode et l'email
+// sauvegarde en DB les infos
 
+export async function  generateTwoFA(
+    db: Database,
+    userId: number,
+    type: 'APP' | 'EMAIL' = 'APP' // par defaut APP pour compatibilite
+): Promise<TwoFAGenerateResponse | { message: string }> { //revoir le message
+
+    if (type == 'APP')
+    {
+        // recuperer email (pour lafficher dans google authenticator)
+        const email = await credRepo.getEmailbyID(db, userId);
+        if (!email) 
+            throw new Error("User not found");
+
+        // creer secret
+        const secret = new Secret({ size: 20});
+
+        // sauvegarder secret en DB (is_2fa_enabled doit rester a 0 ici)
+        await credRepo.update2FASecret(db, userId, secret.base32);
+
+        // generer url avec le secret pour l'appli
+        const totp = new TOTP({
+            issuer: "Transcendence", // etiquette pour lappli
+            label: email, //etiquette pour l'appli
+            algorithm: "SHA1", // fonction qui melange le secret et l'heure
+            digits: 6, // code final a 6 chiffres
+            period: 30, // code change toutes les 30 secondes
+            secret: secret
+        }); // pas de communication par le reseau entre tel et serveur pour verifier le code, ils font chacun le meme calcul
+
+        const otpauth_url = totp.toString();
+
+        // convertir l'url en image qr code (base64)
+        const qrCodeDataUrl = await QRCode.toDataURL(otpauth_url);
+
+        return {
+            qrCodeUrl: qrCodeDataUrl,
+            manualSecret: secret.base32
+        };
+    }
+
+    if (type === 'EMAIL')
+    {
+        const code = crypt.generateRandomCode(6);
+        const expDate = new Date(Date.now() * 10 * 60 * 1000);
+        await credRepo.saveEmailCode(db, userId, code, expDate);
+        const email = credRepo.getEmailbyID(db, userId);
+
+        console.log(`[ACTIVATION] Code envoyé à ${email}: ${code}`)
+        return { message : 'Code send by email' };
+        // revoir avec le vrai email
+    }
+
+    throw new Error("Invalid 2FA type");
+}
+
+// fonciton qui verifie le code envoye par lutilisateur et permet lactivation du 2FA
 export async function verifyAndEnable2FA(
     db: Database,
     userId: number,
-    token: string // code envoye par lutilisateur
+    code: string, // code envoye par lutilisateur
+    type: 'APP' | 'EMAIL'
 ) : Promise<boolean> {
 
-    // 1. Recuperer le secret en DB
-    const secretStr = await credRepo.get2FASecret(db, userId);
-    if (!secretStr)
-        throw new Error("2FA not initiated");
+    let isValid = false;
 
-    // 2. Creer l'objet TOTP pour verifier
-    const totp = new TOTP({
-        issuer: "Transcendence",
-        label: "Transcendence", 
-        algorithm: "SHA1", // fonction qui melange le secret et l'heure
-        digits: 6, // code final a 6 chiffres
-        period: 30, // code change toutes les 30 secondes
-        secret: Secret.fromBase32(secretStr) // Reconvertir la string en objet Secret (il avait ete convertie en string pour etre mise en DB)
-    }); 
+    if (type === 'APP')
+    {
+        // 1. Recuperer le secret en DB
+        const secretStr = await credRepo.get2FASecret(db, userId);
+        if (!secretStr)
+            throw new Error("2FA not initiated");
 
-    // 3. Valider le code
-    // delta renvoit l'ecart de temps (0 = parfait, -1 = code d'il y a 30s, null = invalide)
-    const delta = totp.validate({ token, window: 1}); // window = marge d'erreur -> serveur accepte le code actuel mais regarde aussi 1 periode avant et apres
-    if (delta === null) {
-        return false;
+        // 2. Creer l'objet TOTP pour verifier
+        const totp = new TOTP({
+            issuer: "Transcendence",
+            label: "Transcendence", 
+            algorithm: "SHA1", // fonction qui melange le secret et l'heure
+            digits: 6, // code final a 6 chiffres
+            period: 30, // code change toutes les 30 secondes
+            secret: Secret.fromBase32(secretStr) // Reconvertir la string en objet Secret (il avait ete convertie en string pour etre mise en DB)
+        }); 
+
+            // 3. Valider le code
+            // delta renvoit l'ecart de temps (0 = parfait, -1 = code d'il y a 30s, null = invalide)
+            isValid = totp.validate({ token: code, window: 1}) !== null; // window = marge d'erreur -> serveur accepte le code actuel mais regarde aussi 1 periode avant et apres
+    }
+    else if (type === 'EMAIL')
+    {
+        const data = await credRepo.getEmailCodeData(db, userId);
+        if (!data.code || !data.expiresAt)
+            throw new Error("No code requested");
+        
+        const now = new Date();
+        const expiredAt = new Date(data.expiresAt);
+
+        if (code === data.code && now < expiredAt)
+        {
+            await credRepo.clearEmailCode(db, userId);
+            isValid = true;
+        }
     }
 
-    await credRepo.activate2FA(db, userId);
+    if (isValid)
+    {
+        await credRepo.set2FAMethod(db, userId, type);
+        return true;
+    }
     
-    return true;
+    return false;
 };
 
 // finalizeLogin
@@ -294,42 +397,68 @@ export async function finalizeLogin2FA(
     code: string
 ): Promise<authResponse | null> // renvoit null si le code est invalide
 {
-    // 1. recuperer le secret en bdd
-    const secretStr = await credRepo.get2FASecret(db, userId);
-    if (!secretStr)
-        throw new Error("2FA not configured for this user");
 
-    // 2. verifier le code totp
-    const totp = new TOTP({
-        issuer: "Transcendence",
-        label: "Transcendence",
-        algorithm: "SHA1",
-        digits: 6,
-        period: 30,
-        secret: Secret.fromBase32(secretStr)
-    });
+    // 1. Recuperer la methode active
+    const method = await credRepo.get2FAMethod(db, userId);
+    let isValid = false;
 
-    const delta = totp.validate({ token: code, window: 1});
+    // ----VERIFICATION APP (TOTP)
+    if (method === 'APP')
+    {
+        const secretStr = await credRepo.get2FASecret(db, userId);
+        if (!secretStr)
+            throw new Error("2FA not configured for this user");
 
-    if (delta === null) {
-        return null;
+        // verifier le code totp
+        const totp = new TOTP({
+            issuer: "Transcendence",
+            label: "Transcendence",
+            algorithm: "SHA1",
+            digits: 6,
+            period: 30,
+            secret: Secret.fromBase32(secretStr)
+        });
+
+        const isValid = totp.validate({ token: code, window: 1});
+        if (isValid === null) {
+            return null;
+        }
     }
 
-    // a partir d'ici --> login reussi
+    // ----VERIFICATION EMAIL (OTP)
+    else if (method === 'EMAIL')
+    {
+        const data = await credRepo.getEmailCodeData(db, userId);
+        if (!data.code || !data.expiresAt)
+            return null;
 
-    // 3. recuperer le credential id necessaire pour la table TOKENS
+        const now = new Date();
+        const expiry = new Date(data.expiresAt);
+
+        if (data.code === code && now < expiry)
+        {
+            isValid = true;
+            await credRepo.clearEmailCode(db, userId);
+        }
+    }
+
+    if (!isValid)
+        return null;
+
+    // ----LOGIN REUSSI
+
+    // 2. recuperer le credential id necessaire pour la table TOKENS
     const credential = await credRepo.getCredentialbyUserID(db, userId);
     if (!credential)
         throw new Error("Credential not found");
 
-
-    // 4. generer les vrais tokens (access + refresh)
+    // 3. generer les vrais tokens (access + refresh)
     const tokens = await generateTokens(userId, credential.id);
 
-    // 5. nettoyage : on supprime les vieux tokens de cet utilisateur
+    // 4. nettoyage : on supprime les vieux tokens de cet utilisateur
     await tokenRepo.deleteTokenByCredentialId(db, credential.id);
 
-    // 6. sauvegarde: on enregistre le nouveau refresh token
+    // 5. sauvegarde: on enregistre le nouveau refresh token
     await tokenRepo.createToken(db, {
         user_id: userId,
         credential_id: credential.id,

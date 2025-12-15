@@ -233,6 +233,7 @@ export function afterRender(): void {
         }
     };
 
+    // method 'APP' | 'EMAIL'
     const open2faGenerate = async () => {
         if (!userId) return;
 
@@ -242,15 +243,22 @@ export function afterRender(): void {
                 modal2fa.classList.add('flex');
             }
 
-            //fetch pour le qr code
+            // fetch pour le qr code
+            // //!\\ besoin de preciser le type de la methode 2FA -> 'APP' ou 'EMAIL' (precise dans le body en json)
             const response = await fetchWithAuth(`api/auth/2fa/generate`, {
                 method: 'POST'
             });
-
+            
             if (response.ok) {
                 const result = await response.json();
+
+                // GESTION DE LAFFICHAGE SELON LA METHODE
+
+                // if (method === 'APP)
                 if (result.data && result.data.qrCodeUrl) {
                     if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+
+                // if (method === 'EMAIL)
                 }
             } else {
                 console.error("Failed to generate QR code");
