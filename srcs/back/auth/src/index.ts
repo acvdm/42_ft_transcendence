@@ -367,6 +367,7 @@ fastify.post('/2fa/enable', async (request, reply) => {
 		}
 
 		console.log(`✅ 2FA is now ENABLED for user ${userId}`);
+		
 		return reply.status(200).send({
 			success: true,
 			data: {message: "2FA enabled successfully" },
