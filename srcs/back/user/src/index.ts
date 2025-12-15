@@ -355,6 +355,7 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 		}
 		else 
 		{
+            console.log("newpass: , confirmpass:", newPass, confirmPass);
 		    throw new Error(`Auth error: ${data.error.message}`);    
 		}
 	} 

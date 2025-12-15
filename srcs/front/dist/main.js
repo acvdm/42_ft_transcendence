@@ -6372,6 +6372,7 @@
         return;
       }
       if (newPass !== confirmPass) {
+        console.log("newpass: , confirmpass:", newPass, confirmPass);
         if (pwdError) {
           pwdError.innerText = "These are not the same. Try again";
           pwdError.classList.remove("hidden");
@@ -6385,6 +6386,7 @@
         }
         return;
       }
+      console.log("newpass: , confirmpass:", newPass, confirmPass);
       try {
         const response = await fetchWithAuth(`api/users/${userId}/password`, {
           method: "PATCH",

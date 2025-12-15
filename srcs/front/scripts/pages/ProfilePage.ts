@@ -844,13 +844,14 @@ export function afterRender(): void {
         }
 
         if (newPass !== confirmPass) {
+            console.log("newpass: , confirmpass:", newPass, confirmPass);
             if (pwdError) {
                 pwdError.innerText = "These are not the same. Try again";
                 pwdError.classList.remove('hidden');
             }
             return;
         }
-
+        
         if (newPass.length < 8) {
             if (pwdError) {
                 pwdError.innerText = "Password must be at least 8 characters.";
@@ -859,7 +860,10 @@ export function afterRender(): void {
             return;
         }
 
+        console.log("newpass: , confirmpass:", newPass, confirmPass);
+
         try {
+            
             const response = await fetchWithAuth(`api/users/${userId}/password`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
