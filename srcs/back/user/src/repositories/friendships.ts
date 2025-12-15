@@ -5,7 +5,9 @@ export interface Friendship {
     id: number,
     user_id: number,
     friend_id: number,
-    status: string
+    status: string,
+    user?: User,
+    friend?: User
 }
 
 //-------- POST / CREATE
@@ -13,8 +15,9 @@ export async function makeFriendshipRequest (
     db: Database,
     user_id: number,
     alias: string
-): Promise<{ user_id: number, friend_id: number}>
+): Promise<Friendship>
 {
+    console.log("arrivée dans make friends request");
     const friend = await db.get(`
         SELECT * FROM USERS WHERE alias = ?`,
         [alias]
@@ -40,8 +43,7 @@ export async function makeFriendshipRequest (
                 (user_id = ? AND friend_id = ?)
                 OR
                 (user_id = ? AND friend_id = ?)
-            )
-        `,
+            )`,
         [user_id, friend.id, friend.id, user_id]
     );
     if (already_friends)
@@ -65,54 +67,171 @@ export async function makeFriendshipRequest (
         throw new Error(`Error while sending friendship request from ${user_id} to ${friend.id}`);
     }
 
-    return { user_id, friend_id: friend.id };
+    const friendshipId = result.lastID;
+    const friendship = await db.get(`
+        SELECT * FROM FRIENDSHIPS WHERE id = ?`,
+        [friendshipId]
+    ) as Friendship;
+
+    const user = await db.get(`
+        SELECT * FROM USERS WHERE id = ?`,
+        [user_id]
+    );
+
+    friendship.user = user;
+    friendship.friend = friend;
+
+    return friendship;
 }
 
 //-------- GET / READ
 export async function listFriends (
     db: Database,
     user_id: number
-): Promise<User []>
+): Promise<Friendship []>
 {
     console.log(`Lister les amis de user ${user_id}`);
+    const rows = await db.all(`
+        SELECT 
+            f.id AS friendship_id,
+            f.user_id AS user_id,
+            f.friend_id AS friend_id,
+            f.status AS status,
+            
+            u.id AS requester_id,
+            u.alias AS requester_alias,
+            u.avatar_url AS requester_avatar,
+            u.bio AS requester_bio,
+            u.theme AS requester_theme,
+            u.status AS requester_status,
 
-    // On récupère l'autre personne dans la relation:
-    // - Si je suis user_id, je veux friend_id,
-    // - Si je suis friend_id, je veux user_id
-    const users = await db.all(`
-        SELECT u.* FROM FRIENDSHIPS f
-        JOIN USERS u ON (
-            (f.user_id = ? AND f.friend_id = u.id)
-            OR
-            (f.friend_id = ? AND f.user_id = u.id)
-        )
-        WHERE f.status = 'validated'`,
-        [user_id, user_id]
-    ) as User[];
+            r.id AS receiver_id,
+            r.alias AS receiver_alias,
+            r.avatar_url AS receiver_avatar,
+            r.bio AS receiver_bio,
+            r.theme AS receiver_theme,
+            r.status AS receiver_status
 
-    return users || [];
+        FROM FRIENDSHIPS f
+        JOIN USERS u ON f.user_id = u.id
+        JOIN USERS r ON f.friend_id = r.id
+        WHERE (f.user_id = ? OR f.friend_id = ?)
+          AND f.status = 'validated'`, 
+        [user_id, user_id]);
+
+    if (!rows || rows.length === 0)
+        return [];
+
+    return rows.map((row:any) =>
+    {
+        console.log("Row friendhsip id:", row.friendship_id);
+        const requester: User =
+        {
+            id: row.requester_id,
+            alias: row.requester_alias,
+            avatar_url: row.requester_avatar,
+            bio: row.requester_bio,
+            theme: row.requester_theme,
+            status: row.requester_status,
+        };
+
+        const receiver: User =
+        {
+            id: row.receiver_id,
+            alias: row.receiver_alias,
+            avatar_url: row.receiver_avatar,
+            bio: row.receiver_bio,
+            theme: row.receiver_theme,
+            status: row.receiver_status,         
+        };
+
+        const friendship: Friendship =
+        {
+            id: row.friendship_id,
+            user_id: requester.id,
+            friend_id: receiver.id,
+            status: row.status,
+            user: requester,
+            friend: receiver
+        };
+
+        return friendship;
+    });    
 }
+
 
 export async function listRequests(
     db: Database,
     user_id: number
-): Promise<Friendship[]> {
-    const pending_requests = await db.all(`
+): Promise<Friendship[]> 
+{
+    console.log("arrivée dans Listrequests");
+    const rows = await db.all(`
         SELECT 
-            f.id AS friendshipId,
-            f.user_id AS requesterId,
-            f.friend_id AS receiverId,
+            f.id AS friendship_id,
+            f.user_id AS user_id,
+            f.friend_id AS friend_id,
             f.status AS status,
             
-            u.id AS userId,
-            u.alias AS alias
+            u.id AS requester_id,
+            u.alias AS requester_alias,
+            u.avatar_url AS requester_avatar,
+            u.bio AS requester_bio,
+            u.theme AS requester_theme,
+            u.status AS requester_status,
+
+            r.id AS receiver_id,
+            r.alias AS receiver_alias,
+            r.avatar_url AS receiver_avatar,
+            r.bio AS receiver_bio,
+            r.theme AS receiver_theme,
+            r.status AS receiver_status
+
         FROM FRIENDSHIPS f
         JOIN USERS u ON f.user_id = u.id
+        JOIN USERS r ON f.friend_id = r.id
         WHERE f.friend_id = ?
-          AND f.status = 'pending'
-    `, [user_id]);
+          AND f.status = 'pending'`, 
+        [user_id]);
 
-    return pending_requests || [];
+    if (!rows || rows.length === 0)
+        return [];
+
+    return rows.map((row:any) =>
+    {
+        console.log("Row friendhsip id:", row.friendship_id);
+        const requester: User =
+        {
+            id: row.requester_id,
+            alias: row.requester_alias,
+            avatar_url: row.requester_avatar,
+            bio: row.requester_bio,
+            theme: row.requester_theme,
+            status: row.requester_status,
+        };
+
+        const receiver: User =
+        {
+            id: row.receiver_id,
+            alias: row.receiver_alias,
+            avatar_url: row.receiver_avatar,
+            bio: row.receiver_bio,
+            theme: row.receiver_theme,
+            status: row.receiver_status,         
+        };
+
+        const friendship: Friendship =
+        {
+            id: row.friendship_id,
+            user_id: requester.id,
+            friend_id: receiver.id,
+            status: row.status,
+            user: requester,
+            friend: receiver
+        };
+
+        return friendship;
+    });    
 }
 
 
@@ -124,9 +243,17 @@ export async function reviewFriendshipRequest (
     status: string
 )
 {
+    const allowedStatuses = ['pending', 'validated', 'rejected', 'blocked'];
+    if (!allowedStatuses.includes(status))
+    {
+        throw new Error(`Invalid status: ${status}`);
+    }
+    
     await db.run(`
-        UPDATE FRIENDSHIPS SET status = ? WHERE friend_id = ? AND id = ?`,
-        [status, user_id, friendship_id]
+        UPDATE FRIENDSHIPS
+        SET status = ? 
+        WHERE id = ? AND (user_id = ? OR friend_id = ?)`,
+        [status, friendship_id, user_id, user_id]
     );
 }
 

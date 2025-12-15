@@ -11,6 +11,8 @@ interface UserData {
     bio?: string;
     status?: string;
     email?: string;
+    theme?: string;
+    is2faEnabled?: boolean;
 }
 
 export function render(): string {
@@ -65,6 +67,8 @@ export function afterRender(): void {
     
     // username et bio
     const statusSelect = document.querySelector('select') as HTMLSelectElement;
+    const fieldContainers = document.querySelectorAll<HTMLElement>('.flex.flex-row.gap-2[data-field]');
+
     
     // boutons
     const editButton = document.getElementById('edit-picture-button');
@@ -74,18 +78,26 @@ export function afterRender(): void {
     const browseButton = document.getElementById('browse-button');
     const deleteButton = document.getElementById('delete-button');
 
-    // modale
+    // modale avatar
     const gridContainer = document.getElementById('modal-grid');
     const previewAvatar = document.getElementById('modal-preview-avatar') as HTMLImageElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     
-    // container des champs modifiables via l'id data-field
-    const fieldContainers = document.querySelectorAll<HTMLElement>('.flex.flex-row.gap-2[data-field]');
+    // modale 2fa
+    const button2faToggle = document.getElementById('2fa-modal-button') as HTMLImageElement;
+    const modal2fa = document.getElementById('2fa-modal') as HTMLImageElement;
+    const close2faButton = document.getElementById('close-2fa-modal');
+    const cancel2faButton = document.getElementById('cancel-2fa-button');
+    const confirm2faButton = document.getElementById('confirm-2fa-button');
+    const input2fa = document.getElementById('2fa-input-code') as HTMLInputElement;
+    const qrCodeImg = document.getElementById('2fa-qr-code') as HTMLImageElement;
+
 
     const userId = localStorage.getItem('userId');
 
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
+    let is2faEnabled = false;
 
     const statusImages: { [key: string]: string } = {
         'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
@@ -122,6 +134,8 @@ export function afterRender(): void {
     const currentTheme = localStorage.getItem('userTheme') || 'basic'; // theme actuel via localsotirage -> le stocker dans la db?
     applyTheme(currentTheme);
 
+    let selectedThemeElement: HTMLElement | null = null;
+
     // ouverture modale 
     themeButton?.addEventListener('click', () => {
         themeModal?.classList.remove('hidden');
@@ -138,16 +152,46 @@ export function afterRender(): void {
     if (themeGrid && themeGrid.children.length === 0) {
         Object.entries(appThemes).forEach(([key, theme]) => {
             const div = document.createElement('div');
-            div.className = "cursor-pointer border border-gray-300 hover:border-blue-500 p-2 rounded flex flex-col items-center gap-2 transition-all hover:bg-gray-50";
+            // Mise à jour des classes pour la sélection
+            div.className = `theme-item cursor-pointer border-2 rounded overflow-hidden transition-all hover:shadow-lg`;
+            div.dataset.themeKey = key; // Stocker la clé pour la sélection
             
+            // Appliquer la bordure bleue si c'est le thème actuel
+            if (key === currentTheme) {
+                div.classList.add('border-blue-500', 'shadow-blue-500/50'); // Bordure initiale pour le thème actif
+                selectedThemeElement = div; // Définir comme élément sélectionné
+            } else {
+                div.classList.add('border-gray-300', 'hover:border-blue-500'); // Bordure par défaut
+            }
+
             div.innerHTML = `
-                <div class="w-full h-16 bg-cover bg-center rounded border border-gray-200" style="background-image: url('${theme.headerUrl}')"></div>
-                <span class="text-xs font-bold">${theme.name}</span>
+                <div class="relative">
+                    <div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
+                    
+                    <div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
+                </div>
+                
+                <div class="p-2 bg-white text-center border-t border-gray-200">
+                    <span class="text-sm font-bold text-gray-800">${theme.name}</span>
+                </div>
             `;
 
-            div.addEventListener('click', () => {
-                applyTheme(key);
-                closeThemeFunc();
+            div.addEventListener('click', function(this: HTMLDivElement) {
+                const themeKey = this.dataset.themeKey as string;
+
+                // 1. Mise à jour de l'affichage de sélection (bordures)
+                if (selectedThemeElement) {
+                    selectedThemeElement.classList.remove('border-blue-500', 'shadow-lg');
+                    selectedThemeElement.classList.add('border-gray-300', 'hover:border-blue-500');
+                }
+                this.classList.remove('border-gray-300', 'hover:border-blue-500');
+                this.classList.add('border-blue-500', 'shadow-lg');
+                selectedThemeElement = this;
+
+                // 2. Application et sauvegarde du thème
+                applyTheme(themeKey);
+                updateTheme(themeKey);
+                closeThemeFunc(); // Fermer la modale après la sélection
             });
 
             themeGrid.appendChild(div);
@@ -157,6 +201,133 @@ export function afterRender(): void {
     themeModal?.addEventListener('click', (e) => {
         if (e.target === themeModal) closeThemeFunc();
     });
+
+
+    // ============================================================
+    // ==================== GESTION DU 2FA --======================
+    // ============================================================
+    
+    const update2faButton = (enabled: boolean) => {
+        is2faEnabled = enabled;
+        if (enabled)
+        {
+            button2faToggle.innerText = "Disable 2FA authentication";
+            button2faToggle.classList.remove('bg-green-600');
+            button2faToggle.classList.add('bg-red-600');
+        } 
+        else
+        {
+            button2faToggle.innerText = "Enable 2FA authentication";
+            button2faToggle.classList.remove('bg-red-600');
+            button2faToggle.classList.add('bg-green-600');
+        }
+    };
+
+    const close2fa = () => {
+        if (modal2fa)
+        {
+            modal2fa.classList.add('hidden');
+            modal2fa.classList.remove('flex');
+            if (input2fa) input2fa.value = ""; // on reset le tout
+            if (qrCodeImg) qrCodeImg.src = "";
+        }
+    };
+
+    const open2faGenerate = async () => {
+        if (!userId) return;
+
+        try {
+            if (modal2fa) {
+                modal2fa.classList.remove('hidden');
+                modal2fa.classList.add('flex');
+            }
+
+            //fetch pour le qr code
+            const response = await fetchWithAuth(`api/auth/2fa/generate`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.data && result.data.qrCodeUrl) {
+                    if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+                }
+            } else {
+                console.error("Failed to generate QR code");
+                alert("Error generating 2FA QR code");
+                close2fa();
+            }
+        } catch (error) {
+            console.error("Network error 2FA generate:", error);
+            close2fa();
+        }
+    };
+
+    const enable2fa = async () => {
+        const code = input2fa.value.trim();
+        if (!code || code.length < 6) {
+            alert("Please enter a valid 6-digit code.");
+            return;
+        }
+
+        try {
+            const response = await fetchWithAuth(`api/auth/2fa/enable`, {
+                method: 'POST', // ou patch?? a tester
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            });
+
+            if (response.ok) {
+                update2faButton(true);
+                close2fa();
+                alert("2FA is now enabled!");
+            } else {
+                const result = await response.json();
+                alert(result.message || "Invalid code. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error enabling 2FA:", error);
+            alert("An error occurred.");
+        }
+    };
+
+    // on desactive le 2fa si l'utilisateur veut
+    const disable2fa = async () => {
+        if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) return;
+
+        try {
+            const response = await fetchWithAuth(`api/auth/2fa/disable`, {
+                method: 'POST' // ou patch?? a tester
+            });
+
+            if (response.ok) {
+                update2faButton(false);
+                alert("2FA disabled.");
+            } else {
+                alert("Error disabling 2FA.");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    button2faToggle?.addEventListener('click', () => {
+        if (is2faEnabled) {
+            disable2fa();
+        } else {
+            open2faGenerate();
+        }
+    });
+
+    close2faButton?.addEventListener('click', close2fa);
+    cancel2faButton?.addEventListener('click', close2fa);
+    confirm2faButton?.addEventListener('click', enable2fa);
+    
+    // si on clique dehors 
+    modal2fa?.addEventListener('click', (e) => {
+        if (e.target === modal2fa) close2fa();
+    });
+
 
 
     // ============================================================
@@ -197,6 +368,11 @@ export function afterRender(): void {
             if (response.ok) {
                 const user: UserData = await response.json();
 
+                // maj theme
+                if (user.theme) {
+                    localStorage.setItem('userTheme', user.theme);
+                    applyTheme(user.theme);
+                }
                 // maj avatar si on arrive a le recuperer
                 if (user.avatar_url && mainAvatar) {
                     mainAvatar.src = user.avatar_url;
@@ -204,8 +380,14 @@ export function afterRender(): void {
                     selectedImageSrc = user.avatar_url; 
                 }
 
+                if (user.is2faEnabled !== undefined) {
+                    update2faButton(user.is2faEnabled);
+                }
+
                 // initialisation des champs
                 fieldContainers.forEach(container => {
+
+
                     const fieldName = container.dataset.field;
                     const display = container.querySelector('.field-display') as HTMLParagraphElement;
                     const input = container.querySelector('.field-input') as HTMLInputElement;
@@ -228,7 +410,6 @@ export function afterRender(): void {
                             value = "********"; 
                         }
 
-
                         if (value) {
                             display.innerText = value;
                             if (fieldName !== 'password') {
@@ -250,6 +431,8 @@ export function afterRender(): void {
 
                 //logique change/confirme
                 fieldContainers.forEach(container => {
+                    if (container.dataset.field === 'password') return;
+
                     const display = container.querySelector('.field-display') as HTMLParagraphElement;
                     const input = container.querySelector('.field-input') as HTMLInputElement;
                     const changeButton = container.querySelector('.change-button') as HTMLButtonElement;
@@ -355,16 +538,16 @@ export function afterRender(): void {
             const response = await fetchWithAuth(`api/users/${userId}/email`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ alias: newEmail })
+                body: JSON.stringify({ email: newEmail })
             });
+            const user = await response.json();
             if (response.ok) {
-                const user: UserData = await response.json();
                 user.email = newEmail;
                 console.log("Email mis à jour");
                 return true;
             } else {
-                console.error("Erreur lors de la mise à jour du Email");
-                alert("Erreur lors de la sauvegarde du Email");
+                console.error(user.error.message);
+                alert(user.error.message);
                 return false;
             }
         } catch (error) {
@@ -374,9 +557,26 @@ export function afterRender(): void {
         }
     };
 
-    //maj password /////////// to complete avec la partie de Anne le chat
-    const updatePassword = async (newPassword: string) => {
+    const updateTheme = async (newTheme: string) => {
+        if (!userId) return;
 
+        try {
+            const response = await fetchWithAuth(`api/users/${userId}/theme`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ theme: newTheme })
+            });
+
+            if (response.ok) {
+                console.log("Theme saved to database:", newTheme);
+                // On met à jour le localStorage ici aussi pour être sûr
+                localStorage.setItem('userTheme', newTheme);
+            } else {
+                console.error("Failed to save theme to database");
+            }
+        } catch (error) {
+            console.error("Network error while saving theme:", error);
+        }
     };
 
 
@@ -441,6 +641,10 @@ export function afterRender(): void {
 
         // on revient au mode de base
         const disableEditMode = (newValue: string) => {
+            if (fieldName !== 'password') {
+                initialValue = newValue;
+            }
+
             display.classList.remove('hidden');
             input.classList.add('hidden');
             input.disabled = true;
@@ -508,9 +712,6 @@ export function afterRender(): void {
                 case 'email':
                     updateSuccessful = await updateEmail(newValue);
                     break;
-                // case 'password':
-                //     updateSuccessful = await updatePassword(newValue);
-                //     break;
                 default:
                     updateSuccessful = true;
             }
@@ -580,6 +781,114 @@ export function afterRender(): void {
         if (statusKey) {
             updateStatus(statusKey);
         }
+    });
+
+
+
+
+
+
+    // ============================================================
+    // ============= CLOGIQUE DE CHANGEMENT DE MDP ================
+    // ============================================================
+
+    const pwdModal = document.getElementById('password-modal');
+    const closePwdButton = document.getElementById('close-password-modal');
+    const cancelPwdButton = document.getElementById('cancel-password-button');
+    const savePwdButton = document.getElementById('save-password-button');
+    
+    const currentPwdInput = document.getElementById('pwd-current') as HTMLInputElement;
+    const newPwdInput = document.getElementById('pwd-new') as HTMLInputElement;
+    const confirmPwdInput = document.getElementById('pwd-confirm') as HTMLInputElement;
+    const pwdError = document.getElementById('pwd-error');
+
+    const passwordContainer = document.querySelector('div[data-field="password"]');
+    const openPwdModalButton = passwordContainer?.querySelector('.change-button');
+
+    const resetPwdForm = () => {
+        if (currentPwdInput) currentPwdInput.value = '';
+        if (newPwdInput) newPwdInput.value = '';
+        if (confirmPwdInput) confirmPwdInput.value = '';
+        if (pwdError) {
+            pwdError.innerText = '';
+            pwdError.classList.add('hidden');
+        }
+    };
+
+    const closePwdModal = () => {
+        pwdModal?.classList.add('hidden');
+        pwdModal?.classList.remove('flex');
+        resetPwdForm();
+    };
+
+    openPwdModalButton?.addEventListener('click', () => {
+        pwdModal?.classList.remove('hidden');
+        pwdModal?.classList.add('flex');
+    });
+
+    closePwdButton?.addEventListener('click', closePwdModal);
+    cancelPwdButton?.addEventListener('click', closePwdModal);
+
+    savePwdButton?.addEventListener('click', async () => {
+        const oldPass = currentPwdInput.value;
+        const newPass = newPwdInput.value;
+        const confirmPass = confirmPwdInput.value;
+
+        // on verifie que tous les chanps sont remplis
+        if (!oldPass || !newPass || !confirmPass) {
+            if (pwdError) {
+                pwdError.innerText = "All inpuys are required.";
+                pwdError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (newPass !== confirmPass) {
+            if (pwdError) {
+                pwdError.innerText = "These are not the same. Try again";
+                pwdError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (newPass.length < 8) {
+            if (pwdError) {
+                pwdError.innerText = "Password must be at least 8 characters.";
+                pwdError.classList.remove('hidden');
+            }
+            return;
+        }
+
+        try {
+            const response = await fetchWithAuth(`api/users/${userId}/password`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPass, newPass })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert("Password updated successfully!");
+                closePwdModal();
+            } else {
+                if (pwdError) {
+                    // on recuperer l'erreur du backe
+                    pwdError.innerText = result.error?.message || "Error updating password";
+                    pwdError.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            if (pwdError) {
+                pwdError.innerText = "Network error.";
+                pwdError.classList.remove('hidden');
+            }
+        }
+    });
+
+    pwdModal?.addEventListener('click', (e) => {
+        if (e.target === pwdModal) closePwdModal();
     });
 
 

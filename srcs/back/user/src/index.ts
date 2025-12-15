@@ -276,16 +276,12 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	const userId = Number(id);
 	const { email } = request.body as { email: string };
 
-	const formerEmail = await userRepo.findEmailById(db, userId);
-
 	try
 	{
 		
-		//await userRepo.updateEmail(db, userId, email);
 		console.log("mail updated in userRepo");
 		const authURL = `http://auth:3001/users/${userId}/credentials`;
 
-		// 3. Appeler le service auth pour créer les credentials
 		const authResponse = await fetch(authURL, {
 			method: "PATCH",
 			headers: { 
@@ -314,9 +310,6 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	{
 		const errorMessage = err.message;
 
-		// 5. Rollback
-		//await userRepo.rollbackChangeEmail(db, userId, formerEmail);
-
 		reply.status(400).send({			  
 			success: false,			  
 			data: null, 			  
@@ -333,8 +326,10 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
     const userId = Number(id);
     const { avatar } = request.body as { avatar: string };
 
-    try {
-        if (!avatar) throw new Error("No avatar provided");
+    try 
+	{
+        if (!avatar) 
+			throw new Error("No avatar provided");
 
         await userRepo.updateAvatar(db, userId, avatar);
         
@@ -343,12 +338,47 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
             data: { avatar: avatar },
             error: null
         });
-    } catch (err: any) {
+    } 
+	catch (err: any) 
+	{
         fastify.log.error(err);
         return reply.status(500).send({
             success: false,
             data: null,
-            error: { message: err.message || 'Failed to update avatar' }
+            error: { message: (err as Error).message }
+        });
+    }
+});
+
+/* -- UPDATE THEME -- */
+fastify.patch('/users/:id/theme', async (request, reply) => 
+{
+    const { id } = request.params as { id: string };
+    const userId = Number(id);
+    const { theme } = request.body as { theme: string };
+
+    try 
+	{
+        if (!theme) 
+			throw new Error("No theme provided");
+
+        await userRepo.updateTheme(db, userId, theme);
+        
+        return reply.status(200).send(
+		{
+            success: true,
+            data: { theme: theme },
+            error: null
+        });
+    } 
+	catch (err: any) 
+	{
+        fastify.log.error(err);
+
+        return reply.status(500).send({
+            success: false,
+            data: null,
+            error: { message: (err as Error).message }
         });
     }
 });
@@ -367,10 +397,10 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 
 	try
 	{
-		const requestID = await friendRepo.makeFriendshipRequest(db, userId, alias);
+		const friendship = await friendRepo.makeFriendshipRequest(db, userId, alias);
 		return reply.status(200).send({
 			success: true,
-			data: null,
+			data: friendship,
 			error: null
 		});
 	}
@@ -397,6 +427,7 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 
 	try
 	{
+		console.log("Status depuis index.ts:", status);
 		friendRepo.reviewFriendshipRequest(db, user_id, friendship_id, status);
 		return reply.status(200).send({ 
 			success: true,
@@ -424,10 +455,10 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 
 	try
 	{
-		const friends: userRepo.User [] = await friendRepo.listFriends(db, userId);
+		const friendships: friendRepo.Friendship[] = await friendRepo.listFriends(db, userId);
 		return reply.status(200).send({
 			success: true,
-			data: friends,
+			data: friendships,
 			error: null
 		});
 	}
@@ -445,9 +476,9 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 /* -- LIST FRIENDS PENDING REQUESTS FOR ONE USER -- */
 fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 {
+	console.log("pendings");
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
-  	console.log("ciyciy:", userId);
 
 	try
 	{

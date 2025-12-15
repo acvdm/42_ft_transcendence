@@ -31,28 +31,27 @@ export function afterRender(): void {
 
     // clic sur l'ami
     window.addEventListener('friendSelected', (e: any) => {
-        const friend = e.detail;
-        
-        const friendshipId = friend.friendshipId || friend.friendship_id;
-        currentChatFriendId = friend.id;
+        const { friend, friendshipId } = e.detail;
 
-        console.log("Objet friend reçu :", friend);
+        currentChatFriendId = friend.id;
+        console.log("Ami sélectionné:", friend.alias, "Friendship ID:", friendshipId);
         const myId = parseInt(localStorage.getItem('userId') || "0");
         const ids = [myId, friend.id].sort((a, b) => a - b);
         const channelKey = `channel_${ids[0]}_${ids[1]}`;
+        console.log("channelKey: ", channelKey);
 
         const chatPlaceholder = document.getElementById('chat-placeholder');
         const channelChat = document.getElementById('channel-chat');
         if (chatPlaceholder) chatPlaceholder.classList.add('hidden');
         if (channelChat) channelChat.classList.remove('hidden');
-
         const headerName = document.getElementById('chat-header-username');
         const headerAvatar = document.getElementById('chat-header-avatar') as HTMLImageElement;
         const headerStatus = document.getElementById('chat-header-status') as HTMLImageElement;
         const headerBio = document.getElementById('chat-header-bio');
-
         if (headerName) headerName.textContent = friend.alias;
-        if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
+
+        // *** Fonction qui génère une erreur ***
+        // if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
 
         if (headerAvatar) {
             const avatarSrc = friend.avatar || friend.avatar_url || '/assets/profile/default.png';
@@ -62,7 +61,9 @@ export function afterRender(): void {
         if (headerStatus) {
             headerStatus.src = statusImages[friend.status] || statusImages['invisible'];
         }
+        console.log("friendship homepage:", friendshipId);
         chat.joinChannel(channelKey, friendshipId);
+
     });
 
     // ouverture de la modale
@@ -70,8 +71,29 @@ export function afterRender(): void {
     
     viewProfileButton?.addEventListener('click', () => {
         document.getElementById('chat-options-dropdown')?.classList.add('hidden');
+        console.log("current chat friend id:", currentChatFriendId);
         if (currentChatFriendId) { // est-ce que l'ami exsite?
             friendProfileModal.open(currentChatFriendId);
         }
     });
+
+
+
+    // on fait en sorte que le bouton soit cliquable pour amener sur la page de jeu local
+    const localGameButton = document.getElementById('local-game');
+
+    if (localGameButton) {
+        localGameButton.addEventListener('click', () => {
+            console.log("Lancement d'une partie locale...");
+
+            // on envoit sur la page game -> voir si on personnalise l'url selon la type de game
+            window.history.pushState({}, '', '/game');
+
+            // detection du changement
+            const navEvent = new PopStateEvent('popstate');
+            window.dispatchEvent(navEvent);
+        });
+    }
+
+    
 }

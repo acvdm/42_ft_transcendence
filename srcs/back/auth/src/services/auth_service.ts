@@ -113,6 +113,31 @@ export async function changeEmailInCredential (
     await credRepo.changeEmail(db, user_id, email);
 }
 
+///////////// RAJOUTER PAR FAUSTINE
+
+export async function changePasswordInCredential (
+    db: Database,
+    userId: number,
+    oldPwd: string,
+    newPwd: string
+): Promise<void> {
+    const credential = await credRepo.getCredentialbyUserID(db, userId);
+    if (!credential)
+        throw new Error('User not found');
+
+    const isValidPwd = await crypt.verifyPassword(oldPwd, credential.pwd_hashed);
+    if (!isValidPwd)
+        throw new Error('Invalid current password');
+
+    const newHashedPwd = await crypt.hashPassword(newPwd);
+
+    await credRepo.changePwd(db, credential.id, newHashedPwd);
+}
+
+///////////// RAJOUTER PAR FAUSTINE
+
+
+
 export async function loginUser(
     db: Database,
     email: string, 
@@ -136,14 +161,14 @@ export async function loginUser(
     const is2FA = await credRepo.is2FAEnabled(db, user_id);
 
     // 2FA active -> on ne donne pas les acces (refresk/access token) mais un tocken temporaire pour acceder a la page pour entrer le num
-    if (is2FA) {
-        const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
+    // if (is2FA) {
+    //     const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
 
-        return {
-            require_2fa: true,
-            temp_token: tempToken
-        };
-    }
+    //     return {
+    //         require_2fa: true,
+    //         temp_token: tempToken
+    //     };
+    // }
 
     // 2FA desactive
     const tokens = await generateTokens(user_id, credential_id);

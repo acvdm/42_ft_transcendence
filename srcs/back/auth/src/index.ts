@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
 import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA } from './services/auth_service.js';
+import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -92,11 +92,13 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 {
 	try 
 	{
-		const body = request.body as { user_id: number; email: string };
+		const { id } = request.params as { id: string };
+		const body = request.body as { email: string };
+		const userId = Number(id);
 
 		validateNewEmail(body);
 
-		const result = await changeEmailInCredential(db, body.user_id, body.email);
+		const result = await changeEmailInCredential(db, userId, body.email);
 
 		// 3. Répondre
 		return reply.status(200).send({
@@ -110,10 +112,56 @@ fastify.patch('/users/:id/credentials', async (request, reply) =>
 		return reply.status(400).send({
 			success: false, 
 			data: null,
-			error: { message: err.message }
+			error: {  message: (err as Error).message}
 		});
 	}
 });
+
+
+////////////////// RAJOUTER PAR FAUSTINE
+
+fastify.patch('/users/:id/password', async (request, reply) => 
+{
+	try 
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		const body = request.body as { 
+			oldPwd: string;
+			newPwd: string;
+		};
+
+		if (body.newPwd) {
+            if (!body.oldPwd) {
+                throw new Error("Current password is required to set a new one.");
+            }
+
+            await changePasswordInCredential(db, userId, body.oldPwd, body.newPwd);
+
+            return reply.status(200).send({
+                success: true,
+                message: "Password updated successfully"
+            });
+        }
+		throw new Error('Missing password data');
+	} 
+	catch (err: any) 
+	{
+		return reply.status(400).send({
+			success: false, 
+			data: null,
+			error: {  message: (err as Error).message}
+		});
+	}
+});
+
+
+
+////////////////// RAJOUTER PAR FAUSTINE
+
+
+
+
 
 
 /* -- LOGIN -- */ 
@@ -326,7 +374,7 @@ fastify.post('/2fa/generate', async (request, reply) => {
 	} catch (err: any) {
 		console.error("Error generating 2FA:", err);
 		return reply.status(500).send({
-			sucess: false,
+			success: false,
 			data: null,
 			error: { message: err.message || "failed to generate 2FA" }
 		});

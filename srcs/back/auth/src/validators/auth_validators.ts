@@ -36,12 +36,21 @@ export function validateRegisterInput(body: any)
 
 export function validateNewEmail(body: any) 
 {
+    console.log("arrivée dans validateNewEmail");
     if (!body)
+    {
+        console.log("body n'existe pas");
         throw new Error('Invalid request body');
-
+    }
     if (!body.email)
+    {
+        console.log("body email n'existe pas");
         throw new Error('Missing required field');
-
+    }    
     if (!validator.isEmail(body.email))
+    {
+        console.log("email ne ressemble pas à un email");
         throw new Error('Email address not supported');
+    }
+    console.log("nouvel email valide");
 }

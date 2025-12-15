@@ -17,7 +17,8 @@ export async function initDatabase(): Promise<Database> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         alias TEXT UNIQUE NOT NULL CHECK (length(alias) <= 30),
         bio TEXT CHECK (length(bio) <= 75),
-        avatar_url TEXT DEFAULT '/assets/basic/default.png', 
+        avatar_url TEXT DEFAULT '/assets/basic/default.png',
+        theme TEXT DEFAULT 'Blue', 
         status TEXT DEFAULT 'Available'
         ) 
     `);

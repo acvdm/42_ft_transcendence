@@ -1,6 +1,8 @@
 import SocketService from "../services/SocketService";
 import { getStatusDot, statusImages } from "./Data";
 import { fetchWithAuth } from "../pages/api";
+import { Friendship } from '../../../back/user/src/repositories/friendships';
+
 
 export class FriendList {
     private container: HTMLElement | null;
@@ -37,18 +39,28 @@ export class FriendList {
                 return;
             }
 
-            friendList.forEach((friend: any) => {
+            friendList.forEach((friendship: any) => {
+                const user = friendship.user;
+                const friend = friendship.friend_id;
+
+                if (!user || !friend)
+                {
+                    console.log(`Invalid friendship data`);
+                    return;
+                }
+                const selectedFriend = (user.id === this.userId) ? friend : user;
+                const status = selectedFriend.status || 'invisible';
+
                 const friendItem = document.createElement('div');
                 friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
 
-                const status = friend.status || 'invisible'; 
-
                 // on stocke tout
-                friendItem.dataset.id = friend.id;
-                friendItem.dataset.username = friend.alias;
+                friendItem.dataset.id = selectedFriend.id;
+                friendItem.dataset.friendshipId = friendship.id;
+                friendItem.dataset.username = selectedFriend.alias;
                 friendItem.dataset.status = status;
-                friendItem.dataset.bio = friend.bio || "Share a quick message";
-                friendItem.dataset.avatar = friend.avatar_url || friend.avatar || "/assets/basic/default.png";
+                friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+                friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
                 
 
                 friendItem.innerHTML = `
@@ -57,7 +69,7 @@ export class FriendList {
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
-                        <span class="font-semibold text-sm text-gray-800">${friend.alias}</span>
+                        <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
                     </div>
                 `;
 
@@ -66,7 +78,12 @@ export class FriendList {
                 
                 // ouverture du chat
                 friendItem.addEventListener('click', () => {
-                    const event = new CustomEvent('friendSelected', { detail: friend });
+                    const event = new CustomEvent('friendSelected', { 
+                        detail: {
+                            friend: selectedFriend,
+                            friendshipId: friendship.id
+                        } 
+                    });
                     window.dispatchEvent(event);
                 });
             });
@@ -153,7 +170,7 @@ export class FriendList {
                             friendRequestMessage?.classList.add('hidden');
                         }, 1500);
                     } else {
-                        this.showFriendMessage(data.message || 'Error sending request', 'error', friendRequestMessage);
+                        this.showFriendMessage(data.error.message || 'Error sending request', 'error', friendRequestMessage);
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -202,12 +219,14 @@ export class FriendList {
 
         if (notifButton && notifDropdown && notifList) {
              const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { 
-                const userId = localStorage.getItem('userId'); 
+                const userId = localStorage.getItem('userId');
+                if (!itemDiv.dataset.friendshipId)
+                    return;
                 try {
                     const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: askerId, status: action }) 
+                        body: JSON.stringify({ status: action }) 
                     });
                     if (response.ok) {
                         itemDiv.style.opacity = '0'; 
@@ -229,7 +248,7 @@ export class FriendList {
                 if (!userId) return;
                 try {
                     const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
-                    if (!response.ok) throw new Error('Failed to fetch friends');
+                    if (!response.ok) throw new Error('Failed to fetch pendings');
     
                     const requests = await response.json();
                     const pendingList = requests.data;
@@ -247,20 +266,22 @@ export class FriendList {
                         return;
                     }
 
-                    pendingList.forEach((req: any) => {
+                    // Modif ligne 231 la req est de type Friendship
+                    pendingList.forEach((req: Friendship) => {
                         const item = document.createElement('div');
-                        item.dataset.friendshipId = req.friendshipId;
+                        item.dataset.friendshipId = req.id.toString();
                         item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
     
+                        // Modif ligne 240 de ${req.alias} à ${req.user?.alias}
                         item.innerHTML = `
                             <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                                <img src="${req.avatar_url || '/assets/basic/logo.png'}" 
+                                <img src="/assets/basic/logo.png" 
                                     class="w-full h-full object-cover rounded"
                                     alt="avatar">
                             </div>
                             <div class="flex-1 min-w-0 pr-4">
                                 <p class="text-sm text-gray-800">
-                                    <span class="font-semibold">${req.alias}</span> wants to be your friend
+                                    <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
                                 </p>
                             </div>
                             <div class="flex gap-2 flex-shrink-0">

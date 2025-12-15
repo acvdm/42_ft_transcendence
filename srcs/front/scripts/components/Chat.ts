@@ -31,6 +31,7 @@ export class Chat {
     public joinChannel(channelKey: string, friendshipId?: number) {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
+        console.log("**** join channel friendshipId:", this.currentFriendshipId);
 
         this.socket.emit("joinChannel", channelKey);
         
@@ -436,7 +437,7 @@ export class Chat {
             ////////////// ICI POUR LA LOGIQUE DE BLOCK/BLOCAGE D'UN AMI
             document.getElementById('button-block-user')?.addEventListener('click', async (e) => {
                 e.stopPropagation();
-
+                console.log("friendhsop id:", this.currentFriendshipId);
                 if (!this.currentFriendshipId) { // est-ce qu'on a bien un id d'amitié entre les deux
                     console.error("Cannot block: no friendship id associated to this conv");
                     chatOptionsDropdown.classList.add('hidden'); // on retire le dropdown
@@ -446,7 +447,8 @@ export class Chat {
                 const currentChatUser = document.getElementById('chat-header-username')?.textContent;
                 if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
                     try {
-                        const response = await fetchWithAuth(`api/friendship/${this.currentFriendshipId}`, {
+                        const userId = localStorage.getItem('userId');
+                        const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: 'blocked' })
                         });
