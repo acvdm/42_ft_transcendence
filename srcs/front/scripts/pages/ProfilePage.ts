@@ -97,7 +97,7 @@ export function afterRender(): void {
 
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
-    let is2faEnabled = false;
+    let is2faEnabled = localStorage.getItem('is2faEnabled') === 'true';
 
     const statusImages: { [key: string]: string } = {
         'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
@@ -223,6 +223,8 @@ export function afterRender(): void {
         }
     };
 
+    update2faButton(is2faEnabled);
+
     const close2fa = () => {
         if (modal2fa)
         {
@@ -279,6 +281,7 @@ export function afterRender(): void {
 
             if (response.ok) {
                 update2faButton(true);
+                localStorage.setItem('is2faEnabled', 'true');
                 close2fa();
                 alert("2FA is now enabled!");
             } else {
@@ -302,6 +305,7 @@ export function afterRender(): void {
 
             if (response.ok) {
                 update2faButton(false);
+                localStorage.setItem('is2faEnabled', 'false');
                 alert("2FA disabled.");
             } else {
                 alert("Error disabling 2FA.");
@@ -313,6 +317,7 @@ export function afterRender(): void {
 
     button2faToggle?.addEventListener('click', () => {
         if (is2faEnabled) {
+            console.log("2fa: ", is2faEnabled);
             disable2fa();
         } else {
             open2faGenerate();

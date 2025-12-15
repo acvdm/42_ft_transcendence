@@ -100,6 +100,7 @@ function handleLogin() {
             // cas 1: 2fa required
             if (result.require_2fa) {
                 console.log("2FA require");
+                localStorage.setItem('is2faEnabled', 'true');
                 tempToken = result.temp_token;
                 if (modal2fa) {
                     modal2fa.classList.remove('hidden');
@@ -112,6 +113,7 @@ function handleLogin() {
 
 
             if (result.success) {
+                localStorage.setItem('is2faEnabled', 'false');
 				const { access_token, user_id } = result.data;
                 await init2faLogin(access_token, user_id, cachedStatus);
 
@@ -179,8 +181,12 @@ function handleLogin() {
 
         try {
             // ici pas de fetch with auth car token temporaire
-            const response = await fetchWithAuth('/api/auth/2fa/verify', {
+            const response = await fetch('/api/auth/2fa/verify', {
                 method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tempToken}`
+                },
                 body: JSON.stringify({ code })
             });
 
@@ -188,6 +194,7 @@ function handleLogin() {
 
             if (response.ok && result.success) {
                 // reussite du 2fa -> rvraim tokens
+                localStorage.setItem('is2faEnabled', 'true');
                 const { access_token, user_id } = result; // structure de retour de verify
                 
                 // fermeutr modale

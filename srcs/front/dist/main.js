@@ -240,6 +240,7 @@
         const result = await response.json();
         if (result.require_2fa) {
           console.log("2FA require");
+          localStorage.setItem("is2faEnabled", "true");
           tempToken = result.temp_token;
           if (modal2fa) {
             modal2fa.classList.remove("hidden");
@@ -250,6 +251,7 @@
           return;
         }
         if (result.success) {
+          localStorage.setItem("is2faEnabled", "false");
           const { access_token, user_id } = result.data;
           await init2faLogin(access_token, user_id, cachedStatus);
           if (access_token) localStorage.setItem("accessToken", access_token);
@@ -302,12 +304,17 @@
       if (error2fa) error2fa.classList.add("hidden");
       if (!code || !tempToken) return;
       try {
-        const response = await fetchWithAuth("/api/auth/2fa/verify", {
+        const response = await fetch("/api/auth/2fa/verify", {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tempToken}`
+          },
           body: JSON.stringify({ code })
         });
         const result = await response.json();
         if (response.ok && result.success) {
+          localStorage.setItem("is2faEnabled", "true");
           const { access_token, user_id } = result;
           if (modal2fa) modal2fa.classList.add("hidden");
           await init2faLogin(access_token, user_id, cachedStatus);
@@ -5906,7 +5913,7 @@
     const qrCodeImg = document.getElementById("2fa-qr-code");
     const userId = localStorage.getItem("userId");
     let selectedImageSrc = mainAvatar?.src || "";
-    let is2faEnabled = false;
+    let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
     const statusImages3 = {
       "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
       "online": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
@@ -5996,6 +6003,7 @@
         button2faToggle.classList.add("bg-green-600");
       }
     };
+    update2faButton(is2faEnabled);
     const close2fa = () => {
       if (modal2fa) {
         modal2fa.classList.add("hidden");
@@ -6044,6 +6052,7 @@
         });
         if (response.ok) {
           update2faButton(true);
+          localStorage.setItem("is2faEnabled", "true");
           close2fa();
           alert("2FA is now enabled!");
         } else {
@@ -6064,6 +6073,7 @@
         });
         if (response.ok) {
           update2faButton(false);
+          localStorage.setItem("is2faEnabled", "false");
           alert("2FA disabled.");
         } else {
           alert("Error disabling 2FA.");
@@ -6074,6 +6084,7 @@
     };
     button2faToggle?.addEventListener("click", () => {
       if (is2faEnabled) {
+        console.log("2fa: ", is2faEnabled);
         disable2fa();
       } else {
         open2faGenerate();

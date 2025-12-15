@@ -1,9 +1,9 @@
-import htmlContent from "./LocalGame.html";
+import htmlContentLocal from "./LocalGame.html";
 import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 
 export function render(): string {
-    return htmlContent;
+    return htmlContentLocal;
 }
 
 export function initGamePage(mode: string): void {
