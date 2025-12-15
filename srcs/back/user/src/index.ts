@@ -184,7 +184,7 @@ fastify.get('/showfriend', async (request, reply) =>
 
 
 /* -- UPDATE STATUS -- */
-fastify.patch('/users/:id/status', async (request, reply) => 
+fastify.patch('/users/:id/status', async (request, reply) =>
 {
 	const { id } = request.params as { id: string };
 	const { status } = request.body as { status: string };
@@ -210,7 +210,6 @@ fastify.patch('/users/:id/status', async (request, reply) =>
 		});
 	}
 })
-
 
 
 /* -- UPDATE BIO -- */
