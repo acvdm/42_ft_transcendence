@@ -6125,6 +6125,7 @@
         const response = await fetchWithAuth(`api/users/${userId}`);
         if (response.ok) {
           const user = await response.json();
+          console.log(user);
           if (user.theme) {
             localStorage.setItem("userTheme", user.theme);
             applyTheme(user.theme);
@@ -6141,24 +6142,24 @@
             const display = container.querySelector(".field-display");
             const input = container.querySelector(".field-input");
             if (fieldName && display && input) {
-              let value2 = user[fieldName];
-              if (fieldName === "alias" && user.alias) {
-                value2 = user.alias;
+              let value2;
+              if (fieldName === "alias") {
+                value2 = user.alias || "";
                 if (usernameDisplay)
                   usernameDisplay.innerText = value2;
-              } else if (fieldName === "bio" && user.bio) {
-                value2 = user.bio;
+              } else if (fieldName === "bio") {
+                value2 = user.bio || "";
                 if (bioDisplay)
-                  bioDisplay.innerHTML = parseMessage(value2);
-              } else if (fieldName === "email" && user.email) {
-                value2 = user.email;
+                  bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
+              } else if (fieldName === "email") {
+                value2 = user.email || "";
               } else if (fieldName === "password") {
                 value2 = "********";
               }
-              if (value2) {
-                display.innerText = value2;
+              if (value2 !== void 0) {
+                display.innerText = value2 || (fieldName === "email" ? "No email" : "Empty");
                 if (fieldName !== "password") {
-                  input.placeholder = value2;
+                  input.placeholder = value2 || "Empty";
                 }
               }
             }
@@ -6338,6 +6339,7 @@
           display.innerText = "********";
         } else {
           display.innerText = newValue;
+          input.value = "";
           input.placeholder = newValue;
         }
         if (fieldName === "bio" && charCountElement) {

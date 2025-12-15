@@ -162,7 +162,22 @@ fastify.get('/users/:id', async (request, reply) =>
 	  	});
 	}
 
-	return user;
+	// je rajoute ca 
+	let userEmail = "";
+	try {
+		const authResponse = await fetch(`http://auth:3001/users/${userId}/email`);
+        if (authResponse.ok) {
+            const authData = await authResponse.json();
+            userEmail = authData.email || "";
+        }
+	} catch (err) {
+		console.error("Error getting email from auth: ", err);
+	}
+
+	return {
+		...user,
+		email: userEmail
+	};
 })
 
 fastify.get('/showfriend', async (request, reply) =>

@@ -372,7 +372,7 @@ export function afterRender(): void {
             
             if (response.ok) {
                 const user: UserData = await response.json();
-
+                console.log(user);
                 // maj theme
                 if (user.theme) {
                     localStorage.setItem('userTheme', user.theme);
@@ -391,35 +391,32 @@ export function afterRender(): void {
 
                 // initialisation des champs
                 fieldContainers.forEach(container => {
-
-
                     const fieldName = container.dataset.field;
                     const display = container.querySelector('.field-display') as HTMLParagraphElement;
                     const input = container.querySelector('.field-input') as HTMLInputElement;
 
                     if (fieldName && display && input) {
-                        let value = user[fieldName as keyof UserData] as string | undefined;
+                        let value: string | undefined;
 
-                        if (fieldName === 'alias' && user.alias) {
-                            value = user.alias;
+                        if (fieldName === 'alias') {
+                            value = user.alias || '';
                             if (usernameDisplay)
                                 usernameDisplay.innerText = value;
-                        } else if (fieldName === 'bio' && user.bio) {
-                            value = user.bio;
+                        } else if (fieldName === 'bio') {
+                            value = user.bio || '';
                             if (bioDisplay)
-                                bioDisplay.innerHTML = parseMessage(value);
-                        } else if (fieldName === 'email' && user.email) {
-                            value = user.email;
+                                bioDisplay.innerHTML = parseMessage(value) || "Share a quick message";
+                        } else if (fieldName === 'email') {
+                            value = user.email || '';
                         } else if (fieldName === 'password') {
-                            // on ne met pas la vraie valeur dans le champs pour des questions de securité
                             value = "********"; 
                         }
 
-                        if (value) {
-                            display.innerText = value;
+                        // Mise à jour de l'affichage pour tous les champs
+                        if (value !== undefined) {
+                            display.innerText = value || (fieldName === 'email' ? 'No email' : 'Empty');
                             if (fieldName !== 'password') {
-                                // idem que le placeholder au debut
-                                input.placeholder = value;
+                                input.placeholder = value || "Empty";
                             }
                         }
                     }
@@ -659,6 +656,7 @@ export function afterRender(): void {
                  display.innerText = "********"; // on cache avec des etoiles
             } else {
                  display.innerText = newValue;
+                 input.value = "";
                  input.placeholder = newValue; // maj placeholder
             }
 

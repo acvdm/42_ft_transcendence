@@ -43,6 +43,10 @@ async function main()
 //----------- AUTHENTICATION ------------
 //---------------------------------------
 
+
+
+
+
 /* -- REGISTER - CREATE CREDENTIAL -- */
 fastify.post('/users/:id/credentials', async (request, reply) => 
 {
@@ -521,6 +525,23 @@ fastify.post('/2fa/verify', async (request, reply) => {
 	}
 });
 
+
+
+// faustine
+/* -- INTERNE : Récupérer email pour le service User -- */
+fastify.get('/users/:id/email', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const userId = Number(id);
+
+    // On utilise la fonction qui existe déjà dans ton credRepo
+    const credential = await credRepo.getCredentialbyUserID(db, userId);
+    
+    if (!credential) {
+        return reply.status(404).send({ error: "User credentials not found" });
+    }
+
+    return { email: credential.email };
+});
 
 
 
