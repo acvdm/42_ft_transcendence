@@ -1,4 +1,5 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
+import FastifyIO from 'fastify-socket.io'
 import { initDatabase } from './database.js'
 import { Database } from 'sqlite';
 import { Server, Socket } from 'socket.io';
@@ -8,6 +9,41 @@ import * as chanRepo from "./repositories/channels.js";
 
 // Creation of Fastify server
 const fastify = Fastify({ logger: true });
+
+
+// On enregistre le plugin socket io
+fastify.register(FastifyIO, {
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"]
+	}
+});
+
+// on defini la logique quand le serveur est prêt
+fastify.ready().then(() => {
+	// acces a l'instance via fastify.io
+	fastify.io.on('connection', (socket) => {
+		console.log(`Client connected (Fastify):' ${socket.id}`);
+
+		//on réceptionne un message
+		socket.on('sendMessage', (payload) => {
+			console.log('Message received:', payload);
+
+			// on diffuse a tout le monde
+			fastify.io.emit('messageReceived', {
+				user: payload.user;
+				content: payload.content;
+				timestamp: new Date()
+			});
+		});
+
+		socket.on('disconnect', () => {
+			console.log(`Client disconnected: ${socket.id}`);
+		});
+	});
+});
+
+
 
 let db: Database;
 
@@ -78,6 +114,9 @@ async function chatMessage(
 		io.to(channelKey).emit('error', { message: "Internal server error" });
 	}  	
 }
+
+
+
 
 
 // on demarre le serveur
