@@ -132,11 +132,8 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 		};
 
 		if (body.newPwd) {
-            if (!body.newPwd) {
+            if (!body.oldPwd) {
                 throw new Error("Current password is required to set a new one.");
-            }
-            if (body.newPwd.length < 8) {
-                throw new Error("New password too short (min 8 chars).");
             }
 
             await changePasswordInCredential(db, userId, body.oldPwd, body.newPwd);
@@ -157,7 +154,6 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 		});
 	}
 });
-
 
 
 

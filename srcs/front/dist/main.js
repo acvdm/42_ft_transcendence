@@ -5726,7 +5726,7 @@
     <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Security</div>
+                <div class="title-bar-text">Change password</div>
                 <div class="title-bar-controls">
                     <button id="close-password-modal" aria-label="Close"></button>
                 </div>
@@ -5752,8 +5752,8 @@
                 <p id="pwd-error" class="text-red-500 text-xs hidden"></p>
 
                 <div class="flex justify-end gap-2 mt-4">
-                    <button id="cancel-password-button" class="bg-gray-100 border border-gray-400 px-4 py-1 text-sm hover:bg-gray-200">Cancel</button>
-                    <button id="save-password-button" class="bg-gray-100 border border-gray-400 px-4 py-1 text-sm font-bold hover:bg-gray-200">Save</button>
+                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Save</button>
+                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
                 </div>
             </div>
         </div>
@@ -6142,20 +6142,19 @@
     const updateEmail = async (newEmail) => {
       if (!userId || !newEmail.trim()) return false;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/credentials`, {
+        const response = await fetchWithAuth(`api/users/${userId}/email`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: newEmail })
         });
-        const data = await response.json();
+        const user = await response.json();
         if (response.ok) {
-          const user = await response.json();
           user.email = newEmail;
           console.log("Email mis \xE0 jour");
           return true;
         } else {
-          console.error(data.error.message);
-          alert(data.error.message);
+          console.error(user.error.message);
+          alert(user.error.message);
           return false;
         }
       } catch (error) {

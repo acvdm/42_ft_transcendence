@@ -535,20 +535,19 @@ export function afterRender(): void {
         if (!userId || !newEmail.trim()) return false;
 
         try {
-            const response = await fetchWithAuth(`api/users/${userId}/credentials`, {
+            const response = await fetchWithAuth(`api/users/${userId}/email`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: newEmail })
             });
-            const data = await response.json();
+            const user = await response.json();
             if (response.ok) {
-                const user: UserData = await response.json();
                 user.email = newEmail;
                 console.log("Email mis à jour");
                 return true;
             } else {
-                console.error(data.error.message);
-                alert(data.error.message);
+                console.error(user.error.message);
+                alert(user.error.message);
                 return false;
             }
         } catch (error) {
