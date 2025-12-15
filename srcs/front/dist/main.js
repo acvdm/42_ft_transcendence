@@ -302,12 +302,8 @@
       if (error2fa) error2fa.classList.add("hidden");
       if (!code || !tempToken) return;
       try {
-        const response = await fetch("/api/auth/2fa/verify", {
+        const response = await fetchWithAuth("/api/auth/2fa/verify", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${tempToken}`
-          },
           body: JSON.stringify({ code })
         });
         const result = await response.json();
@@ -319,10 +315,10 @@
           if (error2fa) {
             error2fa.textContent = "Invalid code.";
             error2fa.classList.remove("hidden");
+            console.error("2FA Error:", result.error.message);
           }
         }
       } catch (error) {
-        console.error("2FA Error:", error);
         if (error2fa) {
           error2fa.textContent = "Error during verification.";
           error2fa.classList.remove("hidden");
