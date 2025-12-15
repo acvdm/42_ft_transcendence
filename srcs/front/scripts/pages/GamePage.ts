@@ -1,9 +1,14 @@
 import htmlContentLocal from "./LocalGame.html";
+import htmlContentRemote from "./RemoteGame.html";
 import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 
 export function render(): string {
-    return htmlContentLocal;
+    const state = window.history.state;
+    if (state && state.gameMode === 'remote') {
+        return htmlContentRemote;
+    }
+     return htmlContentLocal;
 }
 
 export function initGamePage(mode: string): void {

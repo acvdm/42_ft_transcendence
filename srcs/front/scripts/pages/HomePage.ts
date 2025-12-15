@@ -81,15 +81,24 @@ export function afterRender(): void {
 
     // on fait en sorte que le bouton soit cliquable pour amener sur la page de jeu local
     const localGameButton = document.getElementById('local-game');
-
     if (localGameButton) {
         localGameButton.addEventListener('click', () => {
             console.log("Lancement d'une partie locale...");
+            // 1er argument : l'état qu'on veut récupérer dans main.ts
+            window.history.pushState({ gameMode: 'local' }, '', '/game');
+            
+            const navEvent = new PopStateEvent('popstate');
+            window.dispatchEvent(navEvent);
+        });
+    }
 
-            // on envoit sur la page game -> voir si on personnalise l'url selon la type de game
-            window.history.pushState({}, '', '/game');
+    // Gestion du bouton REMOTE : on passe { gameMode: 'remote' } dans le pushState
+    const remoteGameButton = document.getElementById('remote-game');
+    if (remoteGameButton) {
+        remoteGameButton.addEventListener('click', () => {
+            console.log("Lancement d'une partie remote...");
+            window.history.pushState({ gameMode: 'remote' }, '', '/game');
 
-            // detection du changement
             const navEvent = new PopStateEvent('popstate');
             window.dispatchEvent(navEvent);
         });
