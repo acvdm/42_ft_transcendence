@@ -34,6 +34,9 @@ export function initGamePage(mode: string): void {
     const bgValueInput = document.getElementById('bg-value') as HTMLInputElement;
     const gameField = document.getElementById('left') as HTMLElement;
 
+
+    const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
+
     if (!modal || !startButton || !nameInput) {
         return;
     }
@@ -150,11 +153,26 @@ export function initGamePage(mode: string): void {
                 if (gameField) {
                     gameField.style.backgroundColor = color;
                 }
-                bgDropdown.classList.add('hidden');
+                bgDropdown.classList.toggle('hidden');
+                if (bgDropdown) bgDropdown.classList.add('hidden');
             });
 
             bgGrid.appendChild(div);
         });
+
+        if (bgResetButton) {
+            bgResetButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const resetColor = '#FFFFFF';
+
+                if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
+                if (bgValueInput) bgValueInput.value = resetColor;
+                if (gameField) gameField.style.backgroundColor = resetColor;
+                
+                bgDropdown.classList.toggle('hidden');
+                if (ballDropdown) ballDropdown.classList.add('hidden');
+            });
+        }
 
         bgButton.addEventListener('click', (e) => {
             e.stopPropagation();
