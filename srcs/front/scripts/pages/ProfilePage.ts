@@ -572,6 +572,7 @@ export function afterRender(): void {
             const result = await response.json();
 
             if (response.ok) {
+                alert("Username updated successfully!");
                 if (usernameDisplay) usernameDisplay.innerText = newUsername;
                 console.log("Username updated");
                 return true;
@@ -636,8 +637,9 @@ export function afterRender(): void {
             });
             const user = await response.json();
             if (response.ok) {
+                alert("Email updated successfully!");
                 user.email = newEmail;
-                console.log("Email mis à jour");
+                console.log("Email updated");
                 return true;
             } else {
                 console.error(user.error.message);
@@ -645,8 +647,8 @@ export function afterRender(): void {
                 return false;
             }
         } catch (error) {
-            console.error("Erreur réseau:", error);
-            alert("Erreur lors de la sauvegarde du Email");
+            console.error("Network error:", error);
+            alert("Error saving email");
             return false;
         }
     };
@@ -669,7 +671,7 @@ export function afterRender(): void {
                 console.error("Failed to save theme to database");
             }
         } catch (error) {
-            console.error("Network error while saving theme:", error);
+            console.error("Network error saving theme:", error);
         }
     };
 

@@ -6315,6 +6315,7 @@
         });
         const result = await response.json();
         if (response.ok) {
+          alert("Username updated successfully!");
           if (usernameDisplay) usernameDisplay.innerText = newUsername;
           console.log("Username updated");
           return true;
@@ -6372,8 +6373,9 @@
         });
         const user = await response.json();
         if (response.ok) {
+          alert("Email updated successfully!");
           user.email = newEmail;
-          console.log("Email mis \xE0 jour");
+          console.log("Email updated");
           return true;
         } else {
           console.error(user.error.message);
@@ -6381,8 +6383,8 @@
           return false;
         }
       } catch (error) {
-        console.error("Erreur r\xE9seau:", error);
-        alert("Erreur lors de la sauvegarde du Email");
+        console.error("Network error:", error);
+        alert("Error saving email");
         return false;
       }
     };
@@ -6401,7 +6403,7 @@
           console.error("Failed to save theme to database");
         }
       } catch (error) {
-        console.error("Network error while saving theme:", error);
+        console.error("Network error saving theme:", error);
       }
     };
     const setupField = (elements, fieldName) => {
