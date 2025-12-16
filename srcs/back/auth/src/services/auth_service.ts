@@ -118,21 +118,14 @@ export async function changeEmailInCredential (
 
 export async function changePasswordInCredential (
     db: Database,
-    userId: number,
-    oldPwd: string,
-    newPwd: string
-): Promise<void> {
-    const credential = await credRepo.getCredentialbyUserID(db, userId);
-    if (!credential)
-        throw new Error('User not found');
+    credentialId: number,
+    newPwd1: string,
+): Promise<void> 
+{
 
-    const isValidPwd = await crypt.verifyPassword(oldPwd, credential.pwd_hashed);
-    if (!isValidPwd)
-        throw new Error('Invalid current password');
+    const newHashedPwd = await crypt.hashPassword(newPwd1);
 
-    const newHashedPwd = await crypt.hashPassword(newPwd);
-
-    await credRepo.changePwd(db, credential.id, newHashedPwd);
+    await credRepo.changePwd(db, credentialId, newHashedPwd);
 }
 
 ///////////// RAJOUTER PAR FAUSTINE

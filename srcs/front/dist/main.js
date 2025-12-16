@@ -240,6 +240,7 @@
         const result = await response.json();
         if (result.require_2fa) {
           console.log("2FA require");
+          localStorage.setItem("is2faEnabled", "true");
           tempToken = result.temp_token;
           if (modal2fa) {
             modal2fa.classList.remove("hidden");
@@ -250,6 +251,7 @@
           return;
         }
         if (result.success) {
+          localStorage.setItem("is2faEnabled", "false");
           const { access_token, user_id } = result.data;
           await init2faLogin(access_token, user_id, cachedStatus);
           if (access_token) localStorage.setItem("accessToken", access_token);
@@ -312,6 +314,7 @@
         });
         const result = await response.json();
         if (response.ok && result.success) {
+          localStorage.setItem("is2faEnabled", "true");
           const { access_token, user_id } = result;
           if (modal2fa) modal2fa.classList.add("hidden");
           await init2faLogin(access_token, user_id, cachedStatus);
@@ -319,10 +322,10 @@
           if (error2fa) {
             error2fa.textContent = "Invalid code.";
             error2fa.classList.remove("hidden");
+            console.error("2FA Error:", result.error.message);
           }
         }
       } catch (error) {
-        console.error("2FA Error:", error);
         if (error2fa) {
           error2fa.textContent = "Error during verification.";
           error2fa.classList.remove("hidden");
@@ -4480,12 +4483,13 @@
         }
         friendList.forEach((friendship) => {
           const user = friendship.user;
-          const friend = friendship.friend_id;
+          const friend = friendship.friend;
           if (!user || !friend) {
             console.log(`Invalid friendship data`);
             return;
           }
-          const selectedFriend = user.id === this.userId ? friend : user;
+          const currentUserId = Number(this.userId);
+          const selectedFriend = user.id === currentUserId ? friend : user;
           const status = selectedFriend.status || "invisible";
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
@@ -5026,7 +5030,7 @@
         }
       });
       this.socket.on("receivedWizz", (data) => {
-        this.addMessage(`<strong>${data.author} sent a nudge</strong>`, "System");
+        this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
         this.shakeElement(this.wizzContainer, 3e3);
       });
       this.socket.on("receivedAnimation", (data) => {
@@ -5505,7 +5509,16 @@
     if (localGameButton) {
       localGameButton.addEventListener("click", () => {
         console.log("Lancement d'une partie locale...");
-        window.history.pushState({}, "", "/game");
+        window.history.pushState({ gameMode: "local" }, "", "/game");
+        const navEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(navEvent);
+      });
+    }
+    const remoteGameButton = document.getElementById("remote-game");
+    if (remoteGameButton) {
+      remoteGameButton.addEventListener("click", () => {
+        console.log("Lancement d'une partie remote...");
+        window.history.pushState({ gameMode: "remote" }, "", "/game");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
       });
@@ -5653,19 +5666,46 @@
 
 
         <!-- MODALE POUR LE 2FA -->
-
-
-    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Two-Factor Authentication</div>
-                <div class="title-bar-controls">
-                    <button id="close-2fa-modal" aria-label="Close"></button>
+<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">Two-Factor Authentication</div>
+            <div class="title-bar-controls">
+                <button id="close-2fa-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        
+        <div class="window-body p-6">
+            
+            <div id="method-selection" class="flex flex-col gap-4 items-center">
+                <div class="text-center mb-2">
+                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
+                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Authenticator App</h3>
+                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Email Verification</h3>
+                            <p class="text-xs text-gray-600">Receive codes via email</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="window-body p-6 flex flex-col items-center gap-4">
-                <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
+
+            <div id="qr-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-qr" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
+                
+                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
                 </div>
 
@@ -5682,22 +5722,53 @@
                 <div class="flex justify-center gap-4 mt-4 w-full">
                     <button id="confirm-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
                         VALIDATE
                     </button>
                     <button id="cancel-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
                         CANCEL
                     </button>
                 </div>
             </div>
+
+            <div id="email-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-email" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
+                
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
+                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
+                </div>
+                
+                <div class="w-full flex flex-col gap-2">
+                    <label class="text-sm">Code will be sent to:</label>
+                    <input type="email" id="2fa-email-input" 
+                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
+                        disabled 
+                        readonly>
+                </div>
+                
+                <button id="send-code-button" 
+                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
+                    SEND CODE
+                </button>
+                
+                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
+                    <label class="text-sm">Enter code received:</label>
+                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                    
+                    <button id="confirm-2fa-email" 
+                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
+                        VALIDATE
+                    </button>
+                </div>
+            </div>
+            
         </div>
     </div>
-
-
+</div>
 
         <!-- MODALE POUR L'AVATAR -->
 
@@ -5901,16 +5972,29 @@
     const gridContainer = document.getElementById("modal-grid");
     const previewAvatar = document.getElementById("modal-preview-avatar");
     const fileInput = document.getElementById("file-input");
+    const methodSelection = document.getElementById("method-selection");
+    const qrContent = document.getElementById("qr-content");
+    const emailContent = document.getElementById("email-content");
+    const buttonSelectQr = document.querySelector('[data-method="qr"]');
+    const buttonSelectEmail = document.querySelector('[data-method="email"]');
+    const buttonBackQr = document.getElementById("back-from-qr");
+    const buttonBackEmail = document.getElementById("back-from-email");
+    const inputEmail2fa = document.getElementById("2fa-email-input");
+    const buttonSendCode = document.getElementById("send-code-button");
+    const codeVerif = document.getElementById("code-verification");
+    const inputCodeEmail = document.getElementById("2fa-input-code-email");
+    const buttonConfirmEmail = document.getElementById("confirm-2fa-email");
     const button2faToggle = document.getElementById("2fa-modal-button");
     const modal2fa = document.getElementById("2fa-modal");
     const close2faButton = document.getElementById("close-2fa-modal");
     const cancel2faButton = document.getElementById("cancel-2fa-button");
-    const confirm2faButton = document.getElementById("confirm-2fa-button");
-    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2faQrButton = document.getElementById("confirm-2fa-button");
+    const input2faQr = document.getElementById("2fa-input-code");
     const qrCodeImg = document.getElementById("2fa-qr-code");
     const userId = localStorage.getItem("userId");
     let selectedImageSrc = mainAvatar?.src || "";
-    let is2faEnabled = false;
+    let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
+    let currentUserEmail = "";
     const statusImages3 = {
       "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
       "online": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
@@ -6001,41 +6085,73 @@
         button2faToggle.classList.add("bg-green-600");
       }
     };
+    update2faButton(is2faEnabled);
     const close2fa = () => {
       if (modal2fa) {
         modal2fa.classList.add("hidden");
         modal2fa.classList.remove("flex");
-        if (input2fa) input2fa.value = "";
+        if (input2faQr) input2faQr.value = "";
+        if (inputCodeEmail) inputCodeEmail.value = "";
         if (qrCodeImg) qrCodeImg.src = "";
       }
     };
-    const open2faGenerate = async () => {
-      if (!userId) return;
-      try {
-        if (modal2fa) {
-          modal2fa.classList.remove("hidden");
-          modal2fa.classList.add("flex");
+    const switch2faView = (view) => {
+      methodSelection?.classList.add("hidden");
+      qrContent?.classList.add("hidden");
+      emailContent?.classList.add("hidden");
+      methodSelection?.classList.remove("flex");
+      qrContent?.classList.remove("flex");
+      emailContent?.classList.remove("flex");
+      if (view === "selection") {
+        methodSelection?.classList.remove("hidden");
+        methodSelection?.classList.add("flex");
+      } else if (view === "qr") {
+        qrContent?.classList.remove("hidden");
+        qrContent?.classList.add("flex");
+      } else if (view === "email") {
+        emailContent?.classList.remove("hidden");
+        emailContent?.classList.add("flex");
+        if (inputEmail2fa) {
+          inputEmail2fa.value = currentUserEmail;
+          inputEmail2fa.disabled = true;
         }
+        if (codeVerif) {
+          codeVerif.classList.remove("hidden");
+          codeVerif.classList.add("flex");
+        }
+        if (buttonSendCode) buttonSendCode.classList.add("hidden");
+      }
+    };
+    const initiate2faSetup = async (method) => {
+      if (!userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
+      try {
         const response = await fetchWithAuth(`api/auth/2fa/generate`, {
-          method: "POST"
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: backendType })
         });
         if (response.ok) {
           const result = await response.json();
-          if (result.data && result.data.qrCodeUrl) {
-            if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+          if (method === "qr") {
+            if (result.data && result.data.qrCodeUrl) {
+              if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+              switch2faView("qr");
+            }
+          } else {
+            console.log("Email code sent");
+            switch2faView("email");
           }
         } else {
-          console.error("Failed to generate QR code");
-          alert("Error generating 2FA QR code");
-          close2fa();
+          console.error("Failed to initiate 2FA");
+          alert("Error initializing 2FA setup");
         }
       } catch (error) {
         console.error("Network error 2FA generate:", error);
-        close2fa();
+        alert("Network error");
       }
     };
-    const enable2fa = async () => {
-      const code = input2fa.value.trim();
+    const enable2fa = async (code, type) => {
       if (!code || code.length < 6) {
         alert("Please enter a valid 6-digit code.");
         return;
@@ -6045,10 +6161,11 @@
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ code, type })
         });
         if (response.ok) {
           update2faButton(true);
+          localStorage.setItem("is2faEnabled", "true");
           close2fa();
           alert("2FA is now enabled!");
         } else {
@@ -6069,6 +6186,7 @@
         });
         if (response.ok) {
           update2faButton(false);
+          localStorage.setItem("is2faEnabled", "false");
           alert("2FA disabled.");
         } else {
           alert("Error disabling 2FA.");
@@ -6077,16 +6195,29 @@
         console.error(error);
       }
     };
+    buttonSelectQr?.addEventListener("click", () => initiate2faSetup("qr"));
+    buttonSelectEmail?.addEventListener("click", () => initiate2faSetup("email"));
+    buttonBackQr?.addEventListener("click", () => switch2faView("selection"));
+    buttonBackEmail?.addEventListener("click", () => switch2faView("selection"));
+    confirm2faQrButton?.addEventListener("click", () => enable2fa(input2faQr.value.trim(), "qr"));
+    buttonConfirmEmail?.addEventListener("click", () => enable2fa(inputCodeEmail.value.trim(), "email"));
     button2faToggle?.addEventListener("click", () => {
       if (is2faEnabled) {
         disable2fa();
       } else {
-        open2faGenerate();
+        if (modal2fa) {
+          modal2fa.classList.remove("hidden");
+          modal2fa.classList.add("flex");
+          if (input2faQr) input2faQr.value = "";
+          if (inputCodeEmail) inputCodeEmail.value = "";
+          switch2faView("selection");
+        }
       }
     });
     close2faButton?.addEventListener("click", close2fa);
     cancel2faButton?.addEventListener("click", close2fa);
-    confirm2faButton?.addEventListener("click", enable2fa);
+    const cancelEmailButton = document.getElementById("cancel-2fa-email");
+    cancelEmailButton?.addEventListener("click", close2fa);
     modal2fa?.addEventListener("click", (e) => {
       if (e.target === modal2fa) close2fa();
     });
@@ -6109,6 +6240,7 @@
         const response = await fetchWithAuth(`api/users/${userId}`);
         if (response.ok) {
           const user = await response.json();
+          currentUserEmail = user.email || "";
           if (user.theme) {
             localStorage.setItem("userTheme", user.theme);
             applyTheme(user.theme);
@@ -6125,24 +6257,24 @@
             const display = container.querySelector(".field-display");
             const input = container.querySelector(".field-input");
             if (fieldName && display && input) {
-              let value2 = user[fieldName];
-              if (fieldName === "alias" && user.alias) {
-                value2 = user.alias;
+              let value2;
+              if (fieldName === "alias") {
+                value2 = user.alias || "";
                 if (usernameDisplay)
                   usernameDisplay.innerText = value2;
-              } else if (fieldName === "bio" && user.bio) {
-                value2 = user.bio;
+              } else if (fieldName === "bio") {
+                value2 = user.bio || "";
                 if (bioDisplay)
-                  bioDisplay.innerHTML = parseMessage(value2);
-              } else if (fieldName === "email" && user.email) {
-                value2 = user.email;
+                  bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
+              } else if (fieldName === "email") {
+                value2 = user.email || "";
               } else if (fieldName === "password") {
                 value2 = "********";
               }
-              if (value2) {
-                display.innerText = value2;
+              if (value2 !== void 0) {
+                display.innerText = value2 || (fieldName === "email" ? "No email" : "Empty");
                 if (fieldName !== "password") {
-                  input.placeholder = value2;
+                  input.placeholder = value2 || "Empty";
                 }
               }
             }
@@ -6322,6 +6454,7 @@
           display.innerText = "********";
         } else {
           display.innerText = newValue;
+          input.value = "";
           input.placeholder = newValue;
         }
         if (fieldName === "bio" && charCountElement) {
@@ -6459,12 +6592,13 @@
       const confirmPass = confirmPwdInput.value;
       if (!oldPass || !newPass || !confirmPass) {
         if (pwdError) {
-          pwdError.innerText = "All inpuys are required.";
+          pwdError.innerText = "All inputs are required.";
           pwdError.classList.remove("hidden");
         }
         return;
       }
       if (newPass !== confirmPass) {
+        console.log("newpass: , confirmpass:", newPass, confirmPass);
         if (pwdError) {
           pwdError.innerText = "These are not the same. Try again";
           pwdError.classList.remove("hidden");
@@ -6478,11 +6612,12 @@
         }
         return;
       }
+      console.log("newpass: , confirmpass:", newPass, confirmPass);
       try {
         const response = await fetchWithAuth(`api/users/${userId}/password`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ oldPass, newPass })
+          body: JSON.stringify({ oldPass, newPass, confirmPass })
         });
         const result = await response.json();
         if (response.ok) {
@@ -6540,7 +6675,7 @@
       }
     });
     deleteButton?.addEventListener("click", () => {
-      const defaultAvatar = "https://wlm.vercel.app/assets/usertiles/default.png";
+      const defaultAvatar = "/assets/basic/default.png";
       selectedImageSrc = defaultAvatar;
       if (previewAvatar) previewAvatar.src = defaultAvatar;
     });
@@ -6757,10 +6892,382 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-300 items-center justify-between px-24 bg-gray-50" style="height: 60px;"> \n                        \n                        <span class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-3xl font-bold text-gray-900">0 - 0</span>\n\n                        <span class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+
+  // scripts/pages/RemoteGame.html
+  var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+	</div>
+
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+		
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+
+			<!-- ========= LEFT WINDOW ========= -->
+			<div class="window w-[700px] min-w-[700px] flex flex-col">
+				<div class="title-bar">
+					<div class="title-bar-text">Games</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 1350px; min-width: 1350px; background-color: white;">
+    
+                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
+                        
+                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>
+
+                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>
+
+                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>
+
+                    </div>
+
+                    <div class="flex-1"></div>
+                    
+                </div>
+			</div>
+
+
+			<!-- ========= RIGHT WINDOW ========= -->
+			<div class="window flex flex-col flex-1 min-w-0">
+				<div class="title-bar">
+					<div class="title-bar-text">Chat</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
+
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+
+						<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+							
+							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+								<div class="flex gap-4 items-center">
+									<div class="relative w-[80px] h-[80px] flex-shrink-0">
+										<!-- l'image (profil principal) -->
+										<img id="chat-header-avatar" 
+											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+											src="" 
+											alt="User avatar">
+										<!-- le cadre -->
+										<img id="chat-header-status" 
+											class="absolute inset-0 w-full h-full object-contain" 
+											src="/assets/basic/status_online_small.png" 
+											alt="Status frame">
+									</div>
+									<div class="flex flex-col justify-start leading-tight">
+										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+									</div>
+								</div>
+								
+								<div class="relative self-start mt-2">
+									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
+										<img src="/assets/chat/meatball.png"
+											 alt="options"
+											 class="w-6 h-6 object-contain"
+											 style="width: 15px; height: 15px; vertical-align: -25px;">
+									</button>
+
+
+
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
+    
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/view_profile.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
+												View profile
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/game_notification.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
+												Invite to play
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/report.png" 
+													class="w-5 h-5 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-report-user" class="text-left text-sm text-gray-700 flex-1">
+												Report user
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/block.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
+												Block user
+											</button>
+										</div>
+
+									</div> <!-- fin de la div menu -->
+
+								</div>
+
+
+							</div>
+
+
+
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+									<!-- Menu pour les fonts -->
+									
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+										<!-- Menu dropdown -> il s'ouvre quand on clique -->
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+
+										</div>
+									</button>
+
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
+						</div>
+					</div> 
+				</div>
+			</div> 
+		</div>
+
+	</div>
+
+<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">User Profile</div>
+            <div class="title-bar-controls">
+                <button id="close-friend-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="window-body p-6">
+            
+            <div class="flex flex-row gap-6 mb-6 items-center">
+                
+                <div class="relative w-[130px] h-[130px] flex-shrink-0">
+                    <img id="friend-modal-status" 
+                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
+                    
+                    <img id="friend-modal-avatar" 
+                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
+                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                </div>
+
+                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
+                    
+                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
+                </div>
+            </div>
+
+            <fieldset class="border border-gray-300 p-4 rounded-sm">
+                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Games Played:</span>
+                        <span id="friend-stat-games" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Wins:</span>
+                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Losses:</span>
+                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Rank:</span>
+                        <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end mt-4">
+                    <button id="close-friend-modal-button" 
+                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+
+        <div class="window w-[600px] shadow-xl">
+            <div class="title-bar">
+                <div class="title-bar-text">Start the game</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
+                
+                <div class="flex flex-col gap-1">
+                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>
+                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>
+                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>
+                </div>
+
+                <fieldset class="border-2 border-gray-300 p-2 mt-2">
+                    <div class="flex flex-row items-center gap-2 mb-3 relative">
+                        <label class="text-sm font-semibold">Choose your ball :</label>
+                        
+                        <div class="relative">
+                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
+                            </button>
+
+                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
+                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>
+                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                                    </div>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">
+                    </div>
+
+
+
+                    <div class="flex flex-row gap-2">
+                        <label class="text-sm font-semibold">Choose your background :</label>
+                        
+                        <div class="relative">
+                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
+                            </button>
+
+                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
+                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
+                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                                </div>
+                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
+                                    Reset to White
+                                </button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" id="bg-value" value="#E8F4F8">
+                    </div>
+                </fieldset>
+
+                <div class="flex justify-center mt-4">
+                    <button id="start-game-btn"
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                        PLAY
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>`;
 
   // scripts/pages/GamePage.ts
   function render4() {
+    const state = window.history.state;
+    if (state && state.gameMode === "remote") {
+      return RemoteGame_default;
+    }
     return LocalGame_default;
   }
   function initGamePage(mode) {
@@ -6768,7 +7275,8 @@
     const startButton = document.getElementById("start-game-btn");
     const nameInput = document.getElementById("opponent-name");
     const errorMsg = document.getElementById("error-message");
-    const player2Display = document.getElementById("player2-name-display");
+    const player1Display = document.getElementById("player-1-name");
+    const player2Display = document.getElementById("player-2-name");
     const ballButton = document.getElementById("ball-selector-button");
     const ballDropdown = document.getElementById("ball-selector-dropdown");
     const ballGrid = document.getElementById("ball-grid");
@@ -6780,8 +7288,19 @@
     const selectedBgPreview = document.getElementById("selected-bg-preview");
     const bgValueInput = document.getElementById("bg-value");
     const gameField = document.getElementById("left");
+    const bgResetButton = document.getElementById("bg-reset-button");
     if (!modal || !startButton || !nameInput) {
       return;
+    }
+    const userId = localStorage.getItem("userId");
+    if (userId && player1Display) {
+      fetchWithAuth(`api/users/${userId}`).then((response) => {
+        if (response.ok) return response.json();
+        throw new Error("Error fetching user");
+      }).then((userData) => {
+        if (userData && userData.alias)
+          player1Display.innerText = userData.alias;
+      }).catch((err) => console.error("Cannot fetch username for player 1"));
     }
     if (mode === "local") {
       modal.classList.remove("hidden");
@@ -6843,10 +7362,22 @@
           if (gameField) {
             gameField.style.backgroundColor = color;
           }
-          bgDropdown.classList.add("hidden");
+          bgDropdown.classList.toggle("hidden");
+          if (bgDropdown) bgDropdown.classList.add("hidden");
         });
         bgGrid.appendChild(div);
       });
+      if (bgResetButton) {
+        bgResetButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const resetColor = "#FFFFFF";
+          if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
+          if (bgValueInput) bgValueInput.value = resetColor;
+          if (gameField) gameField.style.backgroundColor = resetColor;
+          bgDropdown.classList.toggle("hidden");
+          if (ballDropdown) ballDropdown.classList.add("hidden");
+        });
+      }
       bgButton.addEventListener("click", (e) => {
         e.stopPropagation();
         bgDropdown.classList.toggle("hidden");
@@ -6868,7 +7399,7 @@
       const selectedBall = ballValueInput ? ballValueInput.value : "classic";
       const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
       if (player2Display) {
-        player2Display.textContent = opponentName;
+        player2Display.innerText = opponentName;
       }
       if (gameField) {
         gameField.style.backgroundColor = selectedBg;
@@ -6909,8 +7440,11 @@
     "/game": {
       render: render4,
       // La fonction HTML
-      afterRender: () => initGamePage("local")
-      // La fonction TS, on force le mode 'local' pour l'instant
+      afterRender: () => {
+        const state = window.history.state;
+        const mode = state && state.gameMode ? state.gameMode : "local";
+        initGamePage(mode);
+      }
     },
     "/404": {
       render: NotFoundPage

@@ -83,13 +83,32 @@ export function afterRender(): void {
     const previewAvatar = document.getElementById('modal-preview-avatar') as HTMLImageElement;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     
-    // modale 2fa
+    // modale 2fa - ELEMENTS
+    const methodSelection = document.getElementById('method-selection');
+    const qrContent = document.getElementById('qr-content');
+    const emailContent = document.getElementById('email-content');
+
+    // Correction: utilisation de querySelector pour les attributs data
+    const buttonSelectQr = document.querySelector('[data-method="qr"]');
+    const buttonSelectEmail = document.querySelector('[data-method="email"]');
+
+    const buttonBackQr = document.getElementById('back-from-qr');
+    const buttonBackEmail = document.getElementById('back-from-email');
+
+    // Elements specifiques Email
+    const inputEmail2fa = document.getElementById('2fa-email-input') as HTMLInputElement;
+    const buttonSendCode = document.getElementById('send-code-button');
+    const codeVerif = document.getElementById('code-verification');
+    const inputCodeEmail = document.getElementById('2fa-input-code-email') as HTMLInputElement;
+    const buttonConfirmEmail = document.getElementById('confirm-2fa-email');
+    
+    // Elements specifiques QR / Modale globale
     const button2faToggle = document.getElementById('2fa-modal-button') as HTMLImageElement;
     const modal2fa = document.getElementById('2fa-modal') as HTMLImageElement;
     const close2faButton = document.getElementById('close-2fa-modal');
     const cancel2faButton = document.getElementById('cancel-2fa-button');
-    const confirm2faButton = document.getElementById('confirm-2fa-button');
-    const input2fa = document.getElementById('2fa-input-code') as HTMLInputElement;
+    const confirm2faQrButton = document.getElementById('confirm-2fa-button');
+    const input2faQr = document.getElementById('2fa-input-code') as HTMLInputElement;
     const qrCodeImg = document.getElementById('2fa-qr-code') as HTMLImageElement;
 
 
@@ -97,7 +116,8 @@ export function afterRender(): void {
 
     // on conserve l'url temporaire qu'on a choisir dans la modale
     let selectedImageSrc: string = mainAvatar?.src || "";
-    let is2faEnabled = false;
+    let is2faEnabled = localStorage.getItem('is2faEnabled') === 'true';
+    let currentUserEmail: string = "";
 
     const statusImages: { [key: string]: string } = {
         'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
@@ -152,16 +172,15 @@ export function afterRender(): void {
     if (themeGrid && themeGrid.children.length === 0) {
         Object.entries(appThemes).forEach(([key, theme]) => {
             const div = document.createElement('div');
-            // Mise à jour des classes pour la sélection
+
             div.className = `theme-item cursor-pointer border-2 rounded overflow-hidden transition-all hover:shadow-lg`;
-            div.dataset.themeKey = key; // Stocker la clé pour la sélection
+            div.dataset.themeKey = key;
             
-            // Appliquer la bordure bleue si c'est le thème actuel
             if (key === currentTheme) {
-                div.classList.add('border-blue-500', 'shadow-blue-500/50'); // Bordure initiale pour le thème actif
-                selectedThemeElement = div; // Définir comme élément sélectionné
+                div.classList.add('border-blue-500', 'shadow-blue-500/50');
+                selectedThemeElement = div;
             } else {
-                div.classList.add('border-gray-300', 'hover:border-blue-500'); // Bordure par défaut
+                div.classList.add('border-gray-300', 'hover:border-blue-500');
             }
 
             div.innerHTML = `
@@ -179,7 +198,6 @@ export function afterRender(): void {
             div.addEventListener('click', function(this: HTMLDivElement) {
                 const themeKey = this.dataset.themeKey as string;
 
-                // 1. Mise à jour de l'affichage de sélection (bordures)
                 if (selectedThemeElement) {
                     selectedThemeElement.classList.remove('border-blue-500', 'shadow-lg');
                     selectedThemeElement.classList.add('border-gray-300', 'hover:border-blue-500');
@@ -188,10 +206,9 @@ export function afterRender(): void {
                 this.classList.add('border-blue-500', 'shadow-lg');
                 selectedThemeElement = this;
 
-                // 2. Application et sauvegarde du thème
                 applyTheme(themeKey);
                 updateTheme(themeKey);
-                closeThemeFunc(); // Fermer la modale après la sélection
+                closeThemeFunc(); 
             });
 
             themeGrid.appendChild(div);
@@ -227,56 +244,95 @@ export function afterRender(): void {
         }
     };
 
+    update2faButton(is2faEnabled);
+
     const close2fa = () => {
         if (modal2fa)
         {
             modal2fa.classList.add('hidden');
             modal2fa.classList.remove('flex');
-            if (input2fa) input2fa.value = ""; // on reset le tout
+            
+            // on reset le tout
+            if (input2faQr) input2faQr.value = ""; 
+            if (inputCodeEmail) inputCodeEmail.value = "";
             if (qrCodeImg) qrCodeImg.src = "";
         }
     };
 
-    // method 'APP' | 'EMAIL'
-    const open2faGenerate = async () => {
-        if (!userId) return;
+    const switch2faView = (view: 'selection' | 'qr' | 'email') => {
+        // toutes les modales sont cachées
+        methodSelection?.classList.add('hidden');
+        qrContent?.classList.add('hidden');
+        emailContent?.classList.add('hidden');
+        
+        methodSelection?.classList.remove('flex');
+        qrContent?.classList.remove('flex');
+        emailContent?.classList.remove('flex');
 
-        try {
-            if (modal2fa) {
-                modal2fa.classList.remove('hidden');
-                modal2fa.classList.add('flex');
+        // affichange de la sleeciotn email ou app
+        if (view === 'selection') {
+            methodSelection?.classList.remove('hidden');
+            methodSelection?.classList.add('flex');
+        } 
+        else if (view === 'qr') {
+            qrContent?.classList.remove('hidden');
+            qrContent?.classList.add('flex');
+        } 
+        else if (view === 'email') {
+            emailContent?.classList.remove('hidden');
+            emailContent?.classList.add('flex');
+            
+            // email du user
+            if (inputEmail2fa) {
+                inputEmail2fa.value = currentUserEmail; 
+                inputEmail2fa.disabled = true;
             }
 
-            // fetch pour le qr code
-            // //!\\ besoin de preciser le type de la methode 2FA -> 'APP' ou 'EMAIL' (precise dans le body en json)
+            // On affiche directement l'input code car le mail est envoyé par initiate2faSetup
+            if (codeVerif) {
+                codeVerif.classList.remove('hidden');
+                codeVerif.classList.add('flex');
+            }
+            if (buttonSendCode) buttonSendCode.classList.add('hidden');
+        }
+    };
+
+    const initiate2faSetup = async (method: 'qr' | 'email') => {
+        if (!userId) return;
+
+        const backendType = method === 'qr' ? 'APP' : 'EMAIL';
+        try {
+            //fetch pour le qr code ou l'email
             const response = await fetchWithAuth(`api/auth/2fa/generate`, {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: backendType })
             });
             
             if (response.ok) {
                 const result = await response.json();
-
-                // GESTION DE LAFFICHAGE SELON LA METHODE
-
-                // if (method === 'APP)
-                if (result.data && result.data.qrCodeUrl) {
-                    if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
-
-                // if (method === 'EMAIL)
+                
+                if (method === 'qr') {
+                    if (result.data && result.data.qrCodeUrl) {
+                        if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+                        switch2faView('qr');
+                    }
+                } else {
+                    // Email envoyé avec succès
+                    console.log("Email code sent");
+                    switch2faView('email');
                 }
             } else {
-                console.error("Failed to generate QR code");
-                alert("Error generating 2FA QR code");
-                close2fa();
+                console.error("Failed to initiate 2FA");
+                alert("Error initializing 2FA setup");
             }
         } catch (error) {
             console.error("Network error 2FA generate:", error);
-            close2fa();
+            alert("Network error");
         }
     };
 
-    const enable2fa = async () => {
-        const code = input2fa.value.trim();
+    const enable2fa = async (code: string, type: 'qr' | 'email') => {
         if (!code || code.length < 6) {
             alert("Please enter a valid 6-digit code.");
             return;
@@ -286,11 +342,12 @@ export function afterRender(): void {
             const response = await fetchWithAuth(`api/auth/2fa/enable`, {
                 method: 'POST', // ou patch?? a tester
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code })
+                body: JSON.stringify({ code: code, type: type })
             });
 
             if (response.ok) {
                 update2faButton(true);
+                localStorage.setItem('is2faEnabled', 'true');
                 close2fa();
                 alert("2FA is now enabled!");
             } else {
@@ -314,6 +371,7 @@ export function afterRender(): void {
 
             if (response.ok) {
                 update2faButton(false);
+                localStorage.setItem('is2faEnabled', 'false');
                 alert("2FA disabled.");
             } else {
                 alert("Error disabling 2FA.");
@@ -323,23 +381,42 @@ export function afterRender(): void {
         }
     };
 
+    buttonSelectQr?.addEventListener('click', () => initiate2faSetup('qr'));
+    buttonSelectEmail?.addEventListener('click', () => initiate2faSetup('email'));
+
+    buttonBackQr?.addEventListener('click', () => switch2faView('selection'));
+    buttonBackEmail?.addEventListener('click', () => switch2faView('selection'));
+
+    confirm2faQrButton?.addEventListener('click', () => enable2fa(input2faQr.value.trim(), 'qr'));
+    buttonConfirmEmail?.addEventListener('click', () => enable2fa(inputCodeEmail.value.trim(), 'email'));
+
     button2faToggle?.addEventListener('click', () => {
         if (is2faEnabled) {
             disable2fa();
         } else {
-            open2faGenerate();
+            if (modal2fa) {
+                modal2fa.classList.remove('hidden');
+                modal2fa.classList.add('flex');
+                
+                if (input2faQr) input2faQr.value = '';
+                if (inputCodeEmail) inputCodeEmail.value = '';
+                
+                switch2faView('selection');
+            }
         }
     });
 
     close2faButton?.addEventListener('click', close2fa);
-    cancel2faButton?.addEventListener('click', close2fa);
-    confirm2faButton?.addEventListener('click', enable2fa);
+    cancel2faButton?.addEventListener('click', close2fa); // Cancel QR
     
+    // Pour l'email, on peut aussi utiliser close2fa pour annuler
+    const cancelEmailButton = document.getElementById('cancel-2fa-email');
+    cancelEmailButton?.addEventListener('click', close2fa);
+
     // si on clique dehors 
     modal2fa?.addEventListener('click', (e) => {
         if (e.target === modal2fa) close2fa();
     });
-
 
 
     // ============================================================
@@ -379,6 +456,9 @@ export function afterRender(): void {
             
             if (response.ok) {
                 const user: UserData = await response.json();
+                
+                // IMPORTANT: on recupere l'email ici
+                currentUserEmail = user.email || "";
 
                 // maj theme
                 if (user.theme) {
@@ -398,35 +478,32 @@ export function afterRender(): void {
 
                 // initialisation des champs
                 fieldContainers.forEach(container => {
-
-
                     const fieldName = container.dataset.field;
                     const display = container.querySelector('.field-display') as HTMLParagraphElement;
                     const input = container.querySelector('.field-input') as HTMLInputElement;
 
                     if (fieldName && display && input) {
-                        let value = user[fieldName as keyof UserData] as string | undefined;
+                        let value: string | undefined;
 
-                        if (fieldName === 'alias' && user.alias) {
-                            value = user.alias;
+                        if (fieldName === 'alias') {
+                            value = user.alias || '';
                             if (usernameDisplay)
                                 usernameDisplay.innerText = value;
-                        } else if (fieldName === 'bio' && user.bio) {
-                            value = user.bio;
+                        } else if (fieldName === 'bio') {
+                            value = user.bio || '';
                             if (bioDisplay)
-                                bioDisplay.innerHTML = parseMessage(value);
-                        } else if (fieldName === 'email' && user.email) {
-                            value = user.email;
+                                bioDisplay.innerHTML = parseMessage(value) || "Share a quick message";
+                        } else if (fieldName === 'email') {
+                            value = user.email || '';
                         } else if (fieldName === 'password') {
-                            // on ne met pas la vraie valeur dans le champs pour des questions de securité
                             value = "********"; 
                         }
 
-                        if (value) {
-                            display.innerText = value;
+                        // Mise à jour de l'affichage pour tous les champs
+                        if (value !== undefined) {
+                            display.innerText = value || (fieldName === 'email' ? 'No email' : 'Empty');
                             if (fieldName !== 'password') {
-                                // idem que le placeholder au debut
-                                input.placeholder = value;
+                                input.placeholder = value || "Empty";
                             }
                         }
                     }
@@ -666,6 +743,7 @@ export function afterRender(): void {
                  display.innerText = "********"; // on cache avec des etoiles
             } else {
                  display.innerText = newValue;
+                 input.value = "";
                  input.placeholder = newValue; // maj placeholder
             }
 
@@ -849,20 +927,21 @@ export function afterRender(): void {
         // on verifie que tous les chanps sont remplis
         if (!oldPass || !newPass || !confirmPass) {
             if (pwdError) {
-                pwdError.innerText = "All inpuys are required.";
+                pwdError.innerText = "All inputs are required.";
                 pwdError.classList.remove('hidden');
             }
             return;
         }
 
         if (newPass !== confirmPass) {
+            console.log("newpass: , confirmpass:", newPass, confirmPass);
             if (pwdError) {
                 pwdError.innerText = "These are not the same. Try again";
                 pwdError.classList.remove('hidden');
             }
             return;
         }
-
+        
         if (newPass.length < 8) {
             if (pwdError) {
                 pwdError.innerText = "Password must be at least 8 characters.";
@@ -871,11 +950,14 @@ export function afterRender(): void {
             return;
         }
 
+        console.log("newpass: , confirmpass:", newPass, confirmPass);
+
         try {
+            
             const response = await fetchWithAuth(`api/users/${userId}/password`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ oldPass, newPass })
+                body: JSON.stringify({ oldPass, newPass, confirmPass })
             });
 
             const result = await response.json();
@@ -957,7 +1039,7 @@ export function afterRender(): void {
 
     // bouton delete qui reset l'image en par defaut
     deleteButton?.addEventListener('click', () => {
-        const defaultAvatar = "https://wlm.vercel.app/assets/usertiles/default.png";
+        const defaultAvatar = "/assets/basic/default.png";
         selectedImageSrc = defaultAvatar;
         if (previewAvatar) previewAvatar.src = defaultAvatar;
     });
