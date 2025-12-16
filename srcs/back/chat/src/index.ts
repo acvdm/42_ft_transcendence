@@ -35,6 +35,21 @@ fastify.ready().then(() => {
     fastify.io.on('connection', (socket: Socket) => {
         console.log(`Client connected (Fastify): ${socket.id}`);
 
+        socket.on('registerUser', (userId: string) => {
+            socket.join(`user${userId}`);
+            console.log(`User ${userId} registered for notifications`);
+        });
+
+        // On envoie le signal uniquement à la personne concernée
+        socket.on('sendFriendRequestNotif', (data: { targetId: string }) => {
+            fastify.io.to(`user_${data.targetId}`).emit('receiveFriendRequestNotif');
+        });
+
+        // acceptation de l'amitie
+        socket.on('acceptFriendRequest', (data: { targetId: string }) => {
+            fastify.io.to(`user_${data.targetId}`).emit('friendRequestAccepted');
+        });
+
         socket.on("joinChannel", async (channelKey: string) => { 
             await joinChannel(socket, fastify.io, channelKey); 
         });

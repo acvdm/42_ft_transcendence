@@ -16,9 +16,19 @@ export class FriendList {
     public init() {
         this.loadFriends();
         this.setupFriendRequests();
-        this.setupNotifications();
+        this.setupNotifications(); // Configure les clics (ne lance pas de boucle)
+        this.checkNotifications(); // Lance la première vérification manuellement
         this.listenToUpdates();
         this.setupBlockListener();
+
+        // enregistrement pour recevoir les notifs
+        const socket = SocketService.getInstance().socket;
+        if (socket && this.userId) {
+            socket.emit('registerUser', this.userId);
+        }
+
+        // On déplace l'intervalle ici pour éviter les récursions infinies
+        setInterval(() => this.checkNotifications(), 30000);
     }
 
     private async loadFriends() {
@@ -164,6 +174,14 @@ export class FriendList {
     
                     if (response.ok) {
                         this.showFriendMessage('Friend request sent!', 'success', friendRequestMessage); // si ok alors la friend request en envoyee
+                        
+                        const targetId = data.data.friend_id || data.data.friend?.id;
+                        if (targetId) {
+                            SocketService.getInstance().socket.emit('sendFriendRequestNotif', { 
+                                targetId: targetId 
+                            });
+                        }
+                        
                         friendSearchInput.value = '';
                         
                         setTimeout(() => { // timeout pour pas garder le menu ouvert indefiniment
@@ -213,122 +231,136 @@ export class FriendList {
         }
     };
 
+    // Configuration des écouteurs pour le bouton notif (exécuté une seule fois)
     private setupNotifications() {
         const notifButton = document.getElementById('notification-button');
         const notifDropdown = document.getElementById('notification-dropdown');
-        const notifList = document.getElementById('notification-list');
 
-        if (notifButton && notifDropdown && notifList) {
-             const handleRequest = async (askerId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) => { 
-                const userId = localStorage.getItem('userId');
-                if (!itemDiv.dataset.friendshipId)
-                    return;
-                try {
-                    const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ status: action }) 
-                    });
-                    if (response.ok) {
-                        itemDiv.style.opacity = '0'; 
-                        setTimeout(() => {
-                            itemDiv.remove();
-                            if (action === 'validated') this.loadFriends(); 
-                            checkNotifications(); 
-                        }, 300);
-                    } else {
-                        console.error("Failed to update request");
-                    }
-                } catch (error) {
-                    console.error("Network error", error);
-                }
-            };
-
-            const checkNotifications = async () => {
-                const userId = localStorage.getItem('userId');
-                if (!userId) return;
-                try {
-                    const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
-                    if (!response.ok) throw new Error('Failed to fetch pendings');
-    
-                    const requests = await response.json();
-                    const pendingList = requests.data;
-                    const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
-                    
-                    if (pendingList.length > 0) {
-                        if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
-                    } else {
-                        if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
-                    }
-    
-                    notifList.innerHTML = '';
-                    if (pendingList.length === 0) {
-                        notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
-                        return;
-                    }
-
-                    // Modif ligne 231 la req est de type Friendship
-                    pendingList.forEach((req: Friendship) => {
-                        const item = document.createElement('div');
-                        item.dataset.friendshipId = req.id.toString();
-                        item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-    
-                        // Modif ligne 240 de ${req.alias} à ${req.user?.alias}
-                        item.innerHTML = `
-                            <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                                <img src="/assets/basic/logo.png" 
-                                    class="w-full h-full object-cover rounded"
-                                    alt="avatar">
-                            </div>
-                            <div class="flex-1 min-w-0 pr-4">
-                                <p class="text-sm text-gray-800">
-                                    <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
-                                </p>
-                            </div>
-                            <div class="flex gap-2 flex-shrink-0">
-                                <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
-                                    <span class="text-green-600 font-bold text-sm">✓</span>
-                                </button>
-                                <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
-                                    <span class="text-red-600 font-bold text-sm">✕</span>
-                                </button>
-                                <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
-                                    <span class="text-gray-600 text-xs">🚫</span>
-                                </button>
-                            </div>
-                        `;
-                        const buttonAccept = item.querySelector('.btn-accept');
-                        const buttonReject = item.querySelector('.btn-reject');
-                        const buttonBlock  = item.querySelector('.btn-block');
-    
-                        buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); handleRequest(req.id, 'validated', item); });
-                        buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); handleRequest(req.id, 'rejected', item); });
-                        buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); handleRequest(req.id, 'blocked', item); });
-    
-                        notifList.appendChild(item);
-                    });
-                } catch (error) {
-                    console.error("Error fetching notifications:", error);
-                }
-            };
-            
+        if (notifButton && notifDropdown) {
             notifButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 notifDropdown.classList.toggle('hidden');
                 document.getElementById('add-friend-dropdown')?.classList.add('hidden');
                 if (!notifDropdown.classList.contains('hidden')) {
-                    checkNotifications();
+                    this.checkNotifications(); // Appel méthode classe
                 }
             });
             document.addEventListener('click', (e) => {
                 if (!notifDropdown.contains(e.target as Node) && !notifButton.contains(e.target as Node))
                     notifDropdown.classList.add('hidden');
             });
-
-            checkNotifications();
-            setInterval(checkNotifications, 30000);
         }
     }
+
+    // Récupération des données (Méthode de classe indépendante)
+    private async checkNotifications() {
+        const userId = localStorage.getItem('userId');
+        const notifList = document.getElementById('notification-list');
+        
+        if (!userId || !notifList) return;
+
+        try {
+            const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+            if (!response.ok) throw new Error('Failed to fetch pendings');
+
+            const requests = await response.json();
+            const pendingList = requests.data;
+            const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+            
+            if (pendingList.length > 0) {
+                if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+            } else {
+                if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
+            }
+
+            notifList.innerHTML = '';
+            if (pendingList.length === 0) {
+                notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+                return;
+            }
+
+            // Modif ligne 231 la req est de type Friendship
+            pendingList.forEach((req: Friendship) => {
+                const item = document.createElement('div');
+                item.dataset.friendshipId = req.id.toString();
+                item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+
+                // Modif ligne 240 de ${req.alias} à ${req.user?.alias}
+                item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                        <img src="/assets/basic/logo.png" 
+                            class="w-full h-full object-cover rounded"
+                            alt="avatar">
+                    </div>
+                    <div class="flex-1 min-w-0 pr-4">
+                        <p class="text-sm text-gray-800">
+                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                        </p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                            <span class="text-green-600 font-bold text-sm">✓</span>
+                        </button>
+                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                            <span class="text-red-600 font-bold text-sm">✕</span>
+                        </button>
+                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                            <span class="text-gray-600 text-xs">🚫</span>
+                        </button>
+                    </div>
+                `;
+                const buttonAccept = item.querySelector('.btn-accept');
+                const buttonReject = item.querySelector('.btn-reject');
+                const buttonBlock  = item.querySelector('.btn-block');
+
+                // On utilise this.handleRequest (les écouteurs sont attachés ici)
+                if (req.user && req.user.id) {
+                    buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'validated', item); });
+                    buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'rejected', item); });
+                    buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'blocked', item); });
+                }
+
+                notifList.appendChild(item);
+            });
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+        }
+    }
+
+    // On ajoute requesterId en premier argument
+    private async handleRequest(requesterId: number, action: 'validated' | 'rejected' | 'blocked', itemDiv: HTMLElement) { 
+        const userId = localStorage.getItem('userId');
+        if (!itemDiv.dataset.friendshipId) return;
+
+        try {
+            const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: action }) 
+            });
+
+            if (response.ok) {
+                itemDiv.style.opacity = '0'; 
+                setTimeout(() => {
+                    itemDiv.remove();
+                    if (action === 'validated') {
+                        this.loadFriends(); // Recharge MA liste (User2)
+                        
+                        // --- AJOUT : Prévenir l'autre (User1) ---
+                        SocketService.getInstance().socket.emit('acceptFriendRequest', { 
+                            targetId: requesterId 
+                        });
+                    }
+                    // Appel correct via 'this'
+                    this.checkNotifications(); 
+                }, 300);
+            } else {
+                console.error("Failed to update request");
+            }
+        } catch (error) {
+            console.error("Network error", error);
+        }
+    };
 
     private listenToUpdates() {
         const socket = SocketService.getInstance().socket;
@@ -344,6 +376,18 @@ export class FriendList {
              if (data.username !== currentUsername) {
                 this.updateFriendUI(data.username, data.status);
              }
+        });
+
+        socket.on('receiveFriendRequestNotif', () => {
+            console.log("New friend request received !");
+            // On peut maintenant appeler checkNotifications car c'est une méthode de classe
+            this.checkNotifications(); 
+        });
+
+
+        socket.on('friendRequestAccepted', () => {
+            console.log("Friend request has been accepted !");
+            this.loadFriends();
         });
     }
 
