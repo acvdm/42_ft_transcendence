@@ -115,7 +115,7 @@ export async function getEmailbyID(
 ) : Promise<string | undefined> 
 {
     const row = await db.get(`
-        SELECT email FROM CREDENTIALS WHERE id = ?`,
+        SELECT email FROM CREDENTIALS WHERE user_id = ?`,
         [user_id]
     );
     return row?.email;

@@ -323,6 +323,7 @@ export async function  generateTwoFA(
         const email = await credRepo.getEmailbyID(db, userId);
 
         console.log(`[ACTIVATION] Code envoyé à ${email}: ${code}`)
+        
         return { message : 'Code send by email' };
         // revoir avec le vrai email
     }
