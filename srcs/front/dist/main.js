@@ -6124,11 +6124,12 @@
     };
     const initiate2faSetup = async (method) => {
       if (!userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
       try {
         const response = await fetchWithAuth(`api/auth/2fa/generate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: method })
+          body: JSON.stringify({ type: backendType })
         });
         if (response.ok) {
           const result = await response.json();

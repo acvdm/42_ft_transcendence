@@ -3,8 +3,8 @@ import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
-import { validateNewEmail, validateRegisterInput } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA } from './services/auth_service.js';
+import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
+import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
