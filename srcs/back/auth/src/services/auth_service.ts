@@ -419,9 +419,9 @@ export async function finalizeLogin2FA(
             secret: Secret.fromBase32(secretStr)
         });
 
-        isValid = totp.validate({ token: code, window: 1});
-        if (isValid === null) {
-            return null;
+        const delta = totp.validate({ token: code, window: 1});
+        if (delta !== null) {
+            isValid = true;
         }
     }
 
