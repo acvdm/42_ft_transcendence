@@ -102,6 +102,17 @@ function handleLogin() {
                 console.log("2FA require");
                 localStorage.setItem('is2faEnabled', 'true');
                 tempToken = result.temp_token;
+
+                const instructions = document.getElementById('2fa-instructions');
+
+                if (instructions) {
+                    if (result.method === 'EMAIL') {
+                        instructions.textContent = "A verification code has been sent to your email address."
+                    } else {
+                        instructions.textContent = "Please enter the code from your authenticator app."
+                    }
+                }
+
                 if (modal2fa) {
                     modal2fa.classList.remove('hidden');
                     modal2fa.classList.add('flex');

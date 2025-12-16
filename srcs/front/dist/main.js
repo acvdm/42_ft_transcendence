@@ -68,7 +68,7 @@
             <div class="window-body p-6 flex flex-col items-center gap-4">
                 <div class="text-center">
                     <h2 class="text-lg font-bold mb-2">Security Check</h2>
-                    <p class="text-xs text-gray-600 mb-4">Please enter the code from Google authenticator.</p>
+                    <p id="2fa-instructions" class="text-xs text-gray-600 mb-4">Please enter the verification code.</p>
                 </div>
 
                 <div class="w-full flex flex-col gap-2 mt-2">
@@ -242,6 +242,14 @@
           console.log("2FA require");
           localStorage.setItem("is2faEnabled", "true");
           tempToken = result.temp_token;
+          const instructions = document.getElementById("2fa-instructions");
+          if (instructions) {
+            if (result.method === "EMAIL") {
+              instructions.textContent = "A verification code has been sent to your email address.";
+            } else {
+              instructions.textContent = "Please enter the code from your authenticator app.";
+            }
+          }
           if (modal2fa) {
             modal2fa.classList.remove("hidden");
             modal2fa.classList.add("flex");
