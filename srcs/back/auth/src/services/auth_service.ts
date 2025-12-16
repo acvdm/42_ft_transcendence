@@ -1,8 +1,9 @@
 import * as credRepo from "../repositories/credentials.js";
 import * as tokenRepo from '../repositories/token.js';
-import * as crypt from '../utils/crypto.js'
+import * as crypt from '../utils/crypto.js';
 import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
 import * as QRCode from 'qrcode';
+import { send2FAEmail } from "../utils/mailer.js";
 
 import { 
     generateAccessToken, 
