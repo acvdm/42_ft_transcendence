@@ -1,6 +1,7 @@
 import { fetchWithAuth } from "../pages/api"; 
 import { statusImages, statusLabels } from "./Data";
 import { parseMessage } from "./ChatUtils";
+import SocketService from "../services/SocketService";
 
 export class UserProfile {
     private bioText: HTMLElement | null;
@@ -212,6 +213,19 @@ export class UserProfile {
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ status: selectedStatus })
                             });
+
+                            const socket = SocketService.getInstance().socket;
+                            const username = localStorage.getItem('username');
+
+                            if (socket && username) {
+                                socket.emit('notifyStatusChange', { 
+                                    userId: Number(userId), 
+                                    status: selectedStatus,
+                                    username: username 
+                                });
+                            }
+                            this.updateStatusDisplay(selectedStatus);
+
                         } catch (error) {
                             console.error('Error updating status:', error);
                         }

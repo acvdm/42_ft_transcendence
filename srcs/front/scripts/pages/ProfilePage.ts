@@ -168,20 +168,18 @@ export function afterRender(): void {
     };
     closeThemeModal?.addEventListener('click', closeThemeFunc);
 
-    // rajouter la personnalisation sur la modale pour avoir un apercu du theme
     if (themeGrid && themeGrid.children.length === 0) {
         Object.entries(appThemes).forEach(([key, theme]) => {
             const div = document.createElement('div');
-            // Mise à jour des classes pour la sélection
+
             div.className = `theme-item cursor-pointer border-2 rounded overflow-hidden transition-all hover:shadow-lg`;
-            div.dataset.themeKey = key; // Stocker la clé pour la sélection
+            div.dataset.themeKey = key;
             
-            // Appliquer la bordure bleue si c'est le thème actuel
             if (key === currentTheme) {
-                div.classList.add('border-blue-500', 'shadow-blue-500/50'); // Bordure initiale pour le thème actif
-                selectedThemeElement = div; // Définir comme élément sélectionné
+                div.classList.add('border-blue-500', 'shadow-blue-500/50');
+                selectedThemeElement = div;
             } else {
-                div.classList.add('border-gray-300', 'hover:border-blue-500'); // Bordure par défaut
+                div.classList.add('border-gray-300', 'hover:border-blue-500');
             }
 
             div.innerHTML = `
@@ -199,7 +197,6 @@ export function afterRender(): void {
             div.addEventListener('click', function(this: HTMLDivElement) {
                 const themeKey = this.dataset.themeKey as string;
 
-                // 1. Mise à jour de l'affichage de sélection (bordures)
                 if (selectedThemeElement) {
                     selectedThemeElement.classList.remove('border-blue-500', 'shadow-lg');
                     selectedThemeElement.classList.add('border-gray-300', 'hover:border-blue-500');
@@ -208,10 +205,9 @@ export function afterRender(): void {
                 this.classList.add('border-blue-500', 'shadow-lg');
                 selectedThemeElement = this;
 
-                // 2. Application et sauvegarde du thème
                 applyTheme(themeKey);
                 updateTheme(themeKey);
-                closeThemeFunc(); // Fermer la modale après la sélection
+                closeThemeFunc();
             });
 
             themeGrid.appendChild(div);
@@ -288,7 +284,6 @@ export function afterRender(): void {
                 inputEmail2fa.disabled = true;
             }
 
-            // On affiche directement l'input code car le mail est envoyé par initiate2faSetup
             if (codeVerif) {
                 codeVerif.classList.remove('hidden');
                 codeVerif.classList.add('flex');
@@ -381,19 +376,16 @@ export function afterRender(): void {
         }
     };
 
-    // Listeners Sélection
     buttonSelectQr?.addEventListener('click', () => initiate2faSetup('qr'));
     buttonSelectEmail?.addEventListener('click', () => initiate2faSetup('email'));
 
-    // Listeners Retour
+    
     buttonBackQr?.addEventListener('click', () => switch2faView('selection'));
     buttonBackEmail?.addEventListener('click', () => switch2faView('selection'));
 
-    // Listeners Validation
     confirm2faQrButton?.addEventListener('click', () => enable2fa(input2faQr.value.trim(), 'qr'));
     buttonConfirmEmail?.addEventListener('click', () => enable2fa(inputCodeEmail.value.trim(), 'email'));
 
-    // Gestion Ouverture/Fermeture Modale Principale
     button2faToggle?.addEventListener('click', () => {
         if (is2faEnabled) {
             disable2fa();
@@ -402,7 +394,6 @@ export function afterRender(): void {
                 modal2fa.classList.remove('hidden');
                 modal2fa.classList.add('flex');
                 
-                // Reset inputs
                 if (input2faQr) input2faQr.value = '';
                 if (inputCodeEmail) inputCodeEmail.value = '';
                 

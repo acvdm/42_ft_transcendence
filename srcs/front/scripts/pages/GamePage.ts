@@ -140,7 +140,7 @@ export function initGamePage(mode: string): void {
             div.style.height = "36px";
 
             const colorCircle = document.createElement('div');
-            colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300"; // trouver pourquoi ca fait pas un rond -> forcer en inline?
+            colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
             colorCircle.style.backgroundColor = color;
             
             div.appendChild(colorCircle);
