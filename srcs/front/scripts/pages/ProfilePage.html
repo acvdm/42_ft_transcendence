@@ -138,32 +138,46 @@
 
 
         <!-- MODALE POUR LE 2FA -->
-
-
-    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Two-Factor Authentication</div>
-                <div class="title-bar-controls">
-                    <button id="close-2fa-modal" aria-label="Close"></button>
+<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">Two-Factor Authentication</div>
+            <div class="title-bar-controls">
+                <button id="close-2fa-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        
+        <div class="window-body p-6">
+            
+            <div id="method-selection" class="flex flex-col gap-4 items-center">
+                <div class="text-center mb-2">
+                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
+                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Authenticator App</h3>
+                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Email Verification</h3>
+                            <p class="text-xs text-gray-600">Receive codes via email</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="window-body p-6 flex flex-col items-center gap-4">
 
-                <div> <!-- Container pour avoir l'option mail/qr code-->
-
-
-
-
-
-
-                </div>
-
-
-
-
-                <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
+            <div id="qr-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-qr" class="self-start text-sm text-blue-600 hover:underline">← Back</button>
+                
+                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
                 </div>
 
@@ -180,22 +194,53 @@
                 <div class="flex justify-center gap-4 mt-4 w-full">
                     <button id="confirm-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold" style="padding: 7px;">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
                         VALIDATE
                     </button>
                     <button id="cancel-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="padding: 7px;">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
                         CANCEL
                     </button>
                 </div>
             </div>
+
+            <div id="email-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-email" class="self-start text-sm text-blue-600 hover:underline">← Back</button>
+                
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
+                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
+                </div>
+                
+                <div class="w-full flex flex-col gap-2">
+                    <label class="text-sm">Code will be sent to:</label>
+                    <input type="email" id="2fa-email-input" 
+                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
+                        disabled 
+                        readonly>
+                </div>
+                
+                <button id="send-code-button" 
+                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
+                    SEND CODE
+                </button>
+                
+                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
+                    <label class="text-sm">Enter code received:</label>
+                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                    
+                    <button id="confirm-2fa-email" 
+                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
+                        VALIDATE
+                    </button>
+                </div>
+            </div>
+            
         </div>
     </div>
-
-
+</div>
 
         <!-- MODALE POUR L'AVATAR -->
 
