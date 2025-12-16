@@ -15,7 +15,7 @@ export async function initDatabase(): Promise<Database> {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         email TEXT UNIQUE NOT NULL CHECK (length(email) < 75),
-        pwd_hashed TEXT UNIQUE NOT NULL,
+        pwd_hashed TEXT UNIQUE,
         two_fa_secret TEXT,
         is_2fa_enabled INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP

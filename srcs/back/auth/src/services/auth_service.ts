@@ -100,6 +100,45 @@ export async function registerUser(
     };
 }
 
+export async function registerGuest (
+    db: Database,
+    user_id: number,
+    email: string
+): Promise<authResponse>
+{
+    // 1. Vérification que l'email n'est pas déjà pris
+    const existing = await credRepo.findByEmail(db, email);
+    if (existing)
+        throw new Error('Email already in use');
+
+    // 2. Insertion DB
+    const credential_id = await credRepo.createCredentials(db, {
+        user_id,
+        email,
+        pwd_hashed: "",
+        two_fa_secret: null,
+        is_2fa_enabled: 0
+    });
+
+    // 4. Génération token
+    const tokens = await generateTokens(user_id, credential_id);
+
+    // 5. Insertion dans la DB tokens
+    await tokenRepo.createToken(db, {
+        user_id,
+        credential_id, 
+        refresh_token: tokens.refresh_token,
+        expires_at: tokens.expires_at
+    });
+
+    return { 
+        access_token: tokens.access_token, 
+        refresh_token: tokens.refresh_token, 
+        user_id 
+    };
+}
+
+
 export async function changeEmailInCredential (
     db: Database,
     user_id: number,
