@@ -31,8 +31,8 @@ services:
         - .env
       volumes:
       # Monter les certificats
-      - ./certs/gateway.key:/app/certs/service.key:ro
-      - ./certs/gateway.crt:/app/certs/service.crt:ro
+      - ./certs/gateway/gateway.key:/app/certs/service.key:ro
+      - ./certs/gateway/gateway.crt:/app/certs/service.crt:ro
       networks: 
         - transcendence 
 
@@ -71,8 +71,8 @@ services:
       volumes:
         # - auth_data:/app/data
         - ./back/datadev:/app/data
-        - ./certs/auth.key:/app/certs/service.key:ro
-        - ./certs/auth.crt:/app/certs/service.crt:ro
+        - ./certs/auth/auth.key:/app/certs/service.key:ro
+        - ./certs/auth/auth.crt:/app/certs/service.crt:ro
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/auth.sqlite", "SELECT 1;"]
         interval: 2s
@@ -92,8 +92,8 @@ services:
       volumes:
         # - chat_data:/app/data
         - ./back/datadev:/app/data
-        - ./certs/chat.key:/app/certs/service.key:ro
-        - ./certs/chat.crt:/app/certs/service.crt:ro
+        - ./certs/chat/chat.key:/app/certs/service.key:ro
+        - ./certs/chat/chat.crt:/app/certs/service.crt:ro
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/chat.sqlite", "SELECT 1;"]
         interval: 2s
@@ -113,8 +113,8 @@ services:
       volumes:
         # - game_data:/app/data
         - ./back/datadev:/app/data
-        - ./certs/game.key:/app/certs/service.key:ro
-        - ./certs/game.crt:/app/certs/service.crt:ro
+        - ./certs/game/game.key:/app/certs/service.key:ro
+        - ./certs/game/game.crt:/app/certs/service.crt:ro
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/game.sqlite", "SELECT 1;"]
         interval: 2s
@@ -135,8 +135,8 @@ services:
         # - user_data:/app/data
         # - user_avatars:/app/user/avatars
         - ./back/datadev:/app/data
-        - ./certs/user.key:/app/certs/service.key:ro
-        - ./certs/user.crt:/app/certs/service.crt:ro
+        - ./certs/user/user.key:/app/certs/service.key:ro
+        - ./certs/userhttp/user.crt:/app/certs/service.crt:ro
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/user.sqlite", "SELECT 1;"]
         interval: 2s

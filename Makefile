@@ -1,3 +1,9 @@
+certs:
+	echo "Generating SSL certificates..."
+	mkdir -p srcs/certs
+	chmod +x generate-certs.sh
+	./generate-certs.sh
+
 all: up
 
 up:	build
@@ -12,7 +18,7 @@ stop:
 start:
 	docker compose -f ./srcs/docker-compose.yml start
 
-build:
+build: certs
 	docker compose -f ./srcs/docker-compose.yml build
 
 clean:
@@ -24,6 +30,7 @@ clean:
 	@docker volume rm $$(docker volume ls -q) || true
 
 	@docker network rm $$(docker network ls -q) || true
+	@rm -rf srcs/certs/
 
 re: clean up
 
