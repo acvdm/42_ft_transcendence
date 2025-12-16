@@ -16,7 +16,7 @@ export async function initDatabase(): Promise<Database> {
         user_id INTEGER NOT NULL,
         email TEXT UNIQUE NOT NULL CHECK (length(email) < 75),
         pwd_hashed TEXT UNIQUE NOT NULL,
-        two_fa_secret TEXT,
+        two_fa_secret TEXT UNIQUE,
         two_fa_method TEXT DEFAULT 'NONE' CHECK(two_fa_method IN ('NONE', 'APP', 'EMAIL')),
         email_otp TEXT,
         email_otp_expires_at DATETIME,

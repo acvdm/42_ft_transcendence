@@ -46,7 +46,6 @@ export async function createUserInDB (
 }
 
 
-
 //-------- GET / READ
 export async function findUserByID (
     db: Database,

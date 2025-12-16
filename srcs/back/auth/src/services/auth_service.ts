@@ -318,9 +318,9 @@ export async function  generateTwoFA(
     if (type === 'EMAIL')
     {
         const code = crypt.generateRandomCode(6);
-        const expDate = new Date(Date.now() * 10 * 60 * 1000);
+        const expDate = new Date(Date.now() + 10 * 60 * 1000);
         await credRepo.saveEmailCode(db, userId, code, expDate);
-        const email = credRepo.getEmailbyID(db, userId);
+        const email = await credRepo.getEmailbyID(db, userId);
 
         console.log(`[ACTIVATION] Code envoyé à ${email}: ${code}`)
         return { message : 'Code send by email' };
@@ -419,7 +419,7 @@ export async function finalizeLogin2FA(
             secret: Secret.fromBase32(secretStr)
         });
 
-        const isValid = totp.validate({ token: code, window: 1});
+        isValid = totp.validate({ token: code, window: 1});
         if (isValid === null) {
             return null;
         }
