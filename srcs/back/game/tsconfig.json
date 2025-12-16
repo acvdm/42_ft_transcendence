@@ -10,6 +10,6 @@
 		"skipLibCheck": true, // ignore les erreurs dans les bibliothèques
 		"forceConsistentCasingInFileNames": true, // cohérence des noms de fichiers
 	},
-	"include": ["scripts/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
+	"include": ["src/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
 	"exclude": ["node_modules"] // ne pas compiler les bibliothèques externes
 }

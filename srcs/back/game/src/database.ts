@@ -51,7 +51,6 @@ export async function initDatabase(): Promise<Database>{
     await db.exec(`
         CREATE TABLE IF NOT EXISTS STATS (
             user_id INTEGER NOT NULL,
-            game_type TEXT NOT NULL,
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
             draws INTEGER DEFAULT 0,

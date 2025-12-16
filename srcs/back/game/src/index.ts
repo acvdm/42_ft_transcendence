@@ -3,6 +3,7 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
+import { createMatch } from './repositories/matches.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -15,10 +16,37 @@ async function main()
 }
 
 
+
+//---------------------------------------
+//---------------- GAME -----------------
+//---------------------------------------
+
+/* -- CREATE A GAME --*/
+fastify.post('/games', async (request, reply) =>
+{
+	try
+	{
+		const body = request as { 
+			playerOneId: number, 
+			playerTwoId: number, 
+			type: string, 
+			name: string, 
+			tournamentId: number }
+
+		const game = await createMatch(db, body.type, body.tournamentId)
+	}
+	catch (err:any)
+	{
+
+	}
+})
+
+
+
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get
 // async = fonction qui s'execute quand on accede a cette route -> request = info de la requete, reply = objet pour envouer reponse
-fastify.get('/status', async (request, reply) => 
+fastify.get('/health', async (request, reply) => 
 {
 	return { service: 'game', status: 'ready', port: 3003 };
 });
