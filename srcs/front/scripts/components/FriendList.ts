@@ -41,14 +41,15 @@ export class FriendList {
 
             friendList.forEach((friendship: any) => {
                 const user = friendship.user;
-                const friend = friendship.friend_id;
+                const friend = friendship.friend;
 
                 if (!user || !friend)
                 {
                     console.log(`Invalid friendship data`);
                     return;
                 }
-                const selectedFriend = (user.id === this.userId) ? friend : user;
+                const currentUserId = Number(this.userId);
+                const selectedFriend = (user.id === currentUserId) ? friend : user;
                 const status = selectedFriend.status || 'invisible';
 
                 const friendItem = document.createElement('div');

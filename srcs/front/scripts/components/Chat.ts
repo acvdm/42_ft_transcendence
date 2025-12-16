@@ -74,7 +74,7 @@ export class Chat {
         // reception ici du serveur au client
         this.socket.on("receivedWizz", (data: { author: string }) => {
             // on affiche le message -> xx send a nudge (poke?)
-            this.addMessage(`<strong>${data.author} sent a nudge</strong>`, "System");
+            this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
             // on declenche la secousse
             this.shakeElement(this.wizzContainer, 3000);
         });

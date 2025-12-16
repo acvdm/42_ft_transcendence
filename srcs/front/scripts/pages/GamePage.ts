@@ -1,8 +1,14 @@
-import htmlContent from "./LocalGame.html";
+import htmlContentLocal from "./LocalGame.html";
+import htmlContentRemote from "./RemoteGame.html";
 import { ballEmoticons, gameBackgrounds } from "../components/Data";
+import { fetchWithAuth } from "./api";
 
 export function render(): string {
-    return htmlContent;
+    const state = window.history.state;
+    if (state && state.gameMode === 'remote') {
+        return htmlContentRemote;
+    }
+     return htmlContentLocal;
 }
 
 export function initGamePage(mode: string): void {
@@ -11,7 +17,9 @@ export function initGamePage(mode: string): void {
     const startButton = document.getElementById('start-game-btn') as HTMLButtonElement;
     const nameInput = document.getElementById('opponent-name') as HTMLInputElement;
     const errorMsg = document.getElementById('error-message') as HTMLElement;
-    const player2Display = document.getElementById('player2-name-display') as HTMLElement;
+
+    const player1Display = document.getElementById('player-1-name') as HTMLElement;
+    const player2Display = document.getElementById('player-2-name') as HTMLElement;
     
     const ballButton = document.getElementById('ball-selector-button') as HTMLButtonElement;
     const ballDropdown = document.getElementById('ball-selector-dropdown') as HTMLElement;
@@ -26,8 +34,29 @@ export function initGamePage(mode: string): void {
     const bgValueInput = document.getElementById('bg-value') as HTMLInputElement;
     const gameField = document.getElementById('left') as HTMLElement;
 
+
+    const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
+
     if (!modal || !startButton || !nameInput) {
         return;
+    }
+
+
+    // on recupere le username du joueur connecte
+    const userId = localStorage.getItem('userId');
+    if (userId && player1Display)
+    {
+        fetchWithAuth(`api/users/${userId}`)
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('Error fetching user');
+        })
+        .then (userData => {
+            if (userData && userData.alias)
+                player1Display.innerText = userData.alias;
+        })
+        .catch(err => console.error('Cannot fetch username for player 1'));
+
     }
 
     // affichage selon le mode, on rajoutera remote + tournoi plus tard
@@ -124,11 +153,26 @@ export function initGamePage(mode: string): void {
                 if (gameField) {
                     gameField.style.backgroundColor = color;
                 }
-                bgDropdown.classList.add('hidden');
+                bgDropdown.classList.toggle('hidden');
+                if (bgDropdown) bgDropdown.classList.add('hidden');
             });
 
             bgGrid.appendChild(div);
         });
+
+        if (bgResetButton) {
+            bgResetButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const resetColor = '#FFFFFF';
+
+                if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
+                if (bgValueInput) bgValueInput.value = resetColor;
+                if (gameField) gameField.style.backgroundColor = resetColor;
+                
+                bgDropdown.classList.toggle('hidden');
+                if (ballDropdown) ballDropdown.classList.add('hidden');
+            });
+        }
 
         bgButton.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -159,7 +203,7 @@ export function initGamePage(mode: string): void {
         const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
         // on met a jour le nom du second joueur
         if (player2Display) {
-            player2Display.textContent = opponentName;
+            player2Display.innerText = opponentName;
         }
 
         if (gameField) {

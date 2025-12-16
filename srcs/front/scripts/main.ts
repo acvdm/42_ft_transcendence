@@ -46,7 +46,11 @@ const routes: { [key: string]: Page } = {
 	},
 	'/game': {
         render: GamePage, // La fonction HTML
-        afterRender: () => initGamePage('local') // La fonction TS, on force le mode 'local' pour l'instant
+        afterRender: () => {
+			const state = window.history.state;
+			const mode = state && state.gameMode ? state.gameMode : 'local';
+			initGamePage(mode);
+		}
     },
 	'/404': {
 		render: NotFoundPage

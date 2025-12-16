@@ -802,7 +802,7 @@ export function afterRender(): void {
     // reception ici du serveur au client
     socket.on("receivedWizz", (data: { author: string }) => {
         // on affiche le message -> xx send a nudge (poke?)
-        addMessage(`<strong>${data.author} sent a nudge</strong>`, "Admin");
+        addMessage(`[b]${data.author} sent a nudge[/b]`, "Admin");
         // on declenche la secousse
         shakeElement(wizzContainer, 3000)
     })
