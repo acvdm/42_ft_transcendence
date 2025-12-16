@@ -6156,12 +6156,13 @@
         alert("Please enter a valid 6-digit code.");
         return;
       }
+      const backendType = type === "qr" ? "APP" : "EMAIL";
       try {
         const response = await fetchWithAuth(`api/auth/2fa/enable`, {
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, type })
+          body: JSON.stringify({ code, type: backendType })
         });
         if (response.ok) {
           update2faButton(true);
