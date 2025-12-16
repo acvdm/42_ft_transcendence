@@ -5030,7 +5030,7 @@
         }
       });
       this.socket.on("receivedWizz", (data) => {
-        this.addMessage(`<strong>${data.author} sent a nudge</strong>`, "System");
+        this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
         this.shakeElement(this.wizzContainer, 3e3);
       });
       this.socket.on("receivedAnimation", (data) => {
@@ -5677,6 +5677,19 @@
                 </div>
             </div>
             <div class="window-body p-6 flex flex-col items-center gap-4">
+
+                <div> <!-- Container pour avoir l'option mail/qr code-->
+
+
+
+
+
+
+                </div>
+
+
+
+
                 <div class="text-center">
                     <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
@@ -5696,13 +5709,13 @@
                     <button id="confirm-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold" style="padding: 7px;">
                         VALIDATE
                     </button>
                     <button id="cancel-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="padding: 7px;">
                         CANCEL
                     </button>
                 </div>
