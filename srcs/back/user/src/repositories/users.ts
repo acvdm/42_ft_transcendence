@@ -50,9 +50,9 @@ export async function createGuestInDB (
     const alias = generateRandomAlias(db);
     
     const result = await db.run(`
-        INSERT INTO USERS (alias)
-        VALUES (?)`,
-        [alias]
+        INSERT INTO USERS (alias, is_guest)
+        VALUES (?, ?)`,
+        [alias, 1]
     );
 
     if (!result.lastID) 
