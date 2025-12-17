@@ -29,7 +29,7 @@ export async function generateRandomAlias(
         "Charming",
         "Angry",
         "Cute",
-        "Naugthy",
+        "Naughty",
         "Bad",
         "Chatty",
         "Confident",
