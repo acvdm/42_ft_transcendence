@@ -71,7 +71,7 @@ export class FriendProfileModal {
     }
 
     private updateUI(user: any) {
-        if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "https://wlm.vercel.app/assets/usertiles/default.png";
+        if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
         if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages['invisible'];
         if (this.username) this.username.innerText = user.alias;
         if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";

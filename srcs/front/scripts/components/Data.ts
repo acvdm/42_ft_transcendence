@@ -15,7 +15,7 @@ export interface Theme {
 export const appThemes: { [key: string]: Theme } = {
     'basic': {
         name: 'Classic Blue',
-        headerUrl: 'https://wlm.vercel.app/assets/background/background.jpg',
+        headerUrl: '/assets/basic/background.jpg',
         navColor: 'linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)',
         bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)'
     },

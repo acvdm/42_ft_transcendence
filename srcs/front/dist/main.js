@@ -7,7 +7,7 @@
   };
 
   // scripts/pages/LoginPage.html
-  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -15,7 +15,7 @@
 			<!-- le cadre -->
 			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign in to Transcendence
@@ -3561,7 +3561,7 @@
   var appThemes = {
     "basic": {
       name: "Classic Blue",
-      headerUrl: "https://wlm.vercel.app/assets/background/background.jpg",
+      headerUrl: "/assets/basic/background.jpg",
       navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
       bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)"
     },
@@ -4046,7 +4046,7 @@
   var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
 	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+		 style="background-image: url(/assets/basic/background.png); background-size: cover;">
 	</div>
 
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
@@ -4226,17 +4226,6 @@
 
 									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
 										</div>
-								</details>
-
-								<details class="group">
-									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-										\u{1F4C1} Groups
-									</summary>
-
-									<div class="mt-2 ml-4 flex flex-col gap-2">
-										<div class="text-xs text-gray-600 ml-1">les bogoce</div>
-										<div class="text-xs text-gray-600 ml-1">les cheums</div>
-									</div>
 								</details>
 							</div>
 						</div>
@@ -4439,14 +4428,14 @@
                     
                     <img id="friend-modal-avatar" 
                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                            src="/assets/basic/default.png">
                 </div>
 
                 <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
                     <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
                     
                     <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
-                </div>
+                </div>	
             </div>
 
             <fieldset class="border border-gray-300 p-4 rounded-sm">
@@ -5512,7 +5501,7 @@
       }
     }
     updateUI(user) {
-      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "https://wlm.vercel.app/assets/usertiles/default.png";
+      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
       if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
       if (this.username) this.username.innerText = user.alias;
       if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
@@ -5595,7 +5584,7 @@
   var ProfilePage_default = `<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
     <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+         style="background-image: url(/assets/basic/background.png); background-size: cover;">
     </div>
 
     <div class="min-h-screen flex items-center justify-center">
@@ -5885,7 +5874,7 @@
                             src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
                             
                             <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                            src="/assets/basic/default.png">
                         </div>
 
                         <div class="flex flex-col gap-2 w-full mt-2 h-64">
@@ -6792,14 +6781,14 @@
   }
 
   // scripts/pages/LandingPage.html
-  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
 			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Welcome to Transcendence
@@ -6864,7 +6853,7 @@
   // scripts/pages/RegisterPage.ts
   function RegisterPage() {
     return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -6872,7 +6861,7 @@
 			<!-- le cadre -->
 			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign up to Transcendence
@@ -6987,7 +6976,7 @@
   }
 
   // scripts/pages/GuestPage.html
-  var GuestPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex justify-center items-center flex-1 min-h-0">\n\n            <div class="window w-[500px] min-w-[500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Guest Mode</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm">\n                    \n                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">\n                        <div class="flex flex-col items-center">\n                            <h1 class="text-xl font-bold text-blue-900">Welcome Guest</h1>\n                            <p class="text-sm text-gray-500 italic">Select a mode to start playing</p>\n                        </div>\n\n                        <div class="flex flex-col gap-3 w-full px-10">\n                            <button id="local-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                LOCAL GAME\n                            </button>\n\n                            <button id="remote-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                REMOTE GAME\n                            </button>\n\n                            <button id="tournament-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                TOURNAMENT\n                            </button>\n                        </div>\n                    </div>  \n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
+  var GuestPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.png); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex justify-center items-center flex-1 min-h-0">\n\n            <div class="window w-[500px] min-w-[500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Guest Mode</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm">\n                    \n                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">\n                        <div class="flex flex-col items-center">\n                            <h1 class="text-xl font-bold text-blue-900">Welcome Guest</h1>\n                            <p class="text-sm text-gray-500 italic">Select a mode to start playing</p>\n                        </div>\n\n                        <div class="flex flex-col gap-3 w-full px-10">\n                            <button id="local-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                LOCAL GAME\n                            </button>\n\n                            <button id="remote-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                REMOTE GAME\n                            </button>\n\n                            <button id="tournament-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                TOURNAMENT\n                            </button>\n                        </div>\n                    </div>  \n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/GuestPage.ts
   function render5() {
@@ -6995,13 +6984,13 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.png); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
 	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+		 style="background-image: url(/assets/basic/background.png); background-size: cover;">
 	</div>
 
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
@@ -7246,7 +7235,7 @@
                     
                     <img id="friend-modal-avatar" 
                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                            src="/assets/basic/default.png">
                 </div>
 
                 <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
