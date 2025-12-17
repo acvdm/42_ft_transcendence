@@ -84,6 +84,8 @@ function handleRegister() {
 
 			if (response.ok) // on verifie que HTTP entre 200-299 
 			{
+				sessionStorage.removeItem('isGuest');
+   				sessionStorage.removeItem('userRole');
 				// pas besoin du refresh_token car dans le cookie
 				const { access_token, user_id } = result; // on enleve le data, on recupere depuis la racine de lobjet
 				console.log('User ID:', user_id);

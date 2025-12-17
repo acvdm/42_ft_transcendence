@@ -6936,6 +6936,8 @@
         const result = await response.json();
         console.log("RECEPTION DU BACKEND:", result);
         if (response.ok) {
+          sessionStorage.removeItem("isGuest");
+          sessionStorage.removeItem("userRole");
           const { access_token, user_id } = result;
           console.log("User ID:", user_id);
           console.log("Access Token:", access_token);
