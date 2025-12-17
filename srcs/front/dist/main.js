@@ -107,8 +107,11 @@
     refreshSubscribers.forEach((cb) => cb(token));
     refreshSubscribers = [];
   }
+  function getAuthToken() {
+    return sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+  }
   async function fetchWithAuth(url2, options = {}) {
-    const token = localStorage.getItem("accessToken");
+    const token = getAuthToken();
     const getHeaders = (currentToken) => {
       const headers = new Headers(options.headers || {});
       if (!headers.has("Content-Type") && options.body) {
@@ -6836,18 +6839,14 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({})
         });
-        const result = await response.json();
-        if (response.ok && result.access_token) {
-          localStorage.setItem("accessToken", result.access_token);
-          if (result.user_id)
-            localStorage.setItem("userId", result.user_id);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.access_token) sessionStorage.setItem("accessToken", data.access_token);
+          if (data.userId) sessionStorage.setItem("userId", data.userId.toString());
+          sessionStorage.setItem("isGuest", "true");
           handleNavigation("/guest");
         } else {
-          console.error("Guest login failed:", result);
-          if (guestError) {
-            guestError.textContent = result.error?.message || "Failed to create guest";
-            guestError.classList.remove("hidden");
-          }
+          console.error("Erreur cr\xE9ation guest");
         }
       } catch (err) {
         console.error("Network error while guest login: ", err);
@@ -7572,6 +7571,7 @@
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
       localStorage.removeItem("userStatus");
+      sessionStorage.clear();
       window.history.pushState({}, "", "/");
       const popStateEvent = new PopStateEvent("popstate");
       window.dispatchEvent(popStateEvent);
@@ -7580,16 +7580,32 @@
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
-    const accessToken = localStorage.getItem("accessToken");
+    const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const isGuest = sessionStorage.getItem("isGuest") === "true";
     if (path === "/logout") {
       handleLogout();
       return;
     }
-    if (accessToken && (path === "/" || path === "/login" || path === "/register")) {
-      window.history.pushState({}, "", "/home");
-      path = "/home";
+    const navbar = document.getElementById("main-navbar");
+    if (navbar) {
+      if (isGuest) {
+        navbar.style.display = "none";
+      } else if (accessToken) {
+        navbar.style.display = "flex";
+      } else {
+      }
     }
-    if (!accessToken && !publicRoutes.includes(path)) {
+    if (isGuest) {
+      if (path === "/home" || path === "/profile") {
+        window.history.pushState({}, "", "/guest");
+        path = "/guest";
+      }
+    } else if (accessToken) {
+      if (path === "/" || path === "/login" || path === "/register" || path === "/guest") {
+        window.history.pushState({}, "", "/home");
+        path = "/home";
+      }
+    } else if (!publicRoutes.includes(path)) {
       window.history.pushState({}, "", "/");
       path = "/";
     }
@@ -7598,11 +7614,15 @@
     if (page.afterRender) {
       page.afterRender();
     }
-    if (publicRoutes.includes(path))
+    if (publicRoutes.includes(path) || isGuest)
       applyTheme("basic");
     else {
       const savedTheme = localStorage.getItem("userTheme") || "basic";
       applyTheme(savedTheme);
+    }
+    if (path === "/guest" && !isGuest) {
+      window.history.replaceState({}, "", "/");
+      handleLocationChange();
     }
   };
   window.addEventListener("click", (event) => {

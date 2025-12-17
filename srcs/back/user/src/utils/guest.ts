@@ -39,7 +39,6 @@ export async function generateRandomAlias(
         "Goofy",
         "Lazy",
         "Jealous",
-        "Goofy"
     ];
 
     let randomAlias: string;

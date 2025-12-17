@@ -36,20 +36,21 @@ export function initLandingPage() {
 				
 			}); // a verifier
 
-			const result = await response.json();
+			if (response.ok) {
+				const data = await response.json();
 
-			if (response.ok && result.access_token) {
-				localStorage.setItem('accessToken', result.access_token);
-				if (result.user_id)
-					localStorage.setItem('userId', result.user_id);
-			
+				// 2. CHANGEMENT CRITIQUE : sessionStorage
+				// On stocke dans sessionStorage pour que ça disparaisse quand on ferme la fenêtre
+				if (data.access_token) sessionStorage.setItem('accessToken', data.access_token);
+				if (data.userId) sessionStorage.setItem('userId', data.userId.toString());
+				
+				// 3. ON AJOUTE UN MARQUEUR "isGuest"
+				sessionStorage.setItem('isGuest', 'true');
+
+				// 4. ON REDIRIGE VERS /guest (ET SURTOUT PAS /home)
 				handleNavigation('/guest');
 			} else {
-				console.error("Guest login failed:", result);
-				if (guestError) {
-					guestError.textContent = result.error?.message || "Failed to create guest";
-					guestError.classList.remove('hidden');
-				}
+				console.error("Erreur création guest");
 			}
 		} catch (err) {
 			console.error("Network error while guest login: ", err);

@@ -61,6 +61,15 @@ const routes: { [key: string]: Page } = {
 	}
 };
 
+
+const getAccessToken = (): string | null => {
+	return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+};
+
+const isGuestUser = (): boolean => {
+	return sessionStorage.getItem('userRole') === 'guest';
+}
+
 // gestion du logout
 const handleLogout = async () => {
 
@@ -85,6 +94,7 @@ const handleLogout = async () => {
 		localStorage.removeItem('userId');
 		localStorage.removeItem('username');
 		localStorage.removeItem('userStatus');
+		sessionStorage.clear();
 	
 		// redirection vers la page d'accueil
 		window.history.pushState({}, '', '/');
@@ -109,46 +119,80 @@ const handleLogout = async () => {
 // .innerHTML remplace le HTML intérieur de cet élément par la chaîne html.
 
 
+// Remplacez votre handleLocationChange par celle-ci :
 const handleLocationChange = () => {
 	if (!appElement) return;
 
+	let path = window.location.pathname;
 	
-    let path = window.location.pathname; // difference const / let
-    const accessToken = localStorage.getItem('accessToken');
+	// Récupération des tokens (User normal OU Guest)
+	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
-    // gestion de la route d deconnexion
-    if (path === '/logout') {
-        handleLogout();
-        return;
-    }
-	// si user connecter -> et que tentative d'aller sur login etc -> redirection home
-    if (accessToken && (path === '/' || path === '/login' || path === '/register')) {
-        window.history.pushState({}, '', '/home');
-        path = '/home';
-    }
+	// --- 1. GESTION DU LOGOUT (C'est ça qu'il manquait !) ---
+	if (path === '/logout') {
+		handleLogout();
+		return; // On arrête tout ici pour laisser le logout se faire
+	}
 
-	// si pas connecte alors redirection landing page
-    if (!accessToken && !publicRoutes.includes(path)) {
-        window.history.pushState({}, '', '/');
-        path = '/';
-    }
+	// --- 2. GESTION DE LA NAVBAR ---
+	const navbar = document.getElementById('main-navbar');
+	if (navbar) {
+		// On cache la navbar si c'est un Guest
+		if (isGuest) {
+			navbar.style.display = 'none';
+		} else if (accessToken) {
+			navbar.style.display = 'flex';
+		} else {
+			// Optionnel : cacher sur la landing page si vous le souhaitez
+			// navbar.style.display = 'none'; 
+		}
+	}
 
-	// on affiche la page
-    const page = routes[path] || routes['/404'];
-    appElement.innerHTML = page.render();
+	// --- 3. SÉCURITÉ ET REDIRECTIONS ---
 
-    if (page.afterRender) {
-        page.afterRender();
-    }
+	// CAS GUEST : Bloquer l'accès à Home et Profile
+	if (isGuest) {
+		if (path === '/home' || path === '/profile') {
+			window.history.pushState({}, '', '/guest');
+			path = '/guest';
+		}
+	}
+	// CAS USER CONNECTÉ (Normal) : Bloquer l'accès à Login/Register
+	else if (accessToken) {
+		if (path === '/' || path === '/login' || path === '/register' || path === '/guest') {
+			window.history.pushState({}, '', '/home');
+			path = '/home';
+		}
+	}
+	// CAS NON CONNECTÉ : Renvoyer vers l'accueil si page privée
+	else if (!publicRoutes.includes(path)) {
+		window.history.pushState({}, '', '/');
+		path = '/';
+	}
 
-	if (publicRoutes.includes(path))
+	// --- 4. AFFICHAGE DE LA PAGE ---
+	const page = routes[path] || routes['/404'];
+	appElement.innerHTML = page.render();
+
+	if (page.afterRender) {
+		page.afterRender();
+	}
+
+	// Gestion du thème
+	if (publicRoutes.includes(path) || isGuest)
 		applyTheme('basic');
 	else {
 		const savedTheme = localStorage.getItem('userTheme') || 'basic';
 		applyTheme(savedTheme);
 	}
-};
 
+	if (path === '/guest' && !isGuest) {
+        // On redirige vers l'accueil pour se faire éjecter par la sécurité
+        window.history.replaceState({}, '', '/'); 
+        handleLocationChange();
+    }
+};
 /*
 ** Fonction pour la navigation. Elle met à jour l'url dans recharger la page
 ** Appelé quand on clique sur un lien
