@@ -3,7 +3,7 @@ import { render as LoginPage, loginEvents } from "./pages/LoginPage"; // j'impor
 import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
 import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./pages/ProfilePage"
 import { NotFoundPage } from "./pages/NotFound";
-import { LandingPage, initLandingPage } from "./pages/LandingPage";
+import { render as LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";

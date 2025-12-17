@@ -6785,10 +6785,8 @@
 	`;
   }
 
-  // scripts/pages/LandingPage.ts
-  function LandingPage() {
-    return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  // scripts/pages/LandingPage.html
+  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
@@ -6806,16 +6804,19 @@
 			<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 	 		<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
  			<button id="guest-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Play as guest</button>
+			<p id="guest-error" class="hidden text-red-500 text-xs">Error creating guest</p>
 	</div>
-	</div>
+</div>`;
 
-	
-	`;
+  // scripts/pages/LandingPage.ts
+  function render4() {
+    return LandingPage_default;
   }
   function initLandingPage() {
     const loginButton = document.getElementById("login-button");
     const registerButton = document.getElementById("register-button");
     const guestButton = document.getElementById("guest-button");
+    const guestError = document.getElementById("guest-error");
     const handleNavigation = (path) => {
       window.history.pushState({}, "", path);
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -6826,9 +6827,33 @@
     registerButton?.addEventListener("click", () => {
       handleNavigation("/register");
     });
-    guestButton?.addEventListener("click", () => {
-      console.log("click");
-      handleNavigation("/guest");
+    guestButton?.addEventListener("click", async () => {
+      if (guestError)
+        guestError.classList.remove("hidden");
+      try {
+        const response = await fetchWithAuth("api/users/credentials/guest", {
+          method: "POST"
+        });
+        const result = await response.json();
+        if (response.ok && result.access_token) {
+          localStorage.setItem("accessToken", result.access_token);
+          if (result.user_id)
+            localStorage.setItem("userId", result.user_id);
+          handleNavigation("/guest");
+        } else {
+          console.error("Guest login failed:", result);
+          if (guestError) {
+            guestError.textContent = result.error?.message || "Failed to create guest";
+            guestError.classList.remove("hidden");
+          }
+        }
+      } catch (err) {
+        console.error("Network error while guest login: ", err);
+        if (guestError) {
+          guestError.textContent = "Network error. Please try again";
+          guestError.classList.remove("hidden");
+        }
+      }
     });
   }
 
@@ -6956,138 +6981,10 @@
   }
 
   // scripts/pages/GuestPage.html
-  var GuestPage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
-
-	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-	</div>
-
-	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
-		
-		<!-- Container avec left et right qui prennent toute la hauteur restante -->
-		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
-
-			<!-- ========= LEFT WINDOW ========= -->
-			<div class="window w-[700px] min-w-[700px] flex flex-col">
-				<div class="title-bar">
-					<div class="title-bar-text">Games</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
-					</div>
-				</div>
-
-				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px; background-color: white;">
-					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
-						<!-- Cadre du profil -->
-						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
-							<div class="relative w-[110px] h-[110px] flex-shrink-0">
-								<!-- l'image (profil principal) -->
-								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-								<!-- le cadre -->
-								<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
-							</div>
-	
-							<!-- username, bio et status -->
-							<div class="flex flex-col justify-center pl-4 flex-1">
-								<div class="flex items-center gap-2 mb-1">
-									<p class="text-xl font-semibold" id="user-name">Username</p>
-	
-									<!-- selection du status = dynamique -->
-									<div class="relative">
-										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-											<span id="current-status-text">(Available)</span>
-											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-										</button>
-	
-										<!-- Menu dropdown pour le status -->
-										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Available</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Busy</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Away</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Offline</span>
-											</button>
-										</div>
-									</div>
-								</div>
-								<div id="bio-wrapper">
-									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
-									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-								</div>
-							</div>
-	
-							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
-							<div class="ml-auto flex items-start relative">
-								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-									<img id="notification-icon" 
-										src="/assets/basic/no_notification.png" 
-										alt="Notifications" 
-										class="w-full h-full object-contain">
-										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
-								</button>
-								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
-									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
-										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-											Notifications
-										</h3>
-									</div>
-									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
-									</div> <!--fin du listing inside dropdown-->
-								</div> <!--fin du div dropdown-->
-							</div>
-
-
-							
-						</div>
-
-					</div>	<!--FIn du premier cadre-->		
-					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
-						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
-
-						<button id="local-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							LOCAL
-						</button>
-
-						<button id="remote-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							REMOTE
-						</button>
-
-						<button id="tournament-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							TOURNAMENT
-						</button>
-					</div>	<!--FIn du second cadre-->	
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
-`;
+  var GuestPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex justify-center items-center flex-1 min-h-0">\n\n            <div class="window w-[500px] min-w-[500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Guest Mode</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm">\n                    \n                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">\n                        <div class="flex flex-col items-center">\n                            <h1 class="text-xl font-bold text-blue-900">Welcome Guest</h1>\n                            <p class="text-sm text-gray-500 italic">Select a mode to start playing</p>\n                        </div>\n\n                        <div class="flex flex-col gap-3 w-full px-10">\n                            <button id="local-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                LOCAL GAME\n                            </button>\n\n                            <button id="remote-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                REMOTE GAME\n                            </button>\n\n                            <button id="tournament-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                TOURNAMENT\n                            </button>\n                        </div>\n                    </div>  \n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/GuestPage.ts
-  function render4() {
+  function render5() {
     return GuestPage_default;
   }
 
@@ -7463,7 +7360,7 @@
     </div>`;
 
   // scripts/pages/GamePage.ts
-  function render5() {
+  function render6() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
       return RemoteGame_default;
@@ -7618,7 +7515,7 @@
   var publicRoutes = ["/", "/login", "/register", "/404", "/guest"];
   var routes = {
     "/": {
-      render: LandingPage,
+      render: render4,
       afterRender: initLandingPage
     },
     "/home": {
@@ -7638,10 +7535,10 @@
       afterRender: loginEvents
     },
     "/guest": {
-      render: render4
+      render: render5
     },
     "/game": {
-      render: render5,
+      render: render6,
       // La fonction HTML
       afterRender: () => {
         const state = window.history.state;
