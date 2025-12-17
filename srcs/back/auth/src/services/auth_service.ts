@@ -123,7 +123,9 @@ export async function registerGuest (
         email,
         pwd_hashed: uniqueGuestHash,
         two_fa_secret: null,
-        is_2fa_enabled: 0
+        two_fa_method: 'NONE',
+        email_otp: null,
+        email_otp_expires_at: null
     });
 
     // 4. Génération token

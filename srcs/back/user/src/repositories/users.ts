@@ -1,5 +1,5 @@
 import { Database } from 'sqlite';
-import { generateRandomAlias } from "../utils/guest.js"
+import { generateRandomAlias, generateRandomAvatar } from "../utils/guest.js"
 
 export interface CreateUser {
     alias: string,
@@ -48,12 +48,13 @@ export async function createGuestInDB (
 ): Promise<number> {
 
     const alias = await generateRandomAlias(db); // FAUSTINE: je rajoute await ici
+    const avatar = await generateRandomAvatar(db);
     console.log("Generated alias:", alias);
 
     const result = await db.run(`
-        INSERT INTO USERS (alias, is_guest)
-        VALUES (?, ?)`,
-        [alias, 1]
+        INSERT INTO USERS (alias, is_guest, avatar_url)
+        VALUES (?, ?, ?)`,
+        [alias, 1, avatar]
     );
 
     if (!result.lastID) 
