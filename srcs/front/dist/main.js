@@ -6138,6 +6138,7 @@
     themeModal?.addEventListener("click", (e) => {
       if (e.target === themeModal) closeThemeFunc();
     });
+    let current2FAMethod = "APP";
     const update2faButton = (enabled) => {
       is2faEnabled = enabled;
       if (enabled) {
@@ -6189,11 +6190,12 @@
     };
     const initiate2faSetup = async (method) => {
       if (!userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
       try {
         const response = await fetchWithAuth(`api/auth/2fa/generate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: method })
+          body: JSON.stringify({ type: backendType })
         });
         if (response.ok) {
           const result = await response.json();
@@ -6220,12 +6222,13 @@
         alert("Please enter a valid 6-digit code.");
         return;
       }
+      const backendType = type === "qr" ? "APP" : "EMAIL";
       try {
         const response = await fetchWithAuth(`api/auth/2fa/enable`, {
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, type })
+          body: JSON.stringify({ code, type: backendType })
         });
         if (response.ok) {
           update2faButton(true);

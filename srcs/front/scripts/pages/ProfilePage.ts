@@ -219,6 +219,10 @@ export function afterRender(): void {
     });
 
 
+    /* AJOUT CASSAMDRE variable pour stocker la methode choisir */
+    let current2FAMethod: 'APP' | 'EMAIL' = 'APP'; // app par defaut si pas specifie
+
+
     // ============================================================
     // ==================== GESTION DU 2FA --======================
     // ============================================================
@@ -254,7 +258,6 @@ export function afterRender(): void {
         }
     };
 
-    // Gestion de l'affichage des vues
     const switch2faView = (view: 'selection' | 'qr' | 'email') => {
         // toutes les modales sont cachées
         methodSelection?.classList.add('hidden');
@@ -292,18 +295,18 @@ export function afterRender(): void {
         }
     };
 
-    // Initialisation 2FA (c'est le body qui envoit une string email ou qr code)
     const initiate2faSetup = async (method: 'qr' | 'email') => {
         if (!userId) return;
 
+        const backendType = method === 'qr' ? 'APP' : 'EMAIL';
         try {
             //fetch pour le qr code ou l'email
             const response = await fetchWithAuth(`api/auth/2fa/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: method })
+                body: JSON.stringify({ type: backendType })
             });
-
+            
             if (response.ok) {
                 const result = await response.json();
                 
@@ -333,11 +336,13 @@ export function afterRender(): void {
             return;
         }
 
+        const backendType = type === 'qr' ? 'APP' : 'EMAIL';
+
         try {
             const response = await fetchWithAuth(`api/auth/2fa/enable`, {
                 method: 'POST', // ou patch?? a tester
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code, type: type })
+                body: JSON.stringify({ code: code, type: backendType })
             });
 
             if (response.ok) {

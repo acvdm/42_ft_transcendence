@@ -66,7 +66,6 @@ export async function createGuestInDB (
 }
 
 
-
 //-------- GET / READ
 export async function findUserByID (
     db: Database,
