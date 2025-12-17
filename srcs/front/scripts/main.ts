@@ -5,6 +5,7 @@ import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./
 import { NotFoundPage } from "./pages/NotFound";
 import { LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
+import { render as GuestPage } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
 import { render as GamePage, initGamePage } from "./pages/GamePage";
 
@@ -43,6 +44,9 @@ const routes: { [key: string]: Page } = {
 	'/login': {
 		render: LoginPage,
 		afterRender: loginEvents
+	},
+	'/guest': {
+		render: GuestPage
 	},
 	'/game': {
         render: GamePage, // La fonction HTML

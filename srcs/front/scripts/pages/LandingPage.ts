@@ -44,7 +44,8 @@ export function initLandingPage() {
 	});
     
     guestButton?.addEventListener('click', () => {
-		handleNavigation('/home');
+		console.log("click");
+		handleNavigation('/guest');
 	});
 }
 
