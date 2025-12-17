@@ -176,11 +176,18 @@ export async function loginUser(
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Valide 10 min
         // sauvegarder en DB
         await credRepo.saveEmailCode(db, user_id, code, expiresAt);
+    
+        try {
+            await send2FAEmail(email, code);
+        } catch (error) {
+            console.error("Error during the sending of the code by email:", error);
+            throw new Error("Not possible to send verification email");
+        }
 
-        console.log(`[EMAIL] Code pour ${email}: ${code}`);
-        /* IMPLEMENTATION DU CODE ENVOYE PAR EMAIL PLUS TARD */
-
+        console.log(`[ACTIVATION] Code envoyé à ${email}`)
+        
         const tempToken = generateTempToken(user_id);
+
         return {
             require_2fa: true,
             temp_token: tempToken
@@ -313,13 +320,23 @@ export async function  generateTwoFA(
     {
         const code = crypt.generateRandomCode(6);
         const expDate = new Date(Date.now() + 10 * 60 * 1000);
-        await credRepo.saveEmailCode(db, userId, code, expDate);
-        const email = await credRepo.getEmailbyID(db, userId);
 
-        console.log(`[ACTIVATION] Code envoyé à ${email}: ${code}`)
+        await credRepo.saveEmailCode(db, userId, code, expDate);
+
+        const email = await credRepo.getEmailbyID(db, userId);
+        if (!email)
+            throw new Error("User email not found");
+
+        try {
+            await send2FAEmail(email, code);
+        } catch (error) {
+            console.error("Erreur d'envoi de mail:", error);
+            throw new Error("Not possible to send verification email");
+        }
+
+        console.log(`[ACTIVATION] Code envoyé à ${email}`)
         
         return { message : 'Code send by email' };
-        // revoir avec le vrai email
     }
 
     throw new Error("Invalid 2FA type");
