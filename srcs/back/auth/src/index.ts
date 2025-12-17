@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { generate2FASecret } from './utils/crypto.js';
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, authenticatePassword } from './services/auth_service.js';
+import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, authenticatePassword } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -59,6 +59,46 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 
 		// 2. Traiter (toute la logique est dans le service)
 		const authResponse = await registerUser(db, body.user_id, body.email, body.password);
+
+		// 3. Cookie
+		reply.setCookie('refresh_token', authResponse.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
+		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
+
+		// 4. Répondre
+		return reply.status(200).send({
+			success: true,
+			refresh_token: authResponse.refresh_token,
+			access_token: authResponse.access_token,
+			user_id: authResponse.user_id,
+			error: null
+		});
+	} 
+	catch (err: any) 
+	{
+		return reply.status(400).send({
+			success: false, 
+			data: null,
+			error: { message: err.message }
+		});
+	}
+});
+
+fastify.post('/users/:id/credentials/guest', async (request, reply) => 
+{
+	try
+	{
+		const body = request.body as { user_id: number; email: string};
+
+		// 2. Traiter (toute la logique est dans le service)
+		const authResponse = await registerGuest(db, body.user_id, body.email);
 
 		// 3. Cookie
 		reply.setCookie('refresh_token', authResponse.refresh_token, {
@@ -185,6 +225,8 @@ fastify.post('/sessions', async (request, reply) =>
 
 	try 
 	{
+		if (!body.password)
+			throw new Error('Password is required');
 		const result = await loginUser(db, body.email, body.password);
 		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
