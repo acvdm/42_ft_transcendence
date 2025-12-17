@@ -18,7 +18,7 @@ interface Page {
 	afterRender?: () => void;
 }
 
-const publicRoutes = ['/', '/login', '/register', '/404'];
+const publicRoutes = ['/', '/login', '/register', '/404', '/guest'];
 
 
 // 3. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base

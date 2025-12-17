@@ -6956,150 +6956,135 @@
   }
 
   // scripts/pages/GuestPage.html
-  var GuestPage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+  var GuestPage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
-    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
-         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-    </div>
+	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+	</div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex justify-center p-6 overflow-y-auto">
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+		
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
 
-        <div class="flex flex-row min-w-[1000px] h-full gap-4">
+			<!-- ========= LEFT WINDOW ========= -->
+			<div class="window w-[700px] min-w-[700px] flex flex-col">
+				<div class="title-bar">
+					<div class="title-bar-text">Games</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
 
-            <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
-                <h1 class="text-lg font-semibold"> Pong \u{1F47E}</h1>
-            </div>
+				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px; background-color: white;">
+					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
+						<!-- Cadre du profil -->
+						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
+							<div class="relative w-[110px] h-[110px] flex-shrink-0">
+								<!-- l'image (profil principal) -->
+								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+								<!-- le cadre -->
+								<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
+							</div>
+	
+							<!-- username, bio et status -->
+							<div class="flex flex-col justify-center pl-4 flex-1">
+								<div class="flex items-center gap-2 mb-1">
+									<p class="text-xl font-semibold" id="user-name">Username</p>
+	
+									<!-- selection du status = dynamique -->
+									<div class="relative">
+										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+											<span id="current-status-text">(Available)</span>
+											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+										</button>
+	
+										<!-- Menu dropdown pour le status -->
+										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Available</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Busy</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Away</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Offline</span>
+											</button>
+										</div>
+									</div>
+								</div>
+								<div id="bio-wrapper">
+									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+								</div>
+							</div>
+	
+							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
+							<div class="ml-auto flex items-start relative">
+								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+									<img id="notification-icon" 
+										src="/assets/basic/no_notification.png" 
+										alt="Notifications" 
+										class="w-full h-full object-contain">
+										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
+								</button>
+								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+											Notifications
+										</h3>
+									</div>
+									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
+										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
+									</div> <!--fin du listing inside dropdown-->
+								</div> <!--fin du div dropdown-->
+							</div>
 
-            <div class="flex flex-col gap-4 w-[600px] h-full">
-                
-                <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
-                    <p class="font-semibold mb-2"> Game info</p>
-                    <div class="relative w-[50px] h-[50px] mb-4">
-                        <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
-                    </div>
-                    <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
-                </div>
 
+							
+						</div>
 
-                <!-- Partie live chat -->
+					</div>	<!--FIn du premier cadre-->		
+					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
+						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
 
-                <div id="chat-frame" class="relative flex-1 p-10 bg-transparent rounded-sm flex flex-row items-end gap-4 bg-cover bg-center transition-all duration-300 min-h-0 overflow-hidden">
-                  
-                  <!-- Image \xE0 gauche -->
-                  <div class="relative w-[110px] h-[110px] flex-shrink-0">
-                      <!-- le cadre -->
-                      <img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                      <!-- l'image -->
-                      <img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[80px] h-[80px] object-cover" src="/assets/profile/Friendly_Dog.png">
-                  </div>
-                  
-                  <!-- Live chat \xE0 droite -->
-                  <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full -mb-4 -mr-4">
-                      <h1 class="text-lg font-bold mb-2">Live chat </h1>
-                      <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 border-t border-gray-200 pt-2 space-y-2 text-sm"></div>
+						<button id="local-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							LOCAL
+						</button>
 
-                      <!-- Input element  -->
+						<button id="remote-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							REMOTE
+						</button>
 
-                      <div class="flex flex-col">
-                        <input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-
-                        <!-- Insertion des emoticones, wizz etc -->
-                         <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-                            <button id="select-emoticon" class="h-6">
-                                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                <div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-                                <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                              </div>
-
-                              <!-- Menu dropdown -> il s'ouvre quand on clique -->
-
-                              <div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                <div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-                              </div>
-
-                              </div>
-                            </button>
-                            
-                              <button id="select-animation" class="h-6">
-                                <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                <div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-                                <div><img src="/assets/chat/arrow.png" alt="Select arrow">
-                                  </div>
-
-                                  <!-- Menu dropdown -> il s'ouvre quand on clique -->
-
-                                  <div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-                                  <div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-                                  </div>
-
-                                  </div>
-                              </button>
-
-                              
-                              <div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-                              <button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-                              <div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-                              
-                          
-                              <!-- Menu pour les fonts -->
-                            
-                               <button id="change-font" class="h-6">
-                                    <div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-                                    <div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-                                    <div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-                                    <!-- Menu dropdown -> il s'ouvre quand on clique -->
-                                    <div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-                                        <div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-                                    </div>
-
-                                    </div>
-                                </button>
-
-                            
-                            <div class="relative">
-                              <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-                                  <div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-                                  <div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-                              </button>
-
-                              <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                                  <p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-                                  
-                                  <div class="grid grid-cols-3 gap-2">
-                                      
-                                      <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                              data-bg="url('/assets/backgrounds/fish_background.jpg')"
-                                              style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-                                      </button>
-
-                                      <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                              data-bg="url('/assets/backgrounds/heart_background.jpg')"
-                                              style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-                                      </button>
-
-                                      <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                              data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-                                              style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-                                      </button>
-
-                                      
-                                      
-                                      <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-                                          Default background
-                                      </button>
-                                  </div>
-                              </div>
-                          </div>
-
-                      </div>
-                  </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>`;
+						<button id="tournament-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							TOURNAMENT
+						</button>
+					</div>	<!--FIn du second cadre-->	
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+`;
 
   // scripts/pages/GuestPage.ts
   function render4() {
@@ -7630,7 +7615,7 @@
 
   // scripts/main.ts
   var appElement = document.getElementById("app");
-  var publicRoutes = ["/", "/login", "/register", "/404"];
+  var publicRoutes = ["/", "/login", "/register", "/404", "/guest"];
   var routes = {
     "/": {
       render: LandingPage,
