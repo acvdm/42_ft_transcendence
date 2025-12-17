@@ -41,6 +41,11 @@ fastify.post('/users', async (request, reply) => {
 		avatar?: string;
 	};
 
+
+	if (body.avatar && body.avatar.includes('/assets/')) {
+        body.avatar = body.avatar.substring(body.avatar.indexOf('/assets/'));
+    }
+
 	let user_id = null; 
 
 	try 
@@ -494,13 +499,17 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 fastify.patch('/users/:id/avatar', async (request, reply) => {
     const { id } = request.params as { id: string };
     const userId = Number(id);
-    const { avatar } = request.body as { avatar: string };
+    let { avatar } = request.body as { avatar: string };
 
     try 
 	{
         if (!avatar) 
 			throw new Error("No avatar provided");
 
+        // Tu peux aussi ajouter une condition pour tes '/assets/' si nécessaire
+        if (avatar.includes('/assets/')) {
+            avatar = avatar.substring(avatar.indexOf('/assets/'));
+        }
         await userRepo.updateAvatar(db, userId, avatar);
         
         return reply.status(200).send({
