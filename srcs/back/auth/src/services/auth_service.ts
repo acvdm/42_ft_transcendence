@@ -111,11 +111,15 @@ export async function registerGuest (
     if (existing)
         throw new Error('Email already in use');
 
+    // Faustine: on doit générer un mdp aléatoire pour le guest car il aime pas ne rien avoir 
+    const uniqueGuestPwd = `guestPwd${user_id}_${Date.now()}_${Math.random()}`;
+    const uniqueGuestHash = await hashPassword(uniqueGuestPwd);
+
     // 2. Insertion DB
     const credential_id = await credRepo.createCredentials(db, {
         user_id,
         email,
-        pwd_hashed: "",
+        pwd_hashed: uniqueGuestHash,
         two_fa_secret: null,
         is_2fa_enabled: 0
     });

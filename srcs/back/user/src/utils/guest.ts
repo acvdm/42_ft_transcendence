@@ -20,6 +20,7 @@ export async function generateRandomAlias(
         "Panda",
         "Cat",
         "Koala",
+        "Capybara",
         "Paul"
     ];
 
@@ -37,7 +38,8 @@ export async function generateRandomAlias(
         "Hungry",
         "Goofy",
         "Lazy",
-        "Jealous"
+        "Jealous",
+        "Goofy"
     ];
 
     let randomAlias: string;
@@ -47,7 +49,7 @@ export async function generateRandomAlias(
     {
         const animal = animals[Math.floor(Math.random() * animals.length)];
         const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-        randomAlias = `${animal} ${adjective}`;
+        randomAlias = `${adjective}${animal}`; // faustine: j'inverse les deux 
         checkAlias = await isAliasUsed(db, randomAlias);
     } while (checkAlias);
 

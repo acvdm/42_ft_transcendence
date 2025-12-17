@@ -164,7 +164,7 @@ fastify.post('/users/guest', async (request, reply) => {
 		}
 
 		console.log(`User created locally (ID: ${userId}. Calling auth...`);
-		const email = `guest` + `${userId}` + `guest.com`;		
+		const email = `guest` + `${userId}` + `@guest.com`;		
 		const authURL = `http://auth:3001/users/${userId}/credentials/guest`;
 
 		// 3. Appeler le service auth pour créer les credentials
@@ -174,7 +174,7 @@ fastify.post('/users/guest', async (request, reply) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ 
-				userId: userId, 
+				user_id: userId, 
 				email: email, 
 			}),
 		});

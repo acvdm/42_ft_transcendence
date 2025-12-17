@@ -6831,8 +6831,10 @@
       if (guestError)
         guestError.classList.remove("hidden");
       try {
-        const response = await fetchWithAuth("api/users/credentials/guest", {
-          method: "POST"
+        const response = await fetch("/api/users/guest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
         });
         const result = await response.json();
         if (response.ok && result.access_token) {

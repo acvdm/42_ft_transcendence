@@ -29,8 +29,11 @@ export function initLandingPage() {
 			guestError.classList.remove('hidden');
 
 		try {
-			const response = await fetchWithAuth('api/users/credentials/guest', {
+			const response = await fetch('/api/users/guest', {
 				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({})
+				
 			}); // a verifier
 
 			const result = await response.json();

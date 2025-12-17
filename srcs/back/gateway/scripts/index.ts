@@ -28,6 +28,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		"/api/users/register",
 		"/api/users/refresh",
 		"/api/auth/refresh",
+		"/api/users/guest",
 		"/api/auth/login",
 		"/api/auth/register",
 		"/api/auth/sessions",

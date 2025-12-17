@@ -47,8 +47,9 @@ export async function createGuestInDB (
     db: Database,
 ): Promise<number> {
 
-    const alias = generateRandomAlias(db);
-    
+    const alias = await generateRandomAlias(db); // FAUSTINE: je rajoute await ici
+    console.log("Generated alias:", alias);
+
     const result = await db.run(`
         INSERT INTO USERS (alias, is_guest)
         VALUES (?, ?)`,
