@@ -52,7 +52,21 @@ fastify.addHook('onRequest', async (request, reply) => {
 		}
 
 		const token = authHeader.split(' ')[1];
-		const decoded = jwt.verify(token, JWT_SECRET!) as unknown as { sub: number, cred_id: number };
+		const decoded = jwt.verify(token, JWT_SECRET!) as unknown as { 
+			sub: number, 
+			cred_id: number;
+			scope?: string 
+		};
+
+		// si cest un token 2fa on verifie ou il veut aller
+		if (decoded.scope == '2fa_login'){
+			// on autorise seulement la route de verification du 2FA
+			if (!url.includes('/2fa/verify'))
+				throw new Error("2FA verification pending");
+			console.log(`2FA Token user for verification endpoint -> Allowed`);
+		}
+
+		// request.user = decoded;
 
 		// injection d'identite -> le gateway valide lid et previent les microservices
 		request.headers['x-user-id'] = decoded.sub.toString();

@@ -8,7 +8,9 @@ export interface Credential {
     email: string;
     pwd_hashed: string;
     two_fa_secret: string | null;
-    is_2fa_enabled: number;
+    two_fa_method: string;
+    email_otp: string | null;
+    email_otp_expires_at: string | null; 
     created_at: string;
 }
 
@@ -17,7 +19,9 @@ export interface createCredentialData {
     email: string;
     pwd_hashed: string;
     two_fa_secret: string | null;
-    is_2fa_enabled: number;
+    two_fa_method: string;
+    email_otp: string | null;
+    email_otp_expires_at: string | null; 
 }
 
 
@@ -28,9 +32,9 @@ export async function createCredentials(
 ): Promise<number> 
 {
     const result = await db.run(`
-        INSERT INTO CREDENTIALS (user_id, email, pwd_hashed, two_fa_secret, is_2fa_enabled)
-        VALUES (?, ?, ?, ?, ?)`,
-        [data.user_id, data.email, data.pwd_hashed, data.two_fa_secret, 0]
+        INSERT INTO CREDENTIALS (user_id, email, pwd_hashed, two_fa_secret, two_fa_method, email_otp, email_otp_expires_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [data.user_id, data.email, data.pwd_hashed, data.two_fa_secret, 'NONE', data.email_otp, data.email_otp_expires_at ]
     );
 
     if (!result.lastID) {
@@ -74,7 +78,7 @@ export async function findById(
 ): Promise<Credential | undefined> 
 {
     return await db.get(`
-        SELECT user_id, email, is_2fa_enabled, created_at FROM CREDENTIALS WHERE id = ?`,
+        SELECT user_id, email, two_fa_method, created_at FROM CREDENTIALS WHERE id = ?`,
         [id]
     );
 }
@@ -111,7 +115,7 @@ export async function getEmailbyID(
 ) : Promise<string | undefined> 
 {
     const row = await db.get(`
-        SELECT email FROM CREDENTIALS WHERE id = ?`,
+        SELECT email FROM CREDENTIALS WHERE user_id = ?`,
         [user_id]
     );
     return row?.email;
@@ -129,17 +133,45 @@ export async function get2FASecret(
     return row?.two_fa_secret || null;
 }
 
-export async function is2FAEnabled(
+export async function get2FAMethod(
     db: Database,
     user_id: number
-): Promise<boolean>
+): Promise<'NONE' | 'APP' | 'EMAIL'>
 {
     const row = await db.get(`
-        SELECT is_2fa_enabled FROM CREDENTIALS WHERE user_id = ?`,
+        SELECT two_fa_method FROM CREDENTIALS WHERE user_id = ?`,
         [user_id]
     );
-    return row?.is_2fa_enabled === 1;
+    return row?.two_fa_method || 'NONE';
 }
+
+export async function getEmailCodeData(
+    db: Database,
+    user_id: number
+): Promise<{ code: string | null, expiresAt: string | null }>
+{
+    const row = await db.get(`
+        SELECT email_otp, email_otp_expires_at FROM CREDENTIALS WHERE user_id = ?`,
+        [user_id]
+    );
+    return {
+        code: row?.email_otp || null,
+        expiresAt: row?.email_otp_expires_at || null
+    }
+}
+
+/* MODIFIER LA METHODE POUR RECUP NONE APP OU EMAIL */
+// export async function is2FAEnabled(
+//     db: Database,
+//     user_id: number
+// ): Promise<boolean>
+// {
+//     const row = await db.get(`
+//         SELECT is_2fa_enabled FROM CREDENTIALS WHERE user_id = ?`,
+//         [user_id]
+//     );
+//     return row?.is_2fa_enabled === 1;
+// }
 
 //-------- PUT / UPDATE
 
@@ -152,10 +184,10 @@ export async function update2FASecret(
 {
     await db.run(`
         UPDATE CREDENTIALS
-        SET two_fa_secret = ?, is_2fa_enabled = 0
+        SET two_fa_secret = ?, two_fa_method = ?
         WHERE user_id = ?`,
-        [secret, user_id]
-    );
+        [secret, 'NONE', user_id]
+    );/* MODIFIER two_fa_method */
 }
 
 export async function changeEmail (
@@ -185,33 +217,82 @@ export async function changePwd (
     );
 }
 
-/////////////// RAJOUTER PAR FAUSTINE
+export async function set2FAMethod(
+    db: Database, 
+    user_id: number,
+    method: 'APP' | 'EMAIL' | 'NONE'
+): Promise<void> 
+{
+    await db.run(
+        `UPDATE CREDENTIALS SET two_fa_method = ? WHERE user_id = ?`,
+        [method, user_id]
+    );
+}
+
+export async function saveEmailCode(
+    db: Database, 
+    user_id: number,
+    code: string,
+    expiration: Date
+): Promise<void> 
+{
+    await db.run(
+        `UPDATE CREDENTIALS SET email_otp = ?, email_otp_expires_at = ? WHERE user_id = ?`,
+        [code, expiration.toISOString(), user_id]
+    );
+}
 
 // active le 2FA en DB (passe a true)
-export async function activate2FA(
+/* MODIFIER POUR two_fa_method */
+// export async function activate2FA(
+//     db: Database, 
+//     user_id: number
+// ): Promise<void> 
+// {
+//     await db.run(
+//         `UPDATE CREDENTIALS SET is_2fa_enabled = 1 WHERE user_id = ?`,
+//         [user_id]
+//     );
+// }
+
+
+
+//-------- DELETE / DELETE
+
+export async function clearEmailCode(
     db: Database, 
     user_id: number
 ): Promise<void> 
 {
     await db.run(
-        `UPDATE CREDENTIALS SET is_2fa_enabled = 1 WHERE user_id = ?`,
+        `UPDATE CREDENTIALS SET email_otp = NULL, email_otp_expires_at = NULL WHERE user_id = ?`,
         [user_id]
     );
 }
 
 export async function disable2FA(
-    db: Database,
+    db: Database, 
     user_id: number
-): Promise<void>
+): Promise<void> 
 {
     await db.run(
-        `UPDATE CREDENTIALS
-        SET is_2fa_enabled = 0, two_fa_secret = NULL
-        WHERE user_id = ?`,
+        `UPDATE CREDENTIALS SET two_fa_method = 'NONE', two_fa_secret = NULL, email_otp = NULL WHERE user_id = ?`,
         [user_id]
     );
 }
 
 
-//-------- DELETE / DELETE
-    
+// active le 2FA en DB (passe a true)
+/* MODIFIER POUR two_fa_method */
+// export async function disable2FA(
+//     db: Database,
+//     user_id: number
+// ): Promise<void>
+// {
+//     await db.run(
+//         `UPDATE CREDENTIALS
+//         SET is_2fa_enabled = 0, two_fa_secret = NULL
+//         WHERE user_id = ?`,
+//         [user_id]
+//     );
+// }

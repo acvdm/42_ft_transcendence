@@ -5666,32 +5666,46 @@
 
 
         <!-- MODALE POUR LE 2FA -->
-
-
-    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Two-Factor Authentication</div>
-                <div class="title-bar-controls">
-                    <button id="close-2fa-modal" aria-label="Close"></button>
+<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">Two-Factor Authentication</div>
+            <div class="title-bar-controls">
+                <button id="close-2fa-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        
+        <div class="window-body p-6">
+            
+            <div id="method-selection" class="flex flex-col gap-4 items-center">
+                <div class="text-center mb-2">
+                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
+                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Authenticator App</h3>
+                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Email Verification</h3>
+                            <p class="text-xs text-gray-600">Receive codes via email</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="window-body p-6 flex flex-col items-center gap-4">
 
-                <div> <!-- Container pour avoir l'option mail/qr code-->
-
-
-
-
-
-
-                </div>
-
-
-
-
-                <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
+            <div id="qr-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-qr" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
+                
+                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
                 </div>
 
@@ -5708,22 +5722,53 @@
                 <div class="flex justify-center gap-4 mt-4 w-full">
                     <button id="confirm-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold" style="padding: 7px;">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
                         VALIDATE
                     </button>
                     <button id="cancel-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="padding: 7px;">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
                         CANCEL
                     </button>
                 </div>
             </div>
+
+            <div id="email-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-email" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
+                
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
+                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
+                </div>
+                
+                <div class="w-full flex flex-col gap-2">
+                    <label class="text-sm">Code will be sent to:</label>
+                    <input type="email" id="2fa-email-input" 
+                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
+                        disabled 
+                        readonly>
+                </div>
+                
+                <button id="send-code-button" 
+                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
+                    SEND CODE
+                </button>
+                
+                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
+                    <label class="text-sm">Enter code received:</label>
+                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                    
+                    <button id="confirm-2fa-email" 
+                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
+                        VALIDATE
+                    </button>
+                </div>
+            </div>
+            
         </div>
     </div>
-
-
+</div>
 
         <!-- MODALE POUR L'AVATAR -->
 
@@ -5927,16 +5972,29 @@
     const gridContainer = document.getElementById("modal-grid");
     const previewAvatar = document.getElementById("modal-preview-avatar");
     const fileInput = document.getElementById("file-input");
+    const methodSelection = document.getElementById("method-selection");
+    const qrContent = document.getElementById("qr-content");
+    const emailContent = document.getElementById("email-content");
+    const buttonSelectQr = document.querySelector('[data-method="qr"]');
+    const buttonSelectEmail = document.querySelector('[data-method="email"]');
+    const buttonBackQr = document.getElementById("back-from-qr");
+    const buttonBackEmail = document.getElementById("back-from-email");
+    const inputEmail2fa = document.getElementById("2fa-email-input");
+    const buttonSendCode = document.getElementById("send-code-button");
+    const codeVerif = document.getElementById("code-verification");
+    const inputCodeEmail = document.getElementById("2fa-input-code-email");
+    const buttonConfirmEmail = document.getElementById("confirm-2fa-email");
     const button2faToggle = document.getElementById("2fa-modal-button");
     const modal2fa = document.getElementById("2fa-modal");
     const close2faButton = document.getElementById("close-2fa-modal");
     const cancel2faButton = document.getElementById("cancel-2fa-button");
-    const confirm2faButton = document.getElementById("confirm-2fa-button");
-    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2faQrButton = document.getElementById("confirm-2fa-button");
+    const input2faQr = document.getElementById("2fa-input-code");
     const qrCodeImg = document.getElementById("2fa-qr-code");
     const userId = localStorage.getItem("userId");
     let selectedImageSrc = mainAvatar?.src || "";
     let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
+    let currentUserEmail = "";
     const statusImages3 = {
       "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
       "online": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
@@ -6014,6 +6072,7 @@
     themeModal?.addEventListener("click", (e) => {
       if (e.target === themeModal) closeThemeFunc();
     });
+    let current2FAMethod = "APP";
     const update2faButton = (enabled) => {
       is2faEnabled = enabled;
       if (enabled) {
@@ -6031,47 +6090,79 @@
       if (modal2fa) {
         modal2fa.classList.add("hidden");
         modal2fa.classList.remove("flex");
-        if (input2fa) input2fa.value = "";
+        if (input2faQr) input2faQr.value = "";
+        if (inputCodeEmail) inputCodeEmail.value = "";
         if (qrCodeImg) qrCodeImg.src = "";
       }
     };
-    const open2faGenerate = async () => {
-      if (!userId) return;
-      try {
-        if (modal2fa) {
-          modal2fa.classList.remove("hidden");
-          modal2fa.classList.add("flex");
+    const switch2faView = (view) => {
+      methodSelection?.classList.add("hidden");
+      qrContent?.classList.add("hidden");
+      emailContent?.classList.add("hidden");
+      methodSelection?.classList.remove("flex");
+      qrContent?.classList.remove("flex");
+      emailContent?.classList.remove("flex");
+      if (view === "selection") {
+        methodSelection?.classList.remove("hidden");
+        methodSelection?.classList.add("flex");
+      } else if (view === "qr") {
+        qrContent?.classList.remove("hidden");
+        qrContent?.classList.add("flex");
+      } else if (view === "email") {
+        emailContent?.classList.remove("hidden");
+        emailContent?.classList.add("flex");
+        if (inputEmail2fa) {
+          inputEmail2fa.value = currentUserEmail;
+          inputEmail2fa.disabled = true;
         }
+        if (codeVerif) {
+          codeVerif.classList.remove("hidden");
+          codeVerif.classList.add("flex");
+        }
+        if (buttonSendCode) buttonSendCode.classList.add("hidden");
+      }
+    };
+    const initiate2faSetup = async (method) => {
+      if (!userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
+      try {
         const response = await fetchWithAuth(`api/auth/2fa/generate`, {
-          method: "POST"
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: backendType })
         });
         if (response.ok) {
           const result = await response.json();
-          if (result.data && result.data.qrCodeUrl) {
-            if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+          if (method === "qr") {
+            if (result.data && result.data.qrCodeUrl) {
+              if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+              switch2faView("qr");
+            }
+          } else {
+            console.log("Email code sent");
+            switch2faView("email");
           }
         } else {
-          console.error("Failed to generate QR code");
-          alert("Error generating 2FA QR code");
-          close2fa();
+          console.error("Failed to initiate 2FA");
+          alert("Error initializing 2FA setup");
         }
       } catch (error) {
         console.error("Network error 2FA generate:", error);
-        close2fa();
+        alert("Network error");
       }
     };
-    const enable2fa = async () => {
-      const code = input2fa.value.trim();
+    const enable2fa = async (code, type) => {
       if (!code || code.length < 6) {
         alert("Please enter a valid 6-digit code.");
         return;
       }
+      const backendType = type === "qr" ? "APP" : "EMAIL";
       try {
         const response = await fetchWithAuth(`api/auth/2fa/enable`, {
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ code, type: backendType })
         });
         if (response.ok) {
           update2faButton(true);
@@ -6105,17 +6196,29 @@
         console.error(error);
       }
     };
+    buttonSelectQr?.addEventListener("click", () => initiate2faSetup("qr"));
+    buttonSelectEmail?.addEventListener("click", () => initiate2faSetup("email"));
+    buttonBackQr?.addEventListener("click", () => switch2faView("selection"));
+    buttonBackEmail?.addEventListener("click", () => switch2faView("selection"));
+    confirm2faQrButton?.addEventListener("click", () => enable2fa(input2faQr.value.trim(), "qr"));
+    buttonConfirmEmail?.addEventListener("click", () => enable2fa(inputCodeEmail.value.trim(), "email"));
     button2faToggle?.addEventListener("click", () => {
       if (is2faEnabled) {
-        console.log("2fa: ", is2faEnabled);
         disable2fa();
       } else {
-        open2faGenerate();
+        if (modal2fa) {
+          modal2fa.classList.remove("hidden");
+          modal2fa.classList.add("flex");
+          if (input2faQr) input2faQr.value = "";
+          if (inputCodeEmail) inputCodeEmail.value = "";
+          switch2faView("selection");
+        }
       }
     });
     close2faButton?.addEventListener("click", close2fa);
     cancel2faButton?.addEventListener("click", close2fa);
-    confirm2faButton?.addEventListener("click", enable2fa);
+    const cancelEmailButton = document.getElementById("cancel-2fa-email");
+    cancelEmailButton?.addEventListener("click", close2fa);
     modal2fa?.addEventListener("click", (e) => {
       if (e.target === modal2fa) close2fa();
     });
@@ -6138,7 +6241,7 @@
         const response = await fetchWithAuth(`api/users/${userId}`);
         if (response.ok) {
           const user = await response.json();
-          console.log(user);
+          currentUserEmail = user.email || "";
           if (user.theme) {
             localStorage.setItem("userTheme", user.theme);
             applyTheme(user.theme);
@@ -6573,7 +6676,7 @@
       }
     });
     deleteButton?.addEventListener("click", () => {
-      const defaultAvatar = "https://wlm.vercel.app/assets/usertiles/default.png";
+      const defaultAvatar = "/assets/basic/default.png";
       selectedImageSrc = defaultAvatar;
       if (previewAvatar) previewAvatar.src = defaultAvatar;
     });
