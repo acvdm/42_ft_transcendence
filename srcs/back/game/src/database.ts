@@ -51,15 +51,10 @@ export async function initDatabase(): Promise<Database>{
     await db.exec(`
         CREATE TABLE IF NOT EXISTS STATS (
             user_id INTEGER NOT NULL,
-            game_type TEXT NOT NULL,
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
-            draws INTEGER DEFAULT 0,
-            total_games INTEGER GENERATED ALWAYS AS (wins + losses + draws) STORED,
-            total_score INTEGER DEFAULT 0,
-            best_score INTEGER DEFAULT 0,
-            average_score INTEGER DEFAULT 0,
-            longest_win_streak INTEGER DEFAULT 0,
+            total_games INTEGER GENERATED ALWAYS AS (wins + losses) STORED,
+            total_score INTEGER,
             current_win_streak INTEGER DEFAULT 0,
             PRIMARY KEY (user_id)
         )

@@ -12,7 +12,7 @@ export interface User {
     avatar_url?: string,
     bio: string,
     status: string,
-    theme: string
+    theme: string,
 }
 
 
@@ -240,7 +240,7 @@ export async function rollbackDeleteUser (
 export async function updateAvatar(
     db: Database,
     user_id: number,
-    avatar_url: string
+    avatar_url?: string
 ) {
     const user = await findUserByID(db, user_id);
     if (!user?.id)

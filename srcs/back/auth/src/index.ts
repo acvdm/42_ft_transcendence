@@ -43,9 +43,6 @@ async function main()
 //---------------------------------------
 
 
-
-
-
 /* -- REGISTER - CREATE CREDENTIAL -- */
 fastify.post('/users/:id/credentials', async (request, reply) => 
 {
