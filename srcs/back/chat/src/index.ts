@@ -93,6 +93,20 @@ fastify.ready().then(() => {
             }
         });
 
+        socket.on('notifyProfileUpdate', async (data: any) => {
+            const response = await fetch(`http://user:3004/users/${data.userId}/friends`);
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                result.data.forEach((friendship: any) => {
+                    const friendId = (friendship.user.id === data.userId) ? friendship.friend.id : friendship.user.id;
+                    
+                    // Envoyer l'info à l'ami
+                    fastify.io.to(`user_${friendId}`).emit('friendProfileUpdated', data);
+                });
+            }
+        });
+
 
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);

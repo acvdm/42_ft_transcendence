@@ -153,6 +153,13 @@ export class UserProfile {
                         this.bioText!.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
                         this.bioWrapper!.replaceChild(this.bioText!, input);
                         console.log("Message updated");
+                        const socket = SocketService.getInstance().socket;
+
+                        socket.emit('notifyProfileUpdate', {
+                            userId: Number(userId),
+                            bio: trimmedBio,
+                            username: localStorage.getItem('username')
+                        });
                         return true;
                     } else {
                         console.error("Error while updating your message");

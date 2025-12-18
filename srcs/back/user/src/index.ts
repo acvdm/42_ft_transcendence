@@ -506,7 +506,6 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
         if (!avatar) 
 			throw new Error("No avatar provided");
 
-        // Tu peux aussi ajouter une condition pour tes '/assets/' si nécessaire
         if (avatar.includes('/assets/')) {
             avatar = avatar.substring(avatar.indexOf('/assets/'));
         }

@@ -4931,6 +4931,12 @@
               this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
               this.bioWrapper.replaceChild(this.bioText, input);
               console.log("Message updated");
+              const socket = SocketService_default.getInstance().socket;
+              socket.emit("notifyProfileUpdate", {
+                userId: Number(userId),
+                bio: trimmedBio,
+                username: localStorage.getItem("username")
+              });
               return true;
             } else {
               console.error("Error while updating your message");
@@ -5525,6 +5531,34 @@
     chat.init();
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
+    if (socketService.socket) {
+      socketService.socket.on("friendProfileUpdated", (data) => {
+        console.log("Mise \xE0 jour re\xE7ue pour :", data.username);
+        if (currentChatFriendId === data.userId) {
+          const headerBio = document.getElementById("chat-header-bio");
+          if (headerBio && data.bio) {
+            headerBio.innerHTML = parseMessage(data.bio);
+          }
+          const headerAvatar = document.getElementById("chat-header-avatar");
+          if (headerAvatar && data.avatar) {
+            headerAvatar.src = data.avatar;
+          }
+          const headerName = document.getElementById("chat-header-username");
+          if (headerName && data.username) {
+            headerName.textContent = data.username;
+          }
+        }
+      });
+      socketService.socket.on("friendStatusUpdate", (data) => {
+        const headerName = document.getElementById("chat-header-username");
+        if (headerName && headerName.textContent === data.username) {
+          const headerStatus = document.getElementById("chat-header-status");
+          if (headerStatus && statusImages[data.status]) {
+            headerStatus.src = statusImages[data.status];
+          }
+        }
+      });
+    }
     window.addEventListener("friendSelected", (e) => {
       const { friend, friendshipId } = e.detail;
       currentChatFriendId = friend.id;
@@ -6377,6 +6411,11 @@
         if (response.ok) {
           alert("Username updated successfully!");
           if (usernameDisplay) usernameDisplay.innerText = newUsername;
+          localStorage.setItem("username", newUsername);
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(userId),
+            username: newUsername
+          });
           console.log("Username updated");
           return true;
         } else {
@@ -6410,6 +6449,11 @@
         });
         if (response.ok) {
           if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(userId),
+            bio: trimmedBio,
+            username: localStorage.getItem("username")
+          });
           console.log("Bio mise \xE0 jour");
           return true;
         } else {
@@ -6600,6 +6644,12 @@
           updateStatusFrame(newStatus);
           localStorage.setItem("userStatus", newStatus);
           console.log("Status mis \xE0 jour:", newStatus);
+          const username = localStorage.getItem("username");
+          SocketService_default.getInstance().socket?.emit("notifyStatusChange", {
+            userId: Number(userId),
+            status: newStatus,
+            username
+          });
         } else {
           console.error("Erreur lors de la mise \xE0 jour du status");
           alert("Erreur lors de la sauvegarde du status");
@@ -6753,6 +6803,12 @@
         });
         if (response.ok) {
           if (mainAvatar) mainAvatar.src = selectedImageSrc;
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(userId),
+            avatar: selectedImageSrc,
+            username: localStorage.getItem("username")
+            // On renvoie le nom pour identifier
+          });
           closeModalFunc();
           console.log("avatar maj");
         } else {

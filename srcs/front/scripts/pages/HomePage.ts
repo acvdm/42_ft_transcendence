@@ -29,6 +29,45 @@ export function afterRender(): void {
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId: number | null = null;
 
+    if (socketService.socket) {
+        socketService.socket.on('friendProfileUpdated', (data: any) => {
+            console.log("Mise à jour reçue pour :", data.username);
+
+            if (currentChatFriendId === data.userId) {
+                
+                const headerBio = document.getElementById('chat-header-bio');
+                if (headerBio && data.bio) {
+                    headerBio.innerHTML = parseMessage(data.bio);
+                }
+
+                const headerAvatar = document.getElementById('chat-header-avatar') as HTMLImageElement;
+                if (headerAvatar && data.avatar) {
+                    headerAvatar.src = data.avatar;
+                }
+                
+                const headerName = document.getElementById('chat-header-username');
+                if (headerName && data.username) {
+                    headerName.textContent = data.username;
+                }
+            }
+        });
+
+        socketService.socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
+                // Le header du chat affiche-t-il le statut ? Oui, via 'chat-header-status'
+                // Mais friendStatusUpdate ne renvoie souvent que le username, pas l'ID.
+                // Il faut vérifier si c'est l'ami courant.
+                
+                const headerName = document.getElementById('chat-header-username');
+                if (headerName && headerName.textContent === data.username) {
+                    const headerStatus = document.getElementById('chat-header-status') as HTMLImageElement;
+                    if (headerStatus && statusImages[data.status]) {
+                        headerStatus.src = statusImages[data.status];
+                    }
+                }
+            });
+    }
+
+
     // clic sur l'ami
     window.addEventListener('friendSelected', (e: any) => {
         const { friend, friendshipId } = e.detail;

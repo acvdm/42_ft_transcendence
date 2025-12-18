@@ -94,7 +94,7 @@ const handleLogout = async () => {
 		localStorage.removeItem('userId');
 		localStorage.removeItem('username');
 		localStorage.removeItem('userStatus');
-		sessionStorage.clear();
+		sessionStorage.clear(); // faustine: faut le mettre ailleurs pour gérer le guest
 	
 		// redirection vers la page d'accueil
 		window.history.pushState({}, '', '/');

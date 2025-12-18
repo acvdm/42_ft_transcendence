@@ -2,6 +2,7 @@ import htmlContent from "./ProfilePage.html";
 import { fetchWithAuth } from "./api";
 import { parseMessage } from "../components/ChatUtils";
 import { appThemes } from "../components/Data";
+import SocketService from "../services/SocketService";
 
 // interface qui va servir à typer la réponse API de l'utilisateur
 interface UserData {
@@ -119,6 +120,7 @@ export function afterRender(): void {
     let is2faEnabled = localStorage.getItem('is2faEnabled') === 'true';
     let currentUserEmail: string = "";
 
+    
     const statusImages: { [key: string]: string } = {
         'available': '/assets/basic/status_frame_online_large.png',
         'online': '/assets/basic/status_frame_online_large.png',
@@ -574,6 +576,11 @@ export function afterRender(): void {
             if (response.ok) {
                 alert("Username updated successfully!");
                 if (usernameDisplay) usernameDisplay.innerText = newUsername;
+                localStorage.setItem('username', newUsername);
+                SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
+                    userId: Number(userId),
+                    username: newUsername
+                });
                 console.log("Username updated");
                 return true;
             } else {
@@ -612,6 +619,11 @@ export function afterRender(): void {
             });
             if (response.ok) {
                 if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+                SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
+                    userId: Number(userId),
+                    bio: trimmedBio,
+                    username: localStorage.getItem('username')
+                });
                 console.log("Bio mise à jour");
                 return true;
             } else {
@@ -862,6 +874,14 @@ export function afterRender(): void {
                 updateStatusFrame(newStatus);
                 localStorage.setItem('userStatus', newStatus); 
                 console.log("Status mis à jour:", newStatus);
+
+                const username = localStorage.getItem('username');
+                SocketService.getInstance().socket?.emit('notifyStatusChange', { 
+                    userId: Number(userId), 
+                    status: newStatus,
+                    username: username 
+                });
+
             } else {
                 console.error("Erreur lors de la mise à jour du status");
                 alert("Erreur lors de la sauvegarde du status");
@@ -1076,6 +1096,11 @@ export function afterRender(): void {
                 // maj sur le profil
                 if (mainAvatar) mainAvatar.src = selectedImageSrc;
                 
+                SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
+                    userId: Number(userId),
+                    avatar: selectedImageSrc,
+                    username: localStorage.getItem('username') // On renvoie le nom pour identifier
+                });
                 // on ferme la modale une fois qu'on a valide
                 closeModalFunc();
                 
