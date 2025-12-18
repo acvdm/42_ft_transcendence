@@ -4470,7 +4470,100 @@
             </div>
         </div>
     </div>
-</div>`;
+</div>
+
+
+
+ <!-- MODALE POUR L'AVATAR -->
+
+
+    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button id="close-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl mb-1">Select a picture</h2>
+                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                </div>
+                
+                <div class="flex flex-row gap-6">
+                    <div class="flex-1">
+                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
+                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4 w-[200px]">
+                        <div class="relative w-[170px] h-[170px]">
+                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            src="/assets/basic/status_frame_offline_large.png">
+                            
+                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                            src="/assets/basic/default.png">
+                        </div>
+
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
+                            <input type="file" id="file-input" accept="image/*" hidden>
+
+                            <button id="browse-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            BROWSE
+                            </button>
+                            
+                            <button id="delete-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            DELETE
+                            </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
 
   // scripts/components/FriendList.ts
   var FriendList = class {
