@@ -14,3 +14,9 @@ export async function createTournament (
 
     return newTournament.lastID;
 }
+
+
+/* saveLocalTournament()
+    recupere le fichierJSON
+
+ */

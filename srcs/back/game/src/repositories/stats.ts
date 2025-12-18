@@ -14,3 +14,8 @@ export async function createStat (
 
     return newStat.lastID;
 }
+
+/* TOURNAMENT 
+-> fonciton utilitaire qui verifie si l'utilisateurqui a gagne est un vrai utilisateur inscrit 
+Demande a la db si une ligne existe pour lui dans STATS, la cree avec INSERT si non
+UPDATE si victoire ou defaite */

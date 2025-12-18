@@ -26,12 +26,29 @@ export async function initDatabase(): Promise<Database>{
     await db.exec(`
         CREATE TABLE IF NOT EXISTS PLAYER_MATCH (
             match_id INTEGER NOT NULL,
-            player_id INTEGER NOT NULL,
+            user_id INTEGER,
+            guest_alias TEXT,
             score INTEGER DEFAULT 0,
             is_winner INTEGER DEFAULT 0,
-            PRIMARY KEY (match_id, player_id)
+            
+            CHECK (user_id IS NOT NULL OR guest_alias IS NOT NULL),
+            FOREIGN KEY (match_id) REFERENCES MATCHES(match_id)
         )
     `);
+
+    // // Table PLAYER_MATCH
+    // await db.exec(`
+    //     CREATE TABLE IF NOT EXISTS PLAYER_MATCH (
+    //         match_id INTEGER NOT NULL,
+    //         player_id INTEGER NOT NULL,
+    //         guest_alias TEXT,
+    //         score INTEGER DEFAULT 0,
+    //         is_winner INTEGER DEFAULT 0,
+    //         PRIMARY KEY (match_id, player_id)// modification car player_id possiblement a NULL
+    //              une cle primaire ne peut jamais contenir une valeur nulle
+    //     )
+    // `);
+
 
     // Table TOURNAMENTS
     await db.exec(`
@@ -39,11 +56,11 @@ export async function initDatabase(): Promise<Database>{
             tournament_id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             begin_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            end_at DATETIME,
+            end_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             status TEXT DEFAULT 'not started',
             remaining_matches INTEGER,
-            nb_of_participants INTEGER,
-            winner_id INTEGER
+            nb_of_participants INTEGER DEFAULT 4,
+            winner_alias TEXT
         )
     `);
 
@@ -53,12 +70,9 @@ export async function initDatabase(): Promise<Database>{
             user_id INTEGER NOT NULL,
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
-            draws INTEGER DEFAULT 0,
-            total_games INTEGER GENERATED ALWAYS AS (wins + losses + draws) STORED,
+            total_games INTEGER GENERATED ALWAYS AS (wins + losses) STORED,
             total_score INTEGER DEFAULT 0,
-            best_score INTEGER DEFAULT 0,
             average_score INTEGER DEFAULT 0,
-            longest_win_streak INTEGER DEFAULT 0,
             current_win_streak INTEGER DEFAULT 0,
             PRIMARY KEY (user_id)
         )
