@@ -4068,7 +4068,7 @@
 						</div>
 					</div>
 
-					<div class="window-body bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
+					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
 						<div class="flex flex-row w-full rounded-sm p-2"> 
 							<!-- Cadre du profil -->
 							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
@@ -5938,22 +5938,22 @@
                         <div class="grid grid-cols-4 gap-4 mb-8">
                             <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
                                 <span class="text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
-                                <span class="text-3xl font-bold text-gray-800 mt-1">0</span>
+                                <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
                             </div>
                             
                             <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
                                 <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
-                                <span class="text-3xl font-bold text-green-700 mt-1">0</span>
+                                <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
                                 <span class="text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
-                                <span class="text-3xl font-bold text-red-700 mt-1">0</span>
+                                <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
                                 <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
-                                <span class="text-3xl font-bold text-blue-700 mt-1">0%</span>
+                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
                             </div>
                         </div>
                     </div>
@@ -6540,6 +6540,27 @@
         if (response.ok) {
           const user = await response.json();
           currentUserEmail = user.email || "";
+          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+          if (statResponse.ok) {
+            const jsonResponse = await statResponse.json();
+            const stats = jsonResponse.data;
+            const totalGame = document.getElementById("stats-total-games");
+            const wins = document.getElementById("stats-wins");
+            const losses = document.getElementById("stats-losses");
+            const winRateCalcul = document.getElementById("stats-win-rate");
+            if (stats && totalGame && winRateCalcul && wins && losses) {
+              totalGame.innerText = stats.total_games.toString();
+              wins.innerText = stats.wins.toString();
+              losses.innerText = stats.losses.toString();
+              let rateValue = 0;
+              if (stats.total_games > 0) {
+                rateValue = Math.round(stats.wins / stats.total_games * 100);
+              }
+              winRateCalcul.innerText = `${rateValue}%`;
+            }
+          } else {
+            console.warn("Could not fetch user stats");
+          }
           if (user.theme) {
             localStorage.setItem("userTheme", user.theme);
             applyTheme(user.theme);

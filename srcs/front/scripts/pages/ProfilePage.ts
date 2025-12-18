@@ -16,6 +16,12 @@ interface UserData {
     is2faEnabled?: boolean;
 }
 
+interface UserStats {
+    wins: number;
+    losses: number;
+    total_games: number;
+}
+
 export function render(): string {
     return htmlContent;
 }
@@ -467,6 +473,34 @@ export function afterRender(): void {
                 // IMPORTANT: on recupere l'email ici
                 currentUserEmail = user.email || "";
 
+
+                ////// chargement des statistiques
+                const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+                if (statResponse.ok) {
+                    const jsonResponse = await statResponse.json();
+                    const stats: UserStats = jsonResponse.data;
+
+                    const totalGame = document.getElementById('stats-total-games');
+                    const wins = document.getElementById('stats-wins');
+                    const losses = document.getElementById('stats-losses');
+                    const winRateCalcul = document.getElementById('stats-win-rate');
+
+                    if (stats && totalGame && winRateCalcul && wins && losses) {
+                        totalGame.innerText = stats.total_games.toString();
+                        wins.innerText = stats.wins.toString();
+                        losses.innerText = stats.losses.toString();
+                        
+                        let rateValue = 0;
+                        if (stats.total_games > 0) {
+                            rateValue = Math.round((stats.wins / stats.total_games) * 100);
+                        }
+                        winRateCalcul.innerText = `${rateValue}%`;
+                    }
+                } else {
+                    console.warn("Could not fetch user stats");
+                }
+
+
                 // maj theme
                 if (user.theme) {
                     localStorage.setItem('userTheme', user.theme);
@@ -539,6 +573,9 @@ export function afterRender(): void {
                         setupField(fieldElements, container.dataset.field as string);
                     }
                 });
+
+
+
 
             }
         } catch (error) {
