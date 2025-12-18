@@ -3,9 +3,8 @@ import fastifyCookie from '@fastify/cookie'; // pour JWT
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
-import { generate2FASecret } from './utils/crypto.js';
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
-import { loginUser, registerUser, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, authenticatePassword } from './services/auth_service.js';
+import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword } from './services/auth_service.js';
 import fs from 'fs';
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -56,6 +55,46 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 
 		// 2. Traiter (toute la logique est dans le service)
 		const authResponse = await registerUser(db, body.user_id, body.email, body.password);
+
+		// 3. Cookie
+		reply.setCookie('refresh_token', authResponse.refresh_token, {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 3600,
+			signed: true
+		});
+
+		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
+
+		// 4. Répondre
+		return reply.status(200).send({
+			success: true,
+			refresh_token: authResponse.refresh_token,
+			access_token: authResponse.access_token,
+			user_id: authResponse.user_id,
+			error: null
+		});
+	} 
+	catch (err: any) 
+	{
+		return reply.status(400).send({
+			success: false, 
+			data: null,
+			error: { message: err.message }
+		});
+	}
+});
+
+fastify.post('/users/:id/credentials/guest', async (request, reply) => 
+{
+	try
+	{
+		const body = request.body as { user_id: number; email: string};
+
+		// 2. Traiter (toute la logique est dans le service)
+		const authResponse = await registerGuest(db, body.user_id, body.email);
 
 		// 3. Cookie
 		reply.setCookie('refresh_token', authResponse.refresh_token, {
@@ -172,9 +211,6 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
 
 
 
-
-
-
 /* -- LOGIN -- */ 
 fastify.post('/sessions', async (request, reply) => 
 {
@@ -182,6 +218,8 @@ fastify.post('/sessions', async (request, reply) =>
 
 	try 
 	{
+		if (!body.password)
+			throw new Error('Password is required');
 		const result = await loginUser(db, body.email, body.password);
 		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
@@ -189,7 +227,7 @@ fastify.post('/sessions', async (request, reply) =>
 		if (result.require_2fa) {
 			console.log(`🔐 2FA required for user`);
 			return reply.status(200).send({
-				sucess: true,
+				success: true,
 				require_2fa: true,
 				temp_token: result.temp_token // LE FRONT DOIT STOCKER CA
 			});
@@ -370,16 +408,18 @@ fastify.post('/2fa/generate', async (request, reply) => {
             //  const userId = body.user_id;
 
 		}
-
 		const userId = parseInt(userIdHeader as string);
 
-		const result = await generate2FASecret(db, userId);
+		const body = request.body as { type?: 'APP' | 'EMAIL' };
+		const type = body.type || 'APP';
+
+		const result = await generateTwoFA(db, userId, type);
 
 		console.log(`✅ 2FA generated for user ${userId}`);
 
 		return reply.status(200).send({
 			sucess: true,
-			data: result, // contient { qrCodeUrl, manualSecret }
+			data: result, // contient { qrCodeUrl, manualSecret } ou message pour l email
 			error: null
 		});
 	} catch (err: any) {
@@ -411,14 +451,15 @@ fastify.post('/2fa/enable', async (request, reply) => {
 		const userId = parseInt(userIdHeader as string);
 
 		// recuperation du code a 6 chiffres envoye par l'utilisateur
-		const body = request.body as { code: string };
+		const body = request.body as { code: string, type?: 'APP' | 'EMAIL' };
 		if (!body.code)
 			return reply.status(400).send({ error: "Code required"});
 
-		const isSuccess = await verifyAndEnable2FA(db, userId, body.code);
+		const type = body.type || 'APP';
+
+		const isSuccess = await verifyAndEnable2FA(db, userId, body.code, type);
 		if (!isSuccess)
 		{
-			// mauvais code
 			return reply.status(400).send({
 				success: false,
 				error: { message: "Invalid 2FA Code. Please try again."}
@@ -452,7 +493,7 @@ fastify.post('/2fa/disable', async (request, reply) => {
 
 		const userId = parseInt(userIdHeader as string);
 
-		await credRepo.disable2FA(db, userId);
+		await credRepo.set2FAMethod(db, userId, 'NONE');
 
 		console.log(`✅ 2FA disabled for user ${userId}`);
 

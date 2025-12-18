@@ -1,4 +1,5 @@
 import { Database } from 'sqlite';
+import { generateRandomAlias, generateRandomAvatar } from "../utils/guest.js"
 
 export interface CreateUser {
     alias: string,
@@ -21,11 +22,8 @@ export async function createUserInDB (
     data: CreateUser
 ): Promise<number> {
 
-    const check_alias = await db.get(`
-        SELECT id FROM USERS WHERE alias = ?`,
-        [data.alias]
-    );
-    if (check_alias?.id)
+    const checkAlias = await isAliasUsed(db, data.alias)
+    if (checkAlias)
         throw new Error('Alias already taken, find another one');
     
     const avatarDefault = data.avatar_url || '/assets/basic/default.png'; // je rajoute ca pour avoir une image par default
@@ -45,6 +43,28 @@ export async function createUserInDB (
     return result.lastID;
 }
 
+export async function createGuestInDB (
+    db: Database,
+): Promise<number> {
+
+    const alias = await generateRandomAlias(db); // FAUSTINE: je rajoute await ici
+    const avatar = await generateRandomAvatar(db);
+    console.log("Generated alias:", alias);
+
+    const result = await db.run(`
+        INSERT INTO USERS (alias, is_guest, avatar_url)
+        VALUES (?, ?, ?)`,
+        [alias, 1, avatar]
+    );
+
+    if (!result.lastID) 
+    {
+        throw new Error('Failed to create new user');
+    }
+
+    console.log("createGuestinDB fonctionne");
+    return result.lastID;
+}
 
 
 //-------- GET / READ
@@ -60,7 +80,6 @@ export async function findUserByID (
 
     return user;
 }
-
 
 export async function findUserByAlias (
     db: Database,
@@ -86,6 +105,22 @@ export async function findEmailById (
     );
 
     return email.email;
+}
+
+export async function isAliasUsed (
+    db: Database,
+    alias: string
+): Promise<boolean>
+{
+    const checkAlias = await db.get(`
+        SELECT id FROM USERS WHERE alias = ?`,
+        [alias]
+    );
+
+    if (checkAlias?.id)
+        return true;
+
+    return false;
 }
 
 

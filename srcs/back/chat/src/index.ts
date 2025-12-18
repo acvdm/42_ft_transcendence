@@ -35,6 +35,21 @@ fastify.ready().then(() => {
     fastify.io.on('connection', (socket: Socket) => {
         console.log(`Client connected (Fastify): ${socket.id}`);
 
+        socket.on('registerUser', (userId: string) => {
+            socket.join(`user_${userId}`);
+            console.log(`User ${userId} registered for notifications`);
+        });
+
+        // On envoie le signal uniquement à la personne concernée
+        socket.on('sendFriendRequestNotif', (data: { targetId: string }) => {
+            fastify.io.to(`user_${data.targetId}`).emit('receiveFriendRequestNotif');
+        });
+
+        // acceptation de l'amitie
+        socket.on('acceptFriendRequest', (data: { targetId: string }) => {
+            fastify.io.to(`user_${data.targetId}`).emit('friendRequestAccepted');
+        });
+
         socket.on("joinChannel", async (channelKey: string) => { 
             await joinChannel(socket, fastify.io, channelKey); 
         });
@@ -54,6 +69,30 @@ fastify.ready().then(() => {
                 author: data.author 
             }); 
         });
+
+        socket.on('notifyStatusChange', async (data: { userId: number, status: string, username: string }) => {
+            try {
+                // On récupère la liste d'amis via le service User (port 3004 selon votre docker-compose)
+                const response = await fetch(`http://user:3004/users/${data.userId}/friends`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // On prévient chaque ami connecté
+                    result.data.forEach((friendship: any) => {
+                        const friendId = (friendship.user.id === data.userId) ? friendship.friend.id : friendship.user.id;
+                        
+                        // On envoie le message "friendStatusUpdate" que votre FriendList écoute déjà
+                        fastify.io.to(`user_${friendId}`).emit('friendStatusUpdate', {
+                            username: data.username,
+                            status: data.status
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error("Erreur diffusion statut:", err);
+            }
+        });
+
 
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);

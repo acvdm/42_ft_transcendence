@@ -7,15 +7,15 @@
   };
 
   // scripts/pages/LoginPage.html
-  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign in to Transcendence
@@ -68,7 +68,7 @@
             <div class="window-body p-6 flex flex-col items-center gap-4">
                 <div class="text-center">
                     <h2 class="text-lg font-bold mb-2">Security Check</h2>
-                    <p class="text-xs text-gray-600 mb-4">Please enter the code from Google authenticator.</p>
+                    <p class="text-xs text-gray-600 mb-4">Please enter the security code.</p>
                 </div>
 
                 <div class="w-full flex flex-col gap-2 mt-2">
@@ -107,8 +107,11 @@
     refreshSubscribers.forEach((cb) => cb(token));
     refreshSubscribers = [];
   }
+  function getAuthToken() {
+    return sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+  }
   async function fetchWithAuth(url2, options = {}) {
-    const token = localStorage.getItem("accessToken");
+    const token = getAuthToken();
     const getHeaders = (currentToken) => {
       const headers = new Headers(options.headers || {});
       if (!headers.has("Content-Type") && options.body) {
@@ -161,633 +164,6 @@
     }
     return response;
   }
-
-  // scripts/pages/LoginPage.ts
-  function render() {
-    return LoginPage_default;
-  }
-  async function init2faLogin(access_token, user_id, selectedStatus) {
-    if (access_token) localStorage.setItem("accessToken", access_token);
-    if (user_id) localStorage.setItem("userId", user_id.toString());
-    if (user_id && access_token) {
-      try {
-        const userRes = await fetch(`/api/users/${user_id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
-          }
-        });
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          if (userData.alias)
-            localStorage.setItem("username", userData.alias);
-          if (userData.theme)
-            localStorage.setItem("userTheme", userData.theme);
-        }
-      } catch (err) {
-        console.error("Can't get user's profile", err);
-      }
-      try {
-        await fetch(`/api/users/${user_id}/status`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
-          },
-          body: JSON.stringify({ status: selectedStatus })
-        });
-      } catch (err) {
-        console.error("Failed to update status on login", err);
-      }
-    }
-    localStorage.setItem("userStatus", selectedStatus);
-    window.history.pushState({}, "", "/home");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }
-  function handleLogin() {
-    console.log("handleLogin");
-    const button = document.getElementById("login-button");
-    const errorElement = document.getElementById("error-message");
-    const modal2fa = document.getElementById("2fa-modal");
-    const input2fa = document.getElementById("2fa-input-code");
-    const confirm2fa = document.getElementById("confirm-2fa-button");
-    const close2fa = document.getElementById("close-2fa-modal");
-    const error2fa = document.getElementById("2fa-error-message");
-    let tempToken = null;
-    let cachedStatus = "available";
-    button?.addEventListener("click", async () => {
-      const email = document.getElementById("email-input").value;
-      const password = document.getElementById("password-input").value;
-      const selectedStatus = document.getElementById("status-input").value;
-      if (errorElement) {
-        errorElement.classList.add("hidden");
-        errorElement.textContent = "";
-      }
-      if (!email || !password) {
-        if (errorElement) {
-          errorElement.textContent = "Please fill all inputs";
-          errorElement.classList.remove("hidden");
-        }
-        return;
-      }
-      try {
-        const response = await fetch("/api/auth/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-        const result = await response.json();
-        if (result.require_2fa) {
-          console.log("2FA require");
-          localStorage.setItem("is2faEnabled", "true");
-          tempToken = result.temp_token;
-          if (modal2fa) {
-            modal2fa.classList.remove("hidden");
-            modal2fa.classList.add("flex");
-            input2fa.value = "";
-            input2fa.focus();
-          }
-          return;
-        }
-        if (result.success) {
-          localStorage.setItem("is2faEnabled", "false");
-          const { access_token, user_id } = result.data;
-          await init2faLogin(access_token, user_id, cachedStatus);
-          if (access_token) localStorage.setItem("accessToken", access_token);
-          if (user_id) localStorage.setItem("userId", user_id.toString());
-          if (user_id && access_token) {
-            try {
-              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
-                method: "GET"
-              });
-              if (userRes.ok) {
-                const userData = await userRes.json();
-                if (userData.alias)
-                  localStorage.setItem("username", userData.alias);
-                if (userData.theme)
-                  localStorage.setItem("userTheme", userData.theme);
-              }
-            } catch (err) {
-              console.error("Can't get user's profile", err);
-            }
-            try {
-              await fetchWithAuth(`/api/users/${user_id}/status`, {
-                method: "PATCH",
-                body: JSON.stringify({ status: selectedStatus })
-              });
-              console.log("Status updated to DB:", selectedStatus);
-            } catch (err) {
-              console.error("Failed to update status on login", err);
-            }
-          }
-          localStorage.setItem("userStatus", selectedStatus);
-          window.history.pushState({}, "", "/home");
-          window.dispatchEvent(new PopStateEvent("popstate"));
-        } else {
-          console.error("Login error:", result.error);
-          if (errorElement) {
-            errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
-            errorElement.classList.remove("hidden");
-          }
-        }
-      } catch (error) {
-        console.error("Network error:", error);
-        if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
-          errorElement.classList.remove("hidden");
-        }
-      }
-    });
-    confirm2fa?.addEventListener("click", async () => {
-      const code = input2fa.value.trim();
-      if (error2fa) error2fa.classList.add("hidden");
-      if (!code || !tempToken) return;
-      try {
-        const response = await fetch("/api/auth/2fa/verify", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${tempToken}`
-          },
-          body: JSON.stringify({ code })
-        });
-        const result = await response.json();
-        if (response.ok && result.success) {
-          localStorage.setItem("is2faEnabled", "true");
-          const { access_token, user_id } = result;
-          if (modal2fa) modal2fa.classList.add("hidden");
-          await init2faLogin(access_token, user_id, cachedStatus);
-        } else {
-          if (error2fa) {
-            error2fa.textContent = "Invalid code.";
-            error2fa.classList.remove("hidden");
-            console.error("2FA Error:", result.error.message);
-          }
-        }
-      } catch (error) {
-        if (error2fa) {
-          error2fa.textContent = "Error during verification.";
-          error2fa.classList.remove("hidden");
-        }
-      }
-    });
-    const closeFunc = () => {
-      if (modal2fa) {
-        modal2fa.classList.add("hidden");
-        modal2fa.classList.remove("flex");
-        tempToken = null;
-      }
-    };
-    close2fa?.addEventListener("click", closeFunc);
-    modal2fa?.addEventListener("click", (e) => {
-      if (e.target === modal2fa) closeFunc();
-    });
-  }
-  function loginEvents() {
-    handleLogin();
-  }
-
-  // scripts/pages/HomePage.html
-  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
-
-	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-	</div>
-
-	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
-		
-		<!-- Container avec left et right qui prennent toute la hauteur restante -->
-		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
-
-			<!-- ========= LEFT WINDOW ========= -->
-			<div class="window w-[700px] min-w-[700px] flex flex-col">
-				<div class="title-bar">
-					<div class="title-bar-text">Games</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
-					</div>
-				</div>
-
-				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px; background-color: white;">
-					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
-						<!-- Cadre du profil -->
-						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
-							<div class="relative w-[110px] h-[110px] flex-shrink-0">
-								<!-- l'image (profil principal) -->
-								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-								<!-- le cadre -->
-								<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
-							</div>
-	
-							<!-- username, bio et status -->
-							<div class="flex flex-col justify-center pl-4 flex-1">
-								<div class="flex items-center gap-2 mb-1">
-									<p class="text-xl font-semibold" id="user-name">Username</p>
-	
-									<!-- selection du status = dynamique -->
-									<div class="relative">
-										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-											<span id="current-status-text">(Available)</span>
-											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-										</button>
-	
-										<!-- Menu dropdown pour le status -->
-										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Available</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Busy</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Away</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Offline</span>
-											</button>
-										</div>
-									</div>
-								</div>
-								<div id="bio-wrapper">
-									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
-									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-								</div>
-							</div>
-	
-							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
-							<div class="ml-auto flex items-start relative">
-								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-									<img id="notification-icon" 
-										src="/assets/basic/no_notification.png" 
-										alt="Notifications" 
-										class="w-full h-full object-contain">
-										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
-								</button>
-								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
-									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
-										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-											Notifications
-										</h3>
-									</div>
-									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
-									</div> <!--fin du listing inside dropdown-->
-								</div> <!--fin du div dropdown-->
-							</div>
-
-
-							
-						</div>
-
-					</div>	<!--FIn du premier cadre-->		
-					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
-						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
-
-						<button id="local-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							LOCAL
-						</button>
-
-						<button id="remote-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							REMOTE
-						</button>
-
-						<button id="tournament-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							TOURNAMENT
-						</button>
-					</div>	<!--FIn du second cadre-->	
-				</div>
-			</div>
-
-
-			<!-- ========= RIGHT WINDOW ========= -->
-			<div class="window flex flex-col flex-1 min-w-0">
-				<div class="title-bar">
-					<div class="title-bar-text">Messenger</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
-					</div>
-				</div>
-
-				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-
-					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-
-						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
-							<div class="flex flex-row items-center justify-between">
-								<p class="text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">MY FRIENDS</p>
-								
-								<div class="ml-auto flex items-center mb-3 relative">
-									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
-										<img id="add-friend-icon" 
-											src="/assets/basic/1441.png" 
-											alt="Friends button" 
-											class="w-full h-full object-contain">
-									</button>
-									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
-										<p class="text-sm font-semibold mb-2 text-center">Add a friend</p>
-										<input type="text" 
-											id="friend-search-input" 
-											placeholder="Type in username or email" 
-											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-										<div class="flex gap-2">
-											<button id="send-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												Send request
-											</button>
-											<button id="cancel-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												Cancel
-											</button>
-										</div>
-										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
-									</div>
-								</div>
-							</div>
-
-							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
-
-								<details open class="group">
-									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-										\u2B50 Contacts
-									</summary>
-
-									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
-										</div>
-								</details>
-
-								<details class="group">
-									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-										\u{1F4C1} Groups
-									</summary>
-
-									<div class="mt-2 ml-4 flex flex-col gap-2">
-										<div class="text-xs text-gray-600 ml-1">les bogoce</div>
-										<div class="text-xs text-gray-600 ml-1">les cheums</div>
-									</div>
-								</details>
-							</div>
-						</div>
-
-						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
-							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
-							<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
-						</div>
-
-						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-							
-							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
-								<div class="flex gap-4 items-center">
-									<div class="relative w-[80px] h-[80px] flex-shrink-0">
-										<!-- l'image (profil principal) -->
-										<img id="chat-header-avatar" 
-											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
-											src="" 
-											alt="User avatar">
-										<!-- le cadre -->
-										<img id="chat-header-status" 
-											class="absolute inset-0 w-full h-full object-contain" 
-											src="/assets/basic/status_online_small.png" 
-											alt="Status frame">
-									</div>
-									<div class="flex flex-col justify-start leading-tight">
-										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
-										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
-									</div>
-								</div>
-								
-								<div class="relative self-start mt-2">
-									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
-									</button>
-
-
-
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-    
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												View profile
-											</button>
-										</div>
-
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												Invite to play
-											</button>
-										</div>
-
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/report.png" 
-													class="w-5 h-5 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-report-user" class="text-left text-sm text-gray-700 flex-1">
-												Report user
-											</button>
-										</div>
-
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												Block user
-											</button>
-										</div>
-
-									</div> <!-- fin de la div menu -->
-
-								</div>
-
-
-							</div>
-
-
-
-							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
-
-							<div class="flex flex-col">
-								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-
-								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-									<button id="select-emoticon" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-											</div>
-										</div>
-									</button>
-
-									<button id="select-animation" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-											</div>
-										</div>
-									</button>
-
-									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-
-									<!-- Menu pour les fonts -->
-									
-									<button id="change-font" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-										<!-- Menu dropdown -> il s'ouvre quand on clique -->
-										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-										</div>
-
-										</div>
-									</button>
-
-									<div class="relative">
-									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-									</button>
-
-									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-													
-										<div class="grid grid-cols-3 gap-2">
-														
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/fish_background.jpg')"
-													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-											</button>
-
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/heart_background.jpg')"
-													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-											</button>
-
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-											</button>
-
-											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-												Default background
-											</button>
-										</div>
-									</div>
-								</div>
-						</div>
-					</div> 
-				</div>
-			</div> 
-		</div>
-
-	</div>
-
-<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-        <div class="title-bar">
-            <div class="title-bar-text">User Profile</div>
-            <div class="title-bar-controls">
-                <button id="close-friend-modal" aria-label="Close"></button>
-            </div>
-        </div>
-        <div class="window-body p-6">
-            
-            <div class="flex flex-row gap-6 mb-6 items-center">
-                
-                <div class="relative w-[130px] h-[130px] flex-shrink-0">
-                    <img id="friend-modal-status" 
-                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
-                    
-                    <img id="friend-modal-avatar" 
-                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="https://wlm.vercel.app/assets/usertiles/default.png">
-                </div>
-
-                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
-                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
-                    
-                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
-                </div>
-            </div>
-
-            <fieldset class="border border-gray-300 p-4 rounded-sm">
-                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Games Played:</span>
-                        <span id="friend-stat-games" class="font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Wins:</span>
-                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Losses:</span>
-                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Rank:</span>
-                        <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
-                    </div>
-                </div>
-            </fieldset>
-
-            <div class="flex justify-end mt-4">
-                    <button id="close-friend-modal-button" 
-                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>`;
 
   // node_modules/engine.io-parser/build/esm/commons.js
   var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
@@ -4185,7 +3561,7 @@
   var appThemes = {
     "basic": {
       name: "Classic Blue",
-      headerUrl: "https://wlm.vercel.app/assets/background/background.jpg",
+      headerUrl: "/assets/basic/background.jpg",
       navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
       bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)"
     },
@@ -4454,6 +3830,647 @@
   alias(["(Y)", "(y)"], "thumbs_up.gif");
   alias(["(B)", "(b)"], "beer_mug.gif");
   alias(["(X)", "(x)"], "girl.gif");
+  async function updateUserStatus(newStatus) {
+    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
+    if (!userId) return;
+    try {
+      await fetchWithAuth(`/api/users/${userId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const socket = SocketService_default.getInstance().socket;
+      if (socket && username) {
+        socket.emit("notifyStatusChange", {
+          userId: Number(userId),
+          status: newStatus,
+          username
+        });
+        console.log(`[Status] Updated to ${newStatus} for ${username}`);
+      }
+      localStorage.setItem("userStatus", newStatus);
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  }
+
+  // scripts/pages/LoginPage.ts
+  function render() {
+    return LoginPage_default;
+  }
+  async function init2faLogin(access_token, user_id, selectedStatus) {
+    if (access_token) localStorage.setItem("accessToken", access_token);
+    if (user_id) localStorage.setItem("userId", user_id.toString());
+    if (user_id && access_token) {
+      try {
+        const userRes = await fetch(`/api/users/${user_id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access_token}`
+          }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.alias)
+            localStorage.setItem("username", userData.alias);
+          if (userData.theme)
+            localStorage.setItem("userTheme", userData.theme);
+        }
+      } catch (err) {
+        console.error("Can't get user's profile", err);
+      }
+      try {
+        await fetch(`/api/users/${user_id}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${access_token}`
+          },
+          body: JSON.stringify({ status: selectedStatus })
+        });
+      } catch (err) {
+        console.error("Failed to update status on login", err);
+      }
+    }
+    localStorage.setItem("userStatus", selectedStatus);
+    window.history.pushState({}, "", "/home");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }
+  function handleLogin() {
+    console.log("handleLogin");
+    const button = document.getElementById("login-button");
+    const errorElement = document.getElementById("error-message");
+    const modal2fa = document.getElementById("2fa-modal");
+    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2fa = document.getElementById("confirm-2fa-button");
+    const close2fa = document.getElementById("close-2fa-modal");
+    const error2fa = document.getElementById("2fa-error-message");
+    let tempToken = null;
+    let cachedStatus = "available";
+    button?.addEventListener("click", async () => {
+      const email = document.getElementById("email-input").value;
+      const password = document.getElementById("password-input").value;
+      const selectedStatus = document.getElementById("status-input").value;
+      if (errorElement) {
+        errorElement.classList.add("hidden");
+        errorElement.textContent = "";
+      }
+      if (!email || !password) {
+        if (errorElement) {
+          errorElement.textContent = "Please fill all inputs";
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const result = await response.json();
+        if (result.require_2fa) {
+          console.log("2FA require");
+          localStorage.setItem("is2faEnabled", "true");
+          tempToken = result.temp_token;
+          if (modal2fa) {
+            modal2fa.classList.remove("hidden");
+            modal2fa.classList.add("flex");
+            input2fa.value = "";
+            input2fa.focus();
+          }
+          return;
+        }
+        if (result.success) {
+          localStorage.setItem("is2faEnabled", "false");
+          const { access_token, user_id } = result.data;
+          await init2faLogin(access_token, user_id, cachedStatus);
+          if (access_token) localStorage.setItem("accessToken", access_token);
+          if (user_id) localStorage.setItem("userId", user_id.toString());
+          if (user_id && access_token) {
+            try {
+              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+                method: "GET"
+              });
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias)
+                  localStorage.setItem("username", userData.alias);
+                if (userData.theme)
+                  localStorage.setItem("userTheme", userData.theme);
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
+            try {
+              await fetchWithAuth(`/api/users/${user_id}/status`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              console.log("Status updated to DB:", selectedStatus);
+            } catch (err) {
+              console.error("Failed to update status on login", err);
+            }
+          }
+          localStorage.setItem("userStatus", selectedStatus);
+          window.history.pushState({}, "", "/home");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          console.error("Login error:", result.error);
+          if (errorElement) {
+            errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
+            errorElement.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        if (errorElement) {
+          errorElement.textContent = "Network error, please try again";
+          errorElement.classList.remove("hidden");
+        }
+      }
+    });
+    confirm2fa?.addEventListener("click", async () => {
+      const code = input2fa.value.trim();
+      if (error2fa) error2fa.classList.add("hidden");
+      if (!code || !tempToken) return;
+      try {
+        const response = await fetch("/api/auth/2fa/verify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tempToken}`
+          },
+          body: JSON.stringify({ code })
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          localStorage.setItem("is2faEnabled", "true");
+          const { access_token, user_id } = result;
+          if (modal2fa) modal2fa.classList.add("hidden");
+          await updateUserStatus("online");
+          await init2faLogin(access_token, user_id, cachedStatus);
+        } else {
+          if (error2fa) {
+            error2fa.textContent = "Invalid code.";
+            error2fa.classList.remove("hidden");
+            console.error("2FA Error:", result.error.message);
+          }
+        }
+      } catch (error) {
+        if (error2fa) {
+          error2fa.textContent = "Error during verification.";
+          error2fa.classList.remove("hidden");
+        }
+      }
+    });
+    const closeFunc = () => {
+      if (modal2fa) {
+        modal2fa.classList.add("hidden");
+        modal2fa.classList.remove("flex");
+        tempToken = null;
+      }
+    };
+    close2fa?.addEventListener("click", closeFunc);
+    modal2fa?.addEventListener("click", (e) => {
+      if (e.target === modal2fa) closeFunc();
+    });
+  }
+  function loginEvents() {
+    handleLogin();
+  }
+
+  // scripts/pages/HomePage.html
+  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(/assets/basic/background.png); background-size: cover;">
+	</div>
+
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+		
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+
+			<!-- ========= LEFT WINDOW ========= -->
+			<div class="window w-[700px] min-w-[700px] flex flex-col">
+				<div class="title-bar">
+					<div class="title-bar-text">Games</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px; background-color: white;">
+					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
+						<!-- Cadre du profil -->
+						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
+							<div class="relative w-[110px] h-[110px] flex-shrink-0">
+								<!-- l'image (profil principal) -->
+								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+								<!-- le cadre -->
+								<img id="user-status" class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_away_small.png" alt="Status frame">
+							</div>
+	
+							<!-- username, bio et status -->
+							<div class="flex flex-col justify-center pl-4 flex-1">
+								<div class="flex items-center gap-2 mb-1">
+									<p class="text-xl font-semibold" id="user-name">Username</p>
+	
+									<!-- selection du status = dynamique -->
+									<div class="relative">
+										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+											<span id="current-status-text">(Available)</span>
+											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+										</button>
+	
+										<!-- Menu dropdown pour le status -->
+										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Available</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Busy</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Away</span>
+											</button>
+											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+												<span class="w-2 h-2 rounded-full"></span>
+												<span>Offline</span>
+											</button>
+										</div>
+									</div>
+								</div>
+								<div id="bio-wrapper">
+									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+								</div>
+							</div>
+	
+							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
+							<div class="ml-auto flex items-start relative">
+								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+									<img id="notification-icon" 
+										src="/assets/basic/no_notification.png" 
+										alt="Notifications" 
+										class="w-full h-full object-contain">
+										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
+								</button>
+								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+											Notifications
+										</h3>
+									</div>
+									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
+										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
+									</div> <!--fin du listing inside dropdown-->
+								</div> <!--fin du div dropdown-->
+							</div>
+
+
+							
+						</div>
+
+					</div>	<!--FIn du premier cadre-->		
+					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
+						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
+
+						<button id="local-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							LOCAL
+						</button>
+
+						<button id="remote-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							REMOTE
+						</button>
+
+						<button id="tournament-game" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+							TOURNAMENT
+						</button>
+					</div>	<!--FIn du second cadre-->	
+				</div>
+			</div>
+
+
+			<!-- ========= RIGHT WINDOW ========= -->
+			<div class="window flex flex-col flex-1 min-w-0">
+				<div class="title-bar">
+					<div class="title-bar-text">Messenger</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
+
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
+							<div class="flex flex-row items-center justify-between">
+								<p class="text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">MY FRIENDS</p>
+								
+								<div class="ml-auto flex items-center mb-3 relative">
+									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
+										<img id="add-friend-icon" 
+											src="/assets/basic/1441.png" 
+											alt="Friends button" 
+											class="w-full h-full object-contain">
+									</button>
+									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
+										<p class="text-sm font-semibold mb-2 text-center">Add a friend</p>
+										<input type="text" 
+											id="friend-search-input" 
+											placeholder="Type in username or email" 
+											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<div class="flex gap-2">
+											<button id="send-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Send request
+											</button>
+											<button id="cancel-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Cancel
+											</button>
+										</div>
+										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
+
+								<details open class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										\u2B50 Contacts
+									</summary>
+
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
+										</div>
+								</details>
+							</div>
+						</div>
+
+						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
+							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
+							<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
+						</div>
+
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+							
+							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+								<div class="flex gap-4 items-center">
+									<div class="relative w-[80px] h-[80px] flex-shrink-0">
+										<!-- l'image (profil principal) -->
+										<img id="chat-header-avatar" 
+											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+											src="" 
+											alt="User avatar">
+										<!-- le cadre -->
+										<img id="chat-header-status" 
+											class="absolute inset-0 w-full h-full object-contain" 
+											src="/assets/basic/status_online_small.png" 
+											alt="Status frame">
+									</div>
+									<div class="flex flex-col justify-start leading-tight">
+										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+									</div>
+								</div>
+								
+								<div class="relative self-start mt-2">
+									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
+										<img src="/assets/chat/meatball.png"
+											 alt="options"
+											 class="w-6 h-6 object-contain"
+											 style="width: 15px; height: 15px; vertical-align: -25px;">
+									</button>
+
+
+
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
+    
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/view_profile.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
+												View profile
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/game_notification.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
+												Invite to play
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/report.png" 
+													class="w-5 h-5 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-report-user" class="text-left text-sm text-gray-700 flex-1">
+												Report user
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/block.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
+												Block user
+											</button>
+										</div>
+
+									</div> <!-- fin de la div menu -->
+
+								</div>
+
+
+							</div>
+
+
+
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+									<!-- Menu pour les fonts -->
+									
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+										<!-- Menu dropdown -> il s'ouvre quand on clique -->
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+
+										</div>
+									</button>
+
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
+						</div>
+					</div> 
+				</div>
+			</div> 
+		</div>
+
+	</div>
+
+<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">User Profile</div>
+            <div class="title-bar-controls">
+                <button id="close-friend-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="window-body p-6">
+            
+            <div class="flex flex-row gap-6 mb-6 items-center">
+                
+                <div class="relative w-[130px] h-[130px] flex-shrink-0">
+                    <img id="friend-modal-status" 
+                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                            src="/assets/basic/status_frame_online_large.png">
+                    
+                    <img id="friend-modal-avatar" 
+                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
+                            src="/assets/basic/default.png">
+                </div>
+
+                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
+                    
+                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
+                </div>	
+            </div>
+
+            <fieldset class="border border-gray-300 p-4 rounded-sm">
+                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Games Played:</span>
+                        <span id="friend-stat-games" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Wins:</span>
+                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Losses:</span>
+                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Rank:</span>
+                        <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end mt-4">
+                    <button id="close-friend-modal-button" 
+                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>`;
 
   // scripts/components/FriendList.ts
   var FriendList = class {
@@ -4465,14 +4482,28 @@
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
+      this.checkNotifications();
       this.listenToUpdates();
       this.setupBlockListener();
+      this.registerSocketUser();
+      setInterval(() => this.checkNotifications(), 3e4);
+    }
+    registerSocketUser() {
+      const socket = SocketService_default.getInstance().socket;
+      const userId = this.userId;
+      if (!socket || !userId) return;
+      if (socket.connected) {
+        socket.emit("registerUser", userId);
+      }
+      socket.on("connect", () => {
+        socket.emit("registerUser", userId);
+      });
     }
     async loadFriends() {
       const contactsList = this.container;
       if (!this.userId || !contactsList) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${this.userId}/friends`);
+        const response = await fetchWithAuth(`/api/users/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
         if (!response.ok) throw new Error("Failed to fetch friends");
         const responseData = await response.json();
         const friendList = responseData.data;
@@ -4484,18 +4515,17 @@
         friendList.forEach((friendship) => {
           const user = friendship.user;
           const friend = friendship.friend;
-          if (!user || !friend) {
-            console.log(`Invalid friendship data`);
-            return;
-          }
+          if (!user || !friend) return;
           const currentUserId = Number(this.userId);
           const selectedFriend = user.id === currentUserId ? friend : user;
-          const status = selectedFriend.status || "invisible";
+          let rawStatus = selectedFriend.status || "offline";
+          const status = rawStatus.toLowerCase();
           const friendItem = document.createElement("div");
           friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
           friendItem.dataset.id = selectedFriend.id;
           friendItem.dataset.friendshipId = friendship.id;
-          friendItem.dataset.username = selectedFriend.alias;
+          friendItem.dataset.login = selectedFriend.username;
+          friendItem.dataset.alias = selectedFriend.alias;
           friendItem.dataset.status = status;
           friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
           friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
@@ -4511,10 +4541,7 @@
           contactsList.appendChild(friendItem);
           friendItem.addEventListener("click", () => {
             const event = new CustomEvent("friendSelected", {
-              detail: {
-                friend: selectedFriend,
-                friendshipId: friendship.id
-              }
+              detail: { friend: selectedFriend, friendshipId: friendship.id }
             });
             window.dispatchEvent(event);
           });
@@ -4524,11 +4551,48 @@
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
       }
     }
+    listenToUpdates() {
+      const socket = SocketService_default.getInstance().socket;
+      if (!socket) return;
+      socket.on("friendStatusUpdate", (data) => {
+        console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
+        this.updateFriendUI(data.username, data.status);
+      });
+      socket.on("userConnected", (data) => {
+        const currentUsername = localStorage.getItem("username");
+        if (data.username !== currentUsername) {
+          this.updateFriendUI(data.username, data.status);
+        }
+      });
+      socket.on("receiveFriendRequestNotif", () => {
+        console.log("New friend request received!");
+        this.checkNotifications();
+      });
+      socket.on("friendRequestAccepted", () => {
+        console.log("Friend request accepted by other user!");
+        this.loadFriends();
+      });
+    }
+    updateFriendUI(loginOrUsername, newStatus) {
+      const friendItems = document.querySelectorAll(".friend-item");
+      friendItems.forEach((item) => {
+        const el = item;
+        if (el.dataset.login === loginOrUsername || el.dataset.alias === loginOrUsername) {
+          let status = (newStatus || "offline").toLowerCase();
+          el.dataset.status = status;
+          const statusImg = el.querySelector('img[alt="status"]');
+          if (statusImg) {
+            statusImg.src = getStatusDot(status);
+          }
+          console.log(`[FriendList] Updated UI for ${loginOrUsername} to ${status}`);
+        }
+      });
+    }
     setupBlockListener() {
       window.addEventListener("friendBlocked", (e) => {
         const blockedUsername = e.detail?.username;
         if (!blockedUsername || !this.container) return;
-        const friendToRemove = this.container.querySelector(`.friend-item[data-username="${blockedUsername}"]`);
+        const friendToRemove = this.container.querySelector(`.friend-item[data-login="${blockedUsername}"]`);
         if (friendToRemove) {
           friendToRemove.style.opacity = "0";
           setTimeout(() => {
@@ -4565,15 +4629,19 @@
           const userId = localStorage.getItem("userId");
           try {
             const response = await fetchWithAuth(`/api/users/${userId}/friendships`, {
-              // on lance la requete sur cette route
               method: "POST",
-              // post pour creer la demande
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ alias: searchValue })
             });
             const data = await response.json();
             if (response.ok) {
               this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
+              const targetId = data.data.friend_id || data.data.friend?.id;
+              if (targetId) {
+                SocketService_default.getInstance().socket?.emit("sendFriendRequestNotif", {
+                  targetId
+                });
+              }
               friendSearchInput.value = "";
               setTimeout(() => {
                 addFriendDropdown.classList.add("hidden");
@@ -4589,9 +4657,7 @@
         };
         sendFriendRequestButton.addEventListener("click", sendFriendRequest);
         friendSearchInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            sendFriendRequest();
-          }
+          if (e.key === "Enter") sendFriendRequest();
         });
         cancelFriendRequestButton.addEventListener("click", () => {
           addFriendDropdown.classList.add("hidden");
@@ -4607,7 +4673,6 @@
         });
       }
     }
-    // affichage pour l'utilisateur
     showFriendMessage(message, type, element) {
       if (element) {
         element.textContent = message;
@@ -4618,141 +4683,121 @@
     setupNotifications() {
       const notifButton = document.getElementById("notification-button");
       const notifDropdown = document.getElementById("notification-dropdown");
-      const notifList = document.getElementById("notification-list");
-      if (notifButton && notifDropdown && notifList) {
-        const handleRequest = async (askerId, action, itemDiv) => {
-          const userId = localStorage.getItem("userId");
-          if (!itemDiv.dataset.friendshipId)
-            return;
-          try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: action })
-            });
-            if (response.ok) {
-              itemDiv.style.opacity = "0";
-              setTimeout(() => {
-                itemDiv.remove();
-                if (action === "validated") this.loadFriends();
-                checkNotifications();
-              }, 300);
-            } else {
-              console.error("Failed to update request");
-            }
-          } catch (error) {
-            console.error("Network error", error);
-          }
-        };
-        const checkNotifications = async () => {
-          const userId = localStorage.getItem("userId");
-          if (!userId) return;
-          try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
-            if (!response.ok) throw new Error("Failed to fetch pendings");
-            const requests = await response.json();
-            const pendingList = requests.data;
-            const notifIcon = document.getElementById("notification-icon");
-            if (pendingList.length > 0) {
-              if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
-            } else {
-              if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
-            }
-            notifList.innerHTML = "";
-            if (pendingList.length === 0) {
-              notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
-              return;
-            }
-            pendingList.forEach((req) => {
-              const item = document.createElement("div");
-              item.dataset.friendshipId = req.id.toString();
-              item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-              item.innerHTML = `
-                            <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                                <img src="/assets/basic/logo.png" 
-                                    class="w-full h-full object-cover rounded"
-                                    alt="avatar">
-                            </div>
-                            <div class="flex-1 min-w-0 pr-4">
-                                <p class="text-sm text-gray-800">
-                                    <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
-                                </p>
-                            </div>
-                            <div class="flex gap-2 flex-shrink-0">
-                                <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
-                                    <span class="text-green-600 font-bold text-sm">\u2713</span>
-                                </button>
-                                <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
-                                    <span class="text-red-600 font-bold text-sm">\u2715</span>
-                                </button>
-                                <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
-                                    <span class="text-gray-600 text-xs">\u{1F6AB}</span>
-                                </button>
-                            </div>
-                        `;
-              const buttonAccept = item.querySelector(".btn-accept");
-              const buttonReject = item.querySelector(".btn-reject");
-              const buttonBlock = item.querySelector(".btn-block");
-              buttonAccept?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                handleRequest(req.id, "validated", item);
-              });
-              buttonReject?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                handleRequest(req.id, "rejected", item);
-              });
-              buttonBlock?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                handleRequest(req.id, "blocked", item);
-              });
-              notifList.appendChild(item);
-            });
-          } catch (error) {
-            console.error("Error fetching notifications:", error);
-          }
-        };
+      if (notifButton && notifDropdown) {
         notifButton.addEventListener("click", (e) => {
           e.stopPropagation();
           notifDropdown.classList.toggle("hidden");
           document.getElementById("add-friend-dropdown")?.classList.add("hidden");
           if (!notifDropdown.classList.contains("hidden")) {
-            checkNotifications();
+            this.checkNotifications();
           }
         });
         document.addEventListener("click", (e) => {
           if (!notifDropdown.contains(e.target) && !notifButton.contains(e.target))
             notifDropdown.classList.add("hidden");
         });
-        checkNotifications();
-        setInterval(checkNotifications, 3e4);
       }
     }
-    listenToUpdates() {
-      const socket = SocketService_default.getInstance().socket;
-      if (!socket) return;
-      socket.on("friendStatusUpdate", (data) => {
-        console.log(`Status update for ${data.username}: ${data.status}`);
-        this.updateFriendUI(data.username, data.status);
-      });
-      socket.on("userConnected", (data) => {
-        const currentUsername = localStorage.getItem("username");
-        if (data.username !== currentUsername) {
-          this.updateFriendUI(data.username, data.status);
+    async checkNotifications() {
+      const userId = localStorage.getItem("userId");
+      const notifList = document.getElementById("notification-list");
+      if (!userId || !notifList) return;
+      try {
+        const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+        if (!response.ok) throw new Error("Failed to fetch pendings");
+        const requests = await response.json();
+        const pendingList = requests.data;
+        const notifIcon = document.getElementById("notification-icon");
+        if (pendingList.length > 0) {
+          if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+        } else {
+          if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
         }
-      });
-    }
-    updateFriendUI(username, newStatus) {
-      const friendItems = document.querySelectorAll(".friend-item");
-      friendItems.forEach((item) => {
-        const el = item;
-        if (el.dataset.username === username) {
-          el.dataset.status = newStatus;
-          const statusImg = el.querySelector('img[alt="status"]');
-          if (statusImg) {
-            statusImg.src = getStatusDot(newStatus);
+        notifList.innerHTML = "";
+        if (pendingList.length === 0) {
+          notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+          return;
+        }
+        pendingList.forEach((req) => {
+          const item = document.createElement("div");
+          item.dataset.friendshipId = req.id.toString();
+          item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+          item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                        <img src="/assets/basic/logo.png" 
+                            class="w-full h-full object-cover rounded"
+                            alt="avatar">
+                    </div>
+                    <div class="flex-1 min-w-0 pr-4">
+                        <p class="text-sm text-gray-800">
+                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                        </p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                            <span class="text-green-600 font-bold text-sm">\u2713</span>
+                        </button>
+                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                            <span class="text-red-600 font-bold text-sm">\u2715</span>
+                        </button>
+                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                            <span class="text-gray-600 text-xs">\u{1F6AB}</span>
+                        </button>
+                    </div>
+                `;
+          const buttonAccept = item.querySelector(".btn-accept");
+          const buttonReject = item.querySelector(".btn-reject");
+          const buttonBlock = item.querySelector(".btn-block");
+          if (req.user && req.user.id) {
+            buttonAccept?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "validated", item);
+            });
+            buttonReject?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "rejected", item);
+            });
+            buttonBlock?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "blocked", item);
+            });
           }
+          notifList.appendChild(item);
+        });
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    }
+    async handleRequest(requesterId, action, itemDiv) {
+      const userId = localStorage.getItem("userId");
+      if (!itemDiv.dataset.friendshipId) return;
+      try {
+        const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: action })
+        });
+        if (response.ok) {
+          itemDiv.style.opacity = "0";
+          setTimeout(() => {
+            itemDiv.remove();
+            if (action === "validated") {
+              this.loadFriends();
+              const socket = SocketService_default.getInstance().socket;
+              if (socket) {
+                socket.emit("acceptFriendRequest", {
+                  targetId: requesterId
+                });
+              }
+            }
+            this.checkNotifications();
+          }, 300);
+        } else {
+          console.error("Failed to update request");
         }
-      });
+      } catch (error) {
+        console.error("Network error", error);
+      }
     }
   };
 
@@ -4938,6 +4983,16 @@
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ status: selectedStatus })
                 });
+                const socket = SocketService_default.getInstance().socket;
+                const username = localStorage.getItem("username");
+                if (socket && username) {
+                  socket.emit("notifyStatusChange", {
+                    userId: Number(userId),
+                    status: selectedStatus,
+                    username
+                  });
+                }
+                this.updateStatusDisplay(selectedStatus);
               } catch (error) {
                 console.error("Error updating status:", error);
               }
@@ -5446,7 +5501,7 @@
       }
     }
     updateUI(user) {
-      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "https://wlm.vercel.app/assets/usertiles/default.png";
+      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
       if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
       if (this.username) this.username.innerText = user.alias;
       if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
@@ -5529,7 +5584,7 @@
   var ProfilePage_default = `<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
     <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+         style="background-image: url(/assets/basic/background.png); background-size: cover;">
     </div>
 
     <div class="min-h-screen flex items-center justify-center">
@@ -5666,32 +5721,46 @@
 
 
         <!-- MODALE POUR LE 2FA -->
-
-
-    <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Two-Factor Authentication</div>
-                <div class="title-bar-controls">
-                    <button id="close-2fa-modal" aria-label="Close"></button>
+<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">Two-Factor Authentication</div>
+            <div class="title-bar-controls">
+                <button id="close-2fa-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        
+        <div class="window-body p-6">
+            
+            <div id="method-selection" class="flex flex-col gap-4 items-center">
+                <div class="text-center mb-2">
+                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
+                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Authenticator App</h3>
+                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm">Email Verification</h3>
+                            <p class="text-xs text-gray-600">Receive codes via email</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="window-body p-6 flex flex-col items-center gap-4">
 
-                <div> <!-- Container pour avoir l'option mail/qr code-->
-
-
-
-
-
-
-                </div>
-
-
-
-
-                <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
+            <div id="qr-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-qr" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
+                
+                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
                 </div>
 
@@ -5708,22 +5777,53 @@
                 <div class="flex justify-center gap-4 mt-4 w-full">
                     <button id="confirm-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold" style="padding: 7px;">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
                         VALIDATE
                     </button>
                     <button id="cancel-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="padding: 7px;">
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
                         CANCEL
                     </button>
                 </div>
             </div>
+
+            <div id="email-content" class="hidden flex-col items-center gap-4">
+                <button id="back-from-email" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
+                
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
+                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
+                </div>
+                
+                <div class="w-full flex flex-col gap-2">
+                    <label class="text-sm">Code will be sent to:</label>
+                    <input type="email" id="2fa-email-input" 
+                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
+                        disabled 
+                        readonly>
+                </div>
+                
+                <button id="send-code-button" 
+                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
+                    SEND CODE
+                </button>
+                
+                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
+                    <label class="text-sm">Enter code received:</label>
+                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                    
+                    <button id="confirm-2fa-email" 
+                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
+                        VALIDATE
+                    </button>
+                </div>
+            </div>
+            
         </div>
     </div>
-
-
+</div>
 
         <!-- MODALE POUR L'AVATAR -->
 
@@ -5771,10 +5871,10 @@
                     <div class="flex flex-col items-center gap-4 w-[200px]">
                         <div class="relative w-[170px] h-[170px]">
                             <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                            src="/assets/basic/status_frame_offline_large.png">
                             
                             <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                            src="/assets/basic/default.png">
                         </div>
 
                         <div class="flex flex-col gap-2 w-full mt-2 h-64">
@@ -5927,22 +6027,35 @@
     const gridContainer = document.getElementById("modal-grid");
     const previewAvatar = document.getElementById("modal-preview-avatar");
     const fileInput = document.getElementById("file-input");
+    const methodSelection = document.getElementById("method-selection");
+    const qrContent = document.getElementById("qr-content");
+    const emailContent = document.getElementById("email-content");
+    const buttonSelectQr = document.querySelector('[data-method="qr"]');
+    const buttonSelectEmail = document.querySelector('[data-method="email"]');
+    const buttonBackQr = document.getElementById("back-from-qr");
+    const buttonBackEmail = document.getElementById("back-from-email");
+    const inputEmail2fa = document.getElementById("2fa-email-input");
+    const buttonSendCode = document.getElementById("send-code-button");
+    const codeVerif = document.getElementById("code-verification");
+    const inputCodeEmail = document.getElementById("2fa-input-code-email");
+    const buttonConfirmEmail = document.getElementById("confirm-2fa-email");
     const button2faToggle = document.getElementById("2fa-modal-button");
     const modal2fa = document.getElementById("2fa-modal");
     const close2faButton = document.getElementById("close-2fa-modal");
     const cancel2faButton = document.getElementById("cancel-2fa-button");
-    const confirm2faButton = document.getElementById("confirm-2fa-button");
-    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2faQrButton = document.getElementById("confirm-2fa-button");
+    const input2faQr = document.getElementById("2fa-input-code");
     const qrCodeImg = document.getElementById("2fa-qr-code");
     const userId = localStorage.getItem("userId");
     let selectedImageSrc = mainAvatar?.src || "";
     let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
+    let currentUserEmail = "";
     const statusImages3 = {
-      "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
-      "online": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
-      "busy": "https://wlm.vercel.app/assets/status/status_frame_busy_large.png",
-      "away": "https://wlm.vercel.app/assets/status/status_frame_away_large.png",
-      "invisible": "https://wlm.vercel.app/assets/status/status_frame_offline_large.png"
+      "available": "/assets/basic/status_frame_online_large.png",
+      "online": "/assets/basic/status_frame_online_large.png",
+      "busy": "/assets/basic/status_frame_busy_large.png",
+      "away": "/assets/basic/status_frame_away_large.png",
+      "invisible": "/assets/basic/status_frame_offline_large.png"
     };
     const statusMapping = {
       "Available": "available",
@@ -6014,6 +6127,7 @@
     themeModal?.addEventListener("click", (e) => {
       if (e.target === themeModal) closeThemeFunc();
     });
+    let current2FAMethod = "APP";
     const update2faButton = (enabled) => {
       is2faEnabled = enabled;
       if (enabled) {
@@ -6031,47 +6145,79 @@
       if (modal2fa) {
         modal2fa.classList.add("hidden");
         modal2fa.classList.remove("flex");
-        if (input2fa) input2fa.value = "";
+        if (input2faQr) input2faQr.value = "";
+        if (inputCodeEmail) inputCodeEmail.value = "";
         if (qrCodeImg) qrCodeImg.src = "";
       }
     };
-    const open2faGenerate = async () => {
-      if (!userId) return;
-      try {
-        if (modal2fa) {
-          modal2fa.classList.remove("hidden");
-          modal2fa.classList.add("flex");
+    const switch2faView = (view) => {
+      methodSelection?.classList.add("hidden");
+      qrContent?.classList.add("hidden");
+      emailContent?.classList.add("hidden");
+      methodSelection?.classList.remove("flex");
+      qrContent?.classList.remove("flex");
+      emailContent?.classList.remove("flex");
+      if (view === "selection") {
+        methodSelection?.classList.remove("hidden");
+        methodSelection?.classList.add("flex");
+      } else if (view === "qr") {
+        qrContent?.classList.remove("hidden");
+        qrContent?.classList.add("flex");
+      } else if (view === "email") {
+        emailContent?.classList.remove("hidden");
+        emailContent?.classList.add("flex");
+        if (inputEmail2fa) {
+          inputEmail2fa.value = currentUserEmail;
+          inputEmail2fa.disabled = true;
         }
+        if (codeVerif) {
+          codeVerif.classList.remove("hidden");
+          codeVerif.classList.add("flex");
+        }
+        if (buttonSendCode) buttonSendCode.classList.add("hidden");
+      }
+    };
+    const initiate2faSetup = async (method) => {
+      if (!userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
+      try {
         const response = await fetchWithAuth(`api/auth/2fa/generate`, {
-          method: "POST"
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: backendType })
         });
         if (response.ok) {
           const result = await response.json();
-          if (result.data && result.data.qrCodeUrl) {
-            if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+          if (method === "qr") {
+            if (result.data && result.data.qrCodeUrl) {
+              if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
+              switch2faView("qr");
+            }
+          } else {
+            console.log("Email code sent");
+            switch2faView("email");
           }
         } else {
-          console.error("Failed to generate QR code");
-          alert("Error generating 2FA QR code");
-          close2fa();
+          console.error("Failed to initiate 2FA");
+          alert("Error initializing 2FA setup");
         }
       } catch (error) {
         console.error("Network error 2FA generate:", error);
-        close2fa();
+        alert("Network error");
       }
     };
-    const enable2fa = async () => {
-      const code = input2fa.value.trim();
+    const enable2fa = async (code, type) => {
       if (!code || code.length < 6) {
         alert("Please enter a valid 6-digit code.");
         return;
       }
+      const backendType = type === "qr" ? "APP" : "EMAIL";
       try {
         const response = await fetchWithAuth(`api/auth/2fa/enable`, {
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code })
+          body: JSON.stringify({ code, type: backendType })
         });
         if (response.ok) {
           update2faButton(true);
@@ -6105,17 +6251,29 @@
         console.error(error);
       }
     };
+    buttonSelectQr?.addEventListener("click", () => initiate2faSetup("qr"));
+    buttonSelectEmail?.addEventListener("click", () => initiate2faSetup("email"));
+    buttonBackQr?.addEventListener("click", () => switch2faView("selection"));
+    buttonBackEmail?.addEventListener("click", () => switch2faView("selection"));
+    confirm2faQrButton?.addEventListener("click", () => enable2fa(input2faQr.value.trim(), "qr"));
+    buttonConfirmEmail?.addEventListener("click", () => enable2fa(inputCodeEmail.value.trim(), "email"));
     button2faToggle?.addEventListener("click", () => {
       if (is2faEnabled) {
-        console.log("2fa: ", is2faEnabled);
         disable2fa();
       } else {
-        open2faGenerate();
+        if (modal2fa) {
+          modal2fa.classList.remove("hidden");
+          modal2fa.classList.add("flex");
+          if (input2faQr) input2faQr.value = "";
+          if (inputCodeEmail) inputCodeEmail.value = "";
+          switch2faView("selection");
+        }
       }
     });
     close2faButton?.addEventListener("click", close2fa);
     cancel2faButton?.addEventListener("click", close2fa);
-    confirm2faButton?.addEventListener("click", enable2fa);
+    const cancelEmailButton = document.getElementById("cancel-2fa-email");
+    cancelEmailButton?.addEventListener("click", close2fa);
     modal2fa?.addEventListener("click", (e) => {
       if (e.target === modal2fa) close2fa();
     });
@@ -6138,7 +6296,7 @@
         const response = await fetchWithAuth(`api/users/${userId}`);
         if (response.ok) {
           const user = await response.json();
-          console.log(user);
+          currentUserEmail = user.email || "";
           if (user.theme) {
             localStorage.setItem("userTheme", user.theme);
             applyTheme(user.theme);
@@ -6215,6 +6373,7 @@
         });
         const result = await response.json();
         if (response.ok) {
+          alert("Username updated successfully!");
           if (usernameDisplay) usernameDisplay.innerText = newUsername;
           console.log("Username updated");
           return true;
@@ -6272,8 +6431,9 @@
         });
         const user = await response.json();
         if (response.ok) {
+          alert("Email updated successfully!");
           user.email = newEmail;
-          console.log("Email mis \xE0 jour");
+          console.log("Email updated");
           return true;
         } else {
           console.error(user.error.message);
@@ -6281,8 +6441,8 @@
           return false;
         }
       } catch (error) {
-        console.error("Erreur r\xE9seau:", error);
-        alert("Erreur lors de la sauvegarde du Email");
+        console.error("Network error:", error);
+        alert("Error saving email");
         return false;
       }
     };
@@ -6301,7 +6461,7 @@
           console.error("Failed to save theme to database");
         }
       } catch (error) {
-        console.error("Network error while saving theme:", error);
+        console.error("Network error saving theme:", error);
       }
     };
     const setupField = (elements, fieldName) => {
@@ -6573,7 +6733,7 @@
       }
     });
     deleteButton?.addEventListener("click", () => {
-      const defaultAvatar = "https://wlm.vercel.app/assets/usertiles/default.png";
+      const defaultAvatar = "/assets/basic/default.png";
       selectedImageSrc = defaultAvatar;
       if (previewAvatar) previewAvatar.src = defaultAvatar;
     });
@@ -6620,17 +6780,15 @@
 	`;
   }
 
-  // scripts/pages/LandingPage.ts
-  function LandingPage() {
-    return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+  // scripts/pages/LandingPage.html
+  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Welcome to Transcendence
@@ -6641,16 +6799,19 @@
 			<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 	 		<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
  			<button id="guest-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Play as guest</button>
+			<p id="guest-error" class="hidden text-red-500 text-xs">Error creating guest</p>
 	</div>
-	</div>
+</div>`;
 
-	
-	`;
+  // scripts/pages/LandingPage.ts
+  function render4() {
+    return LandingPage_default;
   }
   function initLandingPage() {
     const loginButton = document.getElementById("login-button");
     const registerButton = document.getElementById("register-button");
     const guestButton = document.getElementById("guest-button");
+    const guestError = document.getElementById("guest-error");
     const handleNavigation = (path) => {
       window.history.pushState({}, "", path);
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -6661,23 +6822,46 @@
     registerButton?.addEventListener("click", () => {
       handleNavigation("/register");
     });
-    guestButton?.addEventListener("click", () => {
-      handleNavigation("/home");
+    guestButton?.addEventListener("click", async () => {
+      if (guestError)
+        guestError.classList.remove("hidden");
+      try {
+        const response = await fetch("/api/users/guest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.access_token) sessionStorage.setItem("accessToken", data.access_token);
+          if (data.userId) sessionStorage.setItem("userId", data.userId.toString());
+          sessionStorage.setItem("isGuest", "true");
+          handleNavigation("/guest");
+        } else {
+          console.error("Erreur cr\xE9ation guest");
+        }
+      } catch (err) {
+        console.error("Network error while guest login: ", err);
+        if (guestError) {
+          guestError.textContent = "Network error. Please try again";
+          guestError.classList.remove("hidden");
+        }
+      }
     });
   }
 
   // scripts/pages/RegisterPage.ts
   function RegisterPage() {
     return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign up to Transcendence
@@ -6702,7 +6886,7 @@
 			</div>
 			<!-- Bouton de register -->
 			<div class="flex flex-col gap-2 w-48">
-				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
+				<button id="register-button" class="btn-vista w-full h-8">Register</button>
 			</div>
 	</div>
 	</div>
@@ -6741,6 +6925,8 @@
         const result = await response.json();
         console.log("RECEPTION DU BACKEND:", result);
         if (response.ok) {
+          sessionStorage.removeItem("isGuest");
+          sessionStorage.removeItem("userRole");
           const { access_token, user_id } = result;
           console.log("User ID:", user_id);
           console.log("Access Token:", access_token);
@@ -6789,14 +6975,22 @@
     handleRegister();
   }
 
+  // scripts/pages/GuestPage.html
+  var GuestPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.png); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex justify-center items-center flex-1 min-h-0">\n\n            <div class="window w-[500px] min-w-[500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Guest Mode</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm">\n                    \n                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">\n                        <div class="flex flex-col items-center">\n                            <h1 class="text-xl font-bold text-blue-900">Welcome Guest</h1>\n                            <p class="text-sm text-gray-500 italic">Select a mode to start playing</p>\n                        </div>\n\n                        <div class="flex flex-col gap-3 w-full px-10">\n                            <button id="local-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                LOCAL GAME\n                            </button>\n\n                            <button id="remote-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                REMOTE GAME\n                            </button>\n\n                            <button id="tournament-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                TOURNAMENT\n                            </button>\n                        </div>\n                    </div>  \n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
+
+  // scripts/pages/GuestPage.ts
+  function render5() {
+    return GuestPage_default;
+  }
+
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.png); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
 	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-		 style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
+		 style="background-image: url(/assets/basic/background.png); background-size: cover;">
 	</div>
 
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
@@ -7037,11 +7231,11 @@
                 <div class="relative w-[130px] h-[130px] flex-shrink-0">
                     <img id="friend-modal-status" 
                             class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
+                            src="/assets/basic/status_frame_online_large.png">
                     
                     <img id="friend-modal-avatar" 
                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="https://wlm.vercel.app/assets/usertiles/default.png">
+                            src="/assets/basic/default.png">
                 </div>
 
                 <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
@@ -7161,7 +7355,7 @@
     </div>`;
 
   // scripts/pages/GamePage.ts
-  function render4() {
+  function render6() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
       return RemoteGame_default;
@@ -7313,10 +7507,10 @@
 
   // scripts/main.ts
   var appElement = document.getElementById("app");
-  var publicRoutes = ["/", "/login", "/register", "/404"];
+  var publicRoutes = ["/", "/login", "/register", "/404", "/guest"];
   var routes = {
     "/": {
-      render: LandingPage,
+      render: render4,
       afterRender: initLandingPage
     },
     "/home": {
@@ -7335,8 +7529,11 @@
       render,
       afterRender: loginEvents
     },
+    "/guest": {
+      render: render5
+    },
     "/game": {
-      render: render4,
+      render: render6,
       // La fonction HTML
       afterRender: () => {
         const state = window.history.state;
@@ -7368,6 +7565,7 @@
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
       localStorage.removeItem("userStatus");
+      sessionStorage.clear();
       window.history.pushState({}, "", "/");
       const popStateEvent = new PopStateEvent("popstate");
       window.dispatchEvent(popStateEvent);
@@ -7376,16 +7574,32 @@
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
-    const accessToken = localStorage.getItem("accessToken");
+    const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const isGuest = sessionStorage.getItem("isGuest") === "true";
     if (path === "/logout") {
       handleLogout();
       return;
     }
-    if (accessToken && (path === "/" || path === "/login" || path === "/register")) {
-      window.history.pushState({}, "", "/home");
-      path = "/home";
+    const navbar = document.getElementById("main-navbar");
+    if (navbar) {
+      if (isGuest) {
+        navbar.style.display = "none";
+      } else if (accessToken) {
+        navbar.style.display = "flex";
+      } else {
+      }
     }
-    if (!accessToken && !publicRoutes.includes(path)) {
+    if (isGuest) {
+      if (path === "/home" || path === "/profile") {
+        window.history.pushState({}, "", "/guest");
+        path = "/guest";
+      }
+    } else if (accessToken) {
+      if (path === "/" || path === "/login" || path === "/register" || path === "/guest") {
+        window.history.pushState({}, "", "/home");
+        path = "/home";
+      }
+    } else if (!publicRoutes.includes(path)) {
       window.history.pushState({}, "", "/");
       path = "/";
     }
@@ -7394,11 +7608,15 @@
     if (page.afterRender) {
       page.afterRender();
     }
-    if (publicRoutes.includes(path))
+    if (publicRoutes.includes(path) || isGuest)
       applyTheme("basic");
     else {
       const savedTheme = localStorage.getItem("userTheme") || "basic";
       applyTheme(savedTheme);
+    }
+    if (path === "/guest" && !isGuest) {
+      window.history.replaceState({}, "", "/");
+      handleLocationChange();
     }
   };
   window.addEventListener("click", (event) => {

@@ -19,7 +19,9 @@ export async function initDatabase(): Promise<Database> {
         bio TEXT CHECK (length(bio) <= 75),
         avatar_url TEXT DEFAULT '/assets/basic/default.png',
         theme TEXT DEFAULT 'Blue', 
-        status TEXT DEFAULT 'Available'
+        status TEXT DEFAULT 'Available',
+        is_guest INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         ) 
     `);
     console.log('USERS table created');

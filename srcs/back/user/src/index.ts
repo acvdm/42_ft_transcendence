@@ -2,7 +2,7 @@ import Fastify from 'fastify'; // rôle de serveur HTTP
 import sqlite3 from 'sqlite3';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import { createUserInDB } from './repositories/users.js';
+import { createUserInDB, createGuestInDB } from './repositories/users.js';
 import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 import * as friendRepo from './repositories/friendships.js';
 import fs from 'fs';
@@ -40,6 +40,11 @@ fastify.post('/users', async (request, reply) => {
 		password: string; 
 		avatar?: string;
 	};
+
+
+	if (body.avatar && body.avatar.includes('/assets/')) {
+        body.avatar = body.avatar.substring(body.avatar.indexOf('/assets/'));
+    }
 
 	let user_id = null; 
 
@@ -135,6 +140,109 @@ fastify.post('/users', async (request, reply) => {
 		  console.log(`Rollback: delele orphan ID ${user_id}`);
 		  await userRepo.rollbackDeleteUser(db, user_id);
 		  console.log(`User ID ${user_id} successfully deleted`);
+		}	
+
+		reply.status(400).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
+		});
+	}
+})
+
+/* -- REGISTER GUEST -- */
+fastify.post('/users/guest', async (request, reply) => {
+
+
+	let userId = null; 
+
+	try 
+	{
+		// 1. Créer le user localement dans user.sqlite
+		userId = await userRepo.createGuestInDB(db)		
+		if (!userId)
+		{
+			return reply.status(500).send({
+				success: false,
+				data: null,
+				error: { message: 'Error during profile creation'}
+			});
+		}
+
+		console.log(`User created locally (ID: ${userId}. Calling auth...`);
+		const email = `guest` + `${userId}` + `@guest.com`;		
+		const authURL = `http://auth:3001/users/${userId}/credentials/guest`;
+
+		// 3. Appeler le service auth pour créer les credentials
+		const authResponse = await fetch(authURL, {
+			method: "POST",
+			headers: { 
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ 
+				user_id: userId, 
+				email: email, 
+			}),
+		});
+
+		const authJson = await authResponse.json();
+
+		console.log("Objet Response brut:", authResponse);
+		console.log("Reponse de l'Auth:", authJson);
+    	// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
+    	// MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
+    	// d'abord on extrait les infos recues du service Auth
+
+		// il faut creer un json pour recuperer les donnees du fetch
+		// const data = await authResponse.json();
+		if (authJson.success)
+		{
+			// const authPayload = data; //.data MODIF
+			// if (!authPayload || !authPayload.refresh_token)
+			// 	throw new Error("Auth service response is missing tokens inside data object");
+
+    		const { refresh_token, access_token, user_id } = authJson;//.data?
+
+			if (!access_token || !user_id) {
+				throw new Error("Tokens manquants dans la reponse de l'Auth")
+			}
+    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refresh_token', refresh_token, {
+    		  path: '/',
+    		  httpOnly: true, // invisible au JS (protection XSS)
+    		  secure: true, // acces au cookie uniquement via https
+    		  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+    		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
+    		  signed: true
+    		});
+
+    		// console.log("data from authResponse: ", data);
+
+    		// on envoit pas le refresh token /!\
+    		return reply.status(201).send({
+				// success: true,
+					// data: {
+    					access_token: access_token,
+    					user_id: user_id
+					// },
+				// error: null
+    		});
+		}
+		else {
+			throw new Error(`Auth error: ${authJson.error.message}`); 
+		}
+
+	} 
+	catch (err: any) 
+	{
+		const errorMessage = err.message;
+
+		// 5. Rollback
+		if (userId) 
+		{
+		  console.log(`Rollback: delele orphan ID ${userId}`);
+		  await userRepo.rollbackDeleteUser(db, userId);
+		  console.log(`User ID ${userId} successfully deleted`);
 		}	
 
 		reply.status(400).send({			  
@@ -392,13 +500,17 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 fastify.patch('/users/:id/avatar', async (request, reply) => {
     const { id } = request.params as { id: string };
     const userId = Number(id);
-    const { avatar } = request.body as { avatar: string };
+    let { avatar } = request.body as { avatar: string };
 
     try 
 	{
         if (!avatar) 
 			throw new Error("No avatar provided");
 
+        // Tu peux aussi ajouter une condition pour tes '/assets/' si nécessaire
+        if (avatar.includes('/assets/')) {
+            avatar = avatar.substring(avatar.indexOf('/assets/'));
+        }
         await userRepo.updateAvatar(db, userId, avatar);
         
         return reply.status(200).send({

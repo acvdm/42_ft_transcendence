@@ -1,15 +1,15 @@
 // on va exportrter une fonction qui renvoie du html 
 export function RegisterPage(): string {
 	return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.png); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
 			Sign up to Transcendence
@@ -34,7 +34,7 @@ export function RegisterPage(): string {
 			</div>
 			<!-- Bouton de register -->
 			<div class="flex flex-col gap-2 w-48">
-				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
+				<button id="register-button" class="btn-vista w-full h-8">Register</button>
 			</div>
 	</div>
 	</div>
@@ -84,6 +84,8 @@ function handleRegister() {
 
 			if (response.ok) // on verifie que HTTP entre 200-299 
 			{
+				sessionStorage.removeItem('isGuest');
+   				sessionStorage.removeItem('userRole');
 				// pas besoin du refresh_token car dans le cookie
 				const { access_token, user_id } = result; // on enleve le data, on recupere depuis la racine de lobjet
 				console.log('User ID:', user_id);
