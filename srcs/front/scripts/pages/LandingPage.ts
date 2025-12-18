@@ -25,9 +25,6 @@ export function initLandingPage() {
 	});
     
     guestButton?.addEventListener('click', async () => {
-		if (guestError)
-			guestError.classList.remove('hidden');
-
 		try {
 			const response = await fetch('/api/users/guest', {
 				method: 'POST',
