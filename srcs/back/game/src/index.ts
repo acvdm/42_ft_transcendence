@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
 import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
-import { createStatLineforOneUser, findStatsByUserId } from './repositories/stats.js';
+import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -81,16 +81,17 @@ fastify.post('/games', async (request, reply) =>
 //---------------- STATS -----------------
 //---------------------------------------
 
-
 /* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
 fastify.post('/users/:id/games/stats', async (request, reply) =>
 {
 	try
 	{
-		const body = request.body as { user_id: number };
-		const newStat = await createStatLineforOneUser(db, body.user_id);
+		const { id } = request.params as { id: string }
+		const userId = Number(id);
+
+		const newStat = await createStatLineforOneUser(db, userId);
 		if (!newStat)
-			throw new Error(`Error: could not create stat line for user ${body.user_id}`);
+			throw new Error(`Error: could not create stat line for user ${userId}`);
 
 		return reply.status(200).send({
 			success: true,
@@ -108,6 +109,71 @@ fastify.post('/users/:id/games/stats', async (request, reply) =>
 		})
 	}
 })
+
+
+/* -- GET STATS FOR ONE USER -- */
+fastify.get('/users/:id/games/stats', async (request, reply) =>
+{
+	try
+	{
+		const { id } = request.params as { id: string }
+		const userId = Number(id);
+
+		const userStats = await findStatsByUserId(db, userId);
+		if (!userStats)
+			throw new Error(`Error: could not find stat for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: userStats,
+			error: null
+		})
+
+	}
+	catch (err: any)
+	{
+		return reply.status(400).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		})
+	}
+})
+
+
+/* -- UPDATE STATS FOR ONE USER -- */
+fastify.patch('/users/:id/games/stats', async (request, reply) => 
+{
+	try
+	{
+		const { id } = request.params as { id: string }
+		const userId = Number(id);
+
+		const body = request.body as {
+			userScore: number,
+			isWinner: number
+		}
+		
+		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
+		if (!userStats)
+			throw new Error(`Error: could not update stats for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: userStats,
+			error: null
+		})
+	}
+	catch (err: any)
+	{
+		return reply.status(400).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		})
+	}
+})
+
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get

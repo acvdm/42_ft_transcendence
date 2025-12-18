@@ -54,8 +54,7 @@ export async function initDatabase(): Promise<Database>{
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
             total_games INTEGER GENERATED ALWAYS AS (wins + losses) STORED,
-            total_score INTEGER DEFAULT 0,
-            average_score INTEGER DEFAULT 0,
+            total_score INTEGER,
             current_win_streak INTEGER DEFAULT 0,
             PRIMARY KEY (user_id)
         )

@@ -586,6 +586,7 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 	}
 	catch (err)
 	{
+		console.log("erreur catched");
 		fastify.log.error(err);
 		return reply.status(500).send({
 			success: false,

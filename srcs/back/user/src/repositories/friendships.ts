@@ -17,17 +17,25 @@ export async function makeFriendshipRequest (
     alias: string
 ): Promise<Friendship>
 {
-    console.log("arrivée dans make friends request");
     const friend = await db.get(`
-        SELECT * FROM USERS WHERE alias = ?`,
+        SELECT *,
+            CASE WHEN is_guest = 1 THEN 'true' ELSE 'false' END as is_guest_bool
+        FROM USERS 
+        WHERE alias = ?`,
         [alias]
-    ) as User;
+    ) as User & { is_guest_bool: string };
     if (!friend?.id)
         throw new Error(`Cannot find user with alias ${alias}`);
+
+    console.log(`${friend.alias} is guest ? ${friend.is_guest_bool}`);
+
+    if (friend.is_guest_bool === "true")
+        throw new Error(`You cannot add a guest as friend`);
 
     if (friend.id == user_id)
         throw new Error(`You cannot add yourself as a friend. Loser.`);
 
+    console.log("line 38");
     const is_blocked = await db.get(`
         SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'blocked'`,
         [user_id, friend.id]
@@ -142,7 +150,7 @@ export async function listFriends (
             avatar_url: row.receiver_avatar,
             bio: row.receiver_bio,
             theme: row.receiver_theme,
-            status: row.receiver_status,         
+            status: row.receiver_status,
         };
 
         const friendship: Friendship =
@@ -217,7 +225,7 @@ export async function listRequests(
             avatar_url: row.receiver_avatar,
             bio: row.receiver_bio,
             theme: row.receiver_theme,
-            status: row.receiver_status,         
+            status: row.receiver_status,
         };
 
         const friendship: Friendship =

@@ -12,7 +12,7 @@ export interface User {
     avatar_url?: string,
     bio: string,
     status: string,
-    theme: string
+    theme: string,
 }
 
 
