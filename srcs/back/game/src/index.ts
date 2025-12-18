@@ -3,7 +3,9 @@ import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
-import { createMatch } from './repositories/matches.js';
+import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
+import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
+import { createStatLineforOneUser, findStatsByUserId } from './repositories/stats.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -24,24 +26,88 @@ async function main()
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
 {
+	let gameId = null;
+	let playerMatchOneId = null;
+	let playerMatchTwoId = null;
+
+	const body = request.body as { 
+		playerOneId: number;
+		playerTwoId: number; 
+		type: string; 
+		name: string; 
+		tournamentId: number; 
+	};	
+
 	try
 	{
-		const body = request as { 
-			playerOneId: number, 
-			playerTwoId: number, 
-			type: string, 
-			name: string, 
-			tournamentId: number }
 
-		const game = await createMatch(db, body.type, body.tournamentId)
+		gameId = await createMatch(db, body.type, body.tournamentId);
+		if (!gameId)
+			throw new Error(`Error could not create game`);
+
+		playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
+		playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
+		if (!playerMatchOneId || !playerMatchTwoId)
+			throw new Error(`Error could not associate players with the game ${gameId}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: gameId,
+			error: null
+		})
+
 	}
 	catch (err:any)
 	{
+		if (gameId && playerMatchOneId)
+			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchOneId);
 
+		if (gameId && playerMatchTwoId)
+			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchTwoId);
+
+		if (gameId)
+			await rollbackDeleteGame(db, gameId);
+		
+		return reply.status(400).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		});
 	}
 })
 
 
+//---------------------------------------
+//---------------- STATS -----------------
+//---------------------------------------
+
+
+/* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
+fastify.post('/users/:id/games/stats', async (request, reply) =>
+{
+	try
+	{
+		const body = request.body as { user_id: number };
+		const newStat = await createStatLineforOneUser(db, body.user_id);
+		if (!newStat)
+			throw new Error(`Error: could not create stat line for user ${body.user_id}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: newStat,
+			error: null
+		})
+
+	}
+	catch (err: any)
+	{
+		return reply.status(400).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		})
+	}
+})
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
 //on commence par repondre aux requetes http get

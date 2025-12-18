@@ -80,17 +80,9 @@ fastify.post('/users', async (request, reply) => {
 
 		console.log("Objet Response brut:", authResponse);
 		console.log("Reponse de l'Auth:", authJson);
-    	// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
-    	// MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
-    	// d'abord on extrait les infos recues du service Auth
 
-		// il faut creer un json pour recuperer les donnees du fetch
-		// const data = await authResponse.json();
 		if (authJson.success)
 		{
-			// const authPayload = data; //.data MODIF
-			// if (!authPayload || !authPayload.refresh_token)
-			// 	throw new Error("Auth service response is missing tokens inside data object");
 
     		const { refresh_token, access_token, user_id } = authJson;//.data?
 
@@ -107,22 +99,31 @@ fastify.post('/users', async (request, reply) => {
     		  signed: true
     		});
 
-    		// console.log("data from authResponse: ", data);
+			const statsURL = `http://game:3003/users/${user_id}/games/stats`;
+			const statResponse = await fetch(statsURL, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					user_id: user_id
+				}),
+			});
+			const statJson = await statResponse.json();
 
-    		// on envoit pas le refresh token /!\
-    		return reply.status(201).send({
-				// success: true,
-					// data: {
-    					access_token: access_token,
-    					user_id: user_id
-					// },
-				// error: null
-    		});
+			if (statJson.success)
+			{
+    			// on envoit pas le refresh token /!\
+    			return reply.status(201).send({
+					// success: true,
+						// data: {
+    						access_token: access_token,
+    						user_id: user_id
+						// },
+					// error: null
+    			});
+			}
 		}
-		else {
-			throw new Error(`Auth error: ${authJson.error.message}`); 
-		}
-
 	} 
 	catch (err: any) 
 	{
