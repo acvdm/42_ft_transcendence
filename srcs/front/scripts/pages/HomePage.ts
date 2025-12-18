@@ -89,7 +89,7 @@ export function afterRender(): void {
         const headerBio = document.getElementById('chat-header-bio');
         if (headerName) headerName.textContent = friend.alias;
 
-        if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
+        if (headerBio) headerBio.innerHTML = parseMessage(friend.bio || '');
 
         if (headerAvatar) {
             const avatarSrc = friend.avatar || friend.avatar_url || '/assets/profile/default.png';
