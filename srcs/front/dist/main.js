@@ -4920,6 +4920,7 @@
   // scripts/components/UserProfile.ts
   var UserProfile = class {
     constructor() {
+      this.selectedImageSrc = "";
       this.bioText = document.getElementById("user-bio");
       this.bioWrapper = document.getElementById("bio-wrapper");
       this.statusFrame = document.getElementById("user-status");
@@ -4929,12 +4930,15 @@
       this.statusSelector = document.getElementById("status-selector");
       this.statusDropdown = document.getElementById("status-dropdown");
       this.charCountElement = document.querySelector("#bio-wrapper .char-count");
+      this.pictureModal = document.getElementById("picture-modal");
+      this.modalPreviewAvatar = document.getElementById("modal-preview-avatar");
     }
     init() {
       this.loadUserData();
       this.setupBioEdit();
       this.setupStatusSelector();
       this.loadSavedStatus();
+      this.setupAvatarEdit();
     }
     // CHARGEMENT DE LA BIO
     async loadUserData() {
@@ -5131,6 +5135,84 @@
         const optionStatus = opt.dataset.status;
         if (optionStatus === status) opt.classList.add("bg-blue-50");
         else opt.classList.remove("bg-blue-50");
+      });
+    }
+    setupAvatarEdit() {
+      if (!this.userProfileImg || !this.pictureModal) return;
+      this.userProfileImg.classList.add("cursor-pointer", "hover:opacity-80", "transition");
+      this.userProfileImg.addEventListener("click", () => {
+        this.pictureModal?.classList.remove("hidden");
+        this.pictureModal?.classList.add("flex");
+        this.selectedImageSrc = this.userProfileImg?.src || "";
+        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+      });
+      const closeModal = () => {
+        this.pictureModal?.classList.add("hidden");
+        this.pictureModal?.classList.remove("flex");
+      };
+      document.getElementById("close-modal")?.addEventListener("click", closeModal);
+      document.getElementById("cancel-button")?.addEventListener("click", closeModal);
+      const gridContainer = document.getElementById("modal-grid");
+      if (gridContainer) {
+        const gridImages = gridContainer.querySelectorAll("img");
+        gridImages.forEach((img) => {
+          img.addEventListener("click", () => {
+            this.selectedImageSrc = img.src;
+            if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+            gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
+            img.classList.add("border-[#0078D7]");
+          });
+        });
+      }
+      const fileInput = document.getElementById("file-input");
+      document.getElementById("browse-button")?.addEventListener("click", () => fileInput?.click());
+      fileInput?.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              this.selectedImageSrc = e.target.result;
+              if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      document.getElementById("delete-button")?.addEventListener("click", () => {
+        const defaultAvatar = "/assets/basic/default.png";
+        this.selectedImageSrc = defaultAvatar;
+        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = defaultAvatar;
+      });
+      document.getElementById("validation-button")?.addEventListener("click", async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+        try {
+          const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ avatar: this.selectedImageSrc })
+          });
+          const result = await response.json();
+          if (response.ok) {
+            const cleanAvatarUrl = result.data.avatar;
+            if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
+            const socket = SocketService_default.getInstance().socket;
+            const username = localStorage.getItem("username");
+            if (socket) {
+              socket.emit("notifyProfileUpdate", {
+                userId: Number(userId),
+                avatar: cleanAvatarUrl,
+                username
+              });
+            }
+            closeModal();
+          } else {
+            alert("Error while saving avatar");
+          }
+        } catch (error) {
+          console.error("Network error:", error);
+        }
       });
     }
   };
