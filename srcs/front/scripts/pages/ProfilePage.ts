@@ -1092,19 +1092,23 @@ export function afterRender(): void {
                 body: JSON.stringify({ avatar: selectedImageSrc })
             });
 
+            const result = await response.json();
+
             if (response.ok) {
+
+                const cleanAvatarUrl = result.data.avatar;
                 // maj sur le profil
-                if (mainAvatar) mainAvatar.src = selectedImageSrc;
+                if (mainAvatar) mainAvatar.src = cleanAvatarUrl;
                 
                 SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
                     userId: Number(userId),
-                    avatar: selectedImageSrc,
+                    avatar: cleanAvatarUrl,
                     username: localStorage.getItem('username') // On renvoie le nom pour identifier
                 });
                 // on ferme la modale une fois qu'on a valide
                 closeModalFunc();
                 
-                console.log("avatar maj");
+                console.log("avatar maj:", cleanAvatarUrl);
             } else {
                 console.error("Error while updating");
                 alert("Error while saving");

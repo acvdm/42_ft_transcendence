@@ -6894,16 +6894,18 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ avatar: selectedImageSrc })
         });
+        const result = await response.json();
         if (response.ok) {
-          if (mainAvatar) mainAvatar.src = selectedImageSrc;
+          const cleanAvatarUrl = result.data.avatar;
+          if (mainAvatar) mainAvatar.src = cleanAvatarUrl;
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
-            avatar: selectedImageSrc,
+            avatar: cleanAvatarUrl,
             username: localStorage.getItem("username")
             // On renvoie le nom pour identifier
           });
           closeModalFunc();
-          console.log("avatar maj");
+          console.log("avatar maj:", cleanAvatarUrl);
         } else {
           console.error("Error while updating");
           alert("Error while saving");
