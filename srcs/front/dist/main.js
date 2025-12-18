@@ -4054,119 +4054,140 @@
 		<!-- Container avec left et right qui prennent toute la hauteur restante -->
 		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
 
-			<!-- ========= LEFT WINDOW ========= -->
-			<div class="window w-[700px] min-w-[700px] flex flex-col">
-				<div class="title-bar">
-					<div class="title-bar-text">Games</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
+			<!-- ========= LEFT COLUMN ========= -->
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
+				
+				<!-- ========= PROFILE WINDOW ========= -->
+				<div class="window flex flex-col">
+					<div class="title-bar">
+						<div class="title-bar-text">Profile</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
 					</div>
-				</div>
 
-				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px; background-color: white;">
-					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
-						<!-- Cadre du profil -->
-						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
-							<div class="relative w-[110px] h-[110px] flex-shrink-0">
-								<!-- l'image (profil principal) -->
-								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-								<!-- le cadre -->
-								<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
-							</div>
-	
-							<!-- username, bio et status -->
-							<div class="flex flex-col justify-center pl-4 flex-1">
-								<div class="flex items-center gap-2 mb-1">
-									<p class="text-xl font-semibold" id="user-name">Username</p>
-	
-									<!-- selection du status = dynamique -->
-									<div class="relative">
-										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-											<span id="current-status-text">(Available)</span>
-											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-										</button>
-	
-										<!-- Menu dropdown pour le status -->
-										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Available</span>
+					<div class="window-body bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
+						<div class="flex flex-row w-full rounded-sm p-2"> 
+							<!-- Cadre du profil -->
+							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
+								<div class="relative w-[110px] h-[110px] flex-shrink-0">
+									<!-- l'image (profil principal) -->
+									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+									<!-- le cadre -->
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+								</div>
+		
+								<!-- username, bio et status -->
+								<div class="flex flex-col justify-center pl-4 flex-1">
+									<div class="flex items-center gap-2 mb-1">
+										<p class="text-xl font-semibold" id="user-name">Username</p>
+		
+										<!-- selection du status = dynamique -->
+										<div class="relative">
+											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+												<span id="current-status-text">(Available)</span>
+												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
 											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Busy</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Away</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Offline</span>
-											</button>
+		
+											<!-- Menu dropdown pour le status -->
+											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Available</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Busy</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Away</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Offline</span>
+												</button>
+											</div>
+										</div>
+									</div>
+									<div id="bio-wrapper">
+										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+									</div>
+								</div>
+		
+								<!-- Notifications -->
+								<div class="ml-auto flex items-start relative">
+									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+										<img id="notification-icon" 
+											src="/assets/basic/no_notification.png" 
+											alt="Notifications" 
+											class="w-full h-full object-contain">
+											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
+									</button>
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+												Notifications
+											</h3>
+										</div>
+										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
+											<div class="p-4 text-center text-xs text-gray-500">No notification</div>
 										</div>
 									</div>
 								</div>
-								<div id="bio-wrapper">
-									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
-									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-								</div>
 							</div>
-	
-							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
-							<div class="ml-auto flex items-start relative">
-								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-									<img id="notification-icon" 
-										src="/assets/basic/no_notification.png" 
-										alt="Notifications" 
-										class="w-full h-full object-contain">
-										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
-								</button>
-								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
-									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
-										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-											Notifications
-										</h3>
-									</div>
-									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
-									</div> <!--fin du listing inside dropdown-->
-								</div> <!--fin du div dropdown-->
-							</div>
-
-
-							
 						</div>
-
-					</div>	<!--FIn du premier cadre-->		
-					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
-						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
-
-						<button id="local-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							LOCAL
-						</button>
-
-						<button id="remote-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							REMOTE
-						</button>
-
-						<button id="tournament-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							TOURNAMENT
-						</button>
-					</div>	<!--FIn du second cadre-->	
+					</div>
 				</div>
+
+				<!-- ========= GAMES WINDOW ========= -->
+				<div class="window flex flex-col flex-1">
+					<div class="title-bar">
+						<div class="title-bar-text">Games</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
+
+					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
+						<div class="bg-white p-6 flex flex-col flex-1">
+							<h1 class="text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">CHOOSE YOUR GAME MODE</h1>
+
+							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
+								<button id="local-game" 
+									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+									LOCAL GAME
+								</button>
+
+								<button id="remote-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									REMOTE GAME
+								</button>
+
+								<button id="tournament-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									TOURNAMENT
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
 			</div>
 
 
@@ -4240,12 +4261,10 @@
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
-										<!-- l'image (profil principal) -->
 										<img id="chat-header-avatar" 
 											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
 											src="" 
 											alt="User avatar">
-										<!-- le cadre -->
 										<img id="chat-header-status" 
 											class="absolute inset-0 w-full h-full object-contain" 
 											src="/assets/basic/status_online_small.png" 
@@ -4264,8 +4283,6 @@
 											 class="w-6 h-6 object-contain"
 											 style="width: 15px; height: 15px; vertical-align: -25px;">
 									</button>
-
-
 
 									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
     
@@ -4313,7 +4330,7 @@
 											</button>
 										</div>
 
-									</div> <!-- fin de la div menu -->
+									</div>
 
 								</div>
 
@@ -4354,14 +4371,11 @@
 									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
 									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
 
-									<!-- Menu pour les fonts -->
-									
 									<button id="change-font" class="h-6">
 										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
 										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
 										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
 
-										<!-- Menu dropdown -> il s'ouvre quand on clique -->
 										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
 											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
 										</div>
@@ -4471,8 +4485,6 @@
         </div>
     </div>
 </div>
-
-
 
  <!-- MODALE POUR L'AVATAR -->
 
