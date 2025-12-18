@@ -5542,6 +5542,7 @@
       const headerStatus = document.getElementById("chat-header-status");
       const headerBio = document.getElementById("chat-header-bio");
       if (headerName) headerName.textContent = friend.alias;
+      if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
       if (headerAvatar) {
         const avatarSrc = friend.avatar || friend.avatar_url || "/assets/profile/default.png";
         headerAvatar.src = avatarSrc;
@@ -5733,7 +5734,7 @@
         <div class="window-body p-6">
             
             <div id="method-selection" class="flex flex-col gap-4 items-center">
-                <div class="text-center mb-2">
+                <div class="text-center mb-2 border-b border-gray-500 p-4">
                     <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
                     <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
                 </div>
@@ -5741,7 +5742,7 @@
                 <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <h3 class="font-bold text-sm">Authenticator App</h3>
+                            <h3 class="font-bold text-sm text-center">Authenticator App</h3>
                             <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
                         </div>
                     </div>
@@ -5750,7 +5751,7 @@
                 <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <h3 class="font-bold text-sm">Email Verification</h3>
+                            <h3 class="font-bold text-sm text-center">Email Verification</h3>
                             <p class="text-xs text-gray-600">Receive codes via email</p>
                         </div>
                     </div>
@@ -5758,7 +5759,6 @@
             </div>
 
             <div id="qr-content" class="hidden flex-col items-center gap-4">
-                <button id="back-from-qr" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
                 
                 <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
@@ -5789,7 +5789,6 @@
             </div>
 
             <div id="email-content" class="hidden flex-col items-center gap-4">
-                <button id="back-from-email" class="self-start text-sm text-blue-600 hover:underline">\u2190 Back</button>
                 
                 <div class="text-center">
                     <h2 class="text-lg font-bold mb-2">Email Verification</h2>
@@ -6166,6 +6165,9 @@
       } else if (view === "email") {
         emailContent?.classList.remove("hidden");
         emailContent?.classList.add("flex");
+        const displayedEmail = document.querySelector('div[data-field="email"] .field-display')?.textContent;
+        if (displayedEmail && displayedEmail.trim() !== "")
+          currentUserEmail = displayedEmail.trim();
         if (inputEmail2fa) {
           inputEmail2fa.value = currentUserEmail;
           inputEmail2fa.disabled = true;
@@ -6432,7 +6434,7 @@
         const user = await response.json();
         if (response.ok) {
           alert("Email updated successfully!");
-          user.email = newEmail;
+          currentUserEmail = newEmail;
           console.log("Email updated");
           return true;
         } else {
@@ -6886,7 +6888,7 @@
 			</div>
 			<!-- Bouton de register -->
 			<div class="flex flex-col gap-2 w-48">
-				<button id="register-button" class="btn-vista w-full h-8">Register</button>
+				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
 			</div>
 	</div>
 	</div>

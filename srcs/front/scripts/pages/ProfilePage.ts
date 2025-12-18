@@ -281,6 +281,10 @@ export function afterRender(): void {
             emailContent?.classList.remove('hidden');
             emailContent?.classList.add('flex');
             
+            const displayedEmail = document.querySelector('div[data-field="email"] .field-display')?.textContent;
+
+            if (displayedEmail && displayedEmail.trim() !== "")
+                currentUserEmail = displayedEmail.trim();
             // email du user
             if (inputEmail2fa) {
                 inputEmail2fa.value = currentUserEmail; 
@@ -634,7 +638,7 @@ export function afterRender(): void {
             const user = await response.json();
             if (response.ok) {
                 alert("Email updated successfully!");
-                user.email = newEmail;
+                currentUserEmail = newEmail;
                 console.log("Email updated");
                 return true;
             } else {

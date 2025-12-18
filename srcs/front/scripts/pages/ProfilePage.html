@@ -150,7 +150,7 @@
         <div class="window-body p-6">
             
             <div id="method-selection" class="flex flex-col gap-4 items-center">
-                <div class="text-center mb-2">
+                <div class="text-center mb-2 border-b border-gray-500 p-4">
                     <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
                     <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
                 </div>
@@ -158,7 +158,7 @@
                 <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <h3 class="font-bold text-sm">Authenticator App</h3>
+                            <h3 class="font-bold text-sm text-center">Authenticator App</h3>
                             <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
                         </div>
                     </div>
@@ -167,7 +167,7 @@
                 <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <h3 class="font-bold text-sm">Email Verification</h3>
+                            <h3 class="font-bold text-sm text-center">Email Verification</h3>
                             <p class="text-xs text-gray-600">Receive codes via email</p>
                         </div>
                     </div>
@@ -175,7 +175,6 @@
             </div>
 
             <div id="qr-content" class="hidden flex-col items-center gap-4">
-                <button id="back-from-qr" class="self-start text-sm text-blue-600 hover:underline">← Back</button>
                 
                 <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
                     <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
@@ -206,7 +205,6 @@
             </div>
 
             <div id="email-content" class="hidden flex-col items-center gap-4">
-                <button id="back-from-email" class="self-start text-sm text-blue-600 hover:underline">← Back</button>
                 
                 <div class="text-center">
                     <h2 class="text-lg font-bold mb-2">Email Verification</h2>
