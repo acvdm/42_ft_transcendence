@@ -120,11 +120,11 @@ export function afterRender(): void {
     let currentUserEmail: string = "";
 
     const statusImages: { [key: string]: string } = {
-        'available': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
-        'online': 'https://wlm.vercel.app/assets/status/status_frame_online_large.png',
-        'busy':      'https://wlm.vercel.app/assets/status/status_frame_busy_large.png',
-        'away':      'https://wlm.vercel.app/assets/status/status_frame_away_large.png',
-        'invisible': 'https://wlm.vercel.app/assets/status/status_frame_offline_large.png'
+        'available': '/assets/basic/status_frame_online_large.png',
+        'online': '/assets/basic/status_frame_online_large.png',
+        'busy':      '/assets/basic/status_frame_busy_large.png',
+        'away':      '/assets/basic/status_frame_away_large.png',
+        'invisible': '/assets/basic/status_frame_offline_large.png'
     };
 
     const statusMapping: { [key: string]: string } = {

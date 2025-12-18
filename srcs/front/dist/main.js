@@ -13,7 +13,7 @@
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
@@ -68,7 +68,7 @@
             <div class="window-body p-6 flex flex-col items-center gap-4">
                 <div class="text-center">
                     <h2 class="text-lg font-bold mb-2">Security Check</h2>
-                    <p class="text-xs text-gray-600 mb-4">Please enter the code from Google authenticator.</p>
+                    <p class="text-xs text-gray-600 mb-4">Please enter the security code.</p>
                 </div>
 
                 <div class="w-full flex flex-col gap-2 mt-2">
@@ -4424,7 +4424,7 @@
                 <div class="relative w-[130px] h-[130px] flex-shrink-0">
                     <img id="friend-modal-status" 
                             class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
+                            src="/assets/basic/status_frame_online_large.png">
                     
                     <img id="friend-modal-avatar" 
                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
@@ -5871,7 +5871,7 @@
                     <div class="flex flex-col items-center gap-4 w-[200px]">
                         <div class="relative w-[170px] h-[170px]">
                             <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+                            src="/assets/basic/status_frame_offline_large.png">
                             
                             <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
                             src="/assets/basic/default.png">
@@ -6051,11 +6051,11 @@
     let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
     let currentUserEmail = "";
     const statusImages3 = {
-      "available": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
-      "online": "https://wlm.vercel.app/assets/status/status_frame_online_large.png",
-      "busy": "https://wlm.vercel.app/assets/status/status_frame_busy_large.png",
-      "away": "https://wlm.vercel.app/assets/status/status_frame_away_large.png",
-      "invisible": "https://wlm.vercel.app/assets/status/status_frame_offline_large.png"
+      "available": "/assets/basic/status_frame_online_large.png",
+      "online": "/assets/basic/status_frame_online_large.png",
+      "busy": "/assets/basic/status_frame_busy_large.png",
+      "away": "/assets/basic/status_frame_away_large.png",
+      "invisible": "/assets/basic/status_frame_offline_large.png"
     };
     const statusMapping = {
       "Available": "available",
@@ -6786,7 +6786,7 @@
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
@@ -6859,7 +6859,7 @@
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
 			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
 			<!-- l'image -->
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
@@ -7231,7 +7231,7 @@
                 <div class="relative w-[130px] h-[130px] flex-shrink-0">
                     <img id="friend-modal-status" 
                             class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="https://wlm.vercel.app/assets/status/status_frame_online_large.png">
+                            src="/assets/basic/status_frame_online_large.png">
                     
                     <img id="friend-modal-avatar" 
                             class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
