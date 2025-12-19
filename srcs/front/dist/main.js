@@ -4054,119 +4054,140 @@
 		<!-- Container avec left et right qui prennent toute la hauteur restante -->
 		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
 
-			<!-- ========= LEFT WINDOW ========= -->
-			<div class="window w-[700px] min-w-[700px] flex flex-col">
-				<div class="title-bar">
-					<div class="title-bar-text">Games</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
+			<!-- ========= LEFT COLUMN ========= -->
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
+				
+				<!-- ========= PROFILE WINDOW ========= -->
+				<div class="window flex flex-col">
+					<div class="title-bar">
+						<div class="title-bar-text">Profile</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
 					</div>
-				</div>
 
-				<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 700px; min-width: 700px; background-color: white;">
-					<div class="flex flex-row w-full h-[160px] rounded-sm p-2 flex-shrink-0 border-b border-gray-300"> 
-						<!-- Cadre du profil -->
-						<div class="flex flex-row w-full h-[160px] bg-transparent rounded-sm p-2 flex-shrink-0" style="height: 125px; flex-shrink: 0;">
-							<div class="relative w-[110px] h-[110px] flex-shrink-0">
-								<!-- l'image (profil principal) -->
-								<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-									style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-								<!-- le cadre -->
-								<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
-							</div>
-	
-							<!-- username, bio et status -->
-							<div class="flex flex-col justify-center pl-4 flex-1">
-								<div class="flex items-center gap-2 mb-1">
-									<p class="text-xl font-semibold" id="user-name">Username</p>
-	
-									<!-- selection du status = dynamique -->
-									<div class="relative">
-										<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-											<span id="current-status-text">(Available)</span>
-											<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-										</button>
-	
-										<!-- Menu dropdown pour le status -->
-										<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Available</span>
+					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
+						<div class="flex flex-row w-full rounded-sm p-2"> 
+							<!-- Cadre du profil -->
+							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
+								<div class="relative w-[110px] h-[110px] flex-shrink-0">
+									<!-- l'image (profil principal) -->
+									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+									<!-- le cadre -->
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+								</div>
+		
+								<!-- username, bio et status -->
+								<div class="flex flex-col justify-center pl-4 flex-1">
+									<div class="flex items-center gap-2 mb-1">
+										<p class="text-xl font-semibold" id="user-name">Username</p>
+		
+										<!-- selection du status = dynamique -->
+										<div class="relative">
+											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+												<span id="current-status-text">(Available)</span>
+												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
 											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Busy</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Away</span>
-											</button>
-											<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-												<span class="w-2 h-2 rounded-full"></span>
-												<span>Offline</span>
-											</button>
+		
+											<!-- Menu dropdown pour le status -->
+											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Available</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Busy</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Away</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Offline</span>
+												</button>
+											</div>
+										</div>
+									</div>
+									<div id="bio-wrapper">
+										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+									</div>
+								</div>
+		
+								<!-- Notifications -->
+								<div class="ml-auto flex items-start relative">
+									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+										<img id="notification-icon" 
+											src="/assets/basic/no_notification.png" 
+											alt="Notifications" 
+											class="w-full h-full object-contain">
+											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
+									</button>
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+												Notifications
+											</h3>
+										</div>
+										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
+											<div class="p-4 text-center text-xs text-gray-500">No notification</div>
 										</div>
 									</div>
 								</div>
-								<div id="bio-wrapper">
-									<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
-									<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-								</div>
 							</div>
-	
-							<!-- Notifications /// a mettre en hidden -> ne s'affiche que quand on a une notification!-->
-							<div class="ml-auto flex items-start relative">
-								<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-									<img id="notification-icon" 
-										src="/assets/basic/no_notification.png" 
-										alt="Notifications" 
-										class="w-full h-full object-contain">
-										<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
-								</button>
-								<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
-									<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
-										<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-											Notifications
-										</h3>
-									</div>
-									<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-										<div class="p-4 text-center text-xs text-gray-500">No notification</div>
-									</div> <!--fin du listing inside dropdown-->
-								</div> <!--fin du div dropdown-->
-							</div>
-
-
-							
 						</div>
-
-					</div>	<!--FIn du premier cadre-->		
-					<div class="bg-white p-4 flex flex-col items-center justify-center gap-2">
-						<h1 class="text-lg font-semibold mb-2">Wanna play? \u{1F47E}</h1>
-
-						<button id="local-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							LOCAL
-						</button>
-
-						<button id="remote-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							REMOTE
-						</button>
-
-						<button id="tournament-game" 
-							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-								px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-							TOURNAMENT
-						</button>
-					</div>	<!--FIn du second cadre-->	
+					</div>
 				</div>
+
+				<!-- ========= GAMES WINDOW ========= -->
+				<div class="window flex flex-col flex-1">
+					<div class="title-bar">
+						<div class="title-bar-text">Games</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
+
+					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
+						<div class="bg-white p-6 flex flex-col flex-1">
+							<h1 class="text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">CHOOSE YOUR GAME MODE</h1>
+
+							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
+								<button id="local-game" 
+									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+									LOCAL GAME
+								</button>
+
+								<button id="remote-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									REMOTE GAME
+								</button>
+
+								<button id="tournament-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									TOURNAMENT
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
 			</div>
 
 
@@ -4240,12 +4261,10 @@
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
-										<!-- l'image (profil principal) -->
 										<img id="chat-header-avatar" 
 											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
 											src="" 
 											alt="User avatar">
-										<!-- le cadre -->
 										<img id="chat-header-status" 
 											class="absolute inset-0 w-full h-full object-contain" 
 											src="/assets/basic/status_online_small.png" 
@@ -4264,8 +4283,6 @@
 											 class="w-6 h-6 object-contain"
 											 style="width: 15px; height: 15px; vertical-align: -25px;">
 									</button>
-
-
 
 									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
     
@@ -4313,7 +4330,7 @@
 											</button>
 										</div>
 
-									</div> <!-- fin de la div menu -->
+									</div>
 
 								</div>
 
@@ -4354,14 +4371,11 @@
 									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
 									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
 
-									<!-- Menu pour les fonts -->
-									
 									<button id="change-font" class="h-6">
 										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
 										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
 										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
 
-										<!-- Menu dropdown -> il s'ouvre quand on clique -->
 										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
 											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
 										</div>
@@ -4454,8 +4468,8 @@
                         <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
                     </div>
                     <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Rank:</span>
-                        <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
+                        <span>Winning streak:</span>
+                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
                     </div>
                 </div>
             </fieldset>
@@ -4471,8 +4485,6 @@
         </div>
     </div>
 </div>
-
-
 
  <!-- MODALE POUR L'AVATAR -->
 
@@ -5653,7 +5665,7 @@
         games: document.getElementById("friend-stat-games"),
         wins: document.getElementById("friend-stat-wins"),
         losses: document.getElementById("friend-stat-losses"),
-        rank: document.getElementById("friend-stat-rank")
+        streak: document.getElementById("friend-stat-streak")
       };
       this.initListeners();
     }
@@ -5670,10 +5682,18 @@
       if (!this.modal || !friendId) return;
       try {
         if (this.username) this.username.innerText = "Loading...";
-        const userRes = await fetchWithAuth(`api/users/${friendId}`);
+        const [userRes, statsRes] = await Promise.all([
+          fetchWithAuth(`api/users/${friendId}`),
+          fetchWithAuth(`api/game/users/${friendId}/games/stats`)
+        ]);
         if (userRes.ok) {
           const user = await userRes.json();
-          this.updateUI(user);
+          let stats = null;
+          if (statsRes.ok) {
+            const statsJson = await statsRes.json();
+            stats = statsJson.data || statsJson;
+          }
+          this.updateUI(user, stats);
           this.modal.classList.remove("hidden");
           this.modal.classList.add("flex");
         }
@@ -5681,13 +5701,25 @@
         console.error("Error modal:", error);
       }
     }
-    updateUI(user) {
+    updateUI(user, stats) {
       if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
       if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
       if (this.username) this.username.innerText = user.alias;
       if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
-      if (this.stats.games) this.stats.games.innerText = user.games_played || "0";
-      if (this.stats.wins) this.stats.wins.innerText = user.wins || "0";
+      if (stats) {
+        const gamesPlayed = stats.total_games ?? stats.totalGames ?? stats.played ?? stats.games_played ?? 0;
+        if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
+        if (this.stats.wins) this.stats.wins.innerText = stats.wins || "0";
+        if (this.stats.losses) this.stats.losses.innerText = stats.losses || "0";
+        if (this.stats.streak) {
+          this.stats.streak.innerText = stats.streak ?? stats.ladder_level ?? "No streaks";
+        }
+      } else {
+        if (this.stats.games) this.stats.games.innerText = "0";
+        if (this.stats.wins) this.stats.wins.innerText = "0";
+        if (this.stats.losses) this.stats.losses.innerText = "0";
+        if (this.stats.streak) this.stats.streak.innerText = "-";
+      }
     }
   };
 
@@ -5798,7 +5830,7 @@
     </div>
 
     <div class="min-h-screen flex items-center justify-center">
-        <div class="window" style="width: 900px;">
+        <div class="window" style="width:900px; margin-top:-100px;">
             <div class="title-bar">
                 <div class="title-bar-text">Profil</div>
                 <div class="title-bar-controls">
@@ -5810,6 +5842,7 @@
     
             <div class="window-body bg-white">
                 <div class="flex flex-col items-center py-12">
+                    
                     <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
             
                         <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
@@ -5872,7 +5905,6 @@
                         <div class="flex flex-col justify-between flex-1">
                             <div class="flex flex-col gap-4">
 
-
                                 <label class="text-sm">Username:</label>
                                 <div class="flex flex-row gap-2" data-field="alias">
                                     <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
@@ -5881,8 +5913,6 @@
                                     <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
                                     <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                 </div>
-
-
 
                                 <label class="text-sm">Share a quick message:</label>
                                 <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
@@ -5922,13 +5952,55 @@
                                 </div>
                             </div>
                         </div>
+                    </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
+                        <h1 class="text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
+
+                        <div class="grid grid-cols-4 gap-4 mb-8">
+                            <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
+                                <span class="text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
+                                <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
+                            </div>
+                            
+                            <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
+                                <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
+                                <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
+                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
+                                <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
+                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
+                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
+                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-
 
         <!-- MODALE POUR LE 2FA -->
 <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
@@ -6306,16 +6378,16 @@
           div.classList.add("border-gray-300", "hover:border-blue-500");
         }
         div.innerHTML = `
-                <div class="relative">
-                    <div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
-                    
-                    <div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
-                </div>
-                
-                <div class="p-2 bg-white text-center border-t border-gray-200">
-                    <span class="text-sm font-bold text-gray-800">${theme.name}</span>
-                </div>
-            `;
+				<div class="relative">
+					<div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
+					
+					<div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
+				</div>
+				
+				<div class="p-2 bg-white text-center border-t border-gray-200">
+					<span class="text-sm font-bold text-gray-800">${theme.name}</span>
+				</div>
+			`;
         div.addEventListener("click", function() {
           const themeKey = this.dataset.themeKey;
           if (selectedThemeElement) {
@@ -6508,6 +6580,27 @@
         if (response.ok) {
           const user = await response.json();
           currentUserEmail = user.email || "";
+          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+          if (statResponse.ok) {
+            const jsonResponse = await statResponse.json();
+            const stats = jsonResponse.data;
+            const totalGame = document.getElementById("stats-total-games");
+            const wins = document.getElementById("stats-wins");
+            const losses = document.getElementById("stats-losses");
+            const winRateCalcul = document.getElementById("stats-win-rate");
+            if (stats && totalGame && winRateCalcul && wins && losses) {
+              totalGame.innerText = stats.total_games.toString();
+              wins.innerText = stats.wins.toString();
+              losses.innerText = stats.losses.toString();
+              let rateValue = 0;
+              if (stats.total_games > 0) {
+                rateValue = Math.round(stats.wins / stats.total_games * 100);
+              }
+              winRateCalcul.innerText = `${rateValue}%`;
+            }
+          } else {
+            console.warn("Could not fetch user stats");
+          }
           if (user.theme) {
             localStorage.setItem("userTheme", user.theme);
             applyTheme(user.theme);

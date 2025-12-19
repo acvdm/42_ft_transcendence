@@ -34,9 +34,21 @@ export async function findStatsByUserId (
 ): Promise<Stat>
 {
     const stats = await db.get(`
-        SELECT * FROM STATS WHERE player_id = ?`,
+        SELECT * FROM STATS WHERE user_id = ?`,
         [userId]
     )
+
+    if (!stats) {
+        return {
+            userId: userId,
+            wins: 0,
+            losses: 0,
+            totalGames: 0,
+            totalScore: 0,
+            averageScore: 0,
+            currentWinStreak: 0
+        } as any;
+    }
 
     const averageScore = stats.total_games > 0 
         ? parseFloat((stats.total_score / stats.total_games).toFixed(2)) 

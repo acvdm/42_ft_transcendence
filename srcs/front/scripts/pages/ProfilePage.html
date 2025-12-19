@@ -5,7 +5,7 @@
     </div>
 
     <div class="min-h-screen flex items-center justify-center">
-        <div class="window" style="width: 900px;">
+        <div class="window" style="width:900px; margin-top:-100px;">
             <div class="title-bar">
                 <div class="title-bar-text">Profil</div>
                 <div class="title-bar-controls">
@@ -17,6 +17,7 @@
     
             <div class="window-body bg-white">
                 <div class="flex flex-col items-center py-12">
+                    
                     <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
             
                         <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
@@ -79,7 +80,6 @@
                         <div class="flex flex-col justify-between flex-1">
                             <div class="flex flex-col gap-4">
 
-
                                 <label class="text-sm">Username:</label>
                                 <div class="flex flex-row gap-2" data-field="alias">
                                     <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
@@ -88,8 +88,6 @@
                                     <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
                                     <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                 </div>
-
-
 
                                 <label class="text-sm">Share a quick message:</label>
                                 <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
@@ -129,13 +127,55 @@
                                 </div>
                             </div>
                         </div>
+                    </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
+                        <h1 class="text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
+
+                        <div class="grid grid-cols-4 gap-4 mb-8">
+                            <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
+                                <span class="text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
+                                <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
+                            </div>
+                            
+                            <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
+                                <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
+                                <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
+                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
+                                <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
+                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
+                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
+                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-
 
         <!-- MODALE POUR LE 2FA -->
 <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
