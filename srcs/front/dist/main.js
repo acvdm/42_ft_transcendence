@@ -5684,13 +5684,15 @@
         if (this.username) this.username.innerText = "Loading...";
         const [userRes, statsRes] = await Promise.all([
           fetchWithAuth(`api/users/${friendId}`),
-          fetchWithAuth(`api/users/${friendId}/stats`)
+          fetchWithAuth(`api/game/users/${friendId}/games/stats`)
         ]);
         if (userRes.ok) {
           const user = await userRes.json();
           let stats = null;
-          if (statsRes.ok)
-            stats = await statsRes.json();
+          if (statsRes.ok) {
+            const statsJson = await statsRes.json();
+            stats = statsJson.data || statsJson;
+          }
           this.updateUI(user, stats);
           this.modal.classList.remove("hidden");
           this.modal.classList.add("flex");
