@@ -6,6 +6,7 @@ import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
 import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
 import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
+import { NotFoundError } from './utils/error.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -40,7 +41,6 @@ fastify.post('/games', async (request, reply) =>
 
 	try
 	{
-
 		gameId = await createMatch(db, body.type, body.tournamentId);
 		if (!gameId)
 			throw new Error(`Error could not create game`);
@@ -50,7 +50,7 @@ fastify.post('/games', async (request, reply) =>
 		if (!playerMatchOneId || !playerMatchTwoId)
 			throw new Error(`Error could not associate players with the game ${gameId}`);
 
-		return reply.status(200).send({
+		return reply.status(201).send({
 			success: true,
 			data: gameId,
 			error: null
@@ -68,7 +68,9 @@ fastify.post('/games', async (request, reply) =>
 		if (gameId)
 			await rollbackDeleteGame(db, gameId);
 		
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
 			success: false,
 			data: null,
 			error: { message: (err as Error).message }
@@ -91,7 +93,7 @@ fastify.post('/users/:id/games/stats', async (request, reply) =>
 
 		const newStat = await createStatLineforOneUser(db, userId);
 		if (!newStat)
-			throw new Error(`Error: could not create stat line for user ${userId}`);
+			throw new NotFoundError(`Error: could not create stat line for user ${userId}`);
 
 		return reply.status(200).send({
 			success: true,
@@ -102,7 +104,9 @@ fastify.post('/users/:id/games/stats', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
 			success: false,
 			data: null,
 			error: { message: (err as Error).message }
@@ -121,7 +125,7 @@ fastify.get('/users/:id/games/stats', async (request, reply) =>
 
 		const userStats = await findStatsByUserId(db, userId);
 		if (!userStats)
-			throw new Error(`Error: could not find stat for user ${userId}`);
+			throw new NotFoundError(`Error: could not find stat for user ${userId}`);
 
 		return reply.status(200).send({
 			success: true,
@@ -132,7 +136,9 @@ fastify.get('/users/:id/games/stats', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
 			success: false,
 			data: null,
 			error: { message: (err as Error).message }
@@ -166,7 +172,8 @@ fastify.patch('/users/:id/games/stats', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+		return reply.status(statusCode).send({
 			success: false,
 			data: null,
 			error: { message: (err as Error).message }
