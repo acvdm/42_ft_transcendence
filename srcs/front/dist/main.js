@@ -5971,9 +5971,29 @@
                                 <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
+                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
+                                <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
                             <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
                                 <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
                                 <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
+                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
+                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
                             </div>
                         </div>
                     </div>
@@ -6358,16 +6378,16 @@
           div.classList.add("border-gray-300", "hover:border-blue-500");
         }
         div.innerHTML = `
-                <div class="relative">
-                    <div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
-                    
-                    <div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
-                </div>
-                
-                <div class="p-2 bg-white text-center border-t border-gray-200">
-                    <span class="text-sm font-bold text-gray-800">${theme.name}</span>
-                </div>
-            `;
+				<div class="relative">
+					<div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
+					
+					<div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
+				</div>
+				
+				<div class="p-2 bg-white text-center border-t border-gray-200">
+					<span class="text-sm font-bold text-gray-800">${theme.name}</span>
+				</div>
+			`;
         div.addEventListener("click", function() {
           const themeKey = this.dataset.themeKey;
           if (selectedThemeElement) {
