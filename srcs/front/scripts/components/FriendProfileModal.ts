@@ -56,12 +56,20 @@ export class FriendProfileModal {
             // loading pour les millisecondes 
             if (this.username) this.username.innerText = "Loading...";
             
-            const userRes = await fetchWithAuth(`api/users/${friendId}`);
-            // const statsRes = await fetchWithAuth(`api/users/${friendId}/stats`);
+            const [userRes, statsRes] = await Promise.all([
+                fetchWithAuth(`api/users/${friendId}`),
+                fetchWithAuth(`api/users/${friendId}/stats`)
+            ]);
 
             if (userRes.ok) {
                 const user = await userRes.json();
-                this.updateUI(user);
+
+                let stats = null;
+                if (statsRes.ok)
+                    stats = await statsRes.json();
+
+
+                this.updateUI(user, stats);
                 this.modal.classList.remove('hidden');
                 this.modal.classList.add('flex');
             }
@@ -70,14 +78,27 @@ export class FriendProfileModal {
         }
     }
 
-    private updateUI(user: any) {
+    private updateUI(user: any, stats: any) {
         if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
         if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages['invisible'];
         if (this.username) this.username.innerText = user.alias;
         if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
 
-        // state en dur pour le moment
-        if (this.stats.games) this.stats.games.innerText = user.games_played || "0";
-        if (this.stats.wins) this.stats.wins.innerText = user.wins || "0";
+        if (stats) {
+            const gamesPlayed = stats.total_games ?? stats.totalGames ?? stats.played ?? stats.games_played ?? 0;
+            
+            if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
+            if (this.stats.wins) this.stats.wins.innerText = stats.wins || "0";
+            if (this.stats.losses) this.stats.losses.innerText = stats.losses || "0";
+
+            if (this.stats.rank) {
+                this.stats.rank.innerText = stats.rank ?? stats.ladder_level ?? "No Rank";
+            }
+        } else {
+            if (this.stats.games) this.stats.games.innerText = "0";
+            if (this.stats.wins) this.stats.wins.innerText = "0";
+            if (this.stats.losses) this.stats.losses.innerText = "0";
+            if (this.stats.rank) this.stats.rank.innerText = "-";
+        }
     }
 }
