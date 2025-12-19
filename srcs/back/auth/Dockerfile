@@ -8,7 +8,9 @@ FROM node:20-alpine AS build
 RUN apk add --no-cache \
     make \
     g++ \
-    sqlite
+    python3
+
+ENV PYTHON=/usr/bin/python3
 
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/auth
