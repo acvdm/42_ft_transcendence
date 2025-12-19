@@ -4468,8 +4468,8 @@
                         <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
                     </div>
                     <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Rank:</span>
-                        <span id="friend-stat-rank" class="font-bold text-blue-600">#0</span>
+                        <span>Winning streak:</span>
+                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
                     </div>
                 </div>
             </fieldset>
@@ -5665,7 +5665,7 @@
         games: document.getElementById("friend-stat-games"),
         wins: document.getElementById("friend-stat-wins"),
         losses: document.getElementById("friend-stat-losses"),
-        rank: document.getElementById("friend-stat-rank")
+        streak: document.getElementById("friend-stat-streak")
       };
       this.initListeners();
     }
@@ -5711,14 +5711,14 @@
         if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
         if (this.stats.wins) this.stats.wins.innerText = stats.wins || "0";
         if (this.stats.losses) this.stats.losses.innerText = stats.losses || "0";
-        if (this.stats.rank) {
-          this.stats.rank.innerText = stats.rank ?? stats.ladder_level ?? "No Rank";
+        if (this.stats.streak) {
+          this.stats.streak.innerText = stats.streak ?? stats.ladder_level ?? "No streaks";
         }
       } else {
         if (this.stats.games) this.stats.games.innerText = "0";
         if (this.stats.wins) this.stats.wins.innerText = "0";
         if (this.stats.losses) this.stats.losses.innerText = "0";
-        if (this.stats.rank) this.stats.rank.innerText = "-";
+        if (this.stats.streak) this.stats.streak.innerText = "-";
       }
     }
   };

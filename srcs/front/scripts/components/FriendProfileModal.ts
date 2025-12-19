@@ -15,7 +15,7 @@ export class FriendProfileModal {
         games: HTMLElement | null;
         wins: HTMLElement | null;
         losses: HTMLElement | null;
-        rank: HTMLElement | null;
+        streak: HTMLElement | null;
     };
 
     constructor() {
@@ -32,7 +32,7 @@ export class FriendProfileModal {
             games: document.getElementById('friend-stat-games'),
             wins: document.getElementById('friend-stat-wins'),
             losses: document.getElementById('friend-stat-losses'),
-            rank: document.getElementById('friend-stat-rank')
+            streak: document.getElementById('friend-stat-streak')
         };
 
         this.initListeners();
@@ -92,14 +92,14 @@ export class FriendProfileModal {
             if (this.stats.wins) this.stats.wins.innerText = stats.wins || "0";
             if (this.stats.losses) this.stats.losses.innerText = stats.losses || "0";
 
-            if (this.stats.rank) {
-                this.stats.rank.innerText = stats.rank ?? stats.ladder_level ?? "No Rank";
+            if (this.stats.streak) {
+                this.stats.streak.innerText = stats.streak ?? stats.ladder_level ?? "No streaks";
             }
         } else {
             if (this.stats.games) this.stats.games.innerText = "0";
             if (this.stats.wins) this.stats.wins.innerText = "0";
             if (this.stats.losses) this.stats.losses.innerText = "0";
-            if (this.stats.rank) this.stats.rank.innerText = "-";
+            if (this.stats.streak) this.stats.streak.innerText = "-";
         }
     }
 }
