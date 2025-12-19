@@ -80,6 +80,24 @@ fastify.post('/users', async (request, reply) => {
 			}),
 		});
 
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
+
 		const authJson = await authResponse.json();
 
 		console.log("Objet Response brut:", authResponse);
@@ -120,7 +138,8 @@ fastify.post('/users', async (request, reply) => {
             	const statJson = await statResponse.json().catch(() => ({}));
 				
             	// Propager le code d'erreur du service game
-            	if (statResponse.status >= 400 && statResponse.status < 500) {
+            	if (statResponse.status >= 400 && statResponse.status < 500) 
+				{
             	    const error: any = new Error(
             	        statJson.error?.message || `Game service error: ${statResponse.status}`
             	    );
@@ -128,7 +147,6 @@ fastify.post('/users', async (request, reply) => {
             	    throw error;
             	}
 			
-            	// Service game indisponible (5xx)
             	throw new ServiceUnavailableError('Game service is unavailable');
        		}
         
@@ -151,8 +169,6 @@ fastify.post('/users', async (request, reply) => {
 	}
 	catch (err: any) 
 	{
-		const errorMessage = err.message;
-
 		// 5. Rollback
 		if (user_id) 
 		{
@@ -205,6 +221,24 @@ fastify.post('/users/guest', async (request, reply) => {
 				email: email, 
 			}),
 		});
+
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
 
 		const authJson = await authResponse.json();
 
@@ -302,6 +336,7 @@ fastify.get('/users/:id', async (request, reply) =>
             const authData = await authResponse.json();
             userEmail = authData.email || "";
         }
+
 	} catch (err) {
 		console.error("Error getting email from auth: ", err);
 	}
@@ -312,22 +347,6 @@ fastify.get('/users/:id', async (request, reply) =>
 	};
 })
 
-fastify.get('/showfriend', async (request, reply) =>
-{
-	const { alias } = request.body as { alias: string };
-
-	const user = await userRepo.findUserByAlias(db, alias);
-	if (!user)
-	{
-		reply.status(404).send({
-			success: false,
-			data: null,
-			error: { message: `User not found` }
-	  	});
-	}
-
-	return user;
-})
 
 
 /* -- UPDATE STATUS -- */
@@ -348,9 +367,6 @@ fastify.patch('/users/:id/status', async (request, reply) =>
  	} 
 	catch (err: any) 
 	{
-		fastify.log.error(err);
-		console.log("status selected: ", status);
-
 		const statusCode = err.statusCode || 500;
 
 		reply.status(statusCode).send({			  
@@ -380,8 +396,6 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		fastify.log.error(err);
-
 		const statusCode = err.statusCode || 500;
 
 		reply.status(statusCode).send({			  
@@ -411,8 +425,6 @@ fastify.patch('/users/:id/alias', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		fastify.log.error(err);
-
 		const statusCode = err.statusCode || 500;
 
 		reply.status(statusCode).send({			  
@@ -444,12 +456,30 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 			}),
 		});
 
-		const data = await authResponse.json();
-		if (data.success)
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
+
+		const authJson = await authResponse.json();
+		if (authJson.success)
 		{
 		    return reply.status(201).send({
 				success: true,
-				data: data,
+				data: authJson,
 				error: null
 		    });
 		}
@@ -491,12 +521,30 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 			}),
 		});
 
-		const data = await authResponse.json();
-		if (data.success)
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
+
+		const authJson = await authResponse.json();
+		if (authJson.success)
 		{
 		    return reply.status(201).send({
 				success: true,
-				data: data,
+				data: authJson,
 				error: null
 		    });
 		}
@@ -539,8 +587,6 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
     } 
 	catch (err: any) 
 	{
-        fastify.log.error(err);
-
 		const statusCode = err.statusCode || 500;
 
 		reply.status(statusCode).send({			  
@@ -574,8 +620,6 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
     } 
 	catch (err: any) 
 	{
-        fastify.log.error(err);
-
 		const statusCode = err.statusCode || 500;
 
 		reply.status(statusCode).send({			  
@@ -609,8 +653,6 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		fastify.log.error(err);
-
 		const statusCode = err.statusCode || 500;
 
 		reply.status(statusCode).send({			  

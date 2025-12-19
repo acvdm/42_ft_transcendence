@@ -1,6 +1,6 @@
 import { Database } from 'sqlite';
 import { User } from './users';
-import { NotFoundError, ValidationError, ConflictError } from '../utils/error';
+import { NotFoundError, ValidationError, ConflictError } from '../utils/error.js';
 
 export interface Friendship {
     id: number,
