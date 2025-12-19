@@ -43,7 +43,7 @@ git clone https://github.com/acvdm/42_ft_transcendence.git
 # 2. Lancer les services
 Make
 
-# Vérifier que les conteneurs (user, chat, auth, game, gateway, front, nginx) sont en cours d'exécution
+# Vérifier que les conteneurs (user, chat, auth, game, gateway, front, nginx) sont live
 docker ps
 ```
 
