@@ -5665,7 +5665,11 @@
         games: document.getElementById("friend-stat-games"),
         wins: document.getElementById("friend-stat-wins"),
         losses: document.getElementById("friend-stat-losses"),
-        streak: document.getElementById("friend-stat-streak")
+        streak: document.getElementById("friend-stat-streak"),
+        avgScore: document.getElementById("friend-stat-average-score"),
+        winRate: document.getElementById("friend-stat-win-rate"),
+        opponent: document.getElementById("friend-stat-opponent"),
+        favGame: document.getElementById("friend-stat-fav-game")
       };
       this.initListeners();
     }
@@ -5707,18 +5711,27 @@
       if (this.username) this.username.innerText = user.alias;
       if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
       if (stats) {
-        const gamesPlayed = stats.total_games ?? stats.totalGames ?? stats.played ?? stats.games_played ?? 0;
+        const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
+        const wins = stats.wins || 0;
         if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
-        if (this.stats.wins) this.stats.wins.innerText = stats.wins || "0";
-        if (this.stats.losses) this.stats.losses.innerText = stats.losses || "0";
-        if (this.stats.streak) {
-          this.stats.streak.innerText = stats.streak ?? stats.ladder_level ?? "No streaks";
+        if (this.stats.wins) this.stats.wins.innerText = wins.toString();
+        if (this.stats.losses) this.stats.losses.innerText = (stats.losses || 0).toString();
+        if (this.stats.streak) this.stats.streak.innerText = (stats.streak ?? 0).toString();
+        if (this.stats.avgScore) this.stats.avgScore.innerText = (stats.average_score ?? 0).toString();
+        if (this.stats.winRate) {
+          let rate = 0;
+          if (gamesPlayed > 0) {
+            rate = Math.round(wins / gamesPlayed * 100);
+          }
+          this.stats.winRate.innerText = `${rate}%`;
         }
+        if (this.stats.opponent) this.stats.opponent.innerText = stats.biggest_opponent || "-";
+        if (this.stats.favGame) this.stats.favGame.innerText = stats.favorite_game || "Local";
       } else {
-        if (this.stats.games) this.stats.games.innerText = "0";
-        if (this.stats.wins) this.stats.wins.innerText = "0";
-        if (this.stats.losses) this.stats.losses.innerText = "0";
-        if (this.stats.streak) this.stats.streak.innerText = "-";
+        Object.values(this.stats).forEach((el) => {
+          if (el) el.innerText = el === this.stats.opponent || el === this.stats.favGame ? "-" : "0";
+        });
+        if (this.stats.winRate) this.stats.winRate.innerText = "0%";
       }
     }
   };
@@ -6588,15 +6601,25 @@
             const wins = document.getElementById("stats-wins");
             const losses = document.getElementById("stats-losses");
             const winRateCalcul = document.getElementById("stats-win-rate");
-            if (stats && totalGame && winRateCalcul && wins && losses) {
-              totalGame.innerText = stats.total_games.toString();
-              wins.innerText = stats.wins.toString();
-              losses.innerText = stats.losses.toString();
-              let rateValue = 0;
-              if (stats.total_games > 0) {
-                rateValue = Math.round(stats.wins / stats.total_games * 100);
+            const avgScore = document.getElementById("stats-average-score");
+            const streak = document.getElementById("stats-streak");
+            const opponent = document.getElementById("stats-opponent");
+            const favGame = document.getElementById("stats-fav-game");
+            if (stats) {
+              if (totalGame) totalGame.innerText = stats.total_games.toString();
+              if (wins) wins.innerText = stats.wins.toString();
+              if (losses) losses.innerText = stats.losses.toString();
+              if (winRateCalcul) {
+                let rateValue = 0;
+                if (stats.total_games > 0) {
+                  rateValue = Math.round(stats.wins / stats.total_games * 100);
+                }
+                winRateCalcul.innerText = `${rateValue}%`;
               }
-              winRateCalcul.innerText = `${rateValue}%`;
+              if (avgScore) avgScore.innerText = stats.average_score?.toString() || "0";
+              if (streak) streak.innerText = stats.streak?.toString() || "0";
+              if (opponent) opponent.innerText = stats.biggest_opponent || "-";
+              if (favGame) favGame.innerText = stats.favorite_game || "Local";
             }
           } else {
             console.warn("Could not fetch user stats");
