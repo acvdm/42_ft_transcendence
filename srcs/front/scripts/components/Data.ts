@@ -1,3 +1,6 @@
+import { fetchWithAuth } from "../pages/api";
+import SocketService from "../services/SocketService";
+
 let globalPath = "/assets/emoticons/";
 let animationPath = "/assets/animated/";
 
@@ -12,7 +15,7 @@ export interface Theme {
 export const appThemes: { [key: string]: Theme } = {
     'basic': {
         name: 'Classic Blue',
-        headerUrl: 'https://wlm.vercel.app/assets/background/background.jpg',
+        headerUrl: '/assets/basic/background.jpg',
         navColor: 'linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)',
         bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)'
     },
@@ -289,3 +292,35 @@ alias(["(M)", "(m)"], "messenger.gif");
 alias(["(Y)", "(y)"], "thumbs_up.gif");
 alias(["(B)", "(b)"], "beer_mug.gif");
 alias(["(X)", "(x)"], "girl.gif");
+
+
+export async function updateUserStatus(newStatus: string) {
+    const userId = localStorage.getItem('userId');
+    const username = localStorage.getItem('username');
+
+    if (!userId) return;
+
+    try {
+        await fetchWithAuth(`/api/users/${userId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        // notifications aux amis
+        const socket = SocketService.getInstance().socket;
+        if (socket && username) {
+            socket.emit('notifyStatusChange', { 
+                userId: Number(userId), 
+                status: newStatus,
+                username: username 
+            });
+            console.log(`[Status] Updated to ${newStatus} for ${username}`);
+        }
+        
+        localStorage.setItem('userStatus', newStatus);
+
+    } catch (error) {
+        console.error("Failed to update status:", error);
+    }
+}

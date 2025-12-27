@@ -1,34 +1,15 @@
-export function LandingPage(): string {
-	return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
-	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
-		<!-- Picture div -->
-		<div class="relative w-[170px] h-[170px] mb-4">
-			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
-		</div>
-		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Welcome to Transcendence
-		</h1>
-		<!-- Login div -->
-		<div class="flex flex-col justify-center items-center gap-6">
-			<!-- Bouton de connexion/Register/Guest -->
-			<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
-	 		<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
- 			<button id="guest-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Play as guest</button>
-	</div>
-	</div>
+import { fetchWithAuth } from "./api";
+import htmlContent from "./LandingPage.html"
 
-	
-	`;
+export function render(): string {
+	return htmlContent;
 };
 
 export function initLandingPage() {
 	const loginButton = document.getElementById('login-button');
 	const registerButton = document.getElementById('register-button');
 	const guestButton = document.getElementById('guest-button');
+	const guestError = document.getElementById('guest-error');
 
 	const handleNavigation = (path: string) => {
 		window.history.pushState({}, '', path);
@@ -43,8 +24,38 @@ export function initLandingPage() {
 		handleNavigation('/register');
 	});
     
-    guestButton?.addEventListener('click', () => {
-		handleNavigation('/home');
+    guestButton?.addEventListener('click', async () => {
+		try {
+			const response = await fetch('/api/users/guest', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({})
+				
+			}); // a verifier
+
+			if (response.ok) {
+				const data = await response.json();
+
+				// 2. CHANGEMENT CRITIQUE : sessionStorage
+				// On stocke dans sessionStorage pour que ça disparaisse quand on ferme la fenêtre
+				if (data.access_token) sessionStorage.setItem('accessToken', data.access_token);
+				if (data.userId) sessionStorage.setItem('userId', data.userId.toString());
+				
+				// 3. ON AJOUTE UN MARQUEUR "isGuest"
+				sessionStorage.setItem('isGuest', 'true');
+
+				// 4. ON REDIRIGE VERS /guest (ET SURTOUT PAS /home)
+				handleNavigation('/guest');
+			} else {
+				console.error("Erreur création guest");
+			}
+		} catch (err) {
+			console.error("Network error while guest login: ", err);
+			if (guestError) {
+				guestError.textContent = "Network error. Please try again";
+				guestError.classList.remove('hidden');
+			}
+		}
 	});
 }
 

@@ -29,6 +29,45 @@ export function afterRender(): void {
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId: number | null = null;
 
+    if (socketService.socket) {
+        socketService.socket.on('friendProfileUpdated', (data: any) => {
+            console.log("Mise à jour reçue pour :", data.username);
+
+            if (currentChatFriendId === data.userId) {
+                
+                const headerBio = document.getElementById('chat-header-bio');
+                if (headerBio && data.bio) {
+                    headerBio.innerHTML = parseMessage(data.bio);
+                }
+
+                const headerAvatar = document.getElementById('chat-header-avatar') as HTMLImageElement;
+                if (headerAvatar && data.avatar) {
+                    headerAvatar.src = data.avatar;
+                }
+                
+                const headerName = document.getElementById('chat-header-username');
+                if (headerName && data.username) {
+                    headerName.textContent = data.username;
+                }
+            }
+        });
+
+        socketService.socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
+                // Le header du chat affiche-t-il le statut ? Oui, via 'chat-header-status'
+                // Mais friendStatusUpdate ne renvoie souvent que le username, pas l'ID.
+                // Il faut vérifier si c'est l'ami courant.
+                
+                const headerName = document.getElementById('chat-header-username');
+                if (headerName && headerName.textContent === data.username) {
+                    const headerStatus = document.getElementById('chat-header-status') as HTMLImageElement;
+                    if (headerStatus && statusImages[data.status]) {
+                        headerStatus.src = statusImages[data.status];
+                    }
+                }
+            });
+    }
+
+
     // clic sur l'ami
     window.addEventListener('friendSelected', (e: any) => {
         const { friend, friendshipId } = e.detail;
@@ -50,8 +89,7 @@ export function afterRender(): void {
         const headerBio = document.getElementById('chat-header-bio');
         if (headerName) headerName.textContent = friend.alias;
 
-        // *** Fonction qui génère une erreur ***
-        // if (headerBio) headerBio.innerHTML = parseMessage(friend.bio);
+        if (headerBio) headerBio.innerHTML = parseMessage(friend.bio || '');
 
         if (headerAvatar) {
             const avatarSrc = friend.avatar || friend.avatar_url || '/assets/profile/default.png';
@@ -77,14 +115,11 @@ export function afterRender(): void {
         }
     });
 
-
-
     // on fait en sorte que le bouton soit cliquable pour amener sur la page de jeu local
     const localGameButton = document.getElementById('local-game');
     if (localGameButton) {
         localGameButton.addEventListener('click', () => {
             console.log("Lancement d'une partie locale...");
-            // 1er argument : l'état qu'on veut récupérer dans main.ts
             window.history.pushState({ gameMode: 'local' }, '', '/game');
             
             const navEvent = new PopStateEvent('popstate');
@@ -92,7 +127,6 @@ export function afterRender(): void {
         });
     }
 
-    // Gestion du bouton REMOTE : on passe { gameMode: 'remote' } dans le pushState
     const remoteGameButton = document.getElementById('remote-game');
     if (remoteGameButton) {
         remoteGameButton.addEventListener('click', () => {

@@ -41,19 +41,6 @@ export async function initDatabase(): Promise<Database>{
         )
     `);
 
-    // // Table PLAYER_MATCH
-    // await db.exec(`
-    //     CREATE TABLE IF NOT EXISTS PLAYER_MATCH (
-    //         match_id INTEGER NOT NULL,
-    //         player_id INTEGER NOT NULL,
-    //         guest_alias TEXT,
-    //         score INTEGER DEFAULT 0,
-    //         is_winner INTEGER DEFAULT 0,
-    //         PRIMARY KEY (match_id, player_id)// modification car player_id possiblement a NULL
-    //              une cle primaire ne peut jamais contenir une valeur nulle
-    //     )
-    // `);
-
 
     // Table TOURNAMENTS
     // winner_alias = TEXT car winner n'a potentiellement pas d'id
@@ -77,8 +64,7 @@ export async function initDatabase(): Promise<Database>{
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
             total_games INTEGER GENERATED ALWAYS AS (wins + losses) STORED,
-            total_score INTEGER DEFAULT 0,
-            average_score INTEGER DEFAULT 0,
+            total_score INTEGER,
             current_win_streak INTEGER DEFAULT 0,
             PRIMARY KEY (user_id)
         )

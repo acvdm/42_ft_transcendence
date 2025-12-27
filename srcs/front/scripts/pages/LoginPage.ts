@@ -1,5 +1,6 @@
 import htmlContent from "./LoginPage.html";
 import { fetchWithAuth } from "./api";
+import { updateUserStatus } from "../components/Data";
 
 export function render(): string {
 	return htmlContent;
@@ -10,7 +11,7 @@ async function init2faLogin(access_token: string, user_id: number, selectedStatu
     if (access_token) localStorage.setItem('accessToken', access_token);
     if (user_id) localStorage.setItem('userId', user_id.toString());
 
-    // Récupération du profil
+    // on recupere le profil
     if (user_id && access_token) {
         try {
             const userRes = await fetch(`/api/users/${user_id}`, {
@@ -32,7 +33,7 @@ async function init2faLogin(access_token: string, user_id: number, selectedStatu
             console.error("Can't get user's profile", err);
         }
 
-        // Mise à jour du status
+        // on met a jour le status 
         try {
             await fetch(`/api/users/${user_id}/status`, {
                 method: 'PATCH',
@@ -200,6 +201,7 @@ function handleLogin() {
                 // fermeutr modale
                 if (modal2fa) modal2fa.classList.add('hidden');
             
+                await updateUserStatus('online');
                 await init2faLogin(access_token, user_id, cachedStatus);
             } else {
                 if (error2fa) {
@@ -229,10 +231,6 @@ function handleLogin() {
         if (e.target === modal2fa) closeFunc();
     });
 }
-
-
-
-
 
 export function loginEvents() {
     handleLogin();

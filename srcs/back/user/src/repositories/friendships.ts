@@ -1,5 +1,6 @@
 import { Database } from 'sqlite';
 import { User } from './users';
+import { NotFoundError, ValidationError, ConflictError } from '../utils/error.js';
 
 export interface Friendship {
     id: number,
@@ -10,6 +11,7 @@ export interface Friendship {
     friend?: User
 }
 
+
 //-------- POST / CREATE
 export async function makeFriendshipRequest (
     db: Database,
@@ -17,23 +19,31 @@ export async function makeFriendshipRequest (
     alias: string
 ): Promise<Friendship>
 {
-    console.log("arrivée dans make friends request");
     const friend = await db.get(`
-        SELECT * FROM USERS WHERE alias = ?`,
+        SELECT *,
+            CASE WHEN is_guest = 1 THEN 'true' ELSE 'false' END as is_guest_bool
+        FROM USERS 
+        WHERE alias = ?`,
         [alias]
-    ) as User;
+    ) as User & { is_guest_bool: string };
     if (!friend?.id)
-        throw new Error(`Cannot find user with alias ${alias}`);
+        throw new NotFoundError(`Cannot find user with alias ${alias}`);
+
+    console.log(`${friend.alias} is guest ? ${friend.is_guest_bool}`);
+
+    if (friend.is_guest_bool === "true")
+        throw new Error(`You cannot add a guest as friend`);
 
     if (friend.id == user_id)
         throw new Error(`You cannot add yourself as a friend. Loser.`);
 
+    console.log("line 38");
     const is_blocked = await db.get(`
         SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'blocked'`,
         [user_id, friend.id]
     );
     if (is_blocked)
-        throw new Error('No user found');
+        throw new NotFoundError('No user found');
 
     const already_friends = await db.get(`
         SELECT * FROM FRIENDSHIPS 
@@ -47,14 +57,14 @@ export async function makeFriendshipRequest (
         [user_id, friend.id, friend.id, user_id]
     );
     if (already_friends)
-        throw new Error(`${friend.alias} is already your friend`);
+        throw new ConflictError(`${friend.alias} is already your friend`);
 
     const request_already_sent = await db.get(`
        SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'pending'`,
        [user_id, friend.id]
     );
     if (request_already_sent)
-        throw new Error('A request has already been sent to this user. Wait for them to accept it');
+        throw new ConflictError('A request has already been sent to this user. Wait for them to accept it');
 
     const result = await db.run(`
         INSERT INTO FRIENDSHIPS (user_id, friend_id)
@@ -142,7 +152,7 @@ export async function listFriends (
             avatar_url: row.receiver_avatar,
             bio: row.receiver_bio,
             theme: row.receiver_theme,
-            status: row.receiver_status,         
+            status: row.receiver_status,
         };
 
         const friendship: Friendship =
@@ -217,7 +227,7 @@ export async function listRequests(
             avatar_url: row.receiver_avatar,
             bio: row.receiver_bio,
             theme: row.receiver_theme,
-            status: row.receiver_status,         
+            status: row.receiver_status,
         };
 
         const friendship: Friendship =
@@ -246,7 +256,7 @@ export async function reviewFriendshipRequest (
     const allowedStatuses = ['pending', 'validated', 'rejected', 'blocked'];
     if (!allowedStatuses.includes(status))
     {
-        throw new Error(`Invalid status: ${status}`);
+        throw new ValidationError(`Invalid status: ${status}`);
     }
     
     await db.run(`

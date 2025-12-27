@@ -19,9 +19,12 @@ function onRefreshed(token: string){
     refreshSubscribers = [];
 }
 
+export function getAuthToken(): string | null {
+    return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+}
 
 export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
-    const token = localStorage.getItem('accessToken');
+    const token = getAuthToken();
 
     // 1. Préparer les headers par défaut (fonction interne)
     const getHeaders = (currentToken: string | null) => {
