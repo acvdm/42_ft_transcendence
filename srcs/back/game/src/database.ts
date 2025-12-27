@@ -30,7 +30,7 @@ export async function initDatabase(): Promise<Database>{
             guest_alias TEXT,
             score INTEGER DEFAULT 0,
             is_winner INTEGER DEFAULT 0,
-            
+    
             CHECK (user_id IS NOT NULL OR guest_alias IS NOT NULL),
             FOREIGN KEY (match_id) REFERENCES MATCHES(match_id)
         )

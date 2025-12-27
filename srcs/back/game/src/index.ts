@@ -26,14 +26,14 @@ fastify.post('/games', async (request, reply) =>
 {
 	try
 	{
-		const body = request as { 
+		const body = request.body as { 
 			playerOneId: number, 
 			playerTwoId: number, 
 			type: string, 
 			name: string, 
 			tournamentId: number }
 
-		const game = await createMatch(db, body.type, body.tournamentId)
+		const gameId = await createMatch(db, body.type, body.tournamentId)
 	}
 	catch (err:any)
 	{
@@ -41,6 +41,10 @@ fastify.post('/games', async (request, reply) =>
 	}
 })
 
+
+/** -- TOURNAMENT -- */
+// fastify.post('/tournaments/local', async (request, reply) => 
+// appel savelocaltournament
 
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède

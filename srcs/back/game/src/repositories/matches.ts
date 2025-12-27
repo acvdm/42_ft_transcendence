@@ -17,6 +17,11 @@ export async function createMatch (
         [type, tournamentId]
     );
 
+    // On verifie que l'ID existe bien
+    if (newMatch.lastID === undefined) {
+        throw new Error("Failed: ID is missing")
+    }
+
     return newMatch.lastID;
 }
 
