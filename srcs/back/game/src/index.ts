@@ -6,6 +6,8 @@ import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
 import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
 import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
+import { saveLocalTournament } from './repositories/tournaments.js';
+import { localTournament } from './repositories/tournament_interfaces.js';
 import { NotFoundError } from './utils/error.js';
 
 const fastify = Fastify({ logger: true });
@@ -80,8 +82,46 @@ fastify.post('/games', async (request, reply) =>
 
 
 /** -- TOURNAMENT -- */
-// fastify.post('/tournaments/local', async (request, reply) => 
-// appel savelocaltournament
+/* Le seul appel API pour le tournois (seul moment ou le front parle au back)
+Il a lieux a la fin du match (page de victoire/fin) 
+Sinon tout se passe dans la memoire du navigateur
+*/
+fastify.post('/tournaments/local', async (request, reply) => 
+{
+	try
+	{
+		const body = request.body as localTournament; // === interface dans tournament_interfaces
+		if (!body.match_list || body.match_list.length !== 3)
+		{
+			return reply.status(400).send({
+				success: false,
+				data: null,
+				error: { message: "Invalid format: 3 matches required"}
+			});
+		}
+
+		const tournamentId = await saveLocalTournament(db, body);
+
+		return reply.status(201).send({
+			success: true,
+			data: { tournamentId },
+			error: null
+		})
+
+
+	}
+	catch (err: any)
+	{
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		})
+	}
+})
+
 
 
 //---------------------------------------

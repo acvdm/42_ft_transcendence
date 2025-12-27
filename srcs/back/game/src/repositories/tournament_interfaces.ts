@@ -1,5 +1,6 @@
 import { Database } from 'sqlite'
 
+// interfaces imbriquees
 
 export interface playerGameStats {
     user_id?: number,

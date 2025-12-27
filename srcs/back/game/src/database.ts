@@ -25,7 +25,7 @@ export async function initDatabase(): Promise<Database>{
     // Table PLAYER_MATCH
     // pour le tournois local besoin de gerer des invites sans compte
     // donc modification pour accepter des alias et enlever la contrainte NOT NULL sur l'ID
-    // adapter le fichier player_match.ts en conseaquence
+    // adapter le fichier player_match.ts en consequence
     // utiliser user_id au lieu de player_id
     // user_id === player_id
     await db.exec(`
@@ -51,7 +51,6 @@ export async function initDatabase(): Promise<Database>{
             begin_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             end_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             status TEXT DEFAULT 'not started',
-            remaining_matches INTEGER,
             nb_of_participants INTEGER DEFAULT 4,
             winner_alias TEXT
         )
