@@ -23,6 +23,11 @@ export async function initDatabase(): Promise<Database>{
     `);
 
     // Table PLAYER_MATCH
+    // pour le tournois local besoin de gerer des invites sans compte
+    // donc modification pour accepter des alias et enlever la contrainte NOT NULL sur l'ID
+    // adapter le fichier player_match.ts en conseaquence
+    // utiliser user_id au lieu de player_id
+    // user_id === player_id
     await db.exec(`
         CREATE TABLE IF NOT EXISTS PLAYER_MATCH (
             match_id INTEGER NOT NULL,
@@ -51,6 +56,7 @@ export async function initDatabase(): Promise<Database>{
 
 
     // Table TOURNAMENTS
+    // winner_alias = TEXT car winner n'a potentiellement pas d'id
     await db.exec(`
         CREATE TABLE IF NOT EXISTS TOURNAMENTS (
             tournament_id INTEGER PRIMARY KEY AUTOINCREMENT,
