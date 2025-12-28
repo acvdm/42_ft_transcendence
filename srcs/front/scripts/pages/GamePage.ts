@@ -2,6 +2,7 @@ import htmlContentLocal from "./LocalGame.html";
 import htmlContentRemote from "./RemoteGame.html";
 import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
+import { Chat } from "../components/Chat";
 
 export function render(): string {
     const state = window.history.state;
@@ -57,6 +58,15 @@ export function initGamePage(mode: string): void {
         })
         .catch(err => console.error('Cannot fetch username for player 1'));
 
+    }
+
+    const chat = new Chat();
+    chat.init();
+
+    if (mode == 'remote') {
+        chat.joinChannel("remote_game_room"); // on met l'id correspondant pour l room
+    } else if (mode == 'tournament') {
+        chat.joinChannel("tournament_room"); // same ici
     }
 
     // affichage selon le mode, on rajoutera remote + tournoi plus tard
@@ -197,6 +207,9 @@ export function initGamePage(mode: string): void {
             nameInput.classList.add('border-red-500');
             return;
         }
+
+        chat.addSystemMessage("Game is about to start!");
+        chat.addSystemMessage(`Match: ${player1Display.innerText} vs ${opponentName}`);
 
         // valeur par default 
         const selectedBall = ballValueInput ? ballValueInput.value : 'classic';

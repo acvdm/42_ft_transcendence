@@ -31,9 +31,9 @@ export class Chat {
     public joinChannel(channelKey: string, friendshipId?: number) {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
-        console.log("**** join channel friendshipId:", this.currentFriendshipId);
 
-        this.socket.emit("joinChannel", channelKey);
+        if (this.socket)
+            this.socket.emit("joinChannel", channelKey);
         
         // Reset affichage
         if (this.messagesContainer) {
@@ -175,6 +175,11 @@ export class Chat {
     // ---------------------------------------------------
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
+
+    public addSystemMessage(message: string) {
+        this.addMessage(`[b]${message}[/b]`, "System"); // ou autre chose que system? "game?"
+    }
+
 
     private addMessage(message: string, author: string) {
         if (!this.messagesContainer) return;

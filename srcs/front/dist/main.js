@@ -5249,8 +5249,8 @@
     joinChannel(channelKey, friendshipId) {
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
-      console.log("**** join channel friendshipId:", this.currentFriendshipId);
-      this.socket.emit("joinChannel", channelKey);
+      if (this.socket)
+        this.socket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
       }
@@ -5354,6 +5354,9 @@
     // ---------------------------------------------------
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
+    addSystemMessage(message) {
+      this.addMessage(`[b]${message}[/b]`, "System");
+    }
     addMessage(message, author) {
       if (!this.messagesContainer) return;
       const msgElement = document.createElement("p");
@@ -7798,6 +7801,13 @@
           player1Display.innerText = userData.alias;
       }).catch((err) => console.error("Cannot fetch username for player 1"));
     }
+    const chat = new Chat();
+    chat.init();
+    if (mode == "remote") {
+      chat.joinChannel("remote_game_room");
+    } else if (mode == "tournament") {
+      chat.joinChannel("tournament_room");
+    }
     if (mode === "local") {
       modal.classList.remove("hidden");
       modal.classList.add("flex");
@@ -7892,6 +7902,8 @@
         nameInput.classList.add("border-red-500");
         return;
       }
+      chat.addSystemMessage("Game is about to start!");
+      chat.addSystemMessage(`Match: ${player1Display.innerText} vs ${opponentName}`);
       const selectedBall = ballValueInput ? ballValueInput.value : "classic";
       const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
       if (player2Display) {
