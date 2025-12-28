@@ -1,4 +1,5 @@
 import htmlContent from "./GuestPage.html";
+import { Chat } from "../components/Chat";
 
 
 // on va exportrter une fonction qui renvoie du html 
@@ -31,4 +32,11 @@ export function afterRender(): void {
         console.log("Tournament game starting");
         handleNavigation('/game', { gameMode: 'tournament' });
     });
+
+
+    // pour la partie chat/notifcations
+    const guestChat = new Chat();
+    guestChat.init();
+    guestChat.joinChannel("general_guest");
+    guestChat.addSystemMessage("Welcome to Guest Mode. Select a game mode to start chatting with your opponents.")
 }

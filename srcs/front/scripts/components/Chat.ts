@@ -71,6 +71,10 @@ export class Chat {
             }
         });
 
+        this.socket.on("systemMessage", (data: { content: string}) => {
+            this.addSystemMessage(data.content);
+        })
+
         // reception ici du serveur au client
         this.socket.on("receivedWizz", (data: { author: string }) => {
             // on affiche le message -> xx send a nudge (poke?)
@@ -128,6 +132,9 @@ export class Chat {
         });
     }
 
+
+
+
     // ---------------------------------------------------
     // ----            LOGIQUE DU WIZZ                ----
     // ---------------------------------------------------
@@ -176,6 +183,19 @@ export class Chat {
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
 
+
+    public sendSystemNotification(message: string) {
+        if (this.socket) {
+            this.socket.emit("sendSystemMessage", {
+                channel_key: this.currentChannel,
+                content: message
+            });
+        } else {
+            // ajout d'un fallback
+            this.addSystemMessage(message);
+        }
+    }
+    
     public addSystemMessage(message: string) {
         this.addMessage(`[b]${message}[/b]`, "System"); // ou autre chose que system? "game?"
     }
@@ -548,5 +568,16 @@ export class Chat {
         const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
         this.messageInput.setSelectionRange(newCursorPos, newCursorPos); 
         this.messageInput.focus();
+    }
+
+    public destroy() {
+        if (this.socket) {
+            this.socket.off("connect");
+            this.socket.off("chatMessage");
+            this.socket.off("receivedWizz");
+            this.socket.off("receivedAnimation");
+            this.socket.off("systemMessage");
+            this.socket.off("disconnected");
+        }
     }
 }

@@ -5277,6 +5277,9 @@
           }
         }
       });
+      this.socket.on("systemMessage", (data) => {
+        this.addSystemMessage(data.content);
+      });
       this.socket.on("receivedWizz", (data) => {
         this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
         this.shakeElement(this.wizzContainer, 3e3);
@@ -5354,6 +5357,16 @@
     // ---------------------------------------------------
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
+    sendSystemNotification(message) {
+      if (this.socket) {
+        this.socket.emit("sendSystemMessage", {
+          channel_key: this.currentChannel,
+          content: message
+        });
+      } else {
+        this.addSystemMessage(message);
+      }
+    }
     addSystemMessage(message) {
       this.addMessage(`[b]${message}[/b]`, "System");
     }
@@ -5651,6 +5664,16 @@
       const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
       this.messageInput.setSelectionRange(newCursorPos, newCursorPos);
       this.messageInput.focus();
+    }
+    destroy() {
+      if (this.socket) {
+        this.socket.off("connect");
+        this.socket.off("chatMessage");
+        this.socket.off("receivedWizz");
+        this.socket.off("receivedAnimation");
+        this.socket.off("systemMessage");
+        this.socket.off("disconnected");
+      }
     }
   };
 
@@ -7381,6 +7404,17 @@
                     </div>  
                 </div>
             </div>
+
+
+
+            <div class="window flex flex-col flex-1 min-w-0"> <div class="title-bar">
+                    <div class="title-bar-text">Guest Chat</div>
+                </div>
+                <div class="window-body flex flex-col flex-1 bg-white p-2">
+                    <div id="chat-messages" class="flex-1 overflow-y-auto mb-2 border border-gray-300 p-2"></div>
+                    <input type="text" id="chat-input" placeholder="Say hello..." class="w-full border p-1">
+                    </div>
+            </div>
         </div>
     </div>
 </div>`;
@@ -7762,6 +7796,7 @@
     </div>`;
 
   // scripts/pages/GamePage.ts
+  var gameChat = null;
   function render6() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
@@ -7801,12 +7836,13 @@
           player1Display.innerText = userData.alias;
       }).catch((err) => console.error("Cannot fetch username for player 1"));
     }
-    const chat = new Chat();
-    chat.init();
+    if (gameChat) gameChat.destroy();
+    gameChat = new Chat();
+    gameChat.init();
     if (mode == "remote") {
-      chat.joinChannel("remote_game_room");
+      gameChat.joinChannel("remote_game_room");
     } else if (mode == "tournament") {
-      chat.joinChannel("tournament_room");
+      gameChat.joinChannel("tournament_room");
     }
     if (mode === "local") {
       modal.classList.remove("hidden");
@@ -7902,8 +7938,9 @@
         nameInput.classList.add("border-red-500");
         return;
       }
-      chat.addSystemMessage("Game is about to start!");
-      chat.addSystemMessage(`Match: ${player1Display.innerText} vs ${opponentName}`);
+      if (gameChat) {
+        gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+      }
       const selectedBall = ballValueInput ? ballValueInput.value : "classic";
       const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
       if (player2Display) {

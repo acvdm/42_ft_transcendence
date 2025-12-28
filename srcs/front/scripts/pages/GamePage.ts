@@ -4,6 +4,16 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 
+let gameChat: Chat | null = null;
+
+// pour nettoyer le tout quand on quitte la page
+export function cleanup() {
+    if (gameChat) {
+        gameChat.destroy();
+        gameChat = null;
+    }
+}
+
 export function render(): string {
     const state = window.history.state;
     if (state && state.gameMode === 'remote') {
@@ -60,13 +70,14 @@ export function initGamePage(mode: string): void {
 
     }
 
-    const chat = new Chat();
-    chat.init();
+    if (gameChat) gameChat.destroy();
+    gameChat = new Chat();
+    gameChat.init();
 
     if (mode == 'remote') {
-        chat.joinChannel("remote_game_room"); // on met l'id correspondant pour l room
+        gameChat.joinChannel("remote_game_room"); // on met l'id correspondant pour l room
     } else if (mode == 'tournament') {
-        chat.joinChannel("tournament_room"); // same ici
+        gameChat.joinChannel("tournament_room"); // same ici
     }
 
     // affichage selon le mode, on rajoutera remote + tournoi plus tard
@@ -208,8 +219,10 @@ export function initGamePage(mode: string): void {
             return;
         }
 
-        chat.addSystemMessage("Game is about to start!");
-        chat.addSystemMessage(`Match: ${player1Display.innerText} vs ${opponentName}`);
+        // envoi de la notifciation
+        if (gameChat) {
+            gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+        }
 
         // valeur par default 
         const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
