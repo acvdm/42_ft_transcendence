@@ -85,8 +85,7 @@ export function startTournament(tournamentName: string, aliases: string[]) {
     // les info des joueur A et B
     // changer de page pour nouvelle etape
 
-    // 5 - envoi au backend
-    // transformer le carnet de note brouillon en JSON pour le back
+   
 
 }
 
