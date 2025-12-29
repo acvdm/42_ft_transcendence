@@ -64,8 +64,8 @@ export async function saveLocalTournament (
         );
 
         // si player 1 est un utilisateur on met a jour la db pour ses stats
-        // if (match.player1.user_id)
-        //     await updateUserStats(db, match.player1.user_id, match.player1.score, p1IsWinner ? 1 : 0);
+        if (match.player1.user_id)
+            await updateUserStats(db, match.player1.user_id, match.player1.score, p1IsWinner ? 1 : 0);
 
         // Gestion joueur 2
         const p2IsWinner = match.winner === match.player2.alias;
@@ -83,8 +83,8 @@ export async function saveLocalTournament (
         );
 
         // si player 1 est un utilisateur on met a jour la db pour ses stats
-        // if (match.player2.user_id)
-        //     await updateUserStats(db, match.player2.user_id, match.player2.score, p2IsWinner ? 1 : 0);
+        if (match.player2.user_id)
+            await updateUserStats(db, match.player2.user_id, match.player2.score, p2IsWinner ? 1 : 0);
 
     }
 
