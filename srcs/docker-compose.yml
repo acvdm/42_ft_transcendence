@@ -63,6 +63,9 @@ services:
         - DATABASE_URL=/app/data/auth.sqlite
       networks: 
         - backend
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
       volumes:
         # - auth_data:/app/data
         - ./back/datadev:/app/data
@@ -136,7 +139,7 @@ networks:
   backend:
     name: transcendence_backend
     driver: bridge
-    internal: true
+    # internal: true
 
 volumes:
   # user_avatars:
