@@ -86,7 +86,9 @@ fastify.post('/games', async (request, reply) =>
 Il a lieux a la fin du match (page de victoire/fin) 
 Sinon tout se passe dans la memoire du navigateur
 */
-fastify.post('/tournaments/local', async (request, reply) => 
+
+// changer pour que ce soi restfull /game/tournament
+fastify.post('/game/tournament', async (request, reply) => 
 {
 	try
 	{
