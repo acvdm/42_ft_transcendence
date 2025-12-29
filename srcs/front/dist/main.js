@@ -5859,6 +5859,15 @@
         window.dispatchEvent(navEvent);
       });
     }
+    const tournamentGameButton = document.getElementById("tournament-game");
+    if (tournamentGameButton) {
+      tournamentGameButton.addEventListener("click", () => {
+        console.log("Lancement d'une partie en tournoi...");
+        window.history.pushState({ gameMode: "tournament" }, "", "/game");
+        const navEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(navEvent);
+      });
+    }
   }
 
   // scripts/pages/ProfilePage.html
@@ -7795,12 +7804,18 @@
         </div>
     </div>`;
 
+  // scripts/pages/TournamentPage.html
+  var TournamentPage_default = '<div class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col items-center justify-center p-4">\n\n        <div id="tournament-setup" class="window w-[600px] shadow-xl flex flex-col">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament Options/setup</div>\n            </div>\n            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                <h2 class="text-xl font-bold text-center mb-4">Create your tournament</h2>\n                \n                <div class="flex flex-col gap-1">\n                    <label class="font-bold text-sm">Tournament name:</label>\n                    <input type="text" id="tournament-name-input" class="border-2 border-gray-400 px-2 py-1" placeholder="Epic Battle...">\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-3 rounded">\n                    <legend class="text-sm font-semibold px-1">Participants</legend>\n                    <div class="grid grid-cols-2 gap-4">\n                        <div>\n                            <label class="text-xs font-bold">Player 1 (You):</label>\n                            <input type="text" id="player1-input" class="w-full border p-1 bg-gray-100" readonly>\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 2:</label>\n                            <input type="text" id="player2-input" class="w-full border p-1" placeholder="Enter alias...">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 3:</label>\n                            <input type="text" id="player3-input" class="w-full border p-1" placeholder="Enter alias...">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 4:</label>\n                            <input type="text" id="player4-input" class="w-full border p-1" placeholder="Enter alias...">\n                        </div>\n                    </div>\n                </fieldset>\n\n                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                <button id="start-tournament-btn" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold self-center">\n                    START TOURNAMENT\n                </button>\n            </div>\n        </div>\n\n        <div id="tournament-bracket" class="window w-[800px] hidden shadow-2xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament Bracket</div>\n            </div>\n            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                <h2 class="text-2xl font-black text-blue-900" id="bracket-title">NEXT MATCH</h2>\n                \n                <div class="flex items-center gap-8">\n                    <div class="text-3xl font-bold text-gray-700" id="next-p1">Player A</div>\n                    <div class="text-xl font-black text-red-500">VS</div>\n                    <div class="text-3xl font-bold text-gray-700" id="next-p2">Player B</div>\n                </div>\n\n                <div class="w-full border-t border-gray-300 my-2"></div>\n                \n                <p class="text-gray-600 italic" id="bracket-info">The winner will go to the final!</p>\n\n                <button id="launch-match-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 text-lg">\n                    PLAY MATCH\n                </button>\n            </div>\n        </div>\n\n        <div id="tournament-game-area" class="window w-[1500px] hidden flex-col h-[80vh]">\n            <div class="title-bar">\n                <div class="title-bar-text">AREA</div>\n            </div>\n            <div class="window-body flex flex-col h-full bg-white relative">\n                <div class="flex flex-row h-[60px] border-b border-gray-900 items-center justify-between px-24 bg-gray-50 shrink-0"> \n                    <span id="game-p1-name" class="text-2xl font-bold text-gray-800">P1</span>\n                    <span class="text-3xl font-bold text-gray-900">VS</span>\n                    <span id="game-p2-name" class="text-2xl font-bold text-gray-800">P2</span>\n                </div>\n                <div id="game-canvas-container" class="flex-1 relative bg-black w-full h-full">\n                    </div>\n            </div>\n        </div>\n\n        <div id="tournament-summary" class="window w-[600px] hidden scale-110 shadow-2xl border-4 border-yellow-500">\n            <div class="title-bar bg-yellow-500">\n                <div class="title-bar-text text-black font-bold">VICTORY</div>\n            </div>\n            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                <h1 class="text-4xl font-black text-yellow-600 uppercase">WINNER</h1>\n                <div class="text-6xl font-bold text-gray-800" id="winner-name">NAME</div>\n                <p class="text-gray-600">Congratulations on winning <span id="tour-name-display" class="font-bold"></span>!</p>\n                \n                <button id="quit-tournament-btn" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">\n                    Return to Menu\n                </button>\n            </div>\n        </div>\n\n    </div>\n</div>';
+
   // scripts/pages/GamePage.ts
   var gameChat = null;
+  var tournamenetState = null;
   function render6() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
       return RemoteGame_default;
+    } else if (state && state.gameMode === "tournament") {
+      return TournamentPage_default;
     }
     return LocalGame_default;
   }
@@ -7843,6 +7858,10 @@
       gameChat.joinChannel("remote_game_room");
     } else if (mode == "tournament") {
       gameChat.joinChannel("tournament_room");
+      initTournamenetMode();
+    } else {
+      gameChat.joinChannel("local_game_room");
+      initLocalMode();
     }
     if (mode === "local") {
       modal.classList.remove("hidden");
@@ -7850,6 +7869,181 @@
     } else {
       modal.classList.add("hidden");
       modal.classList.remove("flex");
+    }
+    function initTournamenetMode() {
+      const setupView = document.getElementById("tournament-setup");
+      const nameInput2 = document.getElementById("tournament-name-input");
+      const player1Input = document.getElementById("player1-input");
+      const player2Input = document.getElementById("player2-input");
+      const player3Input = document.getElementById("player3-input");
+      const player4Input = document.getElementById("player4-input");
+      const startButton2 = document.getElementById("start-tournament-button");
+      const errorDiv = document.getElementById("setup-error");
+      const userId2 = localStorage.getItem("userId");
+      const username = localStorage.getItem("username");
+      if (userId2 && username) {
+        console.log("Username du user: ", username);
+        player1Input.value = username;
+        player1Input.readOnly = true;
+        player1Input.classList.add("bg-gray-200", "cursor-not-allowed");
+      } else {
+        console.log("Username du user: ", username);
+        player1Input.value = "";
+        player1Input.readOnly = false;
+        player1Input.classList.remove("bg-gray-200", "cursor-not-allowed");
+      }
+      console.log("Username du user: ", username);
+      startButton2?.addEventListener("click", () => {
+        const tName = nameInput2.value.trim();
+        const players = [
+          player1Input.value.trim(),
+          player2Input.value.trim(),
+          player3Input.value.trim(),
+          player4Input.value.trim()
+        ];
+        if (!tName || players.some((p) => !p)) {
+          if (errorDiv) {
+            errorDiv.innerText = "Please fill all fields.";
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        const uniqueCheck = new Set(players);
+        if (uniqueCheck.size !== 4) {
+          if (errorDiv) {
+            errorDiv.innerText = "All player aliases must be unique.";
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        startTournamentLogic(tName, players);
+      });
+    }
+    function startTournamentLogic(name, players) {
+      document.getElementById("tournament-setup")?.classList.add("hidden");
+      tournamenetState = {
+        name,
+        allPlayers: players,
+        matches: [
+          { p1: players[0], p2: players[1], winner: null },
+          // 1er duo
+          { p1: players[2], p2: players[3], winner: null },
+          // 2eme duo
+          { p1: null, p2: null, winner: null }
+          // finale
+        ],
+        currentMatchIdx: 0
+        // on defini l'id du match pour le stocker dans la db
+      };
+      if (gameChat) {
+        gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${players.join(", ")}`);
+      }
+      showNextMatch();
+    }
+    function showNextMatch() {
+      const bracketView = document.getElementById("tournament-bracket");
+      const title = document.getElementById("bracket-title");
+      const player1Text = document.getElementById("next-p1");
+      const player2Text = document.getElementById("next-p2");
+      const infoText = document.getElementById("bracket-info");
+      const playButton = document.getElementById("launch-match-btn");
+      if (!bracketView || !tournamenetState) return;
+      document.getElementById("tournament-game-area")?.classList.add("hidden");
+      bracketView.classList.remove("hidden");
+      const matchIdx = tournamenetState.currentMatchIdx;
+      const match = tournamenetState.matches[matchIdx];
+      if (matchIdx === 0) {
+        title.innerText = "SEMI-FINAL 1";
+        infoText.innerText = `Next match: ${tournamenetState.matches[1].p1} vs ${tournamenetState.matches[1].p2}`;
+        if (gameChat) gameChat.sendSystemNotification(`Next up: ${match.p1} vs ${match.p2} ! Later: ${tournamenetState.matches[1].p1} vs ${tournamenetState.matches[1].p2}`);
+      } else if (matchIdx === 1) {
+        title.innerText = "SEMI-FINAL 2";
+        infoText.innerText = "Winner plays in the finale!";
+        if (gameChat) gameChat.sendSystemNotification(`Next up: ${match.p1} vs ${match.p2} ! The winner goes to the Final.`);
+      } else {
+        title.innerText = "\u{1F3C6} FINALE \u{1F3C6}";
+        infoText.innerText = "blablabla";
+        if (gameChat) gameChat.sendSystemNotification(`FINAL: ${match.p1} vs ${match.p2} !`);
+      }
+      player1Text.innerText = match.p1;
+      player2Text.innerText = match.p2;
+      const newButton = playButton.cloneNode(true);
+      playButton.parentNode.replaceChild(newButton, playButton);
+      newButton.addEventListener("click", () => {
+        bracketView.classList.add("hidden");
+        launchMatch(match.p1, match.p2);
+      });
+    }
+    function launchMatch(p1, p2) {
+      const gameArea = document.getElementById("tournament-game-area");
+      const p1Name = document.getElementById("game-p1-name");
+      const p2Name = document.getElementById("game-p2-name");
+      if (gameArea) {
+        gameArea.classList.remove("hidden");
+        if (p1Name) p1Name.innerText = p1;
+        if (p2Name) p2Name.innerText = p2;
+      }
+      console.log(`Lancement dy jeu: ${p1} vs ${p2}`);
+    }
+    function endMatch(winner) {
+      if (!tournamenetState) return;
+      const idx = tournamenetState.currentMatchIdx;
+      tournamenetState.matches[idx].winner = winner;
+      if (gameChat) gameChat.sendSystemNotification(`${winner} wins the match!`);
+      if (idx === 0) {
+        tournamenetState.matches[2].p1 = winner;
+        tournamenetState.currentMatchIdx++;
+        showNextMatch();
+      } else if (idx === 1) {
+        tournamenetState.matches[2].p2 = winner;
+        tournamenetState.currentMatchIdx++;
+        showNextMatch();
+      } else {
+        showSummary(winner);
+      }
+    }
+    function showSummary(champion) {
+      document.getElementById("tournament-game-area")?.classList.add("hidden");
+      const summaryView = document.getElementById("tournament-summary");
+      if (summaryView) {
+        summaryView.classList.remove("hidden");
+        const winnerDisplay = document.getElementById("winner-name");
+        const tourNameDisplay = document.getElementById("tour-name-display");
+        if (winnerDisplay) winnerDisplay.innerText = champion;
+        if (tourNameDisplay) tourNameDisplay.innerText = tournamenetState.name;
+        const userId2 = localStorage.getItem("userId");
+        if (userId2) {
+          saveTournamentToApi(champion);
+        }
+        document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
+          window.history.back();
+        });
+      }
+    }
+    async function saveTournamentToApi(winner) {
+      try {
+        await fetchWithAuth("api/game/tournament", {
+          method: "POST",
+          body: JSON.stringify({
+            name: tournamenetState.name,
+            winner,
+            participants: tournamenetState.allPlayers
+          })
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    function initLocalMode() {
+      const modal2 = document.getElementById("game-setup-modal");
+      if (modal2) modal2.classList.remove("hidden");
+      const startButton2 = document.getElementById("start-game-button");
+      const nameInput2 = document.getElementById("opponent-name");
+      if (startButton2) {
+        startButton2.addEventListener("click", () => {
+          modal2?.classList.add("hidden");
+        });
+      }
     }
     if (ballButton && ballDropdown && ballGrid) {
       const uniqueUrls = /* @__PURE__ */ new Set();

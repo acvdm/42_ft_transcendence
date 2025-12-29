@@ -1,0 +1,105 @@
+<div class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+    </div>
+
+    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col items-center justify-center p-4">
+
+        <div id="tournament-setup" class="window w-[600px] shadow-xl flex flex-col">
+            <div class="title-bar">
+                <div class="title-bar-text">Tournament Options/setup</div>
+            </div>
+            <div class="window-body flex flex-col gap-4 p-6 bg-white">
+                <h2 class="text-xl font-bold text-center mb-4">Create your tournament</h2>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="font-bold text-sm">Tournament name:</label>
+                    <input type="text" id="tournament-name-input" class="border-2 border-gray-400 px-2 py-1" placeholder="Epic Battle...">
+                </div>
+
+                <fieldset class="border-2 border-gray-300 p-3 rounded">
+                    <legend class="text-sm font-semibold px-1">Participants</legend>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold">Player 1 (You):</label>
+                            <input type="text" id="player1-input" class="w-full border p-1 bg-gray-100" readonly>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold">Player 2:</label>
+                            <input type="text" id="player2-input" class="w-full border p-1" placeholder="Enter alias...">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold">Player 3:</label>
+                            <input type="text" id="player3-input" class="w-full border p-1" placeholder="Enter alias...">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold">Player 4:</label>
+                            <input type="text" id="player4-input" class="w-full border p-1" placeholder="Enter alias...">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>
+
+                <button id="start-tournament-btn" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold self-center">
+                    START TOURNAMENT
+                </button>
+            </div>
+        </div>
+
+        <div id="tournament-bracket" class="window w-[800px] hidden shadow-2xl">
+            <div class="title-bar">
+                <div class="title-bar-text">Tournament Bracket</div>
+            </div>
+            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">
+                <h2 class="text-2xl font-black text-blue-900" id="bracket-title">NEXT MATCH</h2>
+                
+                <div class="flex items-center gap-8">
+                    <div class="text-3xl font-bold text-gray-700" id="next-p1">Player A</div>
+                    <div class="text-xl font-black text-red-500">VS</div>
+                    <div class="text-3xl font-bold text-gray-700" id="next-p2">Player B</div>
+                </div>
+
+                <div class="w-full border-t border-gray-300 my-2"></div>
+                
+                <p class="text-gray-600 italic" id="bracket-info">The winner will go to the final!</p>
+
+                <button id="launch-match-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 text-lg">
+                    PLAY MATCH
+                </button>
+            </div>
+        </div>
+
+        <div id="tournament-game-area" class="window w-[1500px] hidden flex-col h-[80vh]">
+            <div class="title-bar">
+                <div class="title-bar-text">AREA</div>
+            </div>
+            <div class="window-body flex flex-col h-full bg-white relative">
+                <div class="flex flex-row h-[60px] border-b border-gray-900 items-center justify-between px-24 bg-gray-50 shrink-0"> 
+                    <span id="game-p1-name" class="text-2xl font-bold text-gray-800">P1</span>
+                    <span class="text-3xl font-bold text-gray-900">VS</span>
+                    <span id="game-p2-name" class="text-2xl font-bold text-gray-800">P2</span>
+                </div>
+                <div id="game-canvas-container" class="flex-1 relative bg-black w-full h-full">
+                    </div>
+            </div>
+        </div>
+
+        <div id="tournament-summary" class="window w-[600px] hidden scale-110 shadow-2xl border-4 border-yellow-500">
+            <div class="title-bar bg-yellow-500">
+                <div class="title-bar-text text-black font-bold">VICTORY</div>
+            </div>
+            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                <h1 class="text-4xl font-black text-yellow-600 uppercase">WINNER</h1>
+                <div class="text-6xl font-bold text-gray-800" id="winner-name">NAME</div>
+                <p class="text-gray-600">Congratulations on winning <span id="tour-name-display" class="font-bold"></span>!</p>
+                
+                <button id="quit-tournament-btn" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">
+                    Return to Menu
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
