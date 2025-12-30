@@ -2,13 +2,16 @@
 	"name": "pong-game",
 	"version": "1.0.0",
 	"description": "Game core",
+	"type": "module",
 	"scripts": {
 		"start": "node dist/index.js",
 		"build": "tsc",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"dependencies": {
-		"fastify": "^4.24.3"
+		"fastify": "^4.24.3",
+		"sqlite3": "^5.1.6",
+		"sqlite": "^4.1.1"
 	},
 	"devDependencies": {
 		"@types/node": "24.10.0",

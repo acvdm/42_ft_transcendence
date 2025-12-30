@@ -20,7 +20,6 @@ RUN npm run build
 EXPOSE 8080
 
 #-----------------------START SERVER
-CMD ["npm", "run", "start"]
-# pour le moment le fichier index.js n'existe pas
+CMD ["node", "dist/index.js"]
 
 

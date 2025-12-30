@@ -1,17 +1,149 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>TRANSCENDENCE 🚧</title>
-	<link href="./dist/style.css" rel="stylesheet">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>tr4nsc3nd3nc3 🚧</title>
+		<link href="/dist/style.css" rel="stylesheet">
+
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+			.window {
+            position: relative;
+            z-index: 0;
+            box-shadow: 2px 2px 10px 1px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.67);
+            border: 1px solid rgba(0, 0, 0, 0.7);
+            border-radius: 6px;
+			}
+			
+			.window::before {
+				content: "";
+				position: absolute;
+				z-index: -1;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				border-radius: 6px;
+				background: none;
+				box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.87);
+			}
+			
+			.title-bar {
+				box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.87), 
+							inset 1px 0 0 rgba(255, 255, 255, 0.87), 
+							inset -1px 0 0 rgba(255, 255, 255, 0.87);
+				border: 1px solid rgba(0, 0, 0, 0.7);
+				border-radius: 6px 6px 0 0;
+				padding: 6px;
+				padding-top: 0;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				background: linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2)), #4580c4;
+			}
+			
+			.title-bar-text {
+				color: #000;
+				letter-spacing: 0;
+				line-height: 15px;
+				padding-top: 6px;
+				text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+				font-family: "Segoe UI", Tahoma, sans-serif;
+				font-size: 12px;
+			}
+			
+			.title-bar-controls {
+				display: flex;
+				background: rgba(255, 255, 255, 0.2);
+				border: 1px solid rgba(0, 0, 0, 0.3);
+				border-top: 0;
+				border-radius: 0 0 5px 5px;
+				box-shadow: 0 1px 0 rgba(255, 255, 255, 0.67), 
+							1px 0 0 rgba(255, 255, 255, 0.67), 
+							-1px 0 0 rgba(255, 255, 255, 0.67);
+			}
+			
+			.title-bar-controls button {
+				position: relative;
+				min-width: 29px;
+				min-height: 19px;
+				padding: 0;
+				border: 0;
+				border-right: 1px solid rgba(0, 0, 0, 0.3);
+				border-radius: 0;
+				box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.33);
+				background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5));
+				cursor: pointer;
+			}
+			
+			.title-bar-controls button:first-child {
+				border-bottom-left-radius: 5px;
+			}
+			
+			.title-bar-controls button:last-child {
+				border: 0;
+				border-bottom-right-radius: 5px;
+				min-width: 48px;
+			}
+
+			.title-bar-controls button:last-child {
+				background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5)),
+							radial-gradient(circle at -60% 50%, rgba(0, 0, 0, 0.47) 5% 10%, transparent 50%), 
+							radial-gradient(circle at 160% 50%, rgba(0, 0, 0, 0.47) 5% 10%, transparent 50%),
+							linear-gradient(rgba(224, 161, 151, 0.9), #cf796a 25% 50%, #d54f36 50%);
+			}
+			
+			/* Icônes des boutons */
+			.title-bar-controls button[aria-label="Minimize"]::before {
+			content: "";
+			background: url("./assets/windows/minimize.png") no-repeat center 10px;
+			position: absolute;
+			inset: 0;
+			}
+
+			.title-bar-controls button[aria-label="Maximize"]::before {
+			content: "";
+			background: url("./assets/windows/maximize.png") no-repeat center;
+			position: absolute;
+			inset: 0;
+			}
+
+			.title-bar-controls button[aria-label="Close"]::before {
+			content: "";
+			background: url("./assets/windows/close.png") no-repeat center;
+			position: absolute;
+			inset: 0;
+			}
+
+			
+			.window-body {
+				margin: 6px;
+				margin-top: 0;
+				border: 1px solid rgba(0, 0, 0, 0.7);
+				background: transparent;
+				box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+				min-height: 150px;
+			}
+		</style>
 </head>
-<body class="bg-gray-900 text-white">
-	<div id="app">
-		<h1 class="text-3xl font-bold text-blue-500 p-4">
-			Work in progress
-		</h1>
-	</div>
-		<script src="./dist/main.js" defer></script>
+
+<body id="app-body" class="m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+		
+		<nav id="main-navbar" class="w-full h-[50px] flex items-center justify-between px-4 shadow-xl/30"
+			style="background: linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%); background-size: cover;">
+				<a href="/home" class="text-white hover:underline">Home</a>
+				<a href="/profile" class="text-white hover:underline">Profile</a>
+				<a href="/logout" class="text-white hover:underline">Log out</a>
+		</nav>
+	
+
+
+    <div id="app"></div>
+    <script src="/dist/main.js" defer></script>
 </body>
-</html>	
+</html>
