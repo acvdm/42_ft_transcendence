@@ -1,7 +1,5 @@
 import validator from 'validator';
-import { createToken, CreateTokenData } from '../repositories/token.js';
-import { hashPassword } from '../utils/crypto.js';
-import { Database } from 'sqlite';
+import { ValidationError} from '../utils/error.js';
 
 export function isValidPassword(pwd: string): boolean 
 {
@@ -22,35 +20,33 @@ export function validateRegisterInput(body: any)
 {
     // Vérifier que email est valide, password assez fort, etc
     if (!body)
-        throw new Error('Invalid request body');
+        throw new ValidationError('Invalid request body');
 
     if (!body.email || !body.password)
-        throw new Error('Missing required fields');
+        throw new ValidationError('Missing required fields');
 
     if (!validator.isEmail(body.email))
-        throw new Error('Email address not supported');
+        throw new ValidationError('Email address not supported');
 
     if (!isValidPassword(body.password))
-        throw new Error('Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character');
+        throw new ValidationError('Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character');
 }
 
 export function validateNewEmail(body: any) 
 {
-    console.log("arrivée dans validateNewEmail");
     if (!body)
     {
         console.log("body n'existe pas");
-        throw new Error('Invalid request body');
+        throw new ValidationError('Invalid request body');
     }
     if (!body.email)
     {
         console.log("body email n'existe pas");
-        throw new Error('Missing required field');
+        throw new ValidationError('Missing required field');
     }    
     if (!validator.isEmail(body.email))
     {
         console.log("email ne ressemble pas à un email");
-        throw new Error('Email address not supported');
+        throw new ValidationError('Email address not supported');
     }
-    console.log("nouvel email valide");
 }

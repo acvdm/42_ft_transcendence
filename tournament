@@ -1,0 +1,25 @@
+// Pour le tournois
+// -> Bouton quelque chose du type -> "Start a local tournament"
+
+// dans le cadre d'un tournois lance depuis un compte utilisateur:
+// -> ecran de configuration du tournois
+// "Name of the tournament: "
+// "Enter the three other pseudo for a four player tournament"
+// -> "Player 1" prerempli avec le login du joueur qui est connecte et trois entrees vides (player 2, player 3, player 4) pour les alias de 3 autres joueurs
+// -> bouton "start" ne pas accepter si tous les champs ne sont pas rempli, et verifier que les alias sont uniques
+
+// dans le cadre d'un tournois depuis une session guest:
+// meme chose mais entrer 4 pseudo (pas d'utilisateur deja connecte a unse session)
+
+// pour le jeu depuis la session user
+// -> Pour chaque partie via le chat envoyer un message du type ->  "Annechat joue contre Faustoche ! a la prochaine partie Lanou joue contre Cassou"
+// -> puis -> "Lanou joue contre Cassou ! a la prochaine partie le vainqueur de la premiere manche joueura contre le vainqueur de la seconde manche"
+// puis "Final bidule joue contre bidule"
+
+// entre les partie : page avec le winner de chaque partie et annonce de la prochaine manche
+
+// dans les deux cas invite et user:
+// page "Summary" recap du tournois avec le vainqueur final -> a ce moment appel API vers /tournaments/local
+
+// De mon cote, je vais preparer -> un objet javascript avec toutes les donnees a recuperer a envoyer au backend a la fin du tournois, creer une fonction pour savoir qui dois jouer a quel moment,
+

@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
 import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword } from './services/auth_service.js';
-import fs from 'fs';
+
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
 
@@ -69,7 +69,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
 
 		// 4. Répondre
-		return reply.status(200).send({
+		return reply.status(201).send({
 			success: true,
 			refresh_token: authResponse.refresh_token,
 			access_token: authResponse.access_token,
@@ -79,7 +79,8 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+		return reply.status(statusCode).send({
 			success: false, 
 			data: null,
 			error: { message: err.message }
@@ -119,7 +120,9 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
 			success: false, 
 			data: null,
 			error: { message: err.message }
@@ -149,7 +152,8 @@ fastify.patch('/users/:id/credentials/email', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+		return reply.status(statusCode).send({
 			success: false, 
 			data: null,
 			error: {  message: (err as Error).message}
@@ -197,10 +201,12 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
     }
 	catch (err: any) 
 	{
-		return reply.status(400).send({
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
 			success: false, 
 			data: null,
-			error: {  message: (err as Error).message}
+			error: { message: err.message }
 		});
 	}
 });
@@ -255,46 +261,15 @@ fastify.post('/sessions', async (request, reply) =>
 	} 
 	catch (err: any)
 	{
-		return reply.status(400).send({ 
-			success: false,
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
 			data: null,
-			error: { message: err.message }  
+			error: { message: err.message }
 		});
 	}
 });
-
-// // duplique le /sessions ?
-// fastify.post('/login', async (request, reply) => {
-//   const body = request.body as { email: string, password: string };
-  
-//   try {
-//     const authResponse = await loginUser(db, body.email, body.password);
-// 	console.log("✅ route /login atteinte");
-
-//     // on met le refresh token dans le cookie, pas dans le body
-//     // et on prepare l'en-tete HTTP qui sera attache a la reponse finale
-//     // le navigateur lira cette en tete et enregistrera le cookie
-//     reply.setCookie('refresh_token', authResponse.refresh_token, { // refresh_token dans la fonction loginUser
-//       path: '/',
-//       httpOnly: true, // invisible au JS (protection XSS)
-//       secure: true, //acces au cookie uniquement via https
-//       sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
-//       maxAge: 7 * 24 * 3600, // 7 jours en secondes
-//       signed: true // signe avec cookie secret
-//     });
-
-//     // envoi de l'access token dans le json et pas dans l'authResponse
-//     return reply.status(200).send({
-//       access_token:authResponse.access_token,
-//       user_id: authResponse.user_id
-//     });
-
-//   } catch (err: any) {
-//     console.error("❌ ERREUR AUTH LOGIN:", err);
-//      return reply.status(400).send({ error: err.message });
-//   }
-// });
-
 
 
 /* -- REFRESH THE ACCESS TOKEN -- */
@@ -341,7 +316,8 @@ fastify.post('/refresh', async (request, reply) => {
 
 /* -- LOGOUT -- */
 // pour supprimer le refresh token de la db et supprimer le cookie du navigateur
-fastify.post('/logout', async (request, reply) => {
+fastify.post('/logout', async (request, reply) => 
+{
 	
 	console.log("✅ route /logout atteinte");	
 
@@ -361,10 +337,13 @@ fastify.post('/logout', async (request, reply) => {
 
 	const refreshToken = unsigned.value;
 
-	try {
+	try 
+	{
 		await logoutUser(db, refreshToken);
 		console.log("✅ Refresh Token suppress from the database");
-	} catch (err) {
+	} 
+	catch (err) 
+	{
 		console.error("Error for the supression of Refresh Token in the database: ", err);
 	}
 
@@ -375,7 +354,7 @@ fastify.post('/logout', async (request, reply) => {
 		sameSite: 'strict'
 	});
 
-	return reply.status(200).send({ success: true, message: "✅ Logged out succefully"});
+	return reply.status(204).send({ success: true, message: "✅ Logged out succefully"});
 })
 
 
@@ -397,7 +376,8 @@ fastify.post('/2fa/generate', async (request, reply) => {
 	
 	console.log("✅ route /2fa/generate atteinte");
 
-	try {
+	try 
+	{
 		const userIdHeader = request.headers['x-user-id'];
 		if (!userIdHeader)
 		{
@@ -422,12 +402,15 @@ fastify.post('/2fa/generate', async (request, reply) => {
 			data: result, // contient { qrCodeUrl, manualSecret } ou message pour l email
 			error: null
 		});
-	} catch (err: any) {
-		console.error("Error generating 2FA:", err);
-		return reply.status(500).send({
-			success: false,
+	} 
+	catch (err: any) 
+	{
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
 			data: null,
-			error: { message: err.message || "failed to generate 2FA" }
+			error: { message: err.message || "failed to generate 2FA"}
 		});
 	}
 });
@@ -443,7 +426,8 @@ reponse 2fa active
 
 fastify.post('/2fa/enable', async (request, reply) => {
 	
-	try {
+	try 
+	{
 		const userIdHeader = request.headers['x-user-id'];
 		if (!userIdHeader)
 			return reply.status(401).send({error: "Unauthorized"});
@@ -473,8 +457,16 @@ fastify.post('/2fa/enable', async (request, reply) => {
 			data: {message: "2FA enabled successfully" },
 			error: null
 		});
-	} catch (err: any) {
-		return reply.status(500).send({ success: false, error: { message: err.message}});
+	} 
+	catch (err: any) 
+	{
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "failed to generate 2FA"}
+		});
 	}
 
 });
@@ -486,7 +478,8 @@ update la BDD
 
 fastify.post('/2fa/disable', async (request, reply) => {
 	
-	try {
+	try 
+	{
 		const userIdHeader = request.headers['x-user-id'];
 		if (!userIdHeader)
 			return reply.status(401).send({error: "Unauthorized"});
@@ -502,8 +495,16 @@ fastify.post('/2fa/disable', async (request, reply) => {
 			data: { message: "2FA disabled successfully"},
 			error: null
 		});
-	} catch (err: any) {
-		return reply.status(500).send({ success: false, error: { message: err.message } });
+	} 
+	catch (err: any) 
+	{
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "failed to generate 2FA"}
+		});
 	}
 });
 
@@ -558,8 +559,16 @@ fastify.post('/2fa/verify', async (request, reply) => {
 			user_id: result.user_id	
 		});
 
-	} catch (err: any) {
-		return reply.status(500).send({ success: false, error: { message: err.message } });
+	} 
+	catch (err: any) 
+	{
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "failed to generate 2FA"}
+		});
 	}
 });
 
@@ -567,7 +576,8 @@ fastify.post('/2fa/verify', async (request, reply) => {
 
 // faustine
 /* -- INTERNE : Récupérer email pour le service User -- */
-fastify.get('/users/:id/email', async (request, reply) => {
+fastify.get('/users/:id/email', async (request, reply) => 
+{
     const { id } = request.params as { id: string };
     const userId = Number(id);
 

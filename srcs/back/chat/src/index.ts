@@ -1,10 +1,12 @@
 import Fastify from 'fastify';
 import FastifyIO from 'fastify-socket.io';
+import jwt from 'jsonwebtoken';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import { Socket, Server } from 'socket.io'; // <--- AJOUT DE 'Server' ICI
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
+import { UnauthorizedError } from './utils/error.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -26,10 +28,29 @@ fastify.register(FastifyIO, {
 });
 
 let db: Database;
+const JWT_SECRET = process.env.JWT_SECRET!;
+
+// Middleware de sécurité
+const authMiddleware = (socket: any, next: any) => {
+    const token = socket.handshake.auth.token?.replace('Bearer ', '');
+    if (!token)
+        return next(new Error("No token"));
+
+    try
+    {
+        socket.user = jwt.verify(token, JWT_SECRET);
+        next();
+    }
+    catch (e)
+    {
+        next(new UnauthorizedError("Invalid token"));
+    }
+}
 
 // 1. Définir la logique Socket (se lance quand Fastify est prêt)
 fastify.ready().then(() => {
-    // Note: On n'initialise plus la DB ici, car main() le fait avant.
+    // Application de sécurité
+    fastify.io.use(authMiddleware);
     
     // Toute la logique Socket se passe ICI
     fastify.io.on('connection', (socket: Socket) => {

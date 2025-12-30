@@ -73,7 +73,6 @@ export async function updateUserStats (
         UPDATE STATS SET 
             wins = wins + ?,
             losses = losses + ?,
-            total_games = total_games + 1,
             total_score = total_score + ?,
             current_win_streak = CASE
                 WHEN ? = 1 THEN current_win_streak +1

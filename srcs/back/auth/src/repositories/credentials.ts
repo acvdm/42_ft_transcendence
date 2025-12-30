@@ -1,5 +1,5 @@
 import { Database } from 'sqlite';
-import { verifyPassword } from '../utils/crypto';
+import { verifyPassword } from '../utils/crypto.js';
 
 //-------- TYPE
 export interface Credential {

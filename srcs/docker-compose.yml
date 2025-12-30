@@ -9,7 +9,8 @@ services:
         - gateway
         - front
       networks:
-        - transcendence
+        - frontend
+        - backend
 
     gateway:
       container_name: gateway
@@ -28,7 +29,7 @@ services:
       env_file: 
         - .env
       networks: 
-        - transcendence 
+        - backend 
 
     front:
       container_name: front
@@ -38,7 +39,7 @@ services:
       depends_on:
         - gateway
       networks: 
-        - transcendence
+        - frontend
       # a retirer seulement pour le dev
       volumes:
         - ./front/dist:/usr/share/nginx/html/dist
@@ -61,7 +62,10 @@ services:
       environment:
         - DATABASE_URL=/app/data/auth.sqlite
       networks: 
-        - transcendence
+        - backend
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
       volumes:
         # - auth_data:/app/data
         - ./back/datadev:/app/data
@@ -80,7 +84,7 @@ services:
       environment:
         - DATABASE_URL=/app/data/chat.sqlite
       networks: 
-        - transcendence
+        - backend
       volumes:
         # - chat_data:/app/data
         - ./back/datadev:/app/data
@@ -99,7 +103,7 @@ services:
       environment:
         - DATABASE_URL=/app/data/game.sqlite
       networks:
-        - transcendence
+        - backend
       volumes:
         # - game_data:/app/data
         - ./back/datadev:/app/data
@@ -118,7 +122,7 @@ services:
       environment:
         - DATABASE_URL=/app/data/user.sqlite
       networks: 
-        - transcendence
+        - backend
       volumes:
         # - user_data:/app/data
         # - user_avatars:/app/user/avatars
@@ -129,9 +133,13 @@ services:
         retries: 20
     
 networks:
-  transcendence:
-    name: transcendence
+  frontend:
+    name: transcendence_frontend
     driver: bridge
+  backend:
+    name: transcendence_backend
+    driver: bridge
+    # internal: true
 
 volumes:
   # user_avatars:

@@ -1,5 +1,6 @@
 import { Database } from 'sqlite';
 import { generateRandomAlias, generateRandomAvatar } from "../utils/guest.js"
+import { NotFoundError, ValidationError } from '../utils/error.js';
 
 export interface CreateUser {
     alias: string,
@@ -16,6 +17,10 @@ export interface User {
 }
 
 
+export class ConflictError extends Error {
+    statusCode = 409;
+}
+
 //-------- POST / CREATE
 export async function createUserInDB (
     db: Database,
@@ -24,7 +29,7 @@ export async function createUserInDB (
 
     const checkAlias = await isAliasUsed(db, data.alias)
     if (checkAlias)
-        throw new Error('Alias already taken, find another one');
+        throw new ConflictError('Alias already taken, find another one');
     
     const avatarDefault = data.avatar_url || '/assets/basic/default.png'; // je rajoute ca pour avoir une image par default
 
@@ -134,7 +139,7 @@ export async function updateStatus (
 {
     const user = await findUserByID(db, user_id);
     if (!user?.id)
-        throw new Error(`Error id: ${user_id} does not exist`);
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
     await db.run(`
         UPDATE USERS SET status = ? WHERE id = ?`,
@@ -152,11 +157,11 @@ export async function updateBio (
 {
     const user = await findUserByID(db, user_id);
     if (!user?.id)
-        throw new Error(`Error id: ${user_id} does not exist`);
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
     console.log(`bio length = ${bio.length}`);
     if (bio.length > 75)
-        throw new Error(`Error: bio too long. Max 75 characters`);
+        throw new ValidationError(`Error: bio too long. Max 75 characters`);
 
     // console.log("update bio dans users.ts");
     await db.run(`
@@ -173,7 +178,7 @@ export async function updateTheme (
 {
     const user = await findUserByID(db, userId);
     if (!user?.id)
-        throw new Error(`Error id: ${userId} does not exist`);
+        throw new NotFoundError(`Error id: ${userId} does not exist`);
 
     await db.run(`
         UPDATE USERS SET theme = ? WHERE id = ?`,
@@ -262,10 +267,10 @@ export async function updateAlias (
 {
     const user = await findUserByID(db, user_id);
     if (!user?.id)
-        throw new Error(`Error id: ${user_id} does not exist`);
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
     if (alias.length > 30)
-        throw new Error(`Error: alias too long. Max 30 characters`);
+        throw new ValidationError(`Error: alias too long. Max 30 characters`);
 
     const existingUser = await db.get(`
         SELECT id FROM USERS WHERE alias = ? AND id != ?`,
@@ -273,7 +278,7 @@ export async function updateAlias (
     );
 
     if (existingUser)
-        throw new Error('Alias already taken, be original.');
+        throw new ConflictError('Alias already taken, be original.');
 
     console.log("update username dans users.ts");
     await db.run(`
