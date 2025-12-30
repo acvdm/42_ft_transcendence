@@ -1,8 +1,8 @@
 "use strict";
-// Message à afficher dans la console du navigateur
-console.log("TypeScript est prêt et fonctionnel.");
-// Sélectionne la div app de l'index.html
-const appElement = document.getElementById('app');
-// Test l'interaction avec le DOM
-if (appElement)
-    appElement.innerHTML += '<h2 class="text-green-500 p-4">Test TypeScript: Injecté avec succès! </h2>';
+(() => {
+  // scripts/main.ts
+  console.log("TypeScript est pr\xEAt et fonctionnel.");
+  var appElement = document.getElementById("app");
+  if (appElement)
+    appElement.innerHTML += '<h2 class="text-green-500 p-4">Test TypeScript: Inject\xE9 avec succ\xE8s! </h2>';
+})();
