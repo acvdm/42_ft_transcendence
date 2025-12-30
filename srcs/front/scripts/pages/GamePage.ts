@@ -336,6 +336,7 @@ export function initGamePage(mode: string): void {
 // =========================================================
 // =========       LOGIQUE LOCALE 1v1 ======================
 // =========================================================
+
     function initLocalMode() {
         const modal = document.getElementById('game-setup-modal');
         if (modal) modal.classList.remove('hidden');
