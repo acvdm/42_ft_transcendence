@@ -35,9 +35,9 @@ export async function saveLocalTournament (
         throw new Error("Failed to save tournament");
 
     // 2. on boucle sur la liste des 3 match dans la table MATCHES
-    // for of --> permet d'iterer sur chaque element de la liste data.match_list
+    // for of --> permet d'iterer sur chaque element de la liste data.matchList
     // la valeur match prend la valeur du premier objet de la liste
-    for (const match of data.match_list)
+    for (const match of data.matchList)
     {
         // creation du match dans la table MATCHES
         const matchRes = await db.run(`
@@ -56,16 +56,16 @@ export async function saveLocalTournament (
             VALUES (?, ?, ?, ?, ?)`,
             [
                 matchId, 
-                match.player1.user_id || null, 
-                match.player1.user_id ? null : match.player1.alias,
+                match.player1.userId || null, 
+                match.player1.userId ? null : match.player1.alias,
                 match.player1.score,
                 p1IsWinner ? 1 : 0,
             ]
         );
 
         // si player 1 est un utilisateur on met a jour la db pour ses stats
-        if (match.player1.user_id)
-            await updateUserStats(db, match.player1.user_id, match.player1.score, p1IsWinner ? 1 : 0);
+        if (match.player1.userId)
+            await updateUserStats(db, match.player1.userId, match.player1.score, p1IsWinner ? 1 : 0);
 
         // Gestion joueur 2
         const p2IsWinner = match.winner === match.player2.alias;
@@ -75,16 +75,16 @@ export async function saveLocalTournament (
             VALUES (?, ?, ?, ?, ?)`,
             [
                 matchId, 
-                match.player2.user_id || null, 
-                match.player2.user_id ? null : match.player2.alias,
+                match.player2.userId || null, 
+                match.player2.userId ? null : match.player2.alias,
                 match.player2.score,
                 p2IsWinner ? 1 : 0,
             ]
         );
 
         // si player 1 est un utilisateur on met a jour la db pour ses stats
-        if (match.player2.user_id)
-            await updateUserStats(db, match.player2.user_id, match.player2.score, p2IsWinner ? 1 : 0);
+        if (match.player2.userId)
+            await updateUserStats(db, match.player2.userId, match.player2.score, p2IsWinner ? 1 : 0);
 
     }
 
