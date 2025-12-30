@@ -28,7 +28,7 @@ interface Game {
 
 interface Input {
     addEventListeners(): void;
-    getInput(): { up: boolean; down: boolean };
+    getInput(): { player1: { up: boolean; down: boolean }; player2: { up: boolean; down: boolean } };
 }
 
 interface UI {

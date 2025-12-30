@@ -25,8 +25,8 @@ class Paddle {
         ctx.fillRect(this.x, this.y, this.width, this.height); // Draw paddle
     }
 
-    reset(y: number = this.y) { // A verifier si le paddle est bien remis a sa position initiale sinon creer default x et y pour le reassigner
-        this.y = y;
+    reset() {
+        this.y = 100; // Reset to initial position
     }
 }
 

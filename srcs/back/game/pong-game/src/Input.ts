@@ -17,8 +17,14 @@ class Input {
 
     getInput() {
         return {
-            up: this.keys['ArrowUp'] || this.keys['w'],
-            down: this.keys['ArrowDown'] || this.keys['s'],
+            player1: {
+                up: this.keys['w'],
+                down: this.keys['s'],
+            },
+            player2: {
+                up: this.keys['ArrowUp'],
+                down: this.keys['ArrowDown'],
+            }
         };
     }
 }

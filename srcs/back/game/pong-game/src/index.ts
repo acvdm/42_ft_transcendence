@@ -14,19 +14,10 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // Create game instance
-const game = new Game(canvas, ctx);
-const ui = new UI(ctx, canvas);
 const input = new Input();
-
-// Game loop
-function gameLoop() {
-    game.update(canvas);
-    ui.render(game.score);
-    game.render();
-    requestAnimationFrame(gameLoop);
-}
+const game = new Game(canvas, ctx, input);
+const ui = new UI(ctx, canvas);
 
 // Start the game
 game.start();
 input.addEventListeners();
-gameLoop();
