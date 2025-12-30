@@ -80,16 +80,6 @@ export function startTournament(tournamentName: string, aliases: string[]) {
     // 3 - appeler fonction qui va regarder l'etape actuelle et afficher les bons noms a l'ecran
     // affichage dynamique -> regarde currentStep et decide qui doit jouer
     updateGameUI();
-
-    // 4 - enregistrement dun match
-    // identifier le match
-    // le round
-    // le vainqueur
-    // les info des joueur A et B
-    // changer de page pour nouvelle etape
-
-   
-
 }
 
 export function updateGameUI() {
@@ -136,6 +126,12 @@ export function updateGameUI() {
 export function recordMatchResult(winnerAlias: string, player1Score: number, player2Score: number) {
 
     // pour la mise a jour de l'etat du tournois
+    // identifier le match
+    // le round
+    // le vainqueur
+    // les info des joueur A et B (ou p1 et p2)
+    // changer de page pour nouvelle etape
+
     let p1!: TournamentPlayer;
     let p2!: TournamentPlayer;
 
