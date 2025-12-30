@@ -1,6 +1,7 @@
+import { fetchWithAuth } from "./api";
 
 // Interface pour la gestion interne du tournois
-interface TournamentPlayer 
+export interface TournamentPlayer 
 {
     user_id: number | null; // null si c'est un invite qui joue
     alias: string;
@@ -8,7 +9,7 @@ interface TournamentPlayer
 }
 
 // Interface pour un match termine
-interface TournamentMatch 
+export interface TournamentMatch 
 {
     round: 'semi_final_1' | 'semi_final_2' | 'final';
     winner: string;
@@ -17,7 +18,7 @@ interface TournamentMatch
 }
 
 // Etat global du tournoi en cours
-interface TournamentData 
+export interface TournamentData 
 {
     name: string;
     players: TournamentPlayer[];
@@ -26,7 +27,7 @@ interface TournamentData
 }
 
 // Variable globale pour garder en memoire les infos des match
-let tournamentState: TournamentData = 
+export let tournamentState: TournamentData = 
 {
     name: "",
     players: [],
@@ -76,52 +77,8 @@ export function startTournament(tournamentName: string, aliases: string[]) {
     tournamentState.players = [player1, player2, player3, player4];
     tournamentState.matches = [];
     tournamentState.currentStep = 'semi_final_1';
-
-    // 3 - appeler fonction qui va regarder l'etape actuelle et afficher les bons noms a l'ecran
-    // affichage dynamique -> regarde currentStep et decide qui doit jouer
-    updateGameUI();
 }
 
-export function updateGameUI() {
-// pour la mise a jour des alias a afficher dans le html
-
-    let p1: TournamentPlayer;
-    let p2: TournamentPlayer;
-
-    switch (tournamentState.currentStep)
-    {
-        case 'semi_final_1':
-            p1 = tournamentState.players[0];
-            p2 = tournamentState.players[1];
-            break;
-
-        case 'semi_final_2':
-            p1 = tournamentState.players[2];
-            p2 = tournamentState.players[3];
-            break;
-
-        case 'final':
-            // on recupere les alias
-            const winnerMatch1Alias = tournamentState.matches[0].winner;
-            const winnerMatch2Alias = tournamentState.matches[1].winner;
-            // puis on recupere les objets joueurs 
-            // (find parcourt la liste et p represente le joueur actuel que la boucle est en train d'examiner
-            p1 = tournamentState.players.find(p => p.alias === winnerMatch1Alias)!;
-            p2 = tournamentState.players.find(p => p.alias === winnerMatch2Alias)!;
-            break;
-    
-        case 'finished':
-            console.log("Tournoi termine ! Afficher le resume")
-            return;
-    
-        default:
-            return;    
-    }
-
-    // CONNEXION AVEC LE HTML
-    // const leftSpan = document.getElementById...
-    // if (leftSpan) leftSpan.innerText = p1.alias;..........
-}
 
 export function recordMatchResult(winnerAlias: string, player1Score: number, player2Score: number) {
 
@@ -199,11 +156,6 @@ export function recordMatchResult(winnerAlias: string, player1Score: number, pla
 
     if (tournamentState.currentStep === 'finished')
         sendToBackend(tournamentState); // -> fonction qui transforme tournamentState en JSON pour le back
-
-    // mise a jour de la page en fonction de l'etat du match
-    updateGameUI();
-
-
 }
 
 export async function sendToBackend(state: TournamentData) {
@@ -217,20 +169,16 @@ export async function sendToBackend(state: TournamentData) {
     }
 
     const payload = {
-        tournament_name: state.name,
-        match_list: state.matches,
+        name: state.name,
+        participants: state.players.map(p => p.alias), // on envoit juste les noms
         winner: state.matches[2].winner
     }
 
     console.log(`user1 alias: "${state.players[0].alias}" , id:  "${state.players[0].user_id}"`)
 
     try {
-        const response = await fetch('/api/game/tournament', {
+        const response = await fetchWithAuth('/api/game/tournament', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify(payload)
         });
 

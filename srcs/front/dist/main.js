@@ -1832,7 +1832,7 @@
                 return;
               if ("closed" === this.readyState)
                 return;
-              cleanup();
+              cleanup2();
               this.setTransport(transport);
               transport.send([{ type: "upgrade" }]);
               this.emitReserved("upgrade", transport);
@@ -1851,7 +1851,7 @@
         if (failed)
           return;
         failed = true;
-        cleanup();
+        cleanup2();
         transport.close();
         transport = null;
       }
@@ -1872,7 +1872,7 @@
           freezeTransport();
         }
       }
-      const cleanup = () => {
+      const cleanup2 = () => {
         transport.removeListener("open", onTransportOpen);
         transport.removeListener("error", onerror);
         transport.removeListener("close", onTransportClose);
@@ -7821,9 +7821,134 @@
   // scripts/pages/TournamentPage.html
   var TournamentPage_default = '<div class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col items-center justify-center p-4">\n\n        <div id="tournament-setup" class="window w-[600px] shadow-xl flex flex-col">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament Options/setup</div>\n            </div>\n            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                <h2 class="text-xl font-bold text-center mb-4">Create your tournament</h2>\n                \n                <div class="flex flex-col gap-1">\n                    <label class="font-bold text-sm">Tournament name:</label>\n                    <input type="text" id="tournament-name-input" class="border-2 border-gray-400 px-2 py-1" placeholder="Epic Battle...">\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-3 rounded">\n                    <legend class="text-sm font-semibold px-1">Participants</legend>\n                    <div class="grid grid-cols-2 gap-4">\n                        <div>\n                            <label class="text-xs font-bold">Player 1 (You):</label>\n                            <input type="text" id="player1-input" class="w-full border p-1 bg-gray-100" readonly>\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 2:</label>\n                            <input type="text" id="player2-input" class="w-full border p-1" placeholder="Enter alias...">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 3:</label>\n                            <input type="text" id="player3-input" class="w-full border p-1" placeholder="Enter alias...">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 4:</label>\n                            <input type="text" id="player4-input" class="w-full border p-1" placeholder="Enter alias...">\n                        </div>\n                    </div>\n                </fieldset>\n\n                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                <button id="start-tournament-btn" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold self-center">\n                    START TOURNAMENT\n                </button>\n            </div>\n        </div>\n\n        <div id="tournament-bracket" class="window w-[800px] hidden shadow-2xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament Bracket</div>\n            </div>\n            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                <h2 class="text-2xl font-black text-blue-900" id="bracket-title">NEXT MATCH</h2>\n                \n                <div class="flex items-center gap-8">\n                    <div class="text-3xl font-bold text-gray-700" id="next-p1">Player A</div>\n                    <div class="text-xl font-black text-red-500">VS</div>\n                    <div class="text-3xl font-bold text-gray-700" id="next-p2">Player B</div>\n                </div>\n\n                <div class="w-full border-t border-gray-300 my-2"></div>\n                \n                <p class="text-gray-600 italic" id="bracket-info">The winner will go to the final!</p>\n\n                <button id="launch-match-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 text-lg">\n                    PLAY MATCH\n                </button>\n            </div>\n        </div>\n\n        <div id="tournament-game-area" class="window w-[1500px] hidden flex-col h-[80vh]">\n            <div class="title-bar">\n                <div class="title-bar-text">AREA</div>\n            </div>\n            <div class="window-body flex flex-col h-full bg-white relative">\n                <div class="flex flex-row h-[60px] border-b border-gray-900 items-center justify-between px-24 bg-gray-50 shrink-0"> \n                    <span id="game-p1-name" class="text-2xl font-bold text-gray-800">P1</span>\n                    <span class="text-3xl font-bold text-gray-900">VS</span>\n                    <span id="game-p2-name" class="text-2xl font-bold text-gray-800">P2</span>\n                </div>\n                <div id="game-canvas-container" class="flex-1 relative bg-black w-full h-full">\n                    </div>\n            </div>\n        </div>\n\n        <div id="tournament-summary" class="window w-[600px] hidden scale-110 shadow-2xl border-4 border-yellow-500">\n            <div class="title-bar bg-yellow-500">\n                <div class="title-bar-text text-black font-bold">VICTORY</div>\n            </div>\n            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                <h1 class="text-4xl font-black text-yellow-600 uppercase">WINNER</h1>\n                <div class="text-6xl font-bold text-gray-800" id="winner-name">NAME</div>\n                <p class="text-gray-600">Congratulations on winning <span id="tour-name-display" class="font-bold"></span>!</p>\n                \n                <button id="quit-tournament-btn" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">\n                    Return to Menu\n                </button>\n            </div>\n        </div>\n\n    </div>\n</div>';
 
+  // scripts/pages/Tournament.ts
+  var tournamentState = {
+    name: "",
+    players: [],
+    matches: [],
+    currentStep: "registration"
+  };
+  function startTournament(tournamentName, aliases) {
+    console.log("Start tournament: ", tournamentName);
+    const userIdStr = localStorage.getItem("userId");
+    const userIdNb = userIdStr ? Number(userIdStr) : null;
+    const userAlias = localStorage.getItem("username") || aliases[0];
+    console.log(`\u{1F50D} DEBUG LOCALSTORAGE -> userId: "${userIdStr}", username: "${userAlias}"`);
+    console.log(`\u{1F464} DEBUG PLAYER 1 -> ID assign\xE9: ${userIdNb} (Type: ${typeof userIdNb})`);
+    let player1 = {
+      user_id: userIdNb,
+      alias: userAlias,
+      score: 0
+    };
+    let player2 = {
+      user_id: null,
+      alias: aliases[1],
+      score: 0
+    };
+    let player3 = {
+      user_id: null,
+      alias: aliases[2],
+      score: 0
+    };
+    let player4 = {
+      user_id: null,
+      alias: aliases[3],
+      score: 0
+    };
+    tournamentState.name = tournamentName;
+    tournamentState.players = [player1, player2, player3, player4];
+    tournamentState.matches = [];
+    tournamentState.currentStep = "semi_final_1";
+  }
+  function recordMatchResult(winnerAlias, player1Score, player2Score) {
+    let p1;
+    let p2;
+    let roundName;
+    if (tournamentState.currentStep === "semi_final_1") {
+      p1 = tournamentState.players[0];
+      p2 = tournamentState.players[1];
+      roundName = "semi_final_1";
+    } else if (tournamentState.currentStep === "semi_final_2") {
+      p1 = tournamentState.players[2];
+      p2 = tournamentState.players[3];
+      roundName = "semi_final_2";
+    } else if (tournamentState.currentStep === "final") {
+      const winnerMatch1Alias = tournamentState.matches[0].winner;
+      const winnerMatch2Alias = tournamentState.matches[1].winner;
+      const foundP1 = tournamentState.players.find((p) => p.alias === winnerMatch1Alias);
+      const foundP2 = tournamentState.players.find((p) => p.alias === winnerMatch2Alias);
+      if (!foundP1 || !foundP2) {
+        console.error(`Error: impossible to find finalists`);
+        console.log("Joueurs disponibles :", tournamentState.players);
+        return;
+      }
+      p1 = foundP1;
+      p2 = foundP2;
+      roundName = "final";
+    } else {
+      console.error("Critical error: Attempted to save outside of match. Current step: " + tournamentState.currentStep);
+      return;
+    }
+    p1.score = player1Score;
+    p2.score = player2Score;
+    let finishedMatch = {
+      round: roundName,
+      winner: winnerAlias,
+      player1: { ...p1 },
+      player2: { ...p2 }
+    };
+    tournamentState.matches.push(finishedMatch);
+    if (tournamentState.currentStep === "semi_final_1")
+      tournamentState.currentStep = "semi_final_2";
+    else if (tournamentState.currentStep === "semi_final_2")
+      tournamentState.currentStep = "final";
+    else if (tournamentState.currentStep === "final")
+      tournamentState.currentStep = "finished";
+    if (tournamentState.currentStep === "finished")
+      sendToBackend(tournamentState);
+  }
+  async function sendToBackend(state) {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      console.error("Error: No users are logged in, unable to save the tournament.");
+      return;
+    }
+    const payload = {
+      name: state.name,
+      participants: state.players.map((p) => p.alias),
+      // on envoit juste les noms
+      winner: state.matches[2].winner
+    };
+    console.log(`user1 alias: "${state.players[0].alias}" , id:  "${state.players[0].user_id}"`);
+    try {
+      const response = await fetchWithAuth("/api/game/tournament", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (response.ok) {
+        console.log("Tournament saved !");
+      } else {
+        console.error("Server error", result);
+      }
+    } catch (error) {
+      console.error("Error with the tournament saving");
+    }
+  }
+
   // scripts/pages/GamePage.ts
   var gameChat = null;
-  var tournamenetState = null;
+  var currentGame = null;
+  function cleanup() {
+    if (gameChat) {
+      gameChat.destroy();
+      gameChat = null;
+    }
+    if (currentGame && currentGame.stop) {
+      currentGame.stop();
+    }
+    currentGame = null;
+  }
   function render6() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
@@ -7853,7 +7978,7 @@
     const gameField = document.getElementById("left");
     const bgResetButton = document.getElementById("bg-reset-button");
     if (!modal || !startButton || !nameInput) {
-      return;
+      if (mode !== "tournament") return;
     }
     const userId = localStorage.getItem("userId");
     if (userId && player1Display) {
@@ -7878,9 +8003,11 @@
       initLocalMode();
     }
     if (mode === "local") {
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    } else {
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      }
+    } else if (modal) {
       modal.classList.add("hidden");
       modal.classList.remove("flex");
     }
@@ -7891,7 +8018,7 @@
       const player2Input = document.getElementById("player2-input");
       const player3Input = document.getElementById("player3-input");
       const player4Input = document.getElementById("player4-input");
-      const startButton2 = document.getElementById("start-tournament-button");
+      const startTournamentButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
       const userId2 = localStorage.getItem("userId");
       const username = localStorage.getItem("username");
@@ -7907,7 +8034,7 @@
         player1Input.classList.remove("bg-gray-200", "cursor-not-allowed");
       }
       console.log("Username du user: ", username);
-      startButton2?.addEventListener("click", () => {
+      startTournamentButton?.addEventListener("click", () => {
         const tName = nameInput2.value.trim();
         const players = [
           player1Input.value.trim(),
@@ -7930,29 +8057,13 @@
           }
           return;
         }
-        startTournamentLogic(tName, players);
+        startTournament(tName, players);
+        setupView?.classList.add("hidden");
+        if (gameChat) {
+          gameChat.sendSystemNotification(`Tournament "${tName}" started! Participants: ${players.join(", ")}`);
+        }
+        showNextMatch();
       });
-    }
-    function startTournamentLogic(name, players) {
-      document.getElementById("tournament-setup")?.classList.add("hidden");
-      tournamenetState = {
-        name,
-        allPlayers: players,
-        matches: [
-          { p1: players[0], p2: players[1], winner: null },
-          // 1er duo
-          { p1: players[2], p2: players[3], winner: null },
-          // 2eme duo
-          { p1: null, p2: null, winner: null }
-          // finale
-        ],
-        currentMatchIdx: 0
-        // on defini l'id du match pour le stocker dans la db
-      };
-      if (gameChat) {
-        gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${players.join(", ")}`);
-      }
-      showNextMatch();
     }
     function showNextMatch() {
       const bracketView = document.getElementById("tournament-bracket");
@@ -7961,101 +8072,133 @@
       const player2Text = document.getElementById("next-p2");
       const infoText = document.getElementById("bracket-info");
       const playButton = document.getElementById("launch-match-btn");
-      if (!bracketView || !tournamenetState) return;
+      if (!bracketView) return;
       document.getElementById("tournament-game-area")?.classList.add("hidden");
       bracketView.classList.remove("hidden");
-      const matchIdx = tournamenetState.currentMatchIdx;
-      const match = tournamenetState.matches[matchIdx];
-      if (matchIdx === 0) {
+      const currentStep = tournamentState.currentStep;
+      let p1Name = "?";
+      let p2Name = "?";
+      if (currentStep === "semi_final_1") {
         title.innerText = "SEMI-FINAL 1";
-        infoText.innerText = `Next match: ${tournamenetState.matches[1].p1} vs ${tournamenetState.matches[1].p2}`;
-        if (gameChat) gameChat.sendSystemNotification(`Next up: ${match.p1} vs ${match.p2} ! Later: ${tournamenetState.matches[1].p1} vs ${tournamenetState.matches[1].p2}`);
-      } else if (matchIdx === 1) {
+        p1Name = tournamentState.players[0].alias;
+        p2Name = tournamentState.players[1].alias;
+        infoText.innerText = "The winner goes to the finale!";
+        if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Name} vs ${p2Name}`);
+      } else if (currentStep === "semi_final_2") {
         title.innerText = "SEMI-FINAL 2";
-        infoText.innerText = "Winner plays in the finale!";
-        if (gameChat) gameChat.sendSystemNotification(`Next up: ${match.p1} vs ${match.p2} ! The winner goes to the Final.`);
-      } else {
-        title.innerText = "\u{1F3C6} FINALE \u{1F3C6}";
-        infoText.innerText = "blablabla";
-        if (gameChat) gameChat.sendSystemNotification(`FINAL: ${match.p1} vs ${match.p2} !`);
+        p1Name = tournamentState.players[2].alias;
+        p2Name = tournamentState.players[3].alias;
+        infoText.innerText = "The winner goes to the finale!";
+        if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Name} vs ${p2Name}`);
+      } else if (currentStep === "final") {
+        title.innerText = "FINALE ";
+        p1Name = tournamentState.matches[0].winner;
+        p2Name = tournamentState.matches[1].winner;
+        infoText.innerText = "This is the finale countdown TI DI DI DI TI LI LI TI TI !";
+        if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Name} vs ${p2Name}`);
+      } else if (currentStep === "finished") {
+        showSummary(tournamentState.matches[2].winner);
+        return;
       }
-      player1Text.innerText = match.p1;
-      player2Text.innerText = match.p2;
+      if (player1Text) player1Text.innerText = p1Name;
+      if (player2Text) player2Text.innerText = p2Name;
       const newButton = playButton.cloneNode(true);
       playButton.parentNode.replaceChild(newButton, playButton);
       newButton.addEventListener("click", () => {
         bracketView.classList.add("hidden");
-        launchMatch(match.p1, match.p2);
+        launchMatch(p1Name, p2Name);
       });
     }
     function launchMatch(p1, p2) {
       const gameArea = document.getElementById("tournament-game-area");
       const p1Name = document.getElementById("game-p1-name");
       const p2Name = document.getElementById("game-p2-name");
+      const canvasContainer = document.getElementById("game-canvas-container");
       if (gameArea) {
         gameArea.classList.remove("hidden");
         if (p1Name) p1Name.innerText = p1;
         if (p2Name) p2Name.innerText = p2;
       }
       console.log(`Lancement dy jeu: ${p1} vs ${p2}`);
+      if (canvasContainer) {
+        canvasContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-white">
+                    <h2 class="text-2xl mb-4">MATCH IN PROGRESS...</h2>
+                    <p class="mb-4 text-gray-400">Physics engine not loaded yet.</p>
+                    <div class="flex gap-4">
+                        <button id="sim-win-p1" class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500 font-bold">
+                            Win ${p1}
+                        </button>
+                        <button id="sim-win-p2" class="px-4 py-2 bg-red-600 rounded hover:bg-red-500 font-bold">
+                            Win ${p2}
+                        </button>
+                    </div>
+                </div>
+            `;
+        document.getElementById("sim-win-p1")?.addEventListener("click", () => {
+          endMatch(p1, 11, 5);
+        });
+        document.getElementById("sim-win-p2")?.addEventListener("click", () => {
+          endMatch(p2, 8, 11);
+        });
+      }
     }
-    function endMatch(winner) {
-      if (!tournamenetState) return;
-      const idx = tournamenetState.currentMatchIdx;
-      tournamenetState.matches[idx].winner = winner;
-      if (gameChat) gameChat.sendSystemNotification(`${winner} wins the match!`);
-      if (idx === 0) {
-        tournamenetState.matches[2].p1 = winner;
-        tournamenetState.currentMatchIdx++;
-        showNextMatch();
-      } else if (idx === 1) {
-        tournamenetState.matches[2].p2 = winner;
-        tournamenetState.currentMatchIdx++;
-        showNextMatch();
-      } else {
+    function endMatch(winner, score1, score2) {
+      if (currentGame && currentGame.stop) currentGame.stop();
+      currentGame = null;
+      recordMatchResult(winner, score1, score2);
+      if (gameChat) {
+        gameChat.sendSystemNotification(`${winner} wins the match!`);
+      }
+      if (tournamentState.currentStep === "finished") {
         showSummary(winner);
+      } else {
+        showNextMatch();
       }
     }
     function showSummary(champion) {
       document.getElementById("tournament-game-area")?.classList.add("hidden");
+      document.getElementById("tournament-bracket")?.classList.add("hidden");
       const summaryView = document.getElementById("tournament-summary");
       if (summaryView) {
         summaryView.classList.remove("hidden");
         const winnerDisplay = document.getElementById("winner-name");
         const tourNameDisplay = document.getElementById("tour-name-display");
         if (winnerDisplay) winnerDisplay.innerText = champion;
-        if (tourNameDisplay) tourNameDisplay.innerText = tournamenetState.name;
-        const userId2 = localStorage.getItem("userId");
-        if (userId2) {
-          saveTournamentToApi(champion);
-        }
+        if (tourNameDisplay) tourNameDisplay.innerText = tournamentState.name;
         document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
+          cleanup();
           window.history.back();
         });
       }
     }
-    async function saveTournamentToApi(winner) {
-      try {
-        await fetchWithAuth("api/game/tournament", {
-          method: "POST",
-          body: JSON.stringify({
-            name: tournamenetState.name,
-            winner,
-            participants: tournamenetState.allPlayers
-          })
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    }
     function initLocalMode() {
-      const modal2 = document.getElementById("game-setup-modal");
-      if (modal2) modal2.classList.remove("hidden");
-      const startButton2 = document.getElementById("start-game-button");
-      const nameInput2 = document.getElementById("opponent-name");
-      if (startButton2) {
-        startButton2.addEventListener("click", () => {
-          modal2?.classList.add("hidden");
+      const modalLocal = document.getElementById("game-setup-modal");
+      const startButtonLocal = document.getElementById("start-game-button");
+      const nameInputLocal = document.getElementById("opponent-name");
+      if (modalLocal) modalLocal.classList.remove("hidden");
+      if (startButtonLocal) {
+        startButtonLocal.addEventListener("click", () => {
+          const opponentName = nameInputLocal.value.trim();
+          if (opponentName === "") {
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            nameInputLocal.classList.add("border-red-500");
+            return;
+          }
+          if (gameChat) {
+            gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+          }
+          const selectedBall = ballValueInput ? ballValueInput.value : "classic";
+          const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
+          if (player2Display) {
+            player2Display.innerText = opponentName;
+          }
+          if (gameField) {
+            gameField.style.backgroundColor = selectedBg;
+          }
+          modalLocal?.classList.add("hidden");
+          modalLocal?.classList.remove("flex");
+          console.log("Lancement du jeu Local 1v1 avec ", selectedBall, selectedBg);
         });
       }
     }
@@ -8139,27 +8282,6 @@
         }
       });
     }
-    startButton.addEventListener("click", () => {
-      const opponentName = nameInput.value.trim();
-      if (opponentName === "") {
-        if (errorMsg) errorMsg.classList.remove("hidden");
-        nameInput.classList.add("border-red-500");
-        return;
-      }
-      if (gameChat) {
-        gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
-      }
-      const selectedBall = ballValueInput ? ballValueInput.value : "classic";
-      const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
-      if (player2Display) {
-        player2Display.innerText = opponentName;
-      }
-      if (gameField) {
-        gameField.style.backgroundColor = selectedBg;
-      }
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    });
     nameInput.addEventListener("input", () => {
       if (errorMsg) errorMsg.classList.add("hidden");
       nameInput.classList.remove("border-red-500");
