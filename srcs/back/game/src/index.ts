@@ -88,7 +88,7 @@ Sinon tout se passe dans la memoire du navigateur
 */
 
 // changer pour que ce soi restfull /game/tournament
-fastify.post('/game/tournament', async (request, reply) => 
+fastify.post('/tournament', async (request, reply) => 
 {
 	try
 	{

@@ -8,6 +8,7 @@ import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
 import { render as GamePage, initGamePage } from "./pages/GamePage";
+import './pages/Tournament'; 
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
