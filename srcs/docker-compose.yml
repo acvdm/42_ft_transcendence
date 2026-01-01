@@ -33,7 +33,9 @@ services:
 
     front:
       container_name: front
-      build: ./front
+      build:
+        context: . #j'ajoute ca
+        dockerfile: front/Dockerfile #j'ajoute ca
       expose:
         - "80"
       depends_on:
@@ -45,6 +47,7 @@ services:
         - ./front/dist:/usr/share/nginx/html/dist
         - ./front/public/index.html:/usr/share/nginx/html/index.html
         - ./front/public/assets:/usr/share/nginx/html/assets
+        - ./shared:/usr/share/nginx/html/shared #j'ajoute ca 
         
         # AJOUTEZ CES LIGNES POUR LE DEVELOPPEMENT :
         - ./front/scripts:/usr/share/nginx/html/scripts

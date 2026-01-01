@@ -5,6 +5,9 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 import { startTournament, recordMatchResult, tournamentState } from "./Tournament";
+import Game from "../../../shared/Game";
+import Input from "../../../shared/Input";
+
 
 let gameChat: Chat | null = null;
 let currentGame: any = null; // on stocke l'état du tournoi
@@ -332,49 +335,54 @@ export function initGamePage(mode: string): void {
 // =========================================================
 // =========       LOGIQUE LOCALE 1v1 ======================
 // =========================================================
-
     function initLocalMode() {
-        const modalLocal = document.getElementById('game-setup-modal');
-        const startButtonLocal = document.getElementById('start-game-button');
-        const nameInputLocal = document.getElementById('opponent-name') as HTMLInputElement;
-        
-        if (modalLocal) modalLocal.classList.remove('hidden');
-        
-        if (startButtonLocal) {
-            startButtonLocal.addEventListener('click', () => {
-                const opponentName = nameInputLocal.value.trim(); // l'opposent a besoin du name input
+        // On utilise 'startButton' qui est déjà déclaré en haut de initGamePage
+        if (startButton) {
+            startButton.addEventListener('click', () => {
+                const opponentName = nameInput.value.trim();
 
-                // est-ce qu'on peut utliser un nom qui est egalement un usrename deja pris?
                 if (opponentName === "") {
                     if (errorMsg) errorMsg.classList.remove('hidden');
-                    nameInputLocal.classList.add('border-red-500');
+                    nameInput.classList.add('border-red-500');
                     return;
                 }
 
-                // envoi de la notifciation
-                if (gameChat) {
-                    gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+                // On récupère le container vide dans LocalGame.html
+                const gameContainer = document.querySelector('#left .flex-1') as HTMLElement;
+                if (gameContainer) {
+                    gameContainer.innerHTML = ''; // On nettoie
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800; 
+                    canvas.height = 600;
+                    canvas.style.width = "100%";
+                    canvas.style.height = "100%";
+                    gameContainer.appendChild(canvas);
+
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        // On instancie TON code (Input, Game)
+                        const input = new Input(); 
+                        const game = new Game(canvas, ctx, input);
+                        
+                        // On applique ton fond choisi
+                        canvas.style.backgroundColor = bgValueInput.value;
+
+                        game.start();
+                        currentGame = game; // Pour le nettoyage (cleanup)
+
+                        if (gameChat) {
+                            gameChat.sendSystemNotification(`Game started: ${player1Display.innerText} vs ${opponentName}`);
+                        }
+                    }
                 }
 
-                // valeur par default 
-                const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
-                const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
-                
-                // on met a jour le nom du second joueur
                 if (player2Display) {
                     player2Display.innerText = opponentName;
                 }
-
-                if (gameField) {
-                    gameField.style.backgroundColor = selectedBg;
-                }
-
-                // on ferme la modale 
-                modalLocal?.classList.add('hidden');
-                modalLocal?.classList.remove('flex');
-
-                console.log("Lancement du jeu Local 1v1 avec ", selectedBall, selectedBg);
-                // ici on ajoute la gestion de lancement de jeu
+                
+                modal?.classList.add('hidden');
+                modal?.classList.remove('flex');
             });
         }
     }

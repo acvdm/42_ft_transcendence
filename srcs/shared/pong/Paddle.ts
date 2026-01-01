@@ -1,4 +1,4 @@
-class Paddle {
+export class Paddle {
     x: number;
     y: number;
     width: number;

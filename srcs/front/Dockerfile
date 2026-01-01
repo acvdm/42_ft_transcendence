@@ -7,11 +7,15 @@ FROM node:20-alpine AS build
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/front
 
-#-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
-COPY ./package*.json ./
+#-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON je rajoute front
+COPY front/package*.json ./front/
 
-#-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
-RUN npm ci
+#-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED) je rajoute cdfront
+RUN cd front && npm ci
+
+# ON COPIE TOUT (front et shared) j'ajoute ici 
+COPY shared ./shared
+COPY front ./front
 
 #-----------------------COPY SOURCE CODE
 COPY . .

@@ -28,6 +28,10 @@ class Game {
         this.gameLoop();
     }
 
+    stop() {
+        this.isRunning = false;
+    }
+    
     gameLoop() {
         if (this.isRunning) {
             this.update(this.canvas);

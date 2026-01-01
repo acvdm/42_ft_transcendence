@@ -1,4 +1,4 @@
-class Ball {
+export class Ball {
     x :number;
     y :number;
     radius :number;
