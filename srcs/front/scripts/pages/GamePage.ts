@@ -5,12 +5,11 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 
-// Nouveaux imports pour faire marcher le jeu
 import Game from "../game/Game";
 import Input from "../game/Input";
 
 // =========================================================
-// ===  INTERFACES DU TOURNOI (Ajoutées pour que ça marche) ===
+// ===  INTERFACES DU TOURNOI - debuit tournament.ts.    ===
 // =========================================================
 
 // Interface pour la gestion interne du tournois
@@ -97,7 +96,7 @@ export function initGamePage(mode: string): void {
 
     const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
 
-    // Cette condition ne doit pas bloquer si on est en mode tournoi (car modal peut être null en mode tournoi)
+    // ccondition ne doit pas bloquer si on est en mode tournoi (car modal peut être null en mode tournoi)
     if (mode === 'local' && (!modal || !startButton || !nameInput)) {
         return;
     }
@@ -159,7 +158,7 @@ export function initGamePage(mode: string): void {
         const player2Input = document.getElementById('player2-input') as HTMLInputElement;
         const player3Input = document.getElementById('player3-input') as HTMLInputElement;
         const player4Input = document.getElementById('player4-input') as HTMLInputElement;
-        // Correspondance avec l'ID dans ton HTML : start-tournament-btn
+
         const startButton = document.getElementById('start-tournament-btn'); 
         const errorDiv = document.getElementById('setup-error');
 
@@ -218,11 +217,11 @@ export function initGamePage(mode: string): void {
         // on retire la modale de slection des infos de jeu
         document.getElementById('tournament-setup')?.classList.add('hidden');
 
-        // Récupération ID user connecté pour le lier au joueur 1 (pour le backend)
+        // recuperation de l'id du user connecté
         const userIdStr = localStorage.getItem('userId');
         const userIdNb = userIdStr ? Number(userIdStr) : null;
 
-        // Création des objets Joueurs avec IDs
+        // creation des joueurs avec des ids
         const playersObjects: TournamentPlayer[] = playersAliases.map((alias, index) => ({
             alias: alias,
             user_id: (index === 0) ? userIdNb : null,
@@ -291,8 +290,8 @@ export function initGamePage(mode: string): void {
             // affichage dans le chat
             if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! The winner goes to the Final.`);
         } else {
-            title!.innerText = "🏆 FINALE 🏆";
-            infoText!.innerText = "Championship Match";
+            title!.innerText = "FINALE";
+            infoText!.innerText = "Match de la finale";
             // affichage dans le chat
             if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Alias} vs ${p2Alias} !`);
         }
@@ -312,6 +311,22 @@ export function initGamePage(mode: string): void {
         });
     }
 
+    async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+        try {
+            // ne renvoit pas correctement les stats -> trouver pourquoi 
+            await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    userScore: score,
+                    isWinner: isWinner ? 1 : 0
+                })
+            });
+            console.log(`Stats sauvegardées pour le user ${userId}`);
+        } catch (error) {
+            console.error("Erreur lors de la sauvegarde des stats:", error);
+        }
+    }
+
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
         const gameArea = document.getElementById('tournament-game-area');
         const p1Name = document.getElementById('game-p1-name');
@@ -319,8 +334,6 @@ export function initGamePage(mode: string): void {
 
         if (gameArea) {
             gameArea.classList.remove('hidden');
-            // J'ajoute flex ici car ta div a la classe 'hidden' et 'flex' en meme temps dans le HTML, 
-            // quand on retire hidden il faut s'assurer que display: flex est actif
             gameArea.style.display = 'flex'; 
 
             if (p1Name) p1Name.innerText = p1.alias;
@@ -329,13 +342,10 @@ export function initGamePage(mode: string): void {
 
         console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
         
-        // integration du jeu!!!!
-        
-        // --- Injection Canvas pour Tournoi ---
-        // On récupère le conteneur existant dans ton HTML : <div id="game-canvas-container">
+        // on recupere le conteneur dans lequel on mets le jeu 
         let canvasContainer = document.getElementById('game-canvas-container');
         if (!canvasContainer && gameArea) {
-             // Securité si l'id n'est pas trouvé (ce qui ne devrait pas arriver avec ton HTML)
+             // securite au cas ou on trouve pas l'id
              canvasContainer = document.createElement('div');
              canvasContainer.id = 'game-canvas-container';
              canvasContainer.className = "flex-1 relative bg-black w-full h-full flex items-center justify-center";
@@ -343,16 +353,16 @@ export function initGamePage(mode: string): void {
         }
         
         if (canvasContainer) {
-            canvasContainer.innerHTML = ''; // Reset pour nettoyer l'ancien match
+            canvasContainer.innerHTML = ''; // on nettoie l'ancien match
             
             const canvas = document.createElement('canvas');
             canvas.id = 'pong-canvas-tournament';
-            canvas.width = 1600; 
-            canvas.height = 900;
+            canvas.width = 1600; // check pour ajuste la taille a la fenetre de jeux
+            canvas.height = 900; // check pour ajuste la taille a la fenetre de jeux
             canvas.style.width = '100%';
             canvas.style.height = '100%';
             canvas.style.objectFit = 'contain';
-            // Fond noir par défaut pour le tournoi (ou blanc selon ton css)
+            // Pour le moment, fond noir par defaut mais on ajustera 
             canvas.style.backgroundColor = 'black'; 
             
             canvasContainer.appendChild(canvas);
@@ -365,20 +375,20 @@ export function initGamePage(mode: string): void {
                 activeGame.start();
 
                 // + fin du jeu (endMatch())
-                // SUPERVISEUR DE SCORE
+                // on supervise le socre pour s'arreter a 11
                 const checkInterval = setInterval(() => {
                     if (!activeGame || !activeGame.isRunning) {
                         clearInterval(checkInterval);
                         return;
                     }
-                    // Condition de victoire : PREMIER A 11
+                    // condition de victoire : PREMIER A 11
                     if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
                         activeGame.isRunning = false; // STOP LE JEU
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
                         endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
                     }
-                }, 500); // Check toutes les 500ms
+                }, 500); // on check toutes les demi secondes
             }
         }
     }
@@ -392,6 +402,18 @@ export function initGamePage(mode: string): void {
         match.winner = winner;
         if (match.p1) match.p1.score = scoreP1;
         if (match.p2) match.p2.score = scoreP2;
+
+        if (match.p1 && match.p1.user_id) {
+            const isWinner = (match.p1.alias === winner);
+            saveGameStats(match.p1.user_id, scoreP1, isWinner);
+        }
+
+        // si jamais le joueur 2 a un id (mulitcompte par eemple)
+        if (match.p2 && match.p2.user_id) {
+            const isWinner = (match.p2.alias === winner);
+            saveGameStats(match.p2.user_id, scoreP2, isWinner);
+        }
+
 
         // Con affiche le resultat dans le chat 
         if (gameChat) gameChat.sendSystemNotification(`${winner} wins the match!`);
@@ -470,7 +492,6 @@ export function initGamePage(mode: string): void {
 
         
         const startButton = document.getElementById('start-game-button');
-        // const nameInput = document.getElementById('opponent-name') as HTMLInputElement; // Deja defini plus haut
         
         if (startButton) {
             startButton.addEventListener('click', () => {
@@ -634,10 +655,9 @@ export function initGamePage(mode: string): void {
             }
 
             // ICI LANCEMENT DU JEU
-            const canvasContainer = document.getElementById('game-canvas-container'); // On s'assure d'avoir ajouté cet ID dans le HTML LocalGame
+            const canvasContainer = document.getElementById('game-canvas-container');
             if (!canvasContainer) {
                 console.error("Conteneur canvas introuvable, creation auto...");
-                // Fallback si l'ID n'est pas dans le HTML : on l'injecte dans 'left'
                 const container = document.createElement('div');
                 container.id = 'game-canvas-container';
                 container.className = "w-full flex-1";
@@ -646,16 +666,14 @@ export function initGamePage(mode: string): void {
                 canvasContainer.innerHTML = '';
             }
 
-            // Création dynamique du canvas
             const canvas = document.createElement('canvas');
             canvas.id = 'pong-canvas';
-            canvas.width = 1600;
+            canvas.width = 1600; // verifier la taille
             canvas.height = 900;
             canvas.style.width = '100%';
             canvas.style.height = '100%';
             canvas.style.objectFit = 'contain';
-            // On applique le background sur le canvas
-            canvas.style.backgroundColor = selectedBg; 
+            canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
 
             // Injection
             const targetContainer = document.getElementById('game-canvas-container') || gameField;
@@ -669,22 +687,26 @@ export function initGamePage(mode: string): void {
                 console.log("Démarrage du jeu Local...");
                 activeGame.start();
 
-                // SUPERVISEUR DE SCORE LOCAL (Ajout suite a votre demande)
-                const localLoop = setInterval(() => {
-                    // On verifie si le jeu tourne toujours
+                // checkeur du score
+                const localLoop = setInterval(async () => {
                     if (!activeGame || !activeGame.isRunning) {
                         clearInterval(localLoop);
                         return;
                     }
                     
-                    // Si quelqu'un atteint 11 points
                     if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
                         activeGame.isRunning = false; // STOP
-                        clearInterval(localLoop); // Stop la surveillance
+                        clearInterval(localLoop); 
                         
-                        const winnerName = (activeGame.score.player1 >= 11) ? player1Display.innerText : opponentName;
+                        const p1Wins = activeGame.score.player1 >= 11;
+                        const winnerName = p1Wins ? player1Display.innerText : opponentName;
                         
-                        // On avertit le joueur et on reload pour propre
+                        const userIdStr = localStorage.getItem('userId');
+                        if (userIdStr) {
+                            const userId = Number(userIdStr);
+                            // on sauvegarde les statistiques
+                            await saveGameStats(userId, activeGame.score.player1, p1Wins);
+                        }
                         alert(`GAME OVER ! ${winnerName} remporte la partie !`);
                         window.location.reload();
                     }
