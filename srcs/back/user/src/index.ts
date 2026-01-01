@@ -7,7 +7,7 @@ import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 import * as friendRepo from './repositories/friendships.js';
 import fs from 'fs';
 import * as userRepo from './repositories/users.js';
-
+import { ServiceUnavailableError, ValidationError } from './utils/error.js';
 
 // Creation of Fastify server
 const fastify = Fastify({ logger: true });
@@ -52,7 +52,7 @@ fastify.post('/users', async (request, reply) => {
 	{
 		if (body.alias.length > 30) 
 		{
-		  throw new Error('Error: Alias is too long, max 30 characters');
+		  throw new ValidationError('Error: Alias is too long, max 30 characters');
 		}		
 		// 1. Créer le user localement dans user.sqlite
 		user_id = await userRepo.createUserInDB(db, body)		
@@ -65,7 +65,6 @@ fastify.post('/users', async (request, reply) => {
 			});
 		}
 
-		console.log(`User created locally (ID: ${user_id}. Calling auth...`);		
 		const authURL = `http://auth:3001/users/${user_id}/credentials`;
 
 		// 3. Appeler le service auth pour créer les credentials
@@ -80,6 +79,24 @@ fastify.post('/users', async (request, reply) => {
 				password: body.password, 
 			}),
 		});
+
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
 
 		const authJson = await authResponse.json();
 
@@ -114,26 +131,44 @@ fastify.post('/users', async (request, reply) => {
 					user_id: user_id
 				}),
 			});
-			const statJson = await statResponse.json();
 
-			if (statJson.success)
+			// Gérer les erreurs du service game
+        	if (!statResponse.ok) 
 			{
-    			// on envoit pas le refresh token /!\
-    			return reply.status(201).send({
-					// success: true,
-						// data: {
-    						access_token: access_token,
-    						user_id: user_id
-						// },
-					// error: null
-    			});
+            	const statJson = await statResponse.json().catch(() => ({}));
+				
+            	// Propager le code d'erreur du service game
+            	if (statResponse.status >= 400 && statResponse.status < 500) 
+				{
+            	    const error: any = new Error(
+            	        statJson.error?.message || `Game service error: ${statResponse.status}`
+            	    );
+            	    error.statusCode = statResponse.status;
+            	    throw error;
+            	}
+			
+            	throw new ServiceUnavailableError('Game service is unavailable');
+       		}
+        
+        	const statJson = await statResponse.json();
+        
+        	if (!statJson.success) 
+			{
+            	throw new Error(statJson.error?.message || 'Stats creation failed');
+        	}
+
+    		return reply.status(201).send({
+				// success: true,
+					// data: {
+    					access_token: access_token,
+    					user_id: user_id
+					// },
+				// error: null
+    		});
 			}
-		}
-	} 
+	}
 	catch (err: any) 
 	{
-		const errorMessage = err.message;
-
 		// 5. Rollback
 		if (user_id) 
 		{
@@ -142,7 +177,9 @@ fastify.post('/users', async (request, reply) => {
 		  console.log(`User ID ${user_id} successfully deleted`);
 		}	
 
-		reply.status(400).send({			  
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
 			success: false,			  
 			data: null, 			  
 			error: { message: (err as Error).message } 		
@@ -184,6 +221,24 @@ fastify.post('/users/guest', async (request, reply) => {
 				email: email, 
 			}),
 		});
+
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
 
 		const authJson = await authResponse.json();
 
@@ -245,7 +300,9 @@ fastify.post('/users/guest', async (request, reply) => {
 		  console.log(`User ID ${userId} successfully deleted`);
 		}	
 
-		reply.status(400).send({			  
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
 			success: false,			  
 			data: null, 			  
 			error: { message: (err as Error).message } 		
@@ -279,6 +336,7 @@ fastify.get('/users/:id', async (request, reply) =>
             const authData = await authResponse.json();
             userEmail = authData.email || "";
         }
+
 	} catch (err) {
 		console.error("Error getting email from auth: ", err);
 	}
@@ -289,22 +347,6 @@ fastify.get('/users/:id', async (request, reply) =>
 	};
 })
 
-fastify.get('/showfriend', async (request, reply) =>
-{
-	const { alias } = request.body as { alias: string };
-
-	const user = await userRepo.findUserByAlias(db, alias);
-	if (!user)
-	{
-		reply.status(404).send({
-			success: false,
-			data: null,
-			error: { message: `User not found` }
-	  	});
-	}
-
-	return user;
-})
 
 
 /* -- UPDATE STATUS -- */
@@ -323,14 +365,14 @@ fastify.patch('/users/:id/status', async (request, reply) =>
 			error: null
 		});
  	} 
-	catch (err) 
+	catch (err: any) 
 	{
-		fastify.log.error(err);
-		console.log("status selected: ", status);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
 		});
 	}
 })
@@ -352,13 +394,14 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 			error: null
 		});
 	}
-	catch (err)
+	catch (err: any)
 	{
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false, // c'est true ici non?
-			data: null,
-			error: { message: 'Failed to update bio' }
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
 		});
 	}
 })
@@ -373,21 +416,21 @@ fastify.patch('/users/:id/alias', async (request, reply) =>
 
 	try
 	{
-		console.log("Try to change alias in back: ", userId);
-		await userRepo.updateAlias(db, userId, alias);
+ 		await userRepo.updateAlias(db, userId, alias);
 		return reply.status(200).send({
 			success: true,
-			data: {alias: alias},
+			data: { alias: alias },
 			error: null
 		});
 	}
-	catch (err)
+	catch (err: any)
 	{
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
 		});
 	}
 })
@@ -395,15 +438,12 @@ fastify.patch('/users/:id/alias', async (request, reply) =>
 /* -- UPDATE EMAIL -- */
 fastify.patch('/users/:id/email', async (request, reply) =>
 {
-	console.log("arrivée route patch email");
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
 	const { email } = request.body as { email: string };
 
 	try
 	{
-		
-		console.log("mail updated in userRepo");
 		const authURL = `http://auth:3001/users/${userId}/credentials/email`;
 
 		const authResponse = await fetch(authURL, {
@@ -416,25 +456,39 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 			}),
 		});
 
-		const data = await authResponse.json();
-		if (data.success)
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
+
+		const authJson = await authResponse.json();
+		if (authJson.success)
 		{
 		    return reply.status(201).send({
 				success: true,
-				data: data,
+				data: authJson,
 				error: null
 		    });
-		}
-		else 
-		{
-		    throw new Error(`Auth error: ${data.error.message}`);    
 		}
 	} 
 	catch (err: any) 
 	{
-		const errorMessage = err.message;
+		const statusCode = err.statusCode || 500;
 
-		reply.status(400).send({			  
+		reply.status(statusCode).send({			  
 			success: false,			  
 			data: null, 			  
 			error: { message: (err as Error).message } 		
@@ -467,26 +521,39 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 			}),
 		});
 
-		const data = await authResponse.json();
-		if (data.success)
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			if (authResponse.status >= 400 && authResponse.status < 500)
+			{
+				const error: any = new Error(
+					authJson.error?.message || `Auth service error: ${authResponse.status}`
+				);
+				error.statusCode = authResponse.status;
+				throw error;
+			}
+
+			throw new ServiceUnavailableError(`Auth service is unavailable`);
+		}
+
+		const authJson = await authResponse.json();
+		if (authJson.success)
 		{
 		    return reply.status(201).send({
 				success: true,
-				data: data,
+				data: authJson,
 				error: null
 		    });
-		}
-		else 
-		{
-            console.log("newpass: , confirmpass:", newPass, confirmPass);
-		    throw new Error(`Auth error: ${data.error.message}`);    
 		}
 	} 
 	catch (err: any) 
 	{
-		const errorMessage = err.message;
+		const statusCode = err.statusCode || 500;
 
-		reply.status(400).send({			  
+		reply.status(statusCode).send({			  
 			success: false,			  
 			data: null, 			  
 			error: { message: (err as Error).message } 		
@@ -520,12 +587,13 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
     } 
 	catch (err: any) 
 	{
-        fastify.log.error(err);
-        return reply.status(500).send({
-            success: false,
-            data: null,
-            error: { message: (err as Error).message }
-        });
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
+		});
     }
 });
 
@@ -552,13 +620,13 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
     } 
 	catch (err: any) 
 	{
-        fastify.log.error(err);
+		const statusCode = err.statusCode || 500;
 
-        return reply.status(500).send({
-            success: false,
-            data: null,
-            error: { message: (err as Error).message }
-        });
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
+		});
     }
 });
 
@@ -583,15 +651,15 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 			error: null
 		});
 	}
-	catch (err)
+	catch (err: any)
 	{
-		console.log("erreur catched");
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
-		});		
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
+		});
 	}
 })
 
@@ -607,7 +675,6 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 
 	try
 	{
-		console.log("Status depuis index.ts:", status);
 		friendRepo.reviewFriendshipRequest(db, user_id, friendship_id, status);
 		return reply.status(200).send({ 
 			success: true,
@@ -615,13 +682,14 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 			error: null
 		});
 	}
-	catch (err)
+	catch (err: any)
 	{
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
 		});
 	}
 })
@@ -642,13 +710,14 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 			error: null
 		});
 	}
-	catch (err)
+	catch (err: any)
 	{
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
 		});
 	}
 })
@@ -669,13 +738,14 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 			error: null
 		});
 	}
-	catch (err)
+	catch (err: any)
 	{
-		fastify.log.error(err);
-		return reply.status(500).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
+		const statusCode = err.statusCode || 500;
+
+		reply.status(statusCode).send({			  
+			success: false,			  
+			data: null, 			  
+			error: { message: (err as Error).message } 		
 		});
 	}
 })

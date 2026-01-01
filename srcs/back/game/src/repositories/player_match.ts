@@ -13,6 +13,11 @@ export async function addPlayerToMatch (
         [matchId, userId]
     );
 
+    // On verifie que l'ID existe bien
+    if (newPlayer.lastID === undefined) {
+        throw new Error("Failed: ID is missing")
+    }
+
     return newPlayer.lastID;
 }
 

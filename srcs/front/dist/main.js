@@ -3538,13 +3538,27 @@
       return _SocketService.instance;
     }
     connect() {
-      if (!this.socket) {
-        this.socket = lookup2("/", {
-          path: "/socket.io/"
-          // auth: { token }
-        });
-        console.log("SocketService: Connected");
+      if (this.socket) return;
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("SocketService: No token found, connection aborted");
+        return;
       }
+      this.socket = lookup2("/", {
+        path: "/socket.io/",
+        auth: {
+          token: `Bearer ${token}`
+          // On envoie le JWT
+        },
+        reconnection: true,
+        reconnectionAttemps: 5
+      });
+      this.socket.on("connect", () => {
+        console.log("SocketService: Connection with ID", this.socket?.id);
+      });
+      this.socket.on("connect_error", (err) => {
+        console.error("SocketService: Connection error:", err.message);
+      });
     }
     disconnect() {
       if (this.socket) {

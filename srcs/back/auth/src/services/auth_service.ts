@@ -4,6 +4,7 @@ import * as crypt from '../utils/crypto.js';
 import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
 import * as QRCode from 'qrcode';
 import { send2FAEmail } from "../utils/mailer.js";
+import { ConflictError, NotFoundError, UnauthorizedError } from "../utils/error.js";
 
 import { 
     generateAccessToken, 
@@ -45,6 +46,8 @@ export interface TwoFAGenerateResponse {
     manualSecret: string; // code texte au cas ou la camera ne marche pas
 }
 
+
+
 async function generateTokens (
     user_id: number,
     credential_id: number
@@ -68,7 +71,7 @@ export async function registerUser(
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
-        throw new Error('Email already in use');
+        throw new ConflictError('Email already in use');
 
     // 2. Hashage, génération 2fa
     const pwd_hashed = await hashPassword(password);
@@ -111,7 +114,7 @@ export async function registerGuest (
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
-        throw new Error('Email already in use');
+        throw new ConflictError('Email already in use');
 
     // Faustine: on doit générer un mdp aléatoire pour le guest car il aime pas ne rien avoir 
     const uniqueGuestPwd = `guestPwd${user_id}_${Date.now()}_${Math.random()}`;
@@ -155,7 +158,7 @@ export async function changeEmailInCredential (
 {
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
-        throw new Error('Email already in use');
+        throw new ConflictError('Email already in use');
 
     await credRepo.changeEmail(db, user_id, email);
 }
@@ -187,15 +190,15 @@ export async function loginUser(
     
     const user_id = await credRepo.findUserIdByEmail(db, email);
     if (!user_id)
-        throw new Error('No user matches the email');
+        throw new NotFoundError('No user matches the email');
 
     const credential_id = await credRepo.findByEmail(db, email);
     if (!credential_id)
-        throw new Error('Unknown email');
+        throw new NotFoundError('Unknown email');
 
     const isPasswordValid = await authenticatePassword(db, credential_id, password);
     if (!isPasswordValid)
-        throw new Error ('Invalid password');
+        throw new UnauthorizedError ('Invalid password');
 
     // QUELLE EST LA METHODE 2FA ACTIVE
 
@@ -275,7 +278,7 @@ export async function authenticatePassword(
 {
     const credential =  await credRepo.getCredentialbyID(db, credential_id);
     if (!credential)
-        throw new Error("Could not find any matching credential");
+        throw new NotFoundError("Could not find any matching credential");
     
     return await crypt.verifyPassword(password, credential.pwd_hashed);
 }
@@ -291,7 +294,7 @@ export async function refreshUser(
     // chercher le token en DB
     const tokenRecord = await tokenRepo.findByRefreshToken(db, oldRefreshToken);
     if (!tokenRecord){
-        throw new Error('Refresh token not found');
+        throw new NotFoundError('Refresh token not found');
     }
 
     // verification expiration
@@ -299,7 +302,7 @@ export async function refreshUser(
     const expiry = new Date(tokenRecord.expires_at); // comparaison de string
 
     if (now > expiry){
-        throw new Error('Refresh token expired');
+        throw new UnauthorizedError('Refresh token expired');
     }
 
     // generation de nv secrets et des tokens
@@ -332,7 +335,7 @@ export async function  generateTwoFA(
         // recuperer email (pour lafficher dans google authenticator)
         const email = await credRepo.getEmailbyID(db, userId);
         if (!email) 
-            throw new Error("User not found");
+            throw new NotFoundError("User not found");
 
         // creer secret
         const secret = new Secret({ size: 20});
@@ -370,7 +373,7 @@ export async function  generateTwoFA(
 
         const email = await credRepo.getEmailbyID(db, userId);
         if (!email)
-            throw new Error("User email not found");
+            throw new NotFoundError("User email not found");
 
         try {
             await send2FAEmail(email, code);
@@ -507,7 +510,7 @@ export async function finalizeLogin2FA(
     // 2. recuperer le credential id necessaire pour la table TOKENS
     const credential = await credRepo.getCredentialbyUserID(db, userId);
     if (!credential)
-        throw new Error("Credential not found");
+        throw new NotFoundError("Credential not found");
 
     // 3. generer les vrais tokens (access + refresh)
     const tokens = await generateTokens(userId, credential.id);

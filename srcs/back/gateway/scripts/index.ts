@@ -25,19 +25,20 @@ fastify.addHook('onRequest', async (request, reply) => {
 	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
 	const publicRoutes = [
 		"/api/users/login",
-		"/api/users/register",
 		"/api/users/refresh",
 		"/api/auth/refresh",
 		"/api/users/guest",
 		"/api/auth/login",
-		"/api/auth/register",
 		"/api/auth/sessions",
-		"/api/auth/logout"
+		"/api/auth/logout",
+		"/socket.io"
 	]
 
 	let isPublic = publicRoutes.some(route => request.url.startsWith(route));
 	
-	if (url === '/api/users' && method === 'POST'){
+	const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+
+	if (cleanUrl === '/api/users' && method === 'POST'){
 		isPublic = true;
 	}
 
@@ -92,8 +93,9 @@ fastify.register(fastifyProxy,
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://chat:3002', // adresse interne du réseau du docker
-	prefix: '/api/chat', // toutes les requetes api/chat iront au service chat
-	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
+	prefix: '/socket.io', // toutes les requetes api/chat iront au service chat
+	websocket: true,
+	rewritePrefix: '/socket.io' // on retire le prefixe avant de l'envoyer un service
 });
 
 fastify.register(fastifyProxy, 
