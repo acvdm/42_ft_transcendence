@@ -5,8 +5,8 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 import { startTournament, recordMatchResult, tournamentState } from "./Tournament";
-import Game from "../../../shared/Game";
-import Input from "../../../shared/Input";
+import Game from "../../../shared/pong/Game";
+import Input from "../../../shared/pong/Input";
 
 
 let gameChat: Chat | null = null;
