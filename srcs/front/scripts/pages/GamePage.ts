@@ -5,8 +5,46 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 
+// Nouveaux imports pour faire marcher le jeu
+import Game from "../game/Game";
+import Input from "../game/Input";
+
+// =========================================================
+// ===  INTERFACES DU TOURNOI (Ajoutées pour que ça marche) ===
+// =========================================================
+
+// Interface pour la gestion interne du tournois
+interface TournamentPlayer 
+{
+    user_id: number | null; // null si c'est un invite qui joue
+    alias: string;
+    score: number; // score final d'un match
+}
+
+// Interface pour un match termine
+interface TournamentMatch 
+{
+    round: 'semi_final_1' | 'semi_final_2' | 'final';
+    winner: string | null;
+    p1: TournamentPlayer | null;
+    p2: TournamentPlayer | null;
+}
+
+// Etat global du tournoi en cours
+interface TournamentData 
+{
+    name: string;
+    allPlayers: TournamentPlayer[];
+    matches: TournamentMatch[];
+    currentMatchIdx: number; // on defini l'id du match pour le stocker dans la db
+    currentStep: 'registration' | 'semi_final_1' | 'semi_final_2' | 'final' | 'finished';
+}
+
+// =========================================================
+
 let gameChat: Chat | null = null;
-let tournamenetState: any = null; // on stocke l'état du tournoi
+let tournamenetState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
+let activeGame: Game | null = null; // Instance du jeu
 
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
@@ -15,6 +53,11 @@ export function cleanup() {
         gameChat = null;
     }
     tournamenetState = null;
+
+    if (activeGame) {
+        activeGame.isRunning = false;
+        activeGame = null;
+    }
 }
 
 export function render(): string {
@@ -177,25 +220,37 @@ export function initGamePage(mode: string): void {
         });
     }
 
-    function startTournamentLogic(name: string, players: string[]) {
+    function startTournamentLogic(name: string, playersAliases: string[]) {
         // on retire la modale de slection des infos de jeu
         document.getElementById('tournament-setup')?.classList.add('hidden');
+
+        // Récupération ID user connecté pour le lier au joueur 1 (pour le backend)
+        const userIdStr = localStorage.getItem('userId');
+        const userIdNb = userIdStr ? Number(userIdStr) : null;
+
+        // Création des objets Joueurs avec IDs
+        const playersObjects: TournamentPlayer[] = playersAliases.map((alias, index) => ({
+            alias: alias,
+            user_id: (index === 0) ? userIdNb : null,
+            score: 0
+        }));
 
         // maj de l'etat du tournoi, le nom et les joueurs 
         tournamenetState = {
             name: name,
-            allPlayers: players,
+            allPlayers: playersObjects,
             matches: [
-                { p1: players[0], p2: players[1], winner: null }, // 1er duo
-                { p1: players[2], p2: players[3], winner: null }, // 2eme duo
-                { p1: null, p2: null, winner: null }              // finale
+                { round: 'semi_final_1', winner: null, p1: playersObjects[0], p2: playersObjects[1] }, // 1er duo
+                { round: 'semi_final_2', winner: null, p1: playersObjects[2], p2: playersObjects[3] }, // 2eme duo
+                { round: 'final',        winner: null, p1: null,              p2: null }               // finale
             ],
-            currentMatchIdx: 0 // on defini l'id du match pour le stocker dans la db
+            currentMatchIdx: 0, // on defini l'id du match pour le stocker dans la db
+            currentStep: 'semi_final_1'
         };
 
         // on fait une annonce dans le chat 
         if (gameChat) {
-            gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${players.join(', ')}`);
+            gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${playersAliases.join(', ')}`);
         }
 
         showNextMatch();
@@ -211,36 +266,45 @@ export function initGamePage(mode: string): void {
         const player2Text = document.getElementById('next-p2');
         const infoText = document.getElementById('bracket-info');
         const playButton = document.getElementById('launch-match-btn');
+        const gameArea = document.getElementById('tournament-game-area');
 
         if (!bracketView || !tournamenetState) return;
 
         // on masque le rest e
-        document.getElementById('tournament-game-area')?.classList.add('hidden');
+        gameArea?.classList.add('hidden');
         bracketView.classList.remove('hidden');
 
         const matchIdx = tournamenetState.currentMatchIdx;
         const match = tournamenetState.matches[matchIdx];
+        
+        // Alias safe pour affichage
+        const p1Alias = match.p1 ? match.p1.alias : "???";
+        const p2Alias = match.p2 ? match.p2.alias : "???";
 
         // on determinne la logique pour l'affichage des infos du match
         if (matchIdx === 0) {
             title!.innerText = "SEMI-FINAL 1";
-            infoText!.innerText = `Next match: ${tournamenetState.matches[1].p1} vs ${tournamenetState.matches[1].p2}`;
+            const nextMatch = tournamenetState.matches[1];
+            const nextP1 = nextMatch.p1 ? nextMatch.p1.alias : "?";
+            const nextP2 = nextMatch.p2 ? nextMatch.p2.alias : "?";
+            
+            infoText!.innerText = `Next match: ${nextP1} vs ${nextP2}`;
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`Next up: ${match.p1} vs ${match.p2} ! Later: ${tournamenetState.matches[1].p1} vs ${tournamenetState.matches[1].p2}`);
+            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! Later: ${nextP1} vs ${nextP2}`);
         } else if (matchIdx === 1) {
             title!.innerText = "SEMI-FINAL 2";
             infoText!.innerText = "Winner plays in the finale!";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`Next up: ${match.p1} vs ${match.p2} ! The winner goes to the Final.`);
+            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! The winner goes to the Final.`);
         } else {
             title!.innerText = "🏆 FINALE 🏆";
             infoText!.innerText = "blablabla";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`FINAL: ${match.p1} vs ${match.p2} !`);
+            if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Alias} vs ${p2Alias} !`);
         }
 
-        player1Text!.innerText = match.p1;
-        player2Text!.innerText = match.p2;
+        player1Text!.innerText = p1Alias;
+        player2Text!.innerText = p2Alias;
 
         // on supprime les anciens event listeners du play bouton!
         const newButton = playButton!.cloneNode(true);
@@ -248,50 +312,105 @@ export function initGamePage(mode: string): void {
 
         newButton.addEventListener('click', () => {
             bracketView.classList.add('hidden');
-            launchMatch(match.p1, match.p2);
+            if (match.p1 && match.p2) {
+                launchMatch(match.p1, match.p2);
+            }
         });
     }
 
-    function launchMatch(p1: string, p2: string) {
+    function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
         const gameArea = document.getElementById('tournament-game-area');
         const p1Name = document.getElementById('game-p1-name');
         const p2Name = document.getElementById('game-p2-name');
 
         if (gameArea) {
             gameArea.classList.remove('hidden');
-            if (p1Name) p1Name.innerText = p1;
-            if (p2Name) p2Name.innerText = p2;
+            if (p1Name) p1Name.innerText = p1.alias;
+            if (p2Name) p2Name.innerText = p2.alias;
         }
 
-        console.log(`Lancement dy jeu: ${p1} vs ${p2}`);
+        console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
         
         // integration du jeu!!!!
+        
+        // --- Injection Canvas pour Tournoi ---
+        // On crée un conteneur si besoin ou on utilise gameArea
+        let canvasContainer = document.getElementById('tournament-canvas-container');
+        if (!canvasContainer) {
+             canvasContainer = document.createElement('div');
+             canvasContainer.id = 'tournament-canvas-container';
+             canvasContainer.className = "w-full h-[600px] flex justify-center items-center bg-black";
+             gameArea?.appendChild(canvasContainer);
+        }
+        canvasContainer.innerHTML = ''; // Reset
 
+        const canvas = document.createElement('canvas');
+        canvas.id = 'pong-canvas-tournament';
+        canvas.width = 1600; 
+        canvas.height = 900;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.objectFit = 'contain';
+        canvasContainer.appendChild(canvas);
 
-        // + fin du jeu (endMatch())
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            const input = new Input();
+            if (activeGame) activeGame.isRunning = false;
+            activeGame = new Game(canvas, ctx, input);
+            activeGame.start();
+
+            // + fin du jeu (endMatch())
+            // SUPERVISEUR DE SCORE (Puisqu'on ne touche pas a Game.ts)
+            const checkInterval = setInterval(() => {
+                if (!activeGame || !activeGame.isRunning) {
+                    clearInterval(checkInterval);
+                    return;
+                }
+                // Condition de victoire : PREMIER A 11
+                if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                    activeGame.isRunning = false; // STOP LE JEU
+                    clearInterval(checkInterval);
+                    const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
+                    endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
+                }
+            }, 500); // Check toutes les 500ms
+        }
     }
 
-    function endMatch(winner: string) {
+    function endMatch(winner: string, scoreP1: number, scoreP2: number) {
         if (!tournamenetState) return;
 
         const idx = tournamenetState.currentMatchIdx;
-        tournamenetState.matches[idx].winner = winner;
+        const match = tournamenetState.matches[idx];
+        
+        match.winner = winner;
+        if (match.p1) match.p1.score = scoreP1;
+        if (match.p2) match.p2.score = scoreP2;
 
         // Con affiche le resultat dans le chat 
         if (gameChat) gameChat.sendSystemNotification(`${winner} wins the match!`);
 
         if (idx === 0) {
             // vainqueur demi finale 1
-            tournamenetState.matches[2].p1 = winner;
+            // on recupere le bon objet joueur pour la finale
+            const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
+            tournamenetState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+            
             tournamenetState.currentMatchIdx++;
+            tournamenetState.currentStep = 'semi_final_2';
             showNextMatch();
         } else if (idx === 1) {
             // vainqueur demi finale2 
-            tournamenetState.matches[2].p2 = winner;
+            const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
+            tournamenetState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+
             tournamenetState.currentMatchIdx++;
+            tournamenetState.currentStep = 'final';
             showNextMatch();
         } else {
             // fin
+            tournamenetState.currentStep = 'finished';
             showSummary(winner);
         }
     }
@@ -306,7 +425,7 @@ export function initGamePage(mode: string): void {
             const tourNameDisplay = document.getElementById('tour-name-display');
             
             if (winnerDisplay) winnerDisplay.innerText = champion;
-            if (tourNameDisplay) tourNameDisplay.innerText = tournamenetState.name;
+            if (tourNameDisplay && tournamenetState) tourNameDisplay.innerText = tournamenetState.name;
 
             const userId = localStorage.getItem('userId');
             if (userId) {
@@ -320,13 +439,17 @@ export function initGamePage(mode: string): void {
     }
 
     async function saveTournamentToApi(winner: string) {
+        if (!tournamenetState) return;
         try {
             await fetchWithAuth('api/game/tournament', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: tournamenetState.name,
                     winner: winner,
-                    participants: tournamenetState.allPlayers
+                    participants: tournamenetState.allPlayers,
+                    // Ajout des details complets pour le format JSON attendu
+                    tournament_name: tournamenetState.name,
+                    match_list: tournamenetState.matches
                 })
             });
         } catch (e) { console.error(e); }
@@ -342,7 +465,7 @@ export function initGamePage(mode: string): void {
 
         
         const startButton = document.getElementById('start-game-button');
-        const nameInput = document.getElementById('opponent-name') as HTMLInputElement;
+        // const nameInput = document.getElementById('opponent-name') as HTMLInputElement; // Deja defini plus haut
         
         if (startButton) {
             startButton.addEventListener('click', () => {
@@ -503,6 +626,62 @@ export function initGamePage(mode: string): void {
         modal.classList.remove('flex');
 
         // ICI LANCEMENT DU JEU
+        const canvasContainer = document.getElementById('game-canvas-container'); // On s'assure d'avoir ajouté cet ID dans le HTML LocalGame
+        if (!canvasContainer) {
+            console.error("Conteneur canvas introuvable, creation auto...");
+            // Fallback si l'ID n'est pas dans le HTML : on l'injecte dans 'left'
+            const container = document.createElement('div');
+            container.id = 'game-canvas-container';
+            container.className = "w-full flex-1";
+            gameField.appendChild(container);
+        } else {
+            canvasContainer.innerHTML = '';
+        }
+
+        // Création dynamique du canvas
+        const canvas = document.createElement('canvas');
+        canvas.id = 'pong-canvas';
+        canvas.width = 1600;
+        canvas.height = 900;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.objectFit = 'contain';
+        // On applique le background sur le canvas
+        canvas.style.backgroundColor = selectedBg; 
+
+        // Injection
+        const targetContainer = document.getElementById('game-canvas-container') || gameField;
+        targetContainer.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            const input = new Input();
+            if (activeGame) activeGame.isRunning = false;
+            activeGame = new Game(canvas, ctx, input);
+            console.log("Démarrage du jeu Local...");
+            activeGame.start();
+
+            // SUPERVISEUR DE SCORE LOCAL (Ajout suite a votre demande)
+            const localLoop = setInterval(() => {
+                // On verifie si le jeu tourne toujours
+                if (!activeGame || !activeGame.isRunning) {
+                    clearInterval(localLoop);
+                    return;
+                }
+                
+                // Si quelqu'un atteint 11 points
+                if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                    activeGame.isRunning = false; // STOP
+                    clearInterval(localLoop); // Stop la surveillance
+                    
+                    const winnerName = (activeGame.score.player1 >= 11) ? player1Display.innerText : opponentName;
+                    
+                    // On avertit le joueur et on reload pour propre
+                    alert(`GAME OVER ! ${winnerName} remporte la partie !`);
+                    window.location.reload();
+                }
+            }, 500);
+        }
     });
 
     // resrt erreur ecritur e
