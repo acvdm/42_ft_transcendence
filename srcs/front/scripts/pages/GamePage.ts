@@ -97,7 +97,8 @@ export function initGamePage(mode: string): void {
 
     const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
 
-    if (!modal || !startButton || !nameInput) {
+    // Cette condition ne doit pas bloquer si on est en mode tournoi (car modal peut être null en mode tournoi)
+    if (mode === 'local' && (!modal || !startButton || !nameInput)) {
         return;
     }
 
@@ -140,8 +141,10 @@ export function initGamePage(mode: string): void {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     } else {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
     }
 
 
@@ -156,7 +159,8 @@ export function initGamePage(mode: string): void {
         const player2Input = document.getElementById('player2-input') as HTMLInputElement;
         const player3Input = document.getElementById('player3-input') as HTMLInputElement;
         const player4Input = document.getElementById('player4-input') as HTMLInputElement;
-        const startButton = document.getElementById('start-tournament-button');
+        // Correspondance avec l'ID dans ton HTML : start-tournament-btn
+        const startButton = document.getElementById('start-tournament-btn'); 
         const errorDiv = document.getElementById('setup-error');
 
 
@@ -204,16 +208,6 @@ export function initGamePage(mode: string): void {
                 }
                 return;
             }
-
-            //
-            //
-            //
-            // rajouter la selection de la ball et celle du background
-            // avant le lancement du jeu 
-            //
-
-
-
 
             // demarrage du tournoi 
             startTournamentLogic(tName, players);
@@ -298,7 +292,7 @@ export function initGamePage(mode: string): void {
             if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! The winner goes to the Final.`);
         } else {
             title!.innerText = "🏆 FINALE 🏆";
-            infoText!.innerText = "blablabla";
+            infoText!.innerText = "Championship Match";
             // affichage dans le chat
             if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Alias} vs ${p2Alias} !`);
         }
@@ -325,6 +319,10 @@ export function initGamePage(mode: string): void {
 
         if (gameArea) {
             gameArea.classList.remove('hidden');
+            // J'ajoute flex ici car ta div a la classe 'hidden' et 'flex' en meme temps dans le HTML, 
+            // quand on retire hidden il faut s'assurer que display: flex est actif
+            gameArea.style.display = 'flex'; 
+
             if (p1Name) p1Name.innerText = p1.alias;
             if (p2Name) p2Name.innerText = p2.alias;
         }
@@ -334,47 +332,54 @@ export function initGamePage(mode: string): void {
         // integration du jeu!!!!
         
         // --- Injection Canvas pour Tournoi ---
-        // On crée un conteneur si besoin ou on utilise gameArea
-        let canvasContainer = document.getElementById('tournament-canvas-container');
-        if (!canvasContainer) {
+        // On récupère le conteneur existant dans ton HTML : <div id="game-canvas-container">
+        let canvasContainer = document.getElementById('game-canvas-container');
+        if (!canvasContainer && gameArea) {
+             // Securité si l'id n'est pas trouvé (ce qui ne devrait pas arriver avec ton HTML)
              canvasContainer = document.createElement('div');
-             canvasContainer.id = 'tournament-canvas-container';
-             canvasContainer.className = "w-full h-[600px] flex justify-center items-center bg-black";
-             gameArea?.appendChild(canvasContainer);
+             canvasContainer.id = 'game-canvas-container';
+             canvasContainer.className = "flex-1 relative bg-black w-full h-full flex items-center justify-center";
+             gameArea.appendChild(canvasContainer);
         }
-        canvasContainer.innerHTML = ''; // Reset
+        
+        if (canvasContainer) {
+            canvasContainer.innerHTML = ''; // Reset pour nettoyer l'ancien match
+            
+            const canvas = document.createElement('canvas');
+            canvas.id = 'pong-canvas-tournament';
+            canvas.width = 1600; 
+            canvas.height = 900;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.objectFit = 'contain';
+            // Fond noir par défaut pour le tournoi (ou blanc selon ton css)
+            canvas.style.backgroundColor = 'black'; 
+            
+            canvasContainer.appendChild(canvas);
 
-        const canvas = document.createElement('canvas');
-        canvas.id = 'pong-canvas-tournament';
-        canvas.width = 1600; 
-        canvas.height = 900;
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.objectFit = 'contain';
-        canvasContainer.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                const input = new Input();
+                if (activeGame) activeGame.isRunning = false;
+                activeGame = new Game(canvas, ctx, input);
+                activeGame.start();
 
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            const input = new Input();
-            if (activeGame) activeGame.isRunning = false;
-            activeGame = new Game(canvas, ctx, input);
-            activeGame.start();
-
-            // + fin du jeu (endMatch())
-            // SUPERVISEUR DE SCORE (Puisqu'on ne touche pas a Game.ts)
-            const checkInterval = setInterval(() => {
-                if (!activeGame || !activeGame.isRunning) {
-                    clearInterval(checkInterval);
-                    return;
-                }
-                // Condition de victoire : PREMIER A 11
-                if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                    activeGame.isRunning = false; // STOP LE JEU
-                    clearInterval(checkInterval);
-                    const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-                    endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
-                }
-            }, 500); // Check toutes les 500ms
+                // + fin du jeu (endMatch())
+                // SUPERVISEUR DE SCORE
+                const checkInterval = setInterval(() => {
+                    if (!activeGame || !activeGame.isRunning) {
+                        clearInterval(checkInterval);
+                        return;
+                    }
+                    // Condition de victoire : PREMIER A 11
+                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                        activeGame.isRunning = false; // STOP LE JEU
+                        clearInterval(checkInterval);
+                        const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
+                        endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
+                    }
+                }, 500); // Check toutes les 500ms
+            }
         }
     }
 
@@ -594,95 +599,99 @@ export function initGamePage(mode: string): void {
     }
 
     // on clique sur play
-    startButton.addEventListener('click', () => {
-        const opponentName = nameInput.value.trim(); // l'opposent a besoin du name input
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            const opponentName = nameInput.value.trim(); // l'opposent a besoin du name input
 
-        // est-ce qu'on peut utliser un nom qui est egalement un usrename deja pris?
-        if (opponentName === "") {
-            if (errorMsg) errorMsg.classList.remove('hidden');
-            nameInput.classList.add('border-red-500');
-            return;
-        }
+            // est-ce qu'on peut utliser un nom qui est egalement un usrename deja pris?
+            if (opponentName === "") {
+                if (errorMsg) errorMsg.classList.remove('hidden');
+                nameInput.classList.add('border-red-500');
+                return;
+            }
 
-        // envoi de la notifciation
-        if (gameChat) {
-            gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
-        }
+            // envoi de la notifciation
+            if (gameChat) {
+                gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+            }
 
-        // valeur par default 
-        const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
-        const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
-        // on met a jour le nom du second joueur
-        if (player2Display) {
-            player2Display.innerText = opponentName;
-        }
+            // valeur par default 
+            const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
+            const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
+            // on met a jour le nom du second joueur
+            if (player2Display) {
+                player2Display.innerText = opponentName;
+            }
 
-        if (gameField) {
-            gameField.style.backgroundColor = selectedBg;
-        }
+            if (gameField) {
+                gameField.style.backgroundColor = selectedBg;
+            }
 
-        // on ferme la modale 
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+            // on ferme la modale 
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
 
-        // ICI LANCEMENT DU JEU
-        const canvasContainer = document.getElementById('game-canvas-container'); // On s'assure d'avoir ajouté cet ID dans le HTML LocalGame
-        if (!canvasContainer) {
-            console.error("Conteneur canvas introuvable, creation auto...");
-            // Fallback si l'ID n'est pas dans le HTML : on l'injecte dans 'left'
-            const container = document.createElement('div');
-            container.id = 'game-canvas-container';
-            container.className = "w-full flex-1";
-            gameField.appendChild(container);
-        } else {
-            canvasContainer.innerHTML = '';
-        }
+            // ICI LANCEMENT DU JEU
+            const canvasContainer = document.getElementById('game-canvas-container'); // On s'assure d'avoir ajouté cet ID dans le HTML LocalGame
+            if (!canvasContainer) {
+                console.error("Conteneur canvas introuvable, creation auto...");
+                // Fallback si l'ID n'est pas dans le HTML : on l'injecte dans 'left'
+                const container = document.createElement('div');
+                container.id = 'game-canvas-container';
+                container.className = "w-full flex-1";
+                gameField.appendChild(container);
+            } else {
+                canvasContainer.innerHTML = '';
+            }
 
-        // Création dynamique du canvas
-        const canvas = document.createElement('canvas');
-        canvas.id = 'pong-canvas';
-        canvas.width = 1600;
-        canvas.height = 900;
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-        canvas.style.objectFit = 'contain';
-        // On applique le background sur le canvas
-        canvas.style.backgroundColor = selectedBg; 
+            // Création dynamique du canvas
+            const canvas = document.createElement('canvas');
+            canvas.id = 'pong-canvas';
+            canvas.width = 1600;
+            canvas.height = 900;
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.objectFit = 'contain';
+            // On applique le background sur le canvas
+            canvas.style.backgroundColor = selectedBg; 
 
-        // Injection
-        const targetContainer = document.getElementById('game-canvas-container') || gameField;
-        targetContainer.appendChild(canvas);
+            // Injection
+            const targetContainer = document.getElementById('game-canvas-container') || gameField;
+            targetContainer.appendChild(canvas);
 
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-            const input = new Input();
-            if (activeGame) activeGame.isRunning = false;
-            activeGame = new Game(canvas, ctx, input);
-            console.log("Démarrage du jeu Local...");
-            activeGame.start();
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                const input = new Input();
+                if (activeGame) activeGame.isRunning = false;
+                activeGame = new Game(canvas, ctx, input);
+                console.log("Démarrage du jeu Local...");
+                activeGame.start();
 
-            // SUPERVISEUR DE SCORE LOCAL (Ajout suite a votre demande)
-            const localLoop = setInterval(() => {
-                // On verifie si le jeu tourne toujours
-                if (!activeGame || !activeGame.isRunning) {
-                    clearInterval(localLoop);
-                    return;
-                }
-                
-                // Si quelqu'un atteint 11 points
-                if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                    activeGame.isRunning = false; // STOP
-                    clearInterval(localLoop); // Stop la surveillance
+                // SUPERVISEUR DE SCORE LOCAL (Ajout suite a votre demande)
+                const localLoop = setInterval(() => {
+                    // On verifie si le jeu tourne toujours
+                    if (!activeGame || !activeGame.isRunning) {
+                        clearInterval(localLoop);
+                        return;
+                    }
                     
-                    const winnerName = (activeGame.score.player1 >= 11) ? player1Display.innerText : opponentName;
-                    
-                    // On avertit le joueur et on reload pour propre
-                    alert(`GAME OVER ! ${winnerName} remporte la partie !`);
-                    window.location.reload();
-                }
-            }, 500);
-        }
-    });
+                    // Si quelqu'un atteint 11 points
+                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                        activeGame.isRunning = false; // STOP
+                        clearInterval(localLoop); // Stop la surveillance
+                        
+                        const winnerName = (activeGame.score.player1 >= 11) ? player1Display.innerText : opponentName;
+                        
+                        // On avertit le joueur et on reload pour propre
+                        alert(`GAME OVER ! ${winnerName} remporte la partie !`);
+                        window.location.reload();
+                    }
+                }, 500);
+            }
+        });
+    }
 
     // resrt erreur ecritur e
     nameInput.addEventListener('input', () => {
