@@ -7448,7 +7448,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">\n\n            <div class="window w-[1500px] min-w-[1500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n\n                    </div>\n\n                    <div id="local-game-container" class="flex-1"></div>\n                    \n                </div>\n            </div>\n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -7936,6 +7936,204 @@
     }
   }
 
+  // ../shared/pong/Paddle.ts
+  var Paddle = class {
+    x;
+    y;
+    width;
+    height;
+    speed;
+    constructor(x, y, width = 10, height = 100) {
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+      this.speed = 5;
+    }
+    move(up) {
+      if (up) {
+        this.y -= this.speed;
+      } else {
+        this.y += this.speed;
+      }
+    }
+    draw(ctx) {
+      ctx.fillStyle = "white";
+      ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+    reset() {
+      this.y = 100;
+    }
+  };
+  var Paddle_default = Paddle;
+
+  // ../shared/pong/Ball.ts
+  var Ball = class {
+    x;
+    y;
+    radius;
+    velocityX;
+    velocityY;
+    constructor(x = 0, y = 0, radius = 10) {
+      this.x = x;
+      this.y = y;
+      this.radius = radius;
+      this.velocityX = 5;
+      this.velocityY = 5;
+    }
+    update(canvas) {
+      this.x += this.velocityX;
+      this.y += this.velocityY;
+      if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+        this.velocityY = -this.velocityY;
+      }
+    }
+    draw(ctx) {
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.closePath();
+    }
+    reset(canvas) {
+      this.x = canvas.width / 2;
+      this.y = canvas.height / 2;
+      this.velocityX = 5;
+      this.velocityY = 5;
+    }
+  };
+  var Ball_default = Ball;
+
+  // ../shared/pong/Game.ts
+  var Game = class {
+    score;
+    paddle1;
+    paddle2;
+    ball;
+    isRunning;
+    canvas;
+    ctx;
+    input;
+    constructor(canvas, ctx, input) {
+      this.canvas = canvas;
+      this.ctx = ctx;
+      this.input = input;
+      this.score = { player1: 0, player2: 0 };
+      this.paddle1 = new Paddle_default(30, canvas.height / 2 - 50);
+      this.paddle2 = new Paddle_default(canvas.width - 40, canvas.height / 2 - 50);
+      this.ball = new Ball_default(canvas.width / 2, canvas.height / 2);
+      this.isRunning = false;
+    }
+    start() {
+      this.isRunning = true;
+      this.gameLoop();
+    }
+    stop() {
+      this.isRunning = false;
+    }
+    gameLoop() {
+      if (this.isRunning) {
+        this.update(this.canvas);
+        this.render();
+        requestAnimationFrame(() => this.gameLoop());
+      }
+    }
+    update(canvas) {
+      const inputState = this.input.getInput();
+      if (inputState.player1.up) {
+        this.paddle1.move(true);
+      }
+      if (inputState.player1.down) {
+        this.paddle1.move(false);
+      }
+      if (inputState.player2.up) {
+        this.paddle2.move(true);
+      }
+      if (inputState.player2.down) {
+        this.paddle2.move(false);
+      }
+      if (this.paddle1.y < 0) this.paddle1.y = 0;
+      if (this.paddle1.y + this.paddle1.height > canvas.height) this.paddle1.y = canvas.height - this.paddle1.height;
+      if (this.paddle2.y < 0) this.paddle2.y = 0;
+      if (this.paddle2.y + this.paddle2.height > canvas.height) this.paddle2.y = canvas.height - this.paddle2.height;
+      this.ball.update(canvas);
+      this.checkCollisions();
+    }
+    render() {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.paddle1.draw(this.ctx);
+      this.paddle2.draw(this.ctx);
+      this.ball.draw(this.ctx);
+      this.ctx.fillStyle = "white";
+      this.ctx.font = "30px Arial";
+      this.ctx.fillText(`Player 1: ${this.score.player1}`, 50, 50);
+      this.ctx.fillText(`Player 2: ${this.score.player2}`, this.canvas.width - 150, 50);
+    }
+    checkCollisions() {
+      if (this.ball.velocityX < 0 && this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x && this.ball.y >= this.paddle1.y && this.ball.y <= this.paddle1.y + this.paddle1.height) {
+        let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
+        let angle = hitPos * (Math.PI / 4);
+        let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+        speed *= 1.05;
+        this.ball.velocityX = speed * Math.cos(angle);
+        this.ball.velocityY = speed * Math.sin(angle);
+        this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+      }
+      if (this.ball.velocityX > 0 && this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width && this.ball.y >= this.paddle2.y && this.ball.y <= this.paddle2.y + this.paddle2.height) {
+        let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
+        let angle = hitPos * (Math.PI / 4);
+        let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+        speed *= 1.05;
+        this.ball.velocityX = -speed * Math.cos(angle);
+        this.ball.velocityY = speed * Math.sin(angle);
+        this.ball.x = this.paddle2.x - this.ball.radius;
+      }
+      if (this.ball.x < 0) {
+        this.score.player2++;
+        this.reset();
+      } else if (this.ball.x > this.canvas.width) {
+        this.score.player1++;
+        this.reset();
+      }
+    }
+    reset() {
+      this.ball.reset(this.canvas);
+      this.paddle1.reset();
+      this.paddle2.reset();
+    }
+  };
+  var Game_default = Game;
+
+  // ../shared/pong/Input.ts
+  var Input = class {
+    keys;
+    constructor() {
+      this.keys = {};
+      this.addEventListeners();
+    }
+    addEventListeners() {
+      window.addEventListener("keydown", (event) => {
+        this.keys[event.key] = true;
+      });
+      window.addEventListener("keyup", (event) => {
+        this.keys[event.key] = false;
+      });
+    }
+    getInput() {
+      return {
+        player1: {
+          up: this.keys["w"],
+          down: this.keys["s"]
+        },
+        player2: {
+          up: this.keys["ArrowUp"],
+          down: this.keys["ArrowDown"]
+        }
+      };
+    }
+  };
+  var Input_default = Input;
+
   // scripts/pages/GamePage.ts
   var gameChat = null;
   var currentGame = null;
@@ -8173,32 +8371,40 @@
       }
     }
     function initLocalMode() {
-      const modalLocal = document.getElementById("game-setup-modal");
-      const startButtonLocal = document.getElementById("start-game-button");
-      const nameInputLocal = document.getElementById("opponent-name");
-      if (modalLocal) modalLocal.classList.remove("hidden");
-      if (startButtonLocal) {
-        startButtonLocal.addEventListener("click", () => {
-          const opponentName = nameInputLocal.value.trim();
+      if (startButton) {
+        startButton.addEventListener("click", () => {
+          const opponentName = nameInput.value.trim();
           if (opponentName === "") {
             if (errorMsg) errorMsg.classList.remove("hidden");
-            nameInputLocal.classList.add("border-red-500");
+            nameInput.classList.add("border-red-500");
             return;
           }
-          if (gameChat) {
-            gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+          const gameContainer = document.getElementById("local-game-container");
+          if (gameContainer) {
+            gameContainer.innerHTML = "";
+            const canvas = document.createElement("canvas");
+            canvas.width = 800;
+            canvas.height = 600;
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
+            gameContainer.appendChild(canvas);
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              const input = new Input_default();
+              const game = new Game_default(canvas, ctx, input);
+              canvas.style.backgroundColor = bgValueInput.value;
+              game.start();
+              currentGame = game;
+              if (gameChat) {
+                gameChat.sendSystemNotification(`Game started: ${player1Display.innerText} vs ${opponentName}`);
+              }
+            }
           }
-          const selectedBall = ballValueInput ? ballValueInput.value : "classic";
-          const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
           if (player2Display) {
             player2Display.innerText = opponentName;
           }
-          if (gameField) {
-            gameField.style.backgroundColor = selectedBg;
-          }
-          modalLocal?.classList.add("hidden");
-          modalLocal?.classList.remove("flex");
-          console.log("Lancement du jeu Local 1v1 avec ", selectedBall, selectedBg);
+          modal?.classList.add("hidden");
+          modal?.classList.remove("flex");
         });
       }
     }

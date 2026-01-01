@@ -47,7 +47,7 @@ services:
         - ./front/dist:/usr/share/nginx/html/dist
         - ./front/public/index.html:/usr/share/nginx/html/index.html
         - ./front/public/assets:/usr/share/nginx/html/assets
-        - ./shared:/usr/share/nginx/html/shared #j'ajoute ca 
+        - ./shared:/usr/share/nginx/shared #j'ajoute ca 
         
         # AJOUTEZ CES LIGNES POUR LE DEVELOPPEMENT :
         - ./front/scripts:/usr/share/nginx/html/scripts

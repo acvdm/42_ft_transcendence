@@ -348,8 +348,7 @@ export function initGamePage(mode: string): void {
                 }
 
                 // On récupère le container vide dans LocalGame.html
-                const gameContainer = document.querySelector('#left .flex-1') as HTMLElement;
-                if (gameContainer) {
+                    const gameContainer = document.getElementById('local-game-container') as HTMLElement;                if (gameContainer) {
                     gameContainer.innerHTML = ''; // On nettoie
                     
                     const canvas = document.createElement('canvas');
