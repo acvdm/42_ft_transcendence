@@ -4,11 +4,11 @@
          style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
     </div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 50px; padding-right: 50px; bottom: 100px;">
         
-        <div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+        <div class="flex gap-4 flex-1 min-h-0">
 
-            <div class="window w-[1500px] min-w-[1500px] flex flex-col">
+            <div class="window flex flex-col flex-1 min-w-0">
                 <div class="title-bar">
                     <div class="title-bar-text">Games</div>
                     <div class="title-bar-controls">
@@ -18,22 +18,36 @@
                     </div>
                 </div>
 
-                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 2350px; min-width: 2350px; background-color: white;">
+                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
     
                     <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-                        
                         <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>
-
                         <span class="text-4xl font-bold text-gray-900">0 - 0</span>
-
                         <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>
-
                     </div>
 
                     <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative"></div>
                     
                 </div>
             </div>
+
+            <div class="window flex flex-col w-[300px] min-w-[300px]">
+                <div class="title-bar">
+                    <div class="title-bar-text">Game Logs</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize"></button>
+                        <button aria-label="Maximize"></button>
+                        <button aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <div class="window-body flex flex-col flex-1 bg-white p-2 min-h-0">
+                    <div id="chat-messages" class="flex-1 overflow-y-auto text-sm bg-gray-50 border border-gray-200 p-2 font-mono">
+                        <p class="text-gray-500 italic text-xs">Waiting for game info...</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -74,8 +88,6 @@
                         <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">
                     </div>
 
-
-
                     <div class="flex flex-row gap-2">
                         <label class="text-sm font-semibold">Choose your background :</label>
                         
@@ -108,5 +120,4 @@
             </div>
         </div>
     </div>
-
 </div>
