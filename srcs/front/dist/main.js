@@ -8567,7 +8567,7 @@
         currentRemoteGame = new RemoteGame();
         currentRemoteGame.start();
         document.getElementById("leaveGameBtn")?.addEventListener("click", () => {
-          currentRemoteGame?.stop();
+          if (currentRemoteGame) currentRemoteGame.stop();
           window.history.pushState({}, "", "/home");
           const popStateEvent = new PopStateEvent("popstate");
           window.dispatchEvent(popStateEvent);

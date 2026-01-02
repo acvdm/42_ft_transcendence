@@ -81,7 +81,7 @@ const routes: { [key: string]: Page } = {
 
             // Gestion bouton quitter (inchangé)
             document.getElementById('leaveGameBtn')?.addEventListener('click', () => {
-                currentRemoteGame?.stop(); // Bon de l'arrêter proprement
+                if (currentRemoteGame) currentRemoteGame.stop();
                 window.history.pushState({}, '', '/home');
                 const popStateEvent = new PopStateEvent('popstate');
                 window.dispatchEvent(popStateEvent);
