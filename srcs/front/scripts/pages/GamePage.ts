@@ -685,7 +685,7 @@ export function initGamePage(mode: string): void {
             if (ctx) {
                 const input = new Input();
                 if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game(canvas, ctx, selectedBall);
+                activeGame = new Game(canvas, ctx, input, selectedBall);
                 
                 activeGame.onScoreChange = (score) => {
                     if (scoreBoard) {

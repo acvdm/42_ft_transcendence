@@ -31,7 +31,7 @@ class Ball {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        if (this.image && this.image.complete) {
+        if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
             ctx.drawImage(
                 this.image,
                 this.x - this.radius * 1.5,
