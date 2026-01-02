@@ -8,6 +8,10 @@ import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
 import { render as GamePage, initGamePage } from "./pages/GamePage";
+import { RemoteGame } from "./pages/RemoteGame";
+
+
+let currentRemoteGame: RemoteGame | null = null;
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -55,6 +59,42 @@ const routes: { [key: string]: Page } = {
 			const mode = state && state.gameMode ? state.gameMode : 'local';
 			initGamePage(mode);
 		}
+    },
+	'/remote': {
+        render: () => {
+            // On retourne le HTML directement ici (copie de RemoteGame.html simplifié)
+            return `
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 w-100 text-white">
+                <h1 class="mb-4">Match en Ligne</h1>
+                <div class="d-flex justify-content-between w-50 mb-3" style="max-width: 800px; font-size: 1.5rem;">
+                    <span id="scoreBoard">En attente...</span>
+                </div>
+                <canvas id="gameCanvas" width="800" height="600" style="background-color: #1a1a1a; border: 2px solid #444; border-radius: 8px;"></canvas>
+                <div class="mt-3">
+                    <button id="leaveGameBtn" class="btn btn-danger">Quitter la partie</button>
+                </div>
+            </div>`;
+        },
+        afterRender: () => {
+            // On demande le nom de la room
+            const roomId = prompt("Entrez le nom de la salle (ex: room1) :", "room1");
+            if (!roomId) {
+                window.history.back(); // Si annulation, retour arrière
+                return;
+            }
+
+            // On lance le jeu
+            currentRemoteGame = new RemoteGame(roomId);
+            currentRemoteGame.start();
+
+            // Gestion du bouton quitter dans la page
+            document.getElementById('leaveGameBtn')?.addEventListener('click', () => {
+                // Cela va déclencher handleLocationChange qui fera le nettoyage
+                window.history.pushState({}, '', '/home');
+                const popStateEvent = new PopStateEvent('popstate');
+                window.dispatchEvent(popStateEvent);
+            });
+        }
     },
 	'/404': {
 		render: NotFoundPage
@@ -125,6 +165,11 @@ const handleLocationChange = () => {
 
 	let path = window.location.pathname;
 	
+	if (currentRemoteGame) {
+        console.log("Stopping remote game...");
+        currentRemoteGame.stop();
+        currentRemoteGame = null;
+    }
 	// Récupération des tokens (User normal OU Guest)
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';

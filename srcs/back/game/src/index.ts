@@ -256,20 +256,34 @@ const start = async () =>
 
 		const activeGames = new Map<string, ServerGame>();
 
-		io.on('connection', (socket) => {
+		io.on('connection', (socket: any) => {
 			console.log('Game socket connected:', socket.id);
-			socket.on('joinGame', (roomId) => {
+			socket.on('joinGame', (roomId: string) => {
 				socket.join(roomId);
 
-				// si la partie n'existe pas encore alors elle est créé
-				if (!activeGames.has(roomId)) {
-					const game = new ServerGame(roomId, io);
+				let game = activeGames.get(roomId);
+				if (!game) {
+					game = new ServerGame(roomId, io);
 					activeGames.set(roomId, game);
-					game.startGameLoop();
+
 				}
+
+				if (!game.player1Id) {
+					game.player1Id = socket.id;
+					console.log(`Player 1 (${socket.id}) joined room ${roomId}`);
+				} else if (!game.player2Id) {
+					game.player2Id = socket.id;
+					console.log(`Player 2 (${socket.id}) joined room ${roomId}`);
+					// LE JEU DÉMARRE ICI, QUAND IL Y A 2 JOUEURS
+					game.startGameLoop();
+				} else {
+					console.log('Room is full, spectator mode');
+					// Optionnel : Gérer les spectateurs ici
+				}
+
 			});
 
-			socket.on('input', (data) => {
+			socket.on('input', (data: any) => {
 				const game = activeGames.get(data.roomId);
 				if (game) {
 					game.handleInput(socket.id, data.key);
@@ -277,8 +291,16 @@ const start = async () =>
 			});
 
 			socket.on('disconnect', () => {
-				console.log('User disconnected from the game');
-				// gestion de la fin de partie
+				console.log('User disconnected:', socket.id);
+				// Trouver la partie du joueur déconnecté pour arrêter proprement
+				for (const [roomId, game] of activeGames.entries()) {
+					if (game.player1Id === socket.id || game.player2Id === socket.id) {
+						game.stopGameLoop();
+						activeGames.delete(roomId);
+						io.to(roomId).emit('gameInterrupted', 'A player disconnected');
+						break;
+					}
+				}
 			});
 		});
 
