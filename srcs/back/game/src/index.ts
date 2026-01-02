@@ -4,7 +4,7 @@ import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
-import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
+import { rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
 import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
 import { localTournament } from './repositories/tournament_interfaces.js';
@@ -47,10 +47,10 @@ fastify.post('/games', async (request, reply) =>
 		if (!gameId)
 			throw new Error(`Error could not create game`);
 
-		playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
-		playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
-		if (!playerMatchOneId || !playerMatchTwoId)
-			throw new Error(`Error could not associate players with the game ${gameId}`);
+		// playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
+		// playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
+		// if (!playerMatchOneId || !playerMatchTwoId)
+		// 	throw new Error(`Error could not associate players with the game ${gameId}`);
 
 		return reply.status(201).send({
 			success: true,
@@ -203,11 +203,15 @@ fastify.patch('/users/:id/games/stats', async (request, reply) =>
 		const userId = Number(id);
 
 		const body = request.body as {
+			gameType: string,
+			matchId: number,
+			opponent: string,
 			userScore: number,
 			isWinner: number
 		}
 		
-		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
+		// const gameType = "Local";
+		const userStats = await updateUserStats(db, body.gameType, body.matchId, userId, body.opponent, body.userScore, body.isWinner);
 		if (!userStats)
 			throw new Error(`Error: could not update stats for user ${userId}`);
 

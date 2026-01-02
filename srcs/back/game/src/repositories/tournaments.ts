@@ -47,12 +47,15 @@ export async function saveLocalTournament (
         );
 
         const matchId = matchRes.lastID;
+        if (!matchId) {
+            throw new Error("Failed to save match: ID is missing");
+        }
 
         // Gestion du joueur 1 (INSERT + UPDATE_STATS)
         const p1IsWinner = match.winner === match.player1.alias;
 
         await db.run(`
-            INSERT INTO PLAYER_MATCH (match_id, user_id, guest_alias, score, is_winner)
+            INSERT INTO PLAYER_MATCH (match_id, user_id, opponent, score, is_winner)
             VALUES (?, ?, ?, ?, ?)`,
             [
                 matchId, 
@@ -64,14 +67,15 @@ export async function saveLocalTournament (
         );
 
         // si player 1 est un utilisateur on met a jour la db pour ses stats
+        const gameType: string = "Tournament"
         if (match.player1.user_id)
-            await updateUserStats(db, match.player1.user_id, match.player1.score, p1IsWinner ? 1 : 0);
+            await updateUserStats(db, gameType, matchId, match.player1.user_id, match.player2.alias, match.player1.score, p1IsWinner ? 1 : 0);
 
         // Gestion joueur 2
         const p2IsWinner = match.winner === match.player2.alias;
 
         await db.run(`
-            INSERT INTO PLAYER_MATCH (match_id, user_id, guest_alias, score, is_winner)
+            INSERT INTO PLAYER_MATCH (match_id, user_id, opponent, score, is_winner)
             VALUES (?, ?, ?, ?, ?)`,
             [
                 matchId, 
@@ -84,7 +88,7 @@ export async function saveLocalTournament (
 
         // si player 1 est un utilisateur on met a jour la db pour ses stats
         if (match.player2.user_id)
-            await updateUserStats(db, match.player2.user_id, match.player2.score, p2IsWinner ? 1 : 0);
+            await updateUserStats(db, gameType, matchId, match.player2.user_id, match.player1.alias, match.player2.score, p2IsWinner ? 1 : 0);
 
     }
 
