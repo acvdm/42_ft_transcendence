@@ -124,6 +124,7 @@ class Game {
     // Nouvelle fonction pour mettre à jour l'état visuel depuis le serveur
     updateFromRemote(data: any) {
         // Le serveur envoie des positions brutes sur une base 800x600 (par exemple)
+        
         this.ball.x = data.ball.x;
         this.ball.y = data.ball.y;
         

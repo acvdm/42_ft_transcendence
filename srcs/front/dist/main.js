@@ -7752,12 +7752,10 @@
       if (container) {
         container.innerHTML = "";
         const canvas = document.createElement("canvas");
-        canvas.width = 800;
-        canvas.height = 600;
+        canvas.width = container ? container.clientWidth : 800;
+        canvas.height = container ? container.clientHeight : 600;
         canvas.style.width = "100%";
         canvas.style.height = "100%";
-        canvas.style.maxWidth = "100%";
-        canvas.style.maxHeight = "100%";
         container.appendChild(canvas);
         const ctx = canvas.getContext("2d");
         const input = new Input_default();

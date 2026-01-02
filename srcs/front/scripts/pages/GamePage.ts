@@ -126,17 +126,15 @@ export function initGamePage(mode: string): void {
         const modal = document.getElementById('game-setup-modal');
         const container = document.getElementById('game-canvas-container');
 
-        // Initialisation Canvas
+        // Initialisation Canvas - MODIFIE POUR S'ADAPTER AU CONTENEUR
         if (container) {
             container.innerHTML = ''; // Nettoyage
             const canvas = document.createElement('canvas');
-            canvas.width = 800;
-            canvas.height = 600;
-            // Style pour s'adapter proprement
-            canvas.style.width = '100%'; 
-            canvas.style.height = '100%';
-            canvas.style.maxWidth = '100%';
-            canvas.style.maxHeight = '100%';
+            
+            canvas.width = container ? container.clientWidth : 800; // verifier la taille
+                canvas.height = container ? container.clientHeight : 600;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
             
             container.appendChild(canvas);
             
