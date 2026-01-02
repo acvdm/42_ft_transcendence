@@ -9,6 +9,8 @@ import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './
 import { saveLocalTournament } from './repositories/tournaments.js';
 import { localTournament } from './repositories/tournament_interfaces.js';
 import { NotFoundError } from './utils/error.js';
+import { Server } from 'socket.io';
+import { ServerGame } from './engine/ServerGame.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -242,6 +244,45 @@ const start = async () =>
 {
 	try 
 	{
+		await fastify.ready(); // on s'assure que les pluggins sont chargés
+		// on attache socketio au serveur
+		const io = new Server(fastify.server, {
+			path: '/pong.io', // en accord avec la confgig defini dans la gateway
+			cors: {
+				origin: "*", // a voir selon le niveau de securite voulu
+				methods: ["GET", "POST"]
+			}
+		});
+
+		const activeGames = new Map<string, ServerGame>();
+
+		io.on('connection', (socket) => {
+			console.log('Game socket connected:', socket.id);
+			socket.on('joinGame', (roomId) => {
+				socket.join(roomId);
+
+				// si la partie n'existe pas encore alors elle est créé
+				if (!activeGames.has(roomId)) {
+					const game = new ServerGame(roomId, io);
+					activeGames.set(roomId, game);
+					game.startGameLoop();
+				}
+			});
+
+			socket.on('input', (data) => {
+				const game = activeGames.get(data.roomId);
+				if (game) {
+					game.handleInput(socket.id, data.key);
+				}
+			});
+
+			socket.on('disconnect', () => {
+				console.log('User disconnected from the game');
+				// gestion de la fin de partie
+			});
+		});
+
+
 		// on attend que le serveur demaarre avant de continuer sur port 8080
 		await fastify.listen({ port: 3003, host: '0.0.0.0' });
 		console.log('Auth service listening on port 3003');
@@ -252,6 +293,24 @@ const start = async () =>
 		process.exit(1);
 	}
 };
+
+
+//////////////////////////
+/// GESTION DU REMOTE ////
+//////////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // On initialise la DB puis on démarre le serveur
 main().then(start).catch(err => 

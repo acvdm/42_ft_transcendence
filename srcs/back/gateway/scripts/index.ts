@@ -98,6 +98,14 @@ fastify.register(fastifyProxy,
 	rewritePrefix: '/socket.io' // on retire le prefixe avant de l'envoyer un service
 });
 
+fastify.register(fastifyProxy,
+{
+	upstream: 'http://game:3003',
+	prefix: '/pong.io', // on fait une redirection vers pong io afin de differencier les socket du chat et celles du pong
+	websocket: true,
+	rewritePrefix: '/pong.io'
+});
+
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://game:3003', // adresse interne du réseau du docker
