@@ -73,10 +73,12 @@ export async function updateUserStats (
     isWinner: number
 ): Promise<Stat>
 {
+    console.log("** update User stats");
     const playerMatch = await createPlayerMatch(db, gameType, matchId, userId, opponent, userScore, isWinner);
     if (!playerMatch)
         throw new Error("Could not create player match statistics");
     
+    console.log("playerMatch créé");
     const stats = await db.run(`
         UPDATE STATS SET 
             wins = wins + ?,

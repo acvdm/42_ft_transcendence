@@ -8029,7 +8029,7 @@
 
   // scripts/pages/GamePage.ts
   var gameChat = null;
-  var tournamenetState = null;
+  var tournamentState = null;
   var activeGame = null;
   function render6() {
     const state = window.history.state;
@@ -8079,7 +8079,7 @@
       gameChat.joinChannel("remote_game_room");
     } else if (mode == "tournament") {
       gameChat.joinChannel("tournament_room");
-      initTournamenetMode();
+      inittournamentMode();
     } else {
       gameChat.joinChannel("local_game_room");
       initLocalMode();
@@ -8093,7 +8093,7 @@
         modal.classList.remove("flex");
       }
     }
-    function initTournamenetMode() {
+    function inittournamentMode() {
       const setupView = document.getElementById("tournament-setup");
       const nameInput2 = document.getElementById("tournament-name-input");
       const player1Input = document.getElementById("player1-input");
@@ -8151,7 +8151,7 @@
         user_id: index === 0 ? userIdNb : null,
         score: 0
       }));
-      tournamenetState = {
+      tournamentState = {
         name,
         allPlayers: playersObjects,
         matches: [
@@ -8179,16 +8179,16 @@
       const infoText = document.getElementById("bracket-info");
       const playButton = document.getElementById("launch-match-btn");
       const gameArea = document.getElementById("tournament-game-area");
-      if (!bracketView || !tournamenetState) return;
+      if (!bracketView || !tournamentState) return;
       gameArea?.classList.add("hidden");
       bracketView.classList.remove("hidden");
-      const matchIdx = tournamenetState.currentMatchIdx;
-      const match = tournamenetState.matches[matchIdx];
+      const matchIdx = tournamentState.currentMatchIdx;
+      const match = tournamentState.matches[matchIdx];
       const p1Alias = match.p1 ? match.p1.alias : "???";
       const p2Alias = match.p2 ? match.p2.alias : "???";
       if (matchIdx === 0) {
         title.innerText = "SEMI-FINAL 1";
-        const nextMatch = tournamenetState.matches[1];
+        const nextMatch = tournamentState.matches[1];
         const nextP1 = nextMatch.p1 ? nextMatch.p1.alias : "?";
         const nextP2 = nextMatch.p2 ? nextMatch.p2.alias : "?";
         infoText.innerText = `Next match: ${nextP1} vs ${nextP2}`;
@@ -8213,20 +8213,6 @@
         }
       });
     }
-    async function saveGameStats(userId2, score, isWinner) {
-      try {
-        await fetchWithAuth(`api/game/users/${userId2}/games/stats`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            userScore: score,
-            isWinner: isWinner ? 1 : 0
-          })
-        });
-        console.log(`Stats sauvegard\xE9es pour le user ${userId2}`);
-      } catch (error) {
-        console.error("Erreur lors de la sauvegarde des stats:", error);
-      }
-    }
     function launchMatch(p1, p2) {
       const gameArea = document.getElementById("tournament-game-area");
       const p1Name = document.getElementById("game-p1-name");
@@ -8237,7 +8223,7 @@
         if (p1Name) p1Name.innerText = p1.alias;
         if (p2Name) p2Name.innerText = p2.alias;
       }
-      console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
+      console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
       let canvasContainer = document.getElementById("game-canvas-container");
       if (!canvasContainer && gameArea) {
         canvasContainer = document.createElement("div");
@@ -8268,7 +8254,7 @@
               clearInterval(checkInterval);
               return;
             }
-            if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+            if (activeGame.score.player1 >= 2 || activeGame.score.player2 >= 2) {
               activeGame.isRunning = false;
               clearInterval(checkInterval);
               const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
@@ -8279,35 +8265,33 @@
       }
     }
     function endMatch(winner, scoreP1, scoreP2) {
-      if (!tournamenetState) return;
-      const idx = tournamenetState.currentMatchIdx;
-      const match = tournamenetState.matches[idx];
+      if (!tournamentState) return;
+      const idx = tournamentState.currentMatchIdx;
+      const match = tournamentState.matches[idx];
       match.winner = winner;
       if (match.p1) match.p1.score = scoreP1;
       if (match.p2) match.p2.score = scoreP2;
       if (match.p1 && match.p1.user_id) {
         const isWinner = match.p1.alias === winner;
-        saveGameStats(match.p1.user_id, scoreP1, isWinner);
       }
       if (match.p2 && match.p2.user_id) {
         const isWinner = match.p2.alias === winner;
-        saveGameStats(match.p2.user_id, scoreP2, isWinner);
       }
       if (gameChat) gameChat.sendSystemNotification(`${winner} wins the match!`);
       if (idx === 0) {
         const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-        tournamenetState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
-        tournamenetState.currentMatchIdx++;
-        tournamenetState.currentStep = "semi_final_2";
+        tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+        tournamentState.currentMatchIdx++;
+        tournamentState.currentStep = "semi_final_2";
         showNextMatch();
       } else if (idx === 1) {
         const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-        tournamenetState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
-        tournamenetState.currentMatchIdx++;
-        tournamenetState.currentStep = "final";
+        tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+        tournamentState.currentMatchIdx++;
+        tournamentState.currentStep = "final";
         showNextMatch();
       } else {
-        tournamenetState.currentStep = "finished";
+        tournamentState.currentStep = "finished";
         showSummary(winner);
       }
     }
@@ -8319,7 +8303,7 @@
         const winnerDisplay = document.getElementById("winner-name");
         const tourNameDisplay = document.getElementById("tour-name-display");
         if (winnerDisplay) winnerDisplay.innerText = champion;
-        if (tourNameDisplay && tournamenetState) tourNameDisplay.innerText = tournamenetState.name;
+        if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
         const userId2 = localStorage.getItem("userId");
         if (userId2) {
           saveTournamentToApi(champion);
@@ -8330,17 +8314,21 @@
       }
     }
     async function saveTournamentToApi(winner) {
-      if (!tournamenetState) return;
+      if (!tournamentState) return;
+      else {
+        console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", tournamentState.matches);
+        console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
+      }
       try {
-        await fetchWithAuth("api/game/tournament", {
+        await fetchWithAuth("api/game/tournaments", {
           method: "POST",
           body: JSON.stringify({
-            name: tournamenetState.name,
+            name: tournamentState.name,
             winner,
-            participants: tournamenetState.allPlayers,
+            participants: tournamentState.allPlayers,
             // Ajout des details complets pour le format JSON attendu
-            tournament_name: tournamenetState.name,
-            match_list: tournamenetState.matches
+            tournament_name: tournamentState.name,
+            match_list: tournamentState.matches
           })
         });
       } catch (e) {

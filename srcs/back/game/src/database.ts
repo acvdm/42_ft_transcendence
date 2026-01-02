@@ -14,9 +14,15 @@ export async function initDatabase(): Promise<Database>{
         CREATE TABLE IF NOT EXISTS MATCHES (
             match_id INTEGER PRIMARY KEY AUTOINCREMENT,
             game_type TEXT,
+            player1_alias TEXT,
+            player2_alias TEXT,
+            score_p1 INTEGER,
+            score_p2 INTEGER,
+            winner_alias TEXT,
             status TEXT DEFAULT 'pending',
             started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             finished_at DATETIME,
+            round default '1v1',
             fk_tournament_id INTEGER,
             FOREIGN KEY (fk_tournament_id) REFERENCES TOURNAMENTS(tournament_id)
         )

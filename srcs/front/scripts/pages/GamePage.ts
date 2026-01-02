@@ -42,7 +42,7 @@ interface TournamentData
 // =========================================================
 
 let gameChat: Chat | null = null;
-let tournamenetState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
+let tournamentState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
 let activeGame: Game | null = null; // Instance du jeu
 
 // pour nettoyer le tout quand on quitte la page
@@ -51,7 +51,7 @@ export function cleanup() {
         gameChat.destroy();
         gameChat = null;
     }
-    tournamenetState = null;
+    tournamentState = null;
 
     if (activeGame) {
         activeGame.isRunning = false;
@@ -129,7 +129,7 @@ export function initGamePage(mode: string): void {
     } else if (mode == 'tournament') {
         gameChat.joinChannel("tournament_room"); // same ici
         // initialisation de la logique de jeu en tournoi
-        initTournamenetMode();
+        inittournamentMode();
     } else {
         gameChat.joinChannel("local_game_room");
         initLocalMode();
@@ -151,7 +151,7 @@ export function initGamePage(mode: string): void {
     // -------------- LOGIQUE DU JEU EN TOURNOI ----------------
     // ---------------------------------------------------------
 
-    function initTournamenetMode() {
+    function inittournamentMode() {
         const setupView = document.getElementById('tournament-setup');
         const nameInput = document.getElementById('tournament-name-input') as HTMLInputElement;
         const player1Input = document.getElementById('player1-input') as HTMLInputElement;
@@ -229,7 +229,7 @@ export function initGamePage(mode: string): void {
         }));
 
         // maj de l'etat du tournoi, le nom et les joueurs 
-        tournamenetState = {
+        tournamentState = {
             name: name,
             allPlayers: playersObjects,
             matches: [
@@ -261,14 +261,14 @@ export function initGamePage(mode: string): void {
         const playButton = document.getElementById('launch-match-btn');
         const gameArea = document.getElementById('tournament-game-area');
 
-        if (!bracketView || !tournamenetState) return;
+        if (!bracketView || !tournamentState) return;
 
         // on masque le rest e
         gameArea?.classList.add('hidden');
         bracketView.classList.remove('hidden');
 
-        const matchIdx = tournamenetState.currentMatchIdx;
-        const match = tournamenetState.matches[matchIdx];
+        const matchIdx = tournamentState.currentMatchIdx;
+        const match = tournamentState.matches[matchIdx];
         
         // Alias safe pour affichage
         const p1Alias = match.p1 ? match.p1.alias : "???";
@@ -277,7 +277,7 @@ export function initGamePage(mode: string): void {
         // on determinne la logique pour l'affichage des infos du match
         if (matchIdx === 0) {
             title!.innerText = "SEMI-FINAL 1";
-            const nextMatch = tournamenetState.matches[1];
+            const nextMatch = tournamentState.matches[1];
             const nextP1 = nextMatch.p1 ? nextMatch.p1.alias : "?";
             const nextP2 = nextMatch.p2 ? nextMatch.p2.alias : "?";
             
@@ -311,21 +311,21 @@ export function initGamePage(mode: string): void {
         });
     }
 
-    async function saveGameStats(userId: number, score: number, isWinner: boolean) {
-        try {
-            // ne renvoit pas correctement les stats -> trouver pourquoi 
-            await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-                method: 'PATCH',
-                body: JSON.stringify({
-                    userScore: score,
-                    isWinner: isWinner ? 1 : 0
-                })
-            });
-            console.log(`Stats sauvegardées pour le user ${userId}`);
-        } catch (error) {
-            console.error("Erreur lors de la sauvegarde des stats:", error);
-        }
-    }
+    // async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+    //     try {
+    //         // ne renvoit pas correctement les stats -> trouver pourquoi 
+    //         await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+    //             method: 'PATCH',
+    //             body: JSON.stringify({
+    //                 userScore: score,
+    //                 isWinner: isWinner ? 1 : 0
+    //             })
+    //         });
+    //         console.log(`Stats sauvegardées pour le user ${userId}`);
+    //     } catch (error) {
+    //         console.error("Erreur lors de la sauvegarde des stats:", error);
+    //     }
+    // }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
         const gameArea = document.getElementById('tournament-game-area');
@@ -340,7 +340,7 @@ export function initGamePage(mode: string): void {
             if (p2Name) p2Name.innerText = p2.alias;
         }
 
-        console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
+        console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
         
         // on recupere le conteneur dans lequel on mets le jeu 
         let canvasContainer = document.getElementById('game-canvas-container');
@@ -383,7 +383,7 @@ export function initGamePage(mode: string): void {
                         return;
                     }
                     // condition de victoire : PREMIER A 11
-                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                    if (activeGame.score.player1 >= 2 || activeGame.score.player2 >= 2) {
                         activeGame.isRunning = false; // STOP LE JEU
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
@@ -395,10 +395,10 @@ export function initGamePage(mode: string): void {
     }
 
     function endMatch(winner: string, scoreP1: number, scoreP2: number) {
-        if (!tournamenetState) return;
+        if (!tournamentState) return;
 
-        const idx = tournamenetState.currentMatchIdx;
-        const match = tournamenetState.matches[idx];
+        const idx = tournamentState.currentMatchIdx;
+        const match = tournamentState.matches[idx];
         
         match.winner = winner;
         if (match.p1) match.p1.score = scoreP1;
@@ -406,13 +406,13 @@ export function initGamePage(mode: string): void {
 
         if (match.p1 && match.p1.user_id) {
             const isWinner = (match.p1.alias === winner);
-            saveGameStats(match.p1.user_id, scoreP1, isWinner);
+            // saveGameStats(match.p1.user_id, scoreP1, isWinner);
         }
 
         // si jamais le joueur 2 a un id (mulitcompte par eemple)
         if (match.p2 && match.p2.user_id) {
             const isWinner = (match.p2.alias === winner);
-            saveGameStats(match.p2.user_id, scoreP2, isWinner);
+            // saveGameStats(match.p2.user_id, scoreP2, isWinner);
         }
 
 
@@ -423,22 +423,22 @@ export function initGamePage(mode: string): void {
             // vainqueur demi finale 1
             // on recupere le bon objet joueur pour la finale
             const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
-            tournamenetState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+            tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
             
-            tournamenetState.currentMatchIdx++;
-            tournamenetState.currentStep = 'semi_final_2';
+            tournamentState.currentMatchIdx++;
+            tournamentState.currentStep = 'semi_final_2';
             showNextMatch();
         } else if (idx === 1) {
             // vainqueur demi finale2 
             const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
-            tournamenetState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+            tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
 
-            tournamenetState.currentMatchIdx++;
-            tournamenetState.currentStep = 'final';
+            tournamentState.currentMatchIdx++;
+            tournamentState.currentStep = 'final';
             showNextMatch();
         } else {
             // fin
-            tournamenetState.currentStep = 'finished';
+            tournamentState.currentStep = 'finished';
             showSummary(winner);
         }
     }
@@ -453,7 +453,7 @@ export function initGamePage(mode: string): void {
             const tourNameDisplay = document.getElementById('tour-name-display');
             
             if (winnerDisplay) winnerDisplay.innerText = champion;
-            if (tourNameDisplay && tournamenetState) tourNameDisplay.innerText = tournamenetState.name;
+            if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
 
             const userId = localStorage.getItem('userId');
             if (userId) {
@@ -467,17 +467,23 @@ export function initGamePage(mode: string): void {
     }
 
     async function saveTournamentToApi(winner: string) {
-        if (!tournamenetState) return;
+        
+        if (!tournamentState) return;
+        else
+        {
+            console.log("DEBUG FRONTEND - Matches à envoyer :", tournamentState.matches);
+            console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
+        }
         try {
-            await fetchWithAuth('api/game/tournament', {
+            await fetchWithAuth('api/game/tournaments', {
                 method: 'POST',
                 body: JSON.stringify({
-                    name: tournamenetState.name,
+                    name: tournamentState.name,
                     winner: winner,
-                    participants: tournamenetState.allPlayers,
+                    participants: tournamentState.allPlayers,
                     // Ajout des details complets pour le format JSON attendu
-                    tournament_name: tournamenetState.name,
-                    match_list: tournamenetState.matches
+                    tournament_name: tournamentState.name,
+                    match_list: tournamentState.matches
                 })
             });
         } catch (e) { console.error(e); }

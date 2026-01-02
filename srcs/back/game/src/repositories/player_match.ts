@@ -32,6 +32,7 @@ export async function createPlayerMatch(
     isWinner: number
 ): Promise<number | undefined>
 {
+    console.log("** Create player game");
     const playerMatch = await db.run(`
         INSERT INTO PLAYER_MATCH
             (match_id,
@@ -40,21 +41,23 @@ export async function createPlayerMatch(
             opponent,
             score,
             is_winner)
-        WHERE user_id = ?
-        VALUES
-        [
-            matchId,
+        VALUES(?, ?, ?, ?, ?, ?)`,
+        [   matchId,
             gameType,
             userId,
             opponent,
             score,
             isWinner ? 1 : 0,
-            userId
-        ]`
+        ]
     )
 
     if (!playerMatch?.lastID)
+    {
+        console.log("create player game failed");
         throw new Error("Failed to create player match statistics");
+    }
+
+    console.log("** create match player fonctionné")
 
     return (playerMatch?.lastID);
 }

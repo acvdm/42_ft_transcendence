@@ -88,7 +88,7 @@ Sinon tout se passe dans la memoire du navigateur
 */
 
 // changer pour que ce soi restfull /game/tournament
-fastify.post('/tournament', async (request, reply) => 
+fastify.post('/tournaments', async (request, reply) => 
 {
 	try
 	{
@@ -202,6 +202,7 @@ fastify.patch('/users/:id/games/stats', async (request, reply) =>
 		const { id } = request.params as { id: string }
 		const userId = Number(id);
 
+		console.log("userId = ", userId);
 		const body = request.body as {
 			gameType: string,
 			matchId: number,
