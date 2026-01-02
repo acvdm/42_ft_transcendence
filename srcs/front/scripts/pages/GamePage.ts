@@ -127,32 +127,32 @@ export function initGamePage(mode: string): void {
         const container = document.getElementById('game-canvas-container');
 
         // Initialisation Canvas - MODIFIE POUR S'ADAPTER AU CONTENEUR
-        if (container) {
-            container.innerHTML = ''; // Nettoyage
-            const canvas = document.createElement('canvas');
+        // if (container) {
+        //     container.innerHTML = ''; // Nettoyage
+        //     const canvas = document.createElement('canvas');
             
-            canvas.width = container ? container.clientWidth : 800; // verifier la taille
-                canvas.height = container ? container.clientHeight : 600;
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
+        //     canvas.width = container ? container.clientWidth : 800; // verifier la taille
+        //         canvas.height = container ? container.clientHeight : 600;
+        //         canvas.style.width = '100%';
+        //         canvas.style.height = '100%';
             
-            container.appendChild(canvas);
+        //     container.appendChild(canvas);
             
-            const ctx = canvas.getContext('2d');
-            const input = new Input();
+        //     const ctx = canvas.getContext('2d');
+        //     const input = new Input();
 
-            if (ctx) {
-                // Init du jeu (instance inactive au début)
-                if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game(canvas, ctx, input);
+        //     if (ctx) {
+        //         // Init du jeu (instance inactive au début)
+        //         if (activeGame) activeGame.isRunning = false;
+        //         activeGame = new Game(canvas, ctx, input);
                 
-                // Callback score pour l'UI
-                activeGame.onScoreChange = (score) => {
-                    const sb = document.getElementById('score-board');
-                    if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                };
-            }
-        }
+        //         // Callback score pour l'UI
+        //         activeGame.onScoreChange = (score) => {
+        //             const sb = document.getElementById('score-board');
+        //             if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+        //         };
+        //     }
+        // }
 
         if (btn) {
             // On clone pour éviter les event listeners multiples si on revient sur la page
@@ -177,6 +177,36 @@ export function initGamePage(mode: string): void {
                     // Cache la modale
                     if (modal) modal.style.display = 'none';
 
+                    if (container) {
+                        container.innerHTML = ''; 
+                        const canvas = document.createElement('canvas');
+                        
+                        const availableHeight = container.clientHeight || 500;
+                        // Ici, le layout est prêt, clientHeight sera correct (~540px)
+                        canvas.width = container.clientWidth || 800; 
+                        canvas.height = availableHeight;
+                        canvas.style.display = 'block';
+                        canvas.style.width = '100%';
+                        canvas.style.height = '100%';
+                        
+                        container.appendChild(canvas);
+                        
+                        const ctx = canvas.getContext('2d');
+                        const input = new Input();
+
+                        if (ctx) {
+                            if (activeGame) activeGame.isRunning = false;
+                            activeGame = new Game(canvas, ctx, input);
+                            
+                            activeGame.onScoreChange = (score) => {
+                                const sb = document.getElementById('score-board');
+                                if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+                            };
+                            
+                            // On lance le jeu une fois le canvas prêt
+                            activeGame.startRemote(data.roomId, data.role);
+                        }
+                    }
                     // Configure le jeu en mode remote et lance
                     if (activeGame) {
                         activeGame.startRemote(data.roomId, data.role);
