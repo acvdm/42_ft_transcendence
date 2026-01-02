@@ -4,7 +4,7 @@ import { Database } from 'sqlite'
 
 export interface playerGameStats 
 {
-    user_id?: number,
+    userId?: number,
     alias: string,
     score: number
 }
@@ -22,6 +22,6 @@ export interface localTournament
 {
     tournament_name: string,
     winner: string,
-    match_list: localMatchResult[]
+    matchList: localMatchResult[]
 }
 

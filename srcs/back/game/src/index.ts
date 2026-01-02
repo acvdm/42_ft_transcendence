@@ -93,7 +93,7 @@ fastify.post('/tournament', async (request, reply) =>
 	try
 	{
 		const body = request.body as localTournament; // === interface dans tournament_interfaces
-		if (!body.match_list || body.match_list.length !== 3)
+		if (!body.matchList || body.matchList.length !== 3)
 		{
 			return reply.status(400).send({
 				success: false,

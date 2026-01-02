@@ -2,7 +2,7 @@
 // Interface pour la gestion interne du tournois
 interface TournamentPlayer 
 {
-    user_id: number | null; // null si c'est un invite qui joue
+    userId: number | null; // null si c'est un invite qui joue
     alias: string;
     score: number; // score final d'un match
 }
@@ -48,25 +48,25 @@ export function startTournament(tournamentName: string, aliases: string[]) {
 
     // 2. creation des 4 joueurs
     let player1: TournamentPlayer = {
-        user_id: userIdNb,
+        userId: userIdNb,
         alias: userAlias,
         score: 0
     };
 
     let player2: TournamentPlayer = {
-        user_id: null,
+        userId: null,
         alias: aliases[1],
         score: 0
     };
 
     let player3: TournamentPlayer = {
-        user_id: null,
+        userId: null,
         alias: aliases[2],
         score: 0
     };
 
     let player4: TournamentPlayer = {
-        user_id: null,
+        userId: null,
         alias: aliases[3],
         score: 0
     };
@@ -218,11 +218,11 @@ export async function sendToBackend(state: TournamentData) {
 
     const payload = {
         tournament_name: state.name,
-        match_list: state.matches,
+        matchList: state.matches,
         winner: state.matches[2].winner
     }
 
-    console.log(`user1 alias: "${state.players[0].alias}" , id:  "${state.players[0].user_id}"`)
+    console.log(`user1 alias: "${state.players[0].alias}" , id:  "${state.players[0].userId}"`)
 
     try {
         const response = await fetch('/api/game/tournament', {
