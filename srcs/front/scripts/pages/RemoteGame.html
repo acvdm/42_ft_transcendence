@@ -1,17 +1,14 @@
-<div class="d-flex flex-column align-items-center justify-content-center h-100 w-100 text-white">
-    <h1 class="mb-4">Match en Ligne</h1>
-
-    <div class="d-flex justify-content-between w-50 mb-3" style="max-width: 800px; font-size: 1.5rem; font-weight: bold;">
-        <span id="player1Score" class="text-primary">Joueur 1: 0</span>
-        <span id="player2Score" class="text-danger">Joueur 2: 0</span>
+<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-dark text-white">
+    
+    <div class="mb-3">
+        <h2>Partie en Ligne</h2>
+        <p id="score-board">Score: 0 - 0</p>
     </div>
 
-    <div class="game-board-container" style="position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-        <canvas id="gameCanvas" width="800" height="600" style="background-color: #1a1a1a; border: 2px solid #444; border-radius: 8px; max-width: 100%; height: auto;"></canvas>
-    </div>
+    <canvas id="gameCanvas" width="800" height="600" class="border border-light bg-black"></canvas>
 
-    <div class="mt-3 text-center">
-        <p id="gameStatusMessage" class="text-muted">En attente d'un adversaire...</p>
-        <button id="leaveGameBtn" class="btn btn-danger mt-2">Quitter la partie</button>
+    <div class="mt-3">
+        <button id="leave-game-btn" class="btn btn-danger">Quitter la partie</button>
     </div>
+    
 </div>

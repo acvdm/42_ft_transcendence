@@ -1,40 +1,62 @@
 import { io, Socket } from "socket.io-client";
 
 class GameSocketService {
-	public socket: Socket | null = null;
+    private socket: Socket | null = null;
 
-	public connect(token: string) {
-		if (this.socket) return; // Évite double connexion
-		
-		this.socket = io("/", {
-			path: "/pong.io",
-			auth: { token: `Bearer ${token}` },
-			reconnection: true,
-		});
-	}
+    // Connexion au serveur de jeu
+    public connect(url: string, token: string): void {
+        if (this.socket) return;
 
-	public joinGame(roomId: string) {
-		this.socket?.emit('joinGame', roomId);
-	}
+        this.socket = io(url, {
+            auth: { token },
+            transports: ['websocket'], // Force l'utilisation de WebSocket
+            autoConnect: true
+        });
 
-	public sendInput(roomId: string, key: string) {
-		this.socket?.emit('input', { roomId, key });
-	}
+        this.socket.on("connect", () => {
+            console.log("Connecté au serveur de jeu :", this.socket?.id);
+        });
 
-	public onGameState(callback: (gameState: any) => void) {
-		this.socket?.on('gameState', callback);
-	}
-	
-	public onGameInterrupted(callback: (msg: string) => void) {
-		this.socket?.on('gameInterrupted', callback);
-	}
+        this.socket.on("disconnect", () => {
+            console.log("Déconnecté du serveur de jeu");
+        });
+    }
 
-	public disconnect() {
-		if (this.socket) {
-			this.socket.disconnect();
-			this.socket = null;
-		}
-	}
+    // Rejoindre une partie spécifique
+    public joinRoom(roomId: string): void {
+        if (this.socket) {
+            this.socket.emit("joinGame", { roomId });
+        }
+    }
+
+    // Envoyer les inputs du joueur (ex: monter/descendre)
+    public sendInput(input: any): void {
+        if (this.socket) {
+            this.socket.emit("input", input);
+        }
+    }
+
+    // Écouter les mises à jour de l'état du jeu (position balle, raquettes)
+    public onGameStateUpdate(callback: (gameState: any) => void): void {
+        if (this.socket) {
+            this.socket.on("gameState", callback);
+        }
+    }
+
+    // Écouter la fin de la partie
+    public onGameEnd(callback: (result: any) => void): void {
+        if (this.socket) {
+            this.socket.on("gameEnd", callback);
+        }
+    }
+
+    // Déconnexion propre
+    public disconnect(): void {
+        if (this.socket) {
+            this.socket.disconnect();
+            this.socket = null;
+        }
+    }
 }
 
 export default new GameSocketService();
