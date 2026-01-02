@@ -7441,7 +7441,7 @@
   var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900"></span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative"></div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
-  var RemoteGame_default = '<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-dark text-white">\n    \n    <div class="mb-3">\n        <h2>Partie en Ligne</h2>\n        <p id="score-board">Score: 0 - 0</p>\n    </div>\n\n    <canvas id="gameCanvas" width="800" height="600" class="border border-light bg-black"></canvas>\n\n    <div class="mt-3">\n        <button id="leave-game-btn" class="btn btn-danger">Quitter la partie</button>\n    </div>\n    \n</div>';
+  var RemoteGame_default = '<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #1a1a1a; padding: 20px;">\n    \n    <div style="margin-bottom: 20px; text-align: center;">\n        <h2 style="color: #ffc107; margin-bottom: 10px;">Partie en Ligne</h2>\n        <p id="score-board" style="color: white; font-size: 1.5rem; font-weight: bold;">Score: 0 - 0</p>\n    </div>\n\n    <canvas \n        id="gameCanvas" \n        width="800" \n        height="600" \n        style="\n            border: 3px solid white; \n            background-color: #000000;\n            display: block;\n            max-width: 90vw;\n            max-height: 60vh;\n        "\n    ></canvas>\n\n    <div style="margin-top: 20px;">\n        <button \n            id="leave-game-btn" \n            style="\n                padding: 10px 30px;\n                font-size: 1.1rem;\n                background-color: #dc3545;\n                color: white;\n                border: none;\n                border-radius: 5px;\n                cursor: pointer;\n            "\n        >Quitter la partie</button>\n    </div>\n    \n</div>';
 
   // scripts/pages/TournamentPage.html
   var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Arena</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm relative" style="background-color: white;">\n                    \n                    <div class="flex flex-row w-full h-[60px] rounded-t-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50"> \n                        <span id="game-p1-name" class="text-2xl font-bold text-gray-800 w-1/3 text-left">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 w-1/3 text-center"></span>\n                        <span id="game-p2-name" class="text-2xl font-bold text-gray-800 w-1/3 text-right">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative overflow-hidden">\n                        \n                    </div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					    </div>\n				    </div>\n			    </div> \n            </div>\n        </div>\n    </div>\n\n\n    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n        <div class="window w-[600px] bg-white shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament setup</div>\n            </div>\n            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>\n                \n                <div class="flex flex-col gap-1">\n                    <label class="font-bold text-sm">Tournament name:</label>\n                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urN\xD4\xEE\xEF d33s b0ggggg0\xF4\xF4ssss">\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>\n                    <div class="grid grid-cols-2 gap-4">\n                        <div>\n                            <label class="text-xs font-bold">Player 1 (You):</label>\n                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 2:</label>\n                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 3:</label>\n                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 4:</label>\n                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">\n                        </div>\n                    </div>\n                </fieldset>\n\n                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>\n                    <div class="flex flex-row items-center gap-8 justify-center">\n                        <div class="flex flex-row items-center gap-2 relative">\n                            <label class="text-sm font-semibold">Ball :</label>\n                            <div class="relative">\n                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                </button>\n                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                </div>\n                            </div>\n                            <input type="hidden" id="tour-ball-value" value="/assets/emoticons/smile.gif">\n                        </div>\n                        <div class="flex flex-row items-center gap-2 relative">\n                            <label class="text-sm font-semibold">Background :</label>\n                            <div class="relative">\n                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                </button>\n                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                            </div>\n                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                        </div>\n                    </div>\n                </fieldset>\n\n                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                    START TOURNAMENT\n                </button>\n            </div>\n        </div>\n    </div>\n\n    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n        <div class="window w-[800px] bg-white shadow-2xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament is about to start</div>\n            </div>\n            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                <h2 class="text-2xl font-black text-blue-900">TOURNAMENT PROGRESS</h2>\n                \n                <div class="flex flex-col gap-4 w-full items-center">\n                    <div class="flex flex-row justify-between w-full px-10">\n                        <div class="flex flex-col items-center bg-white p-2 border border-gray-300 rounded w-[200px]">\n                            <span class="text-xs font-bold text-gray-500">Semi-Final 1</span>\n                            <span id="bracket-sf1" class="font-bold"></span>\n                        </div>\n                        <div class="flex flex-col items-center bg-white p-2 border border-gray-300 rounded w-[200px]">\n                            <span class="text-xs font-bold text-gray-500">Semi-Final 2</span>\n                            <span id="bracket-sf2" class="font-bold"></span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center bg-yellow-50 p-4 border-2 border-yellow-400 rounded w-[300px] shadow-md">\n                        <span class="text-xs font-bold text-yellow-600">FINAL</span>\n                        <span id="bracket-final" class="font-black text-lg"></span>\n                    </div>\n                </div>\n\n                <div class="w-full border-t border-gray-300 my-2"></div>\n                <p id="bracket-status-msg" class="text-gray-600 italic">Ready for the next match...</p>\n\n                <button id="bracket-continue-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                    CONTINUE TO MATCH\n                </button>\n            </div>\n        </div>\n    </div>\n\n    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in"> <div class="title-bar bg-blue-800">\n                <div class="title-bar-text text-white">UPCOMING MATCH</div>\n            </div>\n            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-8">\n                <h2 class="text-3xl font-black text-blue-900" id="match-title">SEMI-FINAL 1</h2>\n                \n                <div class="flex items-center gap-10 bg-white p-6 rounded-lg shadow-inner border border-gray-300">\n                    <div class="text-4xl font-bold text-gray-800 w-48 text-right truncate" id="next-p1">Player A</div>\n                    <div class="text-3xl font-black text-red-600 italic">VS</div>\n                    <div class="text-4xl font-bold text-gray-800 w-48 text-left truncate" id="next-p2">Player B</div>\n                </div>\n\n                <p class="text-gray-500 text-sm">The game will start as soon as you click Play.</p>\n\n                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                    PLAY !\n                </button>\n            </div>\n        </div>\n    </div>\n\n    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n            <div class="title-bar bg-yellow-500">\n                <div class="title-bar-text text-black font-bold">TOURNAMENT COMPLETED</div>\n            </div>\n            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CHAMPION</h1>\n                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white shadow-xl rounded-xl" id="winner-name">NAME</div>\n                <p class="text-gray-600 text-lg mt-4">Congratulations on winning <span id="tour-name-display" class="font-bold text-black"></span>!</p>\n                \n                <button id="quit-tournament-btn" class="mt-8 px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 border border-black">\n                    Return to Menu\n                </button>\n            </div>\n        </div>\n    </div>\n\n</div>';
@@ -8345,133 +8345,168 @@
   }
 
   // scripts/services/GameSocketService.ts
-  var GameSocketService = class {
+  var GameSocketServiceClass = class {
     constructor() {
       this.socket = null;
+      this.currentRoomId = null;
     }
-    // Connexion au serveur de jeu
-    connect(url2, token) {
-      if (this.socket) return;
-      this.socket = lookup2(url2, {
+    connect(token) {
+      if (this.socket?.connected) {
+        console.log("Already connected");
+        return;
+      }
+      this.socket = lookup2("http://localhost:3003", {
+        path: "/pong.io",
         auth: { token },
-        transports: ["websocket"],
-        // Force l'utilisation de WebSocket
-        autoConnect: true
+        transports: ["websocket", "polling"]
       });
       this.socket.on("connect", () => {
-        console.log("Connect\xE9 au serveur de jeu :", this.socket?.id);
+        console.log("Connected to game server:", this.socket?.id);
       });
       this.socket.on("disconnect", () => {
-        console.log("D\xE9connect\xE9 du serveur de jeu");
+        console.log("Disconnected from game server");
+      });
+      this.socket.on("gameInterrupted", (message) => {
+        alert(message);
+        window.history.back();
       });
     }
-    // Rejoindre une partie spécifique
     joinRoom(roomId) {
-      if (this.socket) {
-        this.socket.emit("joinGame", { roomId });
+      if (!this.socket) {
+        console.error("Socket not connected!");
+        return;
       }
+      this.currentRoomId = roomId;
+      this.socket.emit("joinGame", roomId);
+      console.log(`Joining room: ${roomId}`);
     }
-    // Envoyer les inputs du joueur (ex: monter/descendre)
-    sendInput(input) {
-      if (this.socket) {
-        this.socket.emit("input", input);
-      }
+    sendInput(key) {
+      if (!this.socket || !this.currentRoomId) return;
+      this.socket.emit("input", {
+        roomId: this.currentRoomId,
+        key
+      });
     }
-    // Écouter les mises à jour de l'état du jeu (position balle, raquettes)
-    onGameStateUpdate(callback) {
-      if (this.socket) {
-        this.socket.on("gameState", callback);
-      }
+    onGameState(callback) {
+      if (!this.socket) return;
+      this.socket.on("gameState", callback);
     }
-    // Écouter la fin de la partie
-    onGameEnd(callback) {
-      if (this.socket) {
-        this.socket.on("gameEnd", callback);
-      }
-    }
-    // Déconnexion propre
     disconnect() {
       if (this.socket) {
         this.socket.disconnect();
         this.socket = null;
+        this.currentRoomId = null;
       }
     }
   };
-  var GameSocketService_default = new GameSocketService();
+  var GameSocketService = new GameSocketServiceClass();
+  var GameSocketService_default = GameSocketService;
 
   // scripts/pages/RemoteGame.ts
   var RemoteGame = class {
     constructor(roomId) {
-      this.isRunning = false;
-      // --- GESTION DES INPUTS ---
-      this.handleKey = (event) => {
-        if (!this.isRunning) return;
-        const validKeys = ["ArrowUp", "ArrowDown", "w", "s", "up", "down"];
-        if (validKeys.includes(event.key)) {
-          GameSocketService_default.sendInput(this.roomId, event.key);
-        }
-      };
+      this.canvas = null;
+      this.ctx = null;
+      this.keysPressed = /* @__PURE__ */ new Set();
       this.roomId = roomId;
-      const canvasElement = document.getElementById("gameCanvas");
-      if (!canvasElement) throw new Error("Canvas element with id 'gameCanvas' not found");
-      this.canvas = canvasElement;
-      const context = this.canvas.getContext("2d");
-      if (!context) throw new Error("Could not get 2D context");
-      this.ctx = context;
-      this.canvas.width = 800;
-      this.canvas.height = 600;
+      console.log("RemoteGame constructor called with room:", roomId);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error("Pas de token ! Redirection vers login...");
+        window.location.href = "#login";
+        return;
+      }
+      this.init(token);
     }
-    async start() {
-      console.log(`Initialising Remote Game for room: ${this.roomId}`);
-      const token = localStorage.getItem("accessToken") || "";
-      GameSocketService_default.connect(token);
-      GameSocketService_default.joinGame(this.roomId);
-      GameSocketService_default.onGameState((state) => {
-        this.render(state);
-        this.updateScore(state.score);
+    init(token) {
+      console.log("Init called");
+      setTimeout(() => {
+        this.canvas = document.getElementById("gameCanvas");
+        if (!this.canvas) {
+          console.error("Canvas introuvable dans init()!");
+          return;
+        }
+        console.log("Canvas found in init:", this.canvas);
+        console.log("Canvas dimensions:", this.canvas.width, "x", this.canvas.height);
+        this.ctx = this.canvas.getContext("2d");
+        if (!this.ctx) {
+          console.error("Could not get 2D context!");
+          return;
+        }
+        console.log("Context obtained successfully");
+        this.ctx.fillStyle = "red";
+        this.ctx.fillRect(0, 0, 100, 100);
+        console.log("Test rectangle drawn");
+        console.log("Connecting to game server...");
+        GameSocketService_default.connect(token);
+        console.log("Joining room:", this.roomId);
+        GameSocketService_default.joinRoom(this.roomId);
+        this.setupControls();
+        GameSocketService_default.onGameState((state) => {
+          console.log("Game state received:", state);
+          this.draw(state);
+          this.updateScore(state.score);
+        });
+      }, 200);
+    }
+    setupControls() {
+      console.log("Setting up controls");
+      window.addEventListener("keydown", (e) => {
+        if (this.keysPressed.has(e.key)) return;
+        this.keysPressed.add(e.key);
+        if (e.key === "ArrowUp" || e.key === "w") {
+          console.log("Sending ArrowUp");
+          GameSocketService_default.sendInput("ArrowUp");
+        }
+        if (e.key === "ArrowDown" || e.key === "s") {
+          console.log("Sending ArrowDown");
+          GameSocketService_default.sendInput("ArrowDown");
+        }
       });
-      GameSocketService_default.onGameInterrupted((msg) => {
-        alert(msg);
-        this.stop();
+      window.addEventListener("keyup", (e) => {
+        this.keysPressed.delete(e.key);
       });
-      this.startInputListener();
-      this.isRunning = true;
     }
-    stop() {
-      this.isRunning = false;
-      this.stopInputListener();
-      GameSocketService_default.disconnect();
-    }
-    startInputListener() {
-      window.addEventListener("keydown", this.handleKey);
-    }
-    stopInputListener() {
-      window.removeEventListener("keydown", this.handleKey);
-    }
-    // --- RENDER (AFFICHAGE) ---
-    render(state) {
+    draw(state) {
+      if (!this.ctx || !this.canvas) {
+        console.error("Cannot draw: ctx or canvas is null");
+        return;
+      }
       this.ctx.fillStyle = "black";
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.fillStyle = "white";
-      this.ctx.beginPath();
-      this.ctx.arc(state.ball.x, state.ball.y, 10, 0, Math.PI * 2);
-      this.ctx.fill();
-      this.ctx.fillStyle = "blue";
-      this.ctx.fillRect(10, state.paddle1.y, 10, 100);
-      this.ctx.fillStyle = "red";
-      this.ctx.fillRect(this.canvas.width - 20, state.paddle2.y, 10, 100);
       this.ctx.strokeStyle = "white";
-      this.ctx.setLineDash([5, 15]);
+      this.ctx.setLineDash([10, 5]);
       this.ctx.beginPath();
       this.ctx.moveTo(this.canvas.width / 2, 0);
       this.ctx.lineTo(this.canvas.width / 2, this.canvas.height);
       this.ctx.stroke();
+      this.ctx.setLineDash([]);
+      if (state.ball) {
+        this.ctx.fillStyle = "white";
+        this.ctx.beginPath();
+        this.ctx.arc(state.ball.x, state.ball.y, 10, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+      this.ctx.fillStyle = "white";
+      if (state.paddle1) {
+        this.ctx.fillRect(10, state.paddle1.y, 10, 100);
+      }
+      if (state.paddle2) {
+        this.ctx.fillRect(this.canvas.width - 20, state.paddle2.y, 10, 100);
+      }
     }
     updateScore(score) {
-      const scoreElement = document.getElementById("scoreBoard");
-      if (scoreElement) {
-        scoreElement.innerText = `J1: ${score.player1} - J2: ${score.player2}`;
+      const scoreBoard = document.getElementById("score-board");
+      if (scoreBoard && score) {
+        scoreBoard.innerText = `Score: ${score.player1} - ${score.player2}`;
       }
+    }
+    start() {
+      console.log(`Game started in room: ${this.roomId}`);
+    }
+    stop() {
+      console.log("Stopping remote game");
+      GameSocketService_default.disconnect();
     }
   };
 
@@ -8574,11 +8609,6 @@
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
-    if (currentRemoteGame) {
-      console.log("Stopping remote game...");
-      currentRemoteGame.stop();
-      currentRemoteGame = null;
-    }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
     if (path === "/logout") {

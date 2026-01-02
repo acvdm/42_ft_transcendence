@@ -1,14 +1,36 @@
-<div class="d-flex flex-column align-items-center justify-content-center vh-100 bg-dark text-white">
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background-color: #1a1a1a; padding: 20px;">
     
-    <div class="mb-3">
-        <h2>Partie en Ligne</h2>
-        <p id="score-board">Score: 0 - 0</p>
+    <div style="margin-bottom: 20px; text-align: center;">
+        <h2 style="color: #ffc107; margin-bottom: 10px;">Partie en Ligne</h2>
+        <p id="score-board" style="color: white; font-size: 1.5rem; font-weight: bold;">Score: 0 - 0</p>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="600" class="border border-light bg-black"></canvas>
+    <canvas 
+        id="gameCanvas" 
+        width="800" 
+        height="600" 
+        style="
+            border: 3px solid white; 
+            background-color: #000000;
+            display: block;
+            max-width: 90vw;
+            max-height: 60vh;
+        "
+    ></canvas>
 
-    <div class="mt-3">
-        <button id="leave-game-btn" class="btn btn-danger">Quitter la partie</button>
+    <div style="margin-top: 20px;">
+        <button 
+            id="leave-game-btn" 
+            style="
+                padding: 10px 30px;
+                font-size: 1.1rem;
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            "
+        >Quitter la partie</button>
     </div>
     
 </div>

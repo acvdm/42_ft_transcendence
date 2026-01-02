@@ -94,14 +94,14 @@ export class ServerGame {
 
 	public handleInput(playerId: string, input: string) {
 		const speed = 10;
-		// Sécurité : seul le bon joueur peut bouger sa raquette
+		
 		if (playerId === this.player1Id) {
-			if (input === 'w' || input === 'ArrowUp') this.gameState.paddle1.y = Math.max(0, this.gameState.paddle1.y - speed);
-			if (input === 's' || input === 'ArrowDown') this.gameState.paddle1.y = Math.min(this.height - this.paddleHeight, this.gameState.paddle1.y + speed);
+			if (input === 'ArrowUp') this.gameState.paddle1.y = Math.max(0, this.gameState.paddle1.y - speed);
+			if (input === 'ArrowDown') this.gameState.paddle1.y = Math.min(this.height - this.paddleHeight, this.gameState.paddle1.y + speed);
 		}
 		else if (playerId === this.player2Id) {
-			if (input === 'up' || input === 'ArrowUp') this.gameState.paddle2.y = Math.max(0, this.gameState.paddle2.y - speed);
-			if (input === 'down' || input === 'ArrowDown') this.gameState.paddle2.y = Math.min(this.height - this.paddleHeight, this.gameState.paddle2.y + speed);
+			if (input === 'ArrowUp') this.gameState.paddle2.y = Math.max(0, this.gameState.paddle2.y - speed);
+			if (input === 'ArrowDown') this.gameState.paddle2.y = Math.min(this.height - this.paddleHeight, this.gameState.paddle2.y + speed);
 		}
 	}
 }

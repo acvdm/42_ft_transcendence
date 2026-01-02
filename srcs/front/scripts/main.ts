@@ -165,11 +165,7 @@ const handleLocationChange = () => {
 
 	let path = window.location.pathname;
 	
-	if (currentRemoteGame) {
-        console.log("Stopping remote game...");
-        currentRemoteGame.stop();
-        currentRemoteGame = null;
-    }
+	
 	// Récupération des tokens (User normal OU Guest)
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
