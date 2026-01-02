@@ -460,7 +460,7 @@ export function initGamePage(mode: string): void {
                         return;
                     }
                     // condition de victoire : PREMIER A 11
-                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                    if (activeGame.score.player1 >= 3 || activeGame.score.player2 >= 3) {
                         activeGame.isRunning = false; // STOP LE JEU
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
@@ -522,6 +522,7 @@ export function initGamePage(mode: string): void {
 
     function showSummary(champion: string) {
         // Reset background
+        launchConfettiExplosion();
         const container = document.getElementById('left');
         if (container) container.style.backgroundColor = 'white';
 
@@ -774,6 +775,7 @@ export function initGamePage(mode: string): void {
                             const p1Wins = activeGame.score.player1 >= 11;
                             const winnerName = p1Wins ? player1Display.innerText : opponentName;
                             
+                            launchConfetti(4000);
                             const userIdStr = localStorage.getItem('userId');
                             if (userIdStr) {
                                 const userId = Number(userIdStr);
@@ -793,5 +795,155 @@ export function initGamePage(mode: string): void {
             if (errorMsg) errorMsg.classList.add('hidden');
             nameInput.classList.remove('border-red-500');
         });
+    }
+
+    // Fonction pour créer l'effet de confettis
+function launchConfetti(duration: number = 3000) {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+    const confettiCount = 150;
+    const container = document.body;
+
+    // Créer le conteneur de confettis
+    const confettiContainer = document.createElement('div');
+    confettiContainer.id = 'confetti-container';
+    confettiContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+    `;
+    container.appendChild(confettiContainer);
+
+    // Créer les confettis
+    for (let i = 0; i < confettiCount; i++) {
+        createConfetti(confettiContainer, colors);
+    }
+
+    // Nettoyer après la durée spécifiée
+    setTimeout(() => {
+        confettiContainer.remove();
+    }, duration);
+}
+
+function createConfetti(container: HTMLElement, colors: string[]) {
+    const confetti = document.createElement('div');
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = Math.random() * 10 + 5; // 5-15px
+    const startX = Math.random() * window.innerWidth;
+    const endX = startX + (Math.random() - 0.5) * 200; // Dérive horizontale
+    const rotation = Math.random() * 360;
+    const duration = Math.random() * 2 + 2; // 2-4 secondes
+    const delay = Math.random() * 0.5; // Délai aléatoire
+
+    confetti.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: ${color};
+        top: -20px;
+        left: ${startX}px;
+        opacity: 1;
+        transform: rotate(${rotation}deg);
+        border-radius: ${Math.random() > 0.5 ? '50%' : '0'}; /* Rond ou carré */
+        animation: fall ${duration}s ease-in ${delay}s forwards;
+    `;
+
+    container.appendChild(confetti);
+
+    // Animation CSS inline
+    const style = document.createElement('style');
+    if (!document.getElementById('confetti-animation-style')) {
+        style.id = 'confetti-animation-style';
+        style.textContent = `
+            @keyframes fall {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+    // Variante avec explosion depuis le centre
+     function launchConfettiExplosion() {
+        const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9'];
+        const confettiCount = 100;
+        const container = document.body;
+
+        const confettiContainer = document.createElement('div');
+        confettiContainer.id = 'confetti-explosion-container';
+        confettiContainer.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+            z-index: 9999;
+        `;
+        container.appendChild(confettiContainer);
+
+        for (let i = 0; i < confettiCount; i++) {
+            createExplosionConfetti(confettiContainer, colors, i, confettiCount);
+        }
+
+        setTimeout(() => {
+            confettiContainer.remove();
+        }, 4000);
+    }
+
+    function createExplosionConfetti(container: HTMLElement, colors: string[], index: number, total: number) {
+        const confetti = document.createElement('div');
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 12 + 6;
+        
+        // Angle d'explosion en cercle
+        const angle = (index / total) * Math.PI * 2;
+        const velocity = Math.random() * 300 + 200; // Distance de projection
+        const endX = Math.cos(angle) * velocity;
+        const endY = Math.sin(angle) * velocity - 100; // Légère montée
+        
+        const rotation = Math.random() * 720;
+        const duration = Math.random() * 1.5 + 2;
+
+        confetti.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            background-color: ${color};
+            top: 0;
+            left: 0;
+            opacity: 1;
+            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+            animation: explode-${index} ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        `;
+
+        container.appendChild(confetti);
+
+        // Animation unique pour chaque confetti
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes explode-${index} {
+                0% {
+                    transform: translate(0, 0) rotate(0deg) scale(1);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translate(${endX}px, ${endY + 500}px) rotate(${rotation}deg) scale(0.3);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
