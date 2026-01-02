@@ -6,7 +6,7 @@ class Paddle {
     speed: number;
     color: string;
     image: HTMLImageElement | null = null;
-    constructor(x: number, y: number, imageSrc: string = '/assets/game/paddle.png') {
+    constructor(x: number, y: number, imageSrc: string = '/assets/basic/block.png') {
         this.x = x; // Paddle's x position
         this.y = y; // Paddle's y position
         this.width = 10; // Paddle's width
@@ -29,7 +29,7 @@ class Paddle {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        if (this.image && this.image.complete) {
+        if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
         } else {
             ctx.fillStyle = 'white'; // Paddle color

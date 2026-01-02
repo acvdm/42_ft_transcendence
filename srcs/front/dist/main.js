@@ -7823,7 +7823,7 @@
 
   // scripts/game/Paddle.ts
   var Paddle = class {
-    constructor(x, y, imageSrc = "/assets/game/paddle.png") {
+    constructor(x, y, imageSrc = "/assets/basic/block.png") {
       this.image = null;
       this.x = x;
       this.y = y;
@@ -7844,7 +7844,7 @@
       }
     }
     draw(ctx) {
-      if (this.image && this.image.complete) {
+      if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
         ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
       } else {
         ctx.fillStyle = "white";
@@ -7880,7 +7880,7 @@
       }
     }
     draw(ctx) {
-      if (this.image && this.image.complete) {
+      if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
         ctx.drawImage(
           this.image,
           this.x - this.radius * 1.5,
@@ -8484,7 +8484,7 @@
         if (ctx) {
           const input = new Input_default();
           if (activeGame) activeGame.isRunning = false;
-          activeGame = new Game_default(canvas, ctx, selectedBall);
+          activeGame = new Game_default(canvas, ctx, input, selectedBall);
           activeGame.onScoreChange = (score) => {
             if (scoreBoard) {
               scoreBoard.innerText = `${score.player1} - ${score.player2}`;
