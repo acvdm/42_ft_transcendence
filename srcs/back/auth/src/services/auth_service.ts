@@ -163,7 +163,6 @@ export async function changeEmailInCredential (
     await credRepo.changeEmail(db, userId, email);
 }
 
-///////////// RAJOUTER PAR FAUSTINE
 
 export async function changePasswordInCredential (
     db: Database,
@@ -176,9 +175,6 @@ export async function changePasswordInCredential (
 
     await credRepo.changePwd(db, credentialId, newHashedPwd);
 }
-
-///////////// RAJOUTER PAR FAUSTINE
-
 
 
 export async function loginUser(
@@ -531,4 +527,19 @@ export async function finalizeLogin2FA(
         refreshToken: tokens.refreshToken,
         userId: userId
     };
+}
+
+export async function deleteAuthData(
+    db: Database, 
+    userId: number, 
+): Promise<void>
+{
+    try {
+        await tokenRepo.deleteAllTokensForUser(db, userId);
+        await credRepo.deleteCredentialsByUserId(db, userId);
+    }
+    catch (error) {
+        console.error(`Error deleting auth data for user ${userId}`, error);
+        throw error;
+    }
 }

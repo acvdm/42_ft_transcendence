@@ -4,7 +4,7 @@ import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
-import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword } from './services/auth_service.js';
+import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword, deleteAuthData } from './services/auth_service.js';
 
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -358,6 +358,40 @@ fastify.post('/logout', async (request, reply) =>
 })
 
 
+/* -- DELETE -- */
+fastify.delete('/users/:id/', async (request, reply) => {
+	try
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		if (!userId) {
+			return reply.status(400).send({error: "Invalid User ID"});
+		}
+
+		// service qui supprime Tokens + Credentials
+		await deleteAuthData(db, userId);
+
+		console.log(`✅ User correctly deleted for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			error: null
+		});
+
+	}
+	catch (err: any) 
+	{
+		console.error("Deleted Auth Error:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "Failed to delete auth data"}
+		});
+	}
+});
+
 
 //---------------------------------------
 //---------------- 2FA ------------------
@@ -380,14 +414,8 @@ fastify.post('/2fa/generate', async (request, reply) => {
 	{
 		const userIdHeader = request.headers['x-user-id'];
 		if (!userIdHeader)
-		{
-			//callback pour test
 			return reply.status(401).send({ error: "Unauthorized: Missing User ID" });
-             // Pour test direct (A SUPPRIMER EN PROD) :
-            //  const body = request.body as { userId: number };
-            //  const userId = body.userId;
 
-		}
 		const userId = parseInt(userIdHeader as string);
 
 		const body = request.body as { type?: 'APP' | 'EMAIL' };

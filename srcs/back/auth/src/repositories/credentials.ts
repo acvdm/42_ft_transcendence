@@ -303,18 +303,13 @@ export async function disable2FA(
     );
 }
 
-
-// active le 2FA en DB (passe a true)
-/* MODIFIER POUR two_fa_method */
-// export async function disable2FA(
-//     db: Database,
-//     user_id: number
-// ): Promise<void>
-// {
-//     await db.run(
-//         `UPDATE CREDENTIALS
-//         SET is_2fa_enabled = 0, two_fa_secret = NULL
-//         WHERE user_id = ?`,
-//         [user_id]
-//     );
-// }
+export async function deleteCredentialsByUserId(
+    db: Database,
+    userId: number
+): Promise<void>
+{
+    await db.run(
+        `DELETE FROM CREDENTIALS WHERE user_id = ?`,
+        [userId]
+    );
+}

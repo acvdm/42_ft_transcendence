@@ -631,6 +631,71 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
 });
 
 
+/* -- DELET USER -- */
+fastify.delete('/users/:id', async (request, reply) =>
+{
+	console.log("Processsing account deletion...");
+
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	if (!userId) {
+		return reply.status(404).send({
+			success: false,
+			error: { message: "User not found" }
+		});
+	}
+
+	const authURL = `http://auth:3001/users/${userId}/`;
+
+	try
+	{
+		console.log("- Deleting friendships...");
+		await friendRepo.deleteAllFriendships(db, userId);
+
+		console.log("- Calling Auth service...");
+		const authResponse = await fetch(authURL, {
+			method: "DELETE",
+		});
+	
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propoager le code d'erreur du service auth
+			const error: any = new Error(
+				authJson.error?.message || `Auth service error: ${authResponse.status}`
+			);
+			error.statusCode = authResponse.status;
+			throw error;
+		}
+
+		console.log("- Anonymising user profile...");
+		// remplace le pseudo par Deleted_User_XXX et l'avatar par defaut
+		await userRepo.anonymizeUser(db, userId);
+
+		// deconnextion -> suppression du cookie pour que le navigateur sache quil nest plus connecte
+		reply.clearCookie('refreshToken', { path: '/' });
+
+		return reply.status(200).send({
+			success: true,
+			message: "Account successfully deleted",
+			error: null
+		});
+	}
+	catch (err: any)
+	{
+		console.error("Error during account deletion:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: err.message || "Failed to delete account" }
+		});
+	}
+})
+
 //---------------------------------------
 //--------------- FRIENDS ---------------
 //---------------------------------------
@@ -749,6 +814,8 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 		});
 	}
 })
+
+
 
 
 
