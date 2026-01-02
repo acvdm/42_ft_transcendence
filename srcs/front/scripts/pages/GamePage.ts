@@ -37,6 +37,10 @@ interface TournamentData
     matches: TournamentMatch[];
     currentMatchIdx: number; // on defini l'id du match pour le stocker dans la db
     currentStep: 'registration' | 'semi_final_1' | 'semi_final_2' | 'final' | 'finished';
+    settings: { // Ajout pour stocker les préférences graphiques du tournoi
+        ballSkin: string;
+        bgSkin: string;
+    };
 }
 
 // =========================================================
@@ -72,35 +76,9 @@ export function render(): string {
 
 export function initGamePage(mode: string): void {
 
-    const modal = document.getElementById('game-setup-modal') as HTMLElement;
-    const startButton = document.getElementById('start-game-btn') as HTMLButtonElement;
-    const nameInput = document.getElementById('opponent-name') as HTMLInputElement;
-    const errorMsg = document.getElementById('error-message') as HTMLElement;
-
+    // Récupération des éléments communs
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
     const player2Display = document.getElementById('player-2-name') as HTMLElement;
-    
-    const ballButton = document.getElementById('ball-selector-button') as HTMLButtonElement;
-    const ballDropdown = document.getElementById('ball-selector-dropdown') as HTMLElement;
-    const ballGrid = document.getElementById('ball-grid') as HTMLElement;
-    const selectedBallImg = document.getElementById('selected-ball-img') as HTMLImageElement;
-    const ballValueInput = document.getElementById('ball-value') as HTMLInputElement;
-
-    const bgButton = document.getElementById('bg-selector-button') as HTMLButtonElement;
-    const bgDropdown = document.getElementById('bg-selector-dropdown') as HTMLElement;
-    const bgGrid = document.getElementById('bg-grid') as HTMLElement;
-    const selectedBgPreview = document.getElementById('selected-bg-preview') as HTMLElement;
-    const bgValueInput = document.getElementById('bg-value') as HTMLInputElement;
-    const gameField = document.getElementById('left') as HTMLElement;
-
-
-    const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
-
-    // ccondition ne doit pas bloquer si on est en mode tournoi (car modal peut être null en mode tournoi)
-    if (mode === 'local' && (!modal || !startButton || !nameInput)) {
-        return;
-    }
-
 
     // on recupere le username du joueur connecte
     const userId = localStorage.getItem('userId');
@@ -135,24 +113,15 @@ export function initGamePage(mode: string): void {
         initLocalMode();
     }
 
-    // affichage selon le mode, on rajoutera remote + tournoi plus tard
-    if (mode === 'local') {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    } else {
-        if (modal) {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-    }
-
-
     // ---------------------------------------------------------
     // -------------- LOGIQUE DU JEU EN TOURNOI ----------------
     // ---------------------------------------------------------
 
     function initTournamenetMode() {
-        const setupView = document.getElementById('tournament-setup');
+        // Affiche la MODALE de setup (et non plus la div intégrée)
+        const setupModal = document.getElementById('tournament-setup-modal');
+        if (setupModal) setupModal.classList.remove('hidden');
+
         const nameInput = document.getElementById('tournament-name-input') as HTMLInputElement;
         const player1Input = document.getElementById('player1-input') as HTMLInputElement;
         const player2Input = document.getElementById('player2-input') as HTMLInputElement;
@@ -162,6 +131,8 @@ export function initGamePage(mode: string): void {
         const startButton = document.getElementById('start-tournament-btn'); 
         const errorDiv = document.getElementById('setup-error');
 
+        // Initialisation des sélecteurs spécifiques au tournoi
+        initTournamentSelectors();
 
         const userId = localStorage.getItem('userId');
         const username = localStorage.getItem('username');
@@ -208,14 +179,83 @@ export function initGamePage(mode: string): void {
                 return;
             }
 
+            // Récupération des choix graphiques du tournoi
+            const ballVal = (document.getElementById('tour-ball-value') as HTMLInputElement)?.value || 'classic';
+            const bgVal = (document.getElementById('tour-bg-value') as HTMLInputElement)?.value || '#E8F4F8';
+
             // demarrage du tournoi 
-            startTournamentLogic(tName, players);
+            startTournamentLogic(tName, players, ballVal, bgVal);
         });
     }
 
-    function startTournamentLogic(name: string, playersAliases: string[]) {
+    // Helper pour initialiser les dropdowns du tournoi (IDs spécifiques tour-*)
+    function initTournamentSelectors() {
+        const ballBtn = document.getElementById('tour-ball-selector-button');
+        const ballDrop = document.getElementById('tour-ball-selector-dropdown');
+        const ballGrid = document.getElementById('tour-ball-grid');
+        const ballImg = document.getElementById('tour-selected-ball-img') as HTMLImageElement;
+        const ballInput = document.getElementById('tour-ball-value') as HTMLInputElement;
+
+        const bgBtn = document.getElementById('tour-bg-selector-button');
+        const bgDrop = document.getElementById('tour-bg-selector-dropdown');
+        const bgGrid = document.getElementById('tour-bg-grid');
+        const bgPrev = document.getElementById('tour-selected-bg-preview');
+        const bgInput = document.getElementById('tour-bg-value') as HTMLInputElement;
+
+        // Balle
+        if (ballBtn && ballDrop && ballGrid) {
+            const uniqueUrls = new Set<string>();
+            ballGrid.innerHTML = '';
+            Object.keys(ballEmoticons).forEach(key => {
+                const imgUrl = ballEmoticons[key];
+                if (!uniqueUrls.has(imgUrl)) {
+                    uniqueUrls.add(imgUrl);
+                    const div = document.createElement('div');
+                    div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+                    div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+                    div.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if(ballImg) ballImg.src = imgUrl;
+                        if(ballInput) ballInput.value = imgUrl;
+                        ballDrop.classList.add('hidden');
+                    });
+                    ballGrid.appendChild(div);
+                }
+            });
+            ballBtn.addEventListener('click', (e) => { e.stopPropagation(); ballDrop.classList.toggle('hidden'); });
+            document.addEventListener('click', (e) => { if (!ballDrop.contains(e.target as Node) && !ballBtn.contains(e.target as Node)) ballDrop.classList.add('hidden'); });
+        }
+
+        if (bgBtn && bgDrop && bgGrid) {
+            bgGrid.innerHTML = '';
+            Object.keys(gameBackgrounds).forEach(key => {
+                const color = gameBackgrounds[key];
+                const div = document.createElement('div');
+                div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+                div.style.width = "35px";   // ← Taille augmentée
+                div.style.height = "35px";  // ← Taille augmentée
+                div.style.padding = "2px";
+                
+                const circle = document.createElement('div');
+                circle.className = "w-full h-full rounded-full border border-gray-300";
+                circle.style.backgroundColor = color;
+                div.appendChild(circle);
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if(bgPrev) bgPrev.style.backgroundColor = color;
+                    if(bgInput) bgInput.value = color;
+                    bgDrop.classList.add('hidden');
+                });
+                bgGrid.appendChild(div);
+            });
+            bgBtn.addEventListener('click', (e) => { e.stopPropagation(); bgDrop.classList.toggle('hidden'); });
+            document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
+        }
+    }
+
+    function startTournamentLogic(name: string, playersAliases: string[], ballSkin: string, bgSkin: string) {
         // on retire la modale de slection des infos de jeu
-        document.getElementById('tournament-setup')?.classList.add('hidden');
+        document.getElementById('tournament-setup-modal')?.classList.add('hidden');
 
         // recuperation de l'id du user connecté
         const userIdStr = localStorage.getItem('userId');
@@ -238,7 +278,8 @@ export function initGamePage(mode: string): void {
                 { round: 'final',        winner: null, p1: null,              p2: null }               // finale
             ],
             currentMatchIdx: 0, // on defini l'id du match pour le stocker dans la db
-            currentStep: 'semi_final_1'
+            currentStep: 'semi_final_1',
+            settings: { ballSkin, bgSkin }
         };
 
         // on fait une annonce dans le chat 
@@ -246,26 +287,68 @@ export function initGamePage(mode: string): void {
             gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${playersAliases.join(', ')}`);
         }
 
-        showNextMatch();
+        // On affiche l'arbre (Bracket)
+        showBracketModal();
+    }
+
+    // Affiche la modale de l'arbre du tournoi
+    function showBracketModal() {
+        const bracketModal = document.getElementById('tournament-bracket-modal');
+        if (!bracketModal || !tournamenetState) return;
+
+        // Maj des textes de l'arbre
+        const sf1 = document.getElementById('bracket-sf1');
+        const sf2 = document.getElementById('bracket-sf2');
+        const fin = document.getElementById('bracket-final');
+        const msg = document.getElementById('bracket-status-msg');
+
+        // SF1
+        const m1 = tournamenetState.matches[0];
+        const w1 = m1.winner ? `✅ ${m1.winner}` : null;
+        if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
+
+        // SF2
+        const m2 = tournamenetState.matches[1];
+        const w2 = m2.winner ? `✅ ${m2.winner}` : null;
+        if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
+
+        // Finale
+        const mf = tournamenetState.matches[2];
+        const p1Final = mf.p1 ? mf.p1.alias : '?';
+        const p2Final = mf.p2 ? mf.p2.alias : '?';
+        if (fin) fin.innerText = mf.winner ? `👑 ${mf.winner}` : `${p1Final} vs ${p2Final}`;
+
+        // Message contextuel
+        const idx = tournamenetState.currentMatchIdx;
+        if (msg) {
+            if (idx === 0) msg.innerText = "Next: Semi-Final 1";
+            else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
+            else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+        }
+
+        bracketModal.classList.remove('hidden');
+
+        // Bouton Continue -> Affiche l'annonce du match
+        const btn = document.getElementById('bracket-continue-btn');
+        const newBtn = btn?.cloneNode(true) as HTMLElement;
+        btn?.parentNode?.replaceChild(newBtn, btn!);
+
+        newBtn.addEventListener('click', () => {
+             bracketModal.classList.add('hidden');
+             showNextMatchModal();
+        });
     }
 
     // on affiche le prochain match, maj du titre finale etc, nom des joueurs, message et bouton play
-
-    function showNextMatch() {
+    function showNextMatchModal() {
         // recuperation des elements du DOM
-        const bracketView = document.getElementById('tournament-bracket'); // ecran pour la transition
-        const title = document.getElementById('bracket-title');
+        const nextMatchModal = document.getElementById('tournament-next-match-modal');
+        const title = document.getElementById('match-title');
         const player1Text = document.getElementById('next-p1');
         const player2Text = document.getElementById('next-p2');
-        const infoText = document.getElementById('bracket-info');
         const playButton = document.getElementById('launch-match-btn');
-        const gameArea = document.getElementById('tournament-game-area');
 
-        if (!bracketView || !tournamenetState) return;
-
-        // on masque le rest e
-        gameArea?.classList.add('hidden');
-        bracketView.classList.remove('hidden');
+        if (!nextMatchModal || !tournamenetState) return;
 
         const matchIdx = tournamenetState.currentMatchIdx;
         const match = tournamenetState.matches[matchIdx];
@@ -276,35 +359,30 @@ export function initGamePage(mode: string): void {
 
         // on determinne la logique pour l'affichage des infos du match
         if (matchIdx === 0) {
-            title!.innerText = "SEMI-FINAL 1";
-            const nextMatch = tournamenetState.matches[1];
-            const nextP1 = nextMatch.p1 ? nextMatch.p1.alias : "?";
-            const nextP2 = nextMatch.p2 ? nextMatch.p2.alias : "?";
-            
-            infoText!.innerText = `Next match: ${nextP1} vs ${nextP2}`;
+            if(title) title.innerText = "SEMI-FINAL 1";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! Later: ${nextP1} vs ${nextP2}`);
+            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} !`);
         } else if (matchIdx === 1) {
-            title!.innerText = "SEMI-FINAL 2";
-            infoText!.innerText = "Winner plays in the finale!";
+            if(title) title.innerText = "SEMI-FINAL 2";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! The winner goes to the Final.`);
+            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} !`);
         } else {
-            title!.innerText = "FINALE";
-            infoText!.innerText = "Match de la finale";
+            if(title) title.innerText = "FINALE";
             // affichage dans le chat
             if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Alias} vs ${p2Alias} !`);
         }
 
-        player1Text!.innerText = p1Alias;
-        player2Text!.innerText = p2Alias;
+        if(player1Text) player1Text.innerText = p1Alias;
+        if(player2Text) player2Text.innerText = p2Alias;
+
+        nextMatchModal.classList.remove('hidden');
 
         // on supprime les anciens event listeners du play bouton!
         const newButton = playButton!.cloneNode(true);
         playButton!.parentNode!.replaceChild(newButton, playButton!);
 
         newButton.addEventListener('click', () => {
-            bracketView.classList.add('hidden');
+            nextMatchModal.classList.add('hidden');
             if (match.p1 && match.p2) {
                 launchMatch(match.p1, match.p2);
             }
@@ -328,51 +406,50 @@ export function initGamePage(mode: string): void {
     }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
-        const gameArea = document.getElementById('tournament-game-area');
         const p1Name = document.getElementById('game-p1-name');
         const p2Name = document.getElementById('game-p2-name');
 
-        if (gameArea) {
-            gameArea.classList.remove('hidden');
-            gameArea.style.display = 'flex'; 
+        // Mise à jour de l'UI du jeu
+        if (p1Name) p1Name.innerText = p1.alias;
+        if (p2Name) p2Name.innerText = p2.alias;
 
-            if (p1Name) p1Name.innerText = p1.alias;
-            if (p2Name) p2Name.innerText = p2.alias;
-        }
+        // Appliquer la couleur de fond choisie au conteneur gauche
+        const container = document.getElementById('left');
+        if(container && tournamenetState) container.style.backgroundColor = tournamenetState.settings.bgSkin;
 
         console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
         
         // on recupere le conteneur dans lequel on mets le jeu 
         let canvasContainer = document.getElementById('game-canvas-container');
-        if (!canvasContainer && gameArea) {
-             // securite au cas ou on trouve pas l'id
-             canvasContainer = document.createElement('div');
-             canvasContainer.id = 'game-canvas-container';
-             canvasContainer.className = "flex-1 relative bg-black w-full h-full flex items-center justify-center";
-             gameArea.appendChild(canvasContainer);
-        }
-        
         if (canvasContainer) {
             canvasContainer.innerHTML = ''; // on nettoie l'ancien match
             
-            const scoreBoard = document.getElementById('score-board');
             const canvas = document.createElement('canvas');
             canvas.id = 'pong-canvas-tournament';
-            canvas.width = 1600; // check pour ajuste la taille a la fenetre de jeux
-            canvas.height = 900; // check pour ajuste la taille a la fenetre de jeux
+            canvas.width = canvasContainer.clientWidth; // check pour ajuste la taille a la fenetre de jeux
+            canvas.height = canvasContainer.clientHeight; // check pour ajuste la taille a la fenetre de jeux
             canvas.style.width = '100%';
             canvas.style.height = '100%';
-            canvas.style.objectFit = 'contain';
-            // Pour le moment, fond noir par defaut mais on ajustera 
-            canvas.style.backgroundColor = 'black'; 
+            // canvas.style.objectFit = 'contain';
             
             canvasContainer.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
-            if (ctx) {
+            if (ctx && tournamenetState) {
                 const input = new Input();
                 if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game(canvas, ctx, input);
+                
+                // Instanciation avec la balle choisie pour le tournoi
+                activeGame = new Game(canvas, ctx, input, tournamenetState.settings.ballSkin);
+                
+                // Connexion du callback de score pour l'affichage dans le header
+                activeGame.onScoreChange = (score) => {
+                    const scoreBoard = document.getElementById('score-board');
+                    if (scoreBoard) {
+                        scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+                    }
+                };
+                
                 activeGame.start();
 
                 // + fin du jeu (endMatch())
@@ -427,7 +504,7 @@ export function initGamePage(mode: string): void {
             
             tournamenetState.currentMatchIdx++;
             tournamenetState.currentStep = 'semi_final_2';
-            showNextMatch();
+            showBracketModal(); // On réaffiche l'arbre
         } else if (idx === 1) {
             // vainqueur demi finale2 
             const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
@@ -435,7 +512,7 @@ export function initGamePage(mode: string): void {
 
             tournamenetState.currentMatchIdx++;
             tournamenetState.currentStep = 'final';
-            showNextMatch();
+            showBracketModal(); // On réaffiche l'arbre
         } else {
             // fin
             tournamenetState.currentStep = 'finished';
@@ -444,11 +521,14 @@ export function initGamePage(mode: string): void {
     }
 
     function showSummary(champion: string) {
-        document.getElementById('tournament-game-area')?.classList.add('hidden');
-        const summaryView = document.getElementById('tournament-summary');
+        // Reset background
+        const container = document.getElementById('left');
+        if (container) container.style.backgroundColor = 'white';
+
+        const summaryModal = document.getElementById('tournament-summary-modal');
         
-        if (summaryView) {
-            summaryView.classList.remove('hidden');
+        if (summaryModal) {
+            summaryModal.classList.remove('hidden');
             const winnerDisplay = document.getElementById('winner-name');
             const tourNameDisplay = document.getElementById('tour-name-display');
             
@@ -489,244 +569,229 @@ export function initGamePage(mode: string): void {
 // =========================================================
     function initLocalMode() {
         const modal = document.getElementById('game-setup-modal');
+        const startButton = document.getElementById('start-game-btn');
+        const nameInput = document.getElementById('opponent-name') as HTMLInputElement;
+        const errorMsg = document.getElementById('error-message') as HTMLElement;
+        const ballButton = document.getElementById('ball-selector-button') as HTMLButtonElement;
+        const ballDropdown = document.getElementById('ball-selector-dropdown') as HTMLElement;
+        const ballGrid = document.getElementById('ball-grid') as HTMLElement;
+        const selectedBallImg = document.getElementById('selected-ball-img') as HTMLImageElement;
+        const ballValueInput = document.getElementById('ball-value') as HTMLInputElement;
+        const bgButton = document.getElementById('bg-selector-button') as HTMLButtonElement;
+        const bgDropdown = document.getElementById('bg-selector-dropdown') as HTMLElement;
+        const bgGrid = document.getElementById('bg-grid') as HTMLElement;
+        const selectedBgPreview = document.getElementById('selected-bg-preview') as HTMLElement;
+        const bgValueInput = document.getElementById('bg-value') as HTMLInputElement;
+        const gameField = document.getElementById('left') as HTMLElement;
+        const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
+        const player2Display = document.getElementById('player-2-name') as HTMLElement;
+
         if (modal) modal.classList.remove('hidden');
 
-        
-        const startButton = document.getElementById('start-game-button');
-        
-        if (startButton) {
-            startButton.addEventListener('click', () => {
-            modal?.classList.add('hidden');
-                // lancement du jeu!
+        // ---------------------------------------------------------
+        // --- LOGIQUE DU SÉLECTEUR DE BALLE (EMOTICONS) -----------
+        // ---------------------------------------------------------
+
+        if (ballButton && ballDropdown && ballGrid) {
+            // la grille des emotifcones
+            const uniqueUrls = new Set<string>();
+            ballGrid.innerHTML = '';
+            Object.keys(ballEmoticons).forEach(key => {
+                const imgUrl = ballEmoticons[key];
+                // on evite les doublons
+                if (!uniqueUrls.has(imgUrl)) {
+                    uniqueUrls.add(imgUrl);
+                    const div = document.createElement('div');
+                    div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded border border-transparent hover:border-blue-300 flex justify-center items-center";
+                    div.innerHTML = `<img src="${imgUrl}" alt="${key}" class="w-6 h-6 object-contain pointer-events-none">`;
+                    div.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectedBallImg.src = imgUrl;
+                        ballValueInput.value = imgUrl;
+                        ballDropdown.classList.add('hidden');
+                    });
+                    ballGrid.appendChild(div);
+                }
+            });
+            ballButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                ballDropdown.classList.toggle('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                if (!ballDropdown.contains(target) && !ballButton.contains(target)) {
+                    ballDropdown.classList.add('hidden');
+                }
             });
         }
-    }
 
-    // ---------------------------------------------------------
-    // --- LOGIQUE DU SÉLECTEUR DE BALLE (EMOTICONS) -----------
-    // ---------------------------------------------------------
+        // ---------------------------------------------------------
+        // --- LOGIQUE DU SÉLECTEUR DE BACKGROUND -------------------
+        // ---------------------------------------------------------
 
-    if (ballButton && ballDropdown && ballGrid) {
-        
-        // la grille des emotifcones
-        const uniqueUrls = new Set<string>();
-        
-        ballGrid.innerHTML = '';
-
-        Object.keys(ballEmoticons).forEach(key => {
-            const imgUrl = ballEmoticons[key];
-
-            // on evite les doublons
-            if (!uniqueUrls.has(imgUrl)) {
-                uniqueUrls.add(imgUrl);
-
+        if (bgButton && bgDropdown && bgGrid) {
+            // geneere la grille de couleurs -> penser a ajouter un reset
+            bgGrid.innerHTML = '';
+            Object.keys(gameBackgrounds).forEach(key => {
+                const color = gameBackgrounds[key];
                 const div = document.createElement('div');
-                div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded border border-transparent hover:border-blue-300 flex justify-center items-center";
-                div.innerHTML = `<img src="${imgUrl}" alt="${key}" class="w-6 h-6 object-contain pointer-events-none">`;
-
+                div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full";
+                div.style.padding = "4px";
+                div.style.display = "flex";
+                div.style.justifyContent = "center";
+                div.style.alignItems = "center";
+                div.style.width = "36px";
+                div.style.height = "36px";
+                const colorCircle = document.createElement('div');
+                colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
+                colorCircle.style.backgroundColor = color;
+                div.appendChild(colorCircle);
                 div.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    
-                    selectedBallImg.src = imgUrl;
-                    ballValueInput.value = imgUrl;
-                    ballDropdown.classList.add('hidden');
+                    selectedBgPreview.style.backgroundColor = color;
+                    bgValueInput.value = color;
+                    if (gameField) {
+                        gameField.style.backgroundColor = color;
+                    }
+                    bgDropdown.classList.toggle('hidden');
                 });
-
-                ballGrid.appendChild(div);
-            }
-        });
-
-        ballButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            ballDropdown.classList.toggle('hidden');
-        });
-
-        document.addEventListener('click', (e) => {
-            const target = e.target as HTMLElement;
-            if (!ballDropdown.contains(target) && !ballButton.contains(target)) {
-                ballDropdown.classList.add('hidden');
-            }
-        });
-    }
-
-
-
-    // ---------------------------------------------------------
-    // --- LOGIQUE DU SÉLECTEUR DE BACKGROUND -------------------
-    // ---------------------------------------------------------
-
-    if (bgButton && bgDropdown && bgGrid) {
-        
-        // geneere la grille de couleurs -> penser a ajouter un reset
-        bgGrid.innerHTML = '';
-
-        Object.keys(gameBackgrounds).forEach(key => {
-            const color = gameBackgrounds[key];
-
-            const div = document.createElement('div');
-            div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full";
-            div.style.padding = "4px";
-            div.style.display = "flex";
-            div.style.justifyContent = "center";
-            div.style.alignItems = "center";
-            div.style.width = "36px";
-            div.style.height = "36px";
-
-            const colorCircle = document.createElement('div');
-            colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
-            colorCircle.style.backgroundColor = color;
-            
-            div.appendChild(colorCircle);
-
-            div.addEventListener('click', (e) => {
-                e.stopPropagation();
-                
-                selectedBgPreview.style.backgroundColor = color;
-                bgValueInput.value = color;
-                if (gameField) {
-                    gameField.style.backgroundColor = color;
-                }
-                bgDropdown.classList.toggle('hidden');
-                if (bgDropdown) bgDropdown.classList.add('hidden');
+                bgGrid.appendChild(div);
             });
 
-            bgGrid.appendChild(div);
-        });
-
-        if (bgResetButton) {
-            bgResetButton.addEventListener('click', (e) => {
+            if (bgResetButton) {
+                bgResetButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const resetColor = '#FFFFFF';
+                    if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
+                    if (bgValueInput) bgValueInput.value = resetColor;
+                    if (gameField) gameField.style.backgroundColor = resetColor;
+                    bgDropdown.classList.toggle('hidden');
+                });
+            }
+            bgButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const resetColor = '#FFFFFF';
-
-                if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
-                if (bgValueInput) bgValueInput.value = resetColor;
-                if (gameField) gameField.style.backgroundColor = resetColor;
-                
                 bgDropdown.classList.toggle('hidden');
-                if (ballDropdown) ballDropdown.classList.add('hidden');
+            });
+            document.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
+                    bgDropdown.classList.add('hidden');
+                }
             });
         }
 
-        bgButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            bgDropdown.classList.toggle('hidden');
-        });
+        // on clique sur play
+        if (startButton) {
+            // Clone pour éviter duplication d'events si on revient sur la page
+            const newStartBtn = startButton.cloneNode(true);
+            startButton.parentNode?.replaceChild(newStartBtn, startButton);
 
-        document.addEventListener('click', (e) => {
-            const target = e.target as HTMLElement;
-            if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
-                bgDropdown.classList.add('hidden');
-            }
-        });
-    }
+            newStartBtn.addEventListener('click', () => {
+                const opponentName = nameInput.value.trim(); // l'opposent a besoin du name input
 
-    // on clique sur play
-    if (startButton) {
-        startButton.addEventListener('click', () => {
-            const opponentName = nameInput.value.trim(); // l'opposent a besoin du name input
-
-            // est-ce qu'on peut utliser un nom qui est egalement un usrename deja pris?
-            if (opponentName === "") {
-                if (errorMsg) errorMsg.classList.remove('hidden');
-                nameInput.classList.add('border-red-500');
-                return;
-            }
-
-            // envoi de la notifciation
-            if (gameChat) {
-                gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
-            }
-
-            // valeur par default 
-            const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
-            const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
-            // on met a jour le nom du second joueur
-            if (player2Display) {
-                player2Display.innerText = opponentName;
-            }
-
-            if (gameField) {
-                gameField.style.backgroundColor = selectedBg;
-            }
-
-            // on ferme la modale 
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }
-
-            // ICI LANCEMENT DU JEU
-            const canvasContainer = document.getElementById('game-canvas-container');
-            if (!canvasContainer) {
-                console.error("Conteneur canvas introuvable, creation auto...");
-                const container = document.createElement('div');
-                container.id = 'game-canvas-container';
-                container.className = "w-full flex-1";
-                gameField.appendChild(container);
-            } else {
-                canvasContainer.innerHTML = '';
-            }
-
-            const scoreBoard = document.getElementById('score-board');
-            const canvas = document.createElement('canvas');
-            canvas.id = 'pong-canvas';
-            canvas.width = canvasContainer.clientWidth; // verifier la taille
-            canvas.height = canvasContainer.clientHeight;
-            canvas.style.width = '100%';
-            canvas.style.height = '100%';
-            //canvas.style.objectFit = 'contain';
-            canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
-
-            // Injection
-            const targetContainer = document.getElementById('game-canvas-container') || gameField;
-            targetContainer.appendChild(canvas);
-
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                const input = new Input();
-                if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game(canvas, ctx, input, selectedBall);
-                
-                activeGame.onScoreChange = (score) => {
-                    if (scoreBoard) {
-                        scoreBoard.innerText = `${score.player1} - ${score.player2}`;
-                    }
+                // est-ce qu'on peut utliser un nom qui est egalement un usrename deja pris?
+                if (opponentName === "") {
+                    if (errorMsg) errorMsg.classList.remove('hidden');
+                    nameInput.classList.add('border-red-500');
+                    return;
                 }
-                
-                console.log("Démarrage du jeu Local...");
-                activeGame.start();
 
-                // checkeur du score
-                const localLoop = setInterval(async () => {
-                    if (!activeGame || !activeGame.isRunning) {
-                        clearInterval(localLoop);
-                        return;
+                // envoi de la notifciation
+                if (gameChat) {
+                    gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+                }
+
+                // valeur par default 
+                const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
+                const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
+                // on met a jour le nom du second joueur
+                if (player2Display) {
+                    player2Display.innerText = opponentName;
+                }
+
+                if (gameField) {
+                    gameField.style.backgroundColor = selectedBg;
+                }
+
+                // on ferme la modale 
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+
+                // ICI LANCEMENT DU JEU
+                const canvasContainer = document.getElementById('game-canvas-container');
+                if (!canvasContainer) {
+                    console.error("Conteneur canvas introuvable, creation auto...");
+                    const container = document.createElement('div');
+                    container.id = 'game-canvas-container';
+                    container.className = "w-full flex-1";
+                    gameField.appendChild(container);
+                } else {
+                    canvasContainer.innerHTML = '';
+                }
+
+                const scoreBoard = document.getElementById('score-board');
+                const canvas = document.createElement('canvas');
+                canvas.id = 'pong-canvas';
+                canvas.width = canvasContainer ? canvasContainer.clientWidth : 800; // verifier la taille
+                canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                //canvas.style.objectFit = 'contain';
+                canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
+
+                // Injection
+                const targetContainer = document.getElementById('game-canvas-container') || gameField;
+                targetContainer.appendChild(canvas);
+
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    const input = new Input();
+                    if (activeGame) activeGame.isRunning = false;
+                    activeGame = new Game(canvas, ctx, input, selectedBall);
+                    
+                    activeGame.onScoreChange = (score) => {
+                        if (scoreBoard) {
+                            scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+                        }
                     }
                     
-                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                        activeGame.isRunning = false; // STOP
-                        clearInterval(localLoop); 
-                        
-                        const p1Wins = activeGame.score.player1 >= 11;
-                        const winnerName = p1Wins ? player1Display.innerText : opponentName;
-                        
-                        const userIdStr = localStorage.getItem('userId');
-                        if (userIdStr) {
-                            const userId = Number(userIdStr);
-                            // on sauvegarde les statistiques
-                            await saveGameStats(userId, activeGame.score.player1, p1Wins);
+                    console.log("Démarrage du jeu Local...");
+                    activeGame.start();
+
+                    // checkeur du score
+                    const localLoop = setInterval(async () => {
+                        if (!activeGame || !activeGame.isRunning) {
+                            clearInterval(localLoop);
+                            return;
                         }
-                        alert(`GAME OVER ! ${winnerName} remporte la partie !`);
-                        window.location.reload();
-                    }
-                }, 500);
-            }
+                        
+                        if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                            activeGame.isRunning = false; // STOP
+                            clearInterval(localLoop); 
+                            
+                            const p1Wins = activeGame.score.player1 >= 11;
+                            const winnerName = p1Wins ? player1Display.innerText : opponentName;
+                            
+                            const userIdStr = localStorage.getItem('userId');
+                            if (userIdStr) {
+                                const userId = Number(userIdStr);
+                                // on sauvegarde les statistiques
+                                await saveGameStats(userId, activeGame.score.player1, p1Wins);
+                            }
+                            alert(`GAME OVER ! ${winnerName} remporte la partie !`);
+                            window.location.reload();
+                        }
+                    }, 500);
+                }
+            });
+        }
+
+        // resrt erreur ecritur e
+        nameInput.addEventListener('input', () => {
+            if (errorMsg) errorMsg.classList.add('hidden');
+            nameInput.classList.remove('border-red-500');
         });
     }
-
-    // resrt erreur ecritur e
-    nameInput.addEventListener('input', () => {
-        if (errorMsg) errorMsg.classList.add('hidden');
-        nameInput.classList.remove('border-red-500');
-    });
 }

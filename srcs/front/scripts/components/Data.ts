@@ -115,7 +115,6 @@ export const ballEmoticons: { [key: string]: string } = {
     "surprised": globalPath + "surprised.gif",
     "wink": globalPath + "wink_smile.gif",
     "confused": globalPath + "confused.gif",
-    "crying": globalPath + "crying.gif",
     "hot": globalPath + "hot.gif",
     "angel": globalPath + "angel.gif",
     "teeth_smile": globalPath + "teeth_smile.gif",
@@ -125,12 +124,9 @@ export const ballEmoticons: { [key: string]: string } = {
     "embarrassed": globalPath + "embarrassed.gif",
     "angry": globalPath + "angry.gif",
     "nerd": globalPath + "nerd.gif",
-    "sleepy": globalPath + "sleepy.gif",
     "teeth": globalPath + "teeth.gif",
     "sarcastic": globalPath + "sarcastic.gif",
     "sick": globalPath + "sick.gif",
-    "thinking": globalPath + "thinking.gif",
-    "eye_roll": globalPath + "eye_roll.gif",
     "devil": globalPath + "devil_smile.gif",
 };
 
@@ -139,17 +135,14 @@ export const gameBackgrounds: { [key: string]: string } = {
     "classic": "#E8F4F8",      // Bleu pastel clair
     "mint": "#D4F1E8",         // Vert menthe
     "lavender": "#E6E6FA",     // Lavande
-    "peach": "#FFE5D9",        // Pêche
     "rose": "#FFE1E9",         // Rose
     "lemon": "#FFFACD",        // Citron
     "sky": "#B0E0E6",          // Bleu ciel
     "coral": "#FFCCCB",        // Corail
     "lilac": "#DCD0FF",        // Lilas
     "sage": "#C8E6C9",         // Vert sauge
-    "cream": "#FFF8DC",        // Crème
     "powder": "#B0C4DE",       // Bleu poudré
     "blush": "#FFC0CB",        // Rose poudré
-    "seafoam": "#B2DFDB",      // Vert d'eau
     "apricot": "#FFDAB9",      // Abricot
 };
 

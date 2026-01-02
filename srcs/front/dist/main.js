@@ -3663,7 +3663,6 @@
     "surprised": globalPath + "surprised.gif",
     "wink": globalPath + "wink_smile.gif",
     "confused": globalPath + "confused.gif",
-    "crying": globalPath + "crying.gif",
     "hot": globalPath + "hot.gif",
     "angel": globalPath + "angel.gif",
     "teeth_smile": globalPath + "teeth_smile.gif",
@@ -3673,12 +3672,9 @@
     "embarrassed": globalPath + "embarrassed.gif",
     "angry": globalPath + "angry.gif",
     "nerd": globalPath + "nerd.gif",
-    "sleepy": globalPath + "sleepy.gif",
     "teeth": globalPath + "teeth.gif",
     "sarcastic": globalPath + "sarcastic.gif",
     "sick": globalPath + "sick.gif",
-    "thinking": globalPath + "thinking.gif",
-    "eye_roll": globalPath + "eye_roll.gif",
     "devil": globalPath + "devil_smile.gif"
   };
   var gameBackgrounds = {
@@ -3688,8 +3684,6 @@
     // Vert menthe
     "lavender": "#E6E6FA",
     // Lavande
-    "peach": "#FFE5D9",
-    // Pêche
     "rose": "#FFE1E9",
     // Rose
     "lemon": "#FFFACD",
@@ -3702,14 +3696,10 @@
     // Lilas
     "sage": "#C8E6C9",
     // Vert sauge
-    "cream": "#FFF8DC",
-    // Crème
     "powder": "#B0C4DE",
     // Bleu poudré
     "blush": "#FFC0CB",
     // Rose poudré
-    "seafoam": "#B2DFDB",
-    // Vert d'eau
     "apricot": "#FFDAB9"
     // Abricot
   };
@@ -7448,7 +7438,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900"></span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative"></div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900"></span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative"></div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -7819,7 +7809,7 @@
     </div>`;
 
   // scripts/pages/TournamentPage.html
-  var TournamentPage_default = '<div class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row items-start justify-center p-4 gap-6 px-10">\n\n        <div class="flex flex-col items-center flex-1 min-w-0">\n\n            <div id="tournament-setup" class="window w-[600px] shadow-xl flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Options/setup</div>\n                </div>\n                <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                    <h2 class="text-xl font-bold text-center mb-4">Create your tournament</h2>\n                    \n                    <div class="flex flex-col gap-1">\n                        <label class="font-bold text-sm">Tournament name:</label>\n                        <input type="text" id="tournament-name-input" class="border-2 border-gray-400 px-2 py-1" placeholder="Epic Battle...">\n                    </div>\n\n                    <fieldset class="border-2 border-gray-300 p-3 rounded">\n                        <legend class="text-sm font-semibold px-1">Participants</legend>\n                        <div class="grid grid-cols-2 gap-4">\n                            <div>\n                                <label class="text-xs font-bold">Player 1 (You):</label>\n                                <input type="text" id="player1-input" class="w-full border p-1 bg-gray-100" readonly>\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 2:</label>\n                                <input type="text" id="player2-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 3:</label>\n                                <input type="text" id="player3-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 4:</label>\n                                <input type="text" id="player4-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                        </div>\n                    </fieldset>\n\n                    <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                    <button id="start-tournament-btn" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold self-center">\n                        START TOURNAMENT\n                    </button>\n                </div>\n            </div>\n\n            <div id="tournament-bracket" class="window w-[800px] hidden shadow-2xl">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Bracket</div>\n                </div>\n                <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                    <h2 class="text-2xl font-black text-blue-900" id="bracket-title">NEXT MATCH</h2>\n                    \n                    <div class="flex items-center gap-8">\n                        <div class="text-3xl font-bold text-gray-700" id="next-p1">Player A</div>\n                        <div class="text-xl font-black text-red-500">VS</div>\n                        <div class="text-3xl font-bold text-gray-700" id="next-p2">Player B</div>\n                    </div>\n\n                    <div class="w-full border-t border-gray-300 my-2"></div>\n                    \n                    <p class="text-gray-600 italic" id="bracket-info">The winner will go to the final!</p>\n\n                    <button id="launch-match-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 text-lg">\n                        PLAY MATCH\n                    </button>\n                </div>\n            </div>\n\n            <div id="tournament-game-area" class="window w-full h-[70vh] hidden flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">AREA</div>\n                </div>\n                <div class="window-body flex flex-col h-full bg-white relative">\n                    <div class="flex flex-row h-[60px] border-b border-gray-900 items-center justify-between px-24 bg-gray-50 shrink-0"> \n                        <span id="game-p1-name" class="text-2xl font-bold text-gray-800">P1</span>\n                        <span class="text-3xl font-bold text-gray-900">VS</span>\n                        <span id="game-p2-name" class="text-2xl font-bold text-gray-800">P2</span>\n                    </div>\n                    <div id="game-canvas-container" class="flex-1 relative bg-black w-full h-full flex items-center justify-center">\n                    </div>\n                </div>\n            </div>\n\n            <div id="tournament-summary" class="window w-[600px] hidden scale-110 shadow-2xl border-4 border-yellow-500">\n                <div class="title-bar bg-yellow-500">\n                    <div class="title-bar-text text-black font-bold">VICTORY</div>\n                </div>\n                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                    <h1 class="text-4xl font-black text-yellow-600 uppercase">WINNER</h1>\n                    <div class="text-6xl font-bold text-gray-800" id="winner-name">NAME</div>\n                    <p class="text-gray-600">Congratulations on winning <span id="tour-name-display" class="font-bold"></span>!</p>\n                    \n                    <button id="quit-tournament-btn" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">\n                        Return to Menu\n                    </button>\n                </div>\n            </div>\n\n        </div>\n\n        <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px;">\n			<div class="title-bar">\n				<div class="title-bar-text">Notifications</div>\n				<div class="title-bar-controls">\n					<button aria-label="Minimize"></button>\n					<button aria-label="Maximize"></button>\n					<button aria-label="Close"></button>\n				</div>\n			</div>\n\n			<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n				<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						\n					<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n						<p>System notification</p>\n					</div>\n\n					<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n					<div class="flex flex-col">\n						<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n				</div>\n			</div>\n		</div> \n    </div>\n</div>';
+  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Arena</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm relative" style="background-color: white;">\n                    \n                    <div class="flex flex-row w-full h-[60px] rounded-t-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50"> \n                        <span id="game-p1-name" class="text-2xl font-bold text-gray-800 w-1/3 text-left">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 w-1/3 text-center"></span>\n                        <span id="game-p2-name" class="text-2xl font-bold text-gray-800 w-1/3 text-right">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative overflow-hidden">\n                        \n                    </div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					    </div>\n				    </div>\n			    </div> \n            </div>\n        </div>\n    </div>\n\n\n    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n        <div class="window w-[600px] bg-white shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament setup</div>\n            </div>\n            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>\n                \n                <div class="flex flex-col gap-1">\n                    <label class="font-bold text-sm">Tournament name:</label>\n                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urN\xD4\xEE\xEF d33s b0ggggg0\xF4\xF4ssss">\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>\n                    <div class="grid grid-cols-2 gap-4">\n                        <div>\n                            <label class="text-xs font-bold">Player 1 (You):</label>\n                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 2:</label>\n                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 3:</label>\n                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">\n                        </div>\n                        <div>\n                            <label class="text-xs font-bold">Player 4:</label>\n                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">\n                        </div>\n                    </div>\n                </fieldset>\n\n                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>\n                    <div class="flex flex-row items-center gap-8 justify-center">\n                        <div class="flex flex-row items-center gap-2 relative">\n                            <label class="text-sm font-semibold">Ball :</label>\n                            <div class="relative">\n                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                </button>\n                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                </div>\n                            </div>\n                            <input type="hidden" id="tour-ball-value" value="/assets/emoticons/smile.gif">\n                        </div>\n                        <div class="flex flex-row items-center gap-2 relative">\n                            <label class="text-sm font-semibold">Background :</label>\n                            <div class="relative">\n                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                </button>\n                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                            </div>\n                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                        </div>\n                    </div>\n                </fieldset>\n\n                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                    START TOURNAMENT\n                </button>\n            </div>\n        </div>\n    </div>\n\n    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n        <div class="window w-[800px] bg-white shadow-2xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament is about to start</div>\n            </div>\n            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                <h2 class="text-2xl font-black text-blue-900">TOURNAMENT PROGRESS</h2>\n                \n                <div class="flex flex-col gap-4 w-full items-center">\n                    <div class="flex flex-row justify-between w-full px-10">\n                        <div class="flex flex-col items-center bg-white p-2 border border-gray-300 rounded w-[200px]">\n                            <span class="text-xs font-bold text-gray-500">Semi-Final 1</span>\n                            <span id="bracket-sf1" class="font-bold"></span>\n                        </div>\n                        <div class="flex flex-col items-center bg-white p-2 border border-gray-300 rounded w-[200px]">\n                            <span class="text-xs font-bold text-gray-500">Semi-Final 2</span>\n                            <span id="bracket-sf2" class="font-bold"></span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center bg-yellow-50 p-4 border-2 border-yellow-400 rounded w-[300px] shadow-md">\n                        <span class="text-xs font-bold text-yellow-600">FINAL</span>\n                        <span id="bracket-final" class="font-black text-lg"></span>\n                    </div>\n                </div>\n\n                <div class="w-full border-t border-gray-300 my-2"></div>\n                <p id="bracket-status-msg" class="text-gray-600 italic">Ready for the next match...</p>\n\n                <button id="bracket-continue-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                    CONTINUE TO MATCH\n                </button>\n            </div>\n        </div>\n    </div>\n\n    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in"> <div class="title-bar bg-blue-800">\n                <div class="title-bar-text text-white">UPCOMING MATCH</div>\n            </div>\n            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-8">\n                <h2 class="text-3xl font-black text-blue-900" id="match-title">SEMI-FINAL 1</h2>\n                \n                <div class="flex items-center gap-10 bg-white p-6 rounded-lg shadow-inner border border-gray-300">\n                    <div class="text-4xl font-bold text-gray-800 w-48 text-right truncate" id="next-p1">Player A</div>\n                    <div class="text-3xl font-black text-red-600 italic">VS</div>\n                    <div class="text-4xl font-bold text-gray-800 w-48 text-left truncate" id="next-p2">Player B</div>\n                </div>\n\n                <p class="text-gray-500 text-sm">The game will start as soon as you click Play.</p>\n\n                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                    PLAY !\n                </button>\n            </div>\n        </div>\n    </div>\n\n    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n            <div class="title-bar bg-yellow-500">\n                <div class="title-bar-text text-black font-bold">TOURNAMENT COMPLETED</div>\n            </div>\n            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CHAMPION</h1>\n                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white shadow-xl rounded-xl" id="winner-name">NAME</div>\n                <p class="text-gray-600 text-lg mt-4">Congratulations on winning <span id="tour-name-display" class="font-bold text-black"></span>!</p>\n                \n                <button id="quit-tournament-btn" class="mt-8 px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 border border-black">\n                    Return to Menu\n                </button>\n            </div>\n        </div>\n    </div>\n\n</div>';
 
   // scripts/game/Paddle.ts
   var Paddle = class {
@@ -8041,27 +8031,8 @@
     return LocalGame_default;
   }
   function initGamePage(mode) {
-    const modal = document.getElementById("game-setup-modal");
-    const startButton = document.getElementById("start-game-btn");
-    const nameInput = document.getElementById("opponent-name");
-    const errorMsg = document.getElementById("error-message");
     const player1Display = document.getElementById("player-1-name");
     const player2Display = document.getElementById("player-2-name");
-    const ballButton = document.getElementById("ball-selector-button");
-    const ballDropdown = document.getElementById("ball-selector-dropdown");
-    const ballGrid = document.getElementById("ball-grid");
-    const selectedBallImg = document.getElementById("selected-ball-img");
-    const ballValueInput = document.getElementById("ball-value");
-    const bgButton = document.getElementById("bg-selector-button");
-    const bgDropdown = document.getElementById("bg-selector-dropdown");
-    const bgGrid = document.getElementById("bg-grid");
-    const selectedBgPreview = document.getElementById("selected-bg-preview");
-    const bgValueInput = document.getElementById("bg-value");
-    const gameField = document.getElementById("left");
-    const bgResetButton = document.getElementById("bg-reset-button");
-    if (mode === "local" && (!modal || !startButton || !nameInput)) {
-      return;
-    }
     const userId = localStorage.getItem("userId");
     if (userId && player1Display) {
       fetchWithAuth(`api/users/${userId}`).then((response) => {
@@ -8084,24 +8055,17 @@
       gameChat.joinChannel("local_game_room");
       initLocalMode();
     }
-    if (mode === "local") {
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    } else {
-      if (modal) {
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
-      }
-    }
     function initTournamenetMode() {
-      const setupView = document.getElementById("tournament-setup");
-      const nameInput2 = document.getElementById("tournament-name-input");
+      const setupModal = document.getElementById("tournament-setup-modal");
+      if (setupModal) setupModal.classList.remove("hidden");
+      const nameInput = document.getElementById("tournament-name-input");
       const player1Input = document.getElementById("player1-input");
       const player2Input = document.getElementById("player2-input");
       const player3Input = document.getElementById("player3-input");
       const player4Input = document.getElementById("player4-input");
-      const startButton2 = document.getElementById("start-tournament-btn");
+      const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
+      initTournamentSelectors();
       const userId2 = localStorage.getItem("userId");
       const username = localStorage.getItem("username");
       if (userId2 && username) {
@@ -8116,8 +8080,8 @@
         player1Input.classList.remove("bg-gray-200", "cursor-not-allowed");
       }
       console.log("Username du user: ", username);
-      startButton2?.addEventListener("click", () => {
-        const tName = nameInput2.value.trim();
+      startButton?.addEventListener("click", () => {
+        const tName = nameInput.value.trim();
         const players = [
           player1Input.value.trim(),
           player2Input.value.trim(),
@@ -8139,11 +8103,81 @@
           }
           return;
         }
-        startTournamentLogic(tName, players);
+        const ballVal = document.getElementById("tour-ball-value")?.value || "classic";
+        const bgVal = document.getElementById("tour-bg-value")?.value || "#E8F4F8";
+        startTournamentLogic(tName, players, ballVal, bgVal);
       });
     }
-    function startTournamentLogic(name, playersAliases) {
-      document.getElementById("tournament-setup")?.classList.add("hidden");
+    function initTournamentSelectors() {
+      const ballBtn = document.getElementById("tour-ball-selector-button");
+      const ballDrop = document.getElementById("tour-ball-selector-dropdown");
+      const ballGrid = document.getElementById("tour-ball-grid");
+      const ballImg = document.getElementById("tour-selected-ball-img");
+      const ballInput = document.getElementById("tour-ball-value");
+      const bgBtn = document.getElementById("tour-bg-selector-button");
+      const bgDrop = document.getElementById("tour-bg-selector-dropdown");
+      const bgGrid = document.getElementById("tour-bg-grid");
+      const bgPrev = document.getElementById("tour-selected-bg-preview");
+      const bgInput = document.getElementById("tour-bg-value");
+      if (ballBtn && ballDrop && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (ballImg) ballImg.src = imgUrl;
+              if (ballInput) ballInput.value = imgUrl;
+              ballDrop.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
+          }
+        });
+        ballBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
+        });
+      }
+      if (bgBtn && bgDrop && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color = gameBackgrounds[key];
+          const div = document.createElement("div");
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+          div.style.width = "35px";
+          div.style.height = "35px";
+          div.style.padding = "2px";
+          const circle = document.createElement("div");
+          circle.className = "w-full h-full rounded-full border border-gray-300";
+          circle.style.backgroundColor = color;
+          div.appendChild(circle);
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (bgPrev) bgPrev.style.backgroundColor = color;
+            if (bgInput) bgInput.value = color;
+            bgDrop.classList.add("hidden");
+          });
+          bgGrid.appendChild(div);
+        });
+        bgBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
+        });
+      }
+    }
+    function startTournamentLogic(name, playersAliases, ballSkin, bgSkin) {
+      document.getElementById("tournament-setup-modal")?.classList.add("hidden");
       const userIdStr = localStorage.getItem("userId");
       const userIdNb = userIdStr ? Number(userIdStr) : null;
       const playersObjects = playersAliases.map((alias2, index) => ({
@@ -8164,50 +8198,74 @@
         ],
         currentMatchIdx: 0,
         // on defini l'id du match pour le stocker dans la db
-        currentStep: "semi_final_1"
+        currentStep: "semi_final_1",
+        settings: { ballSkin, bgSkin }
       };
       if (gameChat) {
         gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
       }
-      showNextMatch();
+      showBracketModal();
     }
-    function showNextMatch() {
-      const bracketView = document.getElementById("tournament-bracket");
-      const title = document.getElementById("bracket-title");
+    function showBracketModal() {
+      const bracketModal = document.getElementById("tournament-bracket-modal");
+      if (!bracketModal || !tournamenetState) return;
+      const sf1 = document.getElementById("bracket-sf1");
+      const sf2 = document.getElementById("bracket-sf2");
+      const fin = document.getElementById("bracket-final");
+      const msg = document.getElementById("bracket-status-msg");
+      const m1 = tournamenetState.matches[0];
+      const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
+      if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
+      const m2 = tournamenetState.matches[1];
+      const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
+      if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
+      const mf = tournamenetState.matches[2];
+      const p1Final = mf.p1 ? mf.p1.alias : "?";
+      const p2Final = mf.p2 ? mf.p2.alias : "?";
+      if (fin) fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
+      const idx = tournamenetState.currentMatchIdx;
+      if (msg) {
+        if (idx === 0) msg.innerText = "Next: Semi-Final 1";
+        else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
+        else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+      }
+      bracketModal.classList.remove("hidden");
+      const btn = document.getElementById("bracket-continue-btn");
+      const newBtn = btn?.cloneNode(true);
+      btn?.parentNode?.replaceChild(newBtn, btn);
+      newBtn.addEventListener("click", () => {
+        bracketModal.classList.add("hidden");
+        showNextMatchModal();
+      });
+    }
+    function showNextMatchModal() {
+      const nextMatchModal = document.getElementById("tournament-next-match-modal");
+      const title = document.getElementById("match-title");
       const player1Text = document.getElementById("next-p1");
       const player2Text = document.getElementById("next-p2");
-      const infoText = document.getElementById("bracket-info");
       const playButton = document.getElementById("launch-match-btn");
-      const gameArea = document.getElementById("tournament-game-area");
-      if (!bracketView || !tournamenetState) return;
-      gameArea?.classList.add("hidden");
-      bracketView.classList.remove("hidden");
+      if (!nextMatchModal || !tournamenetState) return;
       const matchIdx = tournamenetState.currentMatchIdx;
       const match = tournamenetState.matches[matchIdx];
       const p1Alias = match.p1 ? match.p1.alias : "???";
       const p2Alias = match.p2 ? match.p2.alias : "???";
       if (matchIdx === 0) {
-        title.innerText = "SEMI-FINAL 1";
-        const nextMatch = tournamenetState.matches[1];
-        const nextP1 = nextMatch.p1 ? nextMatch.p1.alias : "?";
-        const nextP2 = nextMatch.p2 ? nextMatch.p2.alias : "?";
-        infoText.innerText = `Next match: ${nextP1} vs ${nextP2}`;
-        if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! Later: ${nextP1} vs ${nextP2}`);
+        if (title) title.innerText = "SEMI-FINAL 1";
+        if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} !`);
       } else if (matchIdx === 1) {
-        title.innerText = "SEMI-FINAL 2";
-        infoText.innerText = "Winner plays in the finale!";
-        if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} ! The winner goes to the Final.`);
+        if (title) title.innerText = "SEMI-FINAL 2";
+        if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} !`);
       } else {
-        title.innerText = "FINALE";
-        infoText.innerText = "Match de la finale";
+        if (title) title.innerText = "FINALE";
         if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Alias} vs ${p2Alias} !`);
       }
-      player1Text.innerText = p1Alias;
-      player2Text.innerText = p2Alias;
+      if (player1Text) player1Text.innerText = p1Alias;
+      if (player2Text) player2Text.innerText = p2Alias;
+      nextMatchModal.classList.remove("hidden");
       const newButton = playButton.cloneNode(true);
       playButton.parentNode.replaceChild(newButton, playButton);
       newButton.addEventListener("click", () => {
-        bracketView.classList.add("hidden");
+        nextMatchModal.classList.add("hidden");
         if (match.p1 && match.p2) {
           launchMatch(match.p1, match.p2);
         }
@@ -8228,40 +8286,34 @@
       }
     }
     function launchMatch(p1, p2) {
-      const gameArea = document.getElementById("tournament-game-area");
       const p1Name = document.getElementById("game-p1-name");
       const p2Name = document.getElementById("game-p2-name");
-      if (gameArea) {
-        gameArea.classList.remove("hidden");
-        gameArea.style.display = "flex";
-        if (p1Name) p1Name.innerText = p1.alias;
-        if (p2Name) p2Name.innerText = p2.alias;
-      }
+      if (p1Name) p1Name.innerText = p1.alias;
+      if (p2Name) p2Name.innerText = p2.alias;
+      const container = document.getElementById("left");
+      if (container && tournamenetState) container.style.backgroundColor = tournamenetState.settings.bgSkin;
       console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
       let canvasContainer = document.getElementById("game-canvas-container");
-      if (!canvasContainer && gameArea) {
-        canvasContainer = document.createElement("div");
-        canvasContainer.id = "game-canvas-container";
-        canvasContainer.className = "flex-1 relative bg-black w-full h-full flex items-center justify-center";
-        gameArea.appendChild(canvasContainer);
-      }
       if (canvasContainer) {
         canvasContainer.innerHTML = "";
-        const scoreBoard = document.getElementById("score-board");
         const canvas = document.createElement("canvas");
         canvas.id = "pong-canvas-tournament";
-        canvas.width = 1600;
-        canvas.height = 900;
+        canvas.width = canvasContainer.clientWidth;
+        canvas.height = canvasContainer.clientHeight;
         canvas.style.width = "100%";
         canvas.style.height = "100%";
-        canvas.style.objectFit = "contain";
-        canvas.style.backgroundColor = "black";
         canvasContainer.appendChild(canvas);
         const ctx = canvas.getContext("2d");
-        if (ctx) {
+        if (ctx && tournamenetState) {
           const input = new Input_default();
           if (activeGame) activeGame.isRunning = false;
-          activeGame = new Game_default(canvas, ctx, input);
+          activeGame = new Game_default(canvas, ctx, input, tournamenetState.settings.ballSkin);
+          activeGame.onScoreChange = (score) => {
+            const scoreBoard = document.getElementById("score-board");
+            if (scoreBoard) {
+              scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+            }
+          };
           activeGame.start();
           const checkInterval = setInterval(() => {
             if (!activeGame || !activeGame.isRunning) {
@@ -8299,23 +8351,24 @@
         tournamenetState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
         tournamenetState.currentMatchIdx++;
         tournamenetState.currentStep = "semi_final_2";
-        showNextMatch();
+        showBracketModal();
       } else if (idx === 1) {
         const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
         tournamenetState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
         tournamenetState.currentMatchIdx++;
         tournamenetState.currentStep = "final";
-        showNextMatch();
+        showBracketModal();
       } else {
         tournamenetState.currentStep = "finished";
         showSummary(winner);
       }
     }
     function showSummary(champion) {
-      document.getElementById("tournament-game-area")?.classList.add("hidden");
-      const summaryView = document.getElementById("tournament-summary");
-      if (summaryView) {
-        summaryView.classList.remove("hidden");
+      const container = document.getElementById("left");
+      if (container) container.style.backgroundColor = "white";
+      const summaryModal = document.getElementById("tournament-summary-modal");
+      if (summaryModal) {
+        summaryModal.classList.remove("hidden");
         const winnerDisplay = document.getElementById("winner-name");
         const tourNameDisplay = document.getElementById("tour-name-display");
         if (winnerDisplay) winnerDisplay.innerText = champion;
@@ -8348,176 +8401,186 @@
       }
     }
     function initLocalMode() {
-      const modal2 = document.getElementById("game-setup-modal");
-      if (modal2) modal2.classList.remove("hidden");
-      const startButton2 = document.getElementById("start-game-button");
-      if (startButton2) {
-        startButton2.addEventListener("click", () => {
-          modal2?.classList.add("hidden");
+      const modal = document.getElementById("game-setup-modal");
+      const startButton = document.getElementById("start-game-btn");
+      const nameInput = document.getElementById("opponent-name");
+      const errorMsg = document.getElementById("error-message");
+      const ballButton = document.getElementById("ball-selector-button");
+      const ballDropdown = document.getElementById("ball-selector-dropdown");
+      const ballGrid = document.getElementById("ball-grid");
+      const selectedBallImg = document.getElementById("selected-ball-img");
+      const ballValueInput = document.getElementById("ball-value");
+      const bgButton = document.getElementById("bg-selector-button");
+      const bgDropdown = document.getElementById("bg-selector-dropdown");
+      const bgGrid = document.getElementById("bg-grid");
+      const selectedBgPreview = document.getElementById("selected-bg-preview");
+      const bgValueInput = document.getElementById("bg-value");
+      const gameField = document.getElementById("left");
+      const bgResetButton = document.getElementById("bg-reset-button");
+      const player2Display2 = document.getElementById("player-2-name");
+      if (modal) modal.classList.remove("hidden");
+      if (ballButton && ballDropdown && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded border border-transparent hover:border-blue-300 flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" alt="${key}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              selectedBallImg.src = imgUrl;
+              ballValueInput.value = imgUrl;
+              ballDropdown.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
+          }
+        });
+        ballButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (!ballDropdown.contains(target) && !ballButton.contains(target)) {
+            ballDropdown.classList.add("hidden");
+          }
         });
       }
-    }
-    if (ballButton && ballDropdown && ballGrid) {
-      const uniqueUrls = /* @__PURE__ */ new Set();
-      ballGrid.innerHTML = "";
-      Object.keys(ballEmoticons).forEach((key) => {
-        const imgUrl = ballEmoticons[key];
-        if (!uniqueUrls.has(imgUrl)) {
-          uniqueUrls.add(imgUrl);
+      if (bgButton && bgDropdown && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color = gameBackgrounds[key];
           const div = document.createElement("div");
-          div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded border border-transparent hover:border-blue-300 flex justify-center items-center";
-          div.innerHTML = `<img src="${imgUrl}" alt="${key}" class="w-6 h-6 object-contain pointer-events-none">`;
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full";
+          div.style.padding = "4px";
+          div.style.display = "flex";
+          div.style.justifyContent = "center";
+          div.style.alignItems = "center";
+          div.style.width = "36px";
+          div.style.height = "36px";
+          const colorCircle = document.createElement("div");
+          colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
+          colorCircle.style.backgroundColor = color;
+          div.appendChild(colorCircle);
           div.addEventListener("click", (e) => {
             e.stopPropagation();
-            selectedBallImg.src = imgUrl;
-            ballValueInput.value = imgUrl;
-            ballDropdown.classList.add("hidden");
+            selectedBgPreview.style.backgroundColor = color;
+            bgValueInput.value = color;
+            if (gameField) {
+              gameField.style.backgroundColor = color;
+            }
+            bgDropdown.classList.toggle("hidden");
           });
-          ballGrid.appendChild(div);
-        }
-      });
-      ballButton.addEventListener("click", (e) => {
-        e.stopPropagation();
-        ballDropdown.classList.toggle("hidden");
-      });
-      document.addEventListener("click", (e) => {
-        const target = e.target;
-        if (!ballDropdown.contains(target) && !ballButton.contains(target)) {
-          ballDropdown.classList.add("hidden");
-        }
-      });
-    }
-    if (bgButton && bgDropdown && bgGrid) {
-      bgGrid.innerHTML = "";
-      Object.keys(gameBackgrounds).forEach((key) => {
-        const color = gameBackgrounds[key];
-        const div = document.createElement("div");
-        div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full";
-        div.style.padding = "4px";
-        div.style.display = "flex";
-        div.style.justifyContent = "center";
-        div.style.alignItems = "center";
-        div.style.width = "36px";
-        div.style.height = "36px";
-        const colorCircle = document.createElement("div");
-        colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
-        colorCircle.style.backgroundColor = color;
-        div.appendChild(colorCircle);
-        div.addEventListener("click", (e) => {
-          e.stopPropagation();
-          selectedBgPreview.style.backgroundColor = color;
-          bgValueInput.value = color;
-          if (gameField) {
-            gameField.style.backgroundColor = color;
-          }
-          bgDropdown.classList.toggle("hidden");
-          if (bgDropdown) bgDropdown.classList.add("hidden");
+          bgGrid.appendChild(div);
         });
-        bgGrid.appendChild(div);
-      });
-      if (bgResetButton) {
-        bgResetButton.addEventListener("click", (e) => {
+        if (bgResetButton) {
+          bgResetButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const resetColor = "#FFFFFF";
+            if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
+            if (bgValueInput) bgValueInput.value = resetColor;
+            if (gameField) gameField.style.backgroundColor = resetColor;
+            bgDropdown.classList.toggle("hidden");
+          });
+        }
+        bgButton.addEventListener("click", (e) => {
           e.stopPropagation();
-          const resetColor = "#FFFFFF";
-          if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
-          if (bgValueInput) bgValueInput.value = resetColor;
-          if (gameField) gameField.style.backgroundColor = resetColor;
           bgDropdown.classList.toggle("hidden");
-          if (ballDropdown) ballDropdown.classList.add("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
+            bgDropdown.classList.add("hidden");
+          }
         });
       }
-      bgButton.addEventListener("click", (e) => {
-        e.stopPropagation();
-        bgDropdown.classList.toggle("hidden");
-      });
-      document.addEventListener("click", (e) => {
-        const target = e.target;
-        if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
-          bgDropdown.classList.add("hidden");
-        }
-      });
-    }
-    if (startButton) {
-      startButton.addEventListener("click", () => {
-        const opponentName = nameInput.value.trim();
-        if (opponentName === "") {
-          if (errorMsg) errorMsg.classList.remove("hidden");
-          nameInput.classList.add("border-red-500");
-          return;
-        }
-        if (gameChat) {
-          gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
-        }
-        const selectedBall = ballValueInput ? ballValueInput.value : "classic";
-        const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
-        if (player2Display) {
-          player2Display.innerText = opponentName;
-        }
-        if (gameField) {
-          gameField.style.backgroundColor = selectedBg;
-        }
-        if (modal) {
-          modal.classList.add("hidden");
-          modal.classList.remove("flex");
-        }
-        const canvasContainer = document.getElementById("game-canvas-container");
-        if (!canvasContainer) {
-          console.error("Conteneur canvas introuvable, creation auto...");
-          const container = document.createElement("div");
-          container.id = "game-canvas-container";
-          container.className = "w-full flex-1";
-          gameField.appendChild(container);
-        } else {
-          canvasContainer.innerHTML = "";
-        }
-        const scoreBoard = document.getElementById("score-board");
-        const canvas = document.createElement("canvas");
-        canvas.id = "pong-canvas";
-        canvas.width = canvasContainer.clientWidth;
-        canvas.height = canvasContainer.clientHeight;
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.backgroundColor = selectedBg;
-        const targetContainer = document.getElementById("game-canvas-container") || gameField;
-        targetContainer.appendChild(canvas);
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          const input = new Input_default();
-          if (activeGame) activeGame.isRunning = false;
-          activeGame = new Game_default(canvas, ctx, input, selectedBall);
-          activeGame.onScoreChange = (score) => {
-            if (scoreBoard) {
-              scoreBoard.innerText = `${score.player1} - ${score.player2}`;
-            }
-          };
-          console.log("D\xE9marrage du jeu Local...");
-          activeGame.start();
-          const localLoop = setInterval(async () => {
-            if (!activeGame || !activeGame.isRunning) {
-              clearInterval(localLoop);
-              return;
-            }
-            if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-              activeGame.isRunning = false;
-              clearInterval(localLoop);
-              const p1Wins = activeGame.score.player1 >= 11;
-              const winnerName = p1Wins ? player1Display.innerText : opponentName;
-              const userIdStr = localStorage.getItem("userId");
-              if (userIdStr) {
-                const userId2 = Number(userIdStr);
-                await saveGameStats(userId2, activeGame.score.player1, p1Wins);
+      if (startButton) {
+        const newStartBtn = startButton.cloneNode(true);
+        startButton.parentNode?.replaceChild(newStartBtn, startButton);
+        newStartBtn.addEventListener("click", () => {
+          const opponentName = nameInput.value.trim();
+          if (opponentName === "") {
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            nameInput.classList.add("border-red-500");
+            return;
+          }
+          if (gameChat) {
+            gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+          }
+          const selectedBall = ballValueInput ? ballValueInput.value : "classic";
+          const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
+          if (player2Display2) {
+            player2Display2.innerText = opponentName;
+          }
+          if (gameField) {
+            gameField.style.backgroundColor = selectedBg;
+          }
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          const canvasContainer = document.getElementById("game-canvas-container");
+          if (!canvasContainer) {
+            console.error("Conteneur canvas introuvable, creation auto...");
+            const container = document.createElement("div");
+            container.id = "game-canvas-container";
+            container.className = "w-full flex-1";
+            gameField.appendChild(container);
+          } else {
+            canvasContainer.innerHTML = "";
+          }
+          const scoreBoard = document.getElementById("score-board");
+          const canvas = document.createElement("canvas");
+          canvas.id = "pong-canvas";
+          canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
+          canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+          canvas.style.width = "100%";
+          canvas.style.height = "100%";
+          canvas.style.backgroundColor = selectedBg;
+          const targetContainer = document.getElementById("game-canvas-container") || gameField;
+          targetContainer.appendChild(canvas);
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            const input = new Input_default();
+            if (activeGame) activeGame.isRunning = false;
+            activeGame = new Game_default(canvas, ctx, input, selectedBall);
+            activeGame.onScoreChange = (score) => {
+              if (scoreBoard) {
+                scoreBoard.innerText = `${score.player1} - ${score.player2}`;
               }
-              alert(`GAME OVER ! ${winnerName} remporte la partie !`);
-              window.location.reload();
-            }
-          }, 500);
-        }
+            };
+            console.log("D\xE9marrage du jeu Local...");
+            activeGame.start();
+            const localLoop = setInterval(async () => {
+              if (!activeGame || !activeGame.isRunning) {
+                clearInterval(localLoop);
+                return;
+              }
+              if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                activeGame.isRunning = false;
+                clearInterval(localLoop);
+                const p1Wins = activeGame.score.player1 >= 11;
+                const winnerName = p1Wins ? player1Display.innerText : opponentName;
+                const userIdStr = localStorage.getItem("userId");
+                if (userIdStr) {
+                  const userId2 = Number(userIdStr);
+                  await saveGameStats(userId2, activeGame.score.player1, p1Wins);
+                }
+                alert(`GAME OVER ! ${winnerName} remporte la partie !`);
+                window.location.reload();
+              }
+            }, 500);
+          }
+        });
+      }
+      nameInput.addEventListener("input", () => {
+        if (errorMsg) errorMsg.classList.add("hidden");
+        nameInput.classList.remove("border-red-500");
       });
     }
-    nameInput.addEventListener("input", () => {
-      if (errorMsg) errorMsg.classList.add("hidden");
-      nameInput.classList.remove("border-red-500");
-    });
   }
 
   // scripts/main.ts
