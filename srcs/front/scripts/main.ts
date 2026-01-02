@@ -62,7 +62,6 @@ const routes: { [key: string]: Page } = {
     },
 	'/remote': {
         render: () => {
-            // On retourne le HTML directement ici (copie de RemoteGame.html simplifié)
             return `
             <div class="d-flex flex-column align-items-center justify-content-center h-100 w-100 text-white">
                 <h1 class="mb-4">Match en Ligne</h1>
@@ -76,20 +75,13 @@ const routes: { [key: string]: Page } = {
             </div>`;
         },
         afterRender: () => {
-            // On demande le nom de la room
-            const roomId = prompt("Entrez le nom de la salle (ex: room1) :", "room1");
-            if (!roomId) {
-                window.history.back(); // Si annulation, retour arrière
-                return;
-            }
-
-            // On lance le jeu
-            currentRemoteGame = new RemoteGame(roomId);
+            // PLUS DE PROMPT ! On lance direct
+            currentRemoteGame = new RemoteGame(); // Plus d'argument roomId
             currentRemoteGame.start();
 
-            // Gestion du bouton quitter dans la page
+            // Gestion bouton quitter (inchangé)
             document.getElementById('leaveGameBtn')?.addEventListener('click', () => {
-                // Cela va déclencher handleLocationChange qui fera le nettoyage
+                currentRemoteGame?.stop(); // Bon de l'arrêter proprement
                 window.history.pushState({}, '', '/home');
                 const popStateEvent = new PopStateEvent('popstate');
                 window.dispatchEvent(popStateEvent);

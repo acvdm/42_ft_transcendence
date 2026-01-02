@@ -8355,7 +8355,8 @@
         console.log("Already connected");
         return;
       }
-      this.socket = lookup2("http://localhost:3003", {
+      this.socket = lookup2("/", {
+        // // On se connecte à l'URL courante ('/'), Nginx fera le proxy pass basé sur le path '/pong.io'
         path: "/pong.io",
         auth: { token },
         transports: ["websocket", "polling"]
@@ -8387,6 +8388,14 @@
         key
       });
     }
+    joinQueue() {
+      if (!this.socket) return;
+      this.socket.emit("joinQueue");
+    }
+    onMatchFound(callback) {
+      if (!this.socket) return;
+      this.socket.on("matchFound", callback);
+    }
     onGameState(callback) {
       if (!this.socket) return;
       this.socket.on("gameState", callback);
@@ -8404,46 +8413,39 @@
 
   // scripts/pages/RemoteGame.ts
   var RemoteGame = class {
-    constructor(roomId) {
+    // On retire roomId du constructeur car on ne le connait pas encore
+    constructor() {
       this.canvas = null;
       this.ctx = null;
+      this.roomId = "";
+      // On initialise vide
       this.keysPressed = /* @__PURE__ */ new Set();
-      this.roomId = roomId;
-      console.log("RemoteGame constructor called with room:", roomId);
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        console.error("Pas de token ! Redirection vers login...");
         window.location.href = "#login";
         return;
       }
       this.init(token);
     }
     init(token) {
-      console.log("Init called");
       setTimeout(() => {
         this.canvas = document.getElementById("gameCanvas");
-        if (!this.canvas) {
-          console.error("Canvas introuvable dans init()!");
-          return;
-        }
-        console.log("Canvas found in init:", this.canvas);
-        console.log("Canvas dimensions:", this.canvas.width, "x", this.canvas.height);
+        if (!this.canvas) return;
         this.ctx = this.canvas.getContext("2d");
-        if (!this.ctx) {
-          console.error("Could not get 2D context!");
-          return;
-        }
-        console.log("Context obtained successfully");
-        this.ctx.fillStyle = "red";
-        this.ctx.fillRect(0, 0, 100, 100);
-        console.log("Test rectangle drawn");
-        console.log("Connecting to game server...");
+        if (!this.ctx) return;
         GameSocketService_default.connect(token);
-        console.log("Joining room:", this.roomId);
-        GameSocketService_default.joinRoom(this.roomId);
+        const scoreBoard = document.getElementById("scoreBoard");
+        if (scoreBoard) scoreBoard.innerText = "Recherche d'un adversaire...";
+        GameSocketService_default.onMatchFound((roomId) => {
+          console.log("Adversaire trouv\xE9 ! Room :", roomId);
+          this.roomId = roomId;
+          if (scoreBoard) scoreBoard.innerText = "Match commenc\xE9 !";
+          GameSocketService_default.joinRoom(this.roomId);
+        });
+        console.log("Joining matchmaking queue...");
+        GameSocketService_default.joinQueue();
         this.setupControls();
         GameSocketService_default.onGameState((state) => {
-          console.log("Game state received:", state);
           this.draw(state);
           this.updateScore(state.score);
         });
@@ -8496,7 +8498,7 @@
       }
     }
     updateScore(score) {
-      const scoreBoard = document.getElementById("score-board");
+      const scoreBoard = document.getElementById("scoreBoard");
       if (scoreBoard && score) {
         scoreBoard.innerText = `Score: ${score.player1} - ${score.player2}`;
       }
@@ -8562,14 +8564,10 @@
             </div>`;
       },
       afterRender: () => {
-        const roomId = prompt("Entrez le nom de la salle (ex: room1) :", "room1");
-        if (!roomId) {
-          window.history.back();
-          return;
-        }
-        currentRemoteGame = new RemoteGame(roomId);
+        currentRemoteGame = new RemoteGame();
         currentRemoteGame.start();
         document.getElementById("leaveGameBtn")?.addEventListener("click", () => {
+          currentRemoteGame?.stop();
           window.history.pushState({}, "", "/home");
           const popStateEvent = new PopStateEvent("popstate");
           window.dispatchEvent(popStateEvent);

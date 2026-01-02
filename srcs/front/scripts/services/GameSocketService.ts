@@ -11,7 +11,7 @@ class GameSocketServiceClass {
         }
 
         // Connexion au serveur Socket.IO sur le port 3003
-        this.socket = io('http://localhost:3003', {
+        this.socket = io('/', { // // On se connecte à l'URL courante ('/'), Nginx fera le proxy pass basé sur le path '/pong.io'
             path: '/pong.io',
             auth: { token },
             transports: ['websocket', 'polling']
@@ -49,6 +49,16 @@ class GameSocketServiceClass {
             roomId: this.currentRoomId,
             key: key
         });
+    }
+
+	joinQueue() {
+        if (!this.socket) return;
+        this.socket.emit('joinQueue');
+    }
+
+    onMatchFound(callback: (roomId: string) => void) {
+        if (!this.socket) return;
+        this.socket.on('matchFound', callback);
     }
 
     onGameState(callback: (state: any) => void) {

@@ -3,70 +3,57 @@ import GameSocketService from "../services/GameSocketService.js";
 export class RemoteGame {
     private canvas: HTMLCanvasElement | null = null;
     private ctx: CanvasRenderingContext2D | null = null;
-    private roomId: string;
+    private roomId: string = ""; // On initialise vide
     private keysPressed: Set<string> = new Set();
 
-    constructor(roomId: string) {
-        this.roomId = roomId;
-        console.log("RemoteGame constructor called with room:", roomId);
-        
+    // On retire roomId du constructeur car on ne le connait pas encore
+    constructor() {
         const token = localStorage.getItem('accessToken');
         if (!token) {
-            console.error("Pas de token ! Redirection vers login...");
             window.location.href = '#login';
             return;
         }
-
         this.init(token);
     }
 
     private init(token: string): void {
-        console.log("Init called");
-        
         setTimeout(() => {
+            // 1. Initialisation Canvas (Ton code existant...)
             this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-            
-            if (!this.canvas) {
-                console.error("Canvas introuvable dans init()!");
-                return;
-            }
-
-            console.log("Canvas found in init:", this.canvas);
-            console.log("Canvas dimensions:", this.canvas.width, "x", this.canvas.height);
-
+            if (!this.canvas) return;
             this.ctx = this.canvas.getContext('2d');
-            
-            if (!this.ctx) {
-                console.error("Could not get 2D context!");
-                return;
-            }
+            if (!this.ctx) return;
 
-            console.log("Context obtained successfully");
-            
-            // Test: dessiner un rectangle pour vérifier que le canvas fonctionne
-            this.ctx.fillStyle = 'red';
-            this.ctx.fillRect(0, 0, 100, 100);
-            console.log("Test rectangle drawn");
-            
-            // Connexion au serveur
-            console.log("Connecting to game server...");
+            // 2. Connexion au socket
             GameSocketService.connect(token);
-            
-            // Rejoindre la room
-            console.log("Joining room:", this.roomId);
-            GameSocketService.joinRoom(this.roomId);
 
-            // Configuration des contrôles
+            // 3. MATCHMAKING : On écoute si on trouve un match
+            const scoreBoard = document.getElementById('scoreBoard'); // Attention à l'ID (voir étape 4)
+            if (scoreBoard) scoreBoard.innerText = "Recherche d'un adversaire...";
+
+            GameSocketService.onMatchFound((roomId) => {
+                console.log("Adversaire trouvé ! Room :", roomId);
+                this.roomId = roomId;
+                if (scoreBoard) scoreBoard.innerText = "Match commencé !";
+                
+                // On rejoint la salle donnée par le serveur
+                GameSocketService.joinRoom(this.roomId);
+            });
+
+            // 4. On demande à rejoindre la file d'attente
+            console.log("Joining matchmaking queue...");
+            GameSocketService.joinQueue();
+
+            // 5. Setup des contrôles (Ton code existant)
             this.setupControls();
 
-            // Écouter les mises à jour du serveur
+            // 6. Écouter les mises à jour (Ton code existant)
             GameSocketService.onGameState((state) => {
-                console.log("Game state received:", state);
                 this.draw(state);
                 this.updateScore(state.score);
             });
 
-        }, 200); // Augmenté à 200ms pour plus de sécurité
+        }, 200);
     }
 
     private setupControls(): void {
@@ -134,7 +121,7 @@ export class RemoteGame {
     }
 
     private updateScore(score: any): void {
-        const scoreBoard = document.getElementById('score-board');
+        const scoreBoard = document.getElementById('scoreBoard');
         if (scoreBoard && score) {
             scoreBoard.innerText = `Score: ${score.player1} - ${score.player2}`;
         }

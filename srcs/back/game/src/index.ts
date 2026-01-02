@@ -15,6 +15,7 @@ import { ServerGame } from './engine/ServerGame.js';
 const fastify = Fastify({ logger: true });
 
 let db: Database;
+let waitingPlayer: any = null;
 
 async function main() 
 {
@@ -254,10 +255,34 @@ const start = async () =>
 			}
 		});
 
+
 		const activeGames = new Map<string, ServerGame>();
 
 		io.on('connection', (socket: any) => {
 			console.log('Game socket connected:', socket.id);
+
+
+			socket.on('joinQueue', () => {
+				if (waitingPlayer && waitingPlayer.id !== socket.id) {
+					// Un adversaire est trouvé !
+					const roomId = `room_${waitingPlayer.id}_${socket.id}`;
+					console.log(`Matchmaking success: ${waitingPlayer.id} vs ${socket.id} in ${roomId}`);
+
+					// On prévient les deux joueurs qu'ils ont trouvé un match
+					waitingPlayer.emit('matchFound', roomId);
+					socket.emit('matchFound', roomId);
+
+					// On vide la file d'attente
+					waitingPlayer = null;
+				} else {
+					// Personne n'attend, ce joueur devient le joueur en attente
+					waitingPlayer = socket;
+					console.log(`User ${socket.id} joined queue`);
+				}
+			});
+
+
+
 			socket.on('joinGame', (roomId: string) => {
 				socket.join(roomId);
 
@@ -292,6 +317,11 @@ const start = async () =>
 
 			socket.on('disconnect', () => {
 				console.log('User disconnected:', socket.id);
+				if (waitingPlayer && waitingPlayer.id === socket.id) {
+					console.log('Waiting player disconnected, queue cleared');
+					waitingPlayer = null;
+				}
+				
 				// Trouver la partie du joueur déconnecté pour arrêter proprement
 				for (const [roomId, game] of activeGames.entries()) {
 					if (game.player1Id === socket.id || game.player2Id === socket.id) {
