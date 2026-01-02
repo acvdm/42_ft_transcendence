@@ -11,15 +11,17 @@ class Game {
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     input: Input;
+    onScoreChange?: (score: { player1: number; player2: number }) => void;
 
-    constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input) {
+    constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
         this.canvas = canvas;
         this.ctx = ctx;
         this.input = input;
         this.score = { player1: 0, player2: 0 };
-        this.paddle1 = new Paddle(30, canvas.height / 2 - 50);
-        this.paddle2 = new Paddle(canvas.width - 40, canvas.height / 2 - 50);
-        this.ball = new Ball(canvas.width / 2, canvas.height / 2);
+        const paddleImg = '/assets/game/paddle.png';
+        this.paddle1 = new Paddle(30, canvas.height / 2 - 50, paddleImg);
+        this.paddle2 = new Paddle(canvas.width - 40, canvas.height / 2 - 50, paddleImg);
+        this.ball = new Ball(canvas.width / 2, canvas.height / 2, ballImageSrc);
         this.isRunning = false;
     }
 
@@ -67,11 +69,11 @@ class Game {
         this.paddle1.draw(this.ctx);
         this.paddle2.draw(this.ctx);
         this.ball.draw(this.ctx);
-        // Render UI (score)
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = '30px Arial';
-        this.ctx.fillText(`Player 1: ${this.score.player1}`, 50, 50);
-        this.ctx.fillText(`Player 2: ${this.score.player2}`, this.canvas.width - 150, 50);
+        // Render UI (score) -> je supprime pour récupérer dans mon span dédié
+        // this.ctx.fillStyle = 'white';
+        // this.ctx.font = '30px Arial';
+        // this.ctx.fillText(`Player 1: ${this.score.player1}`, 50, 50);
+        // this.ctx.fillText(`Player 2: ${this.score.player2}`, this.canvas.width - 150, 50);
     }
 
     checkCollisions() {
@@ -120,10 +122,18 @@ class Game {
         // Ball out of bounds (scoring)
         if (this.ball.x < 0) {
             this.score.player2++;
+            this.notifyScoreUpdate();
             this.reset();
         } else if (this.ball.x > this.canvas.width) {
             this.score.player1++;
+            this.notifyScoreUpdate();
             this.reset();
+        }
+    }
+
+    notifyScoreUpdate() {
+        if (this.onScoreChange) {
+            this.onScoreChange(this.score);
         }
     }
 

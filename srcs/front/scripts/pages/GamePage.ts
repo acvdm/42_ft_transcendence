@@ -355,6 +355,7 @@ export function initGamePage(mode: string): void {
         if (canvasContainer) {
             canvasContainer.innerHTML = ''; // on nettoie l'ancien match
             
+            const scoreBoard = document.getElementById('score-board');
             const canvas = document.createElement('canvas');
             canvas.id = 'pong-canvas-tournament';
             canvas.width = 1600; // check pour ajuste la taille a la fenetre de jeux
@@ -666,13 +667,14 @@ export function initGamePage(mode: string): void {
                 canvasContainer.innerHTML = '';
             }
 
+            const scoreBoard = document.getElementById('score-board');
             const canvas = document.createElement('canvas');
             canvas.id = 'pong-canvas';
-            canvas.width = 1600; // verifier la taille
-            canvas.height = 900;
+            canvas.width = canvasContainer.clientWidth; // verifier la taille
+            canvas.height = canvasContainer.clientHeight;
             canvas.style.width = '100%';
             canvas.style.height = '100%';
-            canvas.style.objectFit = 'contain';
+            //canvas.style.objectFit = 'contain';
             canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
 
             // Injection
@@ -683,7 +685,14 @@ export function initGamePage(mode: string): void {
             if (ctx) {
                 const input = new Input();
                 if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game(canvas, ctx, input);
+                activeGame = new Game(canvas, ctx, selectedBall);
+                
+                activeGame.onScoreChange = (score) => {
+                    if (scoreBoard) {
+                        scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+                    }
+                }
+                
                 console.log("Démarrage du jeu Local...");
                 activeGame.start();
 

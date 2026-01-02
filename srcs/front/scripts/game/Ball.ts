@@ -4,12 +4,20 @@ class Ball {
     radius :number;
     velocityX :number;
     velocityY :number;
-    constructor(x: number = 0, y: number = 0, radius: number = 10) {
+    speed: number;
+    image: HTMLImageElement | null = null;
+    constructor(x: number, y: number, imageSrc?: string) {
         this.x = x;
         this.y = y;
-        this.radius = radius;
+        this.radius = 10;
+        this.speed = 5;
         this.velocityX = 5;
         this.velocityY = 5;
+
+        if (imageSrc && imageSrc !== 'classic') {
+            this.image = new Image();
+            this.image.src = imageSrc;
+        }
     }
 
     update(canvas: HTMLCanvasElement) {
@@ -23,11 +31,21 @@ class Ball {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        ctx.fillStyle = 'white'; // Ball color
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); // Draw the ball
-        ctx.fill();
-        ctx.closePath();
+        if (this.image && this.image.complete) {
+            ctx.drawImage(
+                this.image,
+                this.x - this.radius * 1.5,
+                this.y - this.radius * 1.5,
+                this.radius * 3,
+                this.radius * 3
+            );
+        } else {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); // Draw the ball
+            ctx.fillStyle = 'white'; // Ball color
+            ctx.fill();
+            ctx.closePath();
+        }
     }
 
     reset(canvas: HTMLCanvasElement) {

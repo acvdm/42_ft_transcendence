@@ -4,12 +4,20 @@ class Paddle {
     width: number;
     height: number;
     speed: number;
-    constructor(x: number, y: number, width: number = 10, height: number = 100) {
+    color: string;
+    image: HTMLImageElement | null = null;
+    constructor(x: number, y: number, imageSrc: string = '/assets/game/paddle.png') {
         this.x = x; // Paddle's x position
         this.y = y; // Paddle's y position
-        this.width = width; // Paddle's width
-        this.height = height; // Paddle's height
+        this.width = 10; // Paddle's width
+        this.height = 100; // Paddle's height
         this.speed = 5; // Paddle's movement speed
+        this.color = 'white';
+
+        if (imageSrc) {
+            this.image = new Image();
+            this.image.src = imageSrc;
+        }
     }
 
     move(up : boolean) {
@@ -21,8 +29,12 @@ class Paddle {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        ctx.fillStyle = 'white'; // Paddle color
-        ctx.fillRect(this.x, this.y, this.width, this.height); // Draw paddle
+        if (this.image && this.image.complete) {
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } else {
+            ctx.fillStyle = 'white'; // Paddle color
+            ctx.fillRect(this.x, this.y, this.width, this.height); // Draw paddle
+        }
     }
 
     reset() {

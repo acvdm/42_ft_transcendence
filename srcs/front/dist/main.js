@@ -7448,7 +7448,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 50px; padding-right: 50px; bottom: 100px;">\n        \n        <div class="flex gap-4 flex-1 min-h-0">\n\n            <div class="window flex flex-col flex-1 min-w-0">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n                        <span class="text-4xl font-bold text-gray-900">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative"></div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 50px; padding-right: 50px; bottom: 100px;">\n        \n        <div class="flex gap-4 flex-1 min-h-0">\n\n            <div class="window flex flex-col flex-1 min-w-0">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 border-b border-gray-900 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900"></span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative"></div>\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n\n    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n        <div class="window w-[600px] shadow-xl">\n            <div class="title-bar">\n                <div class="title-bar-text">Start the game</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                \n                <div class="flex flex-col gap-1">\n                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                </div>\n\n                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                        <label class="text-sm font-semibold">Choose your ball :</label>\n                        \n                        <div class="relative">\n                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                            </button>\n\n                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                    </div>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">\n                    </div>\n\n                    <div class="flex flex-row gap-2">\n                        <label class="text-sm font-semibold">Choose your background :</label>\n                        \n                        <div class="relative">\n                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                            </button>\n\n                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                </div>\n                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                    Reset to White\n                                </button>\n                            </div>\n                        </div>\n\n                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                    </div>\n                </fieldset>\n\n                <div class="flex justify-center mt-4">\n                    <button id="start-game-btn"\n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                        PLAY\n                    </button>\n                </div>\n\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -7819,16 +7819,22 @@
     </div>`;
 
   // scripts/pages/TournamentPage.html
-  var TournamentPage_default = '<div class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row items-start justify-center p-4 gap-6 px-10">\n\n        <div class="flex flex-col items-center flex-1 min-w-0">\n\n            <div id="tournament-setup" class="window w-[600px] shadow-xl flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Options/setup</div>\n                </div>\n                <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                    <h2 class="text-xl font-bold text-center mb-4">Create your tournament</h2>\n                    \n                    <div class="flex flex-col gap-1">\n                        <label class="font-bold text-sm">Tournament name:</label>\n                        <input type="text" id="tournament-name-input" class="border-2 border-gray-400 px-2 py-1" placeholder="Epic Battle...">\n                    </div>\n\n                    <fieldset class="border-2 border-gray-300 p-3 rounded">\n                        <legend class="text-sm font-semibold px-1">Participants</legend>\n                        <div class="grid grid-cols-2 gap-4">\n                            <div>\n                                <label class="text-xs font-bold">Player 1 (You):</label>\n                                <input type="text" id="player1-input" class="w-full border p-1 bg-gray-100" readonly>\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 2:</label>\n                                <input type="text" id="player2-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 3:</label>\n                                <input type="text" id="player3-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 4:</label>\n                                <input type="text" id="player4-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                        </div>\n                    </fieldset>\n\n                    <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                    <button id="start-tournament-btn" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold self-center">\n                        START TOURNAMENT\n                    </button>\n                </div>\n            </div>\n\n            <div id="tournament-bracket" class="window w-[800px] hidden shadow-2xl">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Bracket</div>\n                </div>\n                <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                    <h2 class="text-2xl font-black text-blue-900" id="bracket-title">NEXT MATCH</h2>\n                    \n                    <div class="flex items-center gap-8">\n                        <div class="text-3xl font-bold text-gray-700" id="next-p1">Player A</div>\n                        <div class="text-xl font-black text-red-500">VS</div>\n                        <div class="text-3xl font-bold text-gray-700" id="next-p2">Player B</div>\n                    </div>\n\n                    <div class="w-full border-t border-gray-300 my-2"></div>\n                    \n                    <p class="text-gray-600 italic" id="bracket-info">The winner will go to the final!</p>\n\n                    <button id="launch-match-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 text-lg">\n                        PLAY MATCH\n                    </button>\n                </div>\n            </div>\n\n            <div id="tournament-game-area" class="window w-full h-[70vh] hidden flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">AREA</div>\n                </div>\n                <div class="window-body flex flex-col h-full bg-white relative">\n                    <div class="flex flex-row h-[60px] border-b border-gray-900 items-center justify-between px-24 bg-gray-50 shrink-0"> \n                        <span id="game-p1-name" class="text-2xl font-bold text-gray-800">P1</span>\n                        <span class="text-3xl font-bold text-gray-900">VS</span>\n                        <span id="game-p2-name" class="text-2xl font-bold text-gray-800">P2</span>\n                    </div>\n                    <div id="game-canvas-container" class="flex-1 relative bg-black w-full h-full flex items-center justify-center">\n                    </div>\n                </div>\n            </div>\n\n            <div id="tournament-summary" class="window w-[600px] hidden scale-110 shadow-2xl border-4 border-yellow-500">\n                <div class="title-bar bg-yellow-500">\n                    <div class="title-bar-text text-black font-bold">VICTORY</div>\n                </div>\n                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                    <h1 class="text-4xl font-black text-yellow-600 uppercase">WINNER</h1>\n                    <div class="text-6xl font-bold text-gray-800" id="winner-name">NAME</div>\n                    <p class="text-gray-600">Congratulations on winning <span id="tour-name-display" class="font-bold"></span>!</p>\n                    \n                    <button id="quit-tournament-btn" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">\n                        Return to Menu\n                    </button>\n                </div>\n            </div>\n\n        </div>\n\n        <div class="window flex flex-col w-[300px] h-[500px] shrink-0">\n            <div class="title-bar">\n                <div class="title-bar-text">Tournament Logs</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body flex flex-col flex-1 bg-white p-2 min-h-0">\n                <div id="chat-messages" class="flex-1 overflow-y-auto text-sm bg-gray-50 border border-gray-200 p-2 font-mono">\n                    <p class="text-gray-500 italic text-xs">System logs ready...</p>\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+  var TournamentPage_default = '<div class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row items-start justify-center p-4 gap-6 px-10">\n\n        <div class="flex flex-col items-center flex-1 min-w-0">\n\n            <div id="tournament-setup" class="window w-[600px] shadow-xl flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Options/setup</div>\n                </div>\n                <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                    <h2 class="text-xl font-bold text-center mb-4">Create your tournament</h2>\n                    \n                    <div class="flex flex-col gap-1">\n                        <label class="font-bold text-sm">Tournament name:</label>\n                        <input type="text" id="tournament-name-input" class="border-2 border-gray-400 px-2 py-1" placeholder="Epic Battle...">\n                    </div>\n\n                    <fieldset class="border-2 border-gray-300 p-3 rounded">\n                        <legend class="text-sm font-semibold px-1">Participants</legend>\n                        <div class="grid grid-cols-2 gap-4">\n                            <div>\n                                <label class="text-xs font-bold">Player 1 (You):</label>\n                                <input type="text" id="player1-input" class="w-full border p-1 bg-gray-100" readonly>\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 2:</label>\n                                <input type="text" id="player2-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 3:</label>\n                                <input type="text" id="player3-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                            <div>\n                                <label class="text-xs font-bold">Player 4:</label>\n                                <input type="text" id="player4-input" class="w-full border p-1" placeholder="Enter alias...">\n                            </div>\n                        </div>\n                    </fieldset>\n\n                    <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                    <button id="start-tournament-btn" class="mt-2 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 font-bold self-center">\n                        START TOURNAMENT\n                    </button>\n                </div>\n            </div>\n\n            <div id="tournament-bracket" class="window w-[800px] hidden shadow-2xl">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Bracket</div>\n                </div>\n                <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                    <h2 class="text-2xl font-black text-blue-900" id="bracket-title">NEXT MATCH</h2>\n                    \n                    <div class="flex items-center gap-8">\n                        <div class="text-3xl font-bold text-gray-700" id="next-p1">Player A</div>\n                        <div class="text-xl font-black text-red-500">VS</div>\n                        <div class="text-3xl font-bold text-gray-700" id="next-p2">Player B</div>\n                    </div>\n\n                    <div class="w-full border-t border-gray-300 my-2"></div>\n                    \n                    <p class="text-gray-600 italic" id="bracket-info">The winner will go to the final!</p>\n\n                    <button id="launch-match-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded shadow hover:bg-green-700 text-lg">\n                        PLAY MATCH\n                    </button>\n                </div>\n            </div>\n\n            <div id="tournament-game-area" class="window w-full h-[70vh] hidden flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">AREA</div>\n                </div>\n                <div class="window-body flex flex-col h-full bg-white relative">\n                    <div class="flex flex-row h-[60px] border-b border-gray-900 items-center justify-between px-24 bg-gray-50 shrink-0"> \n                        <span id="game-p1-name" class="text-2xl font-bold text-gray-800">P1</span>\n                        <span class="text-3xl font-bold text-gray-900">VS</span>\n                        <span id="game-p2-name" class="text-2xl font-bold text-gray-800">P2</span>\n                    </div>\n                    <div id="game-canvas-container" class="flex-1 relative bg-black w-full h-full flex items-center justify-center">\n                    </div>\n                </div>\n            </div>\n\n            <div id="tournament-summary" class="window w-[600px] hidden scale-110 shadow-2xl border-4 border-yellow-500">\n                <div class="title-bar bg-yellow-500">\n                    <div class="title-bar-text text-black font-bold">VICTORY</div>\n                </div>\n                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                    <h1 class="text-4xl font-black text-yellow-600 uppercase">WINNER</h1>\n                    <div class="text-6xl font-bold text-gray-800" id="winner-name">NAME</div>\n                    <p class="text-gray-600">Congratulations on winning <span id="tour-name-display" class="font-bold"></span>!</p>\n                    \n                    <button id="quit-tournament-btn" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700">\n                        Return to Menu\n                    </button>\n                </div>\n            </div>\n\n        </div>\n\n        <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px;">\n			<div class="title-bar">\n				<div class="title-bar-text">Notifications</div>\n				<div class="title-bar-controls">\n					<button aria-label="Minimize"></button>\n					<button aria-label="Maximize"></button>\n					<button aria-label="Close"></button>\n				</div>\n			</div>\n\n			<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n				<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						\n					<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n						<p>System notification</p>\n					</div>\n\n					<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n					<div class="flex flex-col">\n						<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">\n				</div>\n			</div>\n		</div> \n    </div>\n</div>';
 
   // scripts/game/Paddle.ts
   var Paddle = class {
-    constructor(x, y, width = 10, height = 100) {
+    constructor(x, y, imageSrc = "/assets/game/paddle.png") {
+      this.image = null;
       this.x = x;
       this.y = y;
-      this.width = width;
-      this.height = height;
+      this.width = 10;
+      this.height = 100;
       this.speed = 5;
+      this.color = "white";
+      if (imageSrc) {
+        this.image = new Image();
+        this.image.src = imageSrc;
+      }
     }
     move(up) {
       if (up) {
@@ -7838,8 +7844,12 @@
       }
     }
     draw(ctx) {
-      ctx.fillStyle = "white";
-      ctx.fillRect(this.x, this.y, this.width, this.height);
+      if (this.image && this.image.complete) {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      } else {
+        ctx.fillStyle = "white";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+      }
     }
     reset() {
       this.y = 100;
@@ -7849,12 +7859,18 @@
 
   // scripts/game/Ball.ts
   var Ball = class {
-    constructor(x = 0, y = 0, radius = 10) {
+    constructor(x, y, imageSrc) {
+      this.image = null;
       this.x = x;
       this.y = y;
-      this.radius = radius;
+      this.radius = 10;
+      this.speed = 5;
       this.velocityX = 5;
       this.velocityY = 5;
+      if (imageSrc && imageSrc !== "classic") {
+        this.image = new Image();
+        this.image.src = imageSrc;
+      }
     }
     update(canvas) {
       this.x += this.velocityX;
@@ -7864,11 +7880,21 @@
       }
     }
     draw(ctx) {
-      ctx.fillStyle = "white";
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.closePath();
+      if (this.image && this.image.complete) {
+        ctx.drawImage(
+          this.image,
+          this.x - this.radius * 1.5,
+          this.y - this.radius * 1.5,
+          this.radius * 3,
+          this.radius * 3
+        );
+      } else {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.closePath();
+      }
     }
     reset(canvas) {
       this.x = canvas.width / 2;
@@ -7881,14 +7907,15 @@
 
   // scripts/game/Game.ts
   var Game = class {
-    constructor(canvas, ctx, input) {
+    constructor(canvas, ctx, input, ballImageSrc) {
       this.canvas = canvas;
       this.ctx = ctx;
       this.input = input;
       this.score = { player1: 0, player2: 0 };
-      this.paddle1 = new Paddle_default(30, canvas.height / 2 - 50);
-      this.paddle2 = new Paddle_default(canvas.width - 40, canvas.height / 2 - 50);
-      this.ball = new Ball_default(canvas.width / 2, canvas.height / 2);
+      const paddleImg = "/assets/game/paddle.png";
+      this.paddle1 = new Paddle_default(30, canvas.height / 2 - 50, paddleImg);
+      this.paddle2 = new Paddle_default(canvas.width - 40, canvas.height / 2 - 50, paddleImg);
+      this.ball = new Ball_default(canvas.width / 2, canvas.height / 2, ballImageSrc);
       this.isRunning = false;
     }
     start() {
@@ -7928,10 +7955,6 @@
       this.paddle1.draw(this.ctx);
       this.paddle2.draw(this.ctx);
       this.ball.draw(this.ctx);
-      this.ctx.fillStyle = "white";
-      this.ctx.font = "30px Arial";
-      this.ctx.fillText(`Player 1: ${this.score.player1}`, 50, 50);
-      this.ctx.fillText(`Player 2: ${this.score.player2}`, this.canvas.width - 150, 50);
     }
     checkCollisions() {
       if (this.ball.velocityX < 0 && this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x && this.ball.y >= this.paddle1.y && this.ball.y <= this.paddle1.y + this.paddle1.height) {
@@ -7954,10 +7977,17 @@
       }
       if (this.ball.x < 0) {
         this.score.player2++;
+        this.notifyScoreUpdate();
         this.reset();
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
+        this.notifyScoreUpdate();
         this.reset();
+      }
+    }
+    notifyScoreUpdate() {
+      if (this.onScoreChange) {
+        this.onScoreChange(this.score);
       }
     }
     reset() {
@@ -8217,6 +8247,7 @@
       }
       if (canvasContainer) {
         canvasContainer.innerHTML = "";
+        const scoreBoard = document.getElementById("score-board");
         const canvas = document.createElement("canvas");
         canvas.id = "pong-canvas-tournament";
         canvas.width = 1600;
@@ -8439,13 +8470,13 @@
         } else {
           canvasContainer.innerHTML = "";
         }
+        const scoreBoard = document.getElementById("score-board");
         const canvas = document.createElement("canvas");
         canvas.id = "pong-canvas";
-        canvas.width = 1600;
-        canvas.height = 900;
+        canvas.width = canvasContainer.clientWidth;
+        canvas.height = canvasContainer.clientHeight;
         canvas.style.width = "100%";
         canvas.style.height = "100%";
-        canvas.style.objectFit = "contain";
         canvas.style.backgroundColor = selectedBg;
         const targetContainer = document.getElementById("game-canvas-container") || gameField;
         targetContainer.appendChild(canvas);
@@ -8453,7 +8484,12 @@
         if (ctx) {
           const input = new Input_default();
           if (activeGame) activeGame.isRunning = false;
-          activeGame = new Game_default(canvas, ctx, input);
+          activeGame = new Game_default(canvas, ctx, selectedBall);
+          activeGame.onScoreChange = (score) => {
+            if (scoreBoard) {
+              scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+            }
+          };
           console.log("D\xE9marrage du jeu Local...");
           activeGame.start();
           const localLoop = setInterval(async () => {
