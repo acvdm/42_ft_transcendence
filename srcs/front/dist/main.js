@@ -7902,7 +7902,7 @@
       this.ctx = ctx;
       this.input = input;
       this.score = { player1: 0, player2: 0 };
-      const paddleImg = "/assets/game/paddle.png";
+      const paddleImg = "/assets/basic/paddle.png";
       this.paddle1 = new Paddle_default(30, canvas.height / 2 - 50, paddleImg);
       this.paddle2 = new Paddle_default(canvas.width - 40, canvas.height / 2 - 50, paddleImg);
       this.ball = new Ball_default(canvas.width / 2, canvas.height / 2, ballImageSrc);
@@ -8590,15 +8590,15 @@
       const confettiContainer = document.createElement("div");
       confettiContainer.id = "confetti-container";
       confettiContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 9999;
-        overflow: hidden;
-    `;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        `;
       container.appendChild(confettiContainer);
       for (let i = 0; i < confettiCount; i++) {
         createConfetti(confettiContainer, colors);
@@ -8617,33 +8617,33 @@
       const duration = Math.random() * 2 + 2;
       const delay = Math.random() * 0.5;
       confetti.style.cssText = `
-        position: absolute;
-        width: ${size}px;
-        height: ${size}px;
-        background-color: ${color};
-        top: -20px;
-        left: ${startX}px;
-        opacity: 1;
-        transform: rotate(${rotation}deg);
-        border-radius: ${Math.random() > 0.5 ? "50%" : "0"}; /* Rond ou carr\xE9 */
-        animation: fall ${duration}s ease-in ${delay}s forwards;
-    `;
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            background-color: ${color};
+            top: -20px;
+            left: ${startX}px;
+            opacity: 1;
+            transform: rotate(${rotation}deg);
+            border-radius: ${Math.random() > 0.5 ? "50%" : "0"}; /* Rond ou carr\xE9 */
+            animation: fall ${duration}s ease-in ${delay}s forwards;
+        `;
       container.appendChild(confetti);
       const style = document.createElement("style");
       if (!document.getElementById("confetti-animation-style")) {
         style.id = "confetti-animation-style";
         style.textContent = `
-            @keyframes fall {
-                0% {
-                    transform: translateY(0) rotate(0deg);
-                    opacity: 1;
+                @keyframes fall {
+                    0% {
+                        transform: translateY(0) rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
+                        opacity: 0;
+                    }
                 }
-                100% {
-                    transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
-                    opacity: 0;
-                }
-            }
-        `;
+            `;
         document.head.appendChild(style);
       }
     }

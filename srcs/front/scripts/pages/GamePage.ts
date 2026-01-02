@@ -797,85 +797,89 @@ export function initGamePage(mode: string): void {
         });
     }
 
-    // Fonction pour créer l'effet de confettis
-function launchConfetti(duration: number = 3000) {
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
-    const confettiCount = 150;
-    const container = document.body;
 
-    // Créer le conteneur de confettis
-    const confettiContainer = document.createElement('div');
-    confettiContainer.id = 'confetti-container';
-    confettiContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 9999;
-        overflow: hidden;
-    `;
-    container.appendChild(confettiContainer);
+//////////////////////////////////////////////
+//// LANCEMENT DE CONFETTIS A LA VICTOIRE ////
+/////////////////////////////////////////////
 
-    // Créer les confettis
-    for (let i = 0; i < confettiCount; i++) {
-        createConfetti(confettiContainer, colors);
-    }
+    function launchConfetti(duration: number = 3000) {
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+        const confettiCount = 150;
+        const container = document.body;
 
-    // Nettoyer après la durée spécifiée
-    setTimeout(() => {
-        confettiContainer.remove();
-    }, duration);
-}
-
-function createConfetti(container: HTMLElement, colors: string[]) {
-    const confetti = document.createElement('div');
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const size = Math.random() * 10 + 5; // 5-15px
-    const startX = Math.random() * window.innerWidth;
-    const endX = startX + (Math.random() - 0.5) * 200; // Dérive horizontale
-    const rotation = Math.random() * 360;
-    const duration = Math.random() * 2 + 2; // 2-4 secondes
-    const delay = Math.random() * 0.5; // Délai aléatoire
-
-    confetti.style.cssText = `
-        position: absolute;
-        width: ${size}px;
-        height: ${size}px;
-        background-color: ${color};
-        top: -20px;
-        left: ${startX}px;
-        opacity: 1;
-        transform: rotate(${rotation}deg);
-        border-radius: ${Math.random() > 0.5 ? '50%' : '0'}; /* Rond ou carré */
-        animation: fall ${duration}s ease-in ${delay}s forwards;
-    `;
-
-    container.appendChild(confetti);
-
-    // Animation CSS inline
-    const style = document.createElement('style');
-    if (!document.getElementById('confetti-animation-style')) {
-        style.id = 'confetti-animation-style';
-        style.textContent = `
-            @keyframes fall {
-                0% {
-                    transform: translateY(0) rotate(0deg);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
-                    opacity: 0;
-                }
-            }
+        // CONTAINER A CONFFETI
+        const confettiContainer = document.createElement('div');
+        confettiContainer.id = 'confetti-container';
+        confettiContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
         `;
-        document.head.appendChild(style);
-    }
-}
+        container.appendChild(confettiContainer);
 
-    // Variante avec explosion depuis le centre
-     function launchConfettiExplosion() {
+        // creation des confesttis
+        for (let i = 0; i < confettiCount; i++) {
+            createConfetti(confettiContainer, colors);
+        }
+
+        // renmove des confittos
+        setTimeout(() => {
+            confettiContainer.remove();
+        }, duration);
+    }
+
+    function createConfetti(container: HTMLElement, colors: string[]) {
+        const confetti = document.createElement('div');
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 10 + 5; // 5-15px
+        const startX = Math.random() * window.innerWidth;
+        const endX = startX + (Math.random() - 0.5) * 200; // Dérive horizontale
+        const rotation = Math.random() * 360;
+        const duration = Math.random() * 2 + 2; // 2-4 secondes
+        const delay = Math.random() * 0.5; // Délai aléatoire
+
+        confetti.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            background-color: ${color};
+            top: -20px;
+            left: ${startX}px;
+            opacity: 1;
+            transform: rotate(${rotation}deg);
+            border-radius: ${Math.random() > 0.5 ? '50%' : '0'}; /* Rond ou carré */
+            animation: fall ${duration}s ease-in ${delay}s forwards;
+        `;
+
+        container.appendChild(confetti);
+
+        // css inline pour l'animation
+        const style = document.createElement('style');
+        if (!document.getElementById('confetti-animation-style')) {
+            style.id = 'confetti-animation-style';
+            style.textContent = `
+                @keyframes fall {
+                    0% {
+                        transform: translateY(0) rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+
+    // explosion depuis le centre
+    function launchConfettiExplosion() {
         const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9'];
         const confettiCount = 100;
         const container = document.body;
@@ -907,7 +911,7 @@ function createConfetti(container: HTMLElement, colors: string[]) {
         const color = colors[Math.floor(Math.random() * colors.length)];
         const size = Math.random() * 12 + 6;
         
-        // Angle d'explosion en cercle
+        // explosion en cerce
         const angle = (index / total) * Math.PI * 2;
         const velocity = Math.random() * 300 + 200; // Distance de projection
         const endX = Math.cos(angle) * velocity;
@@ -930,7 +934,7 @@ function createConfetti(container: HTMLElement, colors: string[]) {
 
         container.appendChild(confetti);
 
-        // Animation unique pour chaque confetti
+        // animation pour chaque confetti
         const style = document.createElement('style');
         style.textContent = `
             @keyframes explode-${index} {

@@ -18,7 +18,7 @@ class Game {
         this.ctx = ctx;
         this.input = input;
         this.score = { player1: 0, player2: 0 };
-        const paddleImg = '/assets/game/paddle.png';
+        const paddleImg = '/assets/basic/paddle.png';
         this.paddle1 = new Paddle(30, canvas.height / 2 - 50, paddleImg);
         this.paddle2 = new Paddle(canvas.width - 40, canvas.height / 2 - 50, paddleImg);
         this.ball = new Ball(canvas.width / 2, canvas.height / 2, ballImageSrc);
