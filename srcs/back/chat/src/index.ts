@@ -47,6 +47,111 @@ const authMiddleware = (socket: any, next: any) => {
     }
 }
 
+// --- STRUCTURES JEU REMOTE ---
+interface GameState {
+    roomId: string;
+    player1Id: string;
+    player2Id: string;
+    ball: { x: number, y: number, vx: number, vy: number, radius: number };
+    paddle1: { y: number, height: number, width: number, x: number };
+    paddle2: { y: number, height: number, width: number, x: number };
+    score: { player1: number, player2: number };
+    canvasWidth: number;
+    canvasHeight: number;
+    intervalId?: NodeJS.Timeout;
+}
+
+let waitingQueue: string[] = []; // ID des sockets en attente
+const activeGames = new Map<string, GameState>();
+
+// --- LOGIQUE JEU SERVEUR ---
+const GAMESPEED = 1000 / 60; // 60 FPS
+
+function initGameState(roomId: string, p1: string, p2: string): GameState {
+    return {
+        roomId,
+        player1Id: p1,
+        player2Id: p2,
+        canvasWidth: 800, // Taille de référence serveur
+        canvasHeight: 600,
+        ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
+        paddle1: { x: 30, y: 250, width: 10, height: 100 },
+        paddle2: { x: 760, y: 250, width: 10, height: 100 },
+        score: { player1: 0, player2: 0 }
+    };
+}
+
+function resetBall(game: GameState) {
+    game.ball.x = game.canvasWidth / 2;
+    game.ball.y = game.canvasHeight / 2;
+    // Vitesse aléatoire mais constante
+    const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4);
+    const speed = 7;
+    const direction = Math.random() > 0.5 ? 1 : -1;
+    game.ball.vx = direction * speed * Math.cos(angle);
+    game.ball.vy = speed * Math.sin(angle);
+}
+
+function updateGamePhysics(game: GameState, io: Server) {
+    // Bouger la balle
+    game.ball.x += game.ball.vx;
+    game.ball.y += game.ball.vy;
+
+    // Collision murs (Haut/Bas)
+    if (game.ball.y - game.ball.radius < 0 || game.ball.y + game.ball.radius > game.canvasHeight) {
+        game.ball.vy = -game.ball.vy;
+    }
+
+    // Collision Raquettes (Simplifiée)
+    // P1
+    if (game.ball.x - game.ball.radius < game.paddle1.x + game.paddle1.width &&
+        game.ball.x + game.ball.radius > game.paddle1.x &&
+        game.ball.y > game.paddle1.y &&
+        game.ball.y < game.paddle1.y + game.paddle1.height) {
+            game.ball.vx = Math.abs(game.ball.vx); // Rebond vers la droite
+            game.ball.vx *= 1.05; // Accélération
+    }
+    // P2
+    if (game.ball.x + game.ball.radius > game.paddle2.x &&
+        game.ball.x - game.ball.radius < game.paddle2.x + game.paddle2.width &&
+        game.ball.y > game.paddle2.y &&
+        game.ball.y < game.paddle2.y + game.paddle2.height) {
+            game.ball.vx = -Math.abs(game.ball.vx); // Rebond vers la gauche
+            game.ball.vx *= 1.05; // Accélération
+    }
+
+    // Score
+    if (game.ball.x < 0) {
+        game.score.player2++;
+        resetBall(game);
+    } else if (game.ball.x > game.canvasWidth) {
+        game.score.player1++;
+        resetBall(game);
+    }
+
+    // Fin de partie (exemple: 5 points)
+    if (game.score.player1 >= 5 || game.score.player2 >= 5) {
+        stopGame(game.roomId, io);
+    }
+
+    // Envoi de l'état
+    io.to(game.roomId).emit('gameState', {
+        ball: game.ball,
+        paddle1: game.paddle1,
+        paddle2: game.paddle2,
+        score: game.score
+    });
+}
+
+function stopGame(roomId: string, io: Server) {
+    const game = activeGames.get(roomId);
+    if (game) {
+        if (game.intervalId) clearInterval(game.intervalId);
+        io.to(roomId).emit('gameEnded', { finalScore: game.score });
+        activeGames.delete(roomId);
+    }
+}
+
 // 1. Définir la logique Socket (se lance quand Fastify est prêt)
 fastify.ready().then(() => {
     // Application de sécurité
@@ -128,9 +233,82 @@ fastify.ready().then(() => {
             }
         });
 
+        // ------------------------------------
+        // --- EVENTS DU JEU REMOTE (AJOUT) ---
+        // ------------------------------------
+
+        socket.on('joinQueue', () => {
+            // Si le joueur est déjà en jeu ou en file, on ignore (simplifié)
+            if (waitingQueue.includes(socket.id)) return;
+
+            console.log(`Player ${socket.id} joined Queue`);
+            waitingQueue.push(socket.id);
+
+            // Si on a 2 joueurs, on lance
+            if (waitingQueue.length >= 2) {
+                const p1 = waitingQueue.shift()!;
+                const p2 = waitingQueue.shift()!;
+                const roomId = `game_${Date.now()}_${p1}_${p2}`;
+
+                // Création état jeu
+                const gameState = initGameState(roomId, p1, p2);
+                activeGames.set(roomId, gameState);
+
+                // Setup Sockets
+                const sock1 = fastify.io.sockets.sockets.get(p1);
+                const sock2 = fastify.io.sockets.sockets.get(p2);
+
+                if (sock1 && sock2) {
+                    sock1.join(roomId);
+                    sock2.join(roomId);
+
+                    sock1.emit('matchFound', { roomId, role: 'player1', opponent: p2 });
+                    sock2.emit('matchFound', { roomId, role: 'player2', opponent: p1 });
+
+                    console.log(`Match started: ${roomId}`);
+                    
+                    // Lancement boucle
+                    gameState.intervalId = setInterval(() => {
+                        updateGamePhysics(gameState, fastify.io);
+                    }, GAMESPEED);
+                }
+            }
+        });
+
+        socket.on('leaveQueue', () => {
+            waitingQueue = waitingQueue.filter(id => id !== socket.id);
+        });
+
+        socket.on('gameInput', (data: { roomId: string, up: boolean, down: boolean }) => {
+            const game = activeGames.get(data.roomId);
+            if (!game) return;
+
+            const speed = 10;
+            // Qui bouge ?
+            let paddle = null;
+            if (socket.id === game.player1Id) paddle = game.paddle1;
+            else if (socket.id === game.player2Id) paddle = game.paddle2;
+
+            if (paddle) {
+                if (data.up) paddle.y -= speed;
+                if (data.down) paddle.y += speed;
+                // Limites
+                if (paddle.y < 0) paddle.y = 0;
+                if (paddle.y + paddle.height > game.canvasHeight) paddle.y = game.canvasHeight - paddle.height;
+            }
+        });
 
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);
+            // Nettoyage file
+            waitingQueue = waitingQueue.filter(id => id !== socket.id);
+            // Nettoyage parties actives (Forfait)
+            // (Logique simplifiée: si un joueur part, la partie s'arrête)
+            for (const [roomId, game] of activeGames.entries()) {
+                if (game.player1Id === socket.id || game.player2Id === socket.id) {
+                    stopGame(roomId, fastify.io);
+                }
+            }
         });
     });
 });

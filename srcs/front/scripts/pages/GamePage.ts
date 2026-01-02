@@ -4,6 +4,7 @@ import htmlContentTournament from "./TournamentPage.html";
 import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
+import SocketService from '../services/SocketService'; // <--- AJOUT IMPORT
 
 import Game from "../game/Game";
 import Input from "../game/Input";
@@ -104,6 +105,7 @@ export function initGamePage(mode: string): void {
     if (mode == 'remote') {
         gameChat.joinChannel("remote_game_room"); // on met l'id correspondant pour l room
         // iniitailiastion de la logique de jeu en remote
+        initRemoteMode(); // <--- APPEL DE LA FONCTION AJOUTÉE
     } else if (mode == 'tournament') {
         gameChat.joinChannel("tournament_room"); // same ici
         // initialisation de la logique de jeu en tournoi
@@ -112,6 +114,90 @@ export function initGamePage(mode: string): void {
         gameChat.joinChannel("local_game_room");
         initLocalMode();
     }
+
+
+    // ---------------------------------------------------------
+    // -------------- LOGIQUE DU JEU REMOTE (AJOUT) ------------
+    // ---------------------------------------------------------
+    function initRemoteMode() {
+        const socketService = SocketService.getInstance();
+        const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
+        const status = document.getElementById('queue-status');
+        const modal = document.getElementById('game-setup-modal');
+        const container = document.getElementById('game-canvas-container');
+
+        // Initialisation Canvas
+        if (container) {
+            container.innerHTML = ''; // Nettoyage
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 600;
+            // Style pour s'adapter proprement
+            canvas.style.width = '100%'; 
+            canvas.style.height = '100%';
+            canvas.style.maxWidth = '100%';
+            canvas.style.maxHeight = '100%';
+            
+            container.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            const input = new Input();
+
+            if (ctx) {
+                // Init du jeu (instance inactive au début)
+                if (activeGame) activeGame.isRunning = false;
+                activeGame = new Game(canvas, ctx, input);
+                
+                // Callback score pour l'UI
+                activeGame.onScoreChange = (score) => {
+                    const sb = document.getElementById('score-board');
+                    if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+                };
+            }
+        }
+
+        if (btn) {
+            // On clone pour éviter les event listeners multiples si on revient sur la page
+            const newBtn = btn.cloneNode(true) as HTMLButtonElement;
+            btn.parentNode?.replaceChild(newBtn, btn);
+
+            newBtn.addEventListener('click', () => {
+                if (!socketService.socket) {
+                    alert("Erreur: Non connecté au serveur de jeu");
+                    return;
+                }
+
+                if (status) status.innerText = "Recherche d'un adversaire...";
+                newBtn.disabled = true;
+                newBtn.innerText = "WAITING...";
+
+                // Ecoute de l'événement de début de match
+                socketService.socket.on('matchFound', (data: any) => {
+                    console.log("Match Found!", data);
+                    if (status) status.innerText = "Adversaire trouvé ! Lancement...";
+                    
+                    // Cache la modale
+                    if (modal) modal.style.display = 'none';
+
+                    // Configure le jeu en mode remote et lance
+                    if (activeGame) {
+                        activeGame.startRemote(data.roomId, data.role);
+                    }
+                    
+                    // Update UI noms
+                    const p1Name = document.getElementById('player-1-name');
+                    const p2Name = document.getElementById('player-2-name');
+                    
+                    if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
+                    if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
+                });
+
+                // Envoi demande au serveur
+                socketService.socket.emit('joinQueue');
+            });
+        }
+    }
+
 
     // ---------------------------------------------------------
     // -------------- LOGIQUE DU JEU EN TOURNOI ----------------

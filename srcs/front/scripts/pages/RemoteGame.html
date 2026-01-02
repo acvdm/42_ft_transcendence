@@ -72,7 +72,7 @@
                 
                 <div class="flex flex-col gap-1">
                     <label for="opponent-name" class="font-bold">Who are you playing with? :</label>
-                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>
+                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name... (Leave empty for random)" required>
                     <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>
                 </div>
 
@@ -120,9 +120,10 @@
                 <div class="flex justify-center mt-4">
                     <button id="start-game-btn"
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                        PLAY
+                        PLAY (QUEUE)
                     </button>
                 </div>
+                <div class="text-center text-xs text-gray-500" id="queue-status"></div>
 
             </div>
         </div>

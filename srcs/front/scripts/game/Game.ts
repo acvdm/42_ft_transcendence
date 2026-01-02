@@ -1,6 +1,7 @@
 import Paddle from './Paddle';
 import Ball from './Ball';
 import Input from './Input';
+import SocketService from '../services/SocketService'; // Import pour le remote
 
 class Game {
     score: { player1: number; player2: number };
@@ -13,6 +14,13 @@ class Game {
     input: Input;
     onScoreChange?: (score: { player1: number; player2: number }) => void;
 
+    // --- REMOTE PROPS ---
+    isRemote: boolean = false;
+    roomId: string | null = null;
+    playerRole: 'player1' | 'player2' | null = null;
+    socket: any = null;
+    // --------------------
+
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
         this.canvas = canvas;
         this.ctx = ctx;
@@ -23,6 +31,37 @@ class Game {
         this.paddle2 = new Paddle(canvas.width - 40, canvas.height / 2 - 50, paddleImg);
         this.ball = new Ball(canvas.width / 2, canvas.height / 2, ballImageSrc);
         this.isRunning = false;
+    }
+
+    // Fonction pour démarrer le jeu en remote
+    startRemote(roomId: string, role: 'player1' | 'player2') {
+        this.isRemote = true;
+        this.roomId = roomId;
+        this.playerRole = role;
+        this.socket = SocketService.getInstance().socket;
+
+        if (!this.socket) {
+            console.error("Cannot start remote game: No socket connection");
+            return;
+        }
+
+        console.log(`Starting Remote Game in room ${roomId} as ${role}`);
+
+        // Écouter les mises à jour du serveur
+        this.socket.on('gameState', (data: any) => {
+            this.updateFromRemote(data);
+        });
+
+        this.socket.on('gameEnded', (data: any) => {
+            this.isRunning = false;
+            alert(`Game Over! Final Score: ${data.finalScore.player1} - ${data.finalScore.player2}`);
+            // Retour menu ou nettoyage
+            this.socket.off('gameState');
+            this.socket.off('gameEnded');
+        });
+
+        this.isRunning = true;
+        this.gameLoop();
     }
 
     start() {
@@ -40,6 +79,24 @@ class Game {
 
     update(canvas: HTMLCanvasElement) {
         const inputState = this.input.getInput();
+        
+        // --- MODE REMOTE ---
+        if (this.isRemote && this.socket && this.roomId) {
+            // On envoie juste les inputs au serveur
+            // On détermine si on bouge (Up ou Down)
+            const up = (this.playerRole === 'player1' ? inputState.player1.up : inputState.player2.up) || inputState.player1.up; // Support fleches pour les deux
+            const down = (this.playerRole === 'player1' ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
+
+            this.socket.emit('gameInput', {
+                roomId: this.roomId,
+                up: up,
+                down: down
+            });
+            // On ne calcule PAS la physique locale, on attend le 'gameState' du serveur
+            return; 
+        }
+        // -------------------
+
         if (inputState.player1.up) {
             this.paddle1.move(true);
         }
@@ -62,6 +119,25 @@ class Game {
         this.ball.update(canvas);
         this.checkCollisions();
         // Additional game update logic
+    }
+
+    // Nouvelle fonction pour mettre à jour l'état visuel depuis le serveur
+    updateFromRemote(data: any) {
+        // Le serveur envoie des positions brutes sur une base 800x600 (par exemple)
+        this.ball.x = data.ball.x;
+        this.ball.y = data.ball.y;
+        
+        this.paddle1.y = data.paddle1.y;
+        this.paddle1.x = data.paddle1.x; // Au cas où
+        
+        this.paddle2.y = data.paddle2.y;
+        this.paddle2.x = data.paddle2.x;
+
+        // Score
+        if (this.score.player1 !== data.score.player1 || this.score.player2 !== data.score.player2) {
+            this.score = data.score;
+            this.notifyScoreUpdate();
+        }
     }
 
     render() {
