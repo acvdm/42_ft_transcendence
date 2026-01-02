@@ -46,7 +46,7 @@ fastify.post('/users', async (request, reply) => {
         body.avatar = body.avatar.substring(body.avatar.indexOf('/assets/'));
     }
 
-	let user_id = null; 
+	let userId = null; 
 
 	try 
 	{
@@ -55,8 +55,8 @@ fastify.post('/users', async (request, reply) => {
 		  throw new ValidationError('Error: Alias is too long, max 30 characters');
 		}		
 		// 1. Créer le user localement dans user.sqlite
-		user_id = await userRepo.createUserInDB(db, body)		
-		if (!user_id)
+		userId = await userRepo.createUserInDB(db, body)		
+		if (!userId)
 		{
 			return reply.status(500).send({
 				success: false,
@@ -65,7 +65,7 @@ fastify.post('/users', async (request, reply) => {
 			});
 		}
 
-		const authURL = `http://auth:3001/users/${user_id}/credentials`;
+		const authURL = `http://auth:3001/users/${userId}/credentials`;
 
 		// 3. Appeler le service auth pour créer les credentials
 		const authResponse = await fetch(authURL, {
@@ -74,7 +74,7 @@ fastify.post('/users', async (request, reply) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ 
-				user_id: user_id, 
+				userId: userId, 
 				email: body.email, 
 				password: body.password, 
 			}),
@@ -106,13 +106,13 @@ fastify.post('/users', async (request, reply) => {
 		if (authJson.success)
 		{
 
-    		const { refresh_token, access_token, user_id } = authJson;//.data?
+    		const { refreshToken, accessToken, userId } = authJson;//.data?
 
-			if (!access_token || !user_id) {
+			if (!accessToken || !userId) {
 				throw new Error("Tokens manquants dans la reponse de l'Auth")
 			}
-    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
-    		reply.setCookie('refresh_token', refresh_token, {
+    		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refreshToken', refreshToken, {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
     		  secure: true, // acces au cookie uniquement via https
@@ -121,14 +121,14 @@ fastify.post('/users', async (request, reply) => {
     		  signed: true
     		});
 
-			const statsURL = `http://game:3003/users/${user_id}/games/stats`;
+			const statsURL = `http://game:3003/users/${userId}/games/stats`;
 			const statResponse = await fetch(statsURL, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					user_id: user_id
+					userId: userId
 				}),
 			});
 
@@ -160,8 +160,8 @@ fastify.post('/users', async (request, reply) => {
     		return reply.status(201).send({
 				// success: true,
 					// data: {
-    					access_token: access_token,
-    					user_id: user_id
+    					accessToken: accessToken,
+    					userId: userId
 					// },
 				// error: null
     		});
@@ -170,11 +170,11 @@ fastify.post('/users', async (request, reply) => {
 	catch (err: any) 
 	{
 		// 5. Rollback
-		if (user_id) 
+		if (userId) 
 		{
-		  console.log(`Rollback: delele orphan ID ${user_id}`);
-		  await userRepo.rollbackDeleteUser(db, user_id);
-		  console.log(`User ID ${user_id} successfully deleted`);
+		  console.log(`Rollback: delele orphan ID ${userId}`);
+		  await userRepo.rollbackDeleteUser(db, userId);
+		  console.log(`User ID ${userId} successfully deleted`);
 		}	
 
 		const statusCode = err.statusCode || 500;
@@ -217,7 +217,7 @@ fastify.post('/users/guest', async (request, reply) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ 
-				user_id: userId, 
+				userId: userId, 
 				email: email, 
 			}),
 		});
@@ -253,16 +253,16 @@ fastify.post('/users/guest', async (request, reply) => {
 		if (authJson.success)
 		{
 			// const authPayload = data; //.data MODIF
-			// if (!authPayload || !authPayload.refresh_token)
+			// if (!authPayload || !authPayload.refreshToken)
 			// 	throw new Error("Auth service response is missing tokens inside data object");
 
-    		const { refresh_token, access_token, user_id } = authJson;//.data?
+    		const { refreshToken, accessToken, userId } = authJson;//.data?
 
-			if (!access_token || !user_id) {
+			if (!accessToken || !userId) {
 				throw new Error("Tokens manquants dans la reponse de l'Auth")
 			}
-    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
-    		reply.setCookie('refresh_token', refresh_token, {
+    		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refreshToken', refreshToken, {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
     		  secure: true, // acces au cookie uniquement via https
@@ -277,8 +277,8 @@ fastify.post('/users/guest', async (request, reply) => {
     		return reply.status(201).send({
 				// success: true,
 					// data: {
-    					access_token: access_token,
-    					user_id: user_id
+    					accessToken: accessToken,
+    					userId: userId
 					// },
 				// error: null
     		});
@@ -670,12 +670,12 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 	const { id } = request.params as { id: string};
 	const { friendshipId } = request.params as {friendshipId: string}
 	const { status } = request.body as { status: string };
-	const user_id = Number(id);
+	const userId = Number(id);
 	const friendship_id = Number(friendshipId);
 
 	try
 	{
-		friendRepo.reviewFriendshipRequest(db, user_id, friendship_id, status);
+		friendRepo.reviewFriendshipRequest(db, userId, friendship_id, status);
 		return reply.status(200).send({ 
 			success: true,
 			data: null,
@@ -731,10 +731,10 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 
 	try
 	{
-		const pending_requests: friendRepo.Friendship [] = await friendRepo.listRequests(db, userId);
+		const pendingRequests: friendRepo.Friendship [] = await friendRepo.listRequests(db, userId);
 		return reply.status(200).send({
 			success: true,
-			data: pending_requests,
+			data: pendingRequests,
 			error: null
 		});
 	}

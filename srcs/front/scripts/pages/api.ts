@@ -55,7 +55,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
                 const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
                 if (refreshRes.ok) {
                     const data = await refreshRes.json();
-                    const newToken = data.access_token;
+                    const newToken = data.accessToken;
                     localStorage.setItem('accessToken', newToken);
                     isRefreshing = false;
                     onRefreshed(newToken); // on previent tous les appels de foncitons qui attendaient

@@ -134,7 +134,7 @@
           const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
           if (refreshRes.ok) {
             const data = await refreshRes.json();
-            const newToken = data.access_token;
+            const newToken = data.accessToken;
             localStorage.setItem("accessToken", newToken);
             isRefreshing = false;
             onRefreshed(newToken);
@@ -3873,16 +3873,16 @@
   function render() {
     return LoginPage_default;
   }
-  async function init2faLogin(access_token, user_id, selectedStatus) {
-    if (access_token) localStorage.setItem("accessToken", access_token);
-    if (user_id) localStorage.setItem("userId", user_id.toString());
-    if (user_id && access_token) {
+  async function init2faLogin(accessToken, userId, selectedStatus) {
+    if (accessToken) localStorage.setItem("accessToken", accessToken);
+    if (userId) localStorage.setItem("userId", userId.toString());
+    if (userId && accessToken) {
       try {
-        const userRes = await fetch(`/api/users/${user_id}`, {
+        const userRes = await fetch(`/api/users/${userId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
+            "Authorization": `Bearer ${accessToken}`
           }
         });
         if (userRes.ok) {
@@ -3896,11 +3896,11 @@
         console.error("Can't get user's profile", err);
       }
       try {
-        await fetch(`/api/users/${user_id}/status`, {
+        await fetch(`/api/users/${userId}/status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
+            "Authorization": `Bearer ${accessToken}`
           },
           body: JSON.stringify({ status: selectedStatus })
         });
@@ -3945,10 +3945,10 @@
           body: JSON.stringify({ email, password })
         });
         const result = await response.json();
-        if (result.require_2fa) {
+        if (result.require2fa) {
           console.log("2FA require");
           localStorage.setItem("is2faEnabled", "true");
-          tempToken = result.temp_token;
+          tempToken = result.tempToken;
           if (modal2fa) {
             modal2fa.classList.remove("hidden");
             modal2fa.classList.add("flex");
@@ -3959,13 +3959,13 @@
         }
         if (result.success) {
           localStorage.setItem("is2faEnabled", "false");
-          const { access_token, user_id } = result.data;
-          await init2faLogin(access_token, user_id, cachedStatus);
-          if (access_token) localStorage.setItem("accessToken", access_token);
-          if (user_id) localStorage.setItem("userId", user_id.toString());
-          if (user_id && access_token) {
+          const { accessToken, userId } = result.data;
+          await init2faLogin(accessToken, userId, cachedStatus);
+          if (accessToken) localStorage.setItem("accessToken", accessToken);
+          if (userId) localStorage.setItem("userId", userId.toString());
+          if (userId && accessToken) {
             try {
-              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+              const userRes = await fetchWithAuth(`/api/users/${userId}`, {
                 method: "GET"
               });
               if (userRes.ok) {
@@ -3979,7 +3979,7 @@
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetchWithAuth(`/api/users/${user_id}/status`, {
+              await fetchWithAuth(`/api/users/${userId}/status`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: selectedStatus })
               });
@@ -4022,10 +4022,10 @@
         const result = await response.json();
         if (response.ok && result.success) {
           localStorage.setItem("is2faEnabled", "true");
-          const { access_token, user_id } = result;
+          const { accessToken, userId } = result;
           if (modal2fa) modal2fa.classList.add("hidden");
           await updateUserStatus("online");
-          await init2faLogin(access_token, user_id, cachedStatus);
+          await init2faLogin(accessToken, userId, cachedStatus);
         } else {
           if (error2fa) {
             error2fa.textContent = "Invalid code.";
@@ -7172,7 +7172,7 @@
         });
         if (response.ok) {
           const data = await response.json();
-          if (data.access_token) sessionStorage.setItem("accessToken", data.access_token);
+          if (data.accessToken) sessionStorage.setItem("accessToken", data.accessToken);
           if (data.userId) sessionStorage.setItem("userId", data.userId.toString());
           sessionStorage.setItem("isGuest", "true");
           handleNavigation("/guest");
@@ -7266,17 +7266,17 @@
         if (response.ok) {
           sessionStorage.removeItem("isGuest");
           sessionStorage.removeItem("userRole");
-          const { access_token, user_id } = result;
-          console.log("User ID:", user_id);
-          console.log("Access Token:", access_token);
-          if (access_token)
-            localStorage.setItem("accessToken", access_token);
-          if (user_id)
-            localStorage.setItem("userId", user_id.toString());
-          if (user_id) {
+          const { accessToken, userId } = result;
+          console.log("User ID:", userId);
+          console.log("Access Token:", accessToken);
+          if (accessToken)
+            localStorage.setItem("accessToken", accessToken);
+          if (userId)
+            localStorage.setItem("userId", userId.toString());
+          if (userId) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`, {
-                headers: { "Authorization": `Bearer ${access_token}` }
+              const userRes = await fetch(`/api/users/${userId}`, {
+                headers: { "Authorization": `Bearer ${accessToken}` }
               });
               if (userRes.ok) {
                 const userData = await userRes.json();

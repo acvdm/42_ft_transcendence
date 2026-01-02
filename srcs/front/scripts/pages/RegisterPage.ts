@@ -86,21 +86,21 @@ function handleRegister() {
 			{
 				sessionStorage.removeItem('isGuest');
    				sessionStorage.removeItem('userRole');
-				// pas besoin du refresh_token car dans le cookie
-				const { access_token, user_id } = result; // on enleve le data, on recupere depuis la racine de lobjet
-				console.log('User ID:', user_id);
-  				console.log('Access Token:', access_token);
+				// pas besoin du refreshToken car dans le cookie
+				const { accessToken, userId } = result; // on enleve le data, on recupere depuis la racine de lobjet
+				console.log('User ID:', userId);
+  				console.log('Access Token:', accessToken);
 
-				if (access_token)
-					localStorage.setItem('accessToken', access_token);
-				if (user_id) 
-					localStorage.setItem('userId', user_id.toString());
+				if (accessToken)
+					localStorage.setItem('accessToken', accessToken);
+				if (userId) 
+					localStorage.setItem('userId', userId.toString());
 
-				if (user_id) {
-					// console.log(`user_id: ${user_id}`);
+				if (userId) {
+					// console.log(`userId: ${userId}`);
 					try {
-						const userRes = await fetch(`/api/users/${user_id}`, {
-							headers: { 'Authorization': `Bearer ${access_token}` }
+						const userRes = await fetch(`/api/users/${userId}`, {
+							headers: { 'Authorization': `Bearer ${accessToken}` }
 						});
 						// console.log(`${userRes}`);
 						if (userRes.ok) {
