@@ -21,13 +21,100 @@
                 <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
     
                     <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>
+                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>
                         <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>
+                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>
                     </div>
 
                     <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
                     
+
+                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                        <div class="window w-[600px] bg-white shadow-xl">
+                            <div class="title-bar">
+                                <div class="title-bar-text">Tournament setup</div>
+                            </div>
+                            <div class="window-body flex flex-col gap-4 p-6 bg-white">
+                                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>
+                                
+                                <div class="flex flex-col gap-1">
+                                    <label class="font-bold text-sm">Tournament name:</label>
+                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urNÔîï d33s b0ggggg0ôôssss">
+                                </div>
+
+                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">
+                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-xs font-bold">Player 1 (You):</label>
+                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-bold">Player 2:</label>
+                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-bold">Player 3:</label>
+                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-bold">Player 4:</label>
+                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">
+                                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>
+                                    <div class="flex flex-row items-center gap-8 justify-center">
+                                        <div class="flex flex-row items-center gap-2 relative">
+                                            <label class="text-sm font-semibold">Ball :</label>
+                                            <div class="relative">
+                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
+                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
+                                                </button>
+                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">
+                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="tour-ball-value" value="/assets/emoticons/smile.gif">
+                                        </div>
+                                        <div class="flex flex-row items-center gap-2 relative">
+                                            <label class="text-sm font-semibold">Background :</label>
+                                            <div class="relative">
+                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
+                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
+                                                </button>
+                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
+                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                                                </div>
+                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
+                                                    Reset to White
+                                                </button>
+                                            </div>
+                                            </div>
+                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>
+
+                                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    START TOURNAMENT
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
                 </div>
             </div>
 
@@ -57,87 +144,7 @@
     </div>
 
 
-    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-        <div class="window w-[600px] bg-white shadow-xl">
-            <div class="title-bar">
-                <div class="title-bar-text">Tournament setup</div>
-            </div>
-            <div class="window-body flex flex-col gap-4 p-6 bg-white">
-                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>
-                
-                <div class="flex flex-col gap-1">
-                    <label class="font-bold text-sm">Tournament name:</label>
-                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urNÔîï d33s b0ggggg0ôôssss">
-                </div>
-
-                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">
-                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs font-bold">Player 1 (You):</label>
-                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Player 2:</label>
-                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Player 3:</label>
-                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold">Player 4:</label>
-                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">
-                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>
-                    <div class="flex flex-row items-center gap-8 justify-center">
-                        <div class="flex flex-row items-center gap-2 relative">
-                            <label class="text-sm font-semibold">Ball :</label>
-                            <div class="relative">
-                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
-                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
-                                </button>
-                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">
-                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>
-                                </div>
-                            </div>
-                            <input type="hidden" id="tour-ball-value" value="/assets/emoticons/smile.gif">
-                        </div>
-                        <div class="flex flex-row items-center gap-2 relative">
-                            <label class="text-sm font-semibold">Background :</label>
-                            <div class="relative">
-                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
-                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
-                                </button>
-                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
-                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
-                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                                </div>
-                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
-                                    Reset to White
-                                </button>
-                            </div>
-                            </div>
-                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>
-
-                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                    START TOURNAMENT
-                </button>
-            </div>
-        </div>
-    </div>
+    
 
     <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
         <div class="window w-[800px] bg-white shadow-2xl">

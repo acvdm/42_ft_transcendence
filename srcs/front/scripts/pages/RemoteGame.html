@@ -21,13 +21,92 @@
                 <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
     
                     <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Joueur 1</span>
+                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>
                         <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Joueur 2</span>
+                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>
                     </div>
 
                     <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
                     
+                    
+                    
+                    
+                    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                        <div class="window w-[600px] shadow-xl">
+                            <div class="title-bar">
+                                <div class="title-bar-text">Start the game</div>
+                                <div class="title-bar-controls">
+                                    <button aria-label="Close"></button>
+                                </div>
+                            </div>
+
+                            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
+                                
+                                <div class="flex flex-col gap-1">
+                                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>
+                                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name... (Leave empty for random)" required>
+                                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>
+                                </div>
+
+                                <fieldset class="border-2 border-gray-300 p-2 mt-2">
+                                    <div class="flex flex-row items-center gap-2 mb-3 relative">
+                                        <label class="text-sm font-semibold">Choose your ball :</label>
+                                        
+                                        <div class="relative">
+                                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
+                                            </button>
+
+                                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>
+                                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                                                    </div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">
+                                    </div>
+
+                                    <div class="flex flex-row gap-2">
+                                        <label class="text-sm font-semibold">Choose your background :</label>
+                                        
+                                        <div class="relative">
+                                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
+                                            </button>
+
+                                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
+                                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                                                </div>
+                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
+                                                    Reset to White
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" id="bg-value" value="#E8F4F8">
+                                    </div>
+                                </fieldset>
+
+                                <div class="flex justify-center mt-4">
+                                    <button id="start-game-btn"
+                                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        PLAY (QUEUE)
+                                    </button>
+                                </div>
+                                <div class="text-center text-xs text-gray-500" id="queue-status"></div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+
+
                 </div>
             </div>
 
@@ -55,77 +134,6 @@
 					</div>
 				</div>
 			</div> 
-        </div>
-    </div>
-
-    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-
-        <div class="window w-[600px] shadow-xl">
-            <div class="title-bar">
-                <div class="title-bar-text">Start the game</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Close"></button>
-                </div>
-            </div>
-
-            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
-                
-                <div class="flex flex-col gap-1">
-                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>
-                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name... (Leave empty for random)" required>
-                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>
-                </div>
-
-                <fieldset class="border-2 border-gray-300 p-2 mt-2">
-                    <div class="flex flex-row items-center gap-2 mb-3 relative">
-                        <label class="text-sm font-semibold">Choose your ball :</label>
-                        
-                        <div class="relative">
-                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
-                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
-                            </button>
-
-                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
-                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>
-                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
-                                    </div>
-                            </div>
-                        </div>
-
-                        <input type="hidden" id="ball-value" value="/assets/emoticons/smile.gif">
-                    </div>
-
-                    <div class="flex flex-row gap-2">
-                        <label class="text-sm font-semibold">Choose your background :</label>
-                        
-                        <div class="relative">
-                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
-                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
-                            </button>
-
-                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
-                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
-                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                                </div>
-                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
-                                    Reset to White
-                                </button>
-                            </div>
-                        </div>
-
-                        <input type="hidden" id="bg-value" value="#E8F4F8">
-                    </div>
-                </fieldset>
-
-                <div class="flex justify-center mt-4">
-                    <button id="start-game-btn"
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                        PLAY (QUEUE)
-                    </button>
-                </div>
-                <div class="text-center text-xs text-gray-500" id="queue-status"></div>
-
-            </div>
         </div>
     </div>
 </div>
