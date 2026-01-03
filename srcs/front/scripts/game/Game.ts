@@ -123,16 +123,23 @@ class Game {
 
     // Nouvelle fonction pour mettre à jour l'état visuel depuis le serveur
     updateFromRemote(data: any) {
-        // Le serveur envoie des positions brutes sur une base 800x600 (par exemple)
+        // Le serveur utilise une base 800x600, on adapte à notre canvas
+        const SERVER_WIDTH = 800;
+        const SERVER_HEIGHT = 600;
         
-        this.ball.x = data.ball.x;
-        this.ball.y = data.ball.y;
+        const scaleX = this.canvas.width / SERVER_WIDTH;
+        const scaleY = this.canvas.height / SERVER_HEIGHT;
         
-        this.paddle1.y = data.paddle1.y;
-        this.paddle1.x = data.paddle1.x; // Au cas où
+        // Adapter les positions de la balle
+        this.ball.x = data.ball.x * scaleX;
+        this.ball.y = data.ball.y * scaleY;
         
-        this.paddle2.y = data.paddle2.y;
-        this.paddle2.x = data.paddle2.x;
+        // Adapter les raquettes
+        this.paddle1.y = data.paddle1.y * scaleY;
+        this.paddle1.x = data.paddle1.x * scaleX;
+        
+        this.paddle2.y = data.paddle2.y * scaleY;
+        this.paddle2.x = data.paddle2.x * scaleX;
 
         // Score
         if (this.score.player1 !== data.score.player1 || this.score.player2 !== data.score.player2) {

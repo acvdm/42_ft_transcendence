@@ -181,11 +181,8 @@ export function initGamePage(mode: string): void {
                         container.innerHTML = ''; 
                         const canvas = document.createElement('canvas');
                         
-                        const availableHeight = container.clientHeight || 500;
-                        // Ici, le layout est prêt, clientHeight sera correct (~540px)
-                        canvas.width = container.clientWidth || 800; 
-                        canvas.height = availableHeight;
-                        canvas.style.display = 'block';
+                        canvas.width = container.clientWidth;
+                        canvas.height = container.clientHeight;
                         canvas.style.width = '100%';
                         canvas.style.height = '100%';
                         
@@ -203,13 +200,9 @@ export function initGamePage(mode: string): void {
                                 if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
                             };
                             
-                            // On lance le jeu une fois le canvas prêt
+                            // On lance le jeu une fois le canvas prÃªt
                             activeGame.startRemote(data.roomId, data.role);
                         }
-                    }
-                    // Configure le jeu en mode remote et lance
-                    if (activeGame) {
-                        activeGame.startRemote(data.roomId, data.role);
                     }
                     
                     // Update UI noms
@@ -542,6 +535,8 @@ export function initGamePage(mode: string): void {
             canvas.id = 'pong-canvas-tournament';
             canvas.width = canvasContainer.clientWidth; // check pour ajuste la taille a la fenetre de jeux
             canvas.height = canvasContainer.clientHeight; // check pour ajuste la taille a la fenetre de jeux
+            console.log("heigh:", canvasContainer.clientHeight);
+            console.log("width:", canvasContainer.clientWidth);
             canvas.style.width = '100%';
             canvas.style.height = '100%';
             // canvas.style.objectFit = 'contain';
@@ -851,6 +846,8 @@ export function initGamePage(mode: string): void {
                 canvas.id = 'pong-canvas';
                 canvas.width = canvasContainer ? canvasContainer.clientWidth : 800; // verifier la taille
                 canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+                console.log("heigh:", canvasContainer.clientHeight);
+                console.log("width:", canvasContainer.clientWidth);
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
                 //canvas.style.objectFit = 'contain';
