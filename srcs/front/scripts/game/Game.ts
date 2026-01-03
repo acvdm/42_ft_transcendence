@@ -234,8 +234,8 @@ class Game {
 
     reset() {
         this.ball.reset(this.canvas);
-        this.paddle1.reset();
-        this.paddle2.reset();
+        this.paddle1.reset(this.canvas.height);
+        this.paddle2.reset(this.canvas.height);
     }
 }
 
