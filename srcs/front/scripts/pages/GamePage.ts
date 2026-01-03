@@ -49,6 +49,7 @@ interface TournamentData
 let gameChat: Chat | null = null;
 let tournamenetState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
 let activeGame: Game | null = null; // Instance du jeu
+let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null; // on stocke l'ecoute de l'envoi a l'espace
 
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
@@ -61,6 +62,12 @@ export function cleanup() {
     if (activeGame) {
         activeGame.isRunning = false;
         activeGame = null;
+    }
+
+    // nettoyage de l'ecouteur
+    if (spaceKeyListener) {
+        document.removeEventListener('keydown', spaceKeyListener);
+        spaceKeyListener = null;
     }
 }
 
@@ -114,6 +121,47 @@ export function initGamePage(mode: string): void {
         gameChat.joinChannel("local_game_room");
         initLocalMode();
     }
+
+
+    // ---------------------------------------------------------
+    // -------------- WIZZ AVEC BARRE D'ESPACE ------------
+    // ---------------------------------------------------------
+
+
+    // on nettoie les anciens listeners
+    if (spaceKeyListener) {
+        document.removeEventListener('keydown', spaceKeyListener);
+    }
+
+    spaceKeyListener = (e: KeyboardEvent) => {
+        if (e.code === 'Space') {
+            const target = e.target as HTMLElement;
+
+            // aggdngion xi l'uilisateur ecrit dans un input ou dans un truc de texte on ne fait rien
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+
+            if (!activeGame || !activeGame.isRunning) return;
+            
+            e.preventDefault();
+
+            if (gameChat) {
+                if (mode === 'remote') {
+                    // REMOTE : seulement a l'adversaire
+                    gameChat.emitWizzOnly();
+                    console.log("Wizz envoyé à l'adversaire (Remote)");
+                } else {
+                    // LOCAL ET TOURNOI : shake shake shake pour tout le monde
+                    const wizzContainer = document.getElementById('wizz-container');
+                    gameChat.shakeElement(wizzContainer);
+                    console.log("Wizz local déclenché");
+                }
+            }
+        }
+    };
+
+    document.addEventListener('keydown', spaceKeyListener);
+
+
 
 
     // ---------------------------------------------------------

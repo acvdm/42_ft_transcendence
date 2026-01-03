@@ -77,10 +77,15 @@ export class Chat {
 
         // reception ici du serveur au client
         this.socket.on("receivedWizz", (data: { author: string }) => {
-            // on affiche le message -> xx send a nudge (poke?)
+            const currentUser = localStorage.getItem('username');
+
+            // On affiche toujours le message dans le chat
             this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
-            // on declenche la secousse
-            this.shakeElement(this.wizzContainer, 3000);
+
+            // CORRECTION : On ne fait trembler l'écran QUE si l'auteur n'est pas nous-même
+            if (data.author !== currentUser) {
+                this.shakeElement(this.wizzContainer, 3000);
+            }
         });
 
         this.socket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
@@ -152,8 +157,15 @@ export class Chat {
         }
     }
 
+    // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
+    public emitWizzOnly() {
+        if (!this.socket) return;
+        const currentUsername = localStorage.getItem('username');
+        this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+    }
+
     // délcencher la secousse 
-    private shakeElement(element: HTMLElement | null, duration: number = 500) {
+    public shakeElement(element: HTMLElement | null, duration: number = 500) {
         if (!element) return;
 
         // annuler le tem,ps de la secousse rpecedence
@@ -177,6 +189,10 @@ export class Chat {
         } catch (e) {
             console.log("Audio API error:", (e as Error).message);
         }
+    }
+
+    public getWizzContainer(): HTMLElement | null {
+        return this.wizzContainer;
     }
 
     // ---------------------------------------------------

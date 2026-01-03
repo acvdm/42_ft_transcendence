@@ -111,6 +111,111 @@
                         </div>
                     </div>
 
+                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">
+                            <div class="title-bar">
+                                <div class="title-bar-text">Tournament</div>
+                            </div>
+
+                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">
+                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">
+                                    TOURNAMENT IS ABOUT TO START
+                                </h2>
+
+                                <div class="flex flex-col gap-6 w-full items-center">
+
+                                    <!-- SEMI FINALS -->
+                                    <div class="flex flex-row justify-between w-full px-8">
+                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
+                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                Semi-Final 1
+                                            </span>
+                                            <span id="bracket-sf1" class="match-display"></span>
+                                        </div>
+
+                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
+                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                                Semi-Final 2
+                                            </span>
+                                            <span id="bracket-sf2" class="match-display"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- FINAL -->
+                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">
+                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">
+                                            Final
+                                        </span>
+                                        <span id="bracket-final" class="match-display final-match"></span>
+                                    </div>
+
+                                </div>
+
+                                <div class="w-full border-t border-gray-300 my-2"></div>
+
+                                <p id="bracket-status-msg" class="text-gray-600 italic">
+                                    Ready for the next match...
+                                </p>
+
+                                <button
+                                    id="bracket-continue-btn"
+                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    CONTINUE TO MATCH
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
+                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">
+                            <div class="title-bar bg-blue-800">
+                                <div class="title-bar-text text-white">Next match</div>
+                            </div>
+                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">
+                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">SEMI-FINAL 1</h2>
+                                
+                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">
+                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>
+                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">VS</div>
+                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>
+                                </div>
+
+                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">The game will start as soon as you click Play.</p>
+
+                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    PLAY !
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                            <div class="title-bar bg-yellow-500">
+                                <div class="title-bar-text text-black">End of the tournament</div>
+                            </div>
+                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                
+                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    Return to Menu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
 
 
@@ -142,89 +247,4 @@
             </div>
         </div>
     </div>
-
-
-    
-
-    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-        <div class="window w-[800px] bg-white shadow-2xl">
-            <div class="title-bar">
-                <div class="title-bar-text">Tournament is about to start</div>
-            </div>
-            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">
-                <h2 class="text-2xl font-black text-blue-900">TOURNAMENT PROGRESS</h2>
-                
-                <div class="flex flex-col gap-4 w-full items-center">
-                    <div class="flex flex-row justify-between w-full px-10">
-                        <div class="flex flex-col items-center bg-white p-2 border border-gray-300 rounded w-[200px]">
-                            <span class="text-xs font-bold text-gray-500">Semi-Final 1</span>
-                            <span id="bracket-sf1" class="font-bold"></span>
-                        </div>
-                        <div class="flex flex-col items-center bg-white p-2 border border-gray-300 rounded w-[200px]">
-                            <span class="text-xs font-bold text-gray-500">Semi-Final 2</span>
-                            <span id="bracket-sf2" class="font-bold"></span>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-center bg-yellow-50 p-4 border-2 border-yellow-400 rounded w-[300px] shadow-md">
-                        <span class="text-xs font-bold text-yellow-600">FINAL</span>
-                        <span id="bracket-final" class="font-black text-lg"></span>
-                    </div>
-                </div>
-
-                <div class="w-full border-t border-gray-300 my-2"></div>
-                <p id="bracket-status-msg" class="text-gray-600 italic">Ready for the next match...</p>
-
-                <button id="bracket-continue-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                    CONTINUE TO MATCH
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
-        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in"> <div class="title-bar bg-blue-800">
-                <div class="title-bar-text text-white">UPCOMING MATCH</div>
-            </div>
-            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-8">
-                <h2 class="text-3xl font-black text-blue-900" id="match-title">SEMI-FINAL 1</h2>
-                
-                <div class="flex items-center gap-10 bg-white p-6 rounded-lg shadow-inner border border-gray-300">
-                    <div class="text-4xl font-bold text-gray-800 w-48 text-right truncate" id="next-p1">Player A</div>
-                    <div class="text-3xl font-black text-red-600 italic">VS</div>
-                    <div class="text-4xl font-bold text-gray-800 w-48 text-left truncate" id="next-p2">Player B</div>
-                </div>
-
-                <p class="text-gray-500 text-sm">The game will start as soon as you click Play.</p>
-
-                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                    PLAY !
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
-        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-            <div class="title-bar bg-yellow-500">
-                <div class="title-bar-text text-black font-bold">TOURNAMENT COMPLETED</div>
-            </div>
-            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CHAMPION</h1>
-                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white shadow-xl rounded-xl" id="winner-name">NAME</div>
-                <p class="text-gray-600 text-lg mt-4">Congratulations on winning <span id="tour-name-display" class="font-bold text-black"></span>!</p>
-                
-                <button id="quit-tournament-btn" class="mt-8 px-6 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 border border-black">
-                    Return to Menu
-                </button>
-            </div>
-        </div>
-    </div>
-
 </div>
