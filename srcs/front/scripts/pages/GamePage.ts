@@ -141,7 +141,7 @@ export function initGamePage(mode: string): void {
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
             if (!activeGame || !activeGame.isRunning) return;
-            
+
             e.preventDefault();
 
             if (gameChat) {
@@ -174,33 +174,85 @@ export function initGamePage(mode: string): void {
         const modal = document.getElementById('game-setup-modal');
         const container = document.getElementById('game-canvas-container');
 
-        // Initialisation Canvas - MODIFIE POUR S'ADAPTER AU CONTENEUR
-        // if (container) {
-        //     container.innerHTML = ''; // Nettoyage
-        //     const canvas = document.createElement('canvas');
-            
-        //     canvas.width = container ? container.clientWidth : 800; // verifier la taille
-        //         canvas.height = container ? container.clientHeight : 600;
-        //         canvas.style.width = '100%';
-        //         canvas.style.height = '100%';
-            
-        //     container.appendChild(canvas);
-            
-        //     const ctx = canvas.getContext('2d');
-        //     const input = new Input();
 
-        //     if (ctx) {
-        //         // Init du jeu (instance inactive au début)
-        //         if (activeGame) activeGame.isRunning = false;
-        //         activeGame = new Game(canvas, ctx, input);
+        const ballBtn = document.getElementById('ball-selector-button');
+        const ballDrop = document.getElementById('ball-selector-dropdown');
+        const ballGrid = document.getElementById('ball-grid');
+        const ballImg = document.getElementById('selected-ball-img') as HTMLImageElement;
+        const ballInput = document.getElementById('ball-value') as HTMLInputElement;
+
+        const bgBtn = document.getElementById('bg-selector-button');
+        const bgDrop = document.getElementById('bg-selector-dropdown');
+        const bgGrid = document.getElementById('bg-grid');
+        const bgPrev = document.getElementById('selected-bg-preview');
+        const bgInput = document.getElementById('bg-value') as HTMLInputElement;
+        const bgResetBtn = document.getElementById('bg-reset-button');
+        
+        const gameContainer = document.getElementById('left'); // conteneur du jeu pour le background
+
+
+        if (ballBtn && ballDrop && ballGrid) {
+            const uniqueUrls = new Set<string>();
+            ballGrid.innerHTML = '';
+            Object.keys(ballEmoticons).forEach(key => {
+                const imgUrl = ballEmoticons[key];
+                if (!uniqueUrls.has(imgUrl)) {
+                    uniqueUrls.add(imgUrl);
+                    const div = document.createElement('div');
+                    div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+                    div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+                    div.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if(ballImg) ballImg.src = imgUrl;
+                        if(ballInput) ballInput.value = imgUrl;
+                        ballDrop.classList.add('hidden');
+                    });
+                    ballGrid.appendChild(div);
+                }
+            });
+            ballBtn.addEventListener('click', (e) => { e.stopPropagation(); ballDrop.classList.toggle('hidden'); });
+            document.addEventListener('click', (e) => { if (!ballDrop.contains(e.target as Node) && !ballBtn.contains(e.target as Node)) ballDrop.classList.add('hidden'); });
+        }
+
+
+        if (bgBtn && bgDrop && bgGrid) {
+            bgGrid.innerHTML = '';
+            Object.keys(gameBackgrounds).forEach(key => {
+                const color = gameBackgrounds[key];
+                const div = document.createElement('div');
+                div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+                div.style.width = "35px";
+                div.style.height = "35px";
+                div.style.padding = "2px";
                 
-        //         // Callback score pour l'UI
-        //         activeGame.onScoreChange = (score) => {
-        //             const sb = document.getElementById('score-board');
-        //             if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-        //         };
-        //     }
-        // }
+                const circle = document.createElement('div');
+                circle.className = "w-full h-full rounded-full border border-gray-300";
+                circle.style.backgroundColor = color;
+                div.appendChild(circle);
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if(bgPrev) bgPrev.style.backgroundColor = color;
+                    if(bgInput) bgInput.value = color;
+                    if(gameContainer) gameContainer.style.backgroundColor = color; 
+                    bgDrop.classList.add('hidden');
+                });
+                bgGrid.appendChild(div);
+            });
+
+            if (bgResetBtn) {
+                bgResetBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const resetColor = '#E8F4F8';
+                    if (bgPrev) bgPrev.style.backgroundColor = resetColor;
+                    if (bgInput) bgInput.value = resetColor;
+                    if (gameContainer) gameContainer.style.backgroundColor = resetColor;
+                    bgDrop.classList.add('hidden');
+                });
+            }
+
+            bgBtn.addEventListener('click', (e) => { e.stopPropagation(); bgDrop.classList.toggle('hidden'); });
+            document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
+        }
 
         if (btn) {
             // On clone pour éviter les event listeners multiples si on revient sur la page
@@ -239,16 +291,19 @@ export function initGamePage(mode: string): void {
                         const ctx = canvas.getContext('2d');
                         const input = new Input();
 
+                        const selectedBallSkin = ballInput ? ballInput.value : 'classic';
+
+
                         if (ctx) {
                             if (activeGame) activeGame.isRunning = false;
-                            activeGame = new Game(canvas, ctx, input);
+                            activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
                             activeGame.onScoreChange = (score) => {
                                 const sb = document.getElementById('score-board');
                                 if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
                             };
                             
-                            // On lance le jeu une fois le canvas prÃªt
+                            // On lance le jeu une fois le canvas pret
                             activeGame.startRemote(data.roomId, data.role);
                         }
                     }
@@ -344,6 +399,7 @@ export function initGamePage(mode: string): void {
     }
 
     // Helper pour initialiser les dropdowns du tournoi (IDs spécifiques tour-*)
+    // Helper pour initialiser les dropdowns du tournoi (IDs spécifiques tour-*)
     function initTournamentSelectors() {
         const ballBtn = document.getElementById('tour-ball-selector-button');
         const ballDrop = document.getElementById('tour-ball-selector-dropdown');
@@ -356,8 +412,12 @@ export function initGamePage(mode: string): void {
         const bgGrid = document.getElementById('tour-bg-grid');
         const bgPrev = document.getElementById('tour-selected-bg-preview');
         const bgInput = document.getElementById('tour-bg-value') as HTMLInputElement;
+        const bgResetBtn = document.getElementById('bg-reset-button'); // Récupération du bouton reset
 
-        // Balle
+        // Récupération du conteneur "window-body" pour appliquer le background
+        const gameContainer = document.getElementById('left');
+
+        // --- GESTION DE LA BALLE ---
         if (ballBtn && ballDrop && ballGrid) {
             const uniqueUrls = new Set<string>();
             ballGrid.innerHTML = '';
@@ -370,6 +430,7 @@ export function initGamePage(mode: string): void {
                     div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
                     div.addEventListener('click', (e) => {
                         e.stopPropagation();
+                        // Mise à jour de l'image de prévisualisation
                         if(ballImg) ballImg.src = imgUrl;
                         if(ballInput) ballInput.value = imgUrl;
                         ballDrop.classList.add('hidden');
@@ -381,14 +442,15 @@ export function initGamePage(mode: string): void {
             document.addEventListener('click', (e) => { if (!ballDrop.contains(e.target as Node) && !ballBtn.contains(e.target as Node)) ballDrop.classList.add('hidden'); });
         }
 
+        // --- GESTION DU BACKGROUND ---
         if (bgBtn && bgDrop && bgGrid) {
             bgGrid.innerHTML = '';
             Object.keys(gameBackgrounds).forEach(key => {
                 const color = gameBackgrounds[key];
                 const div = document.createElement('div');
                 div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
-                div.style.width = "35px";   // ← Taille augmentée
-                div.style.height = "35px";  // ← Taille augmentée
+                div.style.width = "35px";
+                div.style.height = "35px";
                 div.style.padding = "2px";
                 
                 const circle = document.createElement('div');
@@ -397,12 +459,30 @@ export function initGamePage(mode: string): void {
                 div.appendChild(circle);
                 div.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    // 1. Mise à jour de la pastille dans le menu
                     if(bgPrev) bgPrev.style.backgroundColor = color;
+                    // 2. Mise à jour de la valeur cachée pour le lancement
                     if(bgInput) bgInput.value = color;
+                    // 3. Application immédiate au conteneur de jeu (Effet dynamique)
+                    if(gameContainer) gameContainer.style.backgroundColor = color;
+
                     bgDrop.classList.add('hidden');
                 });
                 bgGrid.appendChild(div);
             });
+
+            // Gestion du bouton Reset
+            if (bgResetBtn) {
+                bgResetBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const resetColor = '#E8F4F8';
+                    if (bgPrev) bgPrev.style.backgroundColor = resetColor;
+                    if (bgInput) bgInput.value = resetColor;
+                    if (gameContainer) gameContainer.style.backgroundColor = resetColor;
+                    bgDrop.classList.add('hidden');
+                });
+            }
+
             bgBtn.addEventListener('click', (e) => { e.stopPropagation(); bgDrop.classList.toggle('hidden'); });
             document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
         }
@@ -819,7 +899,7 @@ export function initGamePage(mode: string): void {
             if (bgResetButton) {
                 bgResetButton.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const resetColor = '#FFFFFF';
+                    const resetColor = '#E8F4F8';
                     if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
                     if (bgValueInput) bgValueInput.value = resetColor;
                     if (gameField) gameField.style.backgroundColor = resetColor;

@@ -131,7 +131,7 @@ export const ballEmoticons: { [key: string]: string } = {
 
 
 export const gameBackgrounds: { [key: string]: string } = {
-    "classic": "#E8F4F8",      // Bleu pastel clair
+    "classic": "#B8E8F9",      // Bleu pastel clair
     "mint": "#D4F1E8",         // Vert menthe
     "lavender": "#E6E6FA",     // Lavande
     "rose": "#FFE1E9",         // Rose

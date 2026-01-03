@@ -164,11 +164,6 @@ class Game {
         this.paddle1.draw(this.ctx);
         this.paddle2.draw(this.ctx);
         this.ball.draw(this.ctx);
-        // Render UI (score) -> je supprime pour récupérer dans mon span dédié
-        // this.ctx.fillStyle = 'white';
-        // this.ctx.font = '30px Arial';
-        // this.ctx.fillText(`Player 1: ${this.score.player1}`, 50, 50);
-        // this.ctx.fillText(`Player 2: ${this.score.player2}`, this.canvas.width - 150, 50);
     }
 
     checkCollisions() {
