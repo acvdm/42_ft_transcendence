@@ -13,6 +13,7 @@ class Game {
     ctx: CanvasRenderingContext2D;
     input: Input;
     onScoreChange?: (score: { player1: number; player2: number }) => void;
+    onGameEnd?: (data: any) => void;
 
     // --- REMOTE PROPS ---
     isRemote: boolean = false;
@@ -54,7 +55,11 @@ class Game {
 
         this.socket.on('gameEnded', (data: any) => {
             this.isRunning = false;
-            alert(`Game Over! Final Score: ${data.finalScore.player1} - ${data.finalScore.player2}`);
+            if (this.onGameEnd) {
+                this.onGameEnd(data);
+            } else {
+                alert(`Game Over! Final Score: ${data.finalScore.player1} - ${data.finalScore.player2}`);
+            }
             // Retour menu ou nettoyage
             this.socket.off('gameState');
             this.socket.off('gameEnded');

@@ -123,6 +123,26 @@ export function initGamePage(mode: string): void {
     }
 
 
+    function showVictoryModal(winnerName: string) {
+        // modal
+        const modal = document.getElementById('local-summary-modal');
+        const winnerText = document.getElementById('winner-name');
+        const quitBtn = document.getElementById('quit-local-btn');
+
+        if (modal && winnerText) {
+            winnerText.innerText = winnerName;
+            modal.classList.remove('hidden');
+            
+            // lancement de confettis
+            launchConfetti(4000);
+        }
+
+        // gestion du bouton retour au menu
+        quitBtn?.addEventListener('click', () => {
+             window.location.reload(); 
+        });
+    }
+
     // ---------------------------------------------------------
     // -------------- WIZZ AVEC BARRE D'ESPACE ------------
     // ---------------------------------------------------------
@@ -298,6 +318,10 @@ export function initGamePage(mode: string): void {
                             if (activeGame) activeGame.isRunning = false;
                             activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
+                            activeGame.onGameEnd = (endData) => {
+                                const winnerName = endData.winnerAlias || "Winner"; 
+                                showVictoryModal(winnerName);
+                            }
                             activeGame.onScoreChange = (score) => {
                                 const sb = document.getElementById('score-board');
                                 if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
@@ -759,7 +783,7 @@ export function initGamePage(mode: string): void {
 
     function showSummary(champion: string) {
         // Reset background
-        launchConfettiExplosion();
+        launchConfetti(4000);
         const container = document.getElementById('left');
         if (container) container.style.backgroundColor = 'white';
 
@@ -1021,8 +1045,7 @@ export function initGamePage(mode: string): void {
                                 // on sauvegarde les statistiques
                                 await saveGameStats(userId, activeGame.score.player1, p1Wins);
                             }
-                            alert(`GAME OVER ! ${winnerName} remporte la partie !`);
-                            window.location.reload();
+                            showVictoryModal(winnerName);
                         }
                     }, 500);
                 }

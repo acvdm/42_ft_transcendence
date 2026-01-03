@@ -101,6 +101,24 @@
 
 
 
+                    <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                            <div class="title-bar bg-yellow-500">
+                                <div class="title-bar-text text-black">End of the game</div>
+                            </div>
+                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                
+                                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    Return to Menu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     
                 </div>
             </div>
