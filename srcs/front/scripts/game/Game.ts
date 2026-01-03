@@ -150,6 +150,17 @@ class Game {
 
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Ligne centrale en pointillés
+        this.ctx.strokeStyle = 'white';
+        this.ctx.lineWidth = 4;
+        this.ctx.setLineDash([10, 10]); // Pointillés: 10px trait, 10px espace
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.canvas.width / 2, 0);
+        this.ctx.lineTo(this.canvas.width / 2, this.canvas.height);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]); // Reset pour les autres dessins
+        
         this.paddle1.draw(this.ctx);
         this.paddle2.draw(this.ctx);
         this.ball.draw(this.ctx);
