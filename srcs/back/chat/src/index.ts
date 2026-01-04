@@ -14,6 +14,12 @@ declare module 'fastify' {
   }
 }
 
+declare module 'socket.io' {
+    interface Socket {
+        user: any; // On ajoute la propriété user (type any ou { sub: number, ... })
+    }
+}
+
 // Creation of Fastify server
 const fastify = Fastify({ logger: true });
 
@@ -29,6 +35,7 @@ fastify.register(FastifyIO, {
 
 let db: Database;
 const JWT_SECRET = process.env.JWT_SECRET!;
+const userSockets = new Map<number, string>();
 
 // Middleware de sécurité
 const authMiddleware = (socket: any, next: any) => {
@@ -162,6 +169,8 @@ fastify.ready().then(() => {
         console.log(`Client connected (Fastify): ${socket.id}`);
 
         socket.on('registerUser', (userId: string) => {
+            const id = Number(userId);
+            userSockets.set(id, socket.id); // AJOUT: on stocke le socket id
             socket.join(`user_${userId}`);
             console.log(`User ${userId} registered for notifications`);
         });
@@ -237,8 +246,64 @@ fastify.ready().then(() => {
         // --- EVENTS DU JEU REMOTE (AJOUT) ---
         // ------------------------------------
 
+        // gestion des invitations
+        socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
+            const targetIdNum = Number(data.targetId);
+            const targetSocketId = userSockets.get(targetIdNum);
+            
+            if (targetSocketId) {
+                // nitifcations a l'ami via son socket
+                fastify.io.to(targetSocketId).emit('receiveGameInvite', {
+                    senderId: socket.user.sub, // son id
+                    senderName: data.senderName
+                });
+            }
+        });
+
+        socket.on('acceptGameInvite', (data: { senderId: string }) => {
+            const senderIdNum = Number(data.senderId);
+            const senderSocketId = userSockets.get(senderIdNum);
+            const acceptorSocketId = socket.id;
+
+            // estce que le user est tjrs connecte
+            if (senderSocketId) {
+                const senderSocket = fastify.io.sockets.sockets.get(senderSocketId);
+                
+                if (senderSocket) {
+                    // creation de la partie 
+                    const roomId = `game_invite_${Date.now()}_${senderIdNum}_${socket.user.sub}`;
+                    
+                    // etat du jeu 
+                    const gameState = initGameState(roomId, senderSocketId, acceptorSocketId);
+                    activeGames.set(roomId, gameState);
+
+                    // les deux ont rejoins la room
+                    senderSocket.join(roomId);
+                    socket.join(roomId);
+
+                    // lancement du jeu 
+                    senderSocket.emit('matchFound', { roomId, role: 'player1', opponent: socket.user.sub });
+                    socket.emit('matchFound', { roomId, role: 'player2', opponent: senderIdNum });
+
+                    console.log(`Friend match started: ${roomId}`);
+                    
+                    //lancement de la boucle
+                    gameState.intervalId = setInterval(() => {
+                        updateGamePhysics(gameState, fastify.io);
+                    }, GAMESPEED);
+                }
+            }
+        });
+
+        socket.on('declineGameInvite', (data: { senderId: string }) => {
+             const senderSocketId = userSockets.get(Number(data.senderId));
+             if (senderSocketId) {
+                 fastify.io.to(senderSocketId).emit('gameInviteDeclined', {});
+             }
+        });
+
         socket.on('joinQueue', () => {
-            // Si le joueur est déjà en jeu ou en file, on ignore (simplifié)
+            // si le joueur est deja en jeu ou en file d'addente on ignore
             if (waitingQueue.includes(socket.id)) return;
 
             console.log(`Player ${socket.id} joined Queue`);
@@ -300,10 +365,17 @@ fastify.ready().then(() => {
 
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);
+            // Nettoyage map userSockets
+            for (const [uid, sid] of userSockets.entries()) {
+                if (sid === socket.id) {
+                    userSockets.delete(uid);
+                    break;
+                }
+            }
             // Nettoyage file
             waitingQueue = waitingQueue.filter(id => id !== socket.id);
-            // Nettoyage parties actives (Forfait)
-            // (Logique simplifiée: si un joueur part, la partie s'arrête)
+            // nettoyage parties actives
+            // si un joueur part, la partie s'arrête)
             for (const [roomId, game] of activeGames.entries()) {
                 if (game.player1Id === socket.id || game.player2Id === socket.id) {
                     stopGame(roomId, fastify.io);

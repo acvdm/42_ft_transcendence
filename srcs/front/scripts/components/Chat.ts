@@ -10,6 +10,7 @@ export class Chat {
     private wizzContainer: HTMLElement | null;
     private currentChannel: string = "general";
     private currentFriendshipId: number | null = null;
+    private currentFriendId: number | null = null;
     private shakeTimeout: number | undefined;
 
     constructor() {
@@ -28,9 +29,10 @@ export class Chat {
         this.setupTools(); // Animations, Fonts, Emoticons, Backgrounds
     }
 
-    public joinChannel(channelKey: string, friendshipId?: number) {
+    public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
+        this.currentFriendId = friendId || null;
 
         if (this.socket)
             this.socket.emit("joinChannel", channelKey);
@@ -40,7 +42,6 @@ export class Chat {
             this.messagesContainer.innerHTML = '';
         }
 
-        //if (this.messageInput) this.messageInput.disabled = false;
     }
 
     // ---------------------------------------------------
@@ -82,7 +83,6 @@ export class Chat {
             // On affiche toujours le message dans le chat
             this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
 
-            // CORRECTION : On ne fait trembler l'écran QUE si l'auteur n'est pas nous-même
             if (data.author !== currentUser) {
                 this.shakeElement(this.wizzContainer, 3000);
             }
@@ -458,12 +458,26 @@ export class Chat {
                 }
             });
             
-            // Tes boutons (Code existant conservé)
+            // GESTION DU BOUTON D'INVITATION
             document.getElementById('button-invite-game')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                console.log("Invite clicked");
+           
+                if (this.currentFriendId) {
+                    const myName = localStorage.getItem('username');
+                    
+                    this.socket.emit('sendGameInvite', {
+                        targetId: this.currentFriendId,
+                        senderName: myName
+                    });
+                    
+                    this.addSystemMessage("Game invitation sent!");
+                } else {
+                    this.addSystemMessage("Error: Can't invite in this channel.");
+                }
+                
                 chatOptionsDropdown.classList.add('hidden');
             });
+
             document.getElementById('button-view-profile')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 console.log("Profile clicked");

@@ -4680,6 +4680,44 @@
         console.log("Friend request accepted by other user!");
         this.loadFriends();
       });
+      socket.on("receiveGameInvite", (data) => {
+        console.log("Game invite received form", data.senderName);
+        this.showGameInviteNotification(data.senderId, data.senderName);
+      });
+      socket.on("matchFound", (data) => {
+        console.log("Global matchFound event received", data);
+        sessionStorage.setItem("pendingMatch", JSON.stringify(data));
+        window.history.pushState({ gameMode: "remote" }, "", "/remote");
+        const navEvent = new PopStateEvent("popstate", { state: { gameMode: "remote" } });
+        window.dispatchEvent(navEvent);
+      });
+    }
+    ///// pour la notification de l'invitation
+    showGameInviteNotification(senderId, senderName) {
+      const notifIcon = document.getElementById("notification-icon");
+      if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
+      toast.innerHTML = `
+            <div class="font-bold text-gray-800">\u{1F3AE} Game Invite</div> 
+            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="flex gap-2 mt-2">
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+            </div>
+        `;
+      document.body.appendChild(toast);
+      toast.querySelector("#accept-invite")?.addEventListener("click", () => {
+        SocketService_default.getInstance().socket?.emit("acceptGameInvite", { senderId });
+        toast.remove();
+      });
+      toast.querySelector("#decline-invite")?.addEventListener("click", () => {
+        SocketService_default.getInstance().socket?.emit("declineGameInvite", { senderId });
+        toast.remove();
+      });
+      setTimeout(() => {
+        if (document.body.contains(toast)) toast.remove();
+      }, 1e4);
     }
     updateFriendUI(loginOrUsername, newStatus) {
       const friendItems = document.querySelectorAll(".friend-item");
@@ -5237,6 +5275,7 @@
     constructor() {
       this.currentChannel = "general";
       this.currentFriendshipId = null;
+      this.currentFriendId = null;
       this.socket = SocketService_default.getInstance().socket;
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
@@ -5249,9 +5288,10 @@
       this.setupWizz();
       this.setupTools();
     }
-    joinChannel(channelKey, friendshipId) {
+    joinChannel(channelKey, friendshipId, friendId) {
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
+      this.currentFriendId = friendId || null;
       if (this.socket)
         this.socket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
@@ -5577,7 +5617,16 @@
         });
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
-          console.log("Invite clicked");
+          if (this.currentFriendId) {
+            const myName = localStorage.getItem("username");
+            this.socket.emit("sendGameInvite", {
+              targetId: this.currentFriendId,
+              senderName: myName
+            });
+            this.addSystemMessage("Game invitation sent!");
+          } else {
+            this.addSystemMessage("Error: Can't invite in this channel.");
+          }
           chatOptionsDropdown.classList.add("hidden");
         });
         document.getElementById("button-view-profile")?.addEventListener("click", (e) => {
@@ -8173,6 +8222,46 @@
         document.addEventListener("click", (e) => {
           if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
         });
+      }
+      const startGameFromData = (data) => {
+        console.log("Starting game from data:", data);
+        if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
+        if (modal) modal.style.display = "none";
+        if (container) {
+          container.innerHTML = "";
+          const canvas = document.createElement("canvas");
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+          canvas.style.width = "100%";
+          canvas.style.height = "100%";
+          container.appendChild(canvas);
+          const ctx = canvas.getContext("2d");
+          const input = new Input_default();
+          const selectedBallSkin = ballInput ? ballInput.value : "classic";
+          if (ctx) {
+            if (activeGame) activeGame.isRunning = false;
+            activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+            activeGame.onGameEnd = (endData) => {
+              const winnerName = endData.winnerAlias || "Winner";
+              showVictoryModal(winnerName);
+            };
+            activeGame.onScoreChange = (score) => {
+              const sb = document.getElementById("score-board");
+              if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+            };
+            activeGame.startRemote(data.roomId, data.role);
+          }
+        }
+        const p1Name = document.getElementById("player-1-name");
+        const p2Name = document.getElementById("player-2-name");
+        if (p1Name) p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
+        if (p2Name) p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
+      };
+      const pendingMatch = sessionStorage.getItem("pendingMatch");
+      if (pendingMatch) {
+        const data = JSON.parse(pendingMatch);
+        sessionStorage.removeItem("pendingMatch");
+        startGameFromData(data);
       }
       if (btn) {
         const newBtn = btn.cloneNode(true);

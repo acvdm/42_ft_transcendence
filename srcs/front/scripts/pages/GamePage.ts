@@ -112,7 +112,7 @@ export function initGamePage(mode: string): void {
     if (mode == 'remote') {
         gameChat.joinChannel("remote_game_room"); // on met l'id correspondant pour l room
         // iniitailiastion de la logique de jeu en remote
-        initRemoteMode(); // <--- APPEL DE LA FONCTION AJOUTÉE
+        initRemoteMode();
     } else if (mode == 'tournament') {
         gameChat.joinChannel("tournament_room"); // same ici
         // initialisation de la logique de jeu en tournoi
@@ -274,6 +274,63 @@ export function initGamePage(mode: string): void {
             document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
         }
 
+
+        const startGameFromData = (data: any) => {
+            console.log("Starting game from data:", data);
+            
+            if (status) status.innerText = "Adversaire trouvé ! Lancement...";
+            if (modal) modal.style.display = 'none';
+
+            if (container) {
+                container.innerHTML = ''; 
+                const canvas = document.createElement('canvas');
+                
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                
+                container.appendChild(canvas);
+                
+                const ctx = canvas.getContext('2d');
+                const input = new Input();
+
+                const selectedBallSkin = ballInput ? ballInput.value : 'classic';
+
+                if (ctx) {
+                    if (activeGame) activeGame.isRunning = false;
+                    activeGame = new Game(canvas, ctx, input, selectedBallSkin);
+                    
+                    activeGame.onGameEnd = (endData) => {
+                        const winnerName = endData.winnerAlias || "Winner"; 
+                        showVictoryModal(winnerName);
+                    }
+                    activeGame.onScoreChange = (score) => {
+                        const sb = document.getElementById('score-board');
+                        if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+                    };
+                    
+                    // On lance le jeu une fois le canvas pret
+                    activeGame.startRemote(data.roomId, data.role);
+                }
+            }
+            
+            // Update UI noms
+            const p1Name = document.getElementById('player-1-name');
+            const p2Name = document.getElementById('player-2-name');
+            
+            if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
+            if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
+        };
+
+        // vérification du match en attente
+        const pendingMatch = sessionStorage.getItem('pendingMatch');
+        if (pendingMatch) {
+            const data = JSON.parse(pendingMatch);
+            sessionStorage.removeItem('pendingMatch'); // On nettoie
+            startGameFromData(data); // Lancement auto !
+        }
+
         if (btn) {
             // On clone pour éviter les event listeners multiples si on revient sur la page
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
@@ -422,8 +479,6 @@ export function initGamePage(mode: string): void {
         });
     }
 
-    // Helper pour initialiser les dropdowns du tournoi (IDs spécifiques tour-*)
-    // Helper pour initialiser les dropdowns du tournoi (IDs spécifiques tour-*)
     function initTournamentSelectors() {
         const ballBtn = document.getElementById('tour-ball-selector-button');
         const ballDrop = document.getElementById('tour-ball-selector-dropdown');
