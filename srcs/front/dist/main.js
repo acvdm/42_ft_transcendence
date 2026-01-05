@@ -7901,6 +7901,7 @@
       if (this.socket) {
         this.socket.off("gameState");
         this.socket.off("gameEnded");
+        this.socket.off("opponentLeft");
       }
     }
     // Fonction pour démarrer le jeu en remote
@@ -8265,6 +8266,29 @@
               activeGame = null;
             }
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+            socketService.socket.on("opponentLeft", () => {
+              if (activeGame && activeGame.isRunning) {
+                activeGame.stop();
+                const alertHtml = `
+                                <div id="opponent-left-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                    <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-blue-400">
+                                        <h2 class="text-xl font-bold mb-4 text-blue-600">Opponent Disconnected</h2>
+                                        <p class="mb-6 font-bold">Your opponent has left the game.</p>
+                                        <button id="opponent-left-ok" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                                            Return to Menu
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                const div = document.createElement("div");
+                div.innerHTML = alertHtml;
+                document.body.appendChild(div);
+                document.getElementById("opponent-left-ok")?.addEventListener("click", () => {
+                  document.getElementById("opponent-left-modal")?.remove();
+                  window.history.back();
+                });
+              }
+            });
             if (!socketService.socket) {
               console.log("Socket non connect\xE9, attente...");
               const checkSocket = setInterval(() => {
@@ -8328,6 +8352,29 @@
               if (ctx) {
                 if (activeGame) activeGame.isRunning = false;
                 activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+                socketService.socket.on("opponentLeft", () => {
+                  if (activeGame && activeGame.isRunning) {
+                    activeGame.stop();
+                    const alertHtml = `
+                                        <div id="opponent-left-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-blue-400">
+                                                <h2 class="text-xl font-bold mb-4 text-blue-600">Opponent Disconnected</h2>
+                                                <p class="mb-6 font-bold">Your opponent has left the game.</p>
+                                                <button id="opponent-left-ok" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                                                    Return to Menu
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                    const div = document.createElement("div");
+                    div.innerHTML = alertHtml;
+                    document.body.appendChild(div);
+                    document.getElementById("opponent-left-ok")?.addEventListener("click", () => {
+                      document.getElementById("opponent-left-modal")?.remove();
+                      window.history.back();
+                    });
+                  }
+                });
                 activeGame.onGameEnd = (endData) => {
                   console.log("Game Ended Data:", endData);
                   let winnerName = "Winner";

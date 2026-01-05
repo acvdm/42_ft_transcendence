@@ -50,6 +50,60 @@ let gameChat: Chat | null = null;
 let tournamenetState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
 let activeGame: Game | null = null; // Instance du jeu
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null; // on stocke l'ecoute de l'envoi a l'espace
+let isNavigationPending = false;
+
+
+export function isGameRunning(): boolean {
+    return activeGame !== null && activeGame.isRunning;
+}
+
+export function handleGameExitConfirmation(confirmCallback: () => void) {
+    // Si aucun jeu ne tourne, on laisse passer direct
+    if (!isGameRunning()) {
+        confirmCallback();
+        return;
+    }
+
+    // Création de la modale de confirmation dynamiquement
+    const modalHtml = `
+        <div id="exit-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-red-400">
+                <h2 class="text-xl font-bold mb-4 text-red-600">⚠ Wait a minute!</h2>
+                <p class="mb-6 font-bold">Are you sure you want to leave?<br>Current game progress will be lost and not saved.</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="confirm-exit-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                        Yes, Leave
+                    </button>
+                    <button id="cancel-exit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Insertion dans le DOM
+    const div = document.createElement('div');
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+
+    // Gestion des clics
+    document.getElementById('confirm-exit-btn')?.addEventListener('click', () => {
+        // Nettoyage spécifique avant de partir
+        if (activeGame && activeGame.isRemote && SocketService.getInstance().socket) {
+            // REMOTE : On prévient l'autre joueur
+            SocketService.getInstance().socket.emit('leaveGame', { roomId: activeGame.roomId });
+        }
+        
+        cleanup(); // On arrête tout (boucles, sockets, etc.)
+        document.getElementById('exit-confirm-modal')?.remove(); // On vire la modale
+        confirmCallback(); // On exécute la navigation
+    });
+
+    document.getElementById('cancel-exit-btn')?.addEventListener('click', () => {
+        document.getElementById('exit-confirm-modal')?.remove();
+    });
+}
 
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
@@ -316,6 +370,31 @@ export function initGamePage(mode: string): void {
 
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
 
+                    // gestion quand on opposant se casse du jeu 
+                    socketService.socket.on('opponentLeft', () => {
+                        if (activeGame && activeGame.isRunning) {
+                            activeGame.stop();
+                            const alertHtml = `
+                                <div id="opponent-left-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                    <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-blue-400">
+                                        <h2 class="text-xl font-bold mb-4 text-blue-600">Opponent Disconnected</h2>
+                                        <p class="mb-6 font-bold">Your opponent has left the game.</p>
+                                        <button id="opponent-left-ok" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                                            Return to Menu
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            const div = document.createElement('div');
+                            div.innerHTML = alertHtml;
+                            document.body.appendChild(div);
+                            document.getElementById('opponent-left-ok')?.addEventListener('click', () => {
+                                document.getElementById('opponent-left-modal')?.remove();
+                                window.history.back();
+                            });
+                        }
+                    });
+
                     // --- ATTENTE SOCKET PRÊT ---
                     if (!socketService.socket) {
                         console.log("Socket non connecté, attente...");
@@ -405,19 +484,48 @@ export function initGamePage(mode: string): void {
                             if (activeGame) activeGame.isRunning = false;
                             activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
+
+                            // gestion si l'autre se casse
+                            socketService.socket.on('opponentLeft', () => {
+                                if (activeGame && activeGame.isRunning) {
+                                    activeGame.stop(); // on stop le jeu 
+                                    
+                                    // affichage de la modale
+                                    const alertHtml = `
+                                        <div id="opponent-left-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-blue-400">
+                                                <h2 class="text-xl font-bold mb-4 text-blue-600">Opponent Disconnected</h2>
+                                                <p class="mb-6 font-bold">Your opponent has left the game.</p>
+                                                <button id="opponent-left-ok" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                                                    Return to Menu
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                    const div = document.createElement('div');
+                                    div.innerHTML = alertHtml;
+                                    document.body.appendChild(div);
+
+                                    document.getElementById('opponent-left-ok')?.addEventListener('click', () => {
+                                        document.getElementById('opponent-left-modal')?.remove();
+                                        window.history.back(); // back au menu
+                                    });
+                                }
+                            });
+
                             activeGame.onGameEnd = (endData) => {
                                 console.log("Game Ended Data:", endData);
                                 
-                                // On détermine le nom du gagnant LOCALEMENT grâce à nos variables
+                                // determineteur du winner localement 
                                 let winnerName = "Winner";
 
-                                // Si le serveur renvoie "player1" ou "player2" comme winner
+                                // on verifie i le back renvoit p1 ou p2
                                 if (endData.winner === 'player1') {
                                     winnerName = currentP1Alias;
                                 } else if (endData.winner === 'player2') {
                                     winnerName = currentP2Alias;
                                 } else if (endData.winnerAlias) {
-                                    // Fallback si le serveur renvoie déjà le bon alias
+                                    // fallbacl
                                     winnerName = endData.winnerAlias;
                                 }
 
