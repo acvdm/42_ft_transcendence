@@ -133,6 +133,7 @@ export function initGamePage(mode: string): void {
             winnerText.innerText = winnerName;
             modal.classList.remove('hidden');
             
+            if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
             // lancement de confettis
             launchConfetti(4000);
         }
@@ -171,7 +172,7 @@ export function initGamePage(mode: string): void {
                     console.log("Wizz envoyé à l'adversaire (Remote)");
                 } else {
                     // LOCAL ET TOURNOI : shake shake shake pour tout le monde
-                    const wizzContainer = document.getElementById('wizz-container');
+                    const wizzContainer = document.getElementById('wizz-game-container');
                     gameChat.shakeElement(wizzContainer);
                     console.log("Wizz local déclenché");
                 }
@@ -742,13 +743,17 @@ export function initGamePage(mode: string): void {
     }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
-        const p1Name = document.getElementById('game-p1-name');
-        const p2Name = document.getElementById('game-p2-name');
+        const p1Name = document.getElementById('player-1-name');
+        const p2Name = document.getElementById('player-2-name');
 
         // Mise à jour de l'UI du jeu
         if (p1Name) p1Name.innerText = p1.alias;
         if (p2Name) p2Name.innerText = p2.alias;
 
+        const scoreBoard = document.getElementById('score-board');
+            if (scoreBoard) {
+                scoreBoard.innerText = "0 - 0";
+            }
         // Appliquer la couleur de fond choisie au conteneur gauche
         const container = document.getElementById('left');
         if(container && tournamenetState) container.style.backgroundColor = tournamenetState.settings.bgSkin;
@@ -790,8 +795,6 @@ export function initGamePage(mode: string): void {
                 
                 activeGame.start();
 
-                // + fin du jeu (endMatch())
-                // on supervise le socre pour s'arreter a 11
                 const checkInterval = setInterval(() => {
                     if (!activeGame || !activeGame.isRunning) {
                         clearInterval(checkInterval);
@@ -860,10 +863,11 @@ export function initGamePage(mode: string): void {
 
     function showSummary(champion: string) {
         // Reset background
+        
         launchConfetti(4000);
         const container = document.getElementById('left');
         if (container) container.style.backgroundColor = 'white';
-
+        
         const summaryModal = document.getElementById('tournament-summary-modal');
         
         if (summaryModal) {
@@ -874,12 +878,17 @@ export function initGamePage(mode: string): void {
             if (winnerDisplay) winnerDisplay.innerText = champion;
             if (tourNameDisplay && tournamenetState) tourNameDisplay.innerText = tournamenetState.name;
 
+            if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
             const userId = localStorage.getItem('userId');
             if (userId) {
                 saveTournamentToApi(champion);
             }
 
             document.getElementById('quit-tournament-btn')?.addEventListener('click', () => {
+                window.history.back();
+            });
+
+            document.getElementById('quit-remote-btn')?.addEventListener('click', () => {
                 window.history.back();
             });
         }
