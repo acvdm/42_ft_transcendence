@@ -136,6 +136,76 @@ export class FriendList {
             // rechargement pour l'affichage
             this.loadFriends();
         });
+
+        socket.on('receiveGameInvite', (data: { senderId: string, senderName: string }) => {
+            console.log("Game invite received form", data.senderName);
+            this.showGameInviteNotification(data.senderId, data.senderName);
+        });
+    }
+
+    ///// pour la notification de l'invitation
+    private showGameInviteNotification(senderId: string, senderName: string) {
+        const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+        
+        // on active l'icone de notif
+        if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+
+        const toast = document.createElement('div');
+        toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
+        // changer l'emoji pour l'image du jeu 
+        toast.innerHTML = `
+            <div class="font-bold text-gray-800">🎮 Game Invite</div> 
+            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="flex gap-2 mt-2">
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+
+        toast.querySelector('#accept-invite')?.addEventListener('click', () => {
+            const socket = SocketService.getInstance().socket;
+        
+            if (!socket) {
+                alert("Erreur de connexion");
+                toast.remove();
+                return;
+            }
+
+            console.log("Accepting game invite from", senderName);
+
+            // ✅ ÉTAPE 1 : Attacher le listener AVANT d'accepter
+            socket.once('matchFound', (data: any) => {
+                console.log("✅ Match found from invitation:", data);
+                
+                // Sauvegarder les infos
+                sessionStorage.setItem('pendingMatch', JSON.stringify(data));
+                
+                // Redirection
+                window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                
+                // Trigger le rendu
+                const event = new PopStateEvent('popstate');
+                window.dispatchEvent(event);
+            });
+
+            // ✅ ÉTAPE 2 : Maintenant on peut accepter
+            socket.emit('acceptGameInvite', { senderId: senderId });
+            
+            toast.remove();
+        });
+
+        // Bouton Decline
+        toast.querySelector('#decline-invite')?.addEventListener('click', () => {
+            SocketService.getInstance().socket?.emit('declineGameInvite', { senderId: senderId });
+            toast.remove();
+        });
+
+        // Auto-suppression après 10s
+        setTimeout(() => { 
+            if(document.body.contains(toast)) toast.remove(); 
+        }, 10000);
     }
 
     private updateFriendUI(loginOrUsername: string, newStatus: string) {
