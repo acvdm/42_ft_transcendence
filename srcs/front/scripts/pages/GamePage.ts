@@ -620,7 +620,7 @@ export function initGamePage(mode: string): void {
 
         // on fait une annonce dans le chat 
         if (gameChat) {
-            gameChat.sendSystemNotification(`Tournament "${name}" started! Participants: ${playersAliases.join(', ')}`);
+            gameChat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(', ')}`);
         }
 
         // On affiche l'arbre (Bracket)
@@ -697,15 +697,15 @@ export function initGamePage(mode: string): void {
         if (matchIdx === 0) {
             if(title) title.innerText = "SEMI-FINAL 1";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} !`);
+            if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
         } else if (matchIdx === 1) {
             if(title) title.innerText = "SEMI-FINAL 2";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`Next up: ${p1Alias} vs ${p2Alias} !`);
+            if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
         } else {
             if(title) title.innerText = "FINALE";
             // affichage dans le chat
-            if (gameChat) gameChat.sendSystemNotification(`FINAL: ${p1Alias} vs ${p2Alias} !`);
+            if (gameChat) gameChat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
         }
 
         if(player1Text) player1Text.innerText = p1Alias;
@@ -832,7 +832,7 @@ export function initGamePage(mode: string): void {
 
 
         // Con affiche le resultat dans le chat 
-        if (gameChat) gameChat.sendSystemNotification(`${winner} wins the match!`);
+        if (gameChat) gameChat.addSystemMessage(`${winner} wins the match!`);
 
         if (idx === 0) {
             // vainqueur demi finale 1
@@ -1037,7 +1037,7 @@ export function initGamePage(mode: string): void {
 
                 // envoi de la notifciation
                 if (gameChat) {
-                    gameChat.sendSystemNotification(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+                    gameChat.addSystemMessage(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
                 }
 
                 // valeur par default 
