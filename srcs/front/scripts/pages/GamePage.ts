@@ -110,7 +110,7 @@ export function initGamePage(mode: string): void {
     gameChat.init();
 
     if (mode == 'remote') {
-        gameChat.joinChannel("remote_game_room"); // on met l'id correspondant pour l room
+        gameChat.joinChannel("remote_game_room"); // salle d'attente globale
         // iniitailiastion de la logique de jeu en remote
         initRemoteMode();
     } else if (mode == 'tournament') {
@@ -363,6 +363,14 @@ export function initGamePage(mode: string): void {
                 // Ecoute de l'événement de début de match
                 socketService.socket.on('matchFound', (data: any) => {
                     console.log("Match Found!", data);
+                    
+                    if (gameChat) {
+                        // on rejoint un canal unique du match et du chat
+                        // la class va nettoyer automqtiquement les messages
+                        gameChat.joinChannel(data.roomId);
+                        gameChat.addSystemMessage("Game found! You are now in a private room.")
+                    }
+                    
                     if (status) status.innerText = "Adversaire trouvé ! Lancement...";
                     
                     // Cache la modale
