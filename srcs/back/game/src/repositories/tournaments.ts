@@ -1,6 +1,8 @@
 import { Database } from 'sqlite'
 import { updateUserStats } from './stats.js'
 import { localTournament } from "./tournament_interfaces.js";
+import { addPlayerMatch } from './player_match.js';
+import { createMatch } from './matches.js';
 
 
 export interface Tournament {
@@ -57,26 +59,15 @@ export async function saveLocalTournament (
             console.error("One game is missing players");
             continue ;
         }
+
         // creation du match dans la table MATCHES
-        const matchRes = await db.run(`
-            INSERT INTO MATCHES (
-                game_type, fk_tournament_id, status,
-                player1_alias, player2_alias, score_p1, score_p2, winner_alias, round
-            )
-            VALUES (?, ?, 'finished', ?, ?, ?, ?, ?, ?)`,
-            [
-                match.type || 'pong', 
-                tournamentId,
-                match.p1.alias,
-                match.p2.alias,
-                match.p1.score,
-                match.p2.score,
-                match.winner,
-                match.round
-            ] 
+        const matchId = await createMatch(
+            db, "Tournament", 
+            match.p1.alias, match.p2.alias, 
+            match.p1.score, match.p2.score, match.winner,
+            "finished", match.round, tournamentId
         );
 
-        const matchId = matchRes.lastID;
         if (!matchId) {
             throw new Error("Failed to save match: ID is missing");
         }
@@ -88,22 +79,15 @@ export async function saveLocalTournament (
             console.log("match.p1.user_id ", match.p1.user_id)
             const p1IsWinner = match.winner === match.p1.alias;
 
-            await db.run(`
-                INSERT INTO PLAYER_MATCH (match_id, game_type, user_id, opponent, score, is_winner)
-                VALUES (?, ?, ?, ?, ?, ?)`,
-                [
-                    matchId,
-                    'Tournament',
-                    match.p1.user_id, 
-                    match.p2.alias,
-                    match.p1.score,
-                    p1IsWinner ? 1 : 0,
-                ]
-            )
-
-            await updateUserStats(
+            await addPlayerMatch(
                 db, "Tournament", matchId, 
                 match.p1.user_id, match.p2.alias, 
+                match.p1.score, p1IsWinner ? 1 : 0
+            );
+
+            console.log(`match.p1.score: ${match.p1.score}`);
+            await updateUserStats(
+                db, match.p1.user_id,
                 match.p1.score, p1IsWinner ? 1 : 0
             );
         };
@@ -116,24 +100,17 @@ export async function saveLocalTournament (
             console.log("match.p2.user_id ", match.p2.user_id)
             const p2IsWinner = match.winner === match.p2.alias;
 
-            await db.run(`
-                INSERT INTO PLAYER_MATCH (match_id, user_id, opponent, score, is_winner)
-                VALUES (?, ?, ?, ?, ?)`,
-                [
-                    matchId,
-                    'Tournament', 
-                    match.p2.user_id, 
-                    match.p1.alias,
-                    match.p2.score,
-                    p2IsWinner ? 1 : 0,
-                ]
+            await addPlayerMatch(
+                db, "Tournament", matchId,
+                match.p2.user_id, match.p1.alias,
+                match.p2.score, p2IsWinner ? 1 : 0
             );
 
+            console.log(`match.p1.score: ${match.p2.score}`);
             await updateUserStats(
-                db, "Tournament", matchId, 
-                match.p2.user_id, match.p1.alias, 
+                db, match.p2.user_id,
                 match.p2.score, p2IsWinner ? 1 : 0
-            )
+            );
         }
     }
 

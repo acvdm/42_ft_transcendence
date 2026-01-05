@@ -475,7 +475,7 @@ export function initGamePage(mode: string): void {
             console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
         }
         try {
-            await fetchWithAuth('api/game/tournaments', {
+            await fetchWithAuth('api/games/tournaments', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: tournamentState.name,
@@ -713,21 +713,77 @@ export function initGamePage(mode: string): void {
                         activeGame.isRunning = false; // STOP
                         clearInterval(localLoop); 
                         
-                        const p1Wins = activeGame.score.player1 >= 11;
-                        const winnerName = p1Wins ? player1Display.innerText : opponentName;
+                        // 1. Récupération des données
+                        const p1Score = activeGame.score.player1;
+                        const p2Score = activeGame.score.player2;
+                        const p1Alias = player1Display.innerText;
+                        const p2Alias = opponentName;
+                        const p1Wins = p1Score > p2Score;
+                        const winnerAlias = p1Wins ? p1Alias : p2Alias;
                         
+                        // 2. Sauvegarde si l'utilistauer est connecté
                         const userIdStr = localStorage.getItem('userId');
                         if (userIdStr) {
                             const userId = Number(userIdStr);
                             // on sauvegarde les statistiques
-                            await saveGameStats(userId, activeGame.score.player1, p1Wins);
+                            console.log(`gamepage, ${userId}`);
+                            await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, userId);
                         }
-                        alert(`GAME OVER ! ${winnerName} remporte la partie !`);
+
+                        // 3. Feedback et Reload
+                        alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
                         window.location.reload();
                     }
                 }, 500);
             }
         });
+    }
+
+    async function saveLocalGameToApi(
+        p1Alias: string,
+        p2Alias: string,
+        p1Score: number,
+        p2Score: number,
+        winnerAlias: string,
+        userId: number
+    ) {
+    
+        try 
+        {
+            const response = await fetchWithAuth('api/games', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: "local",
+                    winner: winnerAlias,
+                    status: "finished",
+                    round: "1v1",
+                    p1: {
+                        alias: p1Alias,
+                        score: p1Score,
+                        user_id: userId
+                    },
+                    p2: {
+                        alias: p2Alias,
+                        score: p2Score,
+                        user_id: null                        
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                console.error("Error while saving local game");
+            }
+            else {
+                console.log("Local game successfully saved");
+            }
+        } 
+        catch (e) 
+        { 
+            console.error(e); 
+        }
     }
 
     // resrt erreur ecritur e

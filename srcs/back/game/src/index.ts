@@ -4,10 +4,10 @@ import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
-import { rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
+import { addPlayerMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
 import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
-import { localTournament } from './repositories/tournament_interfaces.js';
+import { localMatchResult, localTournament } from './repositories/tournament_interfaces.js';
 import { NotFoundError } from './utils/error.js';
 
 const fastify = Fastify({ logger: true });
@@ -29,21 +29,26 @@ async function main()
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
 {
-	let gameId = null;
-	let playerMatchOneId = null;
-	let playerMatchTwoId = null;
 
-	const body = request.body as { 
-		playerOneId: number;
-		playerTwoId: number; 
-		type: string; 
-		name: string; 
-		tournamentId: number; 
-	};	
+	console.log("route games")
+	let gameId = null;
+	let p1Match = null;
+	let p2Match = null;
+
+	const body = request.body as localMatchResult;
 
 	try
 	{
-		gameId = await createMatch(db, body.type, body.tournamentId);
+		console.log(`Body: ${body.type}, ${body.p1.alias}, ${body.p1.user_id}, ${body.p2.user_id}`);
+
+		const gameId = await createMatch(
+			db, body.type,
+			body.p1.alias, body.p2.alias,
+			body.p1.score, body.p2.score,
+			body.winner, "finished",
+			"1v1", null
+		);
+
 		if (!gameId)
 			throw new Error(`Error could not create game`);
 
@@ -52,6 +57,35 @@ fastify.post('/games', async (request, reply) =>
 		// if (!playerMatchOneId || !playerMatchTwoId)
 		// 	throw new Error(`Error could not associate players with the game ${gameId}`);
 
+		if (body.p1.user_id)
+		{
+			const p1IsWinner = body.winner == body.p1.alias
+			p1Match = await addPlayerMatch(
+				db, "local", gameId,
+				body.p1.user_id, body.p2.alias,
+				body.p1.score, p1IsWinner ? 1 : 0
+			);
+
+			await updateUserStats(
+				db, body.p1.user_id,
+				body.p1.score, p1IsWinner ? 1 : 0
+			);
+		}
+
+		if (body.p2.user_id)
+		{
+			const p2IsWinner = body.winner == body.p2.alias
+			p2Match = await addPlayerMatch(
+				db, "local", gameId,
+				body.p2.user_id, body.p1.alias,
+				body.p2.score, p2IsWinner ? 1 : 0
+			);
+
+			await updateUserStats(
+				db, body.p2.user_id,
+				body.p2.score, p2IsWinner ? 1 : 0
+			);
+		}
 		return reply.status(201).send({
 			success: true,
 			data: gameId,
@@ -61,11 +95,11 @@ fastify.post('/games', async (request, reply) =>
 	}
 	catch (err:any)
 	{
-		if (gameId && playerMatchOneId)
-			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchOneId);
+		if (gameId && p1Match)
+			await rollbackDeletePlayerFromMatch(db, gameId, p1Match);
 
-		if (gameId && playerMatchTwoId)
-			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchTwoId);
+		if (gameId && p2Match)
+			await rollbackDeletePlayerFromMatch(db, gameId, p2Match);
 
 		if (gameId)
 			await rollbackDeleteGame(db, gameId);
@@ -212,7 +246,7 @@ fastify.patch('/users/:id/games/stats', async (request, reply) =>
 		}
 		
 		// const gameType = "Local";
-		const userStats = await updateUserStats(db, body.gameType, body.matchId, userId, body.opponent, body.userScore, body.isWinner);
+		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
 		if (!userStats)
 			throw new Error(`Error: could not update stats for user ${userId}`);
 

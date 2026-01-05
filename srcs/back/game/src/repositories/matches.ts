@@ -29,13 +29,30 @@ export async function findMatchById (
 export async function createMatch (
     db: Database,
     type: string,
-    tournamentId: number
+    p1Alias: string,
+    p2Alias: string,
+    p1Score: number,
+    p2Score: number,
+    winnerAlias: string,
+    status: string,
+    round: string,
+    tournamentId: number | null
 ): Promise<number | undefined>
 {
     const newMatch = await db.run(`
-        INSERT INTO MATCHES (game_type, fk_tournament_id)
-        VALUES (?, ?)`,
-        [type, tournamentId]
+        INSERT INTO MATCHES (
+            game_type, 
+            player1_alias, 
+            player2_alias, 
+            score_p1, 
+            score_p2, 
+            winner_alias, 
+            status, 
+            round, 
+            fk_tournament_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [type, p1Alias, p2Alias, p1Score, p2Score, winnerAlias, status, round, tournamentId]
     );
 
     return newMatch?.lastID;

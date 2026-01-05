@@ -1,6 +1,4 @@
 import { Database } from 'sqlite'
-import { createPlayerMatch } from './player_match.js';
-
 
 export interface Stat {
     userId: number,
@@ -65,20 +63,11 @@ export async function findStatsByUserId (
 //-------- UPDATE 
 export async function updateUserStats (
     db: Database,
-    gameType: string,
-    matchId: number,
     userId: number,
-    opponent: string,
     userScore: number,
     isWinner: number
 ): Promise<Stat>
 {
-    console.log("** update User stats");
-    const playerMatch = await createPlayerMatch(db, gameType, matchId, userId, opponent, userScore, isWinner);
-    if (!playerMatch)
-        throw new Error("Could not create player match statistics");
-    
-    console.log("playerMatch créé");
     const stats = await db.run(`
         UPDATE STATS SET 
             wins = wins + ?,

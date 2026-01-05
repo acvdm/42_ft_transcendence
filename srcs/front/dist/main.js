@@ -8320,7 +8320,7 @@
         console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
       }
       try {
-        await fetchWithAuth("api/game/tournaments", {
+        await fetchWithAuth("api/games/tournaments", {
           method: "POST",
           body: JSON.stringify({
             name: tournamentState.name,
@@ -8488,19 +8488,57 @@
             if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
               activeGame.isRunning = false;
               clearInterval(localLoop);
-              const p1Wins = activeGame.score.player1 >= 11;
-              const winnerName = p1Wins ? player1Display.innerText : opponentName;
+              const p1Score = activeGame.score.player1;
+              const p2Score = activeGame.score.player2;
+              const p1Alias = player1Display.innerText;
+              const p2Alias = opponentName;
+              const p1Wins = p1Score > p2Score;
+              const winnerAlias = p1Wins ? p1Alias : p2Alias;
               const userIdStr = localStorage.getItem("userId");
               if (userIdStr) {
                 const userId2 = Number(userIdStr);
-                await saveGameStats(userId2, activeGame.score.player1, p1Wins);
+                console.log(`gamepage, ${userId2}`);
+                await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, userId2);
               }
-              alert(`GAME OVER ! ${winnerName} remporte la partie !`);
+              alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
               window.location.reload();
             }
           }, 500);
         }
       });
+    }
+    async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, userId2) {
+      try {
+        const response = await fetchWithAuth("api/games", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "local",
+            winner: winnerAlias,
+            status: "finished",
+            round: "1v1",
+            p1: {
+              alias: p1Alias,
+              score: p1Score,
+              user_id: userId2
+            },
+            p2: {
+              alias: p2Alias,
+              score: p2Score,
+              user_id: null
+            }
+          })
+        });
+        if (!response.ok) {
+          console.error("Error while saving local game");
+        } else {
+          console.log("Local game successfully saved");
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
     nameInput.addEventListener("input", () => {
       if (errorMsg) errorMsg.classList.add("hidden");
