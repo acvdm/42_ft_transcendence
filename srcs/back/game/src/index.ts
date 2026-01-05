@@ -46,7 +46,7 @@ fastify.post('/games', async (request, reply) =>
 			body.p1.alias, body.p2.alias,
 			body.p1.score, body.p2.score,
 			body.winner, "finished",
-			"1v1", null
+			"1v1", null, body.startDate
 		);
 
 		if (!gameId)
@@ -122,7 +122,7 @@ Sinon tout se passe dans la memoire du navigateur
 */
 
 // changer pour que ce soi restfull /game/tournament
-fastify.post('/tournaments', async (request, reply) => 
+fastify.post('/games/tournaments', async (request, reply) => 
 {
 	try
 	{

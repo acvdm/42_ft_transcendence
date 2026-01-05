@@ -8028,6 +8028,10 @@
   var Input_default = Input;
 
   // scripts/pages/GamePage.ts
+  function getSqlDate() {
+    const now = /* @__PURE__ */ new Date();
+    return now.toISOString().slice(0, 19).replace("T", " ");
+  }
   var gameChat = null;
   var tournamentState = null;
   var activeGame = null;
@@ -8151,15 +8155,17 @@
         user_id: index === 0 ? userIdNb : null,
         score: 0
       }));
+      const startDate = getSqlDate();
       tournamentState = {
         name,
+        startedAt: startDate,
         allPlayers: playersObjects,
         matches: [
-          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1] },
+          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
           // 1er duo
-          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3] },
+          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
           // 2eme duo
-          { round: "final", winner: null, p1: null, p2: null }
+          { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
           // finale
         ],
         currentMatchIdx: 0,
@@ -8217,6 +8223,7 @@
       const gameArea = document.getElementById("tournament-game-area");
       const p1Name = document.getElementById("game-p1-name");
       const p2Name = document.getElementById("game-p2-name");
+      const gameStartDate = getSqlDate();
       if (gameArea) {
         gameArea.classList.remove("hidden");
         gameArea.style.display = "flex";
@@ -8258,16 +8265,19 @@
               activeGame.isRunning = false;
               clearInterval(checkInterval);
               const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-              endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
+              const endDate = getSqlDate();
+              endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate, endDate);
             }
           }, 500);
         }
       }
     }
-    function endMatch(winner, scoreP1, scoreP2) {
+    function endMatch(winner, scoreP1, scoreP2, gameStartDate) {
       if (!tournamentState) return;
       const idx = tournamentState.currentMatchIdx;
       const match = tournamentState.matches[idx];
+      match.startDate = gameStartDate;
+      match.endDate = getSqlDate();
       match.winner = winner;
       if (match.p1) match.p1.score = scoreP1;
       if (match.p2) match.p2.score = scoreP2;
@@ -8328,7 +8338,8 @@
             participants: tournamentState.allPlayers,
             // Ajout des details complets pour le format JSON attendu
             tournament_name: tournamentState.name,
-            match_list: tournamentState.matches
+            match_list: tournamentState.matches,
+            startedAt: tournamentState.startedAt
           })
         });
       } catch (e) {
@@ -8480,6 +8491,7 @@
           };
           console.log("D\xE9marrage du jeu Local...");
           activeGame.start();
+          const startDate = getSqlDate();
           const localLoop = setInterval(async () => {
             if (!activeGame || !activeGame.isRunning) {
               clearInterval(localLoop);
@@ -8498,7 +8510,7 @@
               if (userIdStr) {
                 const userId2 = Number(userIdStr);
                 console.log(`gamepage, ${userId2}`);
-                await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, userId2);
+                await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId2);
               }
               alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
               window.location.reload();
@@ -8507,8 +8519,9 @@
         }
       });
     }
-    async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, userId2) {
+    async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId2) {
       try {
+        const endDate = getSqlDate();
         const response = await fetchWithAuth("api/games", {
           method: "POST",
           headers: {
@@ -8519,6 +8532,8 @@
             winner: winnerAlias,
             status: "finished",
             round: "1v1",
+            startDate,
+            endDate,
             p1: {
               alias: p1Alias,
               score: p1Score,

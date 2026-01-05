@@ -36,7 +36,10 @@ export async function createMatch (
     winnerAlias: string,
     status: string,
     round: string,
-    tournamentId: number | null
+    tournamentId: number | null,
+    startDate?: string | undefined,
+    endDate?: string | undefined
+
 ): Promise<number | undefined>
 {
     const newMatch = await db.run(`
@@ -48,11 +51,13 @@ export async function createMatch (
             score_p2, 
             winner_alias, 
             status, 
-            round, 
+            round,
+            started_at,
+            finished_at, 
             fk_tournament_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [type, p1Alias, p2Alias, p1Score, p2Score, winnerAlias, status, round, tournamentId]
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [type, p1Alias, p2Alias, p1Score, p2Score, winnerAlias, status, round, startDate, endDate, tournamentId]
     );
 
     return newMatch?.lastID;

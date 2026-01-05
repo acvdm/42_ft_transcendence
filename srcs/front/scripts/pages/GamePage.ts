@@ -27,6 +27,8 @@ interface TournamentMatch
     winner: string | null;
     p1: TournamentPlayer | null;
     p2: TournamentPlayer | null;
+    startDate: string;
+    endDate?: string | undefined;
 }
 
 // Etat global du tournoi en cours
@@ -37,6 +39,20 @@ interface TournamentData
     matches: TournamentMatch[];
     currentMatchIdx: number; // on defini l'id du match pour le stocker dans la db
     currentStep: 'registration' | 'semi_final_1' | 'semi_final_2' | 'final' | 'finished';
+    startedAt: string
+}
+
+// =========================================================
+// ================= FONCTIONS UTILITAIRES =================
+// =========================================================
+
+function getSqlDate(): string {
+    // 1. On récupère l'heure actuelle
+    const now = new Date();
+    
+    // 2. Astuce rapide : on prend l'ISO, on coupe les ms, et on remplace T par espace
+    // .slice(0, 19) garde "YYYY-MM-DDTHH:mm:ss"
+    return now.toISOString().slice(0, 19).replace('T', ' ');
 }
 
 // =========================================================
@@ -228,14 +244,16 @@ export function initGamePage(mode: string): void {
             score: 0
         }));
 
+        const startDate = getSqlDate();
         // maj de l'etat du tournoi, le nom et les joueurs 
         tournamentState = {
             name: name,
+            startedAt: startDate,
             allPlayers: playersObjects,
             matches: [
-                { round: 'semi_final_1', winner: null, p1: playersObjects[0], p2: playersObjects[1] }, // 1er duo
-                { round: 'semi_final_2', winner: null, p1: playersObjects[2], p2: playersObjects[3] }, // 2eme duo
-                { round: 'final',        winner: null, p1: null,              p2: null }               // finale
+                { round: 'semi_final_1', winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate: startDate, endDate: startDate }, // 1er duo
+                { round: 'semi_final_2', winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate: startDate, endDate: startDate }, // 2eme duo
+                { round: 'final',        winner: null, p1: null,              p2: null, startDate: startDate, endDate: startDate }               // finale
             ],
             currentMatchIdx: 0, // on defini l'id du match pour le stocker dans la db
             currentStep: 'semi_final_1'
@@ -331,6 +349,7 @@ export function initGamePage(mode: string): void {
         const gameArea = document.getElementById('tournament-game-area');
         const p1Name = document.getElementById('game-p1-name');
         const p2Name = document.getElementById('game-p2-name');
+        const gameStartDate = getSqlDate();
 
         if (gameArea) {
             gameArea.classList.remove('hidden');
@@ -387,19 +406,23 @@ export function initGamePage(mode: string): void {
                         activeGame.isRunning = false; // STOP LE JEU
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-                        endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
+                        const endDate = getSqlDate();
+                        endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate, endDate);
                     }
                 }, 500); // on check toutes les demi secondes
             }
         }
     }
 
-    function endMatch(winner: string, scoreP1: number, scoreP2: number) {
+    function endMatch(winner: string, scoreP1: number, scoreP2: number, gameStartDate: string) {
         if (!tournamentState) return;
 
         const idx = tournamentState.currentMatchIdx;
         const match = tournamentState.matches[idx];
-        
+
+        match.startDate = gameStartDate;
+        match.endDate = getSqlDate();
+
         match.winner = winner;
         if (match.p1) match.p1.score = scoreP1;
         if (match.p2) match.p2.score = scoreP2;
@@ -483,7 +506,8 @@ export function initGamePage(mode: string): void {
                     participants: tournamentState.allPlayers,
                     // Ajout des details complets pour le format JSON attendu
                     tournament_name: tournamentState.name,
-                    match_list: tournamentState.matches
+                    match_list: tournamentState.matches,
+                    startedAt: tournamentState.startedAt
                 })
             });
         } catch (e) { console.error(e); }
@@ -701,6 +725,7 @@ export function initGamePage(mode: string): void {
                 
                 console.log("Démarrage du jeu Local...");
                 activeGame.start();
+                const startDate = getSqlDate();
 
                 // checkeur du score
                 const localLoop = setInterval(async () => {
@@ -727,7 +752,7 @@ export function initGamePage(mode: string): void {
                             const userId = Number(userIdStr);
                             // on sauvegarde les statistiques
                             console.log(`gamepage, ${userId}`);
-                            await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, userId);
+                            await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
                         }
 
                         // 3. Feedback et Reload
@@ -745,11 +770,13 @@ export function initGamePage(mode: string): void {
         p1Score: number,
         p2Score: number,
         winnerAlias: string,
+        startDate: string,
         userId: number
     ) {
     
         try 
         {
+            const endDate = getSqlDate()
             const response = await fetchWithAuth('api/games', {
                 method: 'POST',
                 headers: {
@@ -760,6 +787,8 @@ export function initGamePage(mode: string): void {
                     winner: winnerAlias,
                     status: "finished",
                     round: "1v1",
+                    startDate: startDate,
+                    endDate: endDate,
                     p1: {
                         alias: p1Alias,
                         score: p1Score,
