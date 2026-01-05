@@ -919,7 +919,7 @@ export function initGamePage(mode: string): void {
             console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
         }
         try {
-            await fetchWithAuth('api/games/tournaments', {
+            await fetchWithAuth('api/game/tournaments', {
                 method: 'POST',
                 body: JSON.stringify({
                     name: tournamentState.name,
@@ -1186,7 +1186,7 @@ export function initGamePage(mode: string): void {
         try 
         {
             const endDate = getSqlDate()
-            const response = await fetchWithAuth('api/games', {
+            const response = await fetchWithAuth('api/game', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

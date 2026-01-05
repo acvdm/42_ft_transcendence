@@ -5785,7 +5785,7 @@
         if (this.username) this.username.innerText = "Loading...";
         const [userRes, statsRes] = await Promise.all([
           fetchWithAuth(`api/users/${friendId}`),
-          fetchWithAuth(`api/game/users/${friendId}/games/stats`)
+          fetchWithAuth(`api/game/users/${friendId}/stats`)
         ]);
         if (userRes.ok) {
           const user = await userRes.json();
@@ -6699,7 +6699,7 @@
         if (response.ok) {
           const user = await response.json();
           currentUserEmail = user.email || "";
-          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
           if (statResponse.ok) {
             const jsonResponse = await statResponse.json();
             const stats = jsonResponse.data;
@@ -8686,7 +8686,7 @@
         console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
       }
       try {
-        await fetchWithAuth("api/games/tournaments", {
+        await fetchWithAuth("api/game/tournaments", {
           method: "POST",
           body: JSON.stringify({
             name: tournamentState.name,
@@ -8890,7 +8890,7 @@
       async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId2) {
         try {
           const endDate = getSqlDate();
-          const response = await fetchWithAuth("api/games", {
+          const response = await fetchWithAuth("api/game", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"

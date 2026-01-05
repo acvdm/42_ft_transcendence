@@ -101,7 +101,7 @@ fastify.register(fastifyProxy,
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://game:3003', // adresse interne du réseau du docker
-	prefix: '/api/games', // toutes les requetes api/game iront au service game
+	prefix: '/api/game', // toutes les requetes api/game iront au service game
 	rewritePrefix: '/games' // on retire le prefixe avant de l'envoyer un service
 });
 

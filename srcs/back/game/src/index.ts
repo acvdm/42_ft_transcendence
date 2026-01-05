@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
 import { addPlayerMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
-import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
+import { createStatLineforOneUser, findStatsByUserId, getUserMatchHistory, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
 import { localMatchResult, localTournament } from './repositories/tournament_interfaces.js';
 import { NotFoundError } from './utils/error.js';
@@ -165,7 +165,7 @@ fastify.post('/games/tournaments', async (request, reply) =>
 //---------------------------------------
 
 /* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
-fastify.post('/users/:id/games/stats', async (request, reply) =>
+fastify.post('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -197,7 +197,7 @@ fastify.post('/users/:id/games/stats', async (request, reply) =>
 
 
 /* -- GET STATS FOR ONE USER -- */
-fastify.get('/users/:id/games/stats', async (request, reply) =>
+fastify.get('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -227,9 +227,37 @@ fastify.get('/users/:id/games/stats', async (request, reply) =>
 	}
 })
 
+/* -- GET HISTORY FOR ONE USER -- */
+fastify.get('/users/:id/games/history', async (request, reply) => 
+{
+	const query = request.query as any;
+	const userId = Number(query.userId);
+
+	if (!userId) 
+	{
+		return reply.status(400).send({error: "userId is required"});
+	}
+
+	try 
+	{
+		const result = await getUserMatchHistory(db, userId, {
+				page: Number(query.page),
+				limit: Number(query.limit),
+				onlyWins: query.filter == 'wins',
+				gameType: query.type
+			});
+		return reply.send(result);
+	}
+	catch (err)
+	{
+		return reply.status(500).send({ error: "Failed to fetch history" });
+	}
+
+});
+
 
 /* -- UPDATE STATS FOR ONE USER -- */
-fastify.patch('/users/:id/games/stats', async (request, reply) => 
+fastify.patch('/games/users/:id/stats', async (request, reply) => 
 {
 	try
 	{
@@ -266,6 +294,7 @@ fastify.patch('/users/:id/games/stats', async (request, reply) =>
 		})
 	}
 })
+
 
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède

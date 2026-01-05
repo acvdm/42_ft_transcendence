@@ -121,7 +121,7 @@ fastify.post('/users', async (request, reply) => {
     		  signed: true
     		});
 			console.log("user_id dans user = ", user_id)
-			const statsURL = `http://game:3003/users/${user_id}/games/stats`;
+			const statsURL = `http://game:3003/users/${user_id}/stats`;
 			const statResponse = await fetch(statsURL, {
 				method: "POST",
 				headers: {
