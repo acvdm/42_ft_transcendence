@@ -8172,6 +8172,8 @@
       const bgInput = document.getElementById("bg-value");
       const bgResetBtn = document.getElementById("bg-reset-button");
       const gameContainer = document.getElementById("left");
+      let currentP1Alias = "Player 1";
+      let currentP2Alias = "Player 2";
       if (ballBtn && ballDrop && ballGrid) {
         const uniqueUrls = /* @__PURE__ */ new Set();
         ballGrid.innerHTML = "";
@@ -8303,6 +8305,8 @@
           newBtn.innerText = "WAITING...";
           socketService.socket.on("matchFound", (data) => {
             console.log("Match Found!", data);
+            currentP1Alias = data.player1Alias || "Player 1";
+            currentP2Alias = data.player2Alias || "Player 2";
             if (gameChat) {
               gameChat.joinChannel(data.roomId);
               gameChat.addSystemMessage("Game found! You are now in a private room.");
@@ -8324,7 +8328,15 @@
                 if (activeGame) activeGame.isRunning = false;
                 activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
                 activeGame.onGameEnd = (endData) => {
-                  const winnerName = endData.winnerAlias || endData.winner || "Winner";
+                  console.log("Game Ended Data:", endData);
+                  let winnerName = "Winner";
+                  if (endData.winner === "player1") {
+                    winnerName = currentP1Alias;
+                  } else if (endData.winner === "player2") {
+                    winnerName = currentP2Alias;
+                  } else if (endData.winnerAlias) {
+                    winnerName = endData.winnerAlias;
+                  }
                   showVictoryModal(winnerName);
                 };
                 activeGame.onScoreChange = (score) => {
@@ -8336,10 +8348,16 @@
             }
             const p1Name = document.getElementById("player-1-name");
             const p2Name = document.getElementById("player-2-name");
-            if (p1Name) p1Name.innerText = data.player1?.alias || data.player1Alias || "Player 1";
-            if (p2Name) p2Name.innerText = data.player2?.alias || data.player2Alias || "Player 2";
+            if (data.role === "player1") {
+              if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
+              if (p2Name) p2Name.innerText = currentP2Alias;
+            } else {
+              if (p1Name) p1Name.innerText = currentP1Alias;
+              if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
+            }
           });
-          socketService.socket.emit("joinQueue");
+          const myAlias = document.getElementById("player-1-name")?.innerText || "Player";
+          socketService.socket.emit("joinQueue", { alias: myAlias });
         });
       }
     }

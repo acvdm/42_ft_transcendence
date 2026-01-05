@@ -215,6 +215,8 @@ export function initGamePage(mode: string): void {
         
         const gameContainer = document.getElementById('left'); // conteneur du jeu pour le background
 
+        let currentP1Alias = "Player 1";
+        let currentP2Alias = "Player 2";
 
         if (ballBtn && ballDrop && ballGrid) {
             const uniqueUrls = new Set<string>();
@@ -369,6 +371,9 @@ export function initGamePage(mode: string): void {
                 socketService.socket.on('matchFound', (data: any) => {
                     console.log("Match Found!", data);
                     
+                    currentP1Alias = data.player1Alias || "Player 1";
+                    currentP2Alias = data.player2Alias || "Player 2";
+
                     if (gameChat) {
                         // on rejoint un canal unique du match et du chat
                         // la class va nettoyer automqtiquement les messages
@@ -377,8 +382,6 @@ export function initGamePage(mode: string): void {
                     }
                     
                     if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-                    
-                    // Cache la modale
                     if (modal) modal.style.display = 'none';
 
                     if (container) {
@@ -403,9 +406,26 @@ export function initGamePage(mode: string): void {
                             activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
                             activeGame.onGameEnd = (endData) => {
-                                const winnerName = endData.winnerAlias || endData.winner || "Winner"; 
+                                console.log("Game Ended Data:", endData);
+                                
+                                // On détermine le nom du gagnant LOCALEMENT grâce à nos variables
+                                let winnerName = "Winner";
+
+                                // Si le serveur renvoie "player1" ou "player2" comme winner
+                                if (endData.winner === 'player1') {
+                                    winnerName = currentP1Alias;
+                                } else if (endData.winner === 'player2') {
+                                    winnerName = currentP2Alias;
+                                } else if (endData.winnerAlias) {
+                                    // Fallback si le serveur renvoie déjà le bon alias
+                                    winnerName = endData.winnerAlias;
+                                }
+
                                 showVictoryModal(winnerName);
                             }
+                            
+
+
                             activeGame.onScoreChange = (score) => {
                                 const sb = document.getElementById('score-board');
                                 if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
@@ -420,12 +440,19 @@ export function initGamePage(mode: string): void {
                     const p1Name = document.getElementById('player-1-name');
                     const p2Name = document.getElementById('player-2-name');
                     
-                    if (p1Name) p1Name.innerText = data.player1?.alias || data.player1Alias || "Player 1";
-                    if (p2Name) p2Name.innerText = data.player2?.alias || data.player2Alias || "Player 2";
+                    if (data.role === 'player1') {
+                        if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
+                        if (p2Name) p2Name.innerText = currentP2Alias;
+                    } else {
+                        if (p1Name) p1Name.innerText = currentP1Alias;
+                        if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
+                    }
                 });
 
+                const myAlias = document.getElementById('player-1-name')?.innerText || "Player";
+
                 // Envoi demande au serveur
-                socketService.socket.emit('joinQueue');
+                socketService.socket.emit('joinQueue', { alias: myAlias });
             });
         }
     }
