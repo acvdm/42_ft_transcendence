@@ -403,7 +403,7 @@ export class Chat {
         // LOGIQUE DE BACKGROUND
         const bgButton = document.getElementById('select-background');
         const bgDropdown = document.getElementById('background-dropdown');
-        const chatFrame = document.getElementById('channel-chat');
+        const chatFrame = document.getElementById('chat-frame');
         const bgOptions = document.querySelectorAll('.bg-option');
 
         if (bgButton && bgDropdown && chatFrame) {

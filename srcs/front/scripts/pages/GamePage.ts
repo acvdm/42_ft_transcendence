@@ -176,7 +176,7 @@ export function initGamePage(mode: string): void {
                     console.log("Wizz envoyé à l'adversaire (Remote)");
                 } else {
                     // LOCAL ET TOURNOI : shake shake shake pour tout le monde
-                    const wizzContainer = document.getElementById('wizz-game-container');
+                    const wizzContainer = document.getElementById('wizz-container');
                     gameChat.shakeElement(wizzContainer);
                     console.log("Wizz local déclenché");
                 }
@@ -403,7 +403,7 @@ export function initGamePage(mode: string): void {
                             activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
                             activeGame.onGameEnd = (endData) => {
-                                const winnerName = endData.winnerAlias || "Winner"; 
+                                const winnerName = endData.winnerAlias || endData.winner || "Winner"; 
                                 showVictoryModal(winnerName);
                             }
                             activeGame.onScoreChange = (score) => {
@@ -420,8 +420,8 @@ export function initGamePage(mode: string): void {
                     const p1Name = document.getElementById('player-1-name');
                     const p2Name = document.getElementById('player-2-name');
                     
-                    if (p1Name) p1Name.innerText = data.player1Alias || "Player 1";
-                    if (p2Name) p2Name.innerText = data.player2Alias || "Player 2";
+                    if (p1Name) p1Name.innerText = data.player1?.alias || data.player1Alias || "Player 1";
+                    if (p2Name) p2Name.innerText = data.player2?.alias || data.player2Alias || "Player 2";
                 });
 
                 // Envoi demande au serveur
