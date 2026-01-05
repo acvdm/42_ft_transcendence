@@ -60,7 +60,7 @@ export function cleanup() {
     tournamenetState = null;
 
     if (activeGame) {
-        activeGame.isRunning = false;
+        activeGame.stop();
         activeGame = null;
     }
 
@@ -277,51 +277,65 @@ export function initGamePage(mode: string): void {
 
         const startGameFromData = (data: any) => {
             console.log("Starting game from data:", data);
-            
+
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
             if (modal) modal.style.display = 'none';
 
             if (container) {
-                container.innerHTML = ''; 
+                container.innerHTML = '';
+
                 const canvas = document.createElement('canvas');
-                
                 canvas.width = container.clientWidth;
                 canvas.height = container.clientHeight;
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
-                
+
                 container.appendChild(canvas);
-                
+
+                // Fallback si le container n'a pas encore de taille
+                if (canvas.width === 0) canvas.width = 800;
+                if (canvas.height === 0) canvas.height = 600;
+
                 const ctx = canvas.getContext('2d');
                 const input = new Input();
-
                 const selectedBallSkin = ballInput ? ballInput.value : 'classic';
 
                 if (ctx) {
-                    if (activeGame) activeGame.isRunning = false;
-                    activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                    
-                    activeGame.onGameEnd = (endData) => {
-                        const winnerName = endData.winnerAlias || "Winner"; 
-                        showVictoryModal(winnerName);
+                    // Stop propre de l'ancien jeu
+                    if (activeGame) {
+                        activeGame.stop();
+                        activeGame = null;
                     }
-                    activeGame.onScoreChange = (score) => {
-                        const sb = document.getElementById('score-board');
-                        if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                    };
-                    
-                    // On lance le jeu une fois le canvas pret
-                    activeGame.startRemote(data.roomId, data.role);
+
+                    activeGame = new Game(canvas, ctx, input, selectedBallSkin);
+
+                    // --- ATTENTE SOCKET PRÊT ---
+                    if (!socketService.socket) {
+                        console.log("Socket non connecté, attente...");
+                        const checkSocket = setInterval(() => {
+                            if (socketService.socket) {
+                                clearInterval(checkSocket);
+                                activeGame?.startRemote(data.roomId, data.role);
+                            }
+                        }, 100);
+                    } else {
+                        activeGame.startRemote(data.roomId, data.role);
+                    }
+                }
+
+                // --- Update UI noms joueurs ---
+                const p1Name = document.getElementById('player-1-name');
+                const p2Name = document.getElementById('player-2-name');
+
+                if (p1Name) {
+                    p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
+                }
+                if (p2Name) {
+                    p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
                 }
             }
-            
-            // Update UI noms
-            const p1Name = document.getElementById('player-1-name');
-            const p2Name = document.getElementById('player-2-name');
-            
-            if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
-            if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
         };
+
 
         // vérification du match en attente
         const pendingMatch = sessionStorage.getItem('pendingMatch');

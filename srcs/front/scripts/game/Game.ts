@@ -34,6 +34,14 @@ class Game {
         this.isRunning = false;
     }
 
+    stop() {
+        this.isRunning = false;
+        if (this.socket) {
+            this.socket.off('gameState');
+            this.socket.off('gameEnded');
+        }
+    }
+
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId: string, role: 'player1' | 'player2') {
         this.isRemote = true;
@@ -46,6 +54,9 @@ class Game {
             return;
         }
 
+        this.socket.off('gameState'); 
+        this.socket.off('gameEnded');
+        
         console.log(`Starting Remote Game in room ${roomId} as ${role}`);
 
         // Écouter les mises à jour du serveur

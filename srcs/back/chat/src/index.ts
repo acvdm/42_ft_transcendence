@@ -281,16 +281,18 @@ fastify.ready().then(() => {
                     senderSocket.join(roomId);
                     socket.join(roomId);
 
-                    // lancement du jeu 
-                    senderSocket.emit('matchFound', { roomId, role: 'player1', opponent: socket.user.sub });
-                    socket.emit('matchFound', { roomId, role: 'player2', opponent: senderIdNum });
-
-                    console.log(`Friend match started: ${roomId}`);
-                    
-                    //lancement de la boucle
-                    gameState.intervalId = setInterval(() => {
-                        updateGamePhysics(gameState, fastify.io);
-                    }, GAMESPEED);
+                    setTimeout(() => {
+                        senderSocket.emit('matchFound', { roomId, role: 'player1', opponent: socket.user.sub });
+                        socket.emit('matchFound', { roomId, role: 'player2', opponent: senderIdNum });
+                        // lancement du jeu 
+    
+                        console.log(`Friend match started: ${roomId}`);
+                        
+                        //lancement de la boucle
+                        gameState.intervalId = setInterval(() => {
+                            updateGamePhysics(gameState, fastify.io);
+                        }, GAMESPEED);
+                    }, 100); // delai pour le frontend
                 }
             }
         });

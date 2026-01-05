@@ -4684,13 +4684,6 @@
         console.log("Game invite received form", data.senderName);
         this.showGameInviteNotification(data.senderId, data.senderName);
       });
-      socket.on("matchFound", (data) => {
-        console.log("Global matchFound event received", data);
-        sessionStorage.setItem("pendingMatch", JSON.stringify(data));
-        window.history.pushState({ gameMode: "remote" }, "", "/remote");
-        const navEvent = new PopStateEvent("popstate", { state: { gameMode: "remote" } });
-        window.dispatchEvent(navEvent);
-      });
     }
     ///// pour la notification de l'invitation
     showGameInviteNotification(senderId, senderName) {
@@ -4708,7 +4701,21 @@
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        SocketService_default.getInstance().socket?.emit("acceptGameInvite", { senderId });
+        const socket = SocketService_default.getInstance().socket;
+        if (!socket) {
+          alert("Erreur de connexion");
+          toast.remove();
+          return;
+        }
+        console.log("Accepting game invite from", senderName);
+        socket.once("matchFound", (data) => {
+          console.log("\u2705 Match found from invitation:", data);
+          sessionStorage.setItem("pendingMatch", JSON.stringify(data));
+          window.history.pushState({ gameMode: "remote" }, "", "/game");
+          const event = new PopStateEvent("popstate");
+          window.dispatchEvent(event);
+        });
+        socket.emit("acceptGameInvite", { senderId });
         toast.remove();
       });
       toast.querySelector("#decline-invite")?.addEventListener("click", () => {
@@ -7892,6 +7899,13 @@
       this.ball = new Ball_default(canvas.width / 2, canvas.height / 2, ballImageSrc);
       this.isRunning = false;
     }
+    stop() {
+      this.isRunning = false;
+      if (this.socket) {
+        this.socket.off("gameState");
+        this.socket.off("gameEnded");
+      }
+    }
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId, role) {
       this.isRemote = true;
@@ -7902,6 +7916,8 @@
         console.error("Cannot start remote game: No socket connection");
         return;
       }
+      this.socket.off("gameState");
+      this.socket.off("gameEnded");
       console.log(`Starting Remote Game in room ${roomId} as ${role}`);
       this.socket.on("gameState", (data) => {
         this.updateFromRemote(data);
@@ -8235,27 +8251,38 @@
           canvas.style.width = "100%";
           canvas.style.height = "100%";
           container.appendChild(canvas);
+          if (canvas.width === 0) canvas.width = 800;
+          if (canvas.height === 0) canvas.height = 600;
           const ctx = canvas.getContext("2d");
           const input = new Input_default();
           const selectedBallSkin = ballInput ? ballInput.value : "classic";
           if (ctx) {
-            if (activeGame) activeGame.isRunning = false;
+            if (activeGame) {
+              activeGame.stop();
+              activeGame = null;
+            }
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-            activeGame.onGameEnd = (endData) => {
-              const winnerName = endData.winnerAlias || "Winner";
-              showVictoryModal(winnerName);
-            };
-            activeGame.onScoreChange = (score) => {
-              const sb = document.getElementById("score-board");
-              if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-            };
-            activeGame.startRemote(data.roomId, data.role);
+            if (!socketService.socket) {
+              console.log("Socket non connect\xE9, attente...");
+              const checkSocket = setInterval(() => {
+                if (socketService.socket) {
+                  clearInterval(checkSocket);
+                  activeGame?.startRemote(data.roomId, data.role);
+                }
+              }, 100);
+            } else {
+              activeGame.startRemote(data.roomId, data.role);
+            }
+          }
+          const p1Name = document.getElementById("player-1-name");
+          const p2Name = document.getElementById("player-2-name");
+          if (p1Name) {
+            p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
+          }
+          if (p2Name) {
+            p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
           }
         }
-        const p1Name = document.getElementById("player-1-name");
-        const p2Name = document.getElementById("player-2-name");
-        if (p1Name) p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
-        if (p2Name) p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
       };
       const pendingMatch = sessionStorage.getItem("pendingMatch");
       if (pendingMatch) {
