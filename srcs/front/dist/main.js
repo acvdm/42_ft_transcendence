@@ -5331,6 +5331,7 @@
         this.addSystemMessage(data.content);
       });
       this.socket.on("receivedWizz", (data) => {
+        if (data.channel_key && data.channel_key !== this.currentChannel) return;
         const currentUser = localStorage.getItem("username");
         this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
         if (data.author !== currentUser) {
