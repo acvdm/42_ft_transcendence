@@ -241,6 +241,32 @@ export function initGamePage(mode: string): void {
     document.addEventListener('keydown', spaceKeyListener);
 
 
+    const navIds = ['/home', '/profile', '/logout']; 
+
+    navIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            // intercepteur
+            const handleClickGuard = (e: MouseEvent) => {
+                if (isGameRunning()) {
+                    // on bloaue le comportement par default et propagation au serveru
+                    e.preventDefault();
+                    e.stopImmediatePropagation(); 
+
+                    // modale de confirmation
+                    handleGameExitConfirmation(() => {
+                        // on retire le gardien
+                        element.removeEventListener('click', handleClickGuard as EventListener, true);
+                        element.click();
+                    });
+                }
+            };
+
+            // on intercepte l'evement avant le routeur
+            element.addEventListener('click', handleClickGuard as EventListener, true);
+        }
+    });
+
 
 
     // ---------------------------------------------------------

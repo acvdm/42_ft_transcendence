@@ -1832,7 +1832,7 @@
                 return;
               if ("closed" === this.readyState)
                 return;
-              cleanup();
+              cleanup2();
               this.setTransport(transport);
               transport.send([{ type: "upgrade" }]);
               this.emitReserved("upgrade", transport);
@@ -1851,7 +1851,7 @@
         if (failed)
           return;
         failed = true;
-        cleanup();
+        cleanup2();
         transport.close();
         transport = null;
       }
@@ -1872,7 +1872,7 @@
           freezeTransport();
         }
       }
-      const cleanup = () => {
+      const cleanup2 = () => {
         transport.removeListener("open", onTransportOpen);
         transport.removeListener("error", onerror);
         transport.removeListener("close", onTransportClose);
@@ -8082,6 +8082,60 @@
   var tournamenetState = null;
   var activeGame = null;
   var spaceKeyListener = null;
+  function isGameRunning() {
+    return activeGame !== null && activeGame.isRunning;
+  }
+  function handleGameExitConfirmation(confirmCallback) {
+    if (!isGameRunning()) {
+      confirmCallback();
+      return;
+    }
+    const modalHtml = `
+        <div id="exit-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-red-400">
+                <h2 class="text-xl font-bold mb-4 text-red-600">\u26A0 Wait a minute!</h2>
+                <p class="mb-6 font-bold">Are you sure you want to leave?<br>Current game progress will be lost and not saved.</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="confirm-exit-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                        Yes, Leave
+                    </button>
+                    <button id="cancel-exit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    const div = document.createElement("div");
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+    document.getElementById("confirm-exit-btn")?.addEventListener("click", () => {
+      if (activeGame && activeGame.isRemote && SocketService_default.getInstance().socket) {
+        SocketService_default.getInstance().socket.emit("leaveGame", { roomId: activeGame.roomId });
+      }
+      cleanup();
+      document.getElementById("exit-confirm-modal")?.remove();
+      confirmCallback();
+    });
+    document.getElementById("cancel-exit-btn")?.addEventListener("click", () => {
+      document.getElementById("exit-confirm-modal")?.remove();
+    });
+  }
+  function cleanup() {
+    if (gameChat) {
+      gameChat.destroy();
+      gameChat = null;
+    }
+    tournamenetState = null;
+    if (activeGame) {
+      activeGame.stop();
+      activeGame = null;
+    }
+    if (spaceKeyListener) {
+      document.removeEventListener("keydown", spaceKeyListener);
+      spaceKeyListener = null;
+    }
+  }
   function render6() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
@@ -8156,6 +8210,23 @@
       }
     };
     document.addEventListener("keydown", spaceKeyListener);
+    const navIds = ["/home", "/profile", "/logout"];
+    navIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        const handleClickGuard = (e) => {
+          if (isGameRunning()) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            handleGameExitConfirmation(() => {
+              element.removeEventListener("click", handleClickGuard, true);
+              element.click();
+            });
+          }
+        };
+        element.addEventListener("click", handleClickGuard, true);
+      }
+    });
     function initRemoteMode() {
       const socketService = SocketService_default.getInstance();
       const btn = document.getElementById("start-game-btn");
