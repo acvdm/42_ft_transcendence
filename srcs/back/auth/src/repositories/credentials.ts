@@ -182,6 +182,26 @@ export async function getEmailCodeData(
     }
 }
 
+export async function getAuthDataForExport(
+    db: Database,
+    userId: number
+) : Promise<{ email: string, createdAt: string, twoFaMethod: string, id: number } | undefined >
+{
+    const row = await db.get(`
+        SELECT created_at, two_fa_method, email FROM CREDENTIALS WHERE user_id = ?`,
+        [userId]
+    );
+    if (!row)
+        return undefined;
+
+    return {
+        email: row.email,
+        createdAt: row.created_at,
+        twoFaMethod: row.two_fa_method,
+        id: userId
+    }
+}
+
 /* MODIFIER LA METHODE POUR RECUP NONE APP OU EMAIL */
 // export async function is2FAEnabled(
 //     db: Database,

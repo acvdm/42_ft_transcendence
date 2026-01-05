@@ -365,7 +365,7 @@ fastify.delete('/users/:id/', async (request, reply) => {
 		const { id } = request.params as { id: string };
 		const userId = Number(id);
 		if (!userId) {
-			return reply.status(400).send({error: "Invalid User ID"});
+			return reply.status(400).send({ error: "Invalid User ID" });
 		}
 
 		// service qui supprime Tokens + Credentials
@@ -391,6 +391,39 @@ fastify.delete('/users/:id/', async (request, reply) => {
 		});
 	}
 });
+
+/* -- EXPORT -- */
+fastify.get('/users/:id/export', async (request, reply) => {
+	try
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		if (!userId) {
+			return reply.status(400).send({ error: "Invalid User ID" });
+		}
+
+		const authData = await credRepo.getAuthDataForExport(db, userId);
+
+		console.log(`✅ Data in auth service correctly export for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: authData || null,
+			error: null
+		});
+	}
+	catch (err: any) 
+	{
+		console.error("Export Auth Error:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "Failed to export auth data"}
+		});
+	}
+})
 
 
 //---------------------------------------

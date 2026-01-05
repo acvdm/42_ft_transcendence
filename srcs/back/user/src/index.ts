@@ -630,8 +630,11 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
     }
 });
 
+//---------------------------------------
+//----------------- GDPR ----------------
+//---------------------------------------
 
-/* -- DELET USER -- */
+/* ---- DELETE USER ---- */
 fastify.delete('/users/:id', async (request, reply) =>
 {
 	console.log("Processsing account deletion...");
@@ -662,7 +665,7 @@ fastify.delete('/users/:id', async (request, reply) =>
 		{
 			const authJson = await authResponse.json().catch(() => ({}));
 
-			// Propoager le code d'erreur du service auth
+			// Propager le code d'erreur du service auth
 			const error: any = new Error(
 				authJson.error?.message || `Auth service error: ${authResponse.status}`
 			);
@@ -692,6 +695,120 @@ fastify.delete('/users/:id', async (request, reply) =>
 			success: false,
 			data: null,
 			error: { message: err.message || "Failed to delete account" }
+		});
+	}
+})
+
+/* ---- EXPORT ----- */
+fastify.get('/users/:id/export', async (request, reply) =>
+{
+	console.log("Processsing account export...");
+
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	if (!userId) {
+		return reply.status(404).send({
+			success: false,
+			error: { message: "User not found" }
+		});
+	}
+
+	try
+	{	
+		/* EXPORT FROM USER */	
+		const userProfile = await userRepo.findUserByID(db, userId);
+		if (!userProfile) {
+			return reply.status(404).send({
+				success: false,
+				error: { message: "User not found" }
+			});
+		}
+
+		const friendList = await friendRepo.listFriends(db, userId);
+
+		/* EXPORT FROM AUTH */	
+		console.log("- Calling Auth service...");
+		const authURL = `http://auth:3001/users/${userId}/export`;
+
+		let authPayload = {};
+		
+		const authResponse = await fetch(authURL, {
+			method: "GET",
+		});
+		if (!authResponse.ok)
+			console.error("Problem with fetch with the Auth service");
+		else
+		{
+			const authJson = await authResponse.json();
+			authPayload = authJson.data;
+		}
+
+		/* EXPORT FROM GAME */
+		// console.log("- Calling Game service...");
+		// const gameResponse = await fetch( , {
+		// 	method: "GET",
+		// });
+		// if (!gameResponse.ok)
+		// {
+		// 	const ganeJson = await gameResponse.json().catch(() => ({}));
+
+		// 	// Propager le code d'erreur du service auth
+		// 	const error: any = new Error(
+		// 		gameJson.error?.message || `ame service error: ${gameResponse.status}`
+		// 	);
+		// 	error.statusCode = gameResponse.status;
+		// 	// throw error;
+		// }
+						
+
+		/* object final envoye */
+		const exportData = {
+			identity: {
+				id: authPayload?.id || "Not available",
+				email: authPayload.email || "Not available",
+				twoFaMethod: authPayload.twoFaMethod || "Not available",
+				createdAt: authPayload.createdAt || "Not available",
+			},
+			profile: {
+				alias: userProfile.alias,
+				bio: userProfile.bio,
+				avatar: userProfile.avatar_url,
+				theme: userProfile.theme,
+				status: userProfile.status
+				// id: userProfile.id, // transformer en string ?
+				// createdAt: userProfile.created_at
+			},
+			social: {
+				friend: friendList.map(f: any => {
+					return (f.user_id == userId) ? f.friend?.alias : f.user?.alias;
+				})
+				// pendindRequest: friendList.
+			},
+			// gaming: {
+				// stats:
+				// matchHistory:
+			// 	/* a completer */
+			// },
+			export_date: new Date().toISOString()
+		}
+
+		// fichier json
+		reply.header('Content-Type', 'application/json');
+
+		// COntent-Disposition= header pour gerer les telechargementsne pas afficher mais telecharger sous le nom specifie
+		reply.header('Content-Disposition', `attachment; filename="user_data_${userId}.json"`);
+
+		return reply.status(200).send(exportData);
+	}
+	catch (err: any)
+	{
+		console.error("Error during download data:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: err.message || "Failed to download account data" }
 		});
 	}
 })

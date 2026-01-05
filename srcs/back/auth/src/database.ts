@@ -42,4 +42,3 @@ export async function initDatabase(): Promise<Database> {
 
 }
 
-// is_2fa_enabled 
