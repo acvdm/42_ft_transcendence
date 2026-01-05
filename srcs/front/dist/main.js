@@ -5580,7 +5580,7 @@
       }
       const bgButton = document.getElementById("select-background");
       const bgDropdown = document.getElementById("background-dropdown");
-      const chatFrame = document.getElementById("chat-frame");
+      const chatFrame = document.getElementById("channel-chat");
       const bgOptions = document.querySelectorAll(".bg-option");
       if (bgButton && bgDropdown && chatFrame) {
         bgButton.addEventListener("click", (e) => {
@@ -8122,16 +8122,19 @@
     function showVictoryModal(winnerName) {
       const modal = document.getElementById("local-summary-modal");
       const winnerText = document.getElementById("winner-name");
-      const quitBtn = document.getElementById("quit-local-btn");
+      const quitLocalBtn = document.getElementById("quit-local-btn");
+      const quitRemoteBtn = document.getElementById("quit-remote-btn");
       if (modal && winnerText) {
         winnerText.innerText = winnerName;
         modal.classList.remove("hidden");
         if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
         launchConfetti(4e3);
       }
-      quitBtn?.addEventListener("click", () => {
-        window.location.reload();
-      });
+      const backAction = () => {
+        window.history.back();
+      };
+      quitLocalBtn?.addEventListener("click", backAction);
+      quitRemoteBtn?.addEventListener("click", backAction);
     }
     if (spaceKeyListener) {
       document.removeEventListener("keydown", spaceKeyListener);
@@ -8337,8 +8340,8 @@
             }
             const p1Name = document.getElementById("player-1-name");
             const p2Name = document.getElementById("player-2-name");
-            if (p1Name) p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
-            if (p2Name) p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
+            if (p1Name) p1Name.innerText = data.player1Alias || "Player 1";
+            if (p2Name) p2Name.innerText = data.player2Alias || "Player 2";
           });
           socketService.socket.emit("joinQueue");
         });

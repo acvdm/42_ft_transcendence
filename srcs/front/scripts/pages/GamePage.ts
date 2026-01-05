@@ -127,7 +127,8 @@ export function initGamePage(mode: string): void {
         // modal
         const modal = document.getElementById('local-summary-modal');
         const winnerText = document.getElementById('winner-name');
-        const quitBtn = document.getElementById('quit-local-btn');
+        const quitLocalBtn = document.getElementById('quit-local-btn');
+        const quitRemoteBtn = document.getElementById('quit-remote-btn');
 
         if (modal && winnerText) {
             winnerText.innerText = winnerName;
@@ -138,10 +139,13 @@ export function initGamePage(mode: string): void {
             launchConfetti(4000);
         }
 
+        const backAction = () => {
+            window.history.back();
+        }
         // gestion du bouton retour au menu
-        quitBtn?.addEventListener('click', () => {
-             window.location.reload(); 
-        });
+        quitLocalBtn?.addEventListener('click', backAction);
+        quitRemoteBtn?.addEventListener('click', backAction);
+
     }
 
     // ---------------------------------------------------------
@@ -416,8 +420,8 @@ export function initGamePage(mode: string): void {
                     const p1Name = document.getElementById('player-1-name');
                     const p2Name = document.getElementById('player-2-name');
                     
-                    if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
-                    if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
+                    if (p1Name) p1Name.innerText = data.player1Alias || "Player 1";
+                    if (p2Name) p2Name.innerText = data.player2Alias || "Player 2";
                 });
 
                 // Envoi demande au serveur
