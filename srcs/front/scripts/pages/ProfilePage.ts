@@ -437,6 +437,49 @@ export function afterRender(): void {
 	});
 
 
+
+	// ============================================================
+	// ================== FONCTIONNALITÉ RGPD =====================
+	// ============================================================
+
+	const downloadButton = document.getElementById('download-data-button');
+	downloadButton?.addEventListener('click', async () => {
+		if (!userId) return;
+
+		try {
+			// je récupère les données via le backend
+			const response = await fetchWithAuth(`api/users/${userId}/export`);
+			if (response.ok) {
+				//on convertit la réponse en blob (le fichier - big large object)
+				const blob = await response.blob();
+
+				// lien temporaire pour déclencher le téléchargement
+				const url = window.URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+
+				// définir un nom de fichier par défaut
+				// genre user_data_xxxx.json
+				a.download = `user_data_${userId}.json`;
+				document.body.appendChild(a);
+				a.click(); // clic automatique
+
+				// nettoyage de l'objet
+				window.URL.revokeObjectURL(url);
+				a.remove();
+				console.log("Export data downloaded successfully!");
+			} else {
+				console.error("Failed to download data");
+			}
+		} catch (error) {
+			console.error("Network error during export:", error);
+		}
+	});
+
+
+
+
+
 	// ============================================================
 	// ========================= MODALE ===========================
 	// ============================================================

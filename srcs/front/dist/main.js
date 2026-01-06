@@ -6398,8 +6398,8 @@
                 <p>This action will be irreversible.</p>
 
                 <div class="flex justify-end gap-2 mt-4">
-                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Yes, delete my account</button>
-                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
+                    <button id="confirm-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Yes, delete my account</button>
+                    <button id="cancel-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
                 </div>
             </div>
         </div>
@@ -6706,6 +6706,29 @@
     cancelEmailButton?.addEventListener("click", close2fa);
     modal2fa?.addEventListener("click", (e) => {
       if (e.target === modal2fa) close2fa();
+    });
+    const downloadButton = document.getElementById("download-data-button");
+    downloadButton?.addEventListener("click", async () => {
+      if (!userId) return;
+      try {
+        const response = await fetchWithAuth(`api/users/${userId}/export`);
+        if (response.ok) {
+          const blob = await response.blob();
+          const url2 = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url2;
+          a.download = `user_data_${userId}.json`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url2);
+          a.remove();
+          console.log("Export data downloaded successfully!");
+        } else {
+          console.error("Failed to download data");
+        }
+      } catch (error) {
+        console.error("Network error during export:", error);
+      }
     });
     const closeModalFunc = () => {
       if (!modal) return;
