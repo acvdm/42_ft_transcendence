@@ -43,6 +43,18 @@ class Game {
         }
     }
 
+    pause() {
+        this.isRunning = false;
+    }
+
+    resume() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            console.log("gameloop");
+            this.gameLoop(); // relance de la boucle
+        }
+    }
+
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId: string, role: 'player1' | 'player2') {
         this.isRemote = true;

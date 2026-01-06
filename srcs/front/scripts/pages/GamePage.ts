@@ -79,13 +79,17 @@ function handlePopState(e: PopStateEvent) {
 export function showExitConfirmationModal() {
     if (document.getElementById('exit-confirm-modal')) return;
 
+    if (activeGame) {
+        activeGame.pause();
+    }
+
     const modalHtml = `
-        <div id="exit-confirm-modal" style="position: fixed; inset: 0; z-index: 9999; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center;">
+        <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
             
-            <div class="window w-[600px] shadow-2xl animate-bounce-in">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
                 
-                <div class="title-bar" style="background: linear-gradient(90deg, #b91c1c, #dc2626);">
-                    <div class="title-bar-text text-white font-bold" style="text-shadow: none;">⚠️ Exit Game</div>
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
                     <div class="title-bar-controls">
                         <button aria-label="Close" id="modal-close-x"></button>
                     </div>
@@ -93,29 +97,26 @@ export function showExitConfirmationModal() {
 
                 <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
                     
-                    <h2 class="text-3xl font-black text-red-700 text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
+                    <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
                         WAIT A MINUTE !
                     </h2>
                     
-                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
                         <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
-                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost and not saved.</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
                     </div>
 
                     <div class="flex gap-6 w-full justify-center">
                         
                         <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-8 py-3 text-lg font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none transition-all duration-200" 
-                                style="min-width: 150px;">
-                            Cancel
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            GO BACK TO GAME
                         </button>
                         
-                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-red-100 to-red-300 border border-red-400 rounded-sm 
-                                                        px-8 py-3 text-lg font-semibold text-red-900 shadow-sm hover:from-red-200 hover:to-red-400 
-                                                        active:border-red-500 focus:outline-none transition-all duration-200"
-                                style="min-width: 150px;">
-                            Yes, Leave
+                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            LEAVE
                         </button>
                     </div>
 
@@ -128,8 +129,20 @@ export function showExitConfirmationModal() {
     div.innerHTML = modalHtml;
     document.body.appendChild(div);
 
-    document.getElementById('confirm-exit-btn')?.addEventListener('click', confirmExit);
-    document.getElementById('cancel-exit-btn')?.addEventListener('click', cancelExit);
+    document.getElementById('confirm-exit-btn')?.addEventListener('click', () => {
+        confirmExit();
+    });
+    
+    const closeFunc = () => {
+        document.getElementById('exit-confirm-modal')?.remove();
+
+        if (activeGame) {
+            activeGame.resume();
+        }
+    }
+
+    document.getElementById('cancel-exit-btn')?.addEventListener('click', closeFunc);
+    document.getElementById('modal-close-x')?.addEventListener('click', closeFunc);
 }
 
 function confirmExit() {
@@ -157,6 +170,9 @@ function confirmExit() {
 
 function cancelExit() {
     document.getElementById('exit-confirm-modal')?.remove();
+    if (activeGame) {
+        activeGame.resume();
+    }
 }
 
 
