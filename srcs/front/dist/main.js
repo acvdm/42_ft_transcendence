@@ -8177,6 +8177,7 @@
     if (activeGame) {
       activeGame.isRunning = false;
       activeGame.stop();
+      console.log("Leaving the game - remote");
       if (activeGame.isRemote && SocketService_default.getInstance().socket) {
         SocketService_default.getInstance().socket.emit("leaveGame", { roomId: activeGame.roomId });
         const userIdStr = localStorage.getItem("userId");
@@ -8414,10 +8415,11 @@
             }
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
             socketService.socket.on("opponentLeft", () => {
-              if (activeGame && activeGame.isRunning) {
-                activeGame.stop();
+              if (activeGame) {
                 activeGame.isRunning = false;
+                activeGame.stop();
                 console.log("Opponent left the game! Victory by forfeit!");
+                socketService.socket.off("gameState");
                 let myAlias = "Me";
                 let myScore = 0;
                 if (data.role === "player1") {
@@ -8431,7 +8433,8 @@
                 if (userIdStr) {
                   saveGameStats(Number(userIdStr), myScore, true);
                 }
-                showVictoryModal(myAlias + "(Opponent forfeit)");
+                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                activeGame = null;
               }
             });
             if (!socketService.socket) {
@@ -8908,6 +8911,40 @@
       } catch (e) {
         console.error(e);
       }
+    }
+    function showRemoteEndModal(winnerName, message) {
+      if (document.getElementById("remote-end-modal")) return;
+      const modalHtml = `
+        <div id="remote-end-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+            <div class="window w-[500px] bg-white shadow-2xl animate-bounce-in">
+                <div class="title-bar">
+                    <div class="title-bar-text">Game Over</div>
+                    <div class="title-bar-controls">
+                    </div>
+                </div>
+                <div class="window-body flex flex-col items-center gap-6 p-6">
+                    <h2 class="text-3xl font-black text-blue-600 tracking-wider">VICTORY !</h2>
+                    
+                    <div class="bg-yellow-100 border-2 border-yellow-400 p-4 w-full text-center">
+                        <p class="text-lg font-bold text-gray-800">${winnerName}</p>
+                        <p class="text-sm text-gray-600 mt-2">${message}</p>
+                    </div>
+
+                    <button id="remote-quit-btn" class="mt-4 px-6 py-2 bg-gray-200 border-2 border-white shadow-[inset_-2px_-2px_#0a0a0a,inset_2px_2px_#dfdfdf] active:shadow-[inset_2px_2px_#0a0a0a,inset_-2px_-2px_#dfdfdf] font-bold">
+                        RETURN TO MENU
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+      const div = document.createElement("div");
+      div.innerHTML = modalHtml;
+      document.body.appendChild(div);
+      launchConfetti(4e3);
+      document.getElementById("remote-quit-btn")?.addEventListener("click", () => {
+        document.getElementById("remote-end-modal")?.remove();
+        window.history.back();
+      });
     }
     function initLocalMode() {
       const modal = document.getElementById("game-setup-modal");
