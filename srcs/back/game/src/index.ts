@@ -295,6 +295,39 @@ fastify.patch('/games/users/:id/stats', async (request, reply) =>
 	}
 })
 
+/* -- STAT EXPORT FOR ONE USER -- */
+fastify.get('/users/:id/export', async (request, reply) =>
+{
+	try
+	{
+		const { id } = request.params as { id: string }
+		const userId = Number(id);
+		if (!userId)
+				return reply.status(400).send({ error: "Invalid ID" });
+
+
+		const stats = await findStatsByUserId(db, userId);
+		const historyResult = await getUserMatchHistory(db, userId, { limit: 10000, page: 1});
+		
+		return reply.status(200).send({
+			success: true,
+			data: {
+				stats: stats,
+				history: historyResult.data
+			},
+			error: null
+		})
+	}
+	catch (err: any)
+	{
+		const statusCode = err.statusCode || 500;
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		})
+	}
+})
 
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède

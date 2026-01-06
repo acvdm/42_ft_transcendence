@@ -703,6 +703,9 @@ fastify.delete('/users/:id', async (request, reply) =>
 fastify.get('/users/:id/export', async (request, reply) =>
 {
 	console.log("Processsing account export...");
+	
+	let authPayload: any = {};
+	let gamePayload: any = {};
 
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
@@ -729,9 +732,6 @@ fastify.get('/users/:id/export', async (request, reply) =>
 		/* EXPORT FROM AUTH */	
 		console.log("- Calling Auth service...");
 		const authURL = `http://auth:3001/users/${userId}/export`;
-
-		let authPayload: any = {};
-		
 		const authResponse = await fetch(authURL, {
 			method: "GET",
 		});
@@ -744,22 +744,18 @@ fastify.get('/users/:id/export', async (request, reply) =>
 		}
 
 		/* EXPORT FROM GAME */
-		// console.log("- Calling Game service...");
-		// const gameResponse = await fetch( , {
-		// 	method: "GET",
-		// });
-		// if (!gameResponse.ok)
-		// {
-		// 	const ganeJson = await gameResponse.json().catch(() => ({}));
-
-		// 	// Propager le code d'erreur du service auth
-		// 	const error: any = new Error(
-		// 		gameJson.error?.message || `ame service error: ${gameResponse.status}`
-		// 	);
-		// 	error.statusCode = gameResponse.status;
-		// 	// throw error;
-		// }
-						
+		console.log("- Calling Game service...");
+		const gameURL = `http://game:3003/users/${userId}/export`;
+		const gameResponse = await fetch(gameURL, {
+			method: "GET",
+		});
+		if (!gameResponse.ok)
+			console.error("Problem with fetch with the Game service");
+		else
+		{
+			const gameJson = await gameResponse.json();
+			gamePayload = gameJson.data;
+		}
 
 		/* object final envoye */
 		const exportData = {
@@ -775,22 +771,23 @@ fastify.get('/users/:id/export', async (request, reply) =>
 				avatar: userProfile.avatar_url,
 				theme: userProfile.theme,
 				status: userProfile.status
-				// id: userProfile.id, // transformer en string ?
-				// createdAt: userProfile.created_at
 			},
 			social: {
 				friend: friendList.map((f: any) => {
 					return (f.user_id == userId) ? f.friend?.alias : f.user?.alias;
 				})
-				// pendindRequest: friendList.
+			},
+			gaming: {
+				summary: gamePayload?.stats || "Not available",
+				record: {
+					currentWinStreak: gamePayload?.stats.current_win_streak ?? "Not available",
+					averageScore: gamePayload?.stats.averageScore ?? "Not available",
+					totalGame: gamePayload?.stats.total_games ?? "Not available",
+				},
+				matchHistory: gamePayload?.history || "Not available",
+				tournament: gamePayload?.tournament || null /* a completer ??? */
 			},
 			export_date: new Date().toISOString()
-			// gaming: {
-				// stats:
-				// matchHistory:
-			// 	/* a completer */
-			// },
-			
 		};
 
 		// fichier json
