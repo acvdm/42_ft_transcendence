@@ -730,7 +730,7 @@ fastify.get('/users/:id/export', async (request, reply) =>
 		console.log("- Calling Auth service...");
 		const authURL = `http://auth:3001/users/${userId}/export`;
 
-		let authPayload = {};
+		let authPayload: any = {};
 		
 		const authResponse = await fetch(authURL, {
 			method: "GET",
@@ -764,10 +764,10 @@ fastify.get('/users/:id/export', async (request, reply) =>
 		/* object final envoye */
 		const exportData = {
 			identity: {
-				id: authPayload?.id || "Not available",
-				email: authPayload.email || "Not available",
-				twoFaMethod: authPayload.twoFaMethod || "Not available",
-				createdAt: authPayload.createdAt || "Not available",
+				id: authPayload?.id,
+				email: authPayload?.email || "Not available",
+				twoFaMethod: authPayload?.twoFaMethod || "Not available",
+				createdAt: authPayload?.createdAt || "Not available",
 			},
 			profile: {
 				alias: userProfile.alias,
@@ -779,18 +779,19 @@ fastify.get('/users/:id/export', async (request, reply) =>
 				// createdAt: userProfile.created_at
 			},
 			social: {
-				friend: friendList.map(f: any => {
+				friend: friendList.map((f: any) => {
 					return (f.user_id == userId) ? f.friend?.alias : f.user?.alias;
 				})
 				// pendindRequest: friendList.
 			},
+			export_date: new Date().toISOString()
 			// gaming: {
 				// stats:
 				// matchHistory:
 			// 	/* a completer */
 			// },
-			export_date: new Date().toISOString()
-		}
+			
+		};
 
 		// fichier json
 		reply.header('Content-Type', 'application/json');

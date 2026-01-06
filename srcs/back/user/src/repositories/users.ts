@@ -14,7 +14,7 @@ export interface User {
     bio: string,
     status: string,
     theme: string,
-    created_at: string
+    created_at?: string
 }
 
 
