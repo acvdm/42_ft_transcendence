@@ -138,5 +138,16 @@ export function afterRender(): void {
         });
     }
 
+
+    const tournamentGameButton = document.getElementById('tournament-game');
+    if (tournamentGameButton) {
+        tournamentGameButton.addEventListener('click', () => {
+            console.log("Lancement d'une partie en tournoi...");
+            window.history.pushState({ gameMode: 'tournament' }, '', '/game');
+
+            const navEvent = new PopStateEvent('popstate');
+            window.dispatchEvent(navEvent);
+        });
+    }
     
 }

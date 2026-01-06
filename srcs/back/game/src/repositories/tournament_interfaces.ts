@@ -14,14 +14,17 @@ export interface localMatchResult
     type: string, // LOCAL_TOURNAMENT , REMOTE_1V1, LOCAL_1V1
     round: 'semi_final_1' | 'semi_final_2' | 'final',
     winner: string,
-    player1: playerGameStats,
-    player2: playerGameStats
+    startDate?: string,
+    endDate?: string,
+    p1: playerGameStats,
+    p2: playerGameStats
 }
 
 export interface localTournament 
 {
-    tournament_name: string,
+    tournamentName: string,
     winner: string,
-    matchList: localMatchResult[]
+    matchList: localMatchResult[],
+    startedAt?: string
 }
 

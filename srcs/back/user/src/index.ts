@@ -120,8 +120,8 @@ fastify.post('/users', async (request, reply) => {
     		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
     		  signed: true
     		});
-
-			const statsURL = `http://game:3003/users/${userId}/games/stats`;
+			console.log("user_id dans user = ", userId)
+			const statsURL = `http://game:3003/users/${userId}/stats`;
 			const statResponse = await fetch(statsURL, {
 				method: "POST",
 				headers: {

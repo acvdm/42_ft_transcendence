@@ -220,7 +220,7 @@ export async function getAuthDataForExport(
 // sauvegarde le secret mais laisse le 2FA desactive
 export async function update2FASecret(
     db: Database,
-    user_id: number,
+    userId: number,
     secret: string
 ) : Promise<void> 
 {
@@ -228,19 +228,19 @@ export async function update2FASecret(
         UPDATE CREDENTIALS
         SET two_fa_secret = ?, two_fa_method = ?
         WHERE user_id = ?`,
-        [secret, 'NONE', user_id]
+        [secret, 'NONE', userId]
     );/* MODIFIER two_fa_method */
 }
 
 export async function changeEmail (
     db: Database,
-    user_id: number,
+    userId: number,
     email: string
 )
 { // MODIFICATION 'FROM' enleve Sqlite naime pas FROM dans un UPDATE
     await db.run(`
         UPDATE CREDENTIALS SET email = ? WHERE user_id = ?`,
-        [email, user_id]
+        [email, userId]
     );
 }
 
@@ -261,26 +261,26 @@ export async function changePwd (
 
 export async function set2FAMethod(
     db: Database, 
-    user_id: number,
+    userId: number,
     method: 'APP' | 'EMAIL' | 'NONE'
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET two_fa_method = ? WHERE user_id = ?`,
-        [method, user_id]
+        [method, userId]
     );
 }
 
 export async function saveEmailCode(
     db: Database, 
-    user_id: number,
+    userId: number,
     code: string,
     expiration: Date
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET email_otp = ?, email_otp_expires_at = ? WHERE user_id = ?`,
-        [code, expiration.toISOString(), user_id]
+        [code, expiration.toISOString(), userId]
     );
 }
 
@@ -303,23 +303,23 @@ export async function saveEmailCode(
 
 export async function clearEmailCode(
     db: Database, 
-    user_id: number
+    userId: number
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET email_otp = NULL, email_otp_expires_at = NULL WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
 }
 
 export async function disable2FA(
     db: Database, 
-    user_id: number
+    userId: number
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET two_fa_method = 'NONE', two_fa_secret = NULL, email_otp = NULL WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
 }
 

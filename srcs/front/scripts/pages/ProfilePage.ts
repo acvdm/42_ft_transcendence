@@ -20,6 +20,11 @@ interface UserStats {
 	wins: number;
 	losses: number;
 	total_games: number;
+
+	average_score?: number;
+	streak?: number;
+	biggest_opponent?: string;
+	favorite_game?: string;
 }
 
 export function render(): string {
@@ -475,7 +480,7 @@ export function afterRender(): void {
 
 
 				////// chargement des statistiques
-				const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+				const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
 				if (statResponse.ok) {
 					const jsonResponse = await statResponse.json();
 					const stats: UserStats = jsonResponse.data;
@@ -484,17 +489,28 @@ export function afterRender(): void {
 					const wins = document.getElementById('stats-wins');
 					const losses = document.getElementById('stats-losses');
 					const winRateCalcul = document.getElementById('stats-win-rate');
+					const avgScore = document.getElementById('stats-average-score');
+					const streak = document.getElementById('stats-streak');
+					const opponent = document.getElementById('stats-opponent');
+					const favGame = document.getElementById('stats-fav-game');
 
-					if (stats && totalGame && winRateCalcul && wins && losses) {
-						totalGame.innerText = stats.total_games.toString();
-						wins.innerText = stats.wins.toString();
-						losses.innerText = stats.losses.toString();
+					if (stats) {
+						if (totalGame) totalGame.innerText = stats.total_games.toString();
+						if (wins) wins.innerText = stats.wins.toString();
+						if (losses) losses.innerText = stats.losses.toString();
 						
-						let rateValue = 0;
-						if (stats.total_games > 0) {
-							rateValue = Math.round((stats.wins / stats.total_games) * 100);
+						if (winRateCalcul) {
+							let rateValue = 0;
+							if (stats.total_games > 0) {
+								rateValue = Math.round((stats.wins / stats.total_games) * 100);
+							}
+							winRateCalcul.innerText = `${rateValue}%`;
 						}
-						winRateCalcul.innerText = `${rateValue}%`;
+
+						if (avgScore) avgScore.innerText = stats.average_score?.toString() || "0";
+						if (streak) streak.innerText = stats.streak?.toString() || "0";
+						if (opponent) opponent.innerText = stats.biggest_opponent || "-";
+						if (favGame) favGame.innerText = stats.favorite_game || "Local";
 					}
 				} else {
 					console.warn("Could not fetch user stats");
