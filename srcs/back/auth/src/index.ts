@@ -4,7 +4,7 @@ import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
-import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword } from './services/auth_service.js';
+import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword, deleteAuthData } from './services/auth_service.js';
 
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -48,16 +48,16 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 {
 	try
 	{
-		const body = request.body as { user_id: number; email: string; password: string };
+		const body = request.body as { userId: number; email: string; password: string };
 
 		// 1. Valider
 		validateRegisterInput(body);
 
 		// 2. Traiter (toute la logique est dans le service)
-		const authResponse = await registerUser(db, body.user_id, body.email, body.password);
+		const authResponse = await registerUser(db, body.userId, body.email, body.password);
 
 		// 3. Cookie
-		reply.setCookie('refresh_token', authResponse.refresh_token, {
+		reply.setCookie('refreshToken', authResponse.refreshToken, {
 			path: '/',
 			httpOnly: true,
 			secure: true,
@@ -66,14 +66,14 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 			signed: true
 		});
 
-		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
+		console.log(`✅ Credentials created & auto-login for user ${body.userId}`);
 
 		// 4. Répondre
 		return reply.status(201).send({
 			success: true,
-			refresh_token: authResponse.refresh_token,
-			access_token: authResponse.access_token,
-			user_id: authResponse.user_id,
+			refreshToken: authResponse.refreshToken,
+			accessToken: authResponse.accessToken,
+			userId: authResponse.userId,
 			error: null
 		});
 	} 
@@ -92,13 +92,13 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 {
 	try
 	{
-		const body = request.body as { user_id: number; email: string};
+		const body = request.body as { userId: number; email: string};
 
 		// 2. Traiter (toute la logique est dans le service)
-		const authResponse = await registerGuest(db, body.user_id, body.email);
+		const authResponse = await registerGuest(db, body.userId, body.email);
 
 		// 3. Cookie
-		reply.setCookie('refresh_token', authResponse.refresh_token, {
+		reply.setCookie('refreshToken', authResponse.refreshToken, {
 			path: '/',
 			httpOnly: true,
 			secure: true,
@@ -107,14 +107,14 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 			signed: true
 		});
 
-		console.log(`✅ Credentials created & auto-login for user ${body.user_id}`);
+		console.log(`✅ Credentials created & auto-login for user ${body.userId}`);
 
 		// 4. Répondre
 		return reply.status(200).send({
 			success: true,
-			refresh_token: authResponse.refresh_token,
-			access_token: authResponse.access_token,
-			user_id: authResponse.user_id,
+			refreshToken: authResponse.refreshToken,
+			accessToken: authResponse.accessToken,
+			userId: authResponse.userId,
 			error: null
 		});
 	} 
@@ -230,21 +230,21 @@ fastify.post('/sessions', async (request, reply) =>
 		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
 
-		if (result.require_2fa) {
+		if (result.require2fa) {
 			console.log(`🔐 2FA required for user`);
 			return reply.status(200).send({
 				success: true,
-				require_2fa: true,
-				temp_token: result.temp_token // LE FRONT DOIT STOCKER CA
+				require2fa: true,
+				tempToken: result.tempToken // LE FRONT DOIT STOCKER CA
 			});
 		}
 
-		if (!result.refresh_token || !result.access_token || !result.user_id) {
+		if (!result.refreshToken || !result.accessToken || !result.userId) {
 			throw new Error("Login failed: missing tokens from login response");
 		}
 
 		// Cas ou Login reussi direct
-		reply.setCookie('refresh_token', result.refresh_token, {
+		reply.setCookie('refreshToken', result.refreshToken, {
 			path: '/',
 			httpOnly: true,
 			secure: true,
@@ -277,7 +277,7 @@ fastify.post('/sessions', async (request, reply) =>
 fastify.post('/refresh', async (request, reply) => {
   
   // lire le cookie signe
-  const cookie = request.cookies.refresh_token;
+  const cookie = request.cookies.refreshToken;
   
   // verification de la signature
   const result = request.unsignCookie(cookie || '');
@@ -292,7 +292,7 @@ fastify.post('/refresh', async (request, reply) => {
 	// appeler le service pour verifier la DB et generer nouveaux tokens
     const authResponse = await refreshUser(db, refreshToken);
 
-    reply.setCookie('refresh_token', authResponse.refresh_token, {
+    reply.setCookie('refreshToken', authResponse.refreshToken, {
       path: '/',
       httpOnly: true,
       secure: true,
@@ -304,11 +304,11 @@ fastify.post('/refresh', async (request, reply) => {
     console.log("Refresh request valid for token:", refreshToken);
 
     return reply.send({
-      access_token: authResponse.access_token,
-      user_id: authResponse.user_id
+      accessToken: authResponse.accessToken,
+      userId: authResponse.userId
     });
   } catch (err: any){
-      reply.clearCookie('refresh_token');
+      reply.clearCookie('refreshToken');
       return reply.status(403).send({error: err.message});
   }
 });
@@ -321,7 +321,7 @@ fastify.post('/logout', async (request, reply) =>
 	
 	console.log("✅ route /logout atteinte");	
 
-	const cookie = request.cookies.refresh_token;
+	const cookie = request.cookies.refreshToken;
 	if (!cookie){
 		return reply.status(200).send({message: 'Already logged out'});
 	}
@@ -331,7 +331,7 @@ fastify.post('/logout', async (request, reply) =>
 
 	// si signature invalide ou nulle on nettoie qd meme le cookie client par securite
 	if (!unsigned.valid || !unsigned.value){
-		reply.clearCookie('refresh_token', { path: '/'});
+		reply.clearCookie('refreshToken', { path: '/'});
 		return reply.status(200).send({ message: 'Logged out (Invalid token)'});
 	}
 
@@ -347,7 +347,7 @@ fastify.post('/logout', async (request, reply) =>
 		console.error("Error for the supression of Refresh Token in the database: ", err);
 	}
 
-	reply.clearCookie('refresh_token', {
+	reply.clearCookie('refreshToken', {
 		path: '/',
 		httpOnly: true,
 		secure: true,
@@ -357,6 +357,73 @@ fastify.post('/logout', async (request, reply) =>
 	return reply.status(204).send({ success: true, message: "✅ Logged out succefully"});
 })
 
+
+/* -- DELETE -- */
+fastify.delete('/users/:id/', async (request, reply) => {
+	try
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		if (!userId) {
+			return reply.status(400).send({ error: "Invalid User ID" });
+		}
+
+		// service qui supprime Tokens + Credentials
+		await deleteAuthData(db, userId);
+
+		console.log(`✅ User correctly deleted for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			error: null
+		});
+
+	}
+	catch (err: any) 
+	{
+		console.error("Deleted Auth Error:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "Failed to delete auth data"}
+		});
+	}
+});
+
+/* -- EXPORT -- */
+fastify.get('/users/:id/export', async (request, reply) => {
+	try
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		if (!userId) {
+			return reply.status(400).send({ error: "Invalid User ID" });
+		}
+
+		const authData = await credRepo.getAuthDataForExport(db, userId);
+
+		console.log(`✅ Data in auth service correctly export for user ${userId}`);
+
+		return reply.status(200).send({
+			success: true,
+			data: authData || null,
+			error: null
+		});
+	}
+	catch (err: any) 
+	{
+		console.error("Export Auth Error:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false, 
+			data: null,
+			error: { message: err.message || "Failed to export auth data"}
+		});
+	}
+})
 
 
 //---------------------------------------
@@ -380,14 +447,8 @@ fastify.post('/2fa/generate', async (request, reply) => {
 	{
 		const userIdHeader = request.headers['x-user-id'];
 		if (!userIdHeader)
-		{
-			//callback pour test
 			return reply.status(401).send({ error: "Unauthorized: Missing User ID" });
-             // Pour test direct (A SUPPRIMER EN PROD) :
-            //  const body = request.body as { user_id: number };
-            //  const userId = body.user_id;
 
-		}
 		const userId = parseInt(userIdHeader as string);
 
 		const body = request.body as { type?: 'APP' | 'EMAIL' };
@@ -510,7 +571,7 @@ fastify.post('/2fa/disable', async (request, reply) => {
 
 /*
 /2fa/verify
-recoit temp_token et le code
+recoit tempToken et le code
 verifie et valide
 recupere le secret en BDD et verifie le code TOTP
 genere lles vrais tokens
@@ -544,7 +605,7 @@ fastify.post('/2fa/verify', async (request, reply) => {
 		console.log(`✅ 2FA Login successful for user ${userId}`);
 
 		// on renvoie les vrai acces (cookie + JSON)
-		reply.setCookie('refresh_token', result.refresh_token, {
+		reply.setCookie('refreshToken', result.refreshToken, {
 			path: '/',
 			httpOnly: true,
 			secure: true,
@@ -555,8 +616,8 @@ fastify.post('/2fa/verify', async (request, reply) => {
 
 		return reply.status(200).send({
 			success: true,
-			access_token: result.access_token,
-			user_id: result.user_id	
+			accessToken: result.accessToken,
+			userId: result.userId	
 		});
 
 	} 

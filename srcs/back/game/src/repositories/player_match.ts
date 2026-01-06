@@ -1,24 +1,41 @@
 import { Database } from 'sqlite'
 
-
-export async function addPlayerToMatch (
+// -- CREATE
+export async function addPlayerMatch(
     db: Database,
+    gameType: string,
     matchId: number,
-    userId: number
+    userId: number,
+    opponent: string,
+    score: number,
+    isWinner: number
 ): Promise<number | undefined>
 {
-    const newPlayer = await db.run(`
-        INSERT INTO PLAYER_MATCH (match_id, player_id)
-        VALUES (?, ?)`,
-        [matchId, userId]
-    );
+    const playerMatch = await db.run(`
+        INSERT INTO PLAYER_MATCH
+            (match_id,
+            game_type,
+            user_id,
+            opponent,
+            score,
+            is_winner)
+        VALUES(?, ?, ?, ?, ?, ?)`,
+        [   matchId,
+            gameType,
+            userId,
+            opponent,
+            score,
+            isWinner ? 1 : 0,
+        ]
+    )
 
-    // On verifie que l'ID existe bien
-    if (newPlayer.lastID === undefined) {
-        throw new Error("Failed: ID is missing")
+    if (!playerMatch?.lastID)
+    {
+        console.log("create player game failed");
+        throw new Error("Failed to create player match statistics");
     }
 
-    return newPlayer.lastID;
+    return (playerMatch?.lastID);
 }
 
 

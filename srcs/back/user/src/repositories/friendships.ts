@@ -269,3 +269,14 @@ export async function reviewFriendshipRequest (
 
 //-------- DELETE / DELETE
 
+export async function deleteAllFriendships (
+    db: Database,
+    userId: number
+): Promise<void>
+{
+    await db.run(`
+        DELETE FROM FRIENDSHIPS
+        WHERE user_id = ? OR friend_id = ?`,
+        [userId, userId]
+    );
+}

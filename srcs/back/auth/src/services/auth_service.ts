@@ -18,27 +18,27 @@ import { Database } from 'sqlite';
 
 
 export interface accAndRefTokens {
-    access_token: string,
-    refresh_token: string,
-    expires_at: Date
+    accessToken: string,
+    refreshToken: string,
+    expiresAt: Date
 }
 
 export interface authResponse {
-    access_token: string,
-    refresh_token: string,
-    user_id: number
+    accessToken: string,
+    refreshToken: string,
+    userId: number
 }
 
 //   /!\   NOUVEAU TYPE DE RETOUR POSSIBLE  /!\ 
 export interface LoginResponse {
 	// Cas classique
-	access_token?: string;
-	refresh_token?: string;
-	user_id?: number;
+	accessToken?: string;
+	refreshToken?: string;
+	userId?: number;
 
 	// Cas 2FA requis
-	require_2fa?: boolean;
-	temp_token?: string; // Token temporaire special donne pour entrer le code de verification
+	require2fa?: boolean;
+	tempToken?: string; // Token temporaire special donne pour entrer le code de verification
 }
 
 export interface TwoFAGenerateResponse {
@@ -49,21 +49,21 @@ export interface TwoFAGenerateResponse {
 
 
 async function generateTokens (
-    user_id: number,
-    credential_id: number
+    userId: number,
+    credentialId: number
 ): Promise<accAndRefTokens>
 {
-    const access_token = generateAccessToken(user_id, credential_id);
-    const refresh_token = generateRefreshToken(user_id);
-    const expires_at = getExpirationDate(30);
+    const accessToken = generateAccessToken(userId, credentialId);
+    const refreshToken = generateRefreshToken(userId);
+    const expiresAt = getExpirationDate(30);
 
-    return { access_token, refresh_token, expires_at}
+    return { accessToken, refreshToken, expiresAt}
 }
 
 
 export async function registerUser(
     db: Database,
-    user_id: number, 
+    userId: number, 
     email: string, 
     password: string
 ): Promise<authResponse> 
@@ -74,40 +74,40 @@ export async function registerUser(
         throw new ConflictError('Email already in use');
 
     // 2. Hashage, génération 2fa
-    const pwd_hashed = await hashPassword(password);
+    const pwdHashed = await hashPassword(password);
 
     // 3. Insertion DB
-    const credential_id = await credRepo.createCredentials(db, {
-        user_id,
+    const credentialId = await credRepo.createCredentials(db, {
+        userId,
         email,
-        pwd_hashed,
-        two_fa_secret: null,
-        two_fa_method: 'NONE',
-        email_otp: null,
-        email_otp_expires_at: null
+        pwdHashed,
+        twoFaSecret: null,
+        twoFaMethod: 'NONE',
+        emailOtp: null,
+        emailOtpExpiresAt: null
     });
 
     // 4. Génération token
-    const tokens = await generateTokens(user_id, credential_id);
+    const tokens = await generateTokens(userId, credentialId);
 
     // 5. Insertion dans la DB tokens
     await tokenRepo.createToken(db, {
-        user_id,
-        credential_id, 
-        refresh_token: tokens.refresh_token,
-        expires_at: tokens.expires_at
+        userId,
+        credentialId, 
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt
     });
 
     return { 
-        access_token: tokens.access_token, 
-        refresh_token: tokens.refresh_token, 
-        user_id 
+        accessToken: tokens.accessToken, 
+        refreshToken: tokens.refreshToken, 
+        userId 
     };
 }
 
 export async function registerGuest (
     db: Database,
-    user_id: number,
+    userId: number,
     email: string
 ): Promise<authResponse>
 {
@@ -117,42 +117,42 @@ export async function registerGuest (
         throw new ConflictError('Email already in use');
 
     // Faustine: on doit générer un mdp aléatoire pour le guest car il aime pas ne rien avoir 
-    const uniqueGuestPwd = `guestPwd${user_id}_${Date.now()}_${Math.random()}`;
+    const uniqueGuestPwd = `guestPwd${userId}_${Date.now()}_${Math.random()}`;
     const uniqueGuestHash = await hashPassword(uniqueGuestPwd);
 
     // 2. Insertion DB
-    const credential_id = await credRepo.createCredentials(db, {
-        user_id,
+    const credentialId = await credRepo.createCredentials(db, {
+        userId,
         email,
-        pwd_hashed: uniqueGuestHash,
-        two_fa_secret: null,
-        two_fa_method: 'NONE',
-        email_otp: null,
-        email_otp_expires_at: null
+        pwdHashed: uniqueGuestHash,
+        twoFaSecret: null,
+        twoFaMethod: 'NONE',
+        emailOtp: null,
+        emailOtpExpiresAt: null
     });
 
     // 4. Génération token
-    const tokens = await generateTokens(user_id, credential_id);
+    const tokens = await generateTokens(userId, credentialId);
 
     // 5. Insertion dans la DB tokens
     await tokenRepo.createToken(db, {
-        user_id,
-        credential_id, 
-        refresh_token: tokens.refresh_token,
-        expires_at: tokens.expires_at
+        userId,
+        credentialId, 
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt
     });
 
     return { 
-        access_token: tokens.access_token, 
-        refresh_token: tokens.refresh_token, 
-        user_id 
+        accessToken: tokens.accessToken, 
+        refreshToken: tokens.refreshToken, 
+        userId 
     };
 }
 
 
 export async function changeEmailInCredential (
     db: Database,
-    user_id: number,
+    userId: number,
     email: string
 )
 {
@@ -160,10 +160,9 @@ export async function changeEmailInCredential (
     if (existing)
         throw new ConflictError('Email already in use');
 
-    await credRepo.changeEmail(db, user_id, email);
+    await credRepo.changeEmail(db, userId, email);
 }
 
-///////////// RAJOUTER PAR FAUSTINE
 
 export async function changePasswordInCredential (
     db: Database,
@@ -177,9 +176,6 @@ export async function changePasswordInCredential (
     await credRepo.changePwd(db, credentialId, newHashedPwd);
 }
 
-///////////// RAJOUTER PAR FAUSTINE
-
-
 
 export async function loginUser(
     db: Database,
@@ -188,31 +184,31 @@ export async function loginUser(
 ): Promise<LoginResponse> 
 {
     
-    const user_id = await credRepo.findUserIdByEmail(db, email);
-    if (!user_id)
+    const userId = await credRepo.findUserIdByEmail(db, email);
+    if (!userId)
         throw new NotFoundError('No user matches the email');
 
-    const credential_id = await credRepo.findByEmail(db, email);
-    if (!credential_id)
+    const credentialId = await credRepo.findByEmail(db, email);
+    if (!credentialId)
         throw new NotFoundError('Unknown email');
 
-    const isPasswordValid = await authenticatePassword(db, credential_id, password);
+    const isPasswordValid = await authenticatePassword(db, credentialId, password);
     if (!isPasswordValid)
         throw new UnauthorizedError ('Invalid password');
 
     // QUELLE EST LA METHODE 2FA ACTIVE
 
-    // const is2FA = await credRepo.is2FAEnabled(db, user_id);
-    const method = await credRepo.get2FAMethod(db, user_id);
+    // const is2FA = await credRepo.is2FAEnabled(db, userId);
+    const method = await credRepo.get2FAMethod(db, userId);
 
     // CAS 1 : application (Google Authenticator)
     if (method === 'APP') {
         // 2FA active -> on ne donne pas les acces (refresk/access token) 
         // mais un tocken temporaire pour acceder a la page pour entrer le num
-        const tempToken = generateTempToken(user_id); // dans crypt, duree 5min
+        const tempToken = generateTempToken(userId); // dans crypt, duree 5min
         return {
-            require_2fa: true, 
-            temp_token: tempToken
+            require2fa: true, 
+            tempToken: tempToken
         };
     }
 
@@ -223,7 +219,7 @@ export async function loginUser(
         const code = crypt.generateRandomCode(6);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Valide 10 min
         // sauvegarder en DB
-        await credRepo.saveEmailCode(db, user_id, code, expiresAt);
+        await credRepo.saveEmailCode(db, userId, code, expiresAt);
     
         try {
             await send2FAEmail(email, code);
@@ -234,33 +230,33 @@ export async function loginUser(
 
         console.log(`[ACTIVATION] Code envoyé à ${email}`)
         
-        const tempToken = generateTempToken(user_id);
+        const tempToken = generateTempToken(userId);
 
         return {
-            require_2fa: true,
-            temp_token: tempToken
+            require2fa: true,
+            tempToken: tempToken
         };
 
     }
 
     // CAS 3: pas de 2FA
-    const tokens = await generateTokens(user_id, credential_id);
+    const tokens = await generateTokens(userId, credentialId);
 
     // on delete l'ancien token
-    await tokenRepo.deleteTokenByCredentialId(db, credential_id);
+    await tokenRepo.deleteTokenByCredentialId(db, credentialId);
 
     // on cree une nouvelle ligne en db
     await tokenRepo.createToken(db, {
-        user_id,
-        credential_id,
-        refresh_token: tokens.refresh_token,
-        expires_at: tokens.expires_at
+        userId,
+        credentialId,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt
     })
 
     return { 
-        access_token: tokens.access_token, 
-        refresh_token: tokens.refresh_token, 
-        user_id: user_id 
+        accessToken: tokens.accessToken, 
+        refreshToken: tokens.refreshToken, 
+        userId: userId 
     };
 }
 
@@ -272,15 +268,15 @@ export async function logoutUser(db: Database, refreshToken: string): Promise<vo
 
 export async function authenticatePassword(
     db: Database,
-    credential_id: number,
+    credentialId: number,
     password: string
 ): Promise<boolean> 
 {
-    const credential =  await credRepo.getCredentialbyID(db, credential_id);
+    const credential =  await credRepo.getCredentialbyID(db, credentialId);
     if (!credential)
         throw new NotFoundError("Could not find any matching credential");
     
-    return await crypt.verifyPassword(password, credential.pwd_hashed);
+    return await crypt.verifyPassword(password, credential.pwdHashed);
 }
 
 
@@ -299,24 +295,24 @@ export async function refreshUser(
 
     // verification expiration
     const now = new Date();
-    const expiry = new Date(tokenRecord.expires_at); // comparaison de string
+    const expiry = new Date(tokenRecord.expiresAt); // comparaison de string
 
     if (now > expiry){
         throw new UnauthorizedError('Refresh token expired');
     }
 
     // generation de nv secrets et des tokens
-    const newAccessToken = generateAccessToken(tokenRecord.user_id, tokenRecord.credential_id);
-    const newRefreshToken = generateRefreshToken(tokenRecord.user_id);
+    const newAccessToken = generateAccessToken(tokenRecord.userId, tokenRecord.credentialId);
+    const newRefreshToken = generateRefreshToken(tokenRecord.userId);
     const newExpiresAt = getExpirationDate(7);
 
     // mise a jour de la DB
-    await tokenRepo.updateToken(db, tokenRecord.credential_id, newRefreshToken, newExpiresAt);
+    await tokenRepo.updateToken(db, tokenRecord.credentialId, newRefreshToken, newExpiresAt);
 
     return {
-        access_token: newAccessToken,
-        refresh_token: newRefreshToken,
-        user_id:tokenRecord.user_id
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        userId:tokenRecord.userId
     };
 }
 
@@ -353,10 +349,10 @@ export async function  generateTwoFA(
             secret: secret
         }); // pas de communication par le reseau entre tel et serveur pour verifier le code, ils font chacun le meme calcul
 
-        const otpauth_url = totp.toString();
+        const otpauthUrl = totp.toString();
 
         // convertir l'url en image qr code (base64)
-        const qrCodeDataUrl = await QRCode.toDataURL(otpauth_url);
+        const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
         return {
             qrCodeUrl: qrCodeDataUrl,
@@ -520,15 +516,30 @@ export async function finalizeLogin2FA(
 
     // 5. sauvegarde: on enregistre le nouveau refresh token
     await tokenRepo.createToken(db, {
-        user_id: userId,
-        credential_id: credential.id,
-        refresh_token: tokens.refresh_token,
-        expires_at: tokens.expires_at
+        userId: userId,
+        credentialId: credential.id,
+        refreshToken: tokens.refreshToken,
+        expiresAt: tokens.expiresAt
     });
 
     return {
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        user_id: userId
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        userId: userId
     };
+}
+
+export async function deleteAuthData(
+    db: Database, 
+    userId: number, 
+): Promise<void>
+{
+    try {
+        await tokenRepo.deleteAllTokensForUser(db, userId);
+        await credRepo.deleteCredentialsByUserId(db, userId);
+    }
+    catch (error) {
+        console.error(`Error deleting auth data for user ${userId}`, error);
+        throw error;
+    }
 }

@@ -134,7 +134,7 @@
           const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
           if (refreshRes.ok) {
             const data = await refreshRes.json();
-            const newToken = data.access_token;
+            const newToken = data.accessToken;
             localStorage.setItem("accessToken", newToken);
             isRefreshing = false;
             onRefreshed(newToken);
@@ -3862,16 +3862,16 @@
   function render() {
     return LoginPage_default;
   }
-  async function init2faLogin(access_token, user_id, selectedStatus) {
-    if (access_token) localStorage.setItem("accessToken", access_token);
-    if (user_id) localStorage.setItem("userId", user_id.toString());
-    if (user_id && access_token) {
+  async function init2faLogin(accessToken, userId, selectedStatus) {
+    if (accessToken) localStorage.setItem("accessToken", accessToken);
+    if (userId) localStorage.setItem("userId", userId.toString());
+    if (userId && accessToken) {
       try {
-        const userRes = await fetch(`/api/users/${user_id}`, {
+        const userRes = await fetch(`/api/users/${userId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
+            "Authorization": `Bearer ${accessToken}`
           }
         });
         if (userRes.ok) {
@@ -3885,11 +3885,11 @@
         console.error("Can't get user's profile", err);
       }
       try {
-        await fetch(`/api/users/${user_id}/status`, {
+        await fetch(`/api/users/${userId}/status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${access_token}`
+            "Authorization": `Bearer ${accessToken}`
           },
           body: JSON.stringify({ status: selectedStatus })
         });
@@ -3934,10 +3934,10 @@
           body: JSON.stringify({ email, password })
         });
         const result = await response.json();
-        if (result.require_2fa) {
+        if (result.require2fa) {
           console.log("2FA require");
           localStorage.setItem("is2faEnabled", "true");
-          tempToken = result.temp_token;
+          tempToken = result.tempToken;
           if (modal2fa) {
             modal2fa.classList.remove("hidden");
             modal2fa.classList.add("flex");
@@ -3948,13 +3948,13 @@
         }
         if (result.success) {
           localStorage.setItem("is2faEnabled", "false");
-          const { access_token, user_id } = result.data;
-          await init2faLogin(access_token, user_id, cachedStatus);
-          if (access_token) localStorage.setItem("accessToken", access_token);
-          if (user_id) localStorage.setItem("userId", user_id.toString());
-          if (user_id && access_token) {
+          const { accessToken, userId } = result.data;
+          await init2faLogin(accessToken, userId, cachedStatus);
+          if (accessToken) localStorage.setItem("accessToken", accessToken);
+          if (userId) localStorage.setItem("userId", userId.toString());
+          if (userId && accessToken) {
             try {
-              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+              const userRes = await fetchWithAuth(`/api/users/${userId}`, {
                 method: "GET"
               });
               if (userRes.ok) {
@@ -3968,7 +3968,7 @@
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetchWithAuth(`/api/users/${user_id}/status`, {
+              await fetchWithAuth(`/api/users/${userId}/status`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: selectedStatus })
               });
@@ -4011,10 +4011,10 @@
         const result = await response.json();
         if (response.ok && result.success) {
           localStorage.setItem("is2faEnabled", "true");
-          const { access_token, user_id } = result;
+          const { accessToken, userId } = result;
           if (modal2fa) modal2fa.classList.add("hidden");
           await updateUserStatus("online");
-          await init2faLogin(access_token, user_id, cachedStatus);
+          await init2faLogin(accessToken, userId, cachedStatus);
         } else {
           if (error2fa) {
             error2fa.textContent = "Invalid code.";
@@ -5786,7 +5786,7 @@
         if (this.username) this.username.innerText = "Loading...";
         const [userRes, statsRes] = await Promise.all([
           fetchWithAuth(`api/users/${friendId}`),
-          fetchWithAuth(`api/game/users/${friendId}/games/stats`)
+          fetchWithAuth(`api/game/users/${friendId}/stats`)
         ]);
         if (userRes.ok) {
           const user = await userRes.json();
@@ -6727,7 +6727,7 @@
         if (response.ok) {
           const user = await response.json();
           currentUserEmail = user.email || "";
-          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
           if (statResponse.ok) {
             const jsonResponse = await statResponse.json();
             const stats = jsonResponse.data;
@@ -7315,7 +7315,7 @@
         });
         if (response.ok) {
           const data = await response.json();
-          if (data.access_token) sessionStorage.setItem("accessToken", data.access_token);
+          if (data.accessToken) sessionStorage.setItem("accessToken", data.accessToken);
           if (data.userId) sessionStorage.setItem("userId", data.userId.toString());
           sessionStorage.setItem("isGuest", "true");
           handleNavigation("/guest");
@@ -7409,17 +7409,17 @@
         if (response.ok) {
           sessionStorage.removeItem("isGuest");
           sessionStorage.removeItem("userRole");
-          const { access_token, user_id } = result;
-          console.log("User ID:", user_id);
-          console.log("Access Token:", access_token);
-          if (access_token)
-            localStorage.setItem("accessToken", access_token);
-          if (user_id)
-            localStorage.setItem("userId", user_id.toString());
-          if (user_id) {
+          const { accessToken, userId } = result;
+          console.log("User ID:", userId);
+          console.log("Access Token:", accessToken);
+          if (accessToken)
+            localStorage.setItem("accessToken", accessToken);
+          if (userId)
+            localStorage.setItem("userId", userId.toString());
+          if (userId) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`, {
-                headers: { "Authorization": `Bearer ${access_token}` }
+              const userRes = await fetch(`/api/users/${userId}`, {
+                headers: { "Authorization": `Bearer ${accessToken}` }
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
@@ -8156,8 +8156,12 @@
   var Input_default = Input;
 
   // scripts/pages/GamePage.ts
+  function getSqlDate() {
+    const now = /* @__PURE__ */ new Date();
+    return now.toISOString().slice(0, 19).replace("T", " ");
+  }
   var gameChat = null;
-  var tournamenetState = null;
+  var tournamentState = null;
   var activeGame = null;
   var spaceKeyListener = null;
   var isNavigationBlocked = false;
@@ -8272,7 +8276,7 @@
       gameChat.destroy();
       gameChat = null;
     }
-    tournamenetState = null;
+    tournamentState = null;
     if (activeGame) {
       activeGame.isRunning = false;
       activeGame.stop();
@@ -8379,7 +8383,7 @@
       initRemoteMode();
     } else if (mode == "tournament") {
       gameChat.joinChannel("tournament_room");
-      initTournamenetMode();
+      inittournamentMode();
     } else {
       gameChat.joinChannel("local_game_room");
       initLocalMode();
@@ -8668,7 +8672,7 @@
         });
       }
     }
-    function initTournamenetMode() {
+    function inittournamentMode() {
       const setupModal = document.getElementById("tournament-setup-modal");
       if (setupModal) setupModal.classList.remove("hidden");
       const nameInput = document.getElementById("tournament-name-input");
@@ -8808,18 +8812,20 @@
       const userIdNb = userIdStr ? Number(userIdStr) : null;
       const playersObjects = playersAliases.map((alias2, index) => ({
         alias: alias2,
-        user_id: index === 0 ? userIdNb : null,
+        userId: index === 0 ? userIdNb : null,
         score: 0
       }));
-      tournamenetState = {
+      const startDate = getSqlDate();
+      tournamentState = {
         name,
+        startedAt: startDate,
         allPlayers: playersObjects,
         matches: [
-          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1] },
+          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
           // 1er duo
-          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3] },
+          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
           // 2eme duo
-          { round: "final", winner: null, p1: null, p2: null }
+          { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
           // finale
         ],
         currentMatchIdx: 0,
@@ -8834,22 +8840,22 @@
     }
     function showBracketModal() {
       const bracketModal = document.getElementById("tournament-bracket-modal");
-      if (!bracketModal || !tournamenetState) return;
+      if (!bracketModal || !tournamentState) return;
       const sf1 = document.getElementById("bracket-sf1");
       const sf2 = document.getElementById("bracket-sf2");
       const fin = document.getElementById("bracket-final");
       const msg = document.getElementById("bracket-status-msg");
-      const m1 = tournamenetState.matches[0];
+      const m1 = tournamentState.matches[0];
       const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
       if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
-      const m2 = tournamenetState.matches[1];
+      const m2 = tournamentState.matches[1];
       const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
       if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
-      const mf = tournamenetState.matches[2];
+      const mf = tournamentState.matches[2];
       const p1Final = mf.p1 ? mf.p1.alias : "?";
       const p2Final = mf.p2 ? mf.p2.alias : "?";
       if (fin) fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
-      const idx = tournamenetState.currentMatchIdx;
+      const idx = tournamentState.currentMatchIdx;
       if (msg) {
         if (idx === 0) msg.innerText = "Next: Semi-Final 1";
         else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
@@ -8870,9 +8876,9 @@
       const player1Text = document.getElementById("next-p1");
       const player2Text = document.getElementById("next-p2");
       const playButton = document.getElementById("launch-match-btn");
-      if (!nextMatchModal || !tournamenetState) return;
-      const matchIdx = tournamenetState.currentMatchIdx;
-      const match = tournamenetState.matches[matchIdx];
+      if (!nextMatchModal || !tournamentState) return;
+      const matchIdx = tournamentState.currentMatchIdx;
+      const match = tournamentState.matches[matchIdx];
       const p1Alias = match.p1 ? match.p1.alias : "???";
       const p2Alias = match.p2 ? match.p2.alias : "???";
       if (matchIdx === 0) {
@@ -8907,8 +8913,8 @@
         scoreBoard.innerText = "0 - 0";
       }
       const container = document.getElementById("left");
-      if (container && tournamenetState) container.style.backgroundColor = tournamenetState.settings.bgSkin;
-      console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
+      if (container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
+      console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
       let canvasContainer = document.getElementById("game-canvas-container");
       if (canvasContainer) {
         canvasContainer.innerHTML = "";
@@ -8922,10 +8928,10 @@
         canvas.style.height = "100%";
         canvasContainer.appendChild(canvas);
         const ctx = canvas.getContext("2d");
-        if (ctx && tournamenetState) {
+        if (ctx && tournamentState) {
           const input = new Input_default();
           if (activeGame) activeGame.isRunning = false;
-          activeGame = new Game_default(canvas, ctx, input, tournamenetState.settings.ballSkin);
+          activeGame = new Game_default(canvas, ctx, input, tournamentState.settings.ballSkin);
           activeGame.onScoreChange = (score) => {
             const scoreBoard2 = document.getElementById("score-board");
             if (scoreBoard2) {
@@ -8942,42 +8948,42 @@
               activeGame.isRunning = false;
               clearInterval(checkInterval);
               const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-              endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
+              endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate);
             }
           }, 500);
         }
       }
     }
-    function endMatch(winner, scoreP1, scoreP2) {
-      if (!tournamenetState) return;
-      const idx = tournamenetState.currentMatchIdx;
-      const match = tournamenetState.matches[idx];
+    function endMatch(winner, scoreP1, scoreP2, gameStartDate2) {
+      if (!tournamentState) return;
+      const idx = tournamentState.currentMatchIdx;
+      const match = tournamentState.matches[idx];
+      match.startDate = gameStartDate2;
+      match.endDate = getSqlDate();
       match.winner = winner;
       if (match.p1) match.p1.score = scoreP1;
       if (match.p2) match.p2.score = scoreP2;
-      if (match.p1 && match.p1.user_id) {
+      if (match.p1 && match.p1.userId) {
         const isWinner = match.p1.alias === winner;
-        saveGameStats(match.p1.user_id, scoreP1, isWinner);
       }
-      if (match.p2 && match.p2.user_id) {
+      if (match.p2 && match.p2.userId) {
         const isWinner = match.p2.alias === winner;
-        saveGameStats(match.p2.user_id, scoreP2, isWinner);
       }
       if (gameChat) gameChat.addSystemMessage(`${winner} wins the match!`);
       if (idx === 0) {
         const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-        tournamenetState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
-        tournamenetState.currentMatchIdx++;
-        tournamenetState.currentStep = "semi_final_2";
+        tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+        tournamentState.currentMatchIdx++;
+        tournamentState.currentStep = "semi_final_2";
         showBracketModal();
       } else if (idx === 1) {
         const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-        tournamenetState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
-        tournamenetState.currentMatchIdx++;
-        tournamenetState.currentStep = "final";
+        tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+        tournamentState.currentMatchIdx++;
+        tournamentState.currentStep = "final";
         showBracketModal();
       } else {
-        tournamenetState.currentStep = "finished";
+        tournamentState.currentStep = "finished";
         showSummary(winner);
       }
     }
@@ -8991,7 +8997,7 @@
         const winnerDisplay = document.getElementById("winner-name");
         const tourNameDisplay = document.getElementById("tour-name-display");
         if (winnerDisplay) winnerDisplay.innerText = champion;
-        if (tourNameDisplay && tournamenetState) tourNameDisplay.innerText = tournamenetState.name;
+        if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
         if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
         const userId2 = localStorage.getItem("userId");
         if (userId2) {
@@ -9006,17 +9012,22 @@
       }
     }
     async function saveTournamentToApi(winner) {
-      if (!tournamenetState) return;
+      if (!tournamentState) return;
+      else {
+        console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", tournamentState.matches);
+        console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
+      }
       try {
-        await fetchWithAuth("api/game/tournament", {
+        await fetchWithAuth("api/game/tournaments", {
           method: "POST",
           body: JSON.stringify({
-            name: tournamenetState.name,
+            name: tournamentState.name,
             winner,
-            participants: tournamenetState.allPlayers,
+            participants: tournamentState.allPlayers,
             // Ajout des details complets pour le format JSON attendu
-            tournament_name: tournamenetState.name,
-            match_list: tournamenetState.matches
+            tournament_name: tournamentState.name,
+            match_list: tournamentState.matches,
+            startedAt: tournamentState.startedAt
           })
         });
       } catch (e) {
@@ -9179,6 +9190,7 @@
             };
             console.log("D\xE9marrage du jeu Local...");
             activeGame.start();
+            const startDate = getSqlDate();
             const localLoop = setInterval(async () => {
               if (!activeGame || !activeGame.isRunning) {
                 clearInterval(localLoop);
@@ -9187,19 +9199,61 @@
               if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
                 activeGame.isRunning = false;
                 clearInterval(localLoop);
-                const p1Wins = activeGame.score.player1 >= 11;
-                const winnerName = p1Wins ? player1Display.innerText : opponentName;
+                const p1Score = activeGame.score.player1;
+                const p2Score = activeGame.score.player2;
+                const p1Alias = player1Display.innerText;
+                const p2Alias = opponentName;
+                const p1Wins = p1Score > p2Score;
+                const winnerAlias = p1Wins ? p1Alias : p2Alias;
                 launchConfetti(4e3);
                 const userIdStr = localStorage.getItem("userId");
                 if (userIdStr) {
                   const userId2 = Number(userIdStr);
-                  await saveGameStats(userId2, activeGame.score.player1, p1Wins);
+                  console.log(`gamepage, ${userId2}`);
+                  await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId2);
                 }
-                showVictoryModal(winnerName);
+                alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
+                window.location.reload();
               }
             }, 500);
           }
         });
+      }
+      async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId2) {
+        try {
+          const endDate = getSqlDate();
+          const response = await fetchWithAuth("api/game", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              type: "local",
+              winner: winnerAlias,
+              status: "finished",
+              round: "1v1",
+              startDate,
+              endDate,
+              p1: {
+                alias: p1Alias,
+                score: p1Score,
+                userId: userId2
+              },
+              p2: {
+                alias: p2Alias,
+                score: p2Score,
+                userId: null
+              }
+            })
+          });
+          if (!response.ok) {
+            console.error("Error while saving local game");
+          } else {
+            console.log("Local game successfully saved");
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
       nameInput.addEventListener("input", () => {
         if (errorMsg) errorMsg.classList.add("hidden");

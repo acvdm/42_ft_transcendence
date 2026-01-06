@@ -480,7 +480,7 @@ export function afterRender(): void {
 
 
 				////// chargement des statistiques
-				const statResponse = await fetchWithAuth(`/api/game/users/${userId}/games/stats`);
+				const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
 				if (statResponse.ok) {
 					const jsonResponse = await statResponse.json();
 					const stats: UserStats = jsonResponse.data;

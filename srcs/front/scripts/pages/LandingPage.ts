@@ -38,7 +38,7 @@ export function initLandingPage() {
 
 				// 2. CHANGEMENT CRITIQUE : sessionStorage
 				// On stocke dans sessionStorage pour que ça disparaisse quand on ferme la fenêtre
-				if (data.access_token) sessionStorage.setItem('accessToken', data.access_token);
+				if (data.accessToken) sessionStorage.setItem('accessToken', data.accessToken);
 				if (data.userId) sessionStorage.setItem('userId', data.userId.toString());
 				
 				// 3. ON AJOUTE UN MARQUEUR "isGuest"

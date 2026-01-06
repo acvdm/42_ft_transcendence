@@ -7,18 +7,18 @@ export function render(): string {
 };
 
 
-async function init2faLogin(access_token: string, user_id: number, selectedStatus: string) {
-    if (access_token) localStorage.setItem('accessToken', access_token);
-    if (user_id) localStorage.setItem('userId', user_id.toString());
+async function init2faLogin(accessToken: string, userId: number, selectedStatus: string) {
+    if (accessToken) localStorage.setItem('accessToken', accessToken);
+    if (userId) localStorage.setItem('userId', userId.toString());
 
     // on recupere le profil
-    if (user_id && access_token) {
+    if (userId && accessToken) {
         try {
-            const userRes = await fetch(`/api/users/${user_id}`, {
+            const userRes = await fetch(`/api/users/${userId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${access_token}`
+                    'Authorization': `Bearer ${accessToken}`
                 }
             });
 
@@ -35,11 +35,11 @@ async function init2faLogin(access_token: string, user_id: number, selectedStatu
 
         // on met a jour le status 
         try {
-            await fetch(`/api/users/${user_id}/status`, {
+            await fetch(`/api/users/${userId}/status`, {
                 method: 'PATCH',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${access_token}`
+                    'Authorization': `Bearer ${accessToken}`
                 },
                 body: JSON.stringify({ status: selectedStatus })
             });
@@ -99,10 +99,10 @@ function handleLogin() {
             const result = await response.json();
 
             // cas 1: 2fa required
-            if (result.require_2fa) {
+            if (result.require2fa) {
                 console.log("2FA require");
                 localStorage.setItem('is2faEnabled', 'true');
-                tempToken = result.temp_token;
+                tempToken = result.tempToken;
                 if (modal2fa) {
                     modal2fa.classList.remove('hidden');
                     modal2fa.classList.add('flex');
@@ -115,17 +115,17 @@ function handleLogin() {
 
             if (result.success) {
                 localStorage.setItem('is2faEnabled', 'false');
-				const { access_token, user_id } = result.data;
-                await init2faLogin(access_token, user_id, cachedStatus);
+				const { accessToken, userId } = result.data;
+                await init2faLogin(accessToken, userId, cachedStatus);
 
                 // Stockage des tokens
-                if (access_token) localStorage.setItem('accessToken', access_token);
-                if (user_id) localStorage.setItem('userId', user_id.toString());
+                if (accessToken) localStorage.setItem('accessToken', accessToken);
+                if (userId) localStorage.setItem('userId', userId.toString());
 
                 // Récupération du profil (Username) (on verrifie qu'on a bien un access token)
-                if (user_id && access_token) {
+                if (userId && accessToken) {
                     try {
-                        const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+                        const userRes = await fetchWithAuth(`/api/users/${userId}`, {
                             method: 'GET'
                         });
 
@@ -141,7 +141,7 @@ function handleLogin() {
                     }
 
                     try {
-                        await fetchWithAuth(`/api/users/${user_id}/status`, {
+                        await fetchWithAuth(`/api/users/${userId}/status`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: selectedStatus })
                         });
@@ -196,13 +196,13 @@ function handleLogin() {
             if (response.ok && result.success) {
                 // reussite du 2fa -> rvraim tokens
                 localStorage.setItem('is2faEnabled', 'true');
-                const { access_token, user_id } = result; // structure de retour de verify
+                const { accessToken, userId } = result; // structure de retour de verify
                 
                 // fermeutr modale
                 if (modal2fa) modal2fa.classList.add('hidden');
             
                 await updateUserStatus('online');
-                await init2faLogin(access_token, user_id, cachedStatus);
+                await init2faLogin(accessToken, userId, cachedStatus);
             } else {
                 if (error2fa) {
                     error2fa.textContent = "Invalid code.";

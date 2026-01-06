@@ -4,24 +4,24 @@ import { verifyPassword } from '../utils/crypto.js';
 //-------- TYPE
 export interface Credential {
     id: number;
-    user_id: number;
+    userId: number;
     email: string;
-    pwd_hashed: string;
-    two_fa_secret: string | null;
-    two_fa_method: string;
-    email_otp: string | null;
-    email_otp_expires_at: string | null; 
-    created_at: string;
+    pwdHashed: string;
+    twoFaSecret: string | null;
+    twoFaMethod: string;
+    emailOtp: string | null;
+    emailOtpExpiresAt: string | null; 
+    createdAt: string;
 }
 
 export interface createCredentialData {
-    user_id: number;
+    userId: number;
     email: string;
-    pwd_hashed: string;
-    two_fa_secret: string | null;
-    two_fa_method: string;
-    email_otp: string | null;
-    email_otp_expires_at: string | null; 
+    pwdHashed: string;
+    twoFaSecret: string | null;
+    twoFaMethod: string;
+    emailOtp: string | null;
+    emailOtpExpiresAt: string | null; 
 }
 
 
@@ -34,7 +34,7 @@ export async function createCredentials(
     const result = await db.run(`
         INSERT INTO CREDENTIALS (user_id, email, pwd_hashed, two_fa_secret, two_fa_method, email_otp, email_otp_expires_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [data.user_id, data.email, data.pwd_hashed, data.two_fa_secret, 'NONE', data.email_otp, data.email_otp_expires_at ]
+        [data.userId, data.email, data.pwdHashed, data.twoFaSecret, 'NONE', data.emailOtp, data.emailOtpExpiresAt ]
     );
 
     if (!result.lastID) {
@@ -85,12 +85,23 @@ export async function findById(
 
 export async function getCredentialbyID(
     db: Database,
-    credential_id: number
+    credentialId: number
 ): Promise<Credential | undefined> 
 {
     const credential = await db.get(`
-        SELECT * FROM CREDENTIALS WHERE id = ?`,
-        [credential_id]
+        SELECT 
+            id,
+            user_id AS userId,
+            email,
+            pwd_hashed AS pwdHashed,
+            two_fa_secret AS twoFaSecret,
+            two_fa_method AS twoFaMethod,
+            email_otp AS emailOtp,
+            email_otp_expires_at AS emailOtpExpiresAt,
+            created_at AS createdAt 
+        FROM CREDENTIALS 
+        WHERE id = ?`,
+        [credentialId]
     );
     console.log(`test: ${credential?.id}`);
 
@@ -99,64 +110,95 @@ export async function getCredentialbyID(
 
 export async function getCredentialbyUserID(
     db: Database,
-    user_id: number
+    userId: number
 ): Promise<Credential | undefined> 
 {
     const credential = await db.get(`
-        SELECT * FROM CREDENTIALS WHERE user_id = ?`,
-        [user_id]
+        SELECT 
+            id,
+            user_id AS userId,
+            email,
+            pwd_hashed AS pwdHashed,
+            two_fa_secret AS twoFaSecret,
+            two_fa_method AS twoFaMethod,
+            email_otp AS emailOtp,
+            email_otp_expires_at AS emailOtpExpiresAt,
+            created_at AS createdAt 
+        FROM CREDENTIALS 
+        WHERE user_id = ?`,
+        [userId]
     );
     return credential;
 }
 
 export async function getEmailbyID(
     db: Database,
-    user_id: number
+    userId: number
 ) : Promise<string | undefined> 
 {
     const row = await db.get(`
         SELECT email FROM CREDENTIALS WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
     return row?.email;
 }
 
 export async function get2FASecret(
     db: Database, 
-    user_id: number
+    userId: number
 ): Promise<string | null> 
 {
     const row = await db.get(`
         SELECT two_fa_secret FROM CREDENTIALS WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
     return row?.two_fa_secret || null;
 }
 
 export async function get2FAMethod(
     db: Database,
-    user_id: number
+    userId: number
 ): Promise<'NONE' | 'APP' | 'EMAIL'>
 {
     const row = await db.get(`
         SELECT two_fa_method FROM CREDENTIALS WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
     return row?.two_fa_method || 'NONE';
 }
 
 export async function getEmailCodeData(
     db: Database,
-    user_id: number
+    userId: number
 ): Promise<{ code: string | null, expiresAt: string | null }>
 {
     const row = await db.get(`
         SELECT email_otp, email_otp_expires_at FROM CREDENTIALS WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
     return {
         code: row?.email_otp || null,
         expiresAt: row?.email_otp_expires_at || null
+    }
+}
+
+export async function getAuthDataForExport(
+    db: Database,
+    userId: number
+) : Promise<{ email: string, createdAt: string, twoFaMethod: string, id: number } | undefined >
+{
+    const row = await db.get(`
+        SELECT created_at, two_fa_method, email FROM CREDENTIALS WHERE user_id = ?`,
+        [userId]
+    );
+    if (!row)
+        return undefined;
+
+    return {
+        email: row.email,
+        createdAt: row.created_at,
+        twoFaMethod: row.two_fa_method,
+        id: userId
     }
 }
 
@@ -178,7 +220,7 @@ export async function getEmailCodeData(
 // sauvegarde le secret mais laisse le 2FA desactive
 export async function update2FASecret(
     db: Database,
-    user_id: number,
+    userId: number,
     secret: string
 ) : Promise<void> 
 {
@@ -186,19 +228,19 @@ export async function update2FASecret(
         UPDATE CREDENTIALS
         SET two_fa_secret = ?, two_fa_method = ?
         WHERE user_id = ?`,
-        [secret, 'NONE', user_id]
+        [secret, 'NONE', userId]
     );/* MODIFIER two_fa_method */
 }
 
 export async function changeEmail (
     db: Database,
-    user_id: number,
+    userId: number,
     email: string
 )
 { // MODIFICATION 'FROM' enleve Sqlite naime pas FROM dans un UPDATE
     await db.run(`
         UPDATE CREDENTIALS SET email = ? WHERE user_id = ?`,
-        [email, user_id]
+        [email, userId]
     );
 }
 
@@ -219,26 +261,26 @@ export async function changePwd (
 
 export async function set2FAMethod(
     db: Database, 
-    user_id: number,
+    userId: number,
     method: 'APP' | 'EMAIL' | 'NONE'
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET two_fa_method = ? WHERE user_id = ?`,
-        [method, user_id]
+        [method, userId]
     );
 }
 
 export async function saveEmailCode(
     db: Database, 
-    user_id: number,
+    userId: number,
     code: string,
     expiration: Date
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET email_otp = ?, email_otp_expires_at = ? WHERE user_id = ?`,
-        [code, expiration.toISOString(), user_id]
+        [code, expiration.toISOString(), userId]
     );
 }
 
@@ -261,38 +303,33 @@ export async function saveEmailCode(
 
 export async function clearEmailCode(
     db: Database, 
-    user_id: number
+    userId: number
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET email_otp = NULL, email_otp_expires_at = NULL WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
 }
 
 export async function disable2FA(
     db: Database, 
-    user_id: number
+    userId: number
 ): Promise<void> 
 {
     await db.run(
         `UPDATE CREDENTIALS SET two_fa_method = 'NONE', two_fa_secret = NULL, email_otp = NULL WHERE user_id = ?`,
-        [user_id]
+        [userId]
     );
 }
 
-
-// active le 2FA en DB (passe a true)
-/* MODIFIER POUR two_fa_method */
-// export async function disable2FA(
-//     db: Database,
-//     user_id: number
-// ): Promise<void>
-// {
-//     await db.run(
-//         `UPDATE CREDENTIALS
-//         SET is_2fa_enabled = 0, two_fa_secret = NULL
-//         WHERE user_id = ?`,
-//         [user_id]
-//     );
-// }
+export async function deleteCredentialsByUserId(
+    db: Database,
+    userId: number
+): Promise<void>
+{
+    await db.run(
+        `DELETE FROM CREDENTIALS WHERE user_id = ?`,
+        [userId]
+    );
+}

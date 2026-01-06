@@ -3,17 +3,17 @@ import { Database } from 'sqlite';
 //-------- TYPE
 export interface Token {
     id: number,
-    user_id: number;
-    credential_id: number,
-    refresh_token: string,
-    expires_at: Date
+    userId: number;
+    credentialId: number,
+    refreshToken: string,
+    expiresAt: Date
 }
 
 export interface CreateTokenData {
-    user_id: number;
-    credential_id: number,
-    refresh_token: string,
-    expires_at: Date,
+    userId: number;
+    credentialId: number,
+    refreshToken: string,
+    expiresAt: Date,
 }
 
 //-------- POST / CREATE
@@ -25,7 +25,7 @@ export async function createToken(
     const result = await db.run(`
         INSERT INTO TOKENS (user_id, credential_id, refresh_token, expires_at)
         VALUES (?, ?, ?, ?)`,
-        [data.user_id, data.credential_id, data.refresh_token, data.expires_at]
+        [data.userId, data.credentialId, data.refreshToken, data.expiresAt]
     );
 
     if (!result.lastID) {
@@ -38,14 +38,14 @@ export async function createToken(
 //-------- PUT / UPDATE
 export async function updateToken(
     db: Database,
-    credential_id: number,
-    refresh_token: string,
-    expires_at: Date
+    credentialId: number,
+    refreshToken: string,
+    expiresAt: Date
 )
 {
     await db.run(`
         UPDATE TOKENS SET refresh_token = ?, expires_at = ? WHERE credential_id = ?`,
-        [refresh_token, expires_at, credential_id]
+        [refreshToken, expiresAt, credentialId]
     );
 }
 
@@ -75,8 +75,8 @@ export async function deleteAllTokensForUser(db: Database, userId: number): Prom
     );
 }
 
-export async function deleteTokenByCredentialId(db: Database, credential_id: number) : Promise<void> {
+export async function deleteTokenByCredentialId(db: Database, credentialId: number) : Promise<void> {
     await db.run(`
-        DELETE FROM tokens WHERE credential_id = ?`, [credential_id]
+        DELETE FROM tokens WHERE credential_id = ?`, [credentialId]
     );
 }

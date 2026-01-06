@@ -4,10 +4,10 @@ import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
-import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
-import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
+import { addPlayerMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
+import { createStatLineforOneUser, findStatsByUserId, getUserMatchHistory, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
-import { localTournament } from './repositories/tournament_interfaces.js';
+import { localMatchResult, localTournament } from './repositories/tournament_interfaces.js';
 import { NotFoundError } from './utils/error.js';
 
 const fastify = Fastify({ logger: true });
@@ -29,29 +29,63 @@ async function main()
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
 {
-	let gameId = null;
-	let playerMatchOneId = null;
-	let playerMatchTwoId = null;
 
-	const body = request.body as { 
-		playerOneId: number;
-		playerTwoId: number; 
-		type: string; 
-		name: string; 
-		tournamentId: number; 
-	};	
+	console.log("route games")
+	let gameId = null;
+	let p1Match = null;
+	let p2Match = null;
+
+	const body = request.body as localMatchResult;
 
 	try
 	{
-		gameId = await createMatch(db, body.type, body.tournamentId);
+		console.log(`Body: ${body.type}, ${body.p1.alias}, ${body.p1.userId}, ${body.p2.userId}`);
+
+		const gameId = await createMatch(
+			db, body.type,
+			body.p1.alias, body.p2.alias,
+			body.p1.score, body.p2.score,
+			body.winner, "finished",
+			"1v1", null, body.startDate
+		);
+
 		if (!gameId)
 			throw new Error(`Error could not create game`);
 
-		playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
-		playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
-		if (!playerMatchOneId || !playerMatchTwoId)
-			throw new Error(`Error could not associate players with the game ${gameId}`);
+		// playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
+		// playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
+		// if (!playerMatchOneId || !playerMatchTwoId)
+		// 	throw new Error(`Error could not associate players with the game ${gameId}`);
 
+		if (body.p1.userId)
+		{
+			const p1IsWinner = body.winner == body.p1.alias
+			p1Match = await addPlayerMatch(
+				db, "local", gameId,
+				body.p1.userId, body.p2.alias,
+				body.p1.score, p1IsWinner ? 1 : 0
+			);
+
+			await updateUserStats(
+				db, body.p1.userId,
+				body.p1.score, p1IsWinner ? 1 : 0
+			);
+		}
+
+		if (body.p2.userId)
+		{
+			const p2IsWinner = body.winner == body.p2.alias
+			p2Match = await addPlayerMatch(
+				db, "local", gameId,
+				body.p2.userId, body.p1.alias,
+				body.p2.score, p2IsWinner ? 1 : 0
+			);
+
+			await updateUserStats(
+				db, body.p2.userId,
+				body.p2.score, p2IsWinner ? 1 : 0
+			);
+		}
 		return reply.status(201).send({
 			success: true,
 			data: gameId,
@@ -61,11 +95,11 @@ fastify.post('/games', async (request, reply) =>
 	}
 	catch (err:any)
 	{
-		if (gameId && playerMatchOneId)
-			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchOneId);
+		if (gameId && p1Match)
+			await rollbackDeletePlayerFromMatch(db, gameId, p1Match);
 
-		if (gameId && playerMatchTwoId)
-			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchTwoId);
+		if (gameId && p2Match)
+			await rollbackDeletePlayerFromMatch(db, gameId, p2Match);
 
 		if (gameId)
 			await rollbackDeleteGame(db, gameId);
@@ -88,12 +122,12 @@ Sinon tout se passe dans la memoire du navigateur
 */
 
 // changer pour que ce soi restfull /game/tournament
-fastify.post('/tournament', async (request, reply) => 
+fastify.post('/games/tournaments', async (request, reply) => 
 {
 	try
 	{
 		const body = request.body as localTournament; // === interface dans tournament_interfaces
-		if (!body.match_list || body.match_list.length !== 3)
+		if (!body.matchList || body.matchList.length !== 3)
 		{
 			return reply.status(400).send({
 				success: false,
@@ -131,7 +165,7 @@ fastify.post('/tournament', async (request, reply) =>
 //---------------------------------------
 
 /* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
-fastify.post('/users/:id/games/stats', async (request, reply) =>
+fastify.post('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -163,7 +197,7 @@ fastify.post('/users/:id/games/stats', async (request, reply) =>
 
 
 /* -- GET STATS FOR ONE USER -- */
-fastify.get('/users/:id/games/stats', async (request, reply) =>
+fastify.get('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -193,20 +227,53 @@ fastify.get('/users/:id/games/stats', async (request, reply) =>
 	}
 })
 
+/* -- GET HISTORY FOR ONE USER -- */
+fastify.get('/games/users/:id/history', async (request, reply) => 
+{
+	const query = request.query as any;
+	const userId = Number(query.userId);
+
+	if (!userId) 
+	{
+		return reply.status(400).send({error: "userId is required"});
+	}
+
+	try 
+	{
+		const result = await getUserMatchHistory(db, userId, {
+				page: Number(query.page),
+				limit: Number(query.limit),
+				onlyWins: query.filter == 'wins',
+				gameType: query.type
+			});
+		return reply.send(result);
+	}
+	catch (err)
+	{
+		return reply.status(500).send({ error: "Failed to fetch history" });
+	}
+
+});
+
 
 /* -- UPDATE STATS FOR ONE USER -- */
-fastify.patch('/users/:id/games/stats', async (request, reply) => 
+fastify.patch('/games/users/:id/stats', async (request, reply) => 
 {
 	try
 	{
 		const { id } = request.params as { id: string }
 		const userId = Number(id);
 
+		console.log("userId = ", userId);
 		const body = request.body as {
+			gameType: string,
+			matchId: number,
+			opponent: string,
 			userScore: number,
 			isWinner: number
 		}
 		
+		// const gameType = "Local";
 		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
 		if (!userStats)
 			throw new Error(`Error: could not update stats for user ${userId}`);
@@ -227,6 +294,7 @@ fastify.patch('/users/:id/games/stats', async (request, reply) =>
 		})
 	}
 })
+
 
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède

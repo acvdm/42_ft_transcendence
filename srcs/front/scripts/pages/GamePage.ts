@@ -16,7 +16,7 @@ import Input from "../game/Input";
 // Interface pour la gestion interne du tournois
 interface TournamentPlayer 
 {
-    user_id: number | null; // null si c'est un invite qui joue
+    userId: number | null; // null si c'est un invite qui joue
     alias: string;
     score: number; // score final d'un match
 }
@@ -28,6 +28,8 @@ interface TournamentMatch
     winner: string | null;
     p1: TournamentPlayer | null;
     p2: TournamentPlayer | null;
+    startDate: string;
+    endDate?: string | undefined;
 }
 
 // Etat global du tournoi en cours
@@ -42,12 +44,29 @@ interface TournamentData
         ballSkin: string;
         bgSkin: string;
     };
+    startedAt: string
+}
+
+
+
+// =========================================================
+// ================= FONCTIONS UTILITAIRES =================
+// =========================================================
+
+function getSqlDate(): string {
+    // 1. On récupère l'heure actuelle
+    const now = new Date();
+    
+    // 2. Astuce rapide : on prend l'ISO, on coupe les ms, et on remplace T par espace
+    // .slice(0, 19) garde "YYYY-MM-DDTHH:mm:ss"
+    return now.toISOString().slice(0, 19).replace('T', ' ');
+
 }
 
 // =========================================================
 
 let gameChat: Chat | null = null;
-let tournamenetState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
+let tournamentState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
 let activeGame: Game | null = null; // Instance du jeu
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null; // on stocke l'ecoute de l'envoi a l'espace
 
@@ -198,7 +217,7 @@ export function cleanup() {
         gameChat.destroy();
         gameChat = null;
     }
-    tournamenetState = null;
+    tournamentState = null;
 
     if (activeGame) {
         activeGame.isRunning = false;
@@ -344,7 +363,7 @@ export function initGamePage(mode: string): void {
     } else if (mode == 'tournament') {
         gameChat.joinChannel("tournament_room"); // same ici
         // initialisation de la logique de jeu en tournoi
-        initTournamenetMode();
+        inittournamentMode();
     } else {
         gameChat.joinChannel("local_game_room");
         initLocalMode();
@@ -745,7 +764,7 @@ export function initGamePage(mode: string): void {
     // -------------- LOGIQUE DU JEU EN TOURNOI ----------------
     // ---------------------------------------------------------
 
-    function initTournamenetMode() {
+    function inittournamentMode() {
         // Affiche la MODALE de setup (et non plus la div intégrée)
         const setupModal = document.getElementById('tournament-setup-modal');
         if (setupModal) setupModal.classList.remove('hidden');
@@ -915,18 +934,20 @@ export function initGamePage(mode: string): void {
         // creation des joueurs avec des ids
         const playersObjects: TournamentPlayer[] = playersAliases.map((alias, index) => ({
             alias: alias,
-            user_id: (index === 0) ? userIdNb : null,
+            userId: (index === 0) ? userIdNb : null,
             score: 0
         }));
 
+        const startDate = getSqlDate();
         // maj de l'etat du tournoi, le nom et les joueurs 
-        tournamenetState = {
+        tournamentState = {
             name: name,
+            startedAt: startDate,
             allPlayers: playersObjects,
             matches: [
-                { round: 'semi_final_1', winner: null, p1: playersObjects[0], p2: playersObjects[1] }, // 1er duo
-                { round: 'semi_final_2', winner: null, p1: playersObjects[2], p2: playersObjects[3] }, // 2eme duo
-                { round: 'final',        winner: null, p1: null,              p2: null }               // finale
+                { round: 'semi_final_1', winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate: startDate, endDate: startDate }, // 1er duo
+                { round: 'semi_final_2', winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate: startDate, endDate: startDate }, // 2eme duo
+                { round: 'final',        winner: null, p1: null,              p2: null, startDate: startDate, endDate: startDate }               // finale
             ],
             currentMatchIdx: 0, // on defini l'id du match pour le stocker dans la db
             currentStep: 'semi_final_1',
@@ -945,7 +966,7 @@ export function initGamePage(mode: string): void {
     // Affiche la modale de l'arbre du tournoi
     function showBracketModal() {
         const bracketModal = document.getElementById('tournament-bracket-modal');
-        if (!bracketModal || !tournamenetState) return;
+        if (!bracketModal || !tournamentState) return;
 
         // Maj des textes de l'arbre
         const sf1 = document.getElementById('bracket-sf1');
@@ -954,23 +975,23 @@ export function initGamePage(mode: string): void {
         const msg = document.getElementById('bracket-status-msg');
 
         // SF1
-        const m1 = tournamenetState.matches[0];
+        const m1 = tournamentState.matches[0];
         const w1 = m1.winner ? `✅ ${m1.winner}` : null;
         if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
 
         // SF2
-        const m2 = tournamenetState.matches[1];
+        const m2 = tournamentState.matches[1];
         const w2 = m2.winner ? `✅ ${m2.winner}` : null;
         if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
 
         // Finale
-        const mf = tournamenetState.matches[2];
+        const mf = tournamentState.matches[2];
         const p1Final = mf.p1 ? mf.p1.alias : '?';
         const p2Final = mf.p2 ? mf.p2.alias : '?';
         if (fin) fin.innerText = mf.winner ? `👑 ${mf.winner}` : `${p1Final} vs ${p2Final}`;
 
         // Message contextuel
-        const idx = tournamenetState.currentMatchIdx;
+        const idx = tournamentState.currentMatchIdx;
         if (msg) {
             if (idx === 0) msg.innerText = "Next: Semi-Final 1";
             else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
@@ -999,10 +1020,10 @@ export function initGamePage(mode: string): void {
         const player2Text = document.getElementById('next-p2');
         const playButton = document.getElementById('launch-match-btn');
 
-        if (!nextMatchModal || !tournamenetState) return;
+        if (!nextMatchModal || !tournamentState) return;
 
-        const matchIdx = tournamenetState.currentMatchIdx;
-        const match = tournamenetState.matches[matchIdx];
+        const matchIdx = tournamentState.currentMatchIdx;
+        const match = tournamentState.matches[matchIdx];
         
         // Alias safe pour affichage
         const p1Alias = match.p1 ? match.p1.alias : "???";
@@ -1055,9 +1076,9 @@ export function initGamePage(mode: string): void {
             }
         // Appliquer la couleur de fond choisie au conteneur gauche
         const container = document.getElementById('left');
-        if(container && tournamenetState) container.style.backgroundColor = tournamenetState.settings.bgSkin;
+        if(container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
 
-        console.log(`Lancement dy jeu: ${p1.alias} vs ${p2.alias}`);
+        console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
         
         // on recupere le conteneur dans lequel on mets le jeu 
         let canvasContainer = document.getElementById('game-canvas-container');
@@ -1077,12 +1098,12 @@ export function initGamePage(mode: string): void {
             canvasContainer.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
-            if (ctx && tournamenetState) {
+            if (ctx && tournamentState) {
                 const input = new Input();
                 if (activeGame) activeGame.isRunning = false;
                 
                 // Instanciation avec la balle choisie pour le tournoi
-                activeGame = new Game(canvas, ctx, input, tournamenetState.settings.ballSkin);
+                activeGame = new Game(canvas, ctx, input, tournamentState.settings.ballSkin);
                 
                 // Connexion du callback de score pour l'affichage dans le header
                 activeGame.onScoreChange = (score) => {
@@ -1104,32 +1125,35 @@ export function initGamePage(mode: string): void {
                         activeGame.isRunning = false; // STOP LE JEU
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-                        endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2);
+                        endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate);
                     }
                 }, 500); // on check toutes les demi secondes
             }
         }
     }
 
-    function endMatch(winner: string, scoreP1: number, scoreP2: number) {
-        if (!tournamenetState) return;
+    function endMatch(winner: string, scoreP1: number, scoreP2: number, gameStartDate: string) {
+        if (!tournamentState) return;
 
-        const idx = tournamenetState.currentMatchIdx;
-        const match = tournamenetState.matches[idx];
-        
+        const idx = tournamentState.currentMatchIdx;
+        const match = tournamentState.matches[idx];
+
+        match.startDate = gameStartDate;
+        match.endDate = getSqlDate();
+
         match.winner = winner;
         if (match.p1) match.p1.score = scoreP1;
         if (match.p2) match.p2.score = scoreP2;
 
-        if (match.p1 && match.p1.user_id) {
+        if (match.p1 && match.p1.userId) {
             const isWinner = (match.p1.alias === winner);
-            saveGameStats(match.p1.user_id, scoreP1, isWinner);
+            // saveGameStats(match.p1.userId, scoreP1, isWinner);
         }
 
         // si jamais le joueur 2 a un id (mulitcompte par eemple)
-        if (match.p2 && match.p2.user_id) {
+        if (match.p2 && match.p2.userId) {
             const isWinner = (match.p2.alias === winner);
-            saveGameStats(match.p2.user_id, scoreP2, isWinner);
+            // saveGameStats(match.p2.userId, scoreP2, isWinner);
         }
 
 
@@ -1140,22 +1164,22 @@ export function initGamePage(mode: string): void {
             // vainqueur demi finale 1
             // on recupere le bon objet joueur pour la finale
             const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
-            tournamenetState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+            tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
             
-            tournamenetState.currentMatchIdx++;
-            tournamenetState.currentStep = 'semi_final_2';
+            tournamentState.currentMatchIdx++;
+            tournamentState.currentStep = 'semi_final_2';
             showBracketModal(); // On réaffiche l'arbre
         } else if (idx === 1) {
             // vainqueur demi finale2 
             const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
-            tournamenetState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+            tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
 
-            tournamenetState.currentMatchIdx++;
-            tournamenetState.currentStep = 'final';
+            tournamentState.currentMatchIdx++;
+            tournamentState.currentStep = 'final';
             showBracketModal(); // On réaffiche l'arbre
         } else {
             // fin
-            tournamenetState.currentStep = 'finished';
+            tournamentState.currentStep = 'finished';
             showSummary(winner);
         }
     }
@@ -1175,7 +1199,7 @@ export function initGamePage(mode: string): void {
             const tourNameDisplay = document.getElementById('tour-name-display');
             
             if (winnerDisplay) winnerDisplay.innerText = champion;
-            if (tourNameDisplay && tournamenetState) tourNameDisplay.innerText = tournamenetState.name;
+            if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
 
             if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
             const userId = localStorage.getItem('userId');
@@ -1194,17 +1218,24 @@ export function initGamePage(mode: string): void {
     }
 
     async function saveTournamentToApi(winner: string) {
-        if (!tournamenetState) return;
+        
+        if (!tournamentState) return;
+        else
+        {
+            console.log("DEBUG FRONTEND - Matches à envoyer :", tournamentState.matches);
+            console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
+        }
         try {
-            await fetchWithAuth('api/game/tournament', {
+            await fetchWithAuth('api/game/tournaments', {
                 method: 'POST',
                 body: JSON.stringify({
-                    name: tournamenetState.name,
+                    name: tournamentState.name,
                     winner: winner,
-                    participants: tournamenetState.allPlayers,
+                    participants: tournamentState.allPlayers,
                     // Ajout des details complets pour le format JSON attendu
-                    tournament_name: tournamenetState.name,
-                    match_list: tournamenetState.matches
+                    tournament_name: tournamentState.name,
+                    match_list: tournamentState.matches,
+                    startedAt: tournamentState.startedAt
                 })
             });
         } catch (e) { console.error(e); }
@@ -1406,45 +1437,107 @@ export function initGamePage(mode: string): void {
                             scoreBoard.innerText = `${score.player1} - ${score.player2}`;
                         }
                     }
-                    
+
                     console.log("Démarrage du jeu Local...");
                     activeGame.start();
+                    const startDate = getSqlDate();
 
                     // checkeur du score
                     const localLoop = setInterval(async () => {
                         if (!activeGame || !activeGame.isRunning) {
                             clearInterval(localLoop);
                             return;
-                        }
+                        }                    
+                    
+                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                        activeGame.isRunning = false; // STOP
+                        clearInterval(localLoop); 
                         
-                        if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                            activeGame.isRunning = false; // STOP
-                            clearInterval(localLoop); 
-                            
-                            const p1Wins = activeGame.score.player1 >= 11;
-                            const winnerName = p1Wins ? player1Display.innerText : opponentName;
-                            
-                            launchConfetti(4000);
-                            const userIdStr = localStorage.getItem('userId');
-                            if (userIdStr) {
-                                const userId = Number(userIdStr);
-                                // on sauvegarde les statistiques
-                                await saveGameStats(userId, activeGame.score.player1, p1Wins);
-                            }
-                            showVictoryModal(winnerName);
-                        }
-                    }, 500);
-                }
-            });
-        }
+                        // 1. Récupération des données
+                        const p1Score = activeGame.score.player1;
+                        const p2Score = activeGame.score.player2;
+                        const p1Alias = player1Display.innerText;
+                        const p2Alias = opponentName;
+                        const p1Wins = p1Score > p2Score;
+                        const winnerAlias = p1Wins ? p1Alias : p2Alias;
 
-        // resrt erreur ecritur e
-        nameInput.addEventListener('input', () => {
-            if (errorMsg) errorMsg.classList.add('hidden');
-            nameInput.classList.remove('border-red-500');
+                        launchConfetti(4000);
+                        
+                        // 2. Sauvegarde si l'utilistauer est connecté
+                        const userIdStr = localStorage.getItem('userId');
+                        if (userIdStr) {
+                            const userId = Number(userIdStr);
+                            // on sauvegarde les statistiques
+                            console.log(`gamepage, ${userId}`);
+                            await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                        }
+
+                        // 3. Feedback et Reload
+                        alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
+                        window.location.reload();
+                    }
+                }, 500);
+            }
         });
     }
 
+    async function saveLocalGameToApi(
+        p1Alias: string,
+        p2Alias: string,
+        p1Score: number,
+        p2Score: number,
+        winnerAlias: string,
+        startDate: string,
+        userId: number
+    ) {
+    
+        try 
+        {
+            const endDate = getSqlDate()
+            const response = await fetchWithAuth('api/game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: "local",
+                    winner: winnerAlias,
+                    status: "finished",
+                    round: "1v1",
+                    startDate: startDate,
+                    endDate: endDate,
+                    p1: {
+                        alias: p1Alias,
+                        score: p1Score,
+                        userId: userId
+                    },
+                    p2: {
+                        alias: p2Alias,
+                        score: p2Score,
+                        userId: null                        
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                console.error("Error while saving local game");
+            }
+            else {
+                console.log("Local game successfully saved");
+            }
+        } 
+        catch (e) 
+        { 
+            console.error(e); 
+        }
+    }
+
+    // resrt erreur ecritur e
+    nameInput.addEventListener('input', () => {
+        if (errorMsg) errorMsg.classList.add('hidden');
+        nameInput.classList.remove('border-red-500');
+    });
+}
 
 //////////////////////////////////////////////
 //// LANCEMENT DE CONFETTIS A LA VICTOIRE ////

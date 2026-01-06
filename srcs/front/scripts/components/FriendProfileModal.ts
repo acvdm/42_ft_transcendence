@@ -67,7 +67,7 @@ export class FriendProfileModal {
             
             const [userRes, statsRes] = await Promise.all([
                 fetchWithAuth(`api/users/${friendId}`),
-                fetchWithAuth(`api/game/users/${friendId}/games/stats`)
+                fetchWithAuth(`api/game/users/${friendId}/stats`)
             ]);
 
             if (userRes.ok) {
