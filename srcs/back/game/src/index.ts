@@ -459,7 +459,7 @@ fastify.post('/games/tournaments', async (request, reply) =>
 //---------------------------------------
 
 /* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
-fastify.post('/users/:id/stats', async (request, reply) =>
+fastify.post('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
