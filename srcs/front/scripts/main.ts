@@ -5,7 +5,7 @@ import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./
 import { NotFoundPage } from "./pages/NotFound";
 import { render as LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
-import { render as GuestPage } from "./pages/GuestPage";
+import { render as GuestPage, afterRender as GuestAfterRender } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
 import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./pages/GamePage";
 
@@ -46,7 +46,8 @@ const routes: { [key: string]: Page } = {
 		afterRender: loginEvents
 	},
 	'/guest': {
-		render: GuestPage
+		render: GuestPage,
+		afterRender: GuestAfterRender
 	},
 	'/game': {
         render: GamePage, // La fonction HTML
@@ -147,8 +148,7 @@ const handleLocationChange = () => {
 		} else if (accessToken) {
 			navbar.style.display = 'flex';
 		} else {
-			// Optionnel : cacher sur la landing page si vous le souhaitez
-			// navbar.style.display = 'none'; 
+			navbar.style.display = 'none'; 
 		}
 	}
 

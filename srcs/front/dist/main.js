@@ -5952,7 +5952,7 @@
     <div class="min-h-screen flex items-center justify-center">
         <div class="window" style="width:900px; margin-top:-100px;">
             <div class="title-bar">
-                <div class="title-bar-text">Profil</div>
+                <div class="title-bar-text">Profile</div>
                 <div class="title-bar-controls">
                     <button aria-label="Minimize"></button>
                     <button aria-label="Maximize"></button>
@@ -5963,115 +5963,129 @@
             <div class="window-body bg-white">
                 <div class="flex flex-col items-center py-12">
                     
-                    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
+                    <div class="flex flex-col gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
             
-                        <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
-                            <h1 class="text-lg font-normal mb-4 text-gray-700">My profile</h1>
+                        <div class="flex flex-row gap-6 w-full">
+                            
+                            <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
+                                <h1 class="text-lg font-normal mb-4 text-gray-700">My profile</h1>
 
-                            <div class="relative w-[170px] h-[170px] mb-3">
-                                <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                                src="/assets/basic/status_frame_offline_large.png">
-                                
-                                <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"
-                                src="/assets/basic/default.png">
-                            </div>
-
-                            <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">
-                                
-                                <button id="edit-picture-button" 
-                                        title="Change Avatar"
-                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1
-                                            bg-gradient-to-b from-white to-gray-200
-                                            rounded-[3px] shadow-sm
-                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
-                                            active:translate-y-[1px] active:shadow-inner transition-all group">
-                                    <img src="/assets/basic/camera.png" 
-                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" 
-                                        alt="Avatar">
-                                </button>
-
-                                <button id="theme-button" 
-                                        title="Customize Theme"
-                                        class="flex flex-col items-center justify-center w-20 h-16 gap-1
-                                            bg-gradient-to-b from-white to-gray-200 
-                                            rounded-[3px] shadow-sm
-                                            hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
-                                            active:translate-y-[1px] active:shadow-inner transition-all group">
-                                    <img src="/assets/basic/headers.png" 
-                                        class="w-6 h-6 opacity-80 group-hover:opacity-100" 
-                                        alt="Theme">
-                                </button>
-
-                            </div>
-
-                            <div class="w-full px-4 mb-4 mt-4">
-                                <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
-                                    <label class="text-xs text-gray-500 pl-1">Status:</label>
-                                    <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
-                                        <option>Available</option>
-                                        <option selected>Busy</option>
-                                        <option>Away</option>
-                                        <option>Appear offline</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="text-sm text-center w-full leading-6 mt-2">
-                                <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
-                                <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
-                            </div>
-                        </div>
-            
-                        <div class="flex flex-col justify-between flex-1">
-                            <div class="flex flex-col gap-4">
-
-                                <label class="text-sm">Username:</label>
-                                <div class="flex flex-row gap-2" data-field="alias">
-                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
-                                    <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
+                                <div class="relative w-[170px] h-[170px] mb-3">
+                                    <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                                    src="/assets/basic/status_frame_offline_large.png">
                                     
-                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                    <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"
+                                    src="/assets/basic/default.png">
                                 </div>
 
-                                <label class="text-sm">Share a quick message:</label>
-                                <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
-                                    <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
-                                    <input
-                                        type="text"
-                                        value=""
-                                        placeholder="Share a quick message"
-                                        class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"
-                                        style="width:350px; overflow: hidden;" disabled/>
-                                    <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-                                    <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                    <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">
+                                    
+                                    <button id="edit-picture-button" 
+                                            title="Change Avatar"
+                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                                bg-gradient-to-b from-white to-gray-200
+                                                rounded-[3px] shadow-sm
+                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                                active:translate-y-[1px] active:shadow-inner transition-all group">
+                                        <img src="/assets/basic/camera.png" 
+                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                            alt="Avatar">
+                                    </button>
+
+                                    <button id="theme-button" 
+                                            title="Customize Theme"
+                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                                bg-gradient-to-b from-white to-gray-200 
+                                                rounded-[3px] shadow-sm
+                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                                active:translate-y-[1px] active:shadow-inner transition-all group">
+                                        <img src="/assets/basic/headers.png" 
+                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                            alt="Theme">
+                                    </button>
+
+                                </div>
+
+                                <div class="w-full px-4 mb-4 mt-4">
+                                    <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
+                                        <label class="text-xs text-gray-500 pl-1">Status:</label>
+                                        <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
+                                            <option>Available</option>
+                                            <option selected>Busy</option>
+                                            <option>Away</option>
+                                            <option>Appear offline</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="text-sm text-center w-full leading-6 mt-2">
+                                    <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
+                                    <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
                                 </div>
                             </div>
-            
-                            <div class="mt-8 border-t border-gray-300 pt-4">
+                
+                            <div class="flex flex-col justify-between flex-1">
                                 <div class="flex flex-col gap-4">
-                                    <label class="text-sm">Email:</label>
-                                    <div class="flex flex-row gap-2" data-field="email">
-                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
-                                        <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+
+                                    <label class="text-sm">Username:</label>
+                                    <div class="flex flex-row gap-2" data-field="alias">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
+                                        <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
                                         
                                         <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
                                         <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                     </div>
 
-                                    <label class="text-sm">Password:</label>
-                                    <div class="flex flex-row gap-2" data-field="password">
-                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
-                                        <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
-                                        
+                                    <label class="text-sm">Share a quick message:</label>
+                                    <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
+                                        <input
+                                            type="text"
+                                            value=""
+                                            placeholder="Share a quick message"
+                                            class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"
+                                            style="width:350px; overflow: hidden;" disabled/>
+                                        <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
                                         <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
                                         <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                     </div>
-                                    <button id="2fa-modal-button" class="2FA-button bg-green-600 border border-gray-400 rounded-sm px-3 py-1 text-sm">Enable 2FA authentication</button>
+                                </div>
+                
+                                <div class="mt-8 border-t border-gray-300 pt-4">
+                                    <div class="flex flex-col gap-4">
+                                        <label class="text-sm">Email:</label>
+                                        <div class="flex flex-row gap-2" data-field="email">
+                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                            <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                            
+                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                        </div>
+
+                                        <label class="text-sm">Password:</label>
+                                        <div class="flex flex-row gap-2" data-field="password">
+                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                            <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                            
+                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div> 
+                        <div class="flex flex-row justify-center items-center gap-4 w-full border-t border-gray-200 pt-4" style="padding-top: 25px;">
+                            <button id="2fa-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Enable 2FA authentication</button>
+                            <button id="download-data-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Download personal data</button>
+                            <button id="delete-account-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold" style="color: #DC2626;">Delete my account</button>
                         </div>
+
                     </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
                         <h1 class="text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
 
@@ -6122,8 +6136,7 @@
         </div>
     </div>
 
-        <!-- MODALE POUR LE 2FA -->
-<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
     <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
         <div class="title-bar">
             <div class="title-bar-text">Two-Factor Authentication</div>
@@ -6225,10 +6238,7 @@
     </div>
 </div>
 
-        <!-- MODALE POUR L'AVATAR -->
-
-
-    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
                 <div class="title-bar-text">Change Picture</div>
@@ -6316,9 +6326,6 @@
     </div>
 
 
-    <!-- MODALE POUR LE TH\xC8ME-->
-
-
     <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
             
@@ -6339,8 +6346,6 @@
 
 
 
-    <!-- MODALE POUR LE MOT DE PASSE -->
-
     <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
@@ -6349,7 +6354,7 @@
                     <button id="close-password-modal" aria-label="Close"></button>
                 </div>
             </div>
-            <div class="window-body p-6 flex flex-col gap-4">
+            <div class="window-body p-6 flex flex-col gap-4 items-center">
                 <h2 class="text-lg font-bold mb-2">Change Password</h2>
 
                 <div class="flex flex-col gap-1">
@@ -6378,11 +6383,33 @@
     </div>
 
 
+    <!------------------------ DELETE CONFIRMATION MODALE -->
+
+    <div id="delete-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Delete my account</div>
+                <div class="title-bar-controls">
+                    <button id="close-delete-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col gap-4 items-center">
+                <h2 class="text-lg font-bold mb-2 text-red-600">Are you sure you want to delete your account?</h2>
+                <p>This action will be irreversible.</p>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Yes, delete my account</button>
+                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
-</div>
 
-`;
+
+    
+</div>`;
 
   // scripts/pages/ProfilePage.ts
   function render3() {
@@ -7437,7 +7464,7 @@
          style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
     </div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+    <div class="absolute z-10 top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
         
         <div class="flex justify-center items-center flex-1 min-h-0">
 
@@ -7503,6 +7530,48 @@
   // scripts/pages/GuestPage.ts
   function render5() {
     return GuestPage_default;
+  }
+  function afterRender3() {
+    const localButton = document.getElementById("local-game");
+    const remoteButton = document.getElementById("remote-game");
+    const tournamentButton = document.getElementById("tournament-game");
+    const handleNavigation = (path, state = {}) => {
+      window.history.pushState(state, "", path);
+      const navEvent = new PopStateEvent("popstate", { state });
+      window.dispatchEvent(navEvent);
+    };
+    if (localButton) {
+      localButton.addEventListener("click", () => {
+        console.log("Local game starting");
+        handleNavigation("/game", { gameMode: "local" });
+      });
+    } else {
+      console.log("Error: Button local-game cannot be found in the DOM");
+    }
+    if (remoteButton) {
+      remoteButton.addEventListener("click", () => {
+        console.log("Remote game starting");
+        handleNavigation("/game", { gameMode: "remote" });
+      });
+    } else {
+      console.log("Error: Button remote-game cannot be found in the DOM");
+    }
+    if (tournamentButton) {
+      tournamentButton.addEventListener("click", () => {
+        console.log("Tournament game starting");
+        handleNavigation("/game", { gameMode: "tournament" });
+      });
+    } else {
+      console.log("Error: Button tournament-game cannot be found in the DOM");
+    }
+    try {
+      const guestChat = new Chat();
+      guestChat.init();
+      guestChat.joinChannel("general_guest");
+      guestChat.addSystemMessage("Welcome to Guest Mode. Select a game mode to start chatting with your opponents.");
+    } catch (e) {
+      console.error("Error charging chat:", e);
+    }
   }
 
   // scripts/pages/LocalGame.html
@@ -9288,7 +9357,8 @@
       afterRender: loginEvents
     },
     "/guest": {
-      render: render5
+      render: render5,
+      afterRender: afterRender3
     },
     "/game": {
       render: render6,
@@ -9346,6 +9416,7 @@
       } else if (accessToken) {
         navbar.style.display = "flex";
       } else {
+        navbar.style.display = "none";
       }
     }
     if (isGuest) {
