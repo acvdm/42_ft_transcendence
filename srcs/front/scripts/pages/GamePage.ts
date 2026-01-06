@@ -154,6 +154,12 @@ function confirmExit() {
         
         if (activeGame.isRemote && SocketService.getInstance().socket) {
             SocketService.getInstance().socket.emit('leaveGame', { roomId: activeGame.roomId });
+            
+            const userIdStr = localStorage.getItem('userId');
+            if (userIdStr) {
+                const myScore = activeGame.playerRole === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+                saveGameStats(Number(userIdStr), myScore, false);
+            }
         }
         
         activeGame = null;
@@ -211,6 +217,23 @@ export function render(): string {
         return htmlContentTournament;
     }
     return htmlContentLocal;
+}
+
+
+async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+    try {
+        // ne renvoit pas correctement les stats -> trouver pourquoi 
+       await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                userScore: score,
+                isWinner: isWinner ? 1 : 0
+            })
+        });
+        console.log(`Stats sauvegardées pour le user ${userId}`);
+    } catch (error) {
+        console.error("Erreur lors de la sauvegarde des stats:", error);
+    }
 }
 
 export function initGamePage(mode: string): void {
@@ -471,24 +494,27 @@ export function initGamePage(mode: string): void {
                     socketService.socket.on('opponentLeft', () => {
                         if (activeGame && activeGame.isRunning) {
                             activeGame.stop();
-                            const alertHtml = `
-                                <div id="opponent-left-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                                    <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-blue-400">
-                                        <h2 class="text-xl font-bold mb-4 text-blue-600">Opponent Disconnected</h2>
-                                        <p class="mb-6 font-bold">Your opponent has left the game.</p>
-                                        <button id="opponent-left-ok" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-                                            Return to Menu
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                            const div = document.createElement('div');
-                            div.innerHTML = alertHtml;
-                            document.body.appendChild(div);
-                            document.getElementById('opponent-left-ok')?.addEventListener('click', () => {
-                                document.getElementById('opponent-left-modal')?.remove();
-                                window.history.back();
-                            });
+                            activeGame.isRunning = false;
+
+                            console.log("Opponent left the game! Victory by forfeit!");
+
+                            let myAlias = "Me";
+                            let myScore = 0;
+
+                            if (data.role === 'player1') {
+                                myAlias = currentP1Alias;
+                                myScore = activeGame.score.player1;
+                            } else {
+                                myAlias = currentP2Alias;
+                                myScore = activeGame.score.player2;
+                            }
+
+                            const userIdStr = localStorage.getItem('userId');
+                            if (userIdStr) {
+                                saveGameStats(Number(userIdStr), myScore, true);
+                            }
+
+                            showVictoryModal(myAlias + "(Opponent forfeit)");
                         }
                     });
 
@@ -962,21 +988,6 @@ export function initGamePage(mode: string): void {
         });
     }
 
-    async function saveGameStats(userId: number, score: number, isWinner: boolean) {
-        try {
-            // ne renvoit pas correctement les stats -> trouver pourquoi 
-            await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-                method: 'PATCH',
-                body: JSON.stringify({
-                    userScore: score,
-                    isWinner: isWinner ? 1 : 0
-                })
-            });
-            console.log(`Stats sauvegardées pour le user ${userId}`);
-        } catch (error) {
-            console.error("Erreur lors de la sauvegarde des stats:", error);
-        }
-    }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
         const p1Name = document.getElementById('player-1-name');
