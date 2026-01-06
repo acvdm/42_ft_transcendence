@@ -50,31 +50,45 @@ let gameChat: Chat | null = null;
 let tournamenetState: TournamentData | null = null; // on stocke l'état du tournoi (Typé maintenant)
 let activeGame: Game | null = null; // Instance du jeu
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null; // on stocke l'ecoute de l'envoi a l'espace
-let isNavigationPending = false;
 
+
+// Après les imports, avant les variables globales
+let isNavigationBlocked = false;
 
 export function isGameRunning(): boolean {
     return activeGame !== null && activeGame.isRunning;
 }
 
-export function handleGameExitConfirmation(confirmCallback: () => void) {
-    // Si aucun jeu ne tourne, on laisse passer direct
-    if (!isGameRunning()) {
-        confirmCallback();
-        return;
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+    if (isGameRunning()) {
+        e.preventDefault();
+        e.returnValue = 'A game is in progress. Are you sure you want to leave?';
+        return e.returnValue;
     }
+}
 
-    // Création de la modale de confirmation dynamiquement
+function handlePopState(e: PopStateEvent) {
+    if (isGameRunning() && !isNavigationBlocked) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.history.pushState({ gameMode: window.history.state?.gameMode || 'local' }, '', '/game');
+        showExitConfirmationModal();
+    }
+}
+
+function showExitConfirmationModal() {
+    if (document.getElementById('exit-confirm-modal')) return;
+
     const modalHtml = `
-        <div id="exit-confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-red-400">
-                <h2 class="text-xl font-bold mb-4 text-red-600">⚠ Wait a minute!</h2>
+        <div id="exit-confirm-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[9999]">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-red-400 max-w-md">
+                <h2 class="text-xl font-bold mb-4 text-red-600">⚠️ Wait a minute!</h2>
                 <p class="mb-6 font-bold">Are you sure you want to leave?<br>Current game progress will be lost and not saved.</p>
                 <div class="flex justify-center space-x-4">
-                    <button id="confirm-exit-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                    <button id="confirm-exit-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded transition">
                         Yes, Leave
                     </button>
-                    <button id="cancel-exit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    <button id="cancel-exit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded transition">
                         Cancel
                     </button>
                 </div>
@@ -82,28 +96,42 @@ export function handleGameExitConfirmation(confirmCallback: () => void) {
         </div>
     `;
 
-    // Insertion dans le DOM
     const div = document.createElement('div');
     div.innerHTML = modalHtml;
     document.body.appendChild(div);
 
-    // Gestion des clics
-    document.getElementById('confirm-exit-btn')?.addEventListener('click', () => {
-        // Nettoyage spécifique avant de partir
-        if (activeGame && activeGame.isRemote && SocketService.getInstance().socket) {
-            // REMOTE : On prévient l'autre joueur
+    document.getElementById('confirm-exit-btn')?.addEventListener('click', confirmExit);
+    document.getElementById('cancel-exit-btn')?.addEventListener('click', cancelExit);
+}
+
+function confirmExit() {
+    isNavigationBlocked = true;
+    
+    if (activeGame) {
+        activeGame.isRunning = false;
+        activeGame.stop();
+        
+        if (activeGame.isRemote && SocketService.getInstance().socket) {
             SocketService.getInstance().socket.emit('leaveGame', { roomId: activeGame.roomId });
         }
         
-        cleanup(); // On arrête tout (boucles, sockets, etc.)
-        document.getElementById('exit-confirm-modal')?.remove(); // On vire la modale
-        confirmCallback(); // On exécute la navigation
-    });
-
-    document.getElementById('cancel-exit-btn')?.addEventListener('click', () => {
-        document.getElementById('exit-confirm-modal')?.remove();
-    });
+        activeGame = null;
+    }
+    
+    cleanup();
+    document.getElementById('exit-confirm-modal')?.remove();
+    
+    setTimeout(() => {
+        isNavigationBlocked = false;
+        window.history.back();
+    }, 100);
 }
+
+function cancelExit() {
+    document.getElementById('exit-confirm-modal')?.remove();
+}
+
+
 
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
@@ -114,6 +142,7 @@ export function cleanup() {
     tournamenetState = null;
 
     if (activeGame) {
+        activeGame.isRunning = false;
         activeGame.stop();
         activeGame = null;
     }
@@ -123,6 +152,10 @@ export function cleanup() {
         document.removeEventListener('keydown', spaceKeyListener);
         spaceKeyListener = null;
     }
+
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('popstate', handlePopState);
+    isNavigationBlocked = false;
 }
 
 export function render(): string {
@@ -138,6 +171,26 @@ export function render(): string {
 
 export function initGamePage(mode: string): void {
 
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
+    // Intercepter les clics sur les liens de navigation
+    const navLinks = ['home', 'profile', 'logout'];
+    navLinks.forEach(id => {
+        const link = document.getElementById(`/${id}`) || document.getElementById(id);
+        if (link) {
+            const newLink = link.cloneNode(true) as HTMLElement;
+            link.parentNode?.replaceChild(newLink, link);
+            
+            newLink.addEventListener('click', (e) => {
+                if (isGameRunning()) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    showExitConfirmationModal();
+                }
+            }, true);
+        }
+    });
     // Récupération des éléments communs
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
     const player2Display = document.getElementById('player-2-name') as HTMLElement;

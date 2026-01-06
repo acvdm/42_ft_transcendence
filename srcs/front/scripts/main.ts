@@ -7,7 +7,7 @@ import { render as LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
-import { render as GamePage, initGamePage } from "./pages/GamePage";
+import { render as GamePage, initGamePage, isGameRunning, cleanup } from "./pages/GamePage";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -128,12 +128,27 @@ const handleLocationChange = () => {
 	// Récupération des tokens (User normal OU Guest)
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
+	const currentPath = window.location.pathname;
 
 	// --- 1. GESTION DU LOGOUT (C'est ça qu'il manquait !) ---
 	if (path === '/logout') {
+		if (isGameRunning()) {
+			window.history.pushState({ gameMode: window.history.state?.gameMode }, '', '/game');
+			return ;
+		}
 		handleLogout();
 		return; // On arrête tout ici pour laisser le logout se faire
 	}
+
+	if (currentPath === '/game' && path !== '/game' && isGameRunning()) {
+        window.history.pushState({ gameMode: window.history.state?.gameMode }, '', '/game');
+        return;
+    }
+
+    // ✅ AJOUT - Nettoyage si on quitte la page game
+    if (currentPath === '/game' && path !== '/game') {
+        cleanup();
+    }
 
 	// --- 2. GESTION DE LA NAVBAR ---
 	const navbar = document.getElementById('main-navbar');
