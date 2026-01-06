@@ -8104,17 +8104,45 @@
   function showExitConfirmationModal() {
     if (document.getElementById("exit-confirm-modal")) return;
     const modalHtml = `
-        <div id="exit-confirm-modal" class="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[9999]">
-            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-red-400 max-w-md">
-                <h2 class="text-xl font-bold mb-4 text-red-600">\u26A0\uFE0F Wait a minute!</h2>
-                <p class="mb-6 font-bold">Are you sure you want to leave?<br>Current game progress will be lost and not saved.</p>
-                <div class="flex justify-center space-x-4">
-                    <button id="confirm-exit-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded transition">
-                        Yes, Leave
-                    </button>
-                    <button id="cancel-exit-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded transition">
-                        Cancel
-                    </button>
+        <div id="exit-confirm-modal" style="position: fixed; inset: 0; z-index: 9999; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center;">
+            
+            <div class="window w-[600px] shadow-2xl animate-bounce-in">
+                
+                <div class="title-bar" style="background: linear-gradient(90deg, #b91c1c, #dc2626);">
+                    <div class="title-bar-text text-white font-bold" style="text-shadow: none;">\u26A0\uFE0F Exit Game</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close" id="modal-close-x"></button>
+                    </div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
+                    
+                    <h2 class="text-3xl font-black text-red-700 text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
+                        WAIT A MINUTE !
+                    </h2>
+                    
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost and not saved.</p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        
+                        <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-8 py-3 text-lg font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none transition-all duration-200" 
+                                style="min-width: 150px;">
+                            Cancel
+                        </button>
+                        
+                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-red-100 to-red-300 border border-red-400 rounded-sm 
+                                                        px-8 py-3 text-lg font-semibold text-red-900 shadow-sm hover:from-red-200 hover:to-red-400 
+                                                        active:border-red-500 focus:outline-none transition-all duration-200"
+                                style="min-width: 150px;">
+                            Yes, Leave
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -8176,21 +8204,6 @@
   function initGamePage(mode) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
-    const navLinks = ["home", "profile", "logout"];
-    navLinks.forEach((id) => {
-      const link = document.getElementById(`/${id}`) || document.getElementById(id);
-      if (link) {
-        const newLink = link.cloneNode(true);
-        link.parentNode?.replaceChild(newLink, link);
-        newLink.addEventListener("click", (e) => {
-          if (isGameRunning()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            showExitConfirmationModal();
-          }
-        }, true);
-      }
-    });
     const player1Display = document.getElementById("player-1-name");
     const player2Display = document.getElementById("player-2-name");
     const userId = localStorage.getItem("userId");
@@ -8255,23 +8268,6 @@
       }
     };
     document.addEventListener("keydown", spaceKeyListener);
-    const navIds = ["/home", "/profile", "/logout"];
-    navIds.forEach((id) => {
-      const element = document.getElementById(id);
-      if (element) {
-        const handleClickGuard = (e) => {
-          if (isGameRunning()) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            handleGameExitConfirmation(() => {
-              element.removeEventListener("click", handleClickGuard, true);
-              element.click();
-            });
-          }
-        };
-        element.addEventListener("click", handleClickGuard, true);
-      }
-    });
     function initRemoteMode() {
       const socketService = SocketService_default.getInstance();
       const btn = document.getElementById("start-game-btn");
@@ -9274,21 +9270,10 @@
     let path = window.location.pathname;
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    const currentPath = window.location.pathname;
+    if (isGameRunning() && path !== "game") cleanup();
     if (path === "/logout") {
-      if (isGameRunning()) {
-        window.history.pushState({ gameMode: window.history.state?.gameMode }, "", "/game");
-        return;
-      }
       handleLogout();
       return;
-    }
-    if (currentPath === "/game" && path !== "/game" && isGameRunning()) {
-      window.history.pushState({ gameMode: window.history.state?.gameMode }, "", "/game");
-      return;
-    }
-    if (currentPath === "/game" && path !== "/game") {
-      cleanup();
     }
     const navbar = document.getElementById("main-navbar");
     if (navbar) {
@@ -9334,6 +9319,11 @@
     const anchor = target.closest("a");
     if (anchor && anchor.href.startsWith(window.location.origin)) {
       event.preventDefault();
+      if (isGameRunning()) {
+        event.stopImmediatePropagation();
+        showExitConfirmationModal();
+        return;
+      }
       const href = anchor.href;
       if (href === window.location.href) return;
       window.history.pushState({}, "", href);
@@ -9341,6 +9331,11 @@
     }
   });
   window.addEventListener("popstate", () => {
+    if (isGameRunning()) {
+      window.history.pushState(null, "", "/game");
+      showExitConfirmationModal();
+      return;
+    }
     handleLocationChange();
   });
   document.addEventListener("DOMContentLoaded", () => {
