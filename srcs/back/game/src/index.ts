@@ -522,7 +522,7 @@ fastify.get('/games/users/:id/stats', async (request, reply) =>
 })
 
 /* -- GET HISTORY FOR ONE USER -- */
-fastify.get('/users/:id/games/history', async (request, reply) => 
+fastify.get('/games/users/:id/history', async (request, reply) => 
 {
 	const query = request.query as any;
 	const userId = Number(query.userId);
