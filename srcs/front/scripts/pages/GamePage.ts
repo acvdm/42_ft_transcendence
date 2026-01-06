@@ -333,10 +333,10 @@ export function initGamePage(mode: string): void {
     
     // Récupération des éléments communs
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
-    //const player2Display = document.getElementById('player-2-name') as HTMLElement;
 
     // on recupere le username du joueur connecte
     const userId = localStorage.getItem('userId');
+    const isGuest = sessionStorage.getItem('userRole') === 'guest';
     if (userId && player1Display)
     {
         fetchWithAuth(`api/users/${userId}`)
@@ -350,6 +350,33 @@ export function initGamePage(mode: string): void {
         })
         .catch(err => console.error('Cannot fetch username for player 1'));
 
+    } else if (isGuest && player1Display) {
+        const guestId = sessionStorage.getItem('userId');
+
+        if (guestId) {
+            // 2. On interroge l'API exactement comme pour un vrai user
+            // Le backend renverra l'objet user avec l'alias généré (ex: "Guest_xyz")
+            fetchWithAuth(`api/users/${guestId}`)
+                .then(response => {
+                    if (response.ok) return response.json();
+                    throw new Error('Error fetching guest user');
+                })
+                .then(userData => {
+                    if (userData && userData.alias) {
+                        // 3. On affiche le nom généré par le backend
+                        player1Display.innerText = userData.alias;
+                        
+                        // Optionnel : On peut le stocker pour éviter de refaire le fetch plus tard
+                        sessionStorage.setItem('username', userData.alias);
+                    }
+                })
+                .catch(err => {
+                    console.error('Cannot fetch guest alias', err);
+                    player1Display.innerText = "Guest"; // Fallback au cas où
+                });
+        } else {
+            player1Display.innerText = "Guest";
+        }
     }
 
     if (gameChat) gameChat.destroy();
@@ -406,7 +433,7 @@ export function initGamePage(mode: string): void {
     }
 
     spaceKeyListener = (e: KeyboardEvent) => {
-        if (e.code === 'Space') {
+        if (e.code === 'Space' || e.key === ' ') {
             const target = e.target as HTMLElement;
 
             // aggdngion xi l'uilisateur ecrit dans un input ou dans un truc de texte on ne fait rien
@@ -417,12 +444,12 @@ export function initGamePage(mode: string): void {
             e.preventDefault();
 
             if (gameChat) {
-                if (mode === 'remote') {
-                    // REMOTE : seulement a l'adversaire
+                if (activeGame.isRemote) {
+                    // REMOTE : On envoie via la socket seulement à l'adversaire
                     gameChat.emitWizzOnly();
                     console.log("Wizz envoyé à l'adversaire (Remote)");
                 } else {
-                    // LOCAL ET TOURNOI : shake shake shake pour tout le monde
+                    // LOCAL / TOURNOI : On fait trembler l'écran localement
                     const wizzContainer = document.getElementById('wizz-container');
                     gameChat.shakeElement(wizzContainer);
                     console.log("Wizz local déclenché");
@@ -784,15 +811,24 @@ export function initGamePage(mode: string): void {
         const userId = localStorage.getItem('userId');
         const username = localStorage.getItem('username');
         
+        const isGuest = sessionStorage.getItem('userRole') === 'guest';
+        const guestName = sessionStorage.getItem('username') || "Guest";
+
         if (userId && username) {
             console.log("Username du user: ", username);
             player1Input.value = username; // doit afficher le nom du user connecté
             player1Input.readOnly = true; // n'affiche rien pour le moment
             player1Input.classList.add('bg-gray-200', 'cursor-not-allowed');
+        } else if (isGuest) {
+            console.log("Guest User");
+            player1Input.value = guestName; /
+            player1Input.readOnly = false; // On laisser le tournoi
+            player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
+
         } else {
             console.log("Username du user: ", username);
             player1Input.value = "";
-            player1Input.readOnly = false; // le champs d'input est libre quand la connexion est en guest
+            player1Input.readOnly = false; // le c est en guest
             player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
         }
 
