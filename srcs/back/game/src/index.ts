@@ -165,7 +165,7 @@ fastify.post('/games/tournaments', async (request, reply) =>
 //---------------------------------------
 
 /* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
-fastify.post('/games/users/:id/stats', async (request, reply) =>
+fastify.post('/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -257,7 +257,7 @@ fastify.get('/users/:id/games/history', async (request, reply) =>
 
 
 /* -- UPDATE STATS FOR ONE USER -- */
-fastify.patch('/games/users/:id/stats', async (request, reply) => 
+fastify.patch('/users/:id/stats', async (request, reply) => 
 {
 	try
 	{

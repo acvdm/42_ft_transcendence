@@ -26,7 +26,7 @@ export function initLandingPage() {
     
     guestButton?.addEventListener('click', async () => {
 		try {
-			const response = await fetch('/api/users/guest', {
+			const response = await fetch('/api/user/guest', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({})

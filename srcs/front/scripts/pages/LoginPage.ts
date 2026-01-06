@@ -14,7 +14,7 @@ async function init2faLogin(access_token: string, user_id: number, selectedStatu
     // on recupere le profil
     if (user_id && access_token) {
         try {
-            const userRes = await fetch(`/api/users/${user_id}`, {
+            const userRes = await fetch(`/api/user/${user_id}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ async function init2faLogin(access_token: string, user_id: number, selectedStatu
 
         // on met a jour le status 
         try {
-            await fetch(`/api/users/${user_id}/status`, {
+            await fetch(`/api/user/${user_id}/status`, {
                 method: 'PATCH',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ function handleLogin() {
                 // Récupération du profil (Username) (on verrifie qu'on a bien un access token)
                 if (user_id && access_token) {
                     try {
-                        const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+                        const userRes = await fetchWithAuth(`/api/user/${user_id}`, {
                             method: 'GET'
                         });
 
@@ -141,7 +141,7 @@ function handleLogin() {
                     }
 
                     try {
-                        await fetchWithAuth(`/api/users/${user_id}/status`, {
+                        await fetchWithAuth(`/api/user/${user_id}/status`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: selectedStatus })
                         });

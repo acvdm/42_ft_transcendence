@@ -5,6 +5,7 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 import SocketService from '../services/SocketService'; // <--- AJOUT IMPORT
+// import { Socket } from "socket.io-client";
 
 import Game from "../game/Game";
 import Input from "../game/Input";
@@ -111,7 +112,7 @@ export function initGamePage(mode: string): void {
     const userId = localStorage.getItem('userId');
     if (userId && player1Display)
     {
-        fetchWithAuth(`api/users/${userId}`)
+        fetchWithAuth(`api/user/${userId}`)
             .then(response => {
                 if (response.ok) return response.json();
                 throw new Error('Error fetching user');
@@ -208,6 +209,19 @@ export function initGamePage(mode: string): void {
     // ---------------------------------------------------------
     function initRemoteMode() {
         const socketService = SocketService.getInstance();
+
+        // 1. On lance le connexion spécifique au jeu
+        socketService.connectGame();
+
+        // 2. On récupère le socket jeu
+        const gameSocket = socketService.getGameSocket();
+
+        // Si pas de token ou erreur de connexion
+        if (!gameSocket) {
+            console.error("Cannot connect to server");
+            return ;
+        }
+
         const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
         const status = document.getElementById('queue-status');
         const modal = document.getElementById('game-setup-modal');
@@ -297,6 +311,12 @@ export function initGamePage(mode: string): void {
         const startGameFromData = (data: any) => {
             console.log("Starting game from data:", data);
 
+            // Sync du chat sur la room du jeu
+            if (gameChat) {
+                gameChat.joinChannel(data.roomId);
+                gameChat.addSystemMessage("Match started! Good luck.");
+            }
+
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
             if (modal) modal.style.display = 'none';
 
@@ -328,30 +348,27 @@ export function initGamePage(mode: string): void {
 
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
 
-                    // --- ATTENTE SOCKET PRÊT ---
-                    if (!socketService.socket) {
-                        console.log("Socket non connecté, attente...");
-                        const checkSocket = setInterval(() => {
-                            if (socketService.socket) {
-                                clearInterval(checkSocket);
-                                activeGame?.startRemote(data.roomId, data.role);
-                            }
-                        }, 100);
-                    } else {
-                        activeGame.startRemote(data.roomId, data.role);
+                    // Gestion de la fin de partie (UI)
+                    activeGame.onGameEnd = (endData) => {
+                        const winnerName = endData.winnerAlias || "Winner";
+                        showVictoryModal(winnerName);
                     }
+
+                    activeGame.onScoreChange = (score) => {
+                        const sb = document.getElementById('score-board');
+                        if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+                    }
+
+                    // Lancement effectif via la méthode remote du Game
+                    activeGame.startRemote(data.roomId, data.role);
                 }
 
                 // --- Update UI noms joueurs ---
                 const p1Name = document.getElementById('player-1-name');
                 const p2Name = document.getElementById('player-2-name');
 
-                if (p1Name) {
-                    p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
-                }
-                if (p2Name) {
-                    p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
-                }
+                if (p1Name) p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
+                if (p2Name) p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
             }
         };
 
@@ -364,84 +381,96 @@ export function initGamePage(mode: string): void {
             startGameFromData(data); // Lancement auto !
         }
 
+        // Gestion du bouton "JOUER"
         if (btn) {
             // On clone pour éviter les event listeners multiples si on revient sur la page
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
             newBtn.addEventListener('click', () => {
-                if (!socketService.socket) {
-                    alert("Erreur: Non connecté au serveur de jeu");
-                    return;
+
+                if (!gameSocket) {
+                    alert("Error: lost connexion to game server");
+                    return ;
                 }
 
                 if (status) status.innerText = "Recherche d'un adversaire...";
                 newBtn.disabled = true;
                 newBtn.innerText = "WAITING...";
 
-                // Ecoute de l'événement de début de match
-                socketService.socket.on('matchFound', (data: any) => {
-                    console.log("Match Found!", data);
-                    
-                    if (gameChat) {
-                        // on rejoint un canal unique du match et du chat
-                        // la class va nettoyer automqtiquement les messages
-                        gameChat.joinChannel(data.roomId);
-                        gameChat.addSystemMessage("Game found! You are now in a private room.")
-                    }
-                    
-                    if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-                    
-                    // Cache la modale
-                    if (modal) modal.style.display = 'none';
+                // // Ecoute de l'événement de début de match
+                // socketService.socket.on('matchFound', (data: any) => {
+                //     console.log("Match Found!", data);
+                gameSocket.off('matchFound');
 
-                    if (container) {
-                        container.innerHTML = ''; 
-                        const canvas = document.createElement('canvas');
-                        
-                        canvas.width = container.clientWidth;
-                        canvas.height = container.clientHeight;
-                        canvas.style.width = '100%';
-                        canvas.style.height = '100%';
-                        
-                        container.appendChild(canvas);
-                        
-                        const ctx = canvas.getContext('2d');
-                        const input = new Input();
-
-                        const selectedBallSkin = ballInput ? ballInput.value : 'classic';
-
-
-                        if (ctx) {
-                            if (activeGame) activeGame.isRunning = false;
-                            activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                            
-                            activeGame.onGameEnd = (endData) => {
-                                const winnerName = endData.winnerAlias || "Winner"; 
-                                showVictoryModal(winnerName);
-                            }
-                            activeGame.onScoreChange = (score) => {
-                                const sb = document.getElementById('score-board');
-                                if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                            };
-                            
-                            // On lance le jeu une fois le canvas pret
-                            activeGame.startRemote(data.roomId, data.role);
-                        }
-                    }
-                    
-                    // Update UI noms
-                    const p1Name = document.getElementById('player-1-name');
-                    const p2Name = document.getElementById('player-2-name');
-                    
-                    if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
-                    if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
+                gameSocket.on('matchFound', (data: any) => {
+                    startGameFromData(data);
                 });
 
-                // Envoi demande au serveur
-                socketService.socket.emit('joinQueue');
+                // Envoi demande au server sur le game socket
+                gameSocket.emit('joinQueue');
             });
         }
+                    
+        //             if (gameChat) {
+        //                 // on rejoint un canal unique du match et du chat
+        //                 // la class va nettoyer automqtiquement les messages
+        //                 gameChat.joinChannel(data.roomId);
+        //                 gameChat.addSystemMessage("Game found! You are now in a private room.")
+        //             }
+                    
+        //             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
+                    
+        //             // Cache la modale
+        //             if (modal) modal.style.display = 'none';
+
+        //             if (container) {
+        //                 container.innerHTML = ''; 
+        //                 const canvas = document.createElement('canvas');
+                        
+        //                 canvas.width = container.clientWidth;
+        //                 canvas.height = container.clientHeight;
+        //                 canvas.style.width = '100%';
+        //                 canvas.style.height = '100%';
+                        
+        //                 container.appendChild(canvas);
+                        
+        //                 const ctx = canvas.getContext('2d');
+        //                 const input = new Input();
+
+        //                 const selectedBallSkin = ballInput ? ballInput.value : 'classic';
+
+
+        //                 if (ctx) {
+        //                     if (activeGame) activeGame.isRunning = false;
+        //                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
+                            
+        //                     activeGame.onGameEnd = (endData) => {
+        //                         const winnerName = endData.winnerAlias || "Winner"; 
+        //                         showVictoryModal(winnerName);
+        //                     }
+        //                     activeGame.onScoreChange = (score) => {
+        //                         const sb = document.getElementById('score-board');
+        //                         if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+        //                     };
+                            
+        //                     // On lance le jeu une fois le canvas pret
+        //                     activeGame.startRemote(data.roomId, data.role);
+        //                 }
+        //             }
+                    
+        //             // Update UI noms
+        //             const p1Name = document.getElementById('player-1-name');
+        //             const p2Name = document.getElementById('player-2-name');
+                    
+        //             if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
+        //             if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
+        //         });
+
+        //         // // Envoi demande au serveur
+        //         // socketService.socket.emit('joinQueue');
+        //     });
+        // }
     }
 
 

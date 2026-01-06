@@ -71,7 +71,7 @@ function handleRegister() {
 
 		try {
             // On appelle la route définie dans la Gateway qui redirige vers le service USER
-            const response = await fetch('/api/users', {
+            const response = await fetch('/api/user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -99,7 +99,7 @@ function handleRegister() {
 				if (user_id) {
 					// console.log(`user_id: ${user_id}`);
 					try {
-						const userRes = await fetch(`/api/users/${user_id}`, {
+						const userRes = await fetch(`/api/user/${user_id}`, {
 							headers: { 'Authorization': `Bearer ${access_token}` }
 						});
 						// console.log(`${userRes}`);

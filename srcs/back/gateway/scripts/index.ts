@@ -24,21 +24,22 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
 	const publicRoutes = [
-		"/api/users/login",
-		"/api/users/refresh",
+		"/api/user/login",
+		"/api/user/refresh",
 		"/api/auth/refresh",
-		"/api/users/guest",
+		"/api/user/guest",
 		"/api/auth/login",
 		"/api/auth/sessions",
 		"/api/auth/logout",
-		"/socket.io"
+		"/socket-chat",
+		"/socket-game"
 	]
 
 	let isPublic = publicRoutes.some(route => request.url.startsWith(route));
 	
 	const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
 
-	if (cleanUrl === '/api/users' && method === 'POST'){
+	if (cleanUrl === '/api/user' && method === 'POST'){
 		isPublic = true;
 	}
 
@@ -93,9 +94,16 @@ fastify.register(fastifyProxy,
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://chat:3002', // adresse interne du réseau du docker
-	prefix: '/socket.io', // toutes les requetes api/chat iront au service chat
+	prefix: '/socket-chat', // toutes les requetes api/chat iront au service chat
 	websocket: true,
 	rewritePrefix: '/socket.io' // on retire le prefixe avant de l'envoyer un service
+});
+
+fastify.register(fastifyProxy, {
+	upstream: 'http://game:3003',
+	prefix: '/socket-game',
+	websocket: true,
+	rewritePrefix: '/socket.io'
 });
 
 fastify.register(fastifyProxy, 
@@ -108,7 +116,7 @@ fastify.register(fastifyProxy,
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://user:3004', // adresse interne du réseau du docker
-	prefix: '/api/users', // toutes les requetes api/users iront au service user
+	prefix: '/api/user', // toutes les requetes api/user iront au service user
 	rewritePrefix: '/users' // on retire le prefixe avant de l'envoyer un service
 });
 

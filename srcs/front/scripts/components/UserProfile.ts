@@ -50,7 +50,7 @@ export class UserProfile {
         }
 
         try {
-            const response = await fetchWithAuth(`/api/users/${userId}`);
+            const response = await fetchWithAuth(`/api/user/${userId}`);
             
             if (!response.ok) throw new Error('Failed to fetch user profile');
 
@@ -150,7 +150,7 @@ export class UserProfile {
                 
                 // si la longueur est ok, zou ça passe à l'api
                 try {
-                    const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+                    const response = await fetchWithAuth(`api/user/${userId}/bio`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ bio: trimmedBio })
@@ -223,7 +223,7 @@ export class UserProfile {
 
                         const userId = localStorage.getItem('userId');
                         try {
-                            await fetchWithAuth(`/api/users/${userId}/status`, {
+                            await fetchWithAuth(`/api/user/${userId}/status`, {
                                 method: 'PATCH',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ status: selectedStatus })
@@ -352,7 +352,7 @@ export class UserProfile {
 
             try {
 
-                const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+                const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ avatar: this.selectedImageSrc })

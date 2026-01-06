@@ -3529,7 +3529,8 @@
   // scripts/services/SocketService.ts
   var SocketService = class _SocketService {
     constructor() {
-      this.socket = null;
+      this.chatSocket = null;
+      this.gameSocket = null;
     }
     static getInstance() {
       if (!_SocketService.instance) {
@@ -3537,34 +3538,71 @@
       }
       return _SocketService.instance;
     }
-    connect() {
-      if (this.socket) return;
+    // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
+    // Méthode privée pour ne pas dupliquer le code de config
+    createSocketConnection(path) {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        console.error("SocketService: No token found, connection aborted");
-        return;
+        console.error(`SocketService: No token found, cannot connect to ${path}`);
+        return null;
       }
-      this.socket = lookup2("/", {
-        path: "/socket.io/",
+      const socket = lookup2("/", {
+        path,
         auth: {
           token: `Bearer ${token}`
           // On envoie le JWT
         },
         reconnection: true,
-        reconnectionAttemps: 5
+        reconnectionAttemps: 5,
+        transports: ["websocket", "polling"]
       });
-      this.socket.on("connect", () => {
-        console.log("SocketService: Connection with ID", this.socket?.id);
+      socket.on("connect", () => {
+        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
       });
-      this.socket.on("connect_error", (err) => {
-        console.error("SocketService: Connection error:", err.message);
+      socket.on("connect_error", (err) => {
+        console.error(`SocketService: Connection error on ${path}`, err.message);
       });
+      return socket;
     }
-    disconnect() {
-      if (this.socket) {
-        this.socket.disconnect();
-        this.socket = null;
+    // ---------------------
+    // -- GESTION DU CHAT --
+    connectChat() {
+      if (this.chatSocket) return;
+      console.log("SocketService: Connecting to Chat...");
+      this.chatSocket = this.createSocketConnection("/socket-chat/");
+    }
+    disconnectChat() {
+      if (this.chatSocket) {
+        this.chatSocket.disconnect();
+        this.chatSocket = null;
+        console.log("SocketService: Chat disconnected");
       }
+    }
+    getChatSocket() {
+      return this.chatSocket;
+    }
+    // ---------------------
+    // -- GESTION DU GAME --
+    connectGame() {
+      if (this.gameSocket) return;
+      console.log("SocketService: Connecting to Game...");
+      this.gameSocket = this.createSocketConnection("/socket-game/");
+    }
+    disconnectGame() {
+      if (this.gameSocket) {
+        this.gameSocket.disconnect();
+        this.gameSocket = null;
+        console.log("SocketService: Game disconnected");
+      }
+    }
+    getGameSocket() {
+      return this.gameSocket;
+    }
+    // ---------------------
+    // -- UTILITAIRE GLOBAL --
+    disconnectAll() {
+      this.disconnectChat();
+      this.disconnectGame();
     }
   };
   var SocketService_default = SocketService;
@@ -3838,7 +3876,7 @@
     const username = localStorage.getItem("username");
     if (!userId) return;
     try {
-      await fetchWithAuth(`/api/users/${userId}/status`, {
+      await fetchWithAuth(`/api/user/${userId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -3867,7 +3905,7 @@
     if (user_id) localStorage.setItem("userId", user_id.toString());
     if (user_id && access_token) {
       try {
-        const userRes = await fetch(`/api/users/${user_id}`, {
+        const userRes = await fetch(`/api/user/${user_id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -3885,7 +3923,7 @@
         console.error("Can't get user's profile", err);
       }
       try {
-        await fetch(`/api/users/${user_id}/status`, {
+        await fetch(`/api/user/${user_id}/status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -3954,7 +3992,7 @@
           if (user_id) localStorage.setItem("userId", user_id.toString());
           if (user_id && access_token) {
             try {
-              const userRes = await fetchWithAuth(`/api/users/${user_id}`, {
+              const userRes = await fetchWithAuth(`/api/user/${user_id}`, {
                 method: "GET"
               });
               if (userRes.ok) {
@@ -3968,7 +4006,7 @@
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetchWithAuth(`/api/users/${user_id}/status`, {
+              await fetchWithAuth(`/api/user/${user_id}/status`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: selectedStatus })
               });
@@ -4587,6 +4625,7 @@
       this.userId = localStorage.getItem("userId");
     }
     init() {
+      SocketService_default.getInstance().connectChat();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -4597,7 +4636,7 @@
       setInterval(() => this.checkNotifications(), 3e4);
     }
     registerSocketUser() {
-      const socket = SocketService_default.getInstance().socket;
+      const socket = SocketService_default.getInstance().getChatSocket();
       const userId = this.userId;
       if (!socket || !userId) return;
       if (socket.connected) {
@@ -4611,7 +4650,7 @@
       const contactsList = this.container;
       if (!this.userId || !contactsList) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
+        const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
         if (!response.ok) throw new Error("Failed to fetch friends");
         const responseData = await response.json();
         const friendList = responseData.data;
@@ -4647,11 +4686,17 @@
                     </div>
                 `;
           contactsList.appendChild(friendItem);
-          friendItem.addEventListener("click", () => {
+          friendItem.addEventListener("click", (e) => {
+            if (e.target.closest(".invite-btn")) return;
             const event = new CustomEvent("friendSelected", {
               detail: { friend: selectedFriend, friendshipId: friendship.id }
             });
             window.dispatchEvent(event);
+          });
+          const inviteBtn = friendItem.querySelector(".invite-btn");
+          inviteBtn?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
           });
         });
       } catch (error) {
@@ -4659,8 +4704,16 @@
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
       }
     }
+    // AJOUT: Fonction pour envoyer une invitation depuis la liste
+    sendInviteDirectly(friendId, friendName) {
+      const socket = SocketService_default.getInstance().getChatSocket();
+      if (!socket || !socket.connected) {
+        alert("You must be connected to the chat to invite");
+        return;
+      }
+    }
     listenToUpdates() {
-      const socket = SocketService_default.getInstance().socket;
+      const socket = SocketService_default.getInstance().getChatSocket();
       if (!socket) return;
       socket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
@@ -4701,7 +4754,7 @@
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        const socket = SocketService_default.getInstance().socket;
+        const socket = SocketService_default.getInstance().getChatSocket();
         if (!socket) {
           alert("Erreur de connexion");
           toast.remove();
@@ -4719,7 +4772,7 @@
         toast.remove();
       });
       toast.querySelector("#decline-invite")?.addEventListener("click", () => {
-        SocketService_default.getInstance().socket?.emit("declineGameInvite", { senderId });
+        SocketService_default.getInstance().getChatSocket()?.emit("declineGameInvite", { senderId });
         toast.remove();
       });
       setTimeout(() => {
@@ -4781,7 +4834,7 @@
           }
           const userId = localStorage.getItem("userId");
           try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships`, {
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ alias: searchValue })
@@ -4791,7 +4844,7 @@
               this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
               const targetId = data.data.friend_id || data.data.friend?.id;
               if (targetId) {
-                SocketService_default.getInstance().socket?.emit("sendFriendRequestNotif", {
+                SocketService_default.getInstance().getChatSocket()?.emit("sendFriendRequestNotif", {
                   targetId
                 });
               }
@@ -4856,7 +4909,7 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
         if (!response.ok) throw new Error("Failed to fetch pendings");
         const requests = await response.json();
         const pendingList = requests.data;
@@ -4925,7 +4978,7 @@
       const userId = localStorage.getItem("userId");
       if (!itemDiv.dataset.friendshipId) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: action })
@@ -4936,7 +4989,7 @@
             itemDiv.remove();
             if (action === "validated") {
               this.loadFriends();
-              const socket = SocketService_default.getInstance().socket;
+              const socket = SocketService_default.getInstance().getChatSocket();
               if (socket) {
                 socket.emit("acceptFriendRequest", {
                   targetId: requesterId
@@ -5008,7 +5061,7 @@
         return;
       }
       try {
-        const response = await fetchWithAuth(`/api/users/${userId}`);
+        const response = await fetchWithAuth(`/api/user/${userId}`);
         if (!response.ok) throw new Error("Failed to fetch user profile");
         const userData = await response.json();
         if (this.userConnected && userData.alias) {
@@ -5078,7 +5131,7 @@
             return false;
           }
           try {
-            const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+            const response = await fetchWithAuth(`api/user/${userId}/bio`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ bio: trimmedBio })
@@ -5141,7 +5194,7 @@
               localStorage.setItem("userStatus", selectedStatus);
               const userId = localStorage.getItem("userId");
               try {
-                await fetchWithAuth(`/api/users/${userId}/status`, {
+                await fetchWithAuth(`/api/user/${userId}/status`, {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ status: selectedStatus })
@@ -5248,7 +5301,7 @@
         const userId = localStorage.getItem("userId");
         if (!userId) return;
         try {
-          const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+          const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ avatar: this.selectedImageSrc })
@@ -5280,16 +5333,22 @@
   // scripts/components/Chat.ts
   var Chat = class {
     constructor() {
+      this.socket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
-      this.socket = SocketService_default.getInstance().socket;
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
       this.wizzContainer = document.getElementById("wizz-container");
     }
     init() {
-      if (!this.socket) return;
+      const socketService = SocketService_default.getInstance();
+      socketService.connectChat();
+      this.socket = socketService.getChatSocket();
+      if (!this.socket) {
+        console.error("Chat: Impossible to retrieve chat socket (not connected).");
+        return;
+      }
       this.setupSocketEvents();
       this.setupInputListeners();
       this.setupWizz();
@@ -5658,7 +5717,7 @@
           if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
             try {
               const userId = localStorage.getItem("userId");
-              const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
+              const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: "blocked" })
               });
@@ -5784,7 +5843,7 @@
       try {
         if (this.username) this.username.innerText = "Loading...";
         const [userRes, statsRes] = await Promise.all([
-          fetchWithAuth(`api/users/${friendId}`),
+          fetchWithAuth(`api/user/${friendId}`),
           fetchWithAuth(`api/game/users/${friendId}/stats`)
         ]);
         if (userRes.ok) {
@@ -5839,7 +5898,7 @@
   }
   function afterRender() {
     const socketService = SocketService_default.getInstance();
-    socketService.connect();
+    socketService.connectChat();
     const friendList = new FriendList();
     friendList.init();
     const userProfile = new UserProfile();
@@ -5848,8 +5907,9 @@
     chat.init();
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
-    if (socketService.socket) {
-      socketService.socket.on("friendProfileUpdated", (data) => {
+    const chatSocket = socketService.getChatSocket();
+    if (chatSocket) {
+      chatSocket.on("friendProfileUpdated", (data) => {
         console.log("Mise \xE0 jour re\xE7ue pour :", data.username);
         if (currentChatFriendId === data.userId) {
           const headerBio = document.getElementById("chat-header-bio");
@@ -5866,7 +5926,7 @@
           }
         }
       });
-      socketService.socket.on("friendStatusUpdate", (data) => {
+      chatSocket.on("friendStatusUpdate", (data) => {
         const headerName = document.getElementById("chat-header-username");
         if (headerName && headerName.textContent === data.username) {
           const headerStatus = document.getElementById("chat-header-status");
@@ -6695,7 +6755,7 @@
       if (!userId)
         return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}`);
+        const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
           const user = await response.json();
           currentUserEmail = user.email || "";
@@ -6799,7 +6859,7 @@
     const updateUsername = async (newUsername) => {
       if (!userId || !newUsername.trim()) return false;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/alias`, {
+        const response = await fetchWithAuth(`api/user/${userId}/alias`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ alias: newUsername })
@@ -6839,7 +6899,7 @@
         return false;
       }
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+        const response = await fetchWithAuth(`api/user/${userId}/bio`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ bio: trimmedBio })
@@ -6867,7 +6927,7 @@
     const updateEmail = async (newEmail) => {
       if (!userId || !newEmail.trim()) return false;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/email`, {
+        const response = await fetchWithAuth(`api/user/${userId}/email`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: newEmail })
@@ -6892,7 +6952,7 @@
     const updateTheme = async (newTheme) => {
       if (!userId) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/theme`, {
+        const response = await fetchWithAuth(`api/user/${userId}/theme`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ theme: newTheme })
@@ -7032,7 +7092,7 @@
     const updateStatus = async (newStatus) => {
       if (!userId) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/status`, {
+        const response = await fetchWithAuth(`api/user/${userId}/status`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: newStatus })
@@ -7121,7 +7181,7 @@
       }
       console.log("newpass: , confirmpass:", newPass, confirmPass);
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/password`, {
+        const response = await fetchWithAuth(`api/user/${userId}/password`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ oldPass, newPass, confirmPass })
@@ -7193,7 +7253,7 @@
       }
       try {
         console.log("avatar charge");
-        const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+        const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ avatar: selectedImageSrc })
@@ -7280,7 +7340,7 @@
     });
     guestButton?.addEventListener("click", async () => {
       try {
-        const response = await fetch("/api/users/guest", {
+        const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({})
@@ -7369,7 +7429,7 @@
         return;
       }
       try {
-        const response = await fetch("/api/users", {
+        const response = await fetch("/api/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -7390,7 +7450,7 @@
             localStorage.setItem("userId", user_id.toString());
           if (user_id) {
             try {
-              const userRes = await fetch(`/api/users/${user_id}`, {
+              const userRes = await fetch(`/api/user/${user_id}`, {
                 headers: { "Authorization": `Bearer ${access_token}` }
               });
               if (userRes.ok) {
@@ -7911,7 +7971,9 @@
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
-      this.socket = SocketService_default.getInstance().socket;
+      const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      this.socket = socketService.getGameSocket();
       if (!this.socket) {
         console.error("Cannot start remote game: No socket connection");
         return;
@@ -8102,7 +8164,7 @@
     const player2Display = document.getElementById("player-2-name");
     const userId = localStorage.getItem("userId");
     if (userId && player1Display) {
-      fetchWithAuth(`api/users/${userId}`).then((response) => {
+      fetchWithAuth(`api/user/${userId}`).then((response) => {
         if (response.ok) return response.json();
         throw new Error("Error fetching user");
       }).then((userData) => {
@@ -8160,6 +8222,12 @@
     document.addEventListener("keydown", spaceKeyListener);
     function initRemoteMode() {
       const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      const gameSocket = socketService.getGameSocket();
+      if (!gameSocket) {
+        console.error("Cannot connect to server");
+        return;
+      }
       const btn = document.getElementById("start-game-btn");
       const status = document.getElementById("queue-status");
       const modal = document.getElementById("game-setup-modal");
@@ -8245,6 +8313,10 @@
       }
       const startGameFromData = (data) => {
         console.log("Starting game from data:", data);
+        if (gameChat) {
+          gameChat.joinChannel(data.roomId);
+          gameChat.addSystemMessage("Match started! Good luck.");
+        }
         if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
         if (modal) modal.style.display = "none";
         if (container) {
@@ -8266,26 +8338,20 @@
               activeGame = null;
             }
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-            if (!socketService.socket) {
-              console.log("Socket non connect\xE9, attente...");
-              const checkSocket = setInterval(() => {
-                if (socketService.socket) {
-                  clearInterval(checkSocket);
-                  activeGame?.startRemote(data.roomId, data.role);
-                }
-              }, 100);
-            } else {
-              activeGame.startRemote(data.roomId, data.role);
-            }
+            activeGame.onGameEnd = (endData) => {
+              const winnerName = endData.winnerAlias || "Winner";
+              showVictoryModal(winnerName);
+            };
+            activeGame.onScoreChange = (score) => {
+              const sb = document.getElementById("score-board");
+              if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+            };
+            activeGame.startRemote(data.roomId, data.role);
           }
           const p1Name = document.getElementById("player-1-name");
           const p2Name = document.getElementById("player-2-name");
-          if (p1Name) {
-            p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
-          }
-          if (p2Name) {
-            p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
-          }
+          if (p1Name) p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
+          if (p2Name) p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
         }
       };
       const pendingMatch = sessionStorage.getItem("pendingMatch");
@@ -8298,52 +8364,18 @@
         const newBtn = btn.cloneNode(true);
         btn.parentNode?.replaceChild(newBtn, btn);
         newBtn.addEventListener("click", () => {
-          if (!socketService.socket) {
-            alert("Erreur: Non connect\xE9 au serveur de jeu");
+          if (!gameSocket) {
+            alert("Error: lost connexion to game server");
             return;
           }
           if (status) status.innerText = "Recherche d'un adversaire...";
           newBtn.disabled = true;
           newBtn.innerText = "WAITING...";
-          socketService.socket.on("matchFound", (data) => {
-            console.log("Match Found!", data);
-            if (gameChat) {
-              gameChat.joinChannel(data.roomId);
-              gameChat.addSystemMessage("Game found! You are now in a private room.");
-            }
-            if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
-            if (modal) modal.style.display = "none";
-            if (container) {
-              container.innerHTML = "";
-              const canvas = document.createElement("canvas");
-              canvas.width = container.clientWidth;
-              canvas.height = container.clientHeight;
-              canvas.style.width = "100%";
-              canvas.style.height = "100%";
-              container.appendChild(canvas);
-              const ctx = canvas.getContext("2d");
-              const input = new Input_default();
-              const selectedBallSkin = ballInput ? ballInput.value : "classic";
-              if (ctx) {
-                if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-                activeGame.onGameEnd = (endData) => {
-                  const winnerName = endData.winnerAlias || "Winner";
-                  showVictoryModal(winnerName);
-                };
-                activeGame.onScoreChange = (score) => {
-                  const sb = document.getElementById("score-board");
-                  if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                };
-                activeGame.startRemote(data.roomId, data.role);
-              }
-            }
-            const p1Name = document.getElementById("player-1-name");
-            const p2Name = document.getElementById("player-2-name");
-            if (p1Name) p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
-            if (p2Name) p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
+          gameSocket.off("matchFound");
+          gameSocket.on("matchFound", (data) => {
+            startGameFromData(data);
           });
-          socketService.socket.emit("joinQueue");
+          gameSocket.emit("joinQueue");
         });
       }
     }
