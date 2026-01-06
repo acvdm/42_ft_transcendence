@@ -152,16 +152,21 @@ function confirmExit() {
     isNavigationBlocked = true;
     
     if (activeGame) {
+        const wasRemote = activeGame.isRemote;
+        const roomId = activeGame.roomId;
+        const playerRole = activeGame.playerRole;
+        const currentScore = { ...activeGame.score };
+
         activeGame.isRunning = false;
         activeGame.stop();
         
         console.log("Leaving the game - remote");
-        if (activeGame.isRemote && SocketService.getInstance().socket) {
-            SocketService.getInstance().socket.emit('leaveGame', { roomId: activeGame.roomId });
+        if (wasRemote && roomId && SocketService.getInstance().socket) {
+            SocketService.getInstance().socket.emit('leaveGame', { roomId: roomId });
             
             const userIdStr = localStorage.getItem('userId');
-            if (userIdStr) {
-                const myScore = activeGame.playerRole === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+            if (userIdStr && playerRole) {
+                const myScore = playerRole === 'player1' ? currentScore.player1 : currentScore.player2;
                 saveGameStats(Number(userIdStr), myScore, false);
             }
         }
@@ -238,6 +243,52 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
     } catch (error) {
         console.error("Erreur lors de la sauvegarde des stats:", error);
     }
+}
+
+
+
+//////////////////////////////////////
+////// REMOTE MODALE DE VICTOIRE /////
+//////////////////////////////////////
+
+
+    function showRemoteEndModal(winnerName: string, message: string) {
+    if (document.getElementById('remote-end-modal')) return;
+
+    const modalHtml = `
+        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            <div class="window w-[500px] bg-white shadow-2xl animate-bounce-in">
+                <div class="title-bar">
+                    <div class="title-bar-text">Game Over</div>
+                    <div class="title-bar-controls">
+                    </div>
+                </div>
+                <div class="window-body flex flex-col items-center gap-6 p-6">
+                    <h2 class="text-3xl font-black text-blue-600 tracking-wider">VICTORY !</h2>
+                    
+                    <div class="bg-yellow-100 border-2 border-yellow-400 p-4 w-full text-center">
+                        <p class="text-lg font-bold text-gray-800">${winnerName}</p>
+                        <p class="text-sm text-gray-600 mt-2">${message}</p>
+                    </div>
+
+                    <button id="remote-quit-btn" class="mt-4 px-6 py-2 bg-gray-200 border-2 border-white shadow-[inset_-2px_-2px_#0a0a0a,inset_2px_2px_#dfdfdf] active:shadow-[inset_2px_2px_#0a0a0a,inset_-2px_-2px_#dfdfdf] font-bold">
+                        RETURN TO MENU
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+
+    //launchConfetti(4000);
+
+    document.getElementById('remote-quit-btn')?.addEventListener('click', () => {
+        document.getElementById('remote-end-modal')?.remove();
+        window.history.back();
+    });
 }
 
 export function initGamePage(mode: string): void {
@@ -460,8 +511,12 @@ export function initGamePage(mode: string): void {
         }
 
 
-        const startGameFromData = (data: any) => {
+        const startGameFromData = (data: any, p1Alias?: string, p2Alias?: string) => {
             console.log("Starting game from data:", data);
+
+            const player1Alias = p1Alias || "Player 1";
+            const player2Alias = p2Alias || "Player 2";
+
 
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
             if (modal) modal.style.display = 'none';
@@ -495,23 +550,17 @@ export function initGamePage(mode: string): void {
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
 
                     // gestion quand on opposant se casse du jeu 
-                    socketService.socket.on('opponentLeft', () => {
+                    socketService.socket.off('opponentLeft');
+                    socketService.socket.on('opponentLeft', (eventData: any) => {
                         if (activeGame) {
+                            console.log("Opponent left the game! Victory by forfeit!");
                             activeGame.isRunning = false;
                             activeGame.stop();
 
-                            console.log("Opponent left the game! Victory by forfeit!");
                             socketService.socket.off('gameState');
-                            let myAlias = "Me";
-                            let myScore = 0;
-
-                            if (data.role === 'player1') {
-                                myAlias = currentP1Alias;
-                                myScore = activeGame.score.player1;
-                            } else {
-                                myAlias = currentP2Alias;
-                                myScore = activeGame.score.player2;
-                            }
+                            socketService.socket.off('gameEnded');
+                            let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
+                            let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
 
                             const userIdStr = localStorage.getItem('userId');
                             if (userIdStr) {
@@ -604,7 +653,6 @@ export function initGamePage(mode: string): void {
                         
                         const ctx = canvas.getContext('2d');
                         const input = new Input();
-
                         const selectedBallSkin = ballInput ? ballInput.value : 'classic';
 
 
@@ -612,34 +660,35 @@ export function initGamePage(mode: string): void {
                             if (activeGame) activeGame.isRunning = false;
                             activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
-
-                            // gestion si l'autre se casse
-                            socketService.socket.on('opponentLeft', () => {
+                            socketService.socket.off('opponentLeft'); // on nettoie l'ancien ecouteur
+                            socketService.socket.on('opponentLeft', (eventData: any) => {
                                 if (activeGame && activeGame.isRunning) {
-                                    activeGame.stop(); // on stop le jeu 
+                                    console.log("Opponent left during match!", eventData);
                                     
-                                    // affichage de la modale
-                                    const alertHtml = `
-                                        <div id="opponent-left-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                                            <div class="bg-white p-6 rounded-lg shadow-xl text-center border-4 border-blue-400">
-                                                <h2 class="text-xl font-bold mb-4 text-blue-600">Opponent Disconnected</h2>
-                                                <p class="mb-6 font-bold">Your opponent has left the game.</p>
-                                                <button id="opponent-left-ok" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-                                                    Return to Menu
-                                                </button>
-                                            </div>
-                                        </div>
-                                    `;
-                                    const div = document.createElement('div');
-                                    div.innerHTML = alertHtml;
-                                    document.body.appendChild(div);
-
-                                    document.getElementById('opponent-left-ok')?.addEventListener('click', () => {
-                                        document.getElementById('opponent-left-modal')?.remove();
-                                        window.history.back(); // back au menu
-                                    });
+                                    activeGame.isRunning = false;
+                                    activeGame.stop();
+                                    
+                                    // on nettoie tout 
+                                    socketService.socket.off('gameState');
+                                    socketService.socket.off('gameEnded');
+                                    
+                                    // qui suis je et quel est mon score
+                                    let myAlias = data.role === 'player1' ? currentP1Alias : currentP2Alias;
+                                    let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+                                    
+                                    // on sauvegarde
+                                    const userIdStr = localStorage.getItem('userId');
+                                    if (userIdStr) {
+                                        saveGameStats(Number(userIdStr), myScore, true);
+                                    }
+                                    
+                                    // Afficher la modale de victoire
+                                    showRemoteEndModal(myAlias, "(Opponent disconnected)");
+                                    activeGame = null;
                                 }
                             });
+
+                            
 
                             activeGame.onGameEnd = (endData) => {
                                 console.log("Game Ended Data:", endData);
@@ -1164,49 +1213,6 @@ export function initGamePage(mode: string): void {
     }
 
 
-//////////////////////////////////////
-////// REMOTE MODALE DE VICTOIRE /////
-//////////////////////////////////////
-
-
-    function showRemoteEndModal(winnerName: string, message: string) {
-    if (document.getElementById('remote-end-modal')) return;
-
-    const modalHtml = `
-        <div id="remote-end-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-            <div class="window w-[500px] bg-white shadow-2xl animate-bounce-in">
-                <div class="title-bar">
-                    <div class="title-bar-text">Game Over</div>
-                    <div class="title-bar-controls">
-                    </div>
-                </div>
-                <div class="window-body flex flex-col items-center gap-6 p-6">
-                    <h2 class="text-3xl font-black text-blue-600 tracking-wider">VICTORY !</h2>
-                    
-                    <div class="bg-yellow-100 border-2 border-yellow-400 p-4 w-full text-center">
-                        <p class="text-lg font-bold text-gray-800">${winnerName}</p>
-                        <p class="text-sm text-gray-600 mt-2">${message}</p>
-                    </div>
-
-                    <button id="remote-quit-btn" class="mt-4 px-6 py-2 bg-gray-200 border-2 border-white shadow-[inset_-2px_-2px_#0a0a0a,inset_2px_2px_#dfdfdf] active:shadow-[inset_2px_2px_#0a0a0a,inset_-2px_-2px_#dfdfdf] font-bold">
-                        RETURN TO MENU
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    const div = document.createElement('div');
-    div.innerHTML = modalHtml;
-    document.body.appendChild(div);
-
-    launchConfetti(4000);
-
-    document.getElementById('remote-quit-btn')?.addEventListener('click', () => {
-        document.getElementById('remote-end-modal')?.remove();
-        window.history.back();
-    });
-}
 
 // =========================================================
 // =========       LOGIQUE LOCALE 1v1 ======================
