@@ -442,6 +442,9 @@ export function afterRender(): void {
 	// ================== FONCTIONNALITÉ RGPD =====================
 	// ============================================================
 
+
+	////////// Download datas 
+
 	const downloadButton = document.getElementById('download-data-button');
 	downloadButton?.addEventListener('click', async () => {
 		if (!userId) return;
@@ -477,7 +480,64 @@ export function afterRender(): void {
 	});
 
 
+	////////// Delete account
 
+	const deleteAccountButton = document.getElementById('delete-account-button');
+	const deleteModal = document.getElementById('delete-modal');
+	const closeDeleteModalButton = document.getElementById('close-delete-modal');
+	const confirmDeleteButton = document.getElementById('confirm-delete-account-button');
+	const cancelDeleteButton = document.getElementById('cancel-delete-account-button');
+
+	const openDeleteModal = () => {
+		deleteModal?.classList.remove('hidden');
+		deleteModal?.classList.add('flex');
+	};
+
+	const closeDeleteModal = () => {
+		deleteModal?.classList.add('hidden');
+		deleteModal?.classList.remove('flex');
+	};
+
+	deleteAccountButton?.addEventListener('click', openDeleteModal);
+	closeDeleteModalButton?.addEventListener('click', closeDeleteModal);
+	cancelDeleteButton?.addEventListener('click', closeDeleteModal);
+	deleteModal?.addEventListener('click', (e) => {
+		if (e.target === deleteModal) closeDeleteModal();
+	});
+
+	confirmDeleteButton?.addEventListener('click', async () => {
+		if (!userId) return;
+
+		const confirmation = confirm("This action is irreversible. Are you really sure?");
+		if (!confirmation) return;
+
+		try {
+			const response = await fetchWithAuth(`api/users/${userId}`, {
+				method: 'DELETE'
+			});
+
+			if (response.ok) {
+				alert("Your account has been deleted. You will be redirected.");
+				
+				// on supprime tout du local storage
+				localStorage.removeItem('accessToken');
+				localStorage.removeItem('userId');
+				localStorage.removeItem('userTheme'); // pas sure
+				localStorage.removeItem('username');
+				
+				// reidrection vers landing page
+				window.history.pushState({}, '', '/');
+				window.dispatchEvent(new PopStateEvent('popstate')); // routeur applique changement de page
+			} else {
+				const result = await response.json();
+				alert(result.error?.message || "Error deleting account");
+				closeDeleteModal();
+			}
+		} catch (error) {
+			console.error("Network error during destruction:", error);
+			alert("Network error. Please try again.");
+		}
+	});
 
 
 	// ============================================================

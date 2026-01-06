@@ -6393,8 +6393,8 @@
                     <button id="close-delete-modal" aria-label="Close"></button>
                 </div>
             </div>
-            <div class="window-body p-6 flex flex-col gap-4 items-center">
-                <h2 class="text-lg font-bold mb-2 text-red-600">Are you sure you want to delete your account?</h2>
+            <div class="window-body p-6 flex flex-col gap-4 items-center justify-center">
+                <h2 class="text-lg font-bold mb-2 text-red-600 text-center">Are you sure you want to delete your account?</h2>
                 <p>This action will be irreversible.</p>
 
                 <div class="flex justify-end gap-2 mt-4">
@@ -6728,6 +6728,51 @@
         }
       } catch (error) {
         console.error("Network error during export:", error);
+      }
+    });
+    const deleteAccountButton = document.getElementById("delete-account-button");
+    const deleteModal = document.getElementById("delete-modal");
+    const closeDeleteModalButton = document.getElementById("close-delete-modal");
+    const confirmDeleteButton = document.getElementById("confirm-delete-account-button");
+    const cancelDeleteButton = document.getElementById("cancel-delete-account-button");
+    const openDeleteModal = () => {
+      deleteModal?.classList.remove("hidden");
+      deleteModal?.classList.add("flex");
+    };
+    const closeDeleteModal = () => {
+      deleteModal?.classList.add("hidden");
+      deleteModal?.classList.remove("flex");
+    };
+    deleteAccountButton?.addEventListener("click", openDeleteModal);
+    closeDeleteModalButton?.addEventListener("click", closeDeleteModal);
+    cancelDeleteButton?.addEventListener("click", closeDeleteModal);
+    deleteModal?.addEventListener("click", (e) => {
+      if (e.target === deleteModal) closeDeleteModal();
+    });
+    confirmDeleteButton?.addEventListener("click", async () => {
+      if (!userId) return;
+      const confirmation = confirm("This action is irreversible. Are you really sure?");
+      if (!confirmation) return;
+      try {
+        const response = await fetchWithAuth(`api/users/${userId}`, {
+          method: "DELETE"
+        });
+        if (response.ok) {
+          alert("Your account has been deleted. You will be redirected.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("userTheme");
+          localStorage.removeItem("username");
+          window.history.pushState({}, "", "/");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          const result = await response.json();
+          alert(result.error?.message || "Error deleting account");
+          closeDeleteModal();
+        }
+      } catch (error) {
+        console.error("Network error during destruction:", error);
+        alert("Network error. Please try again.");
       }
     });
     const closeModalFunc = () => {
