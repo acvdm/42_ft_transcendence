@@ -417,8 +417,34 @@ fastify.ready().then(() => {
             }
         });
 
+        // Dans srcs/back/chat/src/index.ts
+
+        socket.on('leaveGame', (data: { roomId: string }) => {
+            const game = activeGames.get(data.roomId);
+            
+            // Vérifier que le socket est bien un joueur de cette partie
+            if (game && (game.player1Id === socket.id || game.player2Id === socket.id)) {
+                console.log(`Player ${socket.id} left the game explicitly`);
+
+                // Identifier l'adversaire
+                const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+
+                // Prévenir l'adversaire IMMÉDIATEMENT qu'il a gagné par forfait
+                fastify.io.to(opponentId).emit('opponentLeft', { 
+                    roomId: data.roomId,
+                    leaver: socket.id 
+                });
+
+                // Arrêter la partie proprement
+                stopGame(data.roomId, fastify.io);
+            }
+        });
+
+        // Dans srcs/back/chat/src/index.ts
+
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);
+            
             // Nettoyage map userSockets
             for (const [uid, sid] of userSockets.entries()) {
                 if (sid === socket.id) {
@@ -426,13 +452,24 @@ fastify.ready().then(() => {
                     break;
                 }
             }
-            // Nettoyage file
+            
+            // Nettoyage file d'attente
             waitingQueue = waitingQueue.filter(id => id !== socket.id);
-            // nettoyage parties actives
-            // si un joueur part, la partie s'arrête)
             socketAliases.delete(socket.id);
+
+            // GESTION DES PARTIES EN COURS
             for (const [roomId, game] of activeGames.entries()) {
                 if (game.player1Id === socket.id || game.player2Id === socket.id) {
+                    
+                    // Identifier l'adversaire restant
+                    const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+                    
+                    // Lui envoyer l'event de victoire par forfait
+                    fastify.io.to(opponentId).emit('opponentLeft', { 
+                        roomId: roomId,
+                        leaver: socket.id 
+                    });
+
                     stopGame(roomId, fastify.io);
                 }
             }

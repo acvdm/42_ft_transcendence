@@ -255,25 +255,41 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
     function showRemoteEndModal(winnerName: string, message: string) {
     if (document.getElementById('remote-end-modal')) return;
 
+    
     const modalHtml = `
         <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
-            <div class="window w-[500px] bg-white shadow-2xl animate-bounce-in">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+
                 <div class="title-bar">
-                    <div class="title-bar-text">Game Over</div>
-                    <div class="title-bar-controls">
-                    </div>
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-controls"></div>
                 </div>
-                <div class="window-body flex flex-col items-center gap-6 p-6">
-                    <h2 class="text-3xl font-black text-blue-600 tracking-wider">VICTORY !</h2>
-                    
-                    <div class="bg-yellow-100 border-2 border-yellow-400 p-4 w-full text-center">
-                        <p class="text-lg font-bold text-gray-800">${winnerName}</p>
-                        <p class="text-sm text-gray-600 mt-2">${message}</p>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
+
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">
+                            ${winnerName}
+                        </p>
+                        <p class="text-sm text-gray-600 font-semibold italic text-center">
+                            ${message}
+                        </p>
                     </div>
 
-                    <button id="remote-quit-btn" class="mt-4 px-6 py-2 bg-gray-200 border-2 border-white shadow-[inset_-2px_-2px_#0a0a0a,inset_2px_2px_#dfdfdf] active:shadow-[inset_2px_2px_#0a0a0a,inset_-2px_-2px_#dfdfdf] font-bold">
-                        RETURN TO MENU
-                    </button>
+                    <div class="flex gap-6 w-full justify-center">
+                        <button id="remote-quit-btn"
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
+                                    px-6 py-4 text-base font-semibold shadow-sm
+                                    hover:from-gray-200 hover:to-gray-400
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                    transition-all duration-200 hover:shadow-md"
+                                style="width: 200px; padding: 4px;">
+                            RETURN TO MENU
+                        </button>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -283,7 +299,7 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
     div.innerHTML = modalHtml;
     document.body.appendChild(div);
 
-    //launchConfetti(4000);
+    //launchConfetti?.(4000);
 
     document.getElementById('remote-quit-btn')?.addEventListener('click', () => {
         document.getElementById('remote-end-modal')?.remove();
@@ -296,27 +312,9 @@ export function initGamePage(mode: string): void {
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
-    // Intercepter les clics sur les liens de navigation
-    // const navLinks = ['/home', '/profile', '/logout'];
-    // navLinks.forEach(path => {
-    //     // on cherche le lien href specifique
-    //     const link = document.querySelector(`a[href="${path}"]`) as HTMLElement;
-    //     if (link) {
-    //         const newLink = link.cloneNode(true) as HTMLElement;
-    //         link.parentNode?.replaceChild(newLink, link);
-            
-    //         newLink.addEventListener('click', (e) => {
-    //             if (isGameRunning()) {
-    //                 e.preventDefault();
-    //                 e.stopImmediatePropagation();
-    //                 showExitConfirmationModal();
-    //             }
-    //         }, true);
-    //     }
-    // });
     // Récupération des éléments communs
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
-    const player2Display = document.getElementById('player-2-name') as HTMLElement;
+    //const player2Display = document.getElementById('player-2-name') as HTMLElement;
 
     // on recupere le username du joueur connecte
     const userId = localStorage.getItem('userId');
