@@ -7,7 +7,7 @@ import { render as LandingPage, initLandingPage } from "./pages/LandingPage";
 import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
-import { render as GamePage, initGamePage } from "./pages/GamePage";
+import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./pages/GamePage";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -129,11 +129,14 @@ const handleLocationChange = () => {
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
-	// --- 1. GESTION DU LOGOUT (C'est ça qu'il manquait !) ---
+	// si le jeu est en train de tourner mais que l'url n'est pas game
+	if (isGameRunning() && path !== '\game') cleanup(); // on arrete le jeu et activegame devient nul
+
 	if (path === '/logout') {
 		handleLogout();
 		return; // On arrête tout ici pour laisser le logout se faire
 	}
+
 
 	// --- 2. GESTION DE LA NAVBAR ---
 	const navbar = document.getElementById('main-navbar');
@@ -225,6 +228,12 @@ window.addEventListener('click', (event) => {
         // (Astuce: on passe l'event, et dans navigate on récupère la cible via l'event)
         // Note: Ici on simplifie l'appel en passant l'event original
         event.preventDefault();
+		if (isGameRunning()) {
+			event.stopImmediatePropagation();
+			showExitConfirmationModal();
+			return ;
+		}
+
         const href = anchor.href;
         
         if (href === window.location.href) return;
@@ -238,6 +247,11 @@ window.addEventListener('click', (event) => {
 
 // 2. Gestion des contenus suivant/precedent
 window.addEventListener('popstate', () => {
+	if (isGameRunning()) {
+		window.history.pushState(null, '', '/game');
+		showExitConfirmationModal();
+		return ;
+	}
 	handleLocationChange();
 });
 

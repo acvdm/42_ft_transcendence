@@ -54,11 +54,15 @@ const authMiddleware = (socket: any, next: any) => {
     }
 }
 
+// const socketAliases = new Map<string, string>();
+
 // // --- STRUCTURES JEU REMOTE ---
 // interface GameState {
 //     roomId: string;
 //     player1Id: string;
 //     player2Id: string;
+//     player1Alias: string;
+//     player2Alias: string;
 //     ball: { x: number, y: number, vx: number, vy: number, radius: number };
 //     paddle1: { y: number, height: number, width: number, x: number };
 //     paddle2: { y: number, height: number, width: number, x: number };
@@ -74,11 +78,13 @@ const authMiddleware = (socket: any, next: any) => {
 // // --- LOGIQUE JEU SERVEUR ---
 // const GAMESPEED = 1000 / 60; // 60 FPS
 
-// function initGameState(roomId: string, p1: string, p2: string): GameState {
+// function initGameState(roomId: string, p1: string, p2: string, alias1: string, alias2: string): GameState {
 //     return {
 //         roomId,
 //         player1Id: p1,
 //         player2Id: p2,
+//         player1Alias: alias1, // Stockage
+//         player2Alias: alias2,
 //         canvasWidth: 800, // Taille de référence serveur
 //         canvasHeight: 600,
 //         ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
@@ -154,7 +160,15 @@ const authMiddleware = (socket: any, next: any) => {
 //     const game = activeGames.get(roomId);
 //     if (game) {
 //         if (game.intervalId) clearInterval(game.intervalId);
-//         io.to(roomId).emit('gameEnded', { finalScore: game.score });
+
+
+//         const isP1Winner = game.score.player1 > game.score.player2;
+//         const winnerRole = isP1Winner ? 'player1' : 'player2';
+//         const winnerName = isP1Winner ? game.player1Alias : game.player2Alias;
+
+
+
+//         io.to(roomId).emit('gameEnded', { finalScore: game.score, winner: winnerRole, winnerAlias: winnerName });
 //         activeGames.delete(roomId);
 //     }
 // }
@@ -243,6 +257,227 @@ fastify.ready().then(() => {
         });
     });
 });
+
+//         // ------------------------------------
+//         // --- EVENTS DU JEU REMOTE (AJOUT) ---
+//         // ------------------------------------
+
+//         // gestion des invitations
+//         socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
+//             const targetIdNum = Number(data.targetId);
+//             const targetSocketId = userSockets.get(targetIdNum);
+            
+//             if (targetSocketId) {
+//                 // nitifcations a l'ami via son socket
+//                 fastify.io.to(targetSocketId).emit('receiveGameInvite', {
+//                     senderId: socket.user.sub, // son id
+//                     senderName: data.senderName
+//                 });
+//             }
+//         });
+
+//         socket.on('acceptGameInvite', (data: { senderId: string, senderAlias?: string, acceptorAlias?: string }) => {
+//             const senderIdNum = Number(data.senderId);
+//             const senderSocketId = userSockets.get(senderIdNum);
+//             const acceptorSocketId = socket.id;
+
+//             // estce que le user est tjrs connecte
+//             if (senderSocketId) {
+//                 const senderSocket = fastify.io.sockets.sockets.get(senderSocketId);
+                
+//                 if (senderSocket) {
+//                     // creation de la partie 
+//                     const roomId = `game_invite_${Date.now()}_${senderIdNum}_${socket.user.sub}`;
+                    
+//                     const alias1 = data.senderAlias || socketAliases.get(senderSocketId) || "Player 1";
+//                     const alias2 = data.acceptorAlias || socketAliases.get(acceptorSocketId) || "Player 2";
+//                     // etat du jeu 
+//                     const gameState = initGameState(roomId, senderSocketId, acceptorSocketId, alias1, alias2);
+//                     activeGames.set(roomId, gameState);
+
+//                     // les deux ont rejoins la room
+//                     senderSocket.join(roomId);
+//                     socket.join(roomId);
+
+//                     setTimeout(() => {
+//                         senderSocket.emit('matchFound', { 
+//                             roomId, 
+//                             role: 'player1', 
+//                             opponent: socket.user.sub,
+//                             player1Alias: alias1,
+//                             player2Alias: alias2
+//                         });
+                        
+//                         socket.emit('matchFound', { 
+//                             roomId, 
+//                             role: 'player2', 
+//                             opponent: senderIdNum,
+//                             player1Alias: alias1,
+//                             player2Alias: alias2
+//                         });
+//                         console.log(`Friend match started: ${roomId}`);
+                        
+//                         //lancement de la boucle
+//                         gameState.intervalId = setInterval(() => {
+//                             updateGamePhysics(gameState, fastify.io);
+//                         }, GAMESPEED);
+//                     }, 100); // delai pour le frontend
+//                 }
+//             }
+//         });
+
+//         socket.on('declineGameInvite', (data: { senderId: string }) => {
+//              const senderSocketId = userSockets.get(Number(data.senderId));
+//              if (senderSocketId) {
+//                  fastify.io.to(senderSocketId).emit('gameInviteDeclined', {});
+//              }
+//         });
+
+//         socket.on('joinQueue', (data: { alias?: string }) => {
+//             // si le joueur est deja en jeu ou en file d'addente on ignore
+//             if (waitingQueue.includes(socket.id)) return;
+
+//             const playerAlias = (data && data.alias) ? data.alias : "Player";
+//             socketAliases.set(socket.id, playerAlias);
+
+
+//             console.log(`Player ${socket.id} joined Queue`);
+//             waitingQueue.push(socket.id);
+
+//             // Si on a 2 joueurs, on lance
+//             if (waitingQueue.length >= 2) {
+//                 const p1 = waitingQueue.shift()!;
+//                 const p2 = waitingQueue.shift()!;
+//                 const roomId = `game_${Date.now()}_${p1}_${p2}`;
+
+//                 const alias1 = socketAliases.get(p1) || "Player 1";
+//                 const alias2 = socketAliases.get(p2) || "Player 2";
+//                 // Création état jeu
+//                 const gameState = initGameState(roomId, p1, p2, alias1, alias2);
+//                 activeGames.set(roomId, gameState);
+
+//                 // Setup Sockets
+//                 const sock1 = fastify.io.sockets.sockets.get(p1);
+//                 const sock2 = fastify.io.sockets.sockets.get(p2);
+
+//                 if (sock1 && sock2) {
+//                     sock1.join(roomId);
+//                     sock2.join(roomId);
+
+//                     const matchData = {
+//                         roomId,
+//                         player1Alias: alias1,
+//                         player2Alias: alias2
+//                     };
+
+//                     sock1.emit('matchFound', { 
+//                         roomId, 
+//                         role: 'player1', 
+//                         opponent: p2,
+//                         player1Alias: alias1,
+//                         player2Alias: alias2
+//                     });
+                    
+//                     sock2.emit('matchFound', { 
+//                         roomId, 
+//                         role: 'player2', 
+//                         opponent: p1,
+//                         player1Alias: alias1,
+//                         player2Alias: alias2
+//                     });
+
+//                     console.log(`Match started: ${roomId}`);
+                    
+//                     // Lancement boucle
+//                     gameState.intervalId = setInterval(() => {
+//                         updateGamePhysics(gameState, fastify.io);
+//                     }, GAMESPEED);
+//                 }
+//             }
+//         });
+
+//         socket.on('leaveQueue', () => {
+//             waitingQueue = waitingQueue.filter(id => id !== socket.id);
+//         });
+
+//         socket.on('gameInput', (data: { roomId: string, up: boolean, down: boolean }) => {
+//             const game = activeGames.get(data.roomId);
+//             if (!game) return;
+
+//             const speed = 10;
+//             // Qui bouge ?
+//             let paddle = null;
+//             if (socket.id === game.player1Id) paddle = game.paddle1;
+//             else if (socket.id === game.player2Id) paddle = game.paddle2;
+
+//             if (paddle) {
+//                 if (data.up) paddle.y -= speed;
+//                 if (data.down) paddle.y += speed;
+//                 // Limites
+//                 if (paddle.y < 0) paddle.y = 0;
+//                 if (paddle.y + paddle.height > game.canvasHeight) paddle.y = game.canvasHeight - paddle.height;
+//             }
+//         });
+
+//         // Dans srcs/back/chat/src/index.ts
+
+//         socket.on('leaveGame', (data: { roomId: string }) => {
+//             const game = activeGames.get(data.roomId);
+            
+//             // Vérifier que le socket est bien un joueur de cette partie
+//             if (game && (game.player1Id === socket.id || game.player2Id === socket.id)) {
+//                 console.log(`Player ${socket.id} left the game explicitly`);
+
+//                 // Identifier l'adversaire
+//                 const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+
+//                 // Prévenir l'adversaire IMMÉDIATEMENT qu'il a gagné par forfait
+//                 fastify.io.to(opponentId).emit('opponentLeft', { 
+//                     roomId: data.roomId,
+//                     leaver: socket.id 
+//                 });
+
+//                 // Arrêter la partie proprement
+//                 stopGame(data.roomId, fastify.io);
+//             }
+//         });
+
+//         // Dans srcs/back/chat/src/index.ts
+
+//         socket.on('disconnect', () => {
+//             console.log(`Client disconnected: ${socket.id}`);
+            
+//             // Nettoyage map userSockets
+//             for (const [uid, sid] of userSockets.entries()) {
+//                 if (sid === socket.id) {
+//                     userSockets.delete(uid);
+//                     break;
+//                 }
+//             }
+            
+//             // Nettoyage file d'attente
+//             waitingQueue = waitingQueue.filter(id => id !== socket.id);
+//             socketAliases.delete(socket.id);
+
+//             // GESTION DES PARTIES EN COURS
+//             for (const [roomId, game] of activeGames.entries()) {
+//                 if (game.player1Id === socket.id || game.player2Id === socket.id) {
+                    
+//                     // Identifier l'adversaire restant
+//                     const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+                    
+//                     // Lui envoyer l'event de victoire par forfait
+//                     fastify.io.to(opponentId).emit('opponentLeft', { 
+//                         roomId: roomId,
+//                         leaver: socket.id 
+//                     });
+
+//                     stopGame(roomId, fastify.io);
+//                 }
+//             }
+//         });
+//     });
+// });
 
 //         // ------------------------------------
 //         // --- EVENTS DU JEU REMOTE (AJOUT) ---

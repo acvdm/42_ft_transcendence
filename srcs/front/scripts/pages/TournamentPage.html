@@ -1,4 +1,4 @@
-<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+<div id="wizz-game-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
 
     <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
          style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
@@ -26,7 +26,7 @@
                         <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>
                     </div>
 
-                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white 25px solid white; border-bottom: 25px solid white;"></div>
+                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
                     
 
                     <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -77,7 +77,7 @@
                                                     <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>
                                                 </div>
                                             </div>
-                                            <input type="hidden" id="tour-ball-value" value="/assets/emoticons/smile.gif">
+                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">
                                         </div>
                                         <div class="flex flex-row items-center gap-2 relative">
                                             <label class="text-sm font-semibold">Background :</label>

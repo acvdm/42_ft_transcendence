@@ -71,6 +71,147 @@ let tournamentState: TournamentData | null = null; // on stocke l'état du tourn
 let activeGame: Game | null = null; // Instance du jeu
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null; // on stocke l'ecoute de l'envoi a l'espace
 
+
+// Après les imports, avant les variables globales
+let isNavigationBlocked = false;
+
+export function isGameRunning(): boolean {
+    return activeGame !== null && activeGame.isRunning;
+}
+
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+    if (isGameRunning()) {
+        e.preventDefault();
+        e.returnValue = 'A game is in progress. Are you sure you want to leave?';
+        return e.returnValue;
+    }
+}
+
+function handlePopState(e: PopStateEvent) {
+    if (isGameRunning() && !isNavigationBlocked) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.history.pushState({ gameMode: window.history.state?.gameMode || 'local' }, '', '/game');
+        showExitConfirmationModal();
+    }
+}
+
+
+
+
+export function showExitConfirmationModal() {
+    if (document.getElementById('exit-confirm-modal')) return;
+
+    if (activeGame) {
+        activeGame.pause();
+    }
+
+    const modalHtml = `
+        <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+                
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close" id="modal-close-x"></button>
+                    </div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
+                    
+                    <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
+                        WAIT A MINUTE !
+                    </h2>
+                    
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        
+                        <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            GO BACK TO GAME
+                        </button>
+                        
+                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            LEAVE
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+
+    document.getElementById('confirm-exit-btn')?.addEventListener('click', () => {
+        confirmExit();
+    });
+    
+    const closeFunc = () => {
+        document.getElementById('exit-confirm-modal')?.remove();
+
+        if (activeGame) {
+            activeGame.resume();
+        }
+    }
+
+    document.getElementById('cancel-exit-btn')?.addEventListener('click', closeFunc);
+    document.getElementById('modal-close-x')?.addEventListener('click', closeFunc);
+}
+
+function confirmExit() {
+    isNavigationBlocked = true;
+    
+    if (activeGame) {
+        const wasRemote = activeGame.isRemote;
+        const roomId = activeGame.roomId;
+        const playerRole = activeGame.playerRole;
+        const currentScore = { ...activeGame.score };
+
+        activeGame.isRunning = false;
+        activeGame.stop();
+        
+        console.log("Leaving the game - remote");
+        if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
+            SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
+            
+            const userIdStr = localStorage.getItem('userId');
+            if (userIdStr && playerRole) {
+                const myScore = playerRole === 'player1' ? currentScore.player1 : currentScore.player2;
+                saveGameStats(Number(userIdStr), myScore, false);
+            }
+        }
+        
+        activeGame = null;
+    }
+    
+    cleanup();
+    document.getElementById('exit-confirm-modal')?.remove();
+    
+    setTimeout(() => {
+        isNavigationBlocked = false;
+        window.history.back();
+    }, 100);
+}
+
+function cancelExit() {
+    document.getElementById('exit-confirm-modal')?.remove();
+    if (activeGame) {
+        activeGame.resume();
+    }
+}
+
+
+
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
     if (gameChat) {
@@ -80,6 +221,7 @@ export function cleanup() {
     tournamentState = null;
 
     if (activeGame) {
+        activeGame.isRunning = false;
         activeGame.stop();
         activeGame = null;
     }
@@ -89,6 +231,10 @@ export function cleanup() {
         document.removeEventListener('keydown', spaceKeyListener);
         spaceKeyListener = null;
     }
+
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('popstate', handlePopState);
+    isNavigationBlocked = false;
 }
 
 export function render(): string {
@@ -102,8 +248,90 @@ export function render(): string {
     return htmlContentLocal;
 }
 
+
+async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+    try {
+        // ne renvoit pas correctement les stats -> trouver pourquoi 
+       await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                userScore: score,
+                isWinner: isWinner ? 1 : 0
+            })
+        });
+        console.log(`Stats sauvegardées pour le user ${userId}`);
+    } catch (error) {
+        console.error("Erreur lors de la sauvegarde des stats:", error);
+    }
+}
+
+
+
+//////////////////////////////////////
+////// REMOTE MODALE DE VICTOIRE /////
+//////////////////////////////////////
+
+
+    function showRemoteEndModal(winnerName: string, message: string) {
+    if (document.getElementById('remote-end-modal')) return;
+
+    
+    const modalHtml = `
+        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-controls"></div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
+
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">
+                            ${winnerName}
+                        </p>
+                        <p class="text-sm text-gray-600 font-semibold italic text-center">
+                            ${message}
+                        </p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        <button id="remote-quit-btn"
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
+                                    px-6 py-4 text-base font-semibold shadow-sm
+                                    hover:from-gray-200 hover:to-gray-400
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                    transition-all duration-200 hover:shadow-md"
+                                style="width: 200px; padding: 4px;">
+                            RETURN TO MENU
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+
+    //launchConfetti?.(4000);
+
+    document.getElementById('remote-quit-btn')?.addEventListener('click', () => {
+        document.getElementById('remote-end-modal')?.remove();
+        window.history.back();
+    });
+}
+
 export function initGamePage(mode: string): void {
 
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
     // Récupération des éléments communs
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
     const player2Display = document.getElementById('player-2-name') as HTMLElement;
@@ -147,20 +375,25 @@ export function initGamePage(mode: string): void {
         // modal
         const modal = document.getElementById('local-summary-modal');
         const winnerText = document.getElementById('winner-name');
-        const quitBtn = document.getElementById('quit-local-btn');
+        const quitLocalBtn = document.getElementById('quit-local-btn');
+        const quitRemoteBtn = document.getElementById('quit-remote-btn');
 
         if (modal && winnerText) {
             winnerText.innerText = winnerName;
             modal.classList.remove('hidden');
             
+            if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
             // lancement de confettis
             launchConfetti(4000);
         }
 
+        const backAction = () => {
+            window.history.back();
+        }
         // gestion du bouton retour au menu
-        quitBtn?.addEventListener('click', () => {
-             window.location.reload(); 
-        });
+        quitLocalBtn?.addEventListener('click', backAction);
+        quitRemoteBtn?.addEventListener('click', backAction);
+
     }
 
     // ---------------------------------------------------------
@@ -203,7 +436,6 @@ export function initGamePage(mode: string): void {
 
 
 
-
     // ---------------------------------------------------------
     // -------------- LOGIQUE DU JEU REMOTE (AJOUT) ------------
     // ---------------------------------------------------------
@@ -243,6 +475,8 @@ export function initGamePage(mode: string): void {
         
         const gameContainer = document.getElementById('left'); // conteneur du jeu pour le background
 
+        let currentP1Alias = "Player 1";
+        let currentP2Alias = "Player 2";
 
         if (ballBtn && ballDrop && ballGrid) {
             const uniqueUrls = new Set<string>();
@@ -316,6 +550,9 @@ export function initGamePage(mode: string): void {
                 gameChat.joinChannel(data.roomId);
                 gameChat.addSystemMessage("Match started! Good luck.");
             }
+            const p1Alias = data.player1Alias || "Player 1";
+            const p2Alias = data.player2Alias || "Player 2";
+
 
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
             if (modal) modal.style.display = 'none';
@@ -350,9 +587,55 @@ export function initGamePage(mode: string): void {
 
                     // Gestion de la fin de partie (UI)
                     activeGame.onGameEnd = (endData) => {
-                        const winnerName = endData.winnerAlias || "Winner";
+                        let winnerName = endData.winnerAlias || "Winner";
+
+                        if (endData.winner == 'player1') {
+                            winnerName = p1Alias;
+                        } 
+                        else if (endData.winner == 'player2') {
+                            winnerName = p2Alias;
+                        }
+                        else if (endData.winnerAlias) {
+                            winnerName = endData.winnerAlias;
+                        }
+
                         showVictoryModal(winnerName);
                     }
+                    // // gestion quand on opposant se casse du jeu 
+                    // socketService.socket.off('opponentLeft');
+                    // socketService.socket.on('opponentLeft', (eventData: any) => {
+                    //     if (activeGame) {
+                    //         console.log("Opponent left the game! Victory by forfeit!");
+                    //         activeGame.isRunning = false;
+                    //         activeGame.stop();
+
+                    //         socketService.socket.off('gameState');
+                    //         socketService.socket.off('gameEnded');
+                    //         let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
+                    //         let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+
+                    //         const userIdStr = localStorage.getItem('userId');
+                    //         if (userIdStr) {
+                    //             saveGameStats(Number(userIdStr), myScore, true);
+                    //         }
+
+                    //         showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                    //         activeGame = null;
+                    //     }
+                    // });
+
+                    // // --- ATTENTE SOCKET PRÊT ---
+                    // if (!socketService.socket) {
+                    //     console.log("Socket non connecté, attente...");
+                    //     const checkSocket = setInterval(() => {
+                    //         if (socketService.socket) {
+                    //             clearInterval(checkSocket);
+                    //             activeGame?.startRemote(data.roomId, data.role);
+                    //         }
+                    //     }, 100);
+                    // } else {
+                    //     activeGame.startRemote(data.roomId, data.role);
+                    // }
 
                     activeGame.onScoreChange = (score) => {
                         const sb = document.getElementById('score-board');
@@ -367,8 +650,8 @@ export function initGamePage(mode: string): void {
                 const p1Name = document.getElementById('player-1-name');
                 const p2Name = document.getElementById('player-2-name');
 
-                if (p1Name) p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
-                if (p2Name) p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
+                if (p1Name) p1Name.innerText = p1Alias;
+                if (p2Name) p2Name.innerText = p2Alias;
             }
         };
 
@@ -404,6 +687,7 @@ export function initGamePage(mode: string): void {
                 gameSocket.off('matchFound');
 
                 gameSocket.on('matchFound', (data: any) => {
+                    console.log(data);
                     startGameFromData(data);
                 });
 
@@ -411,6 +695,123 @@ export function initGamePage(mode: string): void {
                 gameSocket.emit('joinQueue');
             });
         }
+        //         // Ecoute de l'événement de début de match
+        //         socketService.socket.on('matchFound', (data: any) => {
+        //             console.log("Match Found!", data);
+                    
+        //             currentP1Alias = data.player1Alias || "Player 1";
+        //             currentP2Alias = data.player2Alias || "Player 2";
+
+        //             if (gameChat) {
+        //                 // on rejoint un canal unique du match et du chat
+        //                 // la class va nettoyer automqtiquement les messages
+        //                 gameChat.joinChannel(data.roomId);
+        //                 gameChat.addSystemMessage("Game found! You are now in a private room.")
+        //             }
+                    
+        //             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
+        //             if (modal) modal.style.display = 'none';
+
+        //             if (container) {
+        //                 container.innerHTML = ''; 
+        //                 const canvas = document.createElement('canvas');
+                        
+        //                 canvas.width = container.clientWidth;
+        //                 canvas.height = container.clientHeight;
+        //                 canvas.style.width = '100%';
+        //                 canvas.style.height = '100%';
+                        
+        //                 container.appendChild(canvas);
+                        
+        //                 const ctx = canvas.getContext('2d');
+        //                 const input = new Input();
+        //                 const selectedBallSkin = ballInput ? ballInput.value : 'classic';
+
+
+        //                 if (ctx) {
+        //                     if (activeGame) activeGame.isRunning = false;
+        //                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
+                            
+        //                     socketService.socket.off('opponentLeft'); // on nettoie l'ancien ecouteur
+        //                     socketService.socket.on('opponentLeft', (eventData: any) => {
+        //                         if (activeGame && activeGame.isRunning) {
+        //                             console.log("Opponent left during match!", eventData);
+                                    
+        //                             activeGame.isRunning = false;
+        //                             activeGame.stop();
+                                    
+        //                             // on nettoie tout 
+        //                             socketService.socket.off('gameState');
+        //                             socketService.socket.off('gameEnded');
+                                    
+        //                             // qui suis je et quel est mon score
+        //                             let myAlias = data.role === 'player1' ? currentP1Alias : currentP2Alias;
+        //                             let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+                                    
+        //                             // on sauvegarde
+        //                             const userIdStr = localStorage.getItem('userId');
+        //                             if (userIdStr) {
+        //                                 saveGameStats(Number(userIdStr), myScore, true);
+        //                             }
+                                    
+        //                             // Afficher la modale de victoire
+        //                             showRemoteEndModal(myAlias, "(Opponent disconnected)");
+        //                             activeGame = null;
+        //                         }
+        //                     });
+
+                            
+
+        //                     activeGame.onGameEnd = (endData) => {
+        //                         console.log("Game Ended Data:", endData);
+                                
+        //                         // determineteur du winner localement 
+        //                         let winnerName = "Winner";
+
+        //                         // on verifie i le back renvoit p1 ou p2
+        //                         if (endData.winner === 'player1') {
+        //                             winnerName = currentP1Alias;
+        //                         } else if (endData.winner === 'player2') {
+        //                             winnerName = currentP2Alias;
+        //                         } else if (endData.winnerAlias) {
+        //                             // fallbacl
+        //                             winnerName = endData.winnerAlias;
+        //                         }
+
+        //                         showVictoryModal(winnerName);
+        //                     }
+                            
+
+
+        //                     activeGame.onScoreChange = (score) => {
+        //                         const sb = document.getElementById('score-board');
+        //                         if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+        //                     };
+                            
+        //                     // On lance le jeu une fois le canvas pret
+        //                     activeGame.startRemote(data.roomId, data.role);
+        //                 }
+        //             }
+                    
+        //             // Update UI noms
+        //             const p1Name = document.getElementById('player-1-name');
+        //             const p2Name = document.getElementById('player-2-name');
+                    
+        //             if (data.role === 'player1') {
+        //                 if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
+        //                 if (p2Name) p2Name.innerText = currentP2Alias;
+        //             } else {
+        //                 if (p1Name) p1Name.innerText = currentP1Alias;
+        //                 if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
+        //             }
+        //         });
+
+        //         const myAlias = document.getElementById('player-1-name')?.innerText || "Player";
+
+        //         // Envoi demande au serveur
+        //         socketService.socket.emit('joinQueue', { alias: myAlias });
+        //     });
+        // }
                     
         //             if (gameChat) {
         //                 // on rejoint un canal unique du match et du chat
@@ -470,6 +871,7 @@ export function initGamePage(mode: string): void {
         //         // // Envoi demande au serveur
         //         // socketService.socket.emit('joinQueue');
         //     });
+        // }
         // }
     }
 
@@ -800,6 +1202,10 @@ export function initGamePage(mode: string): void {
         if (p1Name) p1Name.innerText = p1.alias;
         if (p2Name) p2Name.innerText = p2.alias;
 
+        const scoreBoard = document.getElementById('score-board');
+            if (scoreBoard) {
+                scoreBoard.innerText = "0 - 0";
+            }
         // Appliquer la couleur de fond choisie au conteneur gauche
         const container = document.getElementById('left');
         if(container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
@@ -841,8 +1247,6 @@ export function initGamePage(mode: string): void {
                 
                 activeGame.start();
 
-                // + fin du jeu (endMatch())
-                // on supervise le socre pour s'arreter a 11
                 const checkInterval = setInterval(() => {
                     if (!activeGame || !activeGame.isRunning) {
                         clearInterval(checkInterval);
@@ -914,10 +1318,11 @@ export function initGamePage(mode: string): void {
 
     function showSummary(champion: string) {
         // Reset background
+        
         launchConfetti(4000);
         const container = document.getElementById('left');
         if (container) container.style.backgroundColor = 'white';
-
+        
         const summaryModal = document.getElementById('tournament-summary-modal');
         
         if (summaryModal) {
@@ -928,12 +1333,17 @@ export function initGamePage(mode: string): void {
             if (winnerDisplay) winnerDisplay.innerText = champion;
             if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
 
+            if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
             const userId = localStorage.getItem('userId');
             if (userId) {
                 saveTournamentToApi(champion);
             }
 
             document.getElementById('quit-tournament-btn')?.addEventListener('click', () => {
+                window.history.back();
+            });
+
+            document.getElementById('quit-remote-btn')?.addEventListener('click', () => {
                 window.history.back();
             });
         }
@@ -962,6 +1372,7 @@ export function initGamePage(mode: string): void {
             });
         } catch (e) { console.error(e); }
     }
+
 
 
 // =========================================================
