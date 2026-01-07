@@ -5310,7 +5310,7 @@
           if (response.ok) {
             const cleanAvatarUrl = result.data.avatar;
             if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
-            const socket = SocketService_default.getInstance().socket;
+            const socket = SocketService_default.getInstance().chatSocket();
             const username = localStorage.getItem("username");
             if (socket) {
               socket.emit("notifyProfileUpdate", {

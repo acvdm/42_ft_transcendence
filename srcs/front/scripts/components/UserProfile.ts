@@ -365,7 +365,7 @@ export class UserProfile {
 
                     if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
 
-                    const socket = SocketService.getInstance().socket;
+                    const socket = SocketService.getInstance().chatSocket();
                     const username = localStorage.getItem('username');
                     
                     if (socket) {
