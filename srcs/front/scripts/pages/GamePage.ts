@@ -626,18 +626,6 @@ export function initGamePage(mode: string): void {
                         }
                     });
 
-                    // // --- ATTENTE SOCKET PRÊT ---
-                    // if (!socketService.socket) {
-                    //     console.log("Socket non connecté, attente...");
-                    //     const checkSocket = setInterval(() => {
-                    //         if (socketService.socket) {
-                    //             clearInterval(checkSocket);
-                    //             activeGame?.startRemote(data.roomId, data.role);
-                    //         }
-                    //     }, 100);
-                    // } else {
-                    //     activeGame.startRemote(data.roomId, data.role);
-                    // }
 
                     activeGame.onScoreChange = (score) => {
                         const sb = document.getElementById('score-board');
@@ -652,12 +640,6 @@ export function initGamePage(mode: string): void {
                 const p1Name = document.getElementById('player-1-name');
                 const p2Name = document.getElementById('player-2-name');
 
-                // if (p1Name) {
-                //     p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
-                // }
-                // if (p2Name) {
-                //     p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
-                // }
             }
         };
 
@@ -701,184 +683,6 @@ export function initGamePage(mode: string): void {
                 gameSocket.emit('joinQueue');
             });
         }
-        //         // Ecoute de l'événement de début de match
-        //         socketService.socket.on('matchFound', (data: any) => {
-        //             console.log("Match Found!", data);
-                    
-        //             currentP1Alias = data.player1Alias || "Player 1";
-        //             currentP2Alias = data.player2Alias || "Player 2";
-
-        //             if (gameChat) {
-        //                 // on rejoint un canal unique du match et du chat
-        //                 // la class va nettoyer automqtiquement les messages
-        //                 gameChat.joinChannel(data.roomId);
-        //                 gameChat.addSystemMessage("Game found! You are now in a private room.")
-        //             }
-                    
-        //             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-        //             if (modal) modal.style.display = 'none';
-
-        //             if (container) {
-        //                 container.innerHTML = ''; 
-        //                 const canvas = document.createElement('canvas');
-                        
-        //                 canvas.width = container.clientWidth;
-        //                 canvas.height = container.clientHeight;
-        //                 canvas.style.width = '100%';
-        //                 canvas.style.height = '100%';
-                        
-        //                 container.appendChild(canvas);
-                        
-        //                 const ctx = canvas.getContext('2d');
-        //                 const input = new Input();
-        //                 const selectedBallSkin = ballInput ? ballInput.value : 'classic';
-
-
-        //                 if (ctx) {
-        //                     if (activeGame) activeGame.isRunning = false;
-        //                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                            
-        //                     socketService.socket.off('opponentLeft'); // on nettoie l'ancien ecouteur
-        //                     socketService.socket.on('opponentLeft', (eventData: any) => {
-        //                         if (activeGame && activeGame.isRunning) {
-        //                             console.log("Opponent left during match!", eventData);
-                                    
-        //                             activeGame.isRunning = false;
-        //                             activeGame.stop();
-                                    
-        //                             // on nettoie tout 
-        //                             socketService.socket.off('gameState');
-        //                             socketService.socket.off('gameEnded');
-                                    
-        //                             // qui suis je et quel est mon score
-        //                             let myAlias = data.role === 'player1' ? currentP1Alias : currentP2Alias;
-        //                             let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
-                                    
-        //                             // on sauvegarde
-        //                             const userIdStr = localStorage.getItem('userId');
-        //                             if (userIdStr) {
-        //                                 saveGameStats(Number(userIdStr), myScore, true);
-        //                             }
-                                    
-        //                             // Afficher la modale de victoire
-        //                             showRemoteEndModal(myAlias, "(Opponent disconnected)");
-        //                             activeGame = null;
-        //                         }
-        //                     });
-
-                            
-
-        //                     activeGame.onGameEnd = (endData) => {
-        //                         console.log("Game Ended Data:", endData);
-                                
-        //                         // determineteur du winner localement 
-        //                         let winnerName = "Winner";
-
-        //                         // on verifie i le back renvoit p1 ou p2
-        //                         if (endData.winner === 'player1') {
-        //                             winnerName = currentP1Alias;
-        //                         } else if (endData.winner === 'player2') {
-        //                             winnerName = currentP2Alias;
-        //                         } else if (endData.winnerAlias) {
-        //                             // fallbacl
-        //                             winnerName = endData.winnerAlias;
-        //                         }
-
-        //                         showVictoryModal(winnerName);
-        //                     }
-                            
-
-
-        //                     activeGame.onScoreChange = (score) => {
-        //                         const sb = document.getElementById('score-board');
-        //                         if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-        //                     };
-                            
-        //                     // On lance le jeu une fois le canvas pret
-        //                     activeGame.startRemote(data.roomId, data.role);
-        //                 }
-        //             }
-                    
-        //             // Update UI noms
-        //             const p1Name = document.getElementById('player-1-name');
-        //             const p2Name = document.getElementById('player-2-name');
-                    
-        //             if (data.role === 'player1') {
-        //                 if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
-        //                 if (p2Name) p2Name.innerText = currentP2Alias;
-        //             } else {
-        //                 if (p1Name) p1Name.innerText = currentP1Alias;
-        //                 if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
-        //             }
-        //         });
-
-        //         const myAlias = document.getElementById('player-1-name')?.innerText || "Player";
-
-        //         // Envoi demande au serveur
-        //         socketService.socket.emit('joinQueue', { alias: myAlias });
-        //     });
-        // }
-                    
-        //             if (gameChat) {
-        //                 // on rejoint un canal unique du match et du chat
-        //                 // la class va nettoyer automqtiquement les messages
-        //                 gameChat.joinChannel(data.roomId);
-        //                 gameChat.addSystemMessage("Game found! You are now in a private room.")
-        //             }
-                    
-        //             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-                    
-        //             // Cache la modale
-        //             if (modal) modal.style.display = 'none';
-
-        //             if (container) {
-        //                 container.innerHTML = ''; 
-        //                 const canvas = document.createElement('canvas');
-                        
-        //                 canvas.width = container.clientWidth;
-        //                 canvas.height = container.clientHeight;
-        //                 canvas.style.width = '100%';
-        //                 canvas.style.height = '100%';
-                        
-        //                 container.appendChild(canvas);
-                        
-        //                 const ctx = canvas.getContext('2d');
-        //                 const input = new Input();
-
-        //                 const selectedBallSkin = ballInput ? ballInput.value : 'classic';
-
-
-        //                 if (ctx) {
-        //                     if (activeGame) activeGame.isRunning = false;
-        //                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                            
-        //                     activeGame.onGameEnd = (endData) => {
-        //                         const winnerName = endData.winnerAlias || "Winner"; 
-        //                         showVictoryModal(winnerName);
-        //                     }
-        //                     activeGame.onScoreChange = (score) => {
-        //                         const sb = document.getElementById('score-board');
-        //                         if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-        //                     };
-                            
-        //                     // On lance le jeu une fois le canvas pret
-        //                     activeGame.startRemote(data.roomId, data.role);
-        //                 }
-        //             }
-                    
-        //             // Update UI noms
-        //             const p1Name = document.getElementById('player-1-name');
-        //             const p2Name = document.getElementById('player-2-name');
-                    
-        //             if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
-        //             if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
-        //         });
-
-        //         // // Envoi demande au serveur
-        //         // socketService.socket.emit('joinQueue');
-        //     });
-        // }
-        // }
     }
 
 
@@ -1182,22 +986,6 @@ export function initGamePage(mode: string): void {
             }
         });
     }
-
-    // async function saveGameStats(userId: number, score: number, isWinner: boolean) {
-    //     try {
-    //         // ne renvoit pas correctement les stats -> trouver pourquoi 
-    //         await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-    //             method: 'PATCH',
-    //             body: JSON.stringify({
-    //                 userScore: score,
-    //                 isWinner: isWinner ? 1 : 0
-    //             })
-    //         });
-    //         console.log(`Stats sauvegardées pour le user ${userId}`);
-    //     } catch (error) {
-    //         console.error("Erreur lors de la sauvegarde des stats:", error);
-    //     }
-    // }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
         const p1Name = document.getElementById('game-p1-name');
