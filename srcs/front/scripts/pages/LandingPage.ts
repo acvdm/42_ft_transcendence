@@ -36,18 +36,33 @@ export function initLandingPage() {
 			if (response.ok) {
 				const data = await response.json();
 
-				// 2. CHANGEMENT CRITIQUE : sessionStorage
-				// On stocke dans sessionStorage pour que ça disparaisse quand on ferme la fenêtre
 				if (data.accessToken) sessionStorage.setItem('accessToken', data.accessToken);
 				if (data.userId) sessionStorage.setItem('userId', data.userId.toString());
 				
-				// 3. ON AJOUTE UN MARQUEUR "isGuest"
 				sessionStorage.setItem('isGuest', 'true');
+				sessionStorage.setItem('userRole', 'guest');
 
-				// 4. ON REDIRIGE VERS /guest (ET SURTOUT PAS /home)
+				try {
+                    const userResponse = await fetch(`/api/users/${data.userId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${data.accessToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (userResponse.ok) {
+                        const userData = await userResponse.json();
+                        if (userData.alias) {
+                            sessionStorage.setItem('username', userData.alias);
+                        }
+                    }
+                } catch (fetchErr) {
+                    console.error("Cannot retrieve guest username", fetchErr);
+                }
 				handleNavigation('/guest');
 			} else {
-				console.error("Erreur création guest");
+				console.error("Error: guest creation");
 			}
 		} catch (err) {
 			console.error("Network error while guest login: ", err);

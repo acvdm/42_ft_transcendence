@@ -3,6 +3,7 @@ import SocketService from "../services/SocketService";
 
 let globalPath = "/assets/emoticons/";
 let animationPath = "/assets/animated/";
+let gamePath = "/assets/game/";
 
 export interface Theme {
     name: string;
@@ -111,22 +112,21 @@ export const appThemes: { [key: string]: Theme } = {
 };
 
 export const ballEmoticons: { [key: string]: string } = {
-    "smile": globalPath + "smile.gif",
-    "surprised": globalPath + "surprised.gif",
-    "confused": globalPath + "confused.gif",
-    "hot": globalPath + "hot.gif",
-    "angel": globalPath + "angel.gif",
-    "teeth_smile": globalPath + "teeth_smile.gif",
-    "tongue": globalPath + "tongue_smile.gif",
-    "sad": globalPath + "sad.gif",
-    "disappointed": globalPath + "disappointed.gif",
-    "embarrassed": globalPath + "embarrassed.gif",
-    "angry": globalPath + "angry.gif",
-    "nerd": globalPath + "nerd.gif",
-    "teeth": globalPath + "teeth.gif",
-    "sarcastic": globalPath + "sarcastic.gif",
-    "sick": globalPath + "sick.gif",
-    "devil": globalPath + "devil_smile.gif",
+    "smile": gamePath + "smile.png",
+    "surprised": gamePath + "surprised.png",
+    "confused": gamePath + "confused.png",
+    "hot": gamePath + "hot.png",
+    "teeth_smile": gamePath + "teeth_smile.png",
+    "tongue": gamePath + "tongue_smile.png",
+    "sad": gamePath + "sad.png",
+    "disappointed": gamePath + "disappointed.png",
+    "embarrassed": gamePath + "embarrassed.png",
+    "angry": gamePath + "angry.png",
+    "nerd": gamePath + "nerd.png",
+    "teeth": gamePath + "teeth.png",
+    "sarcastic": gamePath + "sarcastic.png",
+    "sick": gamePath + "sick.png",
+    "devil": gamePath + "devil_smile.png",
 };
 
 

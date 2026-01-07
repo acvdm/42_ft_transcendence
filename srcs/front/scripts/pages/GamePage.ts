@@ -70,6 +70,170 @@ let tournamentState: TournamentData | null = null; // on stocke l'état du tourn
 let activeGame: Game | null = null; // Instance du jeu
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null; // on stocke l'ecoute de l'envoi a l'espace
 
+
+// Après les imports, avant les variables globales
+let isNavigationBlocked = false;
+
+export function isGameRunning(): boolean {
+    return activeGame !== null && activeGame.isRunning;
+}
+
+
+//aHelper pour recuperer le nom du n joueur
+async function getPlayerAlias(): Promise<string> {
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    const isGuest = sessionStorage.getItem('userRole') === 'guest';
+    
+    if (!userId) return "Player";
+    
+    try {
+        const response = await fetchWithAuth(`api/users/${userId}`);
+        if (response.ok) {
+            const userData = await response.json();
+            return userData.alias || (isGuest ? "Guest" : "Player");
+        }
+    } catch (err) {
+        console.error('Cannot fetch player alias:', err);
+    }
+
+    const result = sessionStorage.getItem('username') || (isGuest ? "Guest (you)" : "Player (you)");
+    
+    return (result + " (you)");
+}
+
+function handleBeforeUnload(e: BeforeUnloadEvent) {
+    if (isGameRunning()) {
+        e.preventDefault();
+        e.returnValue = 'A game is in progress. Are you sure you want to leave?';
+        return e.returnValue;
+    }
+}
+
+function handlePopState(e: PopStateEvent) {
+    if (isGameRunning() && !isNavigationBlocked) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        window.history.pushState({ gameMode: window.history.state?.gameMode || 'local' }, '', '/game');
+        showExitConfirmationModal();
+    }
+}
+
+
+
+
+export function showExitConfirmationModal() {
+    if (document.getElementById('exit-confirm-modal')) return;
+
+    if (activeGame) {
+        activeGame.pause();
+    }
+
+    const modalHtml = `
+        <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+                
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close" id="modal-close-x"></button>
+                    </div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
+                    
+                    <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
+                        WAIT A MINUTE !
+                    </h2>
+                    
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        
+                        <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            GO BACK TO GAME
+                        </button>
+                        
+                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            LEAVE
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+
+    document.getElementById('confirm-exit-btn')?.addEventListener('click', () => {
+        confirmExit();
+    });
+    
+    const closeFunc = () => {
+        document.getElementById('exit-confirm-modal')?.remove();
+
+        if (activeGame) {
+            activeGame.resume();
+        }
+    }
+
+    document.getElementById('cancel-exit-btn')?.addEventListener('click', closeFunc);
+    document.getElementById('modal-close-x')?.addEventListener('click', closeFunc);
+}
+
+function confirmExit() {
+    isNavigationBlocked = true;
+    
+    if (activeGame) {
+        const wasRemote = activeGame.isRemote;
+        const roomId = activeGame.roomId;
+        const playerRole = activeGame.playerRole;
+        const currentScore = { ...activeGame.score };
+
+        activeGame.isRunning = false;
+        activeGame.stop();
+        
+        console.log("Leaving the game - remote");
+        if (wasRemote && roomId && SocketService.getInstance().socket) {
+            SocketService.getInstance().socket.emit('leaveGame', { roomId: roomId });
+            
+            const userIdStr = localStorage.getItem('userId');
+            if (userIdStr && playerRole) {
+                const myScore = playerRole === 'player1' ? currentScore.player1 : currentScore.player2;
+                saveGameStats(Number(userIdStr), myScore, false);
+            }
+        }
+        
+        activeGame = null;
+    }
+    
+    cleanup();
+    document.getElementById('exit-confirm-modal')?.remove();
+    
+    setTimeout(() => {
+        isNavigationBlocked = false;
+        window.history.back();
+    }, 100);
+}
+
+function cancelExit() {
+    document.getElementById('exit-confirm-modal')?.remove();
+    if (activeGame) {
+        activeGame.resume();
+    }
+}
+
+
+
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
     if (gameChat) {
@@ -79,6 +243,7 @@ export function cleanup() {
     tournamentState = null;
 
     if (activeGame) {
+        activeGame.isRunning = false;
         activeGame.stop();
         activeGame = null;
     }
@@ -88,6 +253,10 @@ export function cleanup() {
         document.removeEventListener('keydown', spaceKeyListener);
         spaceKeyListener = null;
     }
+
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.removeEventListener('popstate', handlePopState);
+    isNavigationBlocked = false;
 }
 
 export function render(): string {
@@ -101,28 +270,98 @@ export function render(): string {
     return htmlContentLocal;
 }
 
+
+async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+    try {
+        // ne renvoit pas correctement les stats -> trouver pourquoi 
+       await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                userScore: score,
+                isWinner: isWinner ? 1 : 0
+            })
+        });
+        console.log(`Stats sauvegardées pour le user ${userId}`);
+    } catch (error) {
+        console.error("Erreur lors de la sauvegarde des stats:", error);
+    }
+}
+
+
+
+//////////////////////////////////////
+////// REMOTE MODALE DE VICTOIRE /////
+//////////////////////////////////////
+
+
+    function showRemoteEndModal(winnerName: string, message: string) {
+    if (document.getElementById('remote-end-modal')) return;
+
+    
+    const modalHtml = `
+        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-controls"></div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
+
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">
+                            ${winnerName}
+                        </p>
+                        <p class="text-sm text-gray-600 font-semibold italic text-center">
+                            ${message}
+                        </p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        <button id="remote-quit-btn"
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
+                                    px-6 py-4 text-base font-semibold shadow-sm
+                                    hover:from-gray-200 hover:to-gray-400
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                    transition-all duration-200 hover:shadow-md"
+                                style="width: 200px; padding: 4px;">
+                            RETURN TO MENU
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+
+    //launchConfetti?.(4000);
+
+    document.getElementById('remote-quit-btn')?.addEventListener('click', () => {
+        document.getElementById('remote-end-modal')?.remove();
+        window.history.back();
+    });
+}
+
 export function initGamePage(mode: string): void {
 
-    // Récupération des éléments communs
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
-    const player2Display = document.getElementById('player-2-name') as HTMLElement;
 
-    // on recupere le username du joueur connecte
-    const userId = localStorage.getItem('userId');
-    if (userId && player1Display)
-    {
-        fetchWithAuth(`api/users/${userId}`)
-            .then(response => {
-                if (response.ok) return response.json();
-                throw new Error('Error fetching user');
-        })
-        .then (userData => {
-            if (userData && userData.alias)
-                player1Display.innerText = userData.alias;
-        })
-        .catch(err => console.error('Cannot fetch username for player 1'));
-
+    if (player1Display) {
+        getPlayerAlias().then(alias => {
+            player1Display.innerText = alias;
+        });
     }
+
 
     if (gameChat) gameChat.destroy();
     gameChat = new Chat();
@@ -146,20 +385,25 @@ export function initGamePage(mode: string): void {
         // modal
         const modal = document.getElementById('local-summary-modal');
         const winnerText = document.getElementById('winner-name');
-        const quitBtn = document.getElementById('quit-local-btn');
+        const quitLocalBtn = document.getElementById('quit-local-btn');
+        const quitRemoteBtn = document.getElementById('quit-remote-btn');
 
         if (modal && winnerText) {
             winnerText.innerText = winnerName;
             modal.classList.remove('hidden');
             
+            if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
             // lancement de confettis
             launchConfetti(4000);
         }
 
+        const backAction = () => {
+            window.history.back();
+        }
         // gestion du bouton retour au menu
-        quitBtn?.addEventListener('click', () => {
-             window.location.reload(); 
-        });
+        quitLocalBtn?.addEventListener('click', backAction);
+        quitRemoteBtn?.addEventListener('click', backAction);
+
     }
 
     // ---------------------------------------------------------
@@ -173,7 +417,7 @@ export function initGamePage(mode: string): void {
     }
 
     spaceKeyListener = (e: KeyboardEvent) => {
-        if (e.code === 'Space') {
+        if (e.code === 'Space' || e.key === ' ') {
             const target = e.target as HTMLElement;
 
             // aggdngion xi l'uilisateur ecrit dans un input ou dans un truc de texte on ne fait rien
@@ -184,12 +428,12 @@ export function initGamePage(mode: string): void {
             e.preventDefault();
 
             if (gameChat) {
-                if (mode === 'remote') {
-                    // REMOTE : seulement a l'adversaire
+                if (activeGame.isRemote) {
+                    // REMOTE : On envoie via la socket seulement à l'adversaire
                     gameChat.emitWizzOnly();
                     console.log("Wizz envoyé à l'adversaire (Remote)");
                 } else {
-                    // LOCAL ET TOURNOI : shake shake shake pour tout le monde
+                    // LOCAL / TOURNOI : On fait trembler l'écran localement
                     const wizzContainer = document.getElementById('wizz-container');
                     gameChat.shakeElement(wizzContainer);
                     console.log("Wizz local déclenché");
@@ -199,7 +443,6 @@ export function initGamePage(mode: string): void {
     };
 
     document.addEventListener('keydown', spaceKeyListener);
-
 
 
 
@@ -229,6 +472,8 @@ export function initGamePage(mode: string): void {
         
         const gameContainer = document.getElementById('left'); // conteneur du jeu pour le background
 
+        let currentP1Alias = "Player 1";
+        let currentP2Alias = "Player 2";
 
         if (ballBtn && ballDrop && ballGrid) {
             const uniqueUrls = new Set<string>();
@@ -294,8 +539,12 @@ export function initGamePage(mode: string): void {
         }
 
 
-        const startGameFromData = (data: any) => {
+        const startGameFromData = (data: any, p1Alias?: string, p2Alias?: string) => {
             console.log("Starting game from data:", data);
+
+            const player1Alias = p1Alias || "Player 1";
+            const player2Alias = p2Alias || "Player 2";
+
 
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
             if (modal) modal.style.display = 'none';
@@ -327,6 +576,29 @@ export function initGamePage(mode: string): void {
                     }
 
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
+
+                    // gestion quand on opposant se casse du jeu 
+                    socketService.socket.off('opponentLeft');
+                    socketService.socket.on('opponentLeft', (eventData: any) => {
+                        if (activeGame) {
+                            console.log("Opponent left the game! Victory by forfeit!");
+                            activeGame.isRunning = false;
+                            activeGame.stop();
+
+                            socketService.socket.off('gameState');
+                            socketService.socket.off('gameEnded');
+                            let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
+                            let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+
+                            const userIdStr = localStorage.getItem('userId');
+                            if (userIdStr) {
+                                saveGameStats(Number(userIdStr), myScore, true);
+                            }
+
+                            showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                            activeGame = null;
+                        }
+                    });
 
                     // --- ATTENTE SOCKET PRÊT ---
                     if (!socketService.socket) {
@@ -369,7 +641,7 @@ export function initGamePage(mode: string): void {
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
-            newBtn.addEventListener('click', () => {
+            newBtn.addEventListener('click', async () => {
                 if (!socketService.socket) {
                     alert("Erreur: Non connecté au serveur de jeu");
                     return;
@@ -379,10 +651,15 @@ export function initGamePage(mode: string): void {
                 newBtn.disabled = true;
                 newBtn.innerText = "WAITING...";
 
+                const myAlias = await getPlayerAlias();
+
                 // Ecoute de l'événement de début de match
                 socketService.socket.on('matchFound', (data: any) => {
                     console.log("Match Found!", data);
                     
+                    currentP1Alias = data.player1Alias || "Player 1";
+                    currentP2Alias = data.player2Alias || "Player 2";
+
                     if (gameChat) {
                         // on rejoint un canal unique du match et du chat
                         // la class va nettoyer automqtiquement les messages
@@ -391,8 +668,6 @@ export function initGamePage(mode: string): void {
                     }
                     
                     if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-                    
-                    // Cache la modale
                     if (modal) modal.style.display = 'none';
 
                     if (container) {
@@ -408,7 +683,6 @@ export function initGamePage(mode: string): void {
                         
                         const ctx = canvas.getContext('2d');
                         const input = new Input();
-
                         const selectedBallSkin = ballInput ? ballInput.value : 'classic';
 
 
@@ -416,10 +690,57 @@ export function initGamePage(mode: string): void {
                             if (activeGame) activeGame.isRunning = false;
                             activeGame = new Game(canvas, ctx, input, selectedBallSkin);
                             
+                            socketService.socket.off('opponentLeft'); // on nettoie l'ancien ecouteur
+                            socketService.socket.on('opponentLeft', (eventData: any) => {
+                                if (activeGame && activeGame.isRunning) {
+                                    console.log("Opponent left during match!", eventData);
+                                    
+                                    activeGame.isRunning = false;
+                                    activeGame.stop();
+                                    
+                                    // on nettoie tout 
+                                    socketService.socket.off('gameState');
+                                    socketService.socket.off('gameEnded');
+                                    
+                                    // qui suis je et quel est mon score
+                                    let myAlias = data.role === 'player1' ? currentP1Alias : currentP2Alias;
+                                    let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+                                    
+                                    // on sauvegarde
+                                    const userIdStr = localStorage.getItem('userId');
+                                    if (userIdStr) {
+                                        saveGameStats(Number(userIdStr), myScore, true);
+                                    }
+                                    
+                                    // Afficher la modale de victoire
+                                    showRemoteEndModal(myAlias, "(Opponent disconnected)");
+                                    activeGame = null;
+                                }
+                            });
+
+                            
+
                             activeGame.onGameEnd = (endData) => {
-                                const winnerName = endData.winnerAlias || "Winner"; 
+                                console.log("Game Ended Data:", endData);
+                                
+                                // determineteur du winner localement 
+                                let winnerName = "Winner";
+
+                                // on verifie i le back renvoit p1 ou p2
+                                if (endData.winner === 'player1') {
+                                    winnerName = currentP1Alias;
+                                } else if (endData.winner === 'player2') {
+                                    winnerName = currentP2Alias;
+                                } else if (endData.winnerAlias) {
+                                    // fallbacl
+                                    winnerName = endData.winnerAlias;
+                                }
+
                                 showVictoryModal(winnerName);
                             }
+                            
+
+
                             activeGame.onScoreChange = (score) => {
                                 const sb = document.getElementById('score-board');
                                 if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
@@ -434,12 +755,17 @@ export function initGamePage(mode: string): void {
                     const p1Name = document.getElementById('player-1-name');
                     const p2Name = document.getElementById('player-2-name');
                     
-                    if (p1Name) p1Name.innerText = (data.role === 'player1') ? "Moi" : "Adversaire";
-                    if (p2Name) p2Name.innerText = (data.role === 'player2') ? "Moi" : "Adversaire";
+                    if (data.role === 'player1') {
+                        if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
+                        if (p2Name) p2Name.innerText = currentP2Alias;
+                    } else {
+                        if (p1Name) p1Name.innerText = currentP1Alias;
+                        if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
+                    }
                 });
 
                 // Envoi demande au serveur
-                socketService.socket.emit('joinQueue');
+                socketService.socket.emit('joinQueue', { alias: myAlias });
             });
         }
     }
@@ -469,17 +795,19 @@ export function initGamePage(mode: string): void {
         const userId = localStorage.getItem('userId');
         const username = localStorage.getItem('username');
         
-        if (userId && username) {
-            console.log("Username du user: ", username);
-            player1Input.value = username; // doit afficher le nom du user connecté
-            player1Input.readOnly = true; // n'affiche rien pour le moment
-            player1Input.classList.add('bg-gray-200', 'cursor-not-allowed');
-        } else {
-            console.log("Username du user: ", username);
-            player1Input.value = "";
-            player1Input.readOnly = false; // le champs d'input est libre quand la connexion est en guest
-            player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
-        }
+        const isGuest = sessionStorage.getItem('userRole') === 'guest';
+
+        getPlayerAlias().then(alias => {
+            player1Input.value = alias;
+        
+            if (!isGuest) {
+                player1Input.readOnly = true;
+                player1Input.classList.add('bg-gray-200', 'cursor-not-allowed');
+            } else {
+                player1Input.readOnly = false;
+                player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
+            }
+        })
 
         console.log("Username du user: ", username);
 
@@ -746,31 +1074,20 @@ export function initGamePage(mode: string): void {
         });
     }
 
-    // async function saveGameStats(userId: number, score: number, isWinner: boolean) {
-    //     try {
-    //         // ne renvoit pas correctement les stats -> trouver pourquoi 
-    //         await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-    //             method: 'PATCH',
-    //             body: JSON.stringify({
-    //                 userScore: score,
-    //                 isWinner: isWinner ? 1 : 0
-    //             })
-    //         });
-    //         console.log(`Stats sauvegardées pour le user ${userId}`);
-    //     } catch (error) {
-    //         console.error("Erreur lors de la sauvegarde des stats:", error);
-    //     }
-    // }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
-        const p1Name = document.getElementById('game-p1-name');
-        const p2Name = document.getElementById('game-p2-name');
-        const gameStartDate = getSqlDate();
+        const p1Name = document.getElementById('player-1-name');
+        const p2Name = document.getElementById('player-2-name');
 
+        const gameStartDate = getSqlDate();
         // Mise à jour de l'UI du jeu
         if (p1Name) p1Name.innerText = p1.alias;
         if (p2Name) p2Name.innerText = p2.alias;
 
+        const scoreBoard = document.getElementById('score-board');
+            if (scoreBoard) {
+                scoreBoard.innerText = "0 - 0";
+            }
         // Appliquer la couleur de fond choisie au conteneur gauche
         const container = document.getElementById('left');
         if(container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
@@ -812,8 +1129,6 @@ export function initGamePage(mode: string): void {
                 
                 activeGame.start();
 
-                // + fin du jeu (endMatch())
-                // on supervise le socre pour s'arreter a 11
                 const checkInterval = setInterval(() => {
                     if (!activeGame || !activeGame.isRunning) {
                         clearInterval(checkInterval);
@@ -885,10 +1200,11 @@ export function initGamePage(mode: string): void {
 
     function showSummary(champion: string) {
         // Reset background
+        
         launchConfetti(4000);
         const container = document.getElementById('left');
         if (container) container.style.backgroundColor = 'white';
-
+        
         const summaryModal = document.getElementById('tournament-summary-modal');
         
         if (summaryModal) {
@@ -899,12 +1215,17 @@ export function initGamePage(mode: string): void {
             if (winnerDisplay) winnerDisplay.innerText = champion;
             if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
 
+            if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
             const userId = localStorage.getItem('userId');
             if (userId) {
                 saveTournamentToApi(champion);
             }
 
             document.getElementById('quit-tournament-btn')?.addEventListener('click', () => {
+                window.history.back();
+            });
+
+            document.getElementById('quit-remote-btn')?.addEventListener('click', () => {
                 window.history.back();
             });
         }
@@ -926,13 +1247,14 @@ export function initGamePage(mode: string): void {
                     winner: winner,
                     participants: tournamentState.allPlayers,
                     // Ajout des details complets pour le format JSON attendu
-                    tournament_name: tournamentState.name,
-                    match_list: tournamentState.matches,
+                    tournamentName: tournamentState.name,  // modif de tournament_name en tournamentName pour le back
+                    matchList: tournamentState.matches, // modif de match_list en matchList pour le back
                     startedAt: tournamentState.startedAt
                 })
             });
         } catch (e) { console.error(e); }
     }
+
 
 
 // =========================================================
@@ -1153,8 +1475,6 @@ export function initGamePage(mode: string): void {
                         const p1Wins = p1Score > p2Score;
                         const winnerAlias = p1Wins ? p1Alias : p2Alias;
 
-                        launchConfetti(4000);
-                        
                         // 2. Sauvegarde si l'utilistauer est connecté
                         const userIdStr = localStorage.getItem('userId');
                         if (userIdStr) {
@@ -1163,10 +1483,9 @@ export function initGamePage(mode: string): void {
                             console.log(`gamepage, ${userId}`);
                             await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
                         }
-
+                        
                         // 3. Feedback et Reload
-                        alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
-                        window.location.reload();
+                        showVictoryModal(winnerAlias);
                     }
                 }, 500);
             }

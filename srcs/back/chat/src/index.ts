@@ -54,11 +54,15 @@ const authMiddleware = (socket: any, next: any) => {
     }
 }
 
+const socketAliases = new Map<string, string>();
+
 // --- STRUCTURES JEU REMOTE ---
 interface GameState {
     roomId: string;
     player1Id: string;
     player2Id: string;
+    player1Alias: string;
+    player2Alias: string;
     ball: { x: number, y: number, vx: number, vy: number, radius: number };
     paddle1: { y: number, height: number, width: number, x: number };
     paddle2: { y: number, height: number, width: number, x: number };
@@ -74,11 +78,13 @@ const activeGames = new Map<string, GameState>();
 // --- LOGIQUE JEU SERVEUR ---
 const GAMESPEED = 1000 / 60; // 60 FPS
 
-function initGameState(roomId: string, p1: string, p2: string): GameState {
+function initGameState(roomId: string, p1: string, p2: string, alias1: string, alias2: string): GameState {
     return {
         roomId,
         player1Id: p1,
         player2Id: p2,
+        player1Alias: alias1, // Stockage
+        player2Alias: alias2,
         canvasWidth: 800, // Taille de référence serveur
         canvasHeight: 600,
         ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
@@ -154,7 +160,15 @@ function stopGame(roomId: string, io: Server) {
     const game = activeGames.get(roomId);
     if (game) {
         if (game.intervalId) clearInterval(game.intervalId);
-        io.to(roomId).emit('gameEnded', { finalScore: game.score });
+
+
+        const isP1Winner = game.score.player1 > game.score.player2;
+        const winnerRole = isP1Winner ? 'player1' : 'player2';
+        const winnerName = isP1Winner ? game.player1Alias : game.player2Alias;
+
+
+
+        io.to(roomId).emit('gameEnded', { finalScore: game.score, winner: winnerRole, winnerAlias: winnerName });
         activeGames.delete(roomId);
     }
 }
@@ -260,7 +274,7 @@ fastify.ready().then(() => {
             }
         });
 
-        socket.on('acceptGameInvite', (data: { senderId: string }) => {
+        socket.on('acceptGameInvite', (data: { senderId: string, senderAlias?: string, acceptorAlias?: string }) => {
             const senderIdNum = Number(data.senderId);
             const senderSocketId = userSockets.get(senderIdNum);
             const acceptorSocketId = socket.id;
@@ -273,8 +287,10 @@ fastify.ready().then(() => {
                     // creation de la partie 
                     const roomId = `game_invite_${Date.now()}_${senderIdNum}_${socket.user.sub}`;
                     
+                    const alias1 = data.senderAlias || socketAliases.get(senderSocketId) || "Player 1";
+                    const alias2 = data.acceptorAlias || socketAliases.get(acceptorSocketId) || "Player 2";
                     // etat du jeu 
-                    const gameState = initGameState(roomId, senderSocketId, acceptorSocketId);
+                    const gameState = initGameState(roomId, senderSocketId, acceptorSocketId, alias1, alias2);
                     activeGames.set(roomId, gameState);
 
                     // les deux ont rejoins la room
@@ -282,10 +298,21 @@ fastify.ready().then(() => {
                     socket.join(roomId);
 
                     setTimeout(() => {
-                        senderSocket.emit('matchFound', { roomId, role: 'player1', opponent: socket.user.sub });
-                        socket.emit('matchFound', { roomId, role: 'player2', opponent: senderIdNum });
-                        // lancement du jeu 
-    
+                        senderSocket.emit('matchFound', { 
+                            roomId, 
+                            role: 'player1', 
+                            opponent: socket.user.sub,
+                            player1Alias: alias1,
+                            player2Alias: alias2
+                        });
+                        
+                        socket.emit('matchFound', { 
+                            roomId, 
+                            role: 'player2', 
+                            opponent: senderIdNum,
+                            player1Alias: alias1,
+                            player2Alias: alias2
+                        });
                         console.log(`Friend match started: ${roomId}`);
                         
                         //lancement de la boucle
@@ -304,9 +331,13 @@ fastify.ready().then(() => {
              }
         });
 
-        socket.on('joinQueue', () => {
+        socket.on('joinQueue', (data: { alias?: string }) => {
             // si le joueur est deja en jeu ou en file d'addente on ignore
             if (waitingQueue.includes(socket.id)) return;
+
+            const playerAlias = (data && data.alias) ? data.alias : "Player";
+            socketAliases.set(socket.id, playerAlias);
+
 
             console.log(`Player ${socket.id} joined Queue`);
             waitingQueue.push(socket.id);
@@ -317,8 +348,10 @@ fastify.ready().then(() => {
                 const p2 = waitingQueue.shift()!;
                 const roomId = `game_${Date.now()}_${p1}_${p2}`;
 
+                const alias1 = socketAliases.get(p1) || "Player 1";
+                const alias2 = socketAliases.get(p2) || "Player 2";
                 // Création état jeu
-                const gameState = initGameState(roomId, p1, p2);
+                const gameState = initGameState(roomId, p1, p2, alias1, alias2);
                 activeGames.set(roomId, gameState);
 
                 // Setup Sockets
@@ -329,8 +362,27 @@ fastify.ready().then(() => {
                     sock1.join(roomId);
                     sock2.join(roomId);
 
-                    sock1.emit('matchFound', { roomId, role: 'player1', opponent: p2 });
-                    sock2.emit('matchFound', { roomId, role: 'player2', opponent: p1 });
+                    const matchData = {
+                        roomId,
+                        player1Alias: alias1,
+                        player2Alias: alias2
+                    };
+
+                    sock1.emit('matchFound', { 
+                        roomId, 
+                        role: 'player1', 
+                        opponent: p2,
+                        player1Alias: alias1,
+                        player2Alias: alias2
+                    });
+                    
+                    sock2.emit('matchFound', { 
+                        roomId, 
+                        role: 'player2', 
+                        opponent: p1,
+                        player1Alias: alias1,
+                        player2Alias: alias2
+                    });
 
                     console.log(`Match started: ${roomId}`);
                     
@@ -365,8 +417,34 @@ fastify.ready().then(() => {
             }
         });
 
+        // Dans srcs/back/chat/src/index.ts
+
+        socket.on('leaveGame', (data: { roomId: string }) => {
+            const game = activeGames.get(data.roomId);
+            
+            // Vérifier que le socket est bien un joueur de cette partie
+            if (game && (game.player1Id === socket.id || game.player2Id === socket.id)) {
+                console.log(`Player ${socket.id} left the game explicitly`);
+
+                // Identifier l'adversaire
+                const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+
+                // Prévenir l'adversaire IMMÉDIATEMENT qu'il a gagné par forfait
+                fastify.io.to(opponentId).emit('opponentLeft', { 
+                    roomId: data.roomId,
+                    leaver: socket.id 
+                });
+
+                // Arrêter la partie proprement
+                stopGame(data.roomId, fastify.io);
+            }
+        });
+
+        // Dans srcs/back/chat/src/index.ts
+
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);
+            
             // Nettoyage map userSockets
             for (const [uid, sid] of userSockets.entries()) {
                 if (sid === socket.id) {
@@ -374,12 +452,24 @@ fastify.ready().then(() => {
                     break;
                 }
             }
-            // Nettoyage file
+            
+            // Nettoyage file d'attente
             waitingQueue = waitingQueue.filter(id => id !== socket.id);
-            // nettoyage parties actives
-            // si un joueur part, la partie s'arrête)
+            socketAliases.delete(socket.id);
+
+            // GESTION DES PARTIES EN COURS
             for (const [roomId, game] of activeGames.entries()) {
                 if (game.player1Id === socket.id || game.player2Id === socket.id) {
+                    
+                    // Identifier l'adversaire restant
+                    const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+                    
+                    // Lui envoyer l'event de victoire par forfait
+                    fastify.io.to(opponentId).emit('opponentLeft', { 
+                        roomId: roomId,
+                        leaver: socket.id 
+                    });
+
                     stopGame(roomId, fastify.io);
                 }
             }

@@ -78,7 +78,9 @@ export class Chat {
         })
 
         // reception ici du serveur au client
-        this.socket.on("receivedWizz", (data: { author: string }) => {
+        this.socket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
+            if (data.channel_key && data.channel_key !== this.currentChannel) return;
+            
             const currentUser = localStorage.getItem('username');
 
             // On affiche toujours le message dans le chat

@@ -785,9 +785,7 @@ fastify.get('/users/:id/export', async (request, reply) =>
 					averageScore: gamePayload?.stats.averageScore ?? "Not available",
 					totalGame: gamePayload?.stats.total_games ?? "Not available",
 				},
-				matchHistory: gamePayload?.history || "Not available",
-				tournament: gamePayload?.tournament || null /* a completer ??? */
-				
+				matchHistory: gamePayload?.history || "Not available",				
 			},
 			export_date: new Date().toISOString()
 		};

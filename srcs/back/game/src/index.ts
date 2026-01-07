@@ -31,6 +31,7 @@ fastify.post('/games', async (request, reply) =>
 {
 
 	console.log("route games")
+	
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;
@@ -45,9 +46,16 @@ fastify.post('/games', async (request, reply) =>
 			db, body.type,
 			body.p1.alias, body.p2.alias,
 			body.p1.score, body.p2.score,
-			body.winner, "finished",
-			"1v1", null, body.startDate
+			body.winner, 
+			"finished", // status
+			"1v1", // round
+			null, // tournamentId
+			body.startDate,
+			body.endDate
 		);
+
+		console.log(`DEBUG DATES REÇUES -> Start: ${body.startDate} | End: ${body.endDate}`);
+
 
 		if (!gameId)
 			throw new Error(`Error could not create game`);
@@ -127,6 +135,9 @@ fastify.post('/games/tournaments', async (request, reply) =>
 	try
 	{
 		const body = request.body as localTournament; // === interface dans tournament_interfaces
+		
+		console.log("DEBUG BACKEND - Nombre de matches :", body.matchList.length);
+
 		if (!body.matchList || body.matchList.length !== 3)
 		{
 			return reply.status(400).send({

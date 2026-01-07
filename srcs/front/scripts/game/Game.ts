@@ -39,6 +39,19 @@ class Game {
         if (this.socket) {
             this.socket.off('gameState');
             this.socket.off('gameEnded');
+            //this.socket.off('opponentLeft');
+        }
+    }
+
+    pause() {
+        this.isRunning = false;
+    }
+
+    resume() {
+        if (!this.isRunning) {
+            this.isRunning = true;
+            console.log("gameloop");
+            this.gameLoop(); // relance de la boucle
         }
     }
 
