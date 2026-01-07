@@ -135,6 +135,9 @@ fastify.post('/games/tournaments', async (request, reply) =>
 	try
 	{
 		const body = request.body as localTournament; // === interface dans tournament_interfaces
+		
+		console.log("DEBUG BACKEND - Nombre de matches :", body.matchList.length);
+
 		if (!body.matchList || body.matchList.length !== 3)
 		{
 			return reply.status(400).send({

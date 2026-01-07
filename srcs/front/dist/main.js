@@ -9123,8 +9123,10 @@
             winner,
             participants: tournamentState.allPlayers,
             // Ajout des details complets pour le format JSON attendu
-            tournament_name: tournamentState.name,
-            match_list: tournamentState.matches,
+            tournamentName: tournamentState.name,
+            // modif de tournament_name en tournamentName pour le back
+            matchList: tournamentState.matches,
+            // modif de match_list en matchList pour le back
             startedAt: tournamentState.startedAt
           })
         });
