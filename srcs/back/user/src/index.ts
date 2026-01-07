@@ -654,7 +654,6 @@ fastify.delete('/users/:id', async (request, reply) =>
 	try
 	{
 		console.log("- Mark friendships as deleted...");
-		// await friendRepo.deleteAllFriendships(db, userId);
 		await friendRepo.markFriendshipsAsDeleted(db, userId);
 
 		console.log("- Calling Auth service...");
