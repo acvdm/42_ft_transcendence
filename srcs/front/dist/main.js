@@ -4582,7 +4582,12 @@
 
   // scripts/components/FriendList.ts
   var FriendList = class {
+    // cass: 
+    // init() interval est appele a chaque fois auon va sur la HomePage
+    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
+    // qui s'accumulent quand on change de page et quon revient sur la homePage
     constructor() {
+      this.notificationInterval = null;
       this.container = document.getElementById("contacts-list");
       this.userId = localStorage.getItem("userId");
     }
@@ -4594,7 +4599,15 @@
       this.listenToUpdates();
       this.setupBlockListener();
       this.registerSocketUser();
-      setInterval(() => this.checkNotifications(), 3e4);
+      if (this.notificationInterval) clearInterval(this.notificationInterval);
+      this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
+    }
+    // AJOUT
+    destroy() {
+      if (this.notificationInterval) {
+        clearInterval(this.notificationInterval);
+        this.notificationInterval = null;
+      }
     }
     registerSocketUser() {
       const socket = SocketService_default.getInstance().socket;
