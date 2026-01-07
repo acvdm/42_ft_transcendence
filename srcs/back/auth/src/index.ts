@@ -5,6 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
 import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword } from './services/auth_service.js';
+import { NotFoundError, UnauthorizedError, ValidationError } from './utils/error.js';
 
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -166,6 +167,7 @@ fastify.patch('/users/:id/credentials/email', async (request, reply) =>
 
 fastify.patch('/users/:id/credentials/password', async (request, reply) => 
 {
+	console.log("arrivée dans /users/:id/credentials/password");
 	try 
 	{
 		const { id } = request.params as { id: string };
@@ -178,19 +180,18 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
 
 		const credential = await credRepo.getCredentialbyUserID(db, userId);
 		if (!credential)
-			throw new Error('Cannot find credential_id with userId');
+			throw new NotFoundError('Cannot find credential_id with userId');
 		const credentialId = credential?.id;
 
 		const isOldPwdValid = await authenticatePassword(db, credentialId, body.oldPass);
 		if (! isOldPwdValid)
-			throw new Error('Invalid Password');
+			throw new UnauthorizedError('Invalid Password');
 
 		const isvalidNewPass = await isValidPassword(body.newPass);
 		if (!isvalidNewPass)
-			throw new Error('Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character');
-		
+			throw new ValidationError('Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character');		
 		if (body.newPass !== body.confirmPass)
-			throw new Error('Passwords do not match');
+			throw new ValidationError('Passwords do not match');
 
         await changePasswordInCredential(db, credentialId, body.newPass);
         return reply.status(200).send({

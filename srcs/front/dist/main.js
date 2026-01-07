@@ -7193,12 +7193,13 @@
           closePwdModal();
         } else {
           if (pwdError) {
+            console.log("pwdError");
             pwdError.innerText = result.error?.message || "Error updating password";
             pwdError.classList.remove("hidden");
           }
         }
       } catch (error) {
-        console.error(error);
+        console.error("Catched error:", error);
         if (pwdError) {
           pwdError.innerText = "Network error.";
           pwdError.classList.remove("hidden");

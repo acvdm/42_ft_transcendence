@@ -1047,13 +1047,14 @@ export function afterRender(): void {
 				closePwdModal();
 			} else {
 				if (pwdError) {
+					console.log("pwdError");
 					// on recuperer l'erreur du backe
 					pwdError.innerText = result.error?.message || "Error updating password";
 					pwdError.classList.remove('hidden');
 				}
 			}
 		} catch (error) {
-			console.error(error);
+			console.error("Catched error:", error);
 			if (pwdError) {
 				pwdError.innerText = "Network error.";
 				pwdError.classList.remove('hidden');
