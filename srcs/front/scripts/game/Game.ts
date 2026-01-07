@@ -118,8 +118,8 @@ class Game {
         if (this.isRemote && this.socket && this.roomId) {
             // On envoie juste les inputs au serveur
             // On détermine si on bouge (Up ou Down)
-            const up = (this.playerRole === 'player1' ? inputState.player1.up : inputState.player2.up) || inputState.player1.up; // Support fleches pour les deux
-            const down = (this.playerRole === 'player1' ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
+            const up = (this.playerRole === 'player1' ? inputState.player1.up : inputState.player2.up)
+            const down = (this.playerRole === 'player1' ? inputState.player1.down : inputState.player2.down)
 
             this.socket.emit('gameInput', {
                 roomId: this.roomId,

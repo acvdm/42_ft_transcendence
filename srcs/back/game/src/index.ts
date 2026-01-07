@@ -59,6 +59,9 @@ const authMiddleware = (socket: any, next: any) => {
     }
 }
 
+
+
+
 // ------------------------------------
 // --- EVENTS DU JEU REMOTE (AJOUT) ---
 // ------------------------------------
@@ -77,6 +80,7 @@ fastify.ready().then(() => {
 
         registerRemoteGameEvents(fastify.io, socket, userSockets);
 
+		
         socket.on('disconnect', () => {
             console.log(`Client disconnected: ${socket.id}`);
             // Nettoyage map userSockets

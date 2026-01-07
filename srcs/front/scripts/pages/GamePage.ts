@@ -546,11 +546,24 @@ export function initGamePage(mode: string): void {
             console.log("Starting game from data:", data);
 
             const myAlias = await getPlayerAlias();
+            let opponentAlias = "Opponent";
+            if (data.opponent) {
+                try {
+                    const response = await fetchWithAuth(`api/user/${data.opponent}`);
+                    if (response.ok) {
+                        const userData = await response.json();
+                        opponentAlias = userData.alias;
+                    }
+                } catch (e) {
+                    console.error("Error: could not retrieve opponent alias:", (e));
+                }
+            }
+
             if (data.role === 'player1') {
                 currentP1Alias = myAlias;
-                currentP2Alias = data.player2Alias || "Player 2";
+                currentP2Alias = opponentAlias;
             } else {
-                currentP1Alias = data.player1Alias || "Player 1";
+                currentP1Alias = opponentAlias;
                 currentP2Alias = myAlias;
             }
 

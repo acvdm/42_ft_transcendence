@@ -47,7 +47,11 @@ function stopGame(roomId: string, io: Server) {
     const game = activeGames.get(roomId);
     if (game) {
         if (game.intervalId) clearInterval(game.intervalId);
-        io.to(roomId).emit('gameEnded', { finalScore: game.score });
+
+        let winnerRole = null;
+        if (game.score.player1 > game.score.player2) winnerRole = 'player1';
+        if (game.score.player2 > game.score.player1) winnerRole = 'player2';
+        io.to(roomId).emit('gameEnded', { finalScore: game.score, winner: winnerRole });
         activeGames.delete(roomId);
     }
 }

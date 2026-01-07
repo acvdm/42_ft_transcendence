@@ -8172,8 +8172,8 @@
     update(canvas) {
       const inputState = this.input.getInput();
       if (this.isRemote && this.socket && this.roomId) {
-        const up = (this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up) || inputState.player1.up;
-        const down = (this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
+        const up = this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up;
+        const down = this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down;
         this.socket.emit("gameInput", {
           roomId: this.roomId,
           up,
@@ -8679,11 +8679,23 @@
       const startGameFromData = async (data, p1Alias, p2Alias) => {
         console.log("Starting game from data:", data);
         const myAlias = await getPlayerAlias();
+        let opponentAlias = "Opponent";
+        if (data.opponent) {
+          try {
+            const response = await fetchWithAuth(`api/user/${data.opponent}`);
+            if (response.ok) {
+              const userData = await response.json();
+              opponentAlias = userData.alias;
+            }
+          } catch (e) {
+            console.error("Error: could not retrieve opponent alias:", e);
+          }
+        }
         if (data.role === "player1") {
           currentP1Alias = myAlias;
-          currentP2Alias = data.player2Alias || "Player 2";
+          currentP2Alias = opponentAlias;
         } else {
-          currentP1Alias = data.player1Alias || "Player 1";
+          currentP1Alias = opponentAlias;
           currentP2Alias = myAlias;
         }
         const p1Display = document.getElementById("player-1-name");
