@@ -80,7 +80,6 @@ function handleRegister() {
             });
 
             const result = await response.json();
-			console.log("RECEPTION DU BACKEND:", result);
 
 			if (response.ok) // on verifie que HTTP entre 200-299 
 			{

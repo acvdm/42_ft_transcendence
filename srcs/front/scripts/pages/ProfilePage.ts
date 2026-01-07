@@ -1030,8 +1030,6 @@ export function afterRender(): void {
 			return;
 		}
 
-		console.log("newpass: , confirmpass:", newPass, confirmPass);
-
 		try {
 			
 			const response = await fetchWithAuth(`api/user/${userId}/password`, {

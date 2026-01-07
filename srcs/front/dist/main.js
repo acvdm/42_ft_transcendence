@@ -7180,7 +7180,6 @@
         }
         return;
       }
-      console.log("newpass: , confirmpass:", newPass, confirmPass);
       try {
         const response = await fetchWithAuth(`api/user/${userId}/password`, {
           method: "PATCH",
@@ -7439,7 +7438,6 @@
           body: JSON.stringify({ alias: alias2, email, password })
         });
         const result = await response.json();
-        console.log("RECEPTION DU BACKEND:", result);
         if (response.ok) {
           sessionStorage.removeItem("isGuest");
           sessionStorage.removeItem("userRole");
