@@ -131,7 +131,7 @@
         isRefreshing = true;
         console.warn("Token expired (401). Atempt to refresh...");
         try {
-          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+          const refreshRes = await fetch("/api/auth/token", { method: "POST" });
           if (refreshRes.ok) {
             const data = await refreshRes.json();
             const newToken = data.accessToken;
@@ -4000,7 +4000,7 @@
       if (error2fa) error2fa.classList.add("hidden");
       if (!code || !tempToken) return;
       try {
-        const response = await fetch("/api/auth/2fa/verify", {
+        const response = await fetch("/api/auth/2fa/challenge", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -6611,7 +6611,7 @@
       if (!userId) return;
       const backendType = method === "qr" ? "APP" : "EMAIL";
       try {
-        const response = await fetchWithAuth(`api/auth/2fa/generate`, {
+        const response = await fetchWithAuth(`api/auth/2fa/secret`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: backendType })
@@ -6643,7 +6643,7 @@
       }
       const backendType = type === "qr" ? "APP" : "EMAIL";
       try {
-        const response = await fetchWithAuth(`api/auth/2fa/enable`, {
+        const response = await fetchWithAuth(`api/auth/2fa`, {
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
@@ -6666,9 +6666,9 @@
     const disable2fa = async () => {
       if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) return;
       try {
-        const response = await fetchWithAuth(`api/auth/2fa/disable`, {
-          method: "POST"
-          // ou patch?? a tester
+        const response = await fetchWithAuth(`api/auth/2fa`, {
+          method: "DELETE"
+          // ou patch?? a tester --> MODIFICATION EN DELETE par Cassandre
         });
         if (response.ok) {
           update2faButton(false);

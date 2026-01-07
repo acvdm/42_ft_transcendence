@@ -318,7 +318,7 @@ export function afterRender(): void {
 		const backendType = method === 'qr' ? 'APP' : 'EMAIL';
 		try {
 			//fetch pour le qr code ou l'email
-			const response = await fetchWithAuth(`api/auth/2fa/generate`, {
+			const response = await fetchWithAuth(`api/auth/2fa/secret`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ type: backendType })
@@ -356,7 +356,7 @@ export function afterRender(): void {
 		const backendType = type === 'qr' ? 'APP' : 'EMAIL';
 
 		try {
-			const response = await fetchWithAuth(`api/auth/2fa/enable`, {
+			const response = await fetchWithAuth(`api/auth/2fa`, {
 				method: 'POST', // ou patch?? a tester
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ code: code, type: backendType })
@@ -382,8 +382,8 @@ export function afterRender(): void {
 		if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) return;
 
 		try {
-			const response = await fetchWithAuth(`api/auth/2fa/disable`, {
-				method: 'POST' // ou patch?? a tester
+			const response = await fetchWithAuth(`api/auth/2fa`, {
+				method: 'DELETE' // ou patch?? a tester --> MODIFICATION EN DELETE par Cassandre
 			});
 
 			if (response.ok) {

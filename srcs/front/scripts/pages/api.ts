@@ -52,7 +52,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
             isRefreshing = true;
             console.warn("Token expired (401). Atempt to refresh...");
             try {
-                const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
+                const refreshRes = await fetch('/api/auth/token', { method: 'POST' });
                 if (refreshRes.ok) {
                     const data = await refreshRes.json();
                     const newToken = data.accessToken;
