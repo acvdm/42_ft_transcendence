@@ -8320,7 +8320,7 @@
     const isGuest = sessionStorage.getItem("userRole") === "guest";
     if (!userId) return "Player";
     try {
-      const response = await fetchWithAuth(`api/users/${userId}`);
+      const response = await fetchWithAuth(`api/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
         return userData.alias || (isGuest ? "Guest" : "Player");
@@ -8328,8 +8328,8 @@
     } catch (err) {
       console.error("Cannot fetch player alias:", err);
     }
-    const result = sessionStorage.getItem("username") || (isGuest ? "Guest (you)" : "Player (you)");
-    return result + " (you)";
+    const result = sessionStorage.getItem("username") || (isGuest ? "Guest" : "Player");
+    return result;
   }
   function handleBeforeUnload(e) {
     if (isGameRunning()) {
@@ -8414,10 +8414,8 @@
       const roomId = activeGame.roomId;
       const playerRole = activeGame.playerRole;
       const currentScore = { ...activeGame.score };
-      const player1Alias = "ligne 179";
       activeGame.isRunning = false;
       activeGame.stop();
-      console.log("Leaving the game - remote");
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
         const userIdStr = localStorage.getItem("userId");
@@ -8525,6 +8523,22 @@
       window.history.back();
     });
   }
+  function showVictoryModal(winnerName) {
+    const modal = document.getElementById("local-summary-modal");
+    const winnerText = document.getElementById("winner-name");
+    const quitLocalBtn = document.getElementById("quit-local-btn");
+    const quitRemoteBtn = document.getElementById("quit-remote-btn");
+    if (modal && winnerText) {
+      winnerText.innerText = winnerName;
+      modal.classList.remove("hidden");
+      if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
+    }
+    const backAction = () => {
+      window.history.back();
+    };
+    quitLocalBtn?.addEventListener("click", backAction);
+    quitRemoteBtn?.addEventListener("click", backAction);
+  }
   function initGamePage(mode) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
@@ -8546,23 +8560,6 @@
     } else {
       gameChat.joinChannel("local_game_room");
       initLocalMode();
-    }
-    function showVictoryModal(winnerName) {
-      const modal = document.getElementById("local-summary-modal");
-      const winnerText = document.getElementById("winner-name");
-      const quitLocalBtn = document.getElementById("quit-local-btn");
-      const quitRemoteBtn = document.getElementById("quit-remote-btn");
-      if (modal && winnerText) {
-        winnerText.innerText = winnerName;
-        modal.classList.remove("hidden");
-        if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
-        launchConfetti(4e3);
-      }
-      const backAction = () => {
-        window.history.back();
-      };
-      quitLocalBtn?.addEventListener("click", backAction);
-      quitRemoteBtn?.addEventListener("click", backAction);
     }
     if (spaceKeyListener) {
       document.removeEventListener("keydown", spaceKeyListener);
@@ -8610,8 +8607,6 @@
       const bgInput = document.getElementById("bg-value");
       const bgResetBtn = document.getElementById("bg-reset-button");
       const gameContainer = document.getElementById("left");
-      let currentP1Alias = "Player 1";
-      let currentP2Alias = "Player 2";
       if (ballBtn && ballDrop && ballGrid) {
         const uniqueUrls = /* @__PURE__ */ new Set();
         ballGrid.innerHTML = "";
@@ -8679,15 +8674,29 @@
           if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
         });
       }
-      const startGameFromData = (data, p1Alias, p2Alias) => {
+      let currentP1Alias = "Player 1";
+      let currentP2Alias = "Player 2";
+      const startGameFromData = async (data, p1Alias, p2Alias) => {
         console.log("Starting game from data:", data);
-        const player1Alias = p1Alias || "Player 1";
-        const player2Alias = p2Alias || "Player 2";
+        const myAlias = await getPlayerAlias();
+        if (data.role === "player1") {
+          currentP1Alias = myAlias;
+          currentP2Alias = data.player2Alias || "Player 2";
+        } else {
+          currentP1Alias = data.player1Alias || "Player 1";
+          currentP2Alias = myAlias;
+        }
+        const p1Display = document.getElementById("player-1-name");
+        const p2Display = document.getElementById("player-2-name");
+        if (p1Display && p2Display) {
+          p1Display.innerText = data.role === "player1" ? `${currentP1Alias} (Me)` : currentP1Alias;
+          p2Display.innerText = data.role === "player2" ? `${currentP2Alias} (Me)` : currentP2Alias;
+        }
         if (gameChat) {
           gameChat.joinChannel(data.roomId);
-          gameChat.addSystemMessage(`Match started! Good luck in game chat room ${data.roomId}`);
+          gameChat.addSystemMessage(`Match started!`);
         }
-        if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
+        if (status) status.innerText = "We found an opponent ! Starting the game...";
         if (modal) modal.style.display = "none";
         if (container) {
           container.innerHTML = "";
@@ -8707,44 +8716,40 @@
               activeGame.stop();
               activeGame = null;
             }
+            console.log("Player aliases set:", currentP1Alias, currentP2Alias);
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-            activeGame.onGameEnd = (endData) => {
-              let winnerName = endData.winnerAlias || "Winner";
-              if (endData.winner == "player1") {
-                winnerName = p1Alias;
-              } else if (endData.winner == "player2") {
-                winnerName = p2Alias;
-              } else if (endData.winnerAlias) {
-                winnerName = endData.winnerAlias;
-              }
-              showVictoryModal(winnerName);
-            };
+            console.log("Player aliases set:", currentP1Alias, currentP2Alias);
             gameSocket.off("opponentLeft");
-            gameSocket.on("opponentLeft", (eventData) => {
+            gameSocket.on("opponentLeft", async (eventData) => {
               if (activeGame) {
                 console.log("Opponent left the game! Victory by forfeit!");
                 activeGame.isRunning = false;
                 activeGame.stop();
                 gameSocket.off("gameState");
                 gameSocket.off("gameEnded");
-                let myAlias = data.role === "player1" ? player1Alias : player2Alias;
                 let myScore = data.role === "player1" ? activeGame.score.player1 : activeGame.score.player2;
+                const myAlias2 = await getPlayerAlias();
                 const userIdStr = localStorage.getItem("userId");
                 if (userIdStr) {
                   saveGameStats(Number(userIdStr), myScore, true);
                 }
-                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                showRemoteEndModal(myAlias2, "(Opponent forfeit)");
                 activeGame = null;
               }
             });
+            activeGame.onGameEnd = (endData) => {
+              let winnerName = "Winner";
+              if (endData.winner === "player1") winnerName = currentP1Alias;
+              else if (endData.winner === "player2") winnerName = currentP2Alias;
+              console.log("WinnerName:", winnerName);
+              showVictoryModal(winnerName);
+            };
             activeGame.onScoreChange = (score) => {
               const sb = document.getElementById("score-board");
               if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
             };
             activeGame.startRemote(data.roomId, data.role);
           }
-          const p1Name = document.getElementById("player-1-name");
-          const p2Name = document.getElementById("player-2-name");
         }
       };
       const pendingMatch = sessionStorage.getItem("pendingMatch");
