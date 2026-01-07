@@ -66,7 +66,7 @@ export class FriendProfileModal {
             if (this.username) this.username.innerText = "Loading...";
             
             const [userRes, statsRes] = await Promise.all([
-                fetchWithAuth(`api/users/${friendId}`),
+                fetchWithAuth(`api/user/${friendId}`),
                 fetchWithAuth(`api/game/users/${friendId}/stats`)
             ]);
 

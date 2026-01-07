@@ -524,19 +524,24 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 		// Gérer les erreurs du service auth
 		if (!authResponse.ok)
 		{
-			const authJson = await authResponse.json().catch(() => ({}));
+			const authJson = await authResponse.json().catch(() => null);
+
+			const errorMessage = authJson?.error?.message || authJson?.message || `Error Auth service (${authResponse.status})`;
+			const error: any = new Error(errorMessage);
+			error.statusCode = authResponse.status;
+			throw error;
 
 			// Propoager le code d'erreur du service auth
-			if (authResponse.status >= 400 && authResponse.status < 500)
-			{
-				const error: any = new Error(
-					authJson.error?.message || `Auth service error: ${authResponse.status}`
-				);
-				error.statusCode = authResponse.status;
-				throw error;
-			}
+			// if (authResponse.status >= 400 && authResponse.status < 500)
+			// {
+			// 	const error: any = new Error(
+			// 		authJson.error?.message || `Auth service error: ${authResponse.status}`
+			// 	);
+			// 	error.statusCode = authResponse.status;
+			// 	throw error;
+			// }
 
-			throw new ServiceUnavailableError(`Auth service is unavailable`);
+			// throw new ServiceUnavailableError(`Auth service is unavailable`);
 		}
 
 		const authJson = await authResponse.json();

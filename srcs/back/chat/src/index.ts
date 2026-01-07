@@ -54,124 +54,6 @@ const authMiddleware = (socket: any, next: any) => {
     }
 }
 
-const socketAliases = new Map<string, string>();
-
-// --- STRUCTURES JEU REMOTE ---
-interface GameState {
-    roomId: string;
-    player1Id: string;
-    player2Id: string;
-    player1Alias: string;
-    player2Alias: string;
-    ball: { x: number, y: number, vx: number, vy: number, radius: number };
-    paddle1: { y: number, height: number, width: number, x: number };
-    paddle2: { y: number, height: number, width: number, x: number };
-    score: { player1: number, player2: number };
-    canvasWidth: number;
-    canvasHeight: number;
-    intervalId?: NodeJS.Timeout;
-}
-
-let waitingQueue: string[] = []; // ID des sockets en attente
-const activeGames = new Map<string, GameState>();
-
-// --- LOGIQUE JEU SERVEUR ---
-const GAMESPEED = 1000 / 60; // 60 FPS
-
-function initGameState(roomId: string, p1: string, p2: string, alias1: string, alias2: string): GameState {
-    return {
-        roomId,
-        player1Id: p1,
-        player2Id: p2,
-        player1Alias: alias1, // Stockage
-        player2Alias: alias2,
-        canvasWidth: 800, // Taille de référence serveur
-        canvasHeight: 600,
-        ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
-        paddle1: { x: 30, y: 250, width: 10, height: 100 },
-        paddle2: { x: 760, y: 250, width: 10, height: 100 },
-        score: { player1: 0, player2: 0 }
-    };
-}
-
-function resetBall(game: GameState) {
-    game.ball.x = game.canvasWidth / 2;
-    game.ball.y = game.canvasHeight / 2;
-    // Vitesse aléatoire mais constante
-    const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4);
-    const speed = 7;
-    const direction = Math.random() > 0.5 ? 1 : -1;
-    game.ball.vx = direction * speed * Math.cos(angle);
-    game.ball.vy = speed * Math.sin(angle);
-}
-
-function updateGamePhysics(game: GameState, io: Server) {
-    // Bouger la balle
-    game.ball.x += game.ball.vx;
-    game.ball.y += game.ball.vy;
-
-    // Collision murs (Haut/Bas)
-    if (game.ball.y - game.ball.radius < 0 || game.ball.y + game.ball.radius > game.canvasHeight) {
-        game.ball.vy = -game.ball.vy;
-    }
-
-    // Collision Raquettes (Simplifiée)
-    // P1
-    if (game.ball.x - game.ball.radius < game.paddle1.x + game.paddle1.width &&
-        game.ball.x + game.ball.radius > game.paddle1.x &&
-        game.ball.y > game.paddle1.y &&
-        game.ball.y < game.paddle1.y + game.paddle1.height) {
-            game.ball.vx = Math.abs(game.ball.vx); // Rebond vers la droite
-            game.ball.vx *= 1.05; // Accélération
-    }
-    // P2
-    if (game.ball.x + game.ball.radius > game.paddle2.x &&
-        game.ball.x - game.ball.radius < game.paddle2.x + game.paddle2.width &&
-        game.ball.y > game.paddle2.y &&
-        game.ball.y < game.paddle2.y + game.paddle2.height) {
-            game.ball.vx = -Math.abs(game.ball.vx); // Rebond vers la gauche
-            game.ball.vx *= 1.05; // Accélération
-    }
-
-    // Score
-    if (game.ball.x < 0) {
-        game.score.player2++;
-        resetBall(game);
-    } else if (game.ball.x > game.canvasWidth) {
-        game.score.player1++;
-        resetBall(game);
-    }
-
-    // Fin de partie (exemple: 5 points)
-    if (game.score.player1 >= 5 || game.score.player2 >= 5) {
-        stopGame(game.roomId, io);
-    }
-
-    // Envoi de l'état
-    io.to(game.roomId).emit('gameState', {
-        ball: game.ball,
-        paddle1: game.paddle1,
-        paddle2: game.paddle2,
-        score: game.score
-    });
-}
-
-function stopGame(roomId: string, io: Server) {
-    const game = activeGames.get(roomId);
-    if (game) {
-        if (game.intervalId) clearInterval(game.intervalId);
-
-
-        const isP1Winner = game.score.player1 > game.score.player2;
-        const winnerRole = isP1Winner ? 'player1' : 'player2';
-        const winnerName = isP1Winner ? game.player1Alias : game.player2Alias;
-
-
-
-        io.to(roomId).emit('gameEnded', { finalScore: game.score, winner: winnerRole, winnerAlias: winnerName });
-        activeGames.delete(roomId);
-    }
-}
 
 // 1. Définir la logique Socket (se lance quand Fastify est prêt)
 fastify.ready().then(() => {
@@ -255,236 +137,30 @@ fastify.ready().then(() => {
                 });
             }
         });
-
-        // ------------------------------------
-        // --- EVENTS DU JEU REMOTE (AJOUT) ---
-        // ------------------------------------
-
-        // gestion des invitations
-        socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
-            const targetIdNum = Number(data.targetId);
-            const targetSocketId = userSockets.get(targetIdNum);
-            
-            if (targetSocketId) {
-                // nitifcations a l'ami via son socket
-                fastify.io.to(targetSocketId).emit('receiveGameInvite', {
-                    senderId: socket.user.sub, // son id
-                    senderName: data.senderName
-                });
-            }
-        });
-
-        socket.on('acceptGameInvite', (data: { senderId: string, senderAlias?: string, acceptorAlias?: string }) => {
-            const senderIdNum = Number(data.senderId);
-            const senderSocketId = userSockets.get(senderIdNum);
-            const acceptorSocketId = socket.id;
-
-            // estce que le user est tjrs connecte
-            if (senderSocketId) {
-                const senderSocket = fastify.io.sockets.sockets.get(senderSocketId);
-                
-                if (senderSocket) {
-                    // creation de la partie 
-                    const roomId = `game_invite_${Date.now()}_${senderIdNum}_${socket.user.sub}`;
-                    
-                    const alias1 = data.senderAlias || socketAliases.get(senderSocketId) || "Player 1";
-                    const alias2 = data.acceptorAlias || socketAliases.get(acceptorSocketId) || "Player 2";
-                    // etat du jeu 
-                    const gameState = initGameState(roomId, senderSocketId, acceptorSocketId, alias1, alias2);
-                    activeGames.set(roomId, gameState);
-
-                    // les deux ont rejoins la room
-                    senderSocket.join(roomId);
-                    socket.join(roomId);
-
-                    setTimeout(() => {
-                        senderSocket.emit('matchFound', { 
-                            roomId, 
-                            role: 'player1', 
-                            opponent: socket.user.sub,
-                            player1Alias: alias1,
-                            player2Alias: alias2
-                        });
-                        
-                        socket.emit('matchFound', { 
-                            roomId, 
-                            role: 'player2', 
-                            opponent: senderIdNum,
-                            player1Alias: alias1,
-                            player2Alias: alias2
-                        });
-                        console.log(`Friend match started: ${roomId}`);
-                        
-                        //lancement de la boucle
-                        gameState.intervalId = setInterval(() => {
-                            updateGamePhysics(gameState, fastify.io);
-                        }, GAMESPEED);
-                    }, 100); // delai pour le frontend
-                }
-            }
-        });
-
-        socket.on('declineGameInvite', (data: { senderId: string }) => {
-             const senderSocketId = userSockets.get(Number(data.senderId));
-             if (senderSocketId) {
-                 fastify.io.to(senderSocketId).emit('gameInviteDeclined', {});
-             }
-        });
-
-        socket.on('joinQueue', (data: { alias?: string }) => {
-            // si le joueur est deja en jeu ou en file d'addente on ignore
-            if (waitingQueue.includes(socket.id)) return;
-
-            const playerAlias = (data && data.alias) ? data.alias : "Player";
-            socketAliases.set(socket.id, playerAlias);
-
-
-            console.log(`Player ${socket.id} joined Queue`);
-            waitingQueue.push(socket.id);
-
-            // Si on a 2 joueurs, on lance
-            if (waitingQueue.length >= 2) {
-                const p1 = waitingQueue.shift()!;
-                const p2 = waitingQueue.shift()!;
-                const roomId = `game_${Date.now()}_${p1}_${p2}`;
-
-                const alias1 = socketAliases.get(p1) || "Player 1";
-                const alias2 = socketAliases.get(p2) || "Player 2";
-                // Création état jeu
-                const gameState = initGameState(roomId, p1, p2, alias1, alias2);
-                activeGames.set(roomId, gameState);
-
-                // Setup Sockets
-                const sock1 = fastify.io.sockets.sockets.get(p1);
-                const sock2 = fastify.io.sockets.sockets.get(p2);
-
-                if (sock1 && sock2) {
-                    sock1.join(roomId);
-                    sock2.join(roomId);
-
-                    const matchData = {
-                        roomId,
-                        player1Alias: alias1,
-                        player2Alias: alias2
-                    };
-
-                    sock1.emit('matchFound', { 
-                        roomId, 
-                        role: 'player1', 
-                        opponent: p2,
-                        player1Alias: alias1,
-                        player2Alias: alias2
-                    });
-                    
-                    sock2.emit('matchFound', { 
-                        roomId, 
-                        role: 'player2', 
-                        opponent: p1,
-                        player1Alias: alias1,
-                        player2Alias: alias2
-                    });
-
-                    console.log(`Match started: ${roomId}`);
-                    
-                    // Lancement boucle
-                    gameState.intervalId = setInterval(() => {
-                        updateGamePhysics(gameState, fastify.io);
-                    }, GAMESPEED);
-                }
-            }
-        });
-
-        socket.on('leaveQueue', () => {
-            waitingQueue = waitingQueue.filter(id => id !== socket.id);
-        });
-
-        socket.on('gameInput', (data: { roomId: string, up: boolean, down: boolean }) => {
-            const game = activeGames.get(data.roomId);
-            if (!game) return;
-
-            const speed = 10;
-            // Qui bouge ?
-            let paddle = null;
-            if (socket.id === game.player1Id) paddle = game.paddle1;
-            else if (socket.id === game.player2Id) paddle = game.paddle2;
-
-            if (paddle) {
-                if (data.up) paddle.y -= speed;
-                if (data.down) paddle.y += speed;
-                // Limites
-                if (paddle.y < 0) paddle.y = 0;
-                if (paddle.y + paddle.height > game.canvasHeight) paddle.y = game.canvasHeight - paddle.height;
-            }
-        });
-
-        // Dans srcs/back/chat/src/index.ts
-
-        socket.on('leaveGame', (data: { roomId: string }) => {
-            const game = activeGames.get(data.roomId);
-            
-            // Vérifier que le socket est bien un joueur de cette partie
-            if (game && (game.player1Id === socket.id || game.player2Id === socket.id)) {
-                console.log(`Player ${socket.id} left the game explicitly`);
-
-                // Identifier l'adversaire
-                const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
-
-                // Prévenir l'adversaire IMMÉDIATEMENT qu'il a gagné par forfait
-                fastify.io.to(opponentId).emit('opponentLeft', { 
-                    roomId: data.roomId,
-                    leaver: socket.id 
-                });
-
-                // Arrêter la partie proprement
-                stopGame(data.roomId, fastify.io);
-            }
-        });
-
-        // Dans srcs/back/chat/src/index.ts
-
-        socket.on('disconnect', () => {
-            console.log(`Client disconnected: ${socket.id}`);
-            
-            // Nettoyage map userSockets
-            for (const [uid, sid] of userSockets.entries()) {
-                if (sid === socket.id) {
-                    userSockets.delete(uid);
-                    break;
-                }
-            }
-            
-            // Nettoyage file d'attente
-            waitingQueue = waitingQueue.filter(id => id !== socket.id);
-            socketAliases.delete(socket.id);
-
-            // GESTION DES PARTIES EN COURS
-            for (const [roomId, game] of activeGames.entries()) {
-                if (game.player1Id === socket.id || game.player2Id === socket.id) {
-                    
-                    // Identifier l'adversaire restant
-                    const opponentId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
-                    
-                    // Lui envoyer l'event de victoire par forfait
-                    fastify.io.to(opponentId).emit('opponentLeft', { 
-                        roomId: roomId,
-                        leaver: socket.id 
-                    });
-
-                    stopGame(roomId, fastify.io);
-                }
-            }
-        });
     });
 });
+
 
 // 2. Fonctions de logique métier
 async function joinChannel(socket: Socket, io: Server, channelKey: string) {
     try {
-        const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+        let isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
         
         // Si le channel n'existe pas en base, on le crée (simplifié)
         if (!isExistingChannel?.id) {
-            await chanRepo.createChannel(db, channelKey);
+            try {
+                await chanRepo.createChannel(db, channelKey);
+                isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+            }
+            catch (createErr: any) {
+                if (createErr.code === 'SQLITE_CONSTRAINT')
+                {
+                    console.log("Channel créé simultanément par l'autre joueur");
+                    isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+                }
+                else
+                    throw createErr;
+            }
         }
         
         // IMPORTANT: Le socket rejoint la "room" Socket.IO
@@ -504,6 +180,7 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 
 async function chatMessage(io: Server, data: messRepo.Message) {
     const { channel_key, sender_id, sender_alias, msg_content } = data;
+    console.log("Back: chatMessage ligne 654")
 
     try {
         const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);

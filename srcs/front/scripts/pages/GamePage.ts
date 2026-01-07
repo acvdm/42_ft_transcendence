@@ -5,6 +5,7 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 import SocketService from '../services/SocketService'; // <--- AJOUT IMPORT
+// import { Socket } from "socket.io-client";
 
 import Game from "../game/Game";
 import Input from "../game/Input";
@@ -198,13 +199,14 @@ function confirmExit() {
         const roomId = activeGame.roomId;
         const playerRole = activeGame.playerRole;
         const currentScore = { ...activeGame.score };
+        const player1Alias = "ligne 179";
 
         activeGame.isRunning = false;
         activeGame.stop();
         
         console.log("Leaving the game - remote");
-        if (wasRemote && roomId && SocketService.getInstance().socket) {
-            SocketService.getInstance().socket.emit('leaveGame', { roomId: roomId });
+        if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
+            SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
             
             const userIdStr = localStorage.getItem('userId');
             if (userIdStr && playerRole) {
@@ -451,6 +453,19 @@ export function initGamePage(mode: string): void {
     // ---------------------------------------------------------
     function initRemoteMode() {
         const socketService = SocketService.getInstance();
+
+        // 1. On lance le connexion spécifique au jeu
+        socketService.connectGame();
+
+        // 2. On récupère le socket jeu
+        const gameSocket = socketService.getGameSocket();
+
+        // Si pas de token ou erreur de connexion
+        if (!gameSocket) {
+            console.error("Cannot connect to server");
+            return ;
+        }
+
         const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
         const status = document.getElementById('queue-status');
         const modal = document.getElementById('game-setup-modal');
@@ -545,6 +560,12 @@ export function initGamePage(mode: string): void {
             const player1Alias = p1Alias || "Player 1";
             const player2Alias = p2Alias || "Player 2";
 
+            // Sync du chat sur la room du jeu
+            if (gameChat) {
+                gameChat.joinChannel(data.roomId);
+                gameChat.addSystemMessage(`Match started! Good luck in game chat room ${data.roomId}`);
+            }
+
 
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
             if (modal) modal.style.display = 'none';
@@ -577,16 +598,32 @@ export function initGamePage(mode: string): void {
 
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
 
+                    // Gestion de la fin de partie (UI)
+                    activeGame.onGameEnd = (endData) => {
+                        let winnerName = endData.winnerAlias || "Winner";
+
+                        if (endData.winner == 'player1') {
+                            winnerName = p1Alias;
+                        } 
+                        else if (endData.winner == 'player2') {
+                            winnerName = p2Alias;
+                        }
+                        else if (endData.winnerAlias) {
+                            winnerName = endData.winnerAlias;
+                        }
+
+                        showVictoryModal(winnerName);
+                    }
                     // gestion quand on opposant se casse du jeu 
-                    socketService.socket.off('opponentLeft');
-                    socketService.socket.on('opponentLeft', (eventData: any) => {
+                    gameSocket.off('opponentLeft');
+                    gameSocket.on('opponentLeft', (eventData: any) => {
                         if (activeGame) {
                             console.log("Opponent left the game! Victory by forfeit!");
                             activeGame.isRunning = false;
                             activeGame.stop();
 
-                            socketService.socket.off('gameState');
-                            socketService.socket.off('gameEnded');
+                            gameSocket.off('gameState');
+                            gameSocket.off('gameEnded');
                             let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
                             let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
 
@@ -600,30 +637,20 @@ export function initGamePage(mode: string): void {
                         }
                     });
 
-                    // --- ATTENTE SOCKET PRÊT ---
-                    if (!socketService.socket) {
-                        console.log("Socket non connecté, attente...");
-                        const checkSocket = setInterval(() => {
-                            if (socketService.socket) {
-                                clearInterval(checkSocket);
-                                activeGame?.startRemote(data.roomId, data.role);
-                            }
-                        }, 100);
-                    } else {
-                        activeGame.startRemote(data.roomId, data.role);
+
+                    activeGame.onScoreChange = (score) => {
+                        const sb = document.getElementById('score-board');
+                        if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
                     }
+
+                    // Lancement effectif via la méthode remote du Game
+                    activeGame.startRemote(data.roomId, data.role);
                 }
 
                 // --- Update UI noms joueurs ---
                 const p1Name = document.getElementById('player-1-name');
                 const p2Name = document.getElementById('player-2-name');
 
-                if (p1Name) {
-                    p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
-                }
-                if (p2Name) {
-                    p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
-                }
             }
         };
 
@@ -636,15 +663,17 @@ export function initGamePage(mode: string): void {
             startGameFromData(data); // Lancement auto !
         }
 
+        // Gestion du bouton "JOUER"
         if (btn) {
             // On clone pour éviter les event listeners multiples si on revient sur la page
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
             newBtn.addEventListener('click', async () => {
-                if (!socketService.socket) {
-                    alert("Erreur: Non connecté au serveur de jeu");
-                    return;
+
+                if (!gameSocket) {
+                    alert("Error: lost connexion to game server");
+                    return ;
                 }
 
                 if (status) status.innerText = "Recherche d'un adversaire...";
@@ -653,119 +682,18 @@ export function initGamePage(mode: string): void {
 
                 const myAlias = await getPlayerAlias();
 
-                // Ecoute de l'événement de début de match
-                socketService.socket.on('matchFound', (data: any) => {
-                    console.log("Match Found!", data);
-                    
-                    currentP1Alias = data.player1Alias || "Player 1";
-                    currentP2Alias = data.player2Alias || "Player 2";
+                // // Ecoute de l'événement de début de match
+                // socketService.socket.on('matchFound', (data: any) => {
+                //     console.log("Match Found!", data);
+                gameSocket.off('matchFound');
 
-                    if (gameChat) {
-                        // on rejoint un canal unique du match et du chat
-                        // la class va nettoyer automqtiquement les messages
-                        gameChat.joinChannel(data.roomId);
-                        gameChat.addSystemMessage("Game found! You are now in a private room.")
-                    }
-                    
-                    if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-                    if (modal) modal.style.display = 'none';
-
-                    if (container) {
-                        container.innerHTML = ''; 
-                        const canvas = document.createElement('canvas');
-                        
-                        canvas.width = container.clientWidth;
-                        canvas.height = container.clientHeight;
-                        canvas.style.width = '100%';
-                        canvas.style.height = '100%';
-                        
-                        container.appendChild(canvas);
-                        
-                        const ctx = canvas.getContext('2d');
-                        const input = new Input();
-                        const selectedBallSkin = ballInput ? ballInput.value : 'classic';
-
-
-                        if (ctx) {
-                            if (activeGame) activeGame.isRunning = false;
-                            activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                            
-                            socketService.socket.off('opponentLeft'); // on nettoie l'ancien ecouteur
-                            socketService.socket.on('opponentLeft', (eventData: any) => {
-                                if (activeGame && activeGame.isRunning) {
-                                    console.log("Opponent left during match!", eventData);
-                                    
-                                    activeGame.isRunning = false;
-                                    activeGame.stop();
-                                    
-                                    // on nettoie tout 
-                                    socketService.socket.off('gameState');
-                                    socketService.socket.off('gameEnded');
-                                    
-                                    // qui suis je et quel est mon score
-                                    let myAlias = data.role === 'player1' ? currentP1Alias : currentP2Alias;
-                                    let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
-                                    
-                                    // on sauvegarde
-                                    const userIdStr = localStorage.getItem('userId');
-                                    if (userIdStr) {
-                                        saveGameStats(Number(userIdStr), myScore, true);
-                                    }
-                                    
-                                    // Afficher la modale de victoire
-                                    showRemoteEndModal(myAlias, "(Opponent disconnected)");
-                                    activeGame = null;
-                                }
-                            });
-
-                            
-
-                            activeGame.onGameEnd = (endData) => {
-                                console.log("Game Ended Data:", endData);
-                                
-                                // determineteur du winner localement 
-                                let winnerName = "Winner";
-
-                                // on verifie i le back renvoit p1 ou p2
-                                if (endData.winner === 'player1') {
-                                    winnerName = currentP1Alias;
-                                } else if (endData.winner === 'player2') {
-                                    winnerName = currentP2Alias;
-                                } else if (endData.winnerAlias) {
-                                    // fallbacl
-                                    winnerName = endData.winnerAlias;
-                                }
-
-                                showVictoryModal(winnerName);
-                            }
-                            
-
-
-                            activeGame.onScoreChange = (score) => {
-                                const sb = document.getElementById('score-board');
-                                if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                            };
-                            
-                            // On lance le jeu une fois le canvas pret
-                            activeGame.startRemote(data.roomId, data.role);
-                        }
-                    }
-                    
-                    // Update UI noms
-                    const p1Name = document.getElementById('player-1-name');
-                    const p2Name = document.getElementById('player-2-name');
-                    
-                    if (data.role === 'player1') {
-                        if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
-                        if (p2Name) p2Name.innerText = currentP2Alias;
-                    } else {
-                        if (p1Name) p1Name.innerText = currentP1Alias;
-                        if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
-                    }
+                gameSocket.on('matchFound', (data: any) => {
+                    console.log(data);
+                    startGameFromData(data);
                 });
 
-                // Envoi demande au serveur
-                socketService.socket.emit('joinQueue', { alias: myAlias });
+                // Envoi demande au server sur le game socket
+                gameSocket.emit('joinQueue');
             });
         }
     }
@@ -1074,10 +1002,9 @@ export function initGamePage(mode: string): void {
         });
     }
 
-
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
-        const p1Name = document.getElementById('player-1-name');
-        const p2Name = document.getElementById('player-2-name');
+        const p1Name = document.getElementById('game-p1-name');
+        const p2Name = document.getElementById('game-p2-name');
 
         const gameStartDate = getSqlDate();
         // Mise à jour de l'UI du jeu
