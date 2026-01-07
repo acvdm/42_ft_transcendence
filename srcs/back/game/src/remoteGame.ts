@@ -181,8 +181,11 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
                 sock1.join(roomId);
                 sock2.join(roomId);
 
-                sock1.emit('matchFound', { roomId, role: 'player1', opponent: p2 });
-                sock2.emit('matchFound', { roomId, role: 'player2', opponent: p1 });
+                const p1UserId = (sock1 as any).user?.sub || (sock1 as any).decoded?.sub; 
+                const p2UserId = (sock2 as any).user?.sub || (sock2 as any).decoded?.sub;
+
+                sock1.emit('matchFound', { roomId, role: 'player1', opponent: p2UserId });
+                sock2.emit('matchFound', { roomId, role: 'player2', opponent: p1UserId });
 
                 console.log(`Match started: ${roomId}`);
                 gameState.intervalId = setInterval(() => {

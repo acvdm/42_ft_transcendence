@@ -339,31 +339,6 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
 }
 
 
-    function showVictoryModal(winnerName: string) {
-        // modal
-        const modal = document.getElementById('local-summary-modal');
-        const winnerText = document.getElementById('winner-name');
-        const quitLocalBtn = document.getElementById('quit-local-btn');
-        const quitRemoteBtn = document.getElementById('quit-remote-btn');
-
-        if (modal && winnerText) {
-            winnerText.innerText = winnerName;
-            modal.classList.remove('hidden');
-            
-            if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
-            // lancement de confettis
-            //launchConfetti(4000);
-        }
-
-        const backAction = () => {
-            window.history.back();
-        }
-        // gestion du bouton retour au menu
-        quitLocalBtn?.addEventListener('click', backAction);
-        quitRemoteBtn?.addEventListener('click', backAction);
-
-    }
-
 
 export function initGamePage(mode: string): void {
 
@@ -394,6 +369,33 @@ export function initGamePage(mode: string): void {
     } else {
         gameChat.joinChannel("local_game_room");
         initLocalMode();
+    }
+
+
+
+    function showVictoryModal(winnerName: string) {
+        // modal
+        const modal = document.getElementById('local-summary-modal');
+        const winnerText = document.getElementById('winner-name');
+        const quitLocalBtn = document.getElementById('quit-local-btn');
+        const quitRemoteBtn = document.getElementById('quit-remote-btn');
+
+        if (modal && winnerText) {
+            winnerText.innerText = winnerName;
+            modal.classList.remove('hidden');
+            
+            if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
+            // lancement de confettis
+            launchConfetti(4000);
+        }
+
+        const backAction = () => {
+            window.history.back();
+        }
+        // gestion du bouton retour au menu
+        quitLocalBtn?.addEventListener('click', backAction);
+        quitRemoteBtn?.addEventListener('click', backAction);
+
     }
 
 
@@ -555,10 +557,10 @@ export function initGamePage(mode: string): void {
                         opponentAlias = userData.alias;
                     }
                 } catch (e) {
-                    console.error("Error: could not retrieve opponent alias:", (e));
+                    console.error("Error: could not retrieve opponent alias:", e);
                 }
             }
-
+            console.log("Opponent:", data.opponentAlias);
             if (data.role === 'player1') {
                 currentP1Alias = myAlias;
                 currentP2Alias = opponentAlias;

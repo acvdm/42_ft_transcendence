@@ -8172,8 +8172,8 @@
     update(canvas) {
       const inputState = this.input.getInput();
       if (this.isRemote && this.socket && this.roomId) {
-        const up = this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up;
-        const down = this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down;
+        const up = (this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up) || inputState.player1.up;
+        const down = (this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
         this.socket.emit("gameInput", {
           roomId: this.roomId,
           up,
@@ -8523,22 +8523,6 @@
       window.history.back();
     });
   }
-  function showVictoryModal(winnerName) {
-    const modal = document.getElementById("local-summary-modal");
-    const winnerText = document.getElementById("winner-name");
-    const quitLocalBtn = document.getElementById("quit-local-btn");
-    const quitRemoteBtn = document.getElementById("quit-remote-btn");
-    if (modal && winnerText) {
-      winnerText.innerText = winnerName;
-      modal.classList.remove("hidden");
-      if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
-    }
-    const backAction = () => {
-      window.history.back();
-    };
-    quitLocalBtn?.addEventListener("click", backAction);
-    quitRemoteBtn?.addEventListener("click", backAction);
-  }
   function initGamePage(mode) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
@@ -8560,6 +8544,23 @@
     } else {
       gameChat.joinChannel("local_game_room");
       initLocalMode();
+    }
+    function showVictoryModal(winnerName) {
+      const modal = document.getElementById("local-summary-modal");
+      const winnerText = document.getElementById("winner-name");
+      const quitLocalBtn = document.getElementById("quit-local-btn");
+      const quitRemoteBtn = document.getElementById("quit-remote-btn");
+      if (modal && winnerText) {
+        winnerText.innerText = winnerName;
+        modal.classList.remove("hidden");
+        if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
+        launchConfetti(4e3);
+      }
+      const backAction = () => {
+        window.history.back();
+      };
+      quitLocalBtn?.addEventListener("click", backAction);
+      quitRemoteBtn?.addEventListener("click", backAction);
     }
     if (spaceKeyListener) {
       document.removeEventListener("keydown", spaceKeyListener);
@@ -8691,6 +8692,7 @@
             console.error("Error: could not retrieve opponent alias:", e);
           }
         }
+        console.log("Opponent:", data.opponentAlias);
         if (data.role === "player1") {
           currentP1Alias = myAlias;
           currentP2Alias = opponentAlias;
