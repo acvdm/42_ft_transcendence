@@ -182,7 +182,7 @@ function handleLogin() {
 
         try {
             // ici pas de fetch with auth car token temporaire
-            const response = await fetch('/api/auth/2fa/verify', {
+            const response = await fetch('/api/auth/2fa/challenge', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
