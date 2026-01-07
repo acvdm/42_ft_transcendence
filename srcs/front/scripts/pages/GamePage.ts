@@ -78,6 +78,29 @@ export function isGameRunning(): boolean {
     return activeGame !== null && activeGame.isRunning;
 }
 
+
+//aHelper pour recuperer le nom du n joueur
+async function getPlayerAlias(): Promise<string> {
+    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+    const isGuest = sessionStorage.getItem('userRole') === 'guest';
+    
+    if (!userId) return "Player";
+    
+    try {
+        const response = await fetchWithAuth(`api/users/${userId}`);
+        if (response.ok) {
+            const userData = await response.json();
+            return userData.alias || (isGuest ? "Guest" : "Player");
+        }
+    } catch (err) {
+        console.error('Cannot fetch player alias:', err);
+    }
+
+    const result = sessionStorage.getItem('username') || (isGuest ? "Guest (you)" : "Player (you)");
+    
+    return (result + " (you)");
+}
+
 function handleBeforeUnload(e: BeforeUnloadEvent) {
     if (isGameRunning()) {
         e.preventDefault();
@@ -331,53 +354,14 @@ export function initGamePage(mode: string): void {
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
-    // Récupération des éléments communs
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
 
-    // on recupere le username du joueur connecte
-    const userId = localStorage.getItem('userId');
-    const isGuest = sessionStorage.getItem('userRole') === 'guest';
-    if (userId && player1Display)
-    {
-        fetchWithAuth(`api/users/${userId}`)
-            .then(response => {
-                if (response.ok) return response.json();
-                throw new Error('Error fetching user');
-        })
-        .then (userData => {
-            if (userData && userData.alias)
-                player1Display.innerText = userData.alias;
-        })
-        .catch(err => console.error('Cannot fetch username for player 1'));
-
-    } else if (isGuest && player1Display) {
-        const guestId = sessionStorage.getItem('userId');
-
-        if (guestId) {
-            // 2. On interroge l'API exactement comme pour un vrai user
-            // Le backend renverra l'objet user avec l'alias généré (ex: "Guest_xyz")
-            fetchWithAuth(`api/users/${guestId}`)
-                .then(response => {
-                    if (response.ok) return response.json();
-                    throw new Error('Error fetching guest user');
-                })
-                .then(userData => {
-                    if (userData && userData.alias) {
-                        // 3. On affiche le nom généré par le backend
-                        player1Display.innerText = userData.alias;
-                        
-                        // Optionnel : On peut le stocker pour éviter de refaire le fetch plus tard
-                        sessionStorage.setItem('username', userData.alias);
-                    }
-                })
-                .catch(err => {
-                    console.error('Cannot fetch guest alias', err);
-                    player1Display.innerText = "Guest"; // Fallback au cas où
-                });
-        } else {
-            player1Display.innerText = "Guest";
-        }
+    if (player1Display) {
+        getPlayerAlias().then(alias => {
+            player1Display.innerText = alias;
+        });
     }
+
 
     if (gameChat) gameChat.destroy();
     gameChat = new Chat();
@@ -657,7 +641,7 @@ export function initGamePage(mode: string): void {
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
-            newBtn.addEventListener('click', () => {
+            newBtn.addEventListener('click', async () => {
                 if (!socketService.socket) {
                     alert("Erreur: Non connecté au serveur de jeu");
                     return;
@@ -666,6 +650,8 @@ export function initGamePage(mode: string): void {
                 if (status) status.innerText = "Recherche d'un adversaire...";
                 newBtn.disabled = true;
                 newBtn.innerText = "WAITING...";
+
+                const myAlias = await getPlayerAlias();
 
                 // Ecoute de l'événement de début de match
                 socketService.socket.on('matchFound', (data: any) => {
@@ -778,8 +764,6 @@ export function initGamePage(mode: string): void {
                     }
                 });
 
-                const myAlias = document.getElementById('player-1-name')?.innerText || "Player";
-
                 // Envoi demande au serveur
                 socketService.socket.emit('joinQueue', { alias: myAlias });
             });
@@ -812,25 +796,18 @@ export function initGamePage(mode: string): void {
         const username = localStorage.getItem('username');
         
         const isGuest = sessionStorage.getItem('userRole') === 'guest';
-        const guestName = sessionStorage.getItem('username') || "Guest";
 
-        if (userId && username) {
-            console.log("Username du user: ", username);
-            player1Input.value = username; // doit afficher le nom du user connecté
-            player1Input.readOnly = true; // n'affiche rien pour le moment
-            player1Input.classList.add('bg-gray-200', 'cursor-not-allowed');
-        } else if (isGuest) {
-            console.log("Guest User");
-            player1Input.value = guestName; /
-            player1Input.readOnly = false; // On laisser le tournoi
-            player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
-
-        } else {
-            console.log("Username du user: ", username);
-            player1Input.value = "";
-            player1Input.readOnly = false; // le c est en guest
-            player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
-        }
+        getPlayerAlias().then(alias => {
+            player1Input.value = alias;
+        
+            if (!isGuest) {
+                player1Input.readOnly = true;
+                player1Input.classList.add('bg-gray-200', 'cursor-not-allowed');
+            } else {
+                player1Input.readOnly = false;
+                player1Input.classList.remove('bg-gray-200', 'cursor-not-allowed');
+            }
+        })
 
         console.log("Username du user: ", username);
 
@@ -1102,6 +1079,7 @@ export function initGamePage(mode: string): void {
         const p1Name = document.getElementById('player-1-name');
         const p2Name = document.getElementById('player-2-name');
 
+        const gameStartDate = getSqlDate();
         // Mise à jour de l'UI du jeu
         if (p1Name) p1Name.innerText = p1.alias;
         if (p2Name) p2Name.innerText = p2.alias;
