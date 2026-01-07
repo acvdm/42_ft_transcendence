@@ -586,7 +586,8 @@ export function afterRender(): void {
 				const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
 				if (statResponse.ok) {
 					const jsonResponse = await statResponse.json();
-					const stats: UserStats = jsonResponse.data;
+					console.log("Stats reçues du Backend:", jsonResponse);
+					const stats: UserStats = jsonResponse.data || jsonResponse;
 
 					const totalGame = document.getElementById('stats-total-games');
 					const wins = document.getElementById('stats-wins');

@@ -6858,7 +6858,8 @@
           const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
           if (statResponse.ok) {
             const jsonResponse = await statResponse.json();
-            const stats = jsonResponse.data;
+            console.log("Stats re\xE7ues du Backend:", jsonResponse);
+            const stats = jsonResponse.data || jsonResponse;
             const totalGame = document.getElementById("stats-total-games");
             const wins = document.getElementById("stats-wins");
             const losses = document.getElementById("stats-losses");
