@@ -217,6 +217,29 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
         }
     });
 
+    socket.on('leaveGame', (data: { roomId: string }) => {
+        const game = activeGames.get(data.roomId);
+
+        // Vérifier que le socket fait bien partie du jeu
+        if (game && (game.player1Id === socket.id || game.player2Id === socket.id)) {
+            console.log(`Player ${socket.id} left the game explicitly`);
+
+            // Identifier l'adversaire (celui qui est resté)
+            const opponentSocketId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
+
+            // Prévenir l'adversaire IMMÉDIATEMENT qu'il a gagné par forfait
+            io.to(opponentSocketId).emit('opponentLeft', { 
+                roomId: data.roomId, 
+                leaver: socket.id 
+            });
+
+            // Arrêter la partie proprement (clearInterval et suppression de la map)
+            // Note : stopGame émet aussi 'gameEnded', mais ton front gère cela en coupant les écouteurs
+            // dès réception de 'opponentLeft', donc pas de conflit.
+            stopGame(data.roomId, io);
+        }
+    });
+    
     // 4. Gestion de la Déconnexion (Nettoyage Jeu)
     // Note: On ne gère pas le userSockets.delete ici car il est souvent géré dans le index.ts principal
     // Mais on gère le nettoyage des parties actives et de la queue
