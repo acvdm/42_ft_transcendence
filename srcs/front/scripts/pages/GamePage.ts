@@ -1475,8 +1475,6 @@ export function initGamePage(mode: string): void {
                         const p1Wins = p1Score > p2Score;
                         const winnerAlias = p1Wins ? p1Alias : p2Alias;
 
-                        launchConfetti(4000);
-                        
                         // 2. Sauvegarde si l'utilistauer est connecté
                         const userIdStr = localStorage.getItem('userId');
                         if (userIdStr) {
@@ -1485,10 +1483,9 @@ export function initGamePage(mode: string): void {
                             console.log(`gamepage, ${userId}`);
                             await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
                         }
-
+                        
                         // 3. Feedback et Reload
-                        alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
-                        window.location.reload();
+                        showVictoryModal(winnerAlias);
                     }
                 }, 500);
             }

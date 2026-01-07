@@ -9303,15 +9303,13 @@
                 const p2Alias = opponentName;
                 const p1Wins = p1Score > p2Score;
                 const winnerAlias = p1Wins ? p1Alias : p2Alias;
-                launchConfetti(4e3);
                 const userIdStr = localStorage.getItem("userId");
                 if (userIdStr) {
                   const userId = Number(userIdStr);
                   console.log(`gamepage, ${userId}`);
                   await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
                 }
-                alert(`GAME OVER ! ${winnerAlias} remporte la partie !`);
-                window.location.reload();
+                showVictoryModal(winnerAlias);
               }
             }, 500);
           }
