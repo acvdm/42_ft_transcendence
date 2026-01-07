@@ -4021,7 +4021,7 @@
         } else {
           console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
+            errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
