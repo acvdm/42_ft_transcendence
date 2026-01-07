@@ -627,11 +627,23 @@ fastify.ready().then(() => {
 // 2. Fonctions de logique métier
 async function joinChannel(socket: Socket, io: Server, channelKey: string) {
     try {
-        const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+        let isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
         
         // Si le channel n'existe pas en base, on le crée (simplifié)
         if (!isExistingChannel?.id) {
-            await chanRepo.createChannel(db, channelKey);
+            try {
+                await chanRepo.createChannel(db, channelKey);
+                isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+            }
+            catch (createErr: any) {
+                if (createErr.code === 'SQLITE_CONSTRAINT')
+                {
+                    console.log("Channel créé simultanément par l'autre joueur");
+                    isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+                }
+                else
+                    throw createErr;
+            }
         }
         
         // IMPORTANT: Le socket rejoint la "room" Socket.IO
@@ -651,6 +663,7 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 
 async function chatMessage(io: Server, data: messRepo.Message) {
     const { channel_key, sender_id, sender_alias, msg_content } = data;
+    console.log("Back: chatMessage ligne 654")
 
     try {
         const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);

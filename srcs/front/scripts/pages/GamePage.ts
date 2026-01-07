@@ -176,6 +176,7 @@ function confirmExit() {
         const roomId = activeGame.roomId;
         const playerRole = activeGame.playerRole;
         const currentScore = { ...activeGame.score };
+        const player1Alias = "ligne 179";
 
         activeGame.isRunning = false;
         activeGame.stop();
@@ -542,16 +543,17 @@ export function initGamePage(mode: string): void {
         }
 
 
-        const startGameFromData = (data: any) => {
+        const startGameFromData = (data: any, p1Alias?: string, p2Alias?: string) => {
             console.log("Starting game from data:", data);
+
+            const player1Alias = p1Alias || "Player 1";
+            const player2Alias = p2Alias || "Player 2";
 
             // Sync du chat sur la room du jeu
             if (gameChat) {
                 gameChat.joinChannel(data.roomId);
-                gameChat.addSystemMessage("Match started! Good luck.");
+                gameChat.addSystemMessage(`Match started! Good luck in game chat room ${data.roomId}`);
             }
-            const p1Alias = data.player1Alias || "Player 1";
-            const p2Alias = data.player2Alias || "Player 2";
 
 
             if (status) status.innerText = "Adversaire trouvé ! Lancement...";
@@ -601,28 +603,28 @@ export function initGamePage(mode: string): void {
 
                         showVictoryModal(winnerName);
                     }
-                    // // gestion quand on opposant se casse du jeu 
-                    // socketService.socket.off('opponentLeft');
-                    // socketService.socket.on('opponentLeft', (eventData: any) => {
-                    //     if (activeGame) {
-                    //         console.log("Opponent left the game! Victory by forfeit!");
-                    //         activeGame.isRunning = false;
-                    //         activeGame.stop();
+                    // gestion quand on opposant se casse du jeu 
+                    gameSocket.off('opponentLeft');
+                    gameSocket.on('opponentLeft', (eventData: any) => {
+                        if (activeGame) {
+                            console.log("Opponent left the game! Victory by forfeit!");
+                            activeGame.isRunning = false;
+                            activeGame.stop();
 
-                    //         socketService.socket.off('gameState');
-                    //         socketService.socket.off('gameEnded');
-                    //         let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
-                    //         let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+                            gameSocket.off('gameState');
+                            gameSocket.off('gameEnded');
+                            let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
+                            let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
 
-                    //         const userIdStr = localStorage.getItem('userId');
-                    //         if (userIdStr) {
-                    //             saveGameStats(Number(userIdStr), myScore, true);
-                    //         }
+                            const userIdStr = localStorage.getItem('userId');
+                            if (userIdStr) {
+                                saveGameStats(Number(userIdStr), myScore, true);
+                            }
 
-                    //         showRemoteEndModal(myAlias, "(Opponent forfeit)");
-                    //         activeGame = null;
-                    //     }
-                    // });
+                            showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                            activeGame = null;
+                        }
+                    });
 
                     // // --- ATTENTE SOCKET PRÊT ---
                     // if (!socketService.socket) {
@@ -650,8 +652,12 @@ export function initGamePage(mode: string): void {
                 const p1Name = document.getElementById('player-1-name');
                 const p2Name = document.getElementById('player-2-name');
 
-                if (p1Name) p1Name.innerText = p1Alias;
-                if (p2Name) p2Name.innerText = p2Alias;
+                // if (p1Name) {
+                //     p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
+                // }
+                // if (p2Name) {
+                //     p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
+                // }
             }
         };
 

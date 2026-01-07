@@ -8243,6 +8243,7 @@
       const roomId = activeGame.roomId;
       const playerRole = activeGame.playerRole;
       const currentScore = { ...activeGame.score };
+      const player1Alias = "ligne 179";
       activeGame.isRunning = false;
       activeGame.stop();
       console.log("Leaving the game - remote");
@@ -8304,6 +8305,54 @@
     } catch (error) {
       console.error("Erreur lors de la sauvegarde des stats:", error);
     }
+  }
+  function showRemoteEndModal(winnerName, message) {
+    if (document.getElementById("remote-end-modal")) return;
+    const modalHtml = `
+        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-controls"></div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
+
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">
+                            ${winnerName}
+                        </p>
+                        <p class="text-sm text-gray-600 font-semibold italic text-center">
+                            ${message}
+                        </p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        <button id="remote-quit-btn"
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
+                                    px-6 py-4 text-base font-semibold shadow-sm
+                                    hover:from-gray-200 hover:to-gray-400
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                    transition-all duration-200 hover:shadow-md"
+                                style="width: 200px; padding: 4px;">
+                            RETURN TO MENU
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+    const div = document.createElement("div");
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+    document.getElementById("remote-quit-btn")?.addEventListener("click", () => {
+      document.getElementById("remote-end-modal")?.remove();
+      window.history.back();
+    });
   }
   function initGamePage(mode) {
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -8465,14 +8514,14 @@
           if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
         });
       }
-      const startGameFromData = (data) => {
+      const startGameFromData = (data, p1Alias, p2Alias) => {
         console.log("Starting game from data:", data);
+        const player1Alias = p1Alias || "Player 1";
+        const player2Alias = p2Alias || "Player 2";
         if (gameChat) {
           gameChat.joinChannel(data.roomId);
-          gameChat.addSystemMessage("Match started! Good luck.");
+          gameChat.addSystemMessage(`Match started! Good luck in game chat room ${data.roomId}`);
         }
-        const p1Alias = data.player1Alias || "Player 1";
-        const p2Alias = data.player2Alias || "Player 2";
         if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
         if (modal) modal.style.display = "none";
         if (container) {
@@ -8505,6 +8554,24 @@
               }
               showVictoryModal(winnerName);
             };
+            gameSocket.off("opponentLeft");
+            gameSocket.on("opponentLeft", (eventData) => {
+              if (activeGame) {
+                console.log("Opponent left the game! Victory by forfeit!");
+                activeGame.isRunning = false;
+                activeGame.stop();
+                gameSocket.off("gameState");
+                gameSocket.off("gameEnded");
+                let myAlias = data.role === "player1" ? player1Alias : player2Alias;
+                let myScore = data.role === "player1" ? activeGame.score.player1 : activeGame.score.player2;
+                const userIdStr = localStorage.getItem("userId");
+                if (userIdStr) {
+                  saveGameStats(Number(userIdStr), myScore, true);
+                }
+                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                activeGame = null;
+              }
+            });
             activeGame.onScoreChange = (score) => {
               const sb = document.getElementById("score-board");
               if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
@@ -8513,8 +8580,6 @@
           }
           const p1Name = document.getElementById("player-1-name");
           const p2Name = document.getElementById("player-2-name");
-          if (p1Name) p1Name.innerText = p1Alias;
-          if (p2Name) p2Name.innerText = p2Alias;
         }
       };
       const pendingMatch = sessionStorage.getItem("pendingMatch");
