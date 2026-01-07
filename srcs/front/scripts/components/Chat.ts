@@ -28,6 +28,7 @@ export class Chat {
         this.setupWizz();
         this.setupTools(); // Animations, Fonts, Emoticons, Backgrounds
     }
+    
 
     public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
         this.currentChannel = channelKey;
@@ -604,6 +605,7 @@ export class Chat {
         if (this.socket) {
             this.socket.off("connect");
             this.socket.off("chatMessage");
+            this.socket.off("msg_history"); // ajout
             this.socket.off("receivedWizz");
             this.socket.off("receivedAnimation");
             this.socket.off("systemMessage");

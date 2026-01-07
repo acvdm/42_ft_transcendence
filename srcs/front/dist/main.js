@@ -5753,6 +5753,7 @@
       if (this.socket) {
         this.socket.off("connect");
         this.socket.off("chatMessage");
+        this.socket.off("msg_history");
         this.socket.off("receivedWizz");
         this.socket.off("receivedAnimation");
         this.socket.off("systemMessage");
@@ -5847,18 +5848,21 @@
   };
 
   // scripts/pages/HomePage.ts
+  var friendListInstance = null;
+  var chatInstance = null;
+  var friendSelectedHandler = null;
   function render2() {
     return HomePage_default;
   }
   function afterRender() {
     const socketService = SocketService_default.getInstance();
     socketService.connect();
-    const friendList = new FriendList();
-    friendList.init();
+    friendListInstance = new FriendList();
+    friendListInstance.init();
     const userProfile = new UserProfile();
     userProfile.init();
-    const chat = new Chat();
-    chat.init();
+    chatInstance = new Chat();
+    chatInstance.init();
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
     if (socketService.socket) {
@@ -5889,7 +5893,7 @@
         }
       });
     }
-    window.addEventListener("friendSelected", (e) => {
+    friendSelectedHandler = (e) => {
       const { friend, friendshipId } = e.detail;
       currentChatFriendId = friend.id;
       console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
@@ -5915,8 +5919,11 @@
         headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
       }
       console.log("friendship homepage:", friendshipId);
-      chat.joinChannel(channelKey, friendshipId);
-    });
+      if (chatInstance) {
+        chatInstance.joinChannel(channelKey, friendshipId);
+      }
+    };
+    window.addEventListener("friendSelected", friendSelectedHandler);
     const viewProfileButton = document.getElementById("button-view-profile");
     viewProfileButton?.addEventListener("click", () => {
       document.getElementById("chat-options-dropdown")?.classList.add("hidden");

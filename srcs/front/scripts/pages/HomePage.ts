@@ -7,23 +7,62 @@ import { statusImages } from "../components/Data";
 import { FriendProfileModal } from "../components/FriendProfileModal";
 import { parseMessage } from "../components/ChatUtils";
 
+// ajout de variables globales pour stocker les instances actives de la page
+// init() interval est appele a chaque fois auon va sur la HomePage
+// ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
+// qui s'accumulent quand on change de page et quon revient sur la homePage
+
+let friendListInstance: FriendList | null = null; // on donne atomatiquement null comme valeur a la variable au depart
+let chatInstance: Chat | null = null;
+// fonciton qui prend en argument (e) nimporte quel type et ne renvoit rien 
+let friendSelectedHandler: ((e: any) => void) | null = null; // pour stocker la fonction de lecouteur
+
+
 export function render(): string {
     return htmlContent;
+}
+
+export function cleanup() {
+    // arrete setInterval et ses notifications
+    if (friendListInstance) {
+        friendListInstance.destroy();
+        friendListInstance = null;
+    }
+
+    // supprimer l'ecouteur d'evenement global sur la fenetre
+    // sinon a chaque viisite sur Home on ajoute un nouvel ecouteur
+    if (friendSelectedHandler){
+        window.removeEventListener('friendSelected', friendSelectedHandler);
+        friendSelectedHandler = null;
+    }
+
+    if (chatInstance){
+        chatInstance.destroy();
+        chatInstance = null;
+    }
+
+    // detacher les ecouteurs socket specifiques a cette page
+    // sinon quand on revient le socket declenche l'evenement x fois
+    const socketService = SocketService.getInstance();
+    if (socketService.socket) {
+        socketService.socket.off('friendProfileUpdated');
+        socketService.socket.off('friendStatusUpdate');
+    }
 }
 
 export function afterRender(): void {
     const socketService = SocketService.getInstance();
     socketService.connect();
 
-    const friendList = new FriendList();
+    friendListInstance = new FriendList();
     
-    friendList.init();
+    friendListInstance.init();
 
     const userProfile = new UserProfile();
     userProfile.init();
 
-    const chat = new Chat();
-    chat.init();
+    chatInstance = new Chat();
+    chatInstance.init();
 
     // modale pour voir le profil de son ami
     const friendProfileModal = new FriendProfileModal();
@@ -68,8 +107,10 @@ export function afterRender(): void {
     }
 
 
+
     // clic sur l'ami
-    window.addEventListener('friendSelected', (e: any) => {
+    // MODIF POUR PB DE REFRESH
+    friendSelectedHandler = (e: any) => {
         const { friend, friendshipId } = e.detail;
 
         currentChatFriendId = friend.id;
@@ -100,9 +141,15 @@ export function afterRender(): void {
             headerStatus.src = statusImages[friend.status] || statusImages['invisible'];
         }
         console.log("friendship homepage:", friendshipId);
-        chat.joinChannel(channelKey, friendshipId);
+        // chat.joinChannel(channelKey, friendshipId);
 
-    });
+        if (chatInstance) {
+            chatInstance.joinChannel(channelKey, friendshipId);
+        }
+
+    };
+
+    window.addEventListener('friendSelected', friendSelectedHandler);
 
     // ouverture de la modale
     const viewProfileButton = document.getElementById('button-view-profile');
