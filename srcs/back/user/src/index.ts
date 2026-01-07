@@ -780,11 +780,11 @@ fastify.get('/users/:id/export', async (request, reply) =>
 			},
 			gaming: {
 				summary: gamePayload?.stats || "Not available",
-				record: {
-					currentWinStreak: gamePayload?.stats.current_win_streak ?? "Not available",
-					averageScore: gamePayload?.stats.averageScore ?? "Not available",
-					totalGame: gamePayload?.stats.total_games ?? "Not available",
-				},
+				// record: {
+				// 	// currentWinStreak: gamePayload?.stats.current_win_streak ?? "Not available",
+				// 	// averageScore: gamePayload?.stats.averageScore ?? "Not available",
+				// 	// totalGame: gamePayload?.stats.total_games ?? "Not available",
+				// },
 				matchHistory: gamePayload?.history || "Not available",				
 			},
 			export_date: new Date().toISOString()
