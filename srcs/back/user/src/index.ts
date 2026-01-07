@@ -635,6 +635,7 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
 //---------------------------------------
 
 /* ---- DELETE USER ---- */
+/* AJOUTER reviewFriendshipRequest pour mettre un ami en 'deleted' et ne plus l'afficher dans la liste */
 fastify.delete('/users/:id', async (request, reply) =>
 {
 	console.log("Processsing account deletion...");
@@ -652,8 +653,9 @@ fastify.delete('/users/:id', async (request, reply) =>
 
 	try
 	{
-		console.log("- Deleting friendships...");
-		await friendRepo.deleteAllFriendships(db, userId);
+		console.log("- Mark friendships as deleted...");
+		// await friendRepo.deleteAllFriendships(db, userId);
+		await friendRepo.markFriendshipsAsDeleted(db, userId);
 
 		console.log("- Calling Auth service...");
 		const authResponse = await fetch(authURL, {
@@ -677,7 +679,7 @@ fastify.delete('/users/:id', async (request, reply) =>
 		// remplace le pseudo par Deleted_User_XXX et l'avatar par defaut
 		await userRepo.anonymizeUser(db, userId);
 
-		// deconnextion -> suppression du cookie pour que le navigateur sache quil nest plus connecte
+		// deconnection -> suppression du cookie pour que le navigateur sache quil nest plus connecte
 		reply.clearCookie('refreshToken', { path: '/' });
 
 		return reply.status(200).send({
@@ -717,8 +719,8 @@ fastify.get('/users/:id/export', async (request, reply) =>
 	}
 
 	try
-	{	
-		/* EXPORT FROM USER */	
+	{
+		/* EXPORT FROM USER */
 		const userProfile = await userRepo.findUserByID(db, userId);
 		if (!userProfile) {
 			return reply.status(404).send({
@@ -786,6 +788,7 @@ fastify.get('/users/:id/export', async (request, reply) =>
 				},
 				matchHistory: gamePayload?.history || "Not available",
 				tournament: gamePayload?.tournament || null /* a completer ??? */
+				
 			},
 			export_date: new Date().toISOString()
 		};
