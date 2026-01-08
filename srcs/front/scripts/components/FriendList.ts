@@ -6,6 +6,11 @@ import { Friendship } from '../../../back/user/src/repositories/friendships';
 export class FriendList {
     private container: HTMLElement | null;
     private userId: string | null;
+    private notificationInterval: any = null;
+    // cass: 
+    // init() interval est appele a chaque fois auon va sur la HomePage
+    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
+    // qui s'accumulent quand on change de page et quon revient sur la homePage
 
     constructor() {
         this.container = document.getElementById('contacts-list');
@@ -22,7 +27,22 @@ export class FriendList {
         this.setupBlockListener();
         this.registerSocketUser();
 
-        setInterval(() => this.checkNotifications(), 30000);
+        // setInterval(() => this.checkNotifications(), 30000);
+
+        // AJOUT
+        // nettoyer l'ancien si il existe
+        if (this.notificationInterval) clearInterval(this.notificationInterval);
+
+        // stocker l'id
+        this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
+    }
+
+    // AJOUT
+    public destroy() {
+        if (this.notificationInterval) {
+            clearInterval(this.notificationInterval);
+            this.notificationInterval = null;
+        }
     }
 
     private registerSocketUser() {

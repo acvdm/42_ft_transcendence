@@ -24,10 +24,10 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
 	const publicRoutes = [
-		"/api/user/login",
-		"/api/user/refresh",
-		"/api/auth/refresh",
-		"/api/user/guest",
+		"/api/users/login",
+		"/api/users/token",
+		"/api/auth/token",
+		"/api/users/guest",
 		"/api/auth/login",
 		"/api/auth/sessions",
 		"/api/auth/logout",
@@ -64,7 +64,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		// si cest un token 2fa on verifie ou il veut aller
 		if (decoded.scope == '2fa_login'){
 			// on autorise seulement la route de verification du 2FA
-			if (!url.includes('/2fa/verify'))
+			if (!url.includes('/2fa/challenge'))
 				throw new Error("2FA verification pending");
 			console.log(`2FA Token user for verification endpoint -> Allowed`);
 		}

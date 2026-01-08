@@ -105,6 +105,7 @@ fastify.post('/games', async (request, reply) =>
 {
 
 	console.log("route games")
+	
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;
@@ -119,9 +120,16 @@ fastify.post('/games', async (request, reply) =>
 			db, body.type,
 			body.p1.alias, body.p2.alias,
 			body.p1.score, body.p2.score,
-			body.winner, "finished",
-			"1v1", null, body.startDate
+			body.winner, 
+			"finished", // status
+			"1v1", // round
+			null, // tournamentId
+			body.startDate,
+			body.endDate
 		);
+
+		console.log(`DEBUG DATES REÇUES -> Start: ${body.startDate} | End: ${body.endDate}`);
+
 
 		if (!gameId)
 			throw new Error(`Error could not create game`);
@@ -201,6 +209,7 @@ fastify.post('/games/tournaments', async (request, reply) =>
 	try
 	{
 		const body = request.body as localTournament; // === interface dans tournament_interfaces
+		
 		if (!body.matchList || body.matchList.length !== 3)
 		{
 			return reply.status(400).send({
@@ -369,6 +378,39 @@ fastify.patch('/users/:id/stats', async (request, reply) =>
 	}
 })
 
+/* -- STAT EXPORT FOR ONE USER -- */
+fastify.get('/users/:id/export', async (request, reply) =>
+{
+	try
+	{
+		const { id } = request.params as { id: string }
+		const userId = Number(id);
+		if (!userId)
+				return reply.status(400).send({ error: "Invalid ID" });
+
+
+		const stats = await findStatsByUserId(db, userId);
+		const historyResult = await getUserMatchHistory(db, userId, { limit: 10000, page: 1});
+		
+		return reply.status(200).send({
+			success: true,
+			data: {
+				stats: stats,
+				history: historyResult.data
+			},
+			error: null
+		})
+	}
+	catch (err: any)
+	{
+		const statusCode = err.statusCode || 500;
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: (err as Error).message }
+		})
+	}
+})
 
 
 // on défini une route = un chemin URL + ce qu'on fait quand qqun y accède

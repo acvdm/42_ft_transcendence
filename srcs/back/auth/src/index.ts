@@ -131,7 +131,6 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 	}
 });
 
-// CHANGE EMAIL
 fastify.patch('/users/:id/credentials/email', async (request, reply) => 
 {
 	try 
@@ -161,9 +160,6 @@ fastify.patch('/users/:id/credentials/email', async (request, reply) =>
 		});
 	}
 });
-
-
-////////////////// RAJOUTER PAR FAUSTINE
 
 fastify.patch('/users/:id/credentials/password', async (request, reply) => 
 {
@@ -211,11 +207,6 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
 		});
 	}
 });
-
-
-
-////////////////// RAJOUTER PAR FAUSTINE
-
 
 
 /* -- LOGIN -- */ 
@@ -275,7 +266,7 @@ fastify.post('/sessions', async (request, reply) =>
 
 /* -- REFRESH THE ACCESS TOKEN -- */
 
-fastify.post('/refresh', async (request, reply) => {
+fastify.post('/token', async (request, reply) => {
   
   // lire le cookie signe
   const cookie = request.cookies.refreshToken;
@@ -432,7 +423,7 @@ fastify.get('/users/:id/export', async (request, reply) => {
 //---------------------------------------
 
 /* 
-/2fa/generate
+/2fa/generate --> MODIFIE EN /2fa/secret
 route appellee quand utilisateur clique sur "Active le 2FA"
 Besoin de generer un secret -> otpauth ou crypto
 met a jour ligne de l'utilisateur en BDD two_fa_secret mais & 2fa_enable reste a false
@@ -440,9 +431,9 @@ generer url code et transforme en image base64 avec la lib qrcode
 renvoie image en base64 au front
 */
 
-fastify.post('/2fa/generate', async (request, reply) => {
+fastify.post('/2fa/secret', async (request, reply) => {
 	
-	console.log("✅ route /2fa/generate atteinte");
+	console.log("✅ route /2fa/secret atteinte");
 
 	try 
 	{
@@ -478,7 +469,7 @@ fastify.post('/2fa/generate', async (request, reply) => {
 });
 
 /*
-/2fa/enable
+/2fa/ MODIFICATION NOM ROUTE
 route appellee quand l'utilisateur scanne le qr code et entre son premier code 
 recevoir le code
 recuperer le 2fa secret
@@ -486,7 +477,7 @@ verifier la validation
 reponse 2fa active
 */ 
 
-fastify.post('/2fa/enable', async (request, reply) => {
+fastify.post('/2fa', async (request, reply) => {
 	
 	try 
 	{
@@ -534,11 +525,11 @@ fastify.post('/2fa/enable', async (request, reply) => {
 });
 
 /*
-/2fa/disable
+/2fa/disable -> modifier en /2fa avec methode delete pour respecter API rest
 update la BDD
 */
 
-fastify.post('/2fa/disable', async (request, reply) => {
+fastify.delete('/2fa', async (request, reply) => {
 	
 	try 
 	{
@@ -571,7 +562,7 @@ fastify.post('/2fa/disable', async (request, reply) => {
 });
 
 /*
-/2fa/verify
+/2fa/verify --> MODIFIE EN /2fa/challenge
 recoit tempToken et le code
 verifie et valide
 recupere le secret en BDD et verifie le code TOTP
@@ -579,7 +570,7 @@ genere lles vrais tokens
 renvoit cookie et json final
 */
 
-fastify.post('/2fa/verify', async (request, reply) => {
+fastify.post('/2fa/challenge', async (request, reply) => {
 	
 	try {
 		const userIdHeader = request.headers['x-user-id'];
