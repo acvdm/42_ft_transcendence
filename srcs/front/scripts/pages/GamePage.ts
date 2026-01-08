@@ -4,13 +4,13 @@ import htmlContentTournament from "./TournamentPage.html";
 import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
-import SocketService from '../services/SocketService'; // <--- AJOUT IMPORT
-
+import SocketService from '../services/SocketService';
+import { applyTheme } from "./ProfilePage";
 import Game from "../game/Game";
 import Input from "../game/Input";
 
 // =========================================================
-// ===  INTERFACES DU TOURNOI - debuit tournament.ts.    ===
+// ===               INTERFACES DU TOURNOI               ===
 // =========================================================
 
 // Interface pour la gestion interne du tournois
@@ -87,7 +87,7 @@ async function getPlayerAlias(): Promise<string> {
     if (!userId) return "Player";
     
     try {
-        const response = await fetchWithAuth(`api/users/${userId}`);
+        const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
             const userData = await response.json();
             return userData.alias || (isGuest ? "Guest" : "Player");
@@ -96,9 +96,9 @@ async function getPlayerAlias(): Promise<string> {
         console.error('Cannot fetch player alias:', err);
     }
 
-    const result = sessionStorage.getItem('username') || (isGuest ? "Guest (you)" : "Player (you)");
+    const result = sessionStorage.getItem('username') || (isGuest ? "Guest" : "Player");
     
-    return (result + " (you)");
+    return (result);
 }
 
 function handleBeforeUnload(e: BeforeUnloadEvent) {
@@ -201,10 +201,9 @@ function confirmExit() {
 
         activeGame.isRunning = false;
         activeGame.stop();
-        
-        console.log("Leaving the game - remote");
-        if (wasRemote && roomId && SocketService.getInstance().socket) {
-            SocketService.getInstance().socket.emit('leaveGame', { roomId: roomId });
+
+        if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
+            SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
             
             const userIdStr = localStorage.getItem('userId');
             if (userIdStr && playerRole) {
@@ -224,14 +223,6 @@ function confirmExit() {
         window.history.back();
     }, 100);
 }
-
-function cancelExit() {
-    document.getElementById('exit-confirm-modal')?.remove();
-    if (activeGame) {
-        activeGame.resume();
-    }
-}
-
 
 
 // pour nettoyer le tout quand on quitte la page
@@ -254,6 +245,8 @@ export function cleanup() {
         spaceKeyListener = null;
     }
 
+    document.getElementById('countdown-modal')?.remove();
+    
     window.removeEventListener('beforeunload', handleBeforeUnload);
     window.removeEventListener('popstate', handlePopState);
     isNavigationBlocked = false;
@@ -341,16 +334,53 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
     div.innerHTML = modalHtml;
     document.body.appendChild(div);
 
-    //launchConfetti?.(4000);
-
     document.getElementById('remote-quit-btn')?.addEventListener('click', () => {
         document.getElementById('remote-end-modal')?.remove();
         window.history.back();
     });
 }
 
+
+// =========================================================
+// ==========--====== TOP DEPART DECOMPTE ==================
+// =========================================================
+
+function launchCountdown(onComplete: () => void) {
+    const modal = document.getElementById('countdown-modal');
+    const text = document.getElementById('countdown-text');
+    
+    if (!modal || !text) {
+        onComplete();
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    
+    let count = 3;
+    text.innerText = count.toString();
+    text.className = "text-[150px] font-black text-white animate-bounce"; // Reset animation
+
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            text.innerText = count.toString();
+        } else if (count === 0) {
+            text.innerText = "GO!";
+            text.classList.remove('animate-bounce');
+            text.classList.add('animate-ping');
+        } else {
+            clearInterval(interval);
+            modal.classList.add('hidden');
+            onComplete(); // lancement du jeu 
+        }
+    }, 1000);
+}
+
+
 export function initGamePage(mode: string): void {
 
+    const currentTheme = localStorage.getItem('userTheme') || 'basic';
+    applyTheme(currentTheme);
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
@@ -381,6 +411,7 @@ export function initGamePage(mode: string): void {
     }
 
 
+
     function showVictoryModal(winnerName: string) {
         // modal
         const modal = document.getElementById('local-summary-modal');
@@ -405,6 +436,7 @@ export function initGamePage(mode: string): void {
         quitRemoteBtn?.addEventListener('click', backAction);
 
     }
+
 
     // ---------------------------------------------------------
     // -------------- WIZZ AVEC BARRE D'ESPACE ------------
@@ -451,6 +483,19 @@ export function initGamePage(mode: string): void {
     // ---------------------------------------------------------
     function initRemoteMode() {
         const socketService = SocketService.getInstance();
+
+        // 1. On lance le connexion spécifique au jeu
+        socketService.connectGame();
+
+        // 2. On récupère le socket jeu
+        const gameSocket = socketService.getGameSocket();
+
+        // Si pas de token ou erreur de connexion
+        if (!gameSocket) {
+            console.error("Cannot connect to server");
+            return ;
+        }
+
         const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
         const status = document.getElementById('queue-status');
         const modal = document.getElementById('game-setup-modal');
@@ -471,9 +516,6 @@ export function initGamePage(mode: string): void {
         const bgResetBtn = document.getElementById('bg-reset-button');
         
         const gameContainer = document.getElementById('left'); // conteneur du jeu pour le background
-
-        let currentP1Alias = "Player 1";
-        let currentP2Alias = "Player 2";
 
         if (ballBtn && ballDrop && ballGrid) {
             const uniqueUrls = new Set<string>();
@@ -538,26 +580,80 @@ export function initGamePage(mode: string): void {
             document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
         }
 
+        let currentP1Alias = "Player 1";
+        let currentP2Alias = "Player 2";
 
-        const startGameFromData = (data: any, p1Alias?: string, p2Alias?: string) => {
+        const startGameFromData = async (data: any, p1Alias?: string, p2Alias?: string) => {
             console.log("Starting game from data:", data);
 
-            const player1Alias = p1Alias || "Player 1";
-            const player2Alias = p2Alias || "Player 2";
+            const myAlias = await getPlayerAlias();
+            let opponentAlias = "Opponent";
+            if (data.opponent) {
+                fetchWithAuth(`api/user/${data.opponent}`)
+                    .then(res => res.ok ? res.json() : null)
+                    .then(userData => {
+                        if (userData && userData.alias) {
+                            console.log("Opponent alias loaded:", userData.alias);
+                            opponentAlias = userData.alias;
+                            
+                            // On met à jour les variables globales pour la fin du jeu
+                            if (data.role === 'player1') currentP2Alias = opponentAlias;
+                            else currentP1Alias = opponentAlias;
+
+                            // On met à jour l'affichage en direct
+                            const p1Display = document.getElementById('player-1-name');
+                            const p2Display = document.getElementById('player-2-name');
+                            
+                            if (data.role === 'player1' && p2Display) {
+                                p2Display.innerText = opponentAlias;
+                            } else if (data.role === 'player2' && p1Display) {
+                                p1Display.innerText = opponentAlias;
+                            }
+                        }
+                    })
+                    .catch(e => console.error("Error loading opponent alias:", e));
+            }
+            console.log("Opponent:", data.opponentAlias);
+            if (data.role === 'player1') {
+                currentP1Alias = myAlias;
+                currentP2Alias = opponentAlias;
+            } else {
+                currentP1Alias = opponentAlias;
+                currentP2Alias = myAlias;
+            }
 
 
-            if (status) status.innerText = "Adversaire trouvé ! Lancement...";
+            const p1Display = document.getElementById('player-1-name');
+            const p2Display = document.getElementById('player-2-name');
+
+            if (p1Display && p2Display) {
+                p1Display.innerText =
+                    data.role === 'player1'
+                        ? `${currentP1Alias} (Me)`
+                        : currentP1Alias;
+
+                p2Display.innerText =
+                    data.role === 'player2'
+                        ? `${currentP2Alias} (Me)`
+                        : currentP2Alias;
+            }
+
+            // Sync du chat sur la room du jeu
+            if (gameChat) {
+                gameChat.joinChannel(data.roomId);
+                gameChat.addSystemMessage(`Match started!`);
+            }
+
+            if (status) status.innerText = "We found an opponent ! Starting the game...";
             if (modal) modal.style.display = 'none';
 
             if (container) {
                 container.innerHTML = '';
-
                 const canvas = document.createElement('canvas');
                 canvas.width = container.clientWidth;
                 canvas.height = container.clientHeight;
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
-
                 container.appendChild(canvas);
 
                 // Fallback si le container n'a pas encore de taille
@@ -575,21 +671,22 @@ export function initGamePage(mode: string): void {
                         activeGame = null;
                     }
 
+                    console.log("Player aliases set:", currentP1Alias, currentP2Alias);
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-
+                    console.log("Player aliases set:", currentP1Alias, currentP2Alias);
                     // gestion quand on opposant se casse du jeu 
-                    socketService.socket.off('opponentLeft');
-                    socketService.socket.on('opponentLeft', (eventData: any) => {
+                    gameSocket.off('opponentLeft');
+                    gameSocket.on('opponentLeft', async (eventData: any) => {
                         if (activeGame) {
                             console.log("Opponent left the game! Victory by forfeit!");
                             activeGame.isRunning = false;
                             activeGame.stop();
 
-                            socketService.socket.off('gameState');
-                            socketService.socket.off('gameEnded');
-                            let myAlias = data.role === 'player1' ? player1Alias : player2Alias;
+                            gameSocket.off('gameState');
+                            gameSocket.off('gameEnded');
                             let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
 
+                            const myAlias = await getPlayerAlias();
                             const userIdStr = localStorage.getItem('userId');
                             if (userIdStr) {
                                 saveGameStats(Number(userIdStr), myScore, true);
@@ -600,34 +697,29 @@ export function initGamePage(mode: string): void {
                         }
                     });
 
-                    // --- ATTENTE SOCKET PRÊT ---
-                    if (!socketService.socket) {
-                        console.log("Socket non connecté, attente...");
-                        const checkSocket = setInterval(() => {
-                            if (socketService.socket) {
-                                clearInterval(checkSocket);
-                                activeGame?.startRemote(data.roomId, data.role);
-                            }
-                        }, 100);
-                    } else {
-                        activeGame.startRemote(data.roomId, data.role);
-                    }
+                    activeGame.onGameEnd = (endData) => {
+                        let winnerName = "Winner";
+                        
+                        if (endData.winner === 'player1') winnerName = currentP1Alias;
+                        else if (endData.winner === 'player2') winnerName = currentP2Alias;
+                        
+                        console.log("WinnerName:", winnerName);
+                        showVictoryModal(winnerName);
+                    };
+
+                    activeGame.onScoreChange = (score) => {
+                        const sb = document.getElementById('score-board');
+                        if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+                    };
+
+                    launchCountdown(() => {
+                        if (activeGame)
+                            activeGame.startRemote(data.roomId, data.role);
+                    });
                 }
 
-                // --- Update UI noms joueurs ---
-                const p1Name = document.getElementById('player-1-name');
-                const p2Name = document.getElementById('player-2-name');
-
-                if (p1Name) {
-                    p1Name.innerText = data.role === 'player1' ? 'Moi' : 'Adversaire';
-                }
-                if (p2Name) {
-                    p2Name.innerText = data.role === 'player2' ? 'Moi' : 'Adversaire';
-                }
             }
         };
-
-
         // vérification du match en attente
         const pendingMatch = sessionStorage.getItem('pendingMatch');
         if (pendingMatch) {
@@ -636,15 +728,17 @@ export function initGamePage(mode: string): void {
             startGameFromData(data); // Lancement auto !
         }
 
+        // Gestion du bouton "JOUER"
         if (btn) {
             // On clone pour éviter les event listeners multiples si on revient sur la page
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
             newBtn.addEventListener('click', async () => {
-                if (!socketService.socket) {
-                    alert("Erreur: Non connecté au serveur de jeu");
-                    return;
+
+                if (!gameSocket) {
+                    alert("Error: lost connexion to game server");
+                    return ;
                 }
 
                 if (status) status.innerText = "Recherche d'un adversaire...";
@@ -653,119 +747,18 @@ export function initGamePage(mode: string): void {
 
                 const myAlias = await getPlayerAlias();
 
-                // Ecoute de l'événement de début de match
-                socketService.socket.on('matchFound', (data: any) => {
-                    console.log("Match Found!", data);
-                    
-                    currentP1Alias = data.player1Alias || "Player 1";
-                    currentP2Alias = data.player2Alias || "Player 2";
+                // // Ecoute de l'événement de début de match
+                // socketService.socket.on('matchFound', (data: any) => {
+                //     console.log("Match Found!", data);
+                gameSocket.off('matchFound');
 
-                    if (gameChat) {
-                        // on rejoint un canal unique du match et du chat
-                        // la class va nettoyer automqtiquement les messages
-                        gameChat.joinChannel(data.roomId);
-                        gameChat.addSystemMessage("Game found! You are now in a private room.")
-                    }
-                    
-                    if (status) status.innerText = "Adversaire trouvé ! Lancement...";
-                    if (modal) modal.style.display = 'none';
-
-                    if (container) {
-                        container.innerHTML = ''; 
-                        const canvas = document.createElement('canvas');
-                        
-                        canvas.width = container.clientWidth;
-                        canvas.height = container.clientHeight;
-                        canvas.style.width = '100%';
-                        canvas.style.height = '100%';
-                        
-                        container.appendChild(canvas);
-                        
-                        const ctx = canvas.getContext('2d');
-                        const input = new Input();
-                        const selectedBallSkin = ballInput ? ballInput.value : 'classic';
-
-
-                        if (ctx) {
-                            if (activeGame) activeGame.isRunning = false;
-                            activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                            
-                            socketService.socket.off('opponentLeft'); // on nettoie l'ancien ecouteur
-                            socketService.socket.on('opponentLeft', (eventData: any) => {
-                                if (activeGame && activeGame.isRunning) {
-                                    console.log("Opponent left during match!", eventData);
-                                    
-                                    activeGame.isRunning = false;
-                                    activeGame.stop();
-                                    
-                                    // on nettoie tout 
-                                    socketService.socket.off('gameState');
-                                    socketService.socket.off('gameEnded');
-                                    
-                                    // qui suis je et quel est mon score
-                                    let myAlias = data.role === 'player1' ? currentP1Alias : currentP2Alias;
-                                    let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
-                                    
-                                    // on sauvegarde
-                                    const userIdStr = localStorage.getItem('userId');
-                                    if (userIdStr) {
-                                        saveGameStats(Number(userIdStr), myScore, true);
-                                    }
-                                    
-                                    // Afficher la modale de victoire
-                                    showRemoteEndModal(myAlias, "(Opponent disconnected)");
-                                    activeGame = null;
-                                }
-                            });
-
-                            
-
-                            activeGame.onGameEnd = (endData) => {
-                                console.log("Game Ended Data:", endData);
-                                
-                                // determineteur du winner localement 
-                                let winnerName = "Winner";
-
-                                // on verifie i le back renvoit p1 ou p2
-                                if (endData.winner === 'player1') {
-                                    winnerName = currentP1Alias;
-                                } else if (endData.winner === 'player2') {
-                                    winnerName = currentP2Alias;
-                                } else if (endData.winnerAlias) {
-                                    // fallbacl
-                                    winnerName = endData.winnerAlias;
-                                }
-
-                                showVictoryModal(winnerName);
-                            }
-                            
-
-
-                            activeGame.onScoreChange = (score) => {
-                                const sb = document.getElementById('score-board');
-                                if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                            };
-                            
-                            // On lance le jeu une fois le canvas pret
-                            activeGame.startRemote(data.roomId, data.role);
-                        }
-                    }
-                    
-                    // Update UI noms
-                    const p1Name = document.getElementById('player-1-name');
-                    const p2Name = document.getElementById('player-2-name');
-                    
-                    if (data.role === 'player1') {
-                        if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
-                        if (p2Name) p2Name.innerText = currentP2Alias;
-                    } else {
-                        if (p1Name) p1Name.innerText = currentP1Alias;
-                        if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
-                    }
+                gameSocket.on('matchFound', (data: any) => {
+                    console.log(data);
+                    startGameFromData(data);
                 });
 
-                // Envoi demande au serveur
-                socketService.socket.emit('joinQueue', { alias: myAlias });
+                // Envoi demande au server sur le game socket
+                gameSocket.emit('joinQueue');
             });
         }
     }
@@ -1073,7 +1066,6 @@ export function initGamePage(mode: string): void {
             }
         });
     }
-
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
         const p1Name = document.getElementById('player-1-name');
@@ -1412,84 +1404,86 @@ export function initGamePage(mode: string): void {
                     modal.classList.remove('flex');
                 }
 
-                // ICI LANCEMENT DU JEU
-                const canvasContainer = document.getElementById('game-canvas-container');
-                if (!canvasContainer) {
-                    console.error("Conteneur canvas introuvable, creation auto...");
-                    const container = document.createElement('div');
-                    container.id = 'game-canvas-container';
-                    container.className = "w-full flex-1";
-                    gameField.appendChild(container);
-                } else {
-                    canvasContainer.innerHTML = '';
-                }
-
-                const scoreBoard = document.getElementById('score-board');
-                const canvas = document.createElement('canvas');
-                canvas.id = 'pong-canvas';
-                canvas.width = canvasContainer ? canvasContainer.clientWidth : 800; // verifier la taille
-                canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
-                console.log("heigh:", canvasContainer.clientHeight);
-                console.log("width:", canvasContainer.clientWidth);
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                //canvas.style.objectFit = 'contain';
-                canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
-
-                // Injection
-                const targetContainer = document.getElementById('game-canvas-container') || gameField;
-                targetContainer.appendChild(canvas);
-
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    const input = new Input();
-                    if (activeGame) activeGame.isRunning = false;
-                    activeGame = new Game(canvas, ctx, input, selectedBall);
-                    
-                    activeGame.onScoreChange = (score) => {
-                        if (scoreBoard) {
-                            scoreBoard.innerText = `${score.player1} - ${score.player2}`;
-                        }
+                launchCountdown(() => {
+                    const canvasContainer = document.getElementById('game-canvas-container');
+                    if (!canvasContainer) {
+                        console.error("Conteneur canvas introuvable, creation auto...");
+                        const container = document.createElement('div');
+                        container.id = 'game-canvas-container';
+                        container.className = "w-full flex-1";
+                        gameField.appendChild(container);
+                    } else {
+                        canvasContainer.innerHTML = '';
                     }
-
-                    console.log("Démarrage du jeu Local...");
-                    activeGame.start();
-                    const startDate = getSqlDate();
-
-                    // checkeur du score
-                    const localLoop = setInterval(async () => {
-                        if (!activeGame || !activeGame.isRunning) {
-                            clearInterval(localLoop);
-                            return;
-                        }                    
-                    
-                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                        activeGame.isRunning = false; // STOP
-                        clearInterval(localLoop); 
+    
+                    const scoreBoard = document.getElementById('score-board');
+                    const canvas = document.createElement('canvas');
+                    canvas.id = 'pong-canvas';
+                    canvas.width = canvasContainer ? canvasContainer.clientWidth : 800; // verifier la taille
+                    canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+                    console.log("heigh:", canvasContainer.clientHeight);
+                    console.log("width:", canvasContainer.clientWidth);
+                    canvas.style.width = '100%';
+                    canvas.style.height = '100%';
+                    //canvas.style.objectFit = 'contain';
+                    canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
+    
+                    // Injection
+                    const targetContainer = document.getElementById('game-canvas-container') || gameField;
+                    targetContainer.appendChild(canvas);
+    
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        const input = new Input();
+                        if (activeGame) activeGame.isRunning = false;
+                        activeGame = new Game(canvas, ctx, input, selectedBall);
                         
-                        // 1. Récupération des données
-                        const p1Score = activeGame.score.player1;
-                        const p2Score = activeGame.score.player2;
-                        const p1Alias = player1Display.innerText;
-                        const p2Alias = opponentName;
-                        const p1Wins = p1Score > p2Score;
-                        const winnerAlias = p1Wins ? p1Alias : p2Alias;
-
-                        // 2. Sauvegarde si l'utilistauer est connecté
-                        const userIdStr = localStorage.getItem('userId');
-                        if (userIdStr) {
-                            const userId = Number(userIdStr);
-                            // on sauvegarde les statistiques
-                            console.log(`gamepage, ${userId}`);
-                            await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                        activeGame.onScoreChange = (score) => {
+                            if (scoreBoard) {
+                                scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+                            }
                         }
+    
+                        console.log("Démarrage du jeu Local...");
+                        activeGame.start();
+                        const startDate = getSqlDate();
+    
+                        // checkeur du score
+                        const localLoop = setInterval(async () => {
+                            if (!activeGame || !activeGame.isRunning) {
+                                clearInterval(localLoop);
+                                return;
+                            }                    
                         
-                        // 3. Feedback et Reload
-                        showVictoryModal(winnerAlias);
+                            if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                                activeGame.isRunning = false; // STOP
+                                clearInterval(localLoop); 
+                                
+                                // 1. Récupération des données
+                                const p1Score = activeGame.score.player1;
+                                const p2Score = activeGame.score.player2;
+                                const p1Alias = player1Display.innerText;
+                                const p2Alias = opponentName;
+                                const p1Wins = p1Score > p2Score;
+                                const winnerAlias = p1Wins ? p1Alias : p2Alias;
+        
+                                // 2. Sauvegarde si l'utilistauer est connecté
+                                const userIdStr = localStorage.getItem('userId');
+                                if (userIdStr) {
+                                    const userId = Number(userIdStr);
+                                    // on sauvegarde les statistiques
+                                    console.log(`gamepage, ${userId}`);
+                                    await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                                }
+                                
+                                // 3. Feedback et Reload
+                                showVictoryModal(winnerAlias);
+                            }
+                        }, 500);
                     }
-                }, 500);
-            }
-        });
+                });
+            });
+        }
     }
 
     async function saveLocalGameToApi(
@@ -1629,77 +1623,3 @@ export function initGamePage(mode: string): void {
             document.head.appendChild(style);
         }
     }
-
-    // explosion depuis le centre
-    function launchConfettiExplosion() {
-        const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9'];
-        const confettiCount = 100;
-        const container = document.body;
-
-        const confettiContainer = document.createElement('div');
-        confettiContainer.id = 'confetti-explosion-container';
-        confettiContainer.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            pointer-events: none;
-            z-index: 9999;
-        `;
-        container.appendChild(confettiContainer);
-
-        for (let i = 0; i < confettiCount; i++) {
-            createExplosionConfetti(confettiContainer, colors, i, confettiCount);
-        }
-
-        setTimeout(() => {
-            confettiContainer.remove();
-        }, 4000);
-    }
-
-    function createExplosionConfetti(container: HTMLElement, colors: string[], index: number, total: number) {
-        const confetti = document.createElement('div');
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const size = Math.random() * 12 + 6;
-        
-        // explosion en cerce
-        const angle = (index / total) * Math.PI * 2;
-        const velocity = Math.random() * 300 + 200; // Distance de projection
-        const endX = Math.cos(angle) * velocity;
-        const endY = Math.sin(angle) * velocity - 100; // Légère montée
-        
-        const rotation = Math.random() * 720;
-        const duration = Math.random() * 1.5 + 2;
-
-        confetti.style.cssText = `
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            background-color: ${color};
-            top: 0;
-            left: 0;
-            opacity: 1;
-            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-            animation: explode-${index} ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        `;
-
-        container.appendChild(confetti);
-
-        // animation pour chaque confetti
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes explode-${index} {
-                0% {
-                    transform: translate(0, 0) rotate(0deg) scale(1);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translate(${endX}px, ${endY + 500}px) rotate(${rotation}deg) scale(0.3);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-}

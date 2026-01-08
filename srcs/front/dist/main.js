@@ -3529,7 +3529,8 @@
   // scripts/services/SocketService.ts
   var SocketService = class _SocketService {
     constructor() {
-      this.socket = null;
+      this.chatSocket = null;
+      this.gameSocket = null;
     }
     static getInstance() {
       if (!_SocketService.instance) {
@@ -3537,34 +3538,71 @@
       }
       return _SocketService.instance;
     }
-    connect() {
-      if (this.socket) return;
+    // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
+    // Méthode privée pour ne pas dupliquer le code de config
+    createSocketConnection(path) {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        console.error("SocketService: No token found, connection aborted");
-        return;
+        console.error(`SocketService: No token found, cannot connect to ${path}`);
+        return null;
       }
-      this.socket = lookup2("/", {
-        path: "/socket.io/",
+      const socket = lookup2("/", {
+        path,
         auth: {
           token: `Bearer ${token}`
           // On envoie le JWT
         },
         reconnection: true,
-        reconnectionAttemps: 5
+        reconnectionAttemps: 5,
+        transports: ["websocket", "polling"]
       });
-      this.socket.on("connect", () => {
-        console.log("SocketService: Connection with ID", this.socket?.id);
+      socket.on("connect", () => {
+        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
       });
-      this.socket.on("connect_error", (err) => {
-        console.error("SocketService: Connection error:", err.message);
+      socket.on("connect_error", (err) => {
+        console.error(`SocketService: Connection error on ${path}`, err.message);
       });
+      return socket;
     }
-    disconnect() {
-      if (this.socket) {
-        this.socket.disconnect();
-        this.socket = null;
+    // ---------------------
+    // -- GESTION DU CHAT --
+    connectChat() {
+      if (this.chatSocket) return;
+      console.log("SocketService: Connecting to Chat...");
+      this.chatSocket = this.createSocketConnection("/socket-chat/");
+    }
+    disconnectChat() {
+      if (this.chatSocket) {
+        this.chatSocket.disconnect();
+        this.chatSocket = null;
+        console.log("SocketService: Chat disconnected");
       }
+    }
+    getChatSocket() {
+      return this.chatSocket;
+    }
+    // ---------------------
+    // -- GESTION DU GAME --
+    connectGame() {
+      if (this.gameSocket) return;
+      console.log("SocketService: Connecting to Game...");
+      this.gameSocket = this.createSocketConnection("/socket-game/");
+    }
+    disconnectGame() {
+      if (this.gameSocket) {
+        this.gameSocket.disconnect();
+        this.gameSocket = null;
+        console.log("SocketService: Game disconnected");
+      }
+    }
+    getGameSocket() {
+      return this.gameSocket;
+    }
+    // ---------------------
+    // -- UTILITAIRE GLOBAL --
+    disconnectAll() {
+      this.disconnectChat();
+      this.disconnectGame();
     }
   };
   var SocketService_default = SocketService;
@@ -3838,7 +3876,7 @@
     const username = localStorage.getItem("username");
     if (!userId) return;
     try {
-      await fetchWithAuth(`/api/users/${userId}/status`, {
+      await fetchWithAuth(`/api/user/${userId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -3867,7 +3905,7 @@
     if (userId) localStorage.setItem("userId", userId.toString());
     if (userId && accessToken) {
       try {
-        const userRes = await fetch(`/api/users/${userId}`, {
+        const userRes = await fetch(`/api/user/${userId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -3885,7 +3923,7 @@
         console.error("Can't get user's profile", err);
       }
       try {
-        await fetch(`/api/users/${userId}/status`, {
+        await fetch(`/api/user/${userId}/status`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -3954,7 +3992,7 @@
           if (userId) localStorage.setItem("userId", userId.toString());
           if (userId && accessToken) {
             try {
-              const userRes = await fetchWithAuth(`/api/users/${userId}`, {
+              const userRes = await fetchWithAuth(`/api/user/${userId}`, {
                 method: "GET"
               });
               if (userRes.ok) {
@@ -3968,7 +4006,7 @@
               console.error("Can't get user's profile", err);
             }
             try {
-              await fetchWithAuth(`/api/users/${userId}/status`, {
+              await fetchWithAuth(`/api/user/${userId}/status`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: selectedStatus })
               });
@@ -3983,7 +4021,7 @@
         } else {
           console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
+            errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
             errorElement.classList.remove("hidden");
           }
         }
@@ -4592,6 +4630,7 @@
       this.userId = localStorage.getItem("userId");
     }
     init() {
+      SocketService_default.getInstance().connectChat();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -4610,7 +4649,7 @@
       }
     }
     registerSocketUser() {
-      const socket = SocketService_default.getInstance().socket;
+      const socket = SocketService_default.getInstance().getChatSocket();
       const userId = this.userId;
       if (!socket || !userId) return;
       if (socket.connected) {
@@ -4624,7 +4663,7 @@
       const contactsList = this.container;
       if (!this.userId || !contactsList) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
+        const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
         if (!response.ok) throw new Error("Failed to fetch friends");
         const responseData = await response.json();
         const friendList = responseData.data;
@@ -4660,11 +4699,17 @@
                     </div>
                 `;
           contactsList.appendChild(friendItem);
-          friendItem.addEventListener("click", () => {
+          friendItem.addEventListener("click", (e) => {
+            if (e.target.closest(".invite-btn")) return;
             const event = new CustomEvent("friendSelected", {
               detail: { friend: selectedFriend, friendshipId: friendship.id }
             });
             window.dispatchEvent(event);
+          });
+          const inviteBtn = friendItem.querySelector(".invite-btn");
+          inviteBtn?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
           });
         });
       } catch (error) {
@@ -4672,8 +4717,16 @@
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
       }
     }
+    // AJOUT: Fonction pour envoyer une invitation depuis la liste
+    sendInviteDirectly(friendId, friendName) {
+      const socket = SocketService_default.getInstance().getChatSocket();
+      if (!socket || !socket.connected) {
+        alert("You must be connected to the chat to invite");
+        return;
+      }
+    }
     listenToUpdates() {
-      const socket = SocketService_default.getInstance().socket;
+      const socket = SocketService_default.getInstance().getChatSocket();
       if (!socket) return;
       socket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
@@ -4714,7 +4767,7 @@
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        const socket = SocketService_default.getInstance().socket;
+        const socket = SocketService_default.getInstance().getChatSocket();
         if (!socket) {
           alert("Erreur de connexion");
           toast.remove();
@@ -4732,7 +4785,7 @@
         toast.remove();
       });
       toast.querySelector("#decline-invite")?.addEventListener("click", () => {
-        SocketService_default.getInstance().socket?.emit("declineGameInvite", { senderId });
+        SocketService_default.getInstance().getChatSocket()?.emit("declineGameInvite", { senderId });
         toast.remove();
       });
       setTimeout(() => {
@@ -4794,7 +4847,7 @@
           }
           const userId = localStorage.getItem("userId");
           try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships`, {
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ alias: searchValue })
@@ -4804,7 +4857,7 @@
               this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
               const targetId = data.data.friend_id || data.data.friend?.id;
               if (targetId) {
-                SocketService_default.getInstance().socket?.emit("sendFriendRequestNotif", {
+                SocketService_default.getInstance().getChatSocket()?.emit("sendFriendRequestNotif", {
                   targetId
                 });
               }
@@ -4869,7 +4922,7 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
         if (!response.ok) throw new Error("Failed to fetch pendings");
         const requests = await response.json();
         const pendingList = requests.data;
@@ -4938,7 +4991,7 @@
       const userId = localStorage.getItem("userId");
       if (!itemDiv.dataset.friendshipId) return;
       try {
-        const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: action })
@@ -4949,7 +5002,7 @@
             itemDiv.remove();
             if (action === "validated") {
               this.loadFriends();
-              const socket = SocketService_default.getInstance().socket;
+              const socket = SocketService_default.getInstance().getChatSocket();
               if (socket) {
                 socket.emit("acceptFriendRequest", {
                   targetId: requesterId
@@ -5021,7 +5074,7 @@
         return;
       }
       try {
-        const response = await fetchWithAuth(`/api/users/${userId}`);
+        const response = await fetchWithAuth(`/api/user/${userId}`);
         if (!response.ok) throw new Error("Failed to fetch user profile");
         const userData = await response.json();
         if (this.userConnected && userData.alias) {
@@ -5091,7 +5144,7 @@
             return false;
           }
           try {
-            const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+            const response = await fetchWithAuth(`api/user/${userId}/bio`, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ bio: trimmedBio })
@@ -5154,7 +5207,7 @@
               localStorage.setItem("userStatus", selectedStatus);
               const userId = localStorage.getItem("userId");
               try {
-                await fetchWithAuth(`/api/users/${userId}/status`, {
+                await fetchWithAuth(`/api/user/${userId}/status`, {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ status: selectedStatus })
@@ -5261,7 +5314,7 @@
         const userId = localStorage.getItem("userId");
         if (!userId) return;
         try {
-          const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+          const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ avatar: this.selectedImageSrc })
@@ -5270,7 +5323,7 @@
           if (response.ok) {
             const cleanAvatarUrl = result.data.avatar;
             if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
-            const socket = SocketService_default.getInstance().socket;
+            const socket = SocketService_default.getInstance().getChatSocket();
             const username = localStorage.getItem("username");
             if (socket) {
               socket.emit("notifyProfileUpdate", {
@@ -5293,16 +5346,22 @@
   // scripts/components/Chat.ts
   var Chat = class {
     constructor() {
+      this.socket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
-      this.socket = SocketService_default.getInstance().socket;
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
       this.wizzContainer = document.getElementById("wizz-container");
     }
     init() {
-      if (!this.socket) return;
+      const socketService = SocketService_default.getInstance();
+      socketService.connectChat();
+      this.socket = socketService.getChatSocket();
+      if (!this.socket) {
+        console.error("Chat: Impossible to retrieve chat socket (not connected).");
+        return;
+      }
       this.setupSocketEvents();
       this.setupInputListeners();
       this.setupWizz();
@@ -5672,7 +5731,7 @@
           if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
             try {
               const userId = localStorage.getItem("userId");
-              const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
+              const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: "blocked" })
               });
@@ -5799,7 +5858,7 @@
       try {
         if (this.username) this.username.innerText = "Loading...";
         const [userRes, statsRes] = await Promise.all([
-          fetchWithAuth(`api/users/${friendId}`),
+          fetchWithAuth(`api/user/${friendId}`),
           fetchWithAuth(`api/game/users/${friendId}/stats`)
         ]);
         if (userRes.ok) {
@@ -5857,7 +5916,7 @@
   }
   function afterRender() {
     const socketService = SocketService_default.getInstance();
-    socketService.connect();
+    socketService.connectChat();
     friendListInstance = new FriendList();
     friendListInstance.init();
     const userProfile = new UserProfile();
@@ -5866,8 +5925,9 @@
     chatInstance.init();
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
-    if (socketService.socket) {
-      socketService.socket.on("friendProfileUpdated", (data) => {
+    const chatSocket = socketService.getChatSocket();
+    if (chatSocket) {
+      chatSocket.on("friendProfileUpdated", (data) => {
         console.log("Mise \xE0 jour re\xE7ue pour :", data.username);
         if (currentChatFriendId === data.userId) {
           const headerBio = document.getElementById("chat-header-bio");
@@ -5884,7 +5944,7 @@
           }
         }
       });
-      socketService.socket.on("friendStatusUpdate", (data) => {
+      chatSocket.on("friendStatusUpdate", (data) => {
         const headerName = document.getElementById("chat-header-username");
         if (headerName && headerName.textContent === data.username) {
           const headerStatus = document.getElementById("chat-header-status");
@@ -6811,14 +6871,15 @@
       if (!userId)
         return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}`);
+        const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
           const user = await response.json();
           currentUserEmail = user.email || "";
           const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
           if (statResponse.ok) {
             const jsonResponse = await statResponse.json();
-            const stats = jsonResponse.data;
+            console.log("Stats re\xE7ues du Backend:", jsonResponse);
+            const stats = jsonResponse.data || jsonResponse;
             const totalGame = document.getElementById("stats-total-games");
             const wins = document.getElementById("stats-wins");
             const losses = document.getElementById("stats-losses");
@@ -6838,8 +6899,8 @@
                 }
                 winRateCalcul.innerText = `${rateValue}%`;
               }
-              if (avgScore) avgScore.innerText = stats.average_score?.toString() || "0";
-              if (streak) streak.innerText = stats.streak?.toString() || "0";
+              if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
+              if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
               if (opponent) opponent.innerText = stats.biggest_opponent || "-";
               if (favGame) favGame.innerText = stats.favorite_game || "Local";
             }
@@ -6915,7 +6976,7 @@
     const updateUsername = async (newUsername) => {
       if (!userId || !newUsername.trim()) return false;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/alias`, {
+        const response = await fetchWithAuth(`api/user/${userId}/alias`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ alias: newUsername })
@@ -6955,7 +7016,7 @@
         return false;
       }
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+        const response = await fetchWithAuth(`api/user/${userId}/bio`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ bio: trimmedBio })
@@ -6983,7 +7044,7 @@
     const updateEmail = async (newEmail) => {
       if (!userId || !newEmail.trim()) return false;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/email`, {
+        const response = await fetchWithAuth(`api/user/${userId}/email`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: newEmail })
@@ -7008,7 +7069,7 @@
     const updateTheme = async (newTheme) => {
       if (!userId) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/theme`, {
+        const response = await fetchWithAuth(`api/user/${userId}/theme`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ theme: newTheme })
@@ -7148,7 +7209,7 @@
     const updateStatus = async (newStatus) => {
       if (!userId) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/status`, {
+        const response = await fetchWithAuth(`api/user/${userId}/status`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: newStatus })
@@ -7235,9 +7296,8 @@
         }
         return;
       }
-      console.log("newpass: , confirmpass:", newPass, confirmPass);
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/password`, {
+        const response = await fetchWithAuth(`api/user/${userId}/password`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ oldPass, newPass, confirmPass })
@@ -7248,12 +7308,13 @@
           closePwdModal();
         } else {
           if (pwdError) {
+            console.log("pwdError");
             pwdError.innerText = result.error?.message || "Error updating password";
             pwdError.classList.remove("hidden");
           }
         }
       } catch (error) {
-        console.error(error);
+        console.error("Catched error:", error);
         if (pwdError) {
           pwdError.innerText = "Network error.";
           pwdError.classList.remove("hidden");
@@ -7309,7 +7370,7 @@
       }
       try {
         console.log("avatar charge");
-        const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+        const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ avatar: selectedImageSrc })
@@ -7396,7 +7457,7 @@
     });
     guestButton?.addEventListener("click", async () => {
       try {
-        const response = await fetch("/api/users/guest", {
+        const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({})
@@ -7503,7 +7564,7 @@
         return;
       }
       try {
-        const response = await fetch("/api/users", {
+        const response = await fetch("/api/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -7511,7 +7572,6 @@
           body: JSON.stringify({ alias: alias2, email, password })
         });
         const result = await response.json();
-        console.log("RECEPTION DU BACKEND:", result);
         if (response.ok) {
           sessionStorage.removeItem("isGuest");
           sessionStorage.removeItem("userRole");
@@ -7524,8 +7584,8 @@
             localStorage.setItem("userId", userId.toString());
           if (userId) {
             try {
-              const userRes = await fetch(`/api/users/${userId}`, {
-                headers: { "Authorization": `Bearer ${accessToken}` }
+              const userRes = await fetch(`/api/user/${userId}`, {
+                headers: { "Authorization": `Bearer ${access_token}` }
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
@@ -7681,7 +7741,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                        <div class="window w-[600px] shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Start the game</div>\n                                <div class="title-bar-controls">\n                                    <button aria-label="Close"></button>\n                                </div>\n                            </div>\n\n                            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                \n                                <div class="flex flex-col gap-1">\n                                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                        <label class="text-sm font-semibold">Choose your ball :</label>\n                                        \n                                        <div class="relative">\n                                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                            </button>\n\n                                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                    </div>\n                                            </div>\n                                        </div>\n\n                                        <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                    </div>\n\n                                    <div class="flex flex-row gap-2">\n                                        <label class="text-sm font-semibold">Choose your background :</label>\n                                        \n                                        <div class="relative">\n                                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                            </button>\n\n                                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                        </div>\n\n                                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                                    </div>\n                                </fieldset>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-game-btn"\n                                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        PLAY\n                                    </button>\n                                </div>\n\n                            </div>\n                        </div>\n                    </div>\n\n\n\n                    <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the game</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    \n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n                    \n\n                    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                        <div class="window w-[600px] shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Start the game</div>\n                                <div class="title-bar-controls">\n                                    <button aria-label="Close"></button>\n                                </div>\n                            </div>\n\n                            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                \n                                <div class="flex flex-col gap-1">\n                                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                        <label class="text-sm font-semibold">Choose your ball :</label>\n                                        \n                                        <div class="relative">\n                                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                            </button>\n\n                                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                    </div>\n                                            </div>\n                                        </div>\n\n                                        <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                    </div>\n\n                                    <div class="flex flex-row gap-2">\n                                        <label class="text-sm font-semibold">Choose your background :</label>\n                                        \n                                        <div class="relative">\n                                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                            </button>\n\n                                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                        </div>\n\n                                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                                    </div>\n                                </fieldset>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-game-btn"\n                                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        PLAY\n                                    </button>\n                                </div>\n\n                            </div>\n                        </div>\n                    </div>\n                    \n\n\n                    <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">Ready, steady, go!</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                            </div>\n                        </div>\n                    </div>\n\n\n\n                    <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the game</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    \n                </div>\n                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                    </button>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -7777,6 +7837,20 @@
                                 </div>
                                 <div class="text-center text-xs text-gray-500" id="queue-status"></div>
 
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+					<div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                            <div class="title-bar bg-yellow-500">
+                                <div class="title-bar-text text-black">Ready, steady, go!</div>
+                            </div>
+                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
                             </div>
                         </div>
                     </div>
@@ -8093,7 +8167,9 @@
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
-      this.socket = SocketService_default.getInstance().socket;
+      const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      this.socket = socketService.getGameSocket();
       if (!this.socket) {
         console.error("Cannot start remote game: No socket connection");
         return;
@@ -8279,7 +8355,7 @@
     const isGuest = sessionStorage.getItem("userRole") === "guest";
     if (!userId) return "Player";
     try {
-      const response = await fetchWithAuth(`api/users/${userId}`);
+      const response = await fetchWithAuth(`api/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
         return userData.alias || (isGuest ? "Guest" : "Player");
@@ -8287,8 +8363,8 @@
     } catch (err) {
       console.error("Cannot fetch player alias:", err);
     }
-    const result = sessionStorage.getItem("username") || (isGuest ? "Guest (you)" : "Player (you)");
-    return result + " (you)";
+    const result = sessionStorage.getItem("username") || (isGuest ? "Guest" : "Player");
+    return result;
   }
   function handleBeforeUnload(e) {
     if (isGameRunning()) {
@@ -8375,9 +8451,8 @@
       const currentScore = { ...activeGame.score };
       activeGame.isRunning = false;
       activeGame.stop();
-      console.log("Leaving the game - remote");
-      if (wasRemote && roomId && SocketService_default.getInstance().socket) {
-        SocketService_default.getInstance().socket.emit("leaveGame", { roomId });
+      if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
+        SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
         const userIdStr = localStorage.getItem("userId");
         if (userIdStr && playerRole) {
           const myScore = playerRole === "player1" ? currentScore.player1 : currentScore.player2;
@@ -8408,6 +8483,7 @@
       document.removeEventListener("keydown", spaceKeyListener);
       spaceKeyListener = null;
     }
+    document.getElementById("countdown-modal")?.remove();
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("popstate", handlePopState);
     isNavigationBlocked = false;
@@ -8483,7 +8559,35 @@
       window.history.back();
     });
   }
+  function launchCountdown(onComplete) {
+    const modal = document.getElementById("countdown-modal");
+    const text = document.getElementById("countdown-text");
+    if (!modal || !text) {
+      onComplete();
+      return;
+    }
+    modal.classList.remove("hidden");
+    let count = 3;
+    text.innerText = count.toString();
+    text.className = "text-[150px] font-black text-white animate-bounce";
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        text.innerText = count.toString();
+      } else if (count === 0) {
+        text.innerText = "GO!";
+        text.classList.remove("animate-bounce");
+        text.classList.add("animate-ping");
+      } else {
+        clearInterval(interval);
+        modal.classList.add("hidden");
+        onComplete();
+      }
+    }, 1e3);
+  }
   function initGamePage(mode) {
+    const currentTheme = localStorage.getItem("userTheme") || "basic";
+    applyTheme(currentTheme);
     window.addEventListener("beforeunload", handleBeforeUnload);
     window.addEventListener("popstate", handlePopState);
     const player1Display = document.getElementById("player-1-name");
@@ -8546,6 +8650,12 @@
     document.addEventListener("keydown", spaceKeyListener);
     function initRemoteMode() {
       const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      const gameSocket = socketService.getGameSocket();
+      if (!gameSocket) {
+        console.error("Cannot connect to server");
+        return;
+      }
       const btn = document.getElementById("start-game-btn");
       const status = document.getElementById("queue-status");
       const modal = document.getElementById("game-setup-modal");
@@ -8562,8 +8672,6 @@
       const bgInput = document.getElementById("bg-value");
       const bgResetBtn = document.getElementById("bg-reset-button");
       const gameContainer = document.getElementById("left");
-      let currentP1Alias = "Player 1";
-      let currentP2Alias = "Player 2";
       if (ballBtn && ballDrop && ballGrid) {
         const uniqueUrls = /* @__PURE__ */ new Set();
         ballGrid.innerHTML = "";
@@ -8631,11 +8739,48 @@
           if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
         });
       }
-      const startGameFromData = (data, p1Alias, p2Alias) => {
+      let currentP1Alias = "Player 1";
+      let currentP2Alias = "Player 2";
+      const startGameFromData = async (data, p1Alias, p2Alias) => {
         console.log("Starting game from data:", data);
-        const player1Alias = p1Alias || "Player 1";
-        const player2Alias = p2Alias || "Player 2";
-        if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
+        const myAlias = await getPlayerAlias();
+        let opponentAlias = "Opponent";
+        if (data.opponent) {
+          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            if (userData && userData.alias) {
+              console.log("Opponent alias loaded:", userData.alias);
+              opponentAlias = userData.alias;
+              if (data.role === "player1") currentP2Alias = opponentAlias;
+              else currentP1Alias = opponentAlias;
+              const p1Display2 = document.getElementById("player-1-name");
+              const p2Display2 = document.getElementById("player-2-name");
+              if (data.role === "player1" && p2Display2) {
+                p2Display2.innerText = opponentAlias;
+              } else if (data.role === "player2" && p1Display2) {
+                p1Display2.innerText = opponentAlias;
+              }
+            }
+          }).catch((e) => console.error("Error loading opponent alias:", e));
+        }
+        console.log("Opponent:", data.opponentAlias);
+        if (data.role === "player1") {
+          currentP1Alias = myAlias;
+          currentP2Alias = opponentAlias;
+        } else {
+          currentP1Alias = opponentAlias;
+          currentP2Alias = myAlias;
+        }
+        const p1Display = document.getElementById("player-1-name");
+        const p2Display = document.getElementById("player-2-name");
+        if (p1Display && p2Display) {
+          p1Display.innerText = data.role === "player1" ? `${currentP1Alias} (Me)` : currentP1Alias;
+          p2Display.innerText = data.role === "player2" ? `${currentP2Alias} (Me)` : currentP2Alias;
+        }
+        if (gameChat) {
+          gameChat.joinChannel(data.roomId);
+          gameChat.addSystemMessage(`Match started!`);
+        }
+        if (status) status.innerText = "We found an opponent ! Starting the game...";
         if (modal) modal.style.display = "none";
         if (container) {
           container.innerHTML = "";
@@ -8655,44 +8800,42 @@
               activeGame.stop();
               activeGame = null;
             }
+            console.log("Player aliases set:", currentP1Alias, currentP2Alias);
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-            socketService.socket.off("opponentLeft");
-            socketService.socket.on("opponentLeft", (eventData) => {
+            console.log("Player aliases set:", currentP1Alias, currentP2Alias);
+            gameSocket.off("opponentLeft");
+            gameSocket.on("opponentLeft", async (eventData) => {
               if (activeGame) {
                 console.log("Opponent left the game! Victory by forfeit!");
                 activeGame.isRunning = false;
                 activeGame.stop();
-                socketService.socket.off("gameState");
-                socketService.socket.off("gameEnded");
-                let myAlias = data.role === "player1" ? player1Alias : player2Alias;
+                gameSocket.off("gameState");
+                gameSocket.off("gameEnded");
                 let myScore = data.role === "player1" ? activeGame.score.player1 : activeGame.score.player2;
+                const myAlias2 = await getPlayerAlias();
                 const userIdStr = localStorage.getItem("userId");
                 if (userIdStr) {
                   saveGameStats(Number(userIdStr), myScore, true);
                 }
-                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                showRemoteEndModal(myAlias2, "(Opponent forfeit)");
                 activeGame = null;
               }
             });
-            if (!socketService.socket) {
-              console.log("Socket non connect\xE9, attente...");
-              const checkSocket = setInterval(() => {
-                if (socketService.socket) {
-                  clearInterval(checkSocket);
-                  activeGame?.startRemote(data.roomId, data.role);
-                }
-              }, 100);
-            } else {
-              activeGame.startRemote(data.roomId, data.role);
-            }
-          }
-          const p1Name = document.getElementById("player-1-name");
-          const p2Name = document.getElementById("player-2-name");
-          if (p1Name) {
-            p1Name.innerText = data.role === "player1" ? "Moi" : "Adversaire";
-          }
-          if (p2Name) {
-            p2Name.innerText = data.role === "player2" ? "Moi" : "Adversaire";
+            activeGame.onGameEnd = (endData) => {
+              let winnerName = "Winner";
+              if (endData.winner === "player1") winnerName = currentP1Alias;
+              else if (endData.winner === "player2") winnerName = currentP2Alias;
+              console.log("WinnerName:", winnerName);
+              showVictoryModal(winnerName);
+            };
+            activeGame.onScoreChange = (score) => {
+              const sb = document.getElementById("score-board");
+              if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
+            };
+            launchCountdown(() => {
+              if (activeGame)
+                activeGame.startRemote(data.roomId, data.role);
+            });
           }
         }
       };
@@ -8706,93 +8849,27 @@
         const newBtn = btn.cloneNode(true);
         btn.parentNode?.replaceChild(newBtn, btn);
         newBtn.addEventListener("click", async () => {
-          if (!socketService.socket) {
-            alert("Erreur: Non connect\xE9 au serveur de jeu");
+          if (!gameSocket) {
+            alert("Error: lost connexion to game server");
             return;
           }
           if (status) status.innerText = "Recherche d'un adversaire...";
           newBtn.disabled = true;
           newBtn.innerText = "WAITING...";
           const myAlias = await getPlayerAlias();
-          socketService.socket.on("matchFound", (data) => {
-            console.log("Match Found!", data);
-            currentP1Alias = data.player1Alias || "Player 1";
-            currentP2Alias = data.player2Alias || "Player 2";
-            if (gameChat) {
-              gameChat.joinChannel(data.roomId);
-              gameChat.addSystemMessage("Game found! You are now in a private room.");
-            }
-            if (status) status.innerText = "Adversaire trouv\xE9 ! Lancement...";
-            if (modal) modal.style.display = "none";
-            if (container) {
-              container.innerHTML = "";
-              const canvas = document.createElement("canvas");
-              canvas.width = container.clientWidth;
-              canvas.height = container.clientHeight;
-              canvas.style.width = "100%";
-              canvas.style.height = "100%";
-              container.appendChild(canvas);
-              const ctx = canvas.getContext("2d");
-              const input = new Input_default();
-              const selectedBallSkin = ballInput ? ballInput.value : "classic";
-              if (ctx) {
-                if (activeGame) activeGame.isRunning = false;
-                activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-                socketService.socket.off("opponentLeft");
-                socketService.socket.on("opponentLeft", (eventData) => {
-                  if (activeGame && activeGame.isRunning) {
-                    console.log("Opponent left during match!", eventData);
-                    activeGame.isRunning = false;
-                    activeGame.stop();
-                    socketService.socket.off("gameState");
-                    socketService.socket.off("gameEnded");
-                    let myAlias2 = data.role === "player1" ? currentP1Alias : currentP2Alias;
-                    let myScore = data.role === "player1" ? activeGame.score.player1 : activeGame.score.player2;
-                    const userIdStr = localStorage.getItem("userId");
-                    if (userIdStr) {
-                      saveGameStats(Number(userIdStr), myScore, true);
-                    }
-                    showRemoteEndModal(myAlias2, "(Opponent disconnected)");
-                    activeGame = null;
-                  }
-                });
-                activeGame.onGameEnd = (endData) => {
-                  console.log("Game Ended Data:", endData);
-                  let winnerName = "Winner";
-                  if (endData.winner === "player1") {
-                    winnerName = currentP1Alias;
-                  } else if (endData.winner === "player2") {
-                    winnerName = currentP2Alias;
-                  } else if (endData.winnerAlias) {
-                    winnerName = endData.winnerAlias;
-                  }
-                  showVictoryModal(winnerName);
-                };
-                activeGame.onScoreChange = (score) => {
-                  const sb = document.getElementById("score-board");
-                  if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-                };
-                activeGame.startRemote(data.roomId, data.role);
-              }
-            }
-            const p1Name = document.getElementById("player-1-name");
-            const p2Name = document.getElementById("player-2-name");
-            if (data.role === "player1") {
-              if (p1Name) p1Name.innerText = currentP1Alias + " (Me)";
-              if (p2Name) p2Name.innerText = currentP2Alias;
-            } else {
-              if (p1Name) p1Name.innerText = currentP1Alias;
-              if (p2Name) p2Name.innerText = currentP2Alias + " (Me)";
-            }
+          gameSocket.off("matchFound");
+          gameSocket.on("matchFound", (data) => {
+            console.log(data);
+            startGameFromData(data);
           });
-          socketService.socket.emit("joinQueue", { alias: myAlias });
+          gameSocket.emit("joinQueue");
         });
       }
     }
     function inittournamentMode() {
       const setupModal = document.getElementById("tournament-setup-modal");
       if (setupModal) setupModal.classList.remove("hidden");
-      const nameInput = document.getElementById("tournament-name-input");
+      const nameInput2 = document.getElementById("tournament-name-input");
       const player1Input = document.getElementById("player1-input");
       const player2Input = document.getElementById("player2-input");
       const player3Input = document.getElementById("player3-input");
@@ -8815,7 +8892,7 @@
       });
       console.log("Username du user: ", username);
       startButton?.addEventListener("click", () => {
-        const tName = nameInput.value.trim();
+        const tName = nameInput2.value.trim();
         const players = [
           player1Input.value.trim(),
           player2Input.value.trim(),
@@ -9157,8 +9234,8 @@
     function initLocalMode() {
       const modal = document.getElementById("game-setup-modal");
       const startButton = document.getElementById("start-game-btn");
-      const nameInput = document.getElementById("opponent-name");
-      const errorMsg = document.getElementById("error-message");
+      const nameInput2 = document.getElementById("opponent-name");
+      const errorMsg2 = document.getElementById("error-message");
       const ballButton = document.getElementById("ball-selector-button");
       const ballDropdown = document.getElementById("ball-selector-dropdown");
       const ballGrid = document.getElementById("ball-grid");
@@ -9255,10 +9332,10 @@
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
-          const opponentName = nameInput.value.trim();
+          const opponentName = nameInput2.value.trim();
           if (opponentName === "") {
-            if (errorMsg) errorMsg.classList.remove("hidden");
-            nameInput.classList.add("border-red-500");
+            if (errorMsg2) errorMsg2.classList.remove("hidden");
+            nameInput2.classList.add("border-red-500");
             return;
           }
           if (gameChat) {
@@ -9276,115 +9353,118 @@
             modal.classList.add("hidden");
             modal.classList.remove("flex");
           }
-          const canvasContainer = document.getElementById("game-canvas-container");
-          if (!canvasContainer) {
-            console.error("Conteneur canvas introuvable, creation auto...");
-            const container = document.createElement("div");
-            container.id = "game-canvas-container";
-            container.className = "w-full flex-1";
-            gameField.appendChild(container);
-          } else {
-            canvasContainer.innerHTML = "";
-          }
-          const scoreBoard = document.getElementById("score-board");
-          const canvas = document.createElement("canvas");
-          canvas.id = "pong-canvas";
-          canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
-          canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
-          console.log("heigh:", canvasContainer.clientHeight);
-          console.log("width:", canvasContainer.clientWidth);
-          canvas.style.width = "100%";
-          canvas.style.height = "100%";
-          canvas.style.backgroundColor = selectedBg;
-          const targetContainer = document.getElementById("game-canvas-container") || gameField;
-          targetContainer.appendChild(canvas);
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            const input = new Input_default();
-            if (activeGame) activeGame.isRunning = false;
-            activeGame = new Game_default(canvas, ctx, input, selectedBall);
-            activeGame.onScoreChange = (score) => {
-              if (scoreBoard) {
-                scoreBoard.innerText = `${score.player1} - ${score.player2}`;
-              }
-            };
-            console.log("D\xE9marrage du jeu Local...");
-            activeGame.start();
-            const startDate = getSqlDate();
-            const localLoop = setInterval(async () => {
-              if (!activeGame || !activeGame.isRunning) {
-                clearInterval(localLoop);
-                return;
-              }
-              if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                activeGame.isRunning = false;
-                clearInterval(localLoop);
-                const p1Score = activeGame.score.player1;
-                const p2Score = activeGame.score.player2;
-                const p1Alias = player1Display.innerText;
-                const p2Alias = opponentName;
-                const p1Wins = p1Score > p2Score;
-                const winnerAlias = p1Wins ? p1Alias : p2Alias;
-                const userIdStr = localStorage.getItem("userId");
-                if (userIdStr) {
-                  const userId = Number(userIdStr);
-                  console.log(`gamepage, ${userId}`);
-                  await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+          launchCountdown(() => {
+            const canvasContainer = document.getElementById("game-canvas-container");
+            if (!canvasContainer) {
+              console.error("Conteneur canvas introuvable, creation auto...");
+              const container = document.createElement("div");
+              container.id = "game-canvas-container";
+              container.className = "w-full flex-1";
+              gameField.appendChild(container);
+            } else {
+              canvasContainer.innerHTML = "";
+            }
+            const scoreBoard = document.getElementById("score-board");
+            const canvas = document.createElement("canvas");
+            canvas.id = "pong-canvas";
+            canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
+            canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+            console.log("heigh:", canvasContainer.clientHeight);
+            console.log("width:", canvasContainer.clientWidth);
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
+            canvas.style.backgroundColor = selectedBg;
+            const targetContainer = document.getElementById("game-canvas-container") || gameField;
+            targetContainer.appendChild(canvas);
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              const input = new Input_default();
+              if (activeGame) activeGame.isRunning = false;
+              activeGame = new Game_default(canvas, ctx, input, selectedBall);
+              activeGame.onScoreChange = (score) => {
+                if (scoreBoard) {
+                  scoreBoard.innerText = `${score.player1} - ${score.player2}`;
                 }
-                showVictoryModal(winnerAlias);
-              }
-            }, 500);
-          }
+              };
+              console.log("D\xE9marrage du jeu Local...");
+              activeGame.start();
+              const startDate = getSqlDate();
+              const localLoop = setInterval(async () => {
+                if (!activeGame || !activeGame.isRunning) {
+                  clearInterval(localLoop);
+                  return;
+                }
+                if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                  activeGame.isRunning = false;
+                  clearInterval(localLoop);
+                  const p1Score = activeGame.score.player1;
+                  const p2Score = activeGame.score.player2;
+                  const p1Alias = player1Display.innerText;
+                  const p2Alias = opponentName;
+                  const p1Wins = p1Score > p2Score;
+                  const winnerAlias = p1Wins ? p1Alias : p2Alias;
+                  const userIdStr = localStorage.getItem("userId");
+                  if (userIdStr) {
+                    const userId = Number(userIdStr);
+                    console.log(`gamepage, ${userId}`);
+                    await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                  }
+                  showVictoryModal(winnerAlias);
+                }
+              }, 500);
+            }
+          });
         });
       }
-      async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
-        try {
-          const endDate = getSqlDate();
-          const response = await fetchWithAuth("api/game", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              type: "local",
-              winner: winnerAlias,
-              status: "finished",
-              round: "1v1",
-              startDate,
-              endDate,
-              p1: {
-                alias: p1Alias,
-                score: p1Score,
-                userId
-              },
-              p2: {
-                alias: p2Alias,
-                score: p2Score,
-                userId: null
-              }
-            })
-          });
-          if (!response.ok) {
-            console.error("Error while saving local game");
-          } else {
-            console.log("Local game successfully saved");
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-      nameInput.addEventListener("input", () => {
-        if (errorMsg) errorMsg.classList.add("hidden");
-        nameInput.classList.remove("border-red-500");
-      });
     }
-    function launchConfetti(duration = 3e3) {
-      const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
-      const confettiCount = 150;
-      const container = document.body;
-      const confettiContainer = document.createElement("div");
-      confettiContainer.id = "confetti-container";
-      confettiContainer.style.cssText = `
+    async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
+      try {
+        const endDate = getSqlDate();
+        const response = await fetchWithAuth("api/game", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "local",
+            winner: winnerAlias,
+            status: "finished",
+            round: "1v1",
+            startDate,
+            endDate,
+            p1: {
+              alias: p1Alias,
+              score: p1Score,
+              userId
+            },
+            p2: {
+              alias: p2Alias,
+              score: p2Score,
+              userId: null
+            }
+          })
+        });
+        if (!response.ok) {
+          console.error("Error while saving local game");
+        } else {
+          console.log("Local game successfully saved");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    nameInput.addEventListener("input", () => {
+      if (errorMsg) errorMsg.classList.add("hidden");
+      nameInput.classList.remove("border-red-500");
+    });
+  }
+  function launchConfetti(duration = 3e3) {
+    const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
+    const confettiCount = 150;
+    const container = document.body;
+    const confettiContainer = document.createElement("div");
+    confettiContainer.id = "confetti-container";
+    confettiContainer.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
@@ -9394,24 +9474,24 @@
             z-index: 9999;
             overflow: hidden;
         `;
-      container.appendChild(confettiContainer);
-      for (let i = 0; i < confettiCount; i++) {
-        createConfetti(confettiContainer, colors);
-      }
-      setTimeout(() => {
-        confettiContainer.remove();
-      }, duration);
+    container.appendChild(confettiContainer);
+    for (let i = 0; i < confettiCount; i++) {
+      createConfetti(confettiContainer, colors);
     }
-    function createConfetti(container, colors) {
-      const confetti = document.createElement("div");
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const size = Math.random() * 10 + 5;
-      const startX = Math.random() * window.innerWidth;
-      const endX = startX + (Math.random() - 0.5) * 200;
-      const rotation = Math.random() * 360;
-      const duration = Math.random() * 2 + 2;
-      const delay = Math.random() * 0.5;
-      confetti.style.cssText = `
+    setTimeout(() => {
+      confettiContainer.remove();
+    }, duration);
+  }
+  function createConfetti(container, colors) {
+    const confetti = document.createElement("div");
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = Math.random() * 10 + 5;
+    const startX = Math.random() * window.innerWidth;
+    const endX = startX + (Math.random() - 0.5) * 200;
+    const rotation = Math.random() * 360;
+    const duration = Math.random() * 2 + 2;
+    const delay = Math.random() * 0.5;
+    confetti.style.cssText = `
             position: absolute;
             width: ${size}px;
             height: ${size}px;
@@ -9423,11 +9503,11 @@
             border-radius: ${Math.random() > 0.5 ? "50%" : "0"}; /* Rond ou carr\xE9 */
             animation: fall ${duration}s ease-in ${delay}s forwards;
         `;
-      container.appendChild(confetti);
-      const style = document.createElement("style");
-      if (!document.getElementById("confetti-animation-style")) {
-        style.id = "confetti-animation-style";
-        style.textContent = `
+    container.appendChild(confetti);
+    const style = document.createElement("style");
+    if (!document.getElementById("confetti-animation-style")) {
+      style.id = "confetti-animation-style";
+      style.textContent = `
                 @keyframes fall {
                     0% {
                         transform: translateY(0) rotate(0deg);
@@ -9439,69 +9519,18 @@
                     }
                 }
             `;
-        document.head.appendChild(style);
-      }
-    }
-    function launchConfettiExplosion() {
-      const colors = ["#FFD700", "#FFA500", "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DFE6E9"];
-      const confettiCount = 100;
-      const container = document.body;
-      const confettiContainer = document.createElement("div");
-      confettiContainer.id = "confetti-explosion-container";
-      confettiContainer.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            pointer-events: none;
-            z-index: 9999;
-        `;
-      container.appendChild(confettiContainer);
-      for (let i = 0; i < confettiCount; i++) {
-        createExplosionConfetti(confettiContainer, colors, i, confettiCount);
-      }
-      setTimeout(() => {
-        confettiContainer.remove();
-      }, 4e3);
-    }
-    function createExplosionConfetti(container, colors, index, total) {
-      const confetti = document.createElement("div");
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const size = Math.random() * 12 + 6;
-      const angle = index / total * Math.PI * 2;
-      const velocity = Math.random() * 300 + 200;
-      const endX = Math.cos(angle) * velocity;
-      const endY = Math.sin(angle) * velocity - 100;
-      const rotation = Math.random() * 720;
-      const duration = Math.random() * 1.5 + 2;
-      confetti.style.cssText = `
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            background-color: ${color};
-            top: 0;
-            left: 0;
-            opacity: 1;
-            border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
-            animation: explode-${index} ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        `;
-      container.appendChild(confetti);
-      const style = document.createElement("style");
-      style.textContent = `
-            @keyframes explode-${index} {
-                0% {
-                    transform: translate(0, 0) rotate(0deg) scale(1);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translate(${endX}px, ${endY + 500}px) rotate(${rotation}deg) scale(0.3);
-                    opacity: 0;
-                }
-            }
-        `;
       document.head.appendChild(style);
     }
+  }
+
+  // scripts/pages/DashboardPage.html
+  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div class="flex flex-col w-[500px] min-w-[500px]">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dash-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dash-win-rate" class="text-2xl font-bold text-blue-600">0%</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dash-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col border border-gray-300 rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-xs font-bold text-gray-600 mb-2 border-b border-gray-200 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="evolution-chart" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Ici on insert un graphique</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-row gap-2 h-[180px]">\n                    \n                        <div class="w-[140px] border border-gray-300 rounded-sm p-3 shadow-sm bg-white flex flex-col items-center justify-between">\n                            <h3 class="text-xs font-bold text-gray-600 w-full text-center border-b border-gray-200 pb-1">Streaks</h3>\n                            \n                            <div class="flex flex-row items-center">\n                                <span class="text-[10px] text-gray-500">My best winning streak</span>\n                                <div class="flex items-center gap-1">\n                                    <span class="text-xl font-bold text-green-600" id="dash-max-win-streak">0</span>\n                                    <img src="/assets/game/hot.png" class="w-4 h-4" alt="hot">\n                                </div>\n                            </div>\n\n                            <div class="w-full border-t border-gray-200"></div>\n\n                            <div class="flex flex-col items-center">\n                                <span class="text-[10px] text-gray-500">My worst loosing streak</span>\n                                <div class="flex items-center gap-1">\n                                    <span class="text-xl font-bold text-red-600" id="dash-max-lose-streak">0</span>\n                                    <img src="/assets/game/sick.png" class="w-4 h-4" alt="cold">\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n\n                </div>\n            </div>\n        </div>\n\n        <div class="flex flex-col flex-1 min-w-0">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center">\n                        <label class="text-xs font-semibold text-gray-600">Filter by:</label>\n                        \n                        <input type="text" id="filter-opponent" placeholder="Opponent name" \n                               class="text-xs p-1.5 border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 w-[150px]">\n                        \n                        <select id="filter-mode" class="text-xs p-1.5 border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 bg-white">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1"></div>\n\n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-semibold hover:from-gray-200 hover:to-gray-400 active:border-blue-400">\n                            Apply\n                        </button>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0">\n                        <div class="grid grid-cols-12 bg-gray-100 border-b border-gray-300 p-2 text-xs font-bold text-gray-600 select-none">\n                            <div class="col-span-2">Date</div>\n                            <div class="col-span-3">Opponent</div>\n                            <div class="col-span-2 text-center">Mode</div>\n                            <div class="col-span-2 text-center">Score</div>\n                            <div class="col-span-2 text-center">Result</div>\n                            <div class="col-span-1 text-center">View</div>\n                        </div>\n\n                        <div id="match-history-list" class="overflow-y-auto flex-1 p-1 space-y-1">\n                            <div class="grid grid-cols-12 items-center p-2 text-sm border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors group">\n                                <div class="col-span-2 text-gray-500 text-xs">07-01-2026</div>\n                                <div class="col-span-3 font-semibold text-gray-700 flex items-center gap-2">\n                                    <img src="/assets/basic/default.png" class="w-5 h-5 border border-gray-300">\n                                    <span>Faustochedu49</span>\n                                </div>\n                                <div class="col-span-2 text-center text-xs bg-gray-200 rounded px-1 py-0.5 w-fit mx-auto">Game type</div>\n                                <div class="col-span-2 text-center font-mono">0 - 0</div>\n                                <div class="col-span-2 text-center font-bold text-green-600">VICTOIRE</div>\n                                <div class="col-span-1 text-center">\n                                    <img src="/assets/chat/arrow.png" class="w-3 h-3 mx-auto opacity-50 group-hover:opacity-100">\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n					<!-- ICI ON AJOUTE LE PANEL DE DETAIL DE CHAQUE MATCH??? -->\n                    <div id="match-details-panel" class="h-[180px] mt-4 border border-gray-300 rounded-sm bg-gray-50 p-4 shadow-inner flex flex-col hidden">\n                        \n						\n\n\n\n\n						\n                    </div>\n\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+
+  // scripts/pages/DashboardPage.ts
+  function render7() {
+    return DashboardPage_default;
+  }
+  function afterRender4() {
   }
 
   // scripts/main.ts
@@ -9519,6 +9548,10 @@
     "/profile": {
       render: render3,
       afterRender: afterRender2
+    },
+    "/dashboard": {
+      render: render7,
+      afterRender: afterRender4
     },
     "/register": {
       render: RegisterPage,
@@ -9592,7 +9625,7 @@
       }
     }
     if (isGuest) {
-      if (path === "/home" || path === "/profile") {
+      if (path === "/home" || path === "/profile" || path === "/dashboard") {
         window.history.pushState({}, "", "/guest");
         path = "/guest";
       }

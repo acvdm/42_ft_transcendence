@@ -71,7 +71,7 @@ function handleRegister() {
 
 		try {
             // On appelle la route définie dans la Gateway qui redirige vers le service USER
-            const response = await fetch('/api/users', {
+            const response = await fetch('/api/user', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -80,7 +80,6 @@ function handleRegister() {
             });
 
             const result = await response.json();
-			console.log("RECEPTION DU BACKEND:", result);
 
 			if (response.ok) // on verifie que HTTP entre 200-299 
 			{
@@ -99,8 +98,8 @@ function handleRegister() {
 				if (userId) {
 					// console.log(`userId: ${userId}`);
 					try {
-						const userRes = await fetch(`/api/users/${userId}`, {
-							headers: { 'Authorization': `Bearer ${accessToken}` }
+						const userRes = await fetch(`/api/user/${userId}`, {
+							headers: { 'Authorization': `Bearer ${access_token}` }
 						});
 						// console.log(`${userRes}`);
 						if (userRes.ok) {

@@ -14,7 +14,7 @@ async function init2faLogin(accessToken: string, userId: number, selectedStatus:
     // on recupere le profil
     if (userId && accessToken) {
         try {
-            const userRes = await fetch(`/api/users/${userId}`, {
+            const userRes = await fetch(`/api/user/${userId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ async function init2faLogin(accessToken: string, userId: number, selectedStatus:
 
         // on met a jour le status 
         try {
-            await fetch(`/api/users/${userId}/status`, {
+            await fetch(`/api/user/${userId}/status`, {
                 method: 'PATCH',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -125,7 +125,8 @@ function handleLogin() {
                 // Récupération du profil (Username) (on verrifie qu'on a bien un access token)
                 if (userId && accessToken) {
                     try {
-                        const userRes = await fetchWithAuth(`/api/users/${userId}`, {
+
+                        const userRes = await fetchWithAuth(`/api/user/${userId}`, {
                             method: 'GET'
                         });
 
@@ -141,7 +142,7 @@ function handleLogin() {
                     }
 
                     try {
-                        await fetchWithAuth(`/api/users/${userId}/status`, {
+                        await fetchWithAuth(`/api/user/${userId}/status`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: selectedStatus })
                         });
@@ -159,7 +160,7 @@ function handleLogin() {
                 // Gestion d'erreur login
                 console.error("Login error:", result.error);
                 if (errorElement) {
-                    errorElement.textContent = result.error.errorMessage || result.error.error || "Authentication failed";
+                    errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
                     errorElement.classList.remove('hidden');
                 }
             }

@@ -8,6 +8,7 @@ import { RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage, afterRender as GuestAfterRender } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
 import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./pages/GamePage";
+import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./pages/DashboardPage";
 
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
@@ -36,6 +37,10 @@ const routes: { [key: string]: Page } = {
 	'/profile': {
 		render: ProfilePage,
 		afterRender: ProfilePageAfterRender
+	},
+	'/dashboard': {
+		render: DashboardPage,
+		afterRender: DashboardPageAfterRender
 	},
 	'/register': {
 		render: RegisterPage,
@@ -156,7 +161,7 @@ const handleLocationChange = () => {
 
 	// CAS GUEST : Bloquer l'accès à Home et Profile
 	if (isGuest) {
-		if (path === '/home' || path === '/profile') {
+		if (path === '/home' || path === '/profile' || path === '/dashboard') {
 			window.history.pushState({}, '', '/guest');
 			path = '/guest';
 		}

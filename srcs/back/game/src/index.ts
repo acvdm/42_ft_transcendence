@@ -1,6 +1,9 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import FastifyIO from 'fastify-socket.io';
+import { Socket, Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
+// import sqlite3 from 'sqlite3';
+// import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
@@ -8,18 +11,89 @@ import { addPlayerMatch, rollbackDeletePlayerFromMatch } from './repositories/pl
 import { createStatLineforOneUser, findStatsByUserId, getUserMatchHistory, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
 import { localMatchResult, localTournament } from './repositories/tournament_interfaces.js';
-import { NotFoundError } from './utils/error.js';
+import { NotFoundError, UnauthorizedError } from './utils/error.js';
+import { initGameState, registerRemoteGameEvents, updateGamePhysics } from './remoteGame.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    io: Server;
+  }
+}
+
+declare module 'socket.io' {
+    interface Socket {
+        user: any; // On ajoute la propriété user (type any ou { sub: number, ... })
+    }
+}
 
 const fastify = Fastify({ logger: true });
 
-let db: Database;
+// On enregistre le plugin socket io
+fastify.register(FastifyIO as any, {
+    cors: {
+        origin: "*", // Pense à mettre l'URL du front en prod
+        methods: ["GET", "POST"]
+    },
+    path: '/socket.io/',
+    transports: ['websocket', 'polling']
+});
 
-async function main() 
-{
-	db = await initDatabase();
-	console.log('game database initialised');
+let db: Database;
+const JWT_SECRET = process.env.JWT_SECRET!;
+const userSockets = new Map<number, string>();
+
+// Middleware de sécurité
+const authMiddleware = (socket: any, next: any) => {
+    const token = socket.handshake.auth.token?.replace('Bearer ', '');
+    if (!token)
+        return next(new Error("No token"));
+
+    try
+    {
+        socket.user = jwt.verify(token, JWT_SECRET);
+        next();
+    }
+    catch (e)
+    {
+        next(new UnauthorizedError("Invalid token"));
+    }
 }
 
+
+
+
+// ------------------------------------
+// --- EVENTS DU JEU REMOTE (AJOUT) ---
+// ------------------------------------
+
+fastify.ready().then(() => {
+    // Application de sécurité
+    fastify.io.use(authMiddleware);
+    
+    // Toute la logique Socket se passe ICI
+    fastify.io.on('connection', (socket: Socket) => {
+        console.log(`Client connected (Fastify): ${socket.id}`);
+
+        if (socket.user && socket.user.sub) {
+            userSockets.set(socket.user.sub, socket.id);
+        }
+
+        registerRemoteGameEvents(fastify.io, socket, userSockets);
+
+		
+        socket.on('disconnect', () => {
+            console.log(`Client disconnected: ${socket.id}`);
+            // Nettoyage map userSockets
+            for (const [uid, sid] of userSockets.entries()) {
+                if (sid === socket.id) {
+                    userSockets.delete(uid);
+                    break;
+                }
+            }
+
+        });
+    });
+});
 
 
 //---------------------------------------
@@ -266,7 +340,7 @@ fastify.get('/games/users/:id/history', async (request, reply) =>
 
 
 /* -- UPDATE STATS FOR ONE USER -- */
-fastify.patch('/games/users/:id/stats', async (request, reply) => 
+fastify.patch('/users/:id/stats', async (request, reply) => 
 {
 	try
 	{
@@ -346,6 +420,12 @@ fastify.get('/health', async (request, reply) =>
 {
 	return { service: 'game', status: 'ready', port: 3003 };
 });
+
+async function main() 
+{
+	db = await initDatabase();
+	console.log('game database initialised');
+}
 
 // on demarre le serveur
 const start = async () => 

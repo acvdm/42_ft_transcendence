@@ -293,7 +293,7 @@ export async function updateUserStatus(newStatus: string) {
     if (!userId) return;
 
     try {
-        await fetchWithAuth(`/api/users/${userId}/status`, {
+        await fetchWithAuth(`/api/user/${userId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: newStatus })

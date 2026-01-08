@@ -21,8 +21,8 @@ interface UserStats {
 	losses: number;
 	total_games: number;
 
-	average_score?: number;
-	streak?: number;
+	averageScore?: number;
+	current_win_streak?: number;
 	biggest_opponent?: string;
 	favorite_game?: string;
 }
@@ -573,7 +573,7 @@ export function afterRender(): void {
 		
 		try {
 			// on recuperer les infos user
-			const response = await fetchWithAuth(`api/users/${userId}`);
+			const response = await fetchWithAuth(`api/user/${userId}`);
 			
 			if (response.ok) {
 				const user: UserData = await response.json();
@@ -586,7 +586,8 @@ export function afterRender(): void {
 				const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
 				if (statResponse.ok) {
 					const jsonResponse = await statResponse.json();
-					const stats: UserStats = jsonResponse.data;
+					console.log("Stats reçues du Backend:", jsonResponse);
+					const stats: UserStats = jsonResponse.data || jsonResponse;
 
 					const totalGame = document.getElementById('stats-total-games');
 					const wins = document.getElementById('stats-wins');
@@ -610,8 +611,8 @@ export function afterRender(): void {
 							winRateCalcul.innerText = `${rateValue}%`;
 						}
 
-						if (avgScore) avgScore.innerText = stats.average_score?.toString() || "0";
-						if (streak) streak.innerText = stats.streak?.toString() || "0";
+						if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
+						if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
 						if (opponent) opponent.innerText = stats.biggest_opponent || "-";
 						if (favGame) favGame.innerText = stats.favorite_game || "Local";
 					}
@@ -721,7 +722,7 @@ export function afterRender(): void {
 	const updateUsername = async (newUsername: string) => {
 		if (!userId || !newUsername.trim()) return false;
 		try {
-			const response = await fetchWithAuth(`api/users/${userId}/alias`, {
+			const response = await fetchWithAuth(`api/user/${userId}/alias`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ alias: newUsername })
@@ -768,7 +769,7 @@ export function afterRender(): void {
 		}
 
 		try {
-			const response = await fetchWithAuth(`api/users/${userId}/bio`, {
+			const response = await fetchWithAuth(`api/user/${userId}/bio`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ bio: trimmedBio })
@@ -798,7 +799,7 @@ export function afterRender(): void {
 		if (!userId || !newEmail.trim()) return false;
 
 		try {
-			const response = await fetchWithAuth(`api/users/${userId}/email`, {
+			const response = await fetchWithAuth(`api/user/${userId}/email`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ email: newEmail })
@@ -825,7 +826,7 @@ export function afterRender(): void {
 		if (!userId) return;
 
 		try {
-			const response = await fetchWithAuth(`api/users/${userId}/theme`, {
+			const response = await fetchWithAuth(`api/user/${userId}/theme`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ theme: newTheme })
@@ -1020,7 +1021,7 @@ export function afterRender(): void {
 		if (!userId) return;
 
 		try {
-			const response = await fetchWithAuth(`api/users/${userId}/status`, {
+			const response = await fetchWithAuth(`api/user/${userId}/status`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ status: newStatus })
@@ -1133,11 +1134,9 @@ export function afterRender(): void {
 			return;
 		}
 
-		console.log("newpass: , confirmpass:", newPass, confirmPass);
-
 		try {
 			
-			const response = await fetchWithAuth(`api/users/${userId}/password`, {
+			const response = await fetchWithAuth(`api/user/${userId}/password`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ oldPass, newPass, confirmPass })
@@ -1150,13 +1149,14 @@ export function afterRender(): void {
 				closePwdModal();
 			} else {
 				if (pwdError) {
+					console.log("pwdError");
 					// on recuperer l'erreur du backe
 					pwdError.innerText = result.error?.message || "Error updating password";
 					pwdError.classList.remove('hidden');
 				}
 			}
 		} catch (error) {
-			console.error(error);
+			console.error("Catched error:", error);
 			if (pwdError) {
 				pwdError.innerText = "Network error.";
 				pwdError.classList.remove('hidden');
@@ -1242,7 +1242,7 @@ export function afterRender(): void {
 			console.log("avatar charge");
 			
 			// envoit de l'url au backend
-			const response = await fetchWithAuth(`api/users/${userId}/avatar`, {
+			const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ avatar: selectedImageSrc })

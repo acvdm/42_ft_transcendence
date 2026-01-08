@@ -2,9 +2,11 @@ import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import { fetchWithAuth } from "../pages/api";
+import { Socket } from "socket.io-client";
+import SocketService from "../services/SocketService";
 
 export class Chat {
-    private socket: any;
+    private socket: Socket | null = null;
     private messagesContainer: HTMLElement | null;
     private messageInput: HTMLInputElement | null;
     private wizzContainer: HTMLElement | null;
@@ -14,15 +16,29 @@ export class Chat {
     private shakeTimeout: number | undefined;
 
     constructor() {
-        this.socket = SocketService.getInstance().socket;
+        // this.socket = SocketService.getInstance().socket;
         this.messagesContainer = document.getElementById('chat-messages');
         this.messageInput = document.getElementById('chat-input') as HTMLInputElement;
         this.wizzContainer = document.getElementById('wizz-container');
     }
 
     public init() {
-        if (!this.socket) return;
-        
+        // 1. On récupère l'instance du service
+        const socketService = SocketService.getInstance();
+
+        // 2. On lance explicitement la connection au chat
+        socketService.connectChat();
+
+        // 3. On récupère la socket spécifique au chat
+        this.socket = socketService.getChatSocket();
+
+        // Si la connexion a échoué, on arrête
+        if (!this.socket) {
+            console.error("Chat: Impossible to retrieve chat socket (not connected).");
+            return;
+        }
+
+        // 4. On lance les listeners
         this.setupSocketEvents();
         this.setupInputListeners();
         this.setupWizz();
@@ -506,7 +522,7 @@ export class Chat {
                 if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
                     try {
                         const userId = localStorage.getItem('userId');
-                        const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
+                        const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: 'blocked' })
                         });

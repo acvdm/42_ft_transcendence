@@ -28,6 +28,7 @@
 
                     <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
                     
+                    
 
                     <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
 
@@ -98,6 +99,19 @@
                             </div>
                         </div>
                     </div>
+                    
+
+
+                    <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                            <div class="title-bar bg-yellow-500">
+                                <div class="title-bar-text text-black">Ready, steady, go!</div>
+                            </div>
+                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
+                            </div>
+                        </div>
+                    </div>
 
 
 
@@ -121,6 +135,12 @@
 
                     
                 </div>
+                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    Return to Menu
+                    </button>
             </div>
 
             <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">

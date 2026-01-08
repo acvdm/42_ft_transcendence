@@ -52,7 +52,9 @@ export function cleanup() {
 
 export function afterRender(): void {
     const socketService = SocketService.getInstance();
-    socketService.connect();
+    // socketService.connect();
+
+    socketService.connectChat();
 
     friendListInstance = new FriendList();
     
@@ -68,8 +70,10 @@ export function afterRender(): void {
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId: number | null = null;
 
-    if (socketService.socket) {
-        socketService.socket.on('friendProfileUpdated', (data: any) => {
+    const chatSocket = socketService.getChatSocket();
+
+    if (chatSocket) {
+        chatSocket.on('friendProfileUpdated', (data: any) => {
             console.log("Mise à jour reçue pour :", data.username);
 
             if (currentChatFriendId === data.userId) {
@@ -91,7 +95,7 @@ export function afterRender(): void {
             }
         });
 
-        socketService.socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
+        chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
                 // Le header du chat affiche-t-il le statut ? Oui, via 'chat-header-status'
                 // Mais friendStatusUpdate ne renvoie souvent que le username, pas l'ID.
                 // Il faut vérifier si c'est l'ami courant.

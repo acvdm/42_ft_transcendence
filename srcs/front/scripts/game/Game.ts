@@ -2,6 +2,7 @@ import Paddle from './Paddle';
 import Ball from './Ball';
 import Input from './Input';
 import SocketService from '../services/SocketService'; // Import pour le remote
+import { Socket } from "socket.io-client";
 
 class Game {
     score: { player1: number; player2: number };
@@ -19,7 +20,7 @@ class Game {
     isRemote: boolean = false;
     roomId: string | null = null;
     playerRole: 'player1' | 'player2' | null = null;
-    socket: any = null;
+    socket: Socket | null = null;
     // --------------------
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
@@ -60,7 +61,11 @@ class Game {
         this.isRemote = true;
         this.roomId = roomId;
         this.playerRole = role;
-        this.socket = SocketService.getInstance().socket;
+        // this.socket = SocketService.getInstance().socket;
+
+        const socketService = SocketService.getInstance();
+        socketService.connectGame();
+        this.socket = socketService.getGameSocket();
 
         if (!this.socket) {
             console.error("Cannot start remote game: No socket connection");

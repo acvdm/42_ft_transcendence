@@ -18,6 +18,7 @@ export class FriendList {
     }
 
     public init() {
+        SocketService.getInstance().connectChat();
         this.loadFriends();
         this.setupFriendRequests();
         this.setupNotifications(); 
@@ -45,7 +46,8 @@ export class FriendList {
     }
 
     private registerSocketUser() {
-        const socket = SocketService.getInstance().socket;
+        // const socket = SocketService.getInstance().socket;
+        const socket = SocketService.getInstance().getChatSocket();
         const userId = this.userId;
 
         if (!socket || !userId) return;
@@ -65,7 +67,7 @@ export class FriendList {
 
         try {
             // Timestamp pour éviter le cache navigateur
-            const response = await fetchWithAuth(`/api/users/${this.userId}/friends?t=${new Date().getTime()}`);
+            const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${new Date().getTime()}`);
             
             if (!response.ok) throw new Error('Failed to fetch friends');
             
@@ -117,11 +119,21 @@ export class FriendList {
 
                 contactsList.appendChild(friendItem);
                 
-                friendItem.addEventListener('click', () => {
+                friendItem.addEventListener('click', (e) => {
+                    // Si on clique sur le bouton inviter, on ne déclenche pas l'ouverture du chat ici
+                    if ((e.target as HTMLElement).closest('.invite-btn')) return;
+
                     const event = new CustomEvent('friendSelected', { 
                         detail: { friend: selectedFriend, friendshipId: friendship.id } 
                     });
                     window.dispatchEvent(event);
+                });
+
+                // AJOUT: Clic sur le bouton d'invitation
+                const inviteBtn = friendItem.querySelector('.invite-btn');
+                inviteBtn?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
                 });
             });
         } catch (error) {
@@ -130,8 +142,18 @@ export class FriendList {
         }
     }
 
+    // AJOUT: Fonction pour envoyer une invitation depuis la liste
+    private sendInviteDirectly(friendId: number, friendName: string) {
+        const socket = SocketService.getInstance().getChatSocket();
+        if (!socket || !socket.connected) 
+        {
+            alert("You must be connected to the chat to invite");
+            return ;
+        }
+    }
+
     private listenToUpdates() {
-        const socket = SocketService.getInstance().socket;
+        const socket = SocketService.getInstance().getChatSocket();
         if (!socket) return;
         
         socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
@@ -185,7 +207,7 @@ export class FriendList {
         document.body.appendChild(toast);
 
         toast.querySelector('#accept-invite')?.addEventListener('click', () => {
-            const socket = SocketService.getInstance().socket;
+            const socket = SocketService.getInstance().getChatSocket();
         
             if (!socket) {
                 alert("Erreur de connexion");
@@ -218,7 +240,7 @@ export class FriendList {
 
         // Bouton Decline
         toast.querySelector('#decline-invite')?.addEventListener('click', () => {
-            SocketService.getInstance().socket?.emit('declineGameInvite', { senderId: senderId });
+            SocketService.getInstance().getChatSocket()?.emit('declineGameInvite', { senderId: senderId });
             toast.remove();
         });
 
@@ -291,7 +313,7 @@ export class FriendList {
                 }
                 const userId = localStorage.getItem('userId');
                 try {
-                    const response = await fetchWithAuth(`/api/users/${userId}/friendships`, {
+                    const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ alias: searchValue })
@@ -303,7 +325,7 @@ export class FriendList {
                         
                         const targetId = data.data.friend_id || data.data.friend?.id;
                         if (targetId) {
-                            SocketService.getInstance().socket?.emit('sendFriendRequestNotif', { 
+                            SocketService.getInstance().getChatSocket()?.emit('sendFriendRequestNotif', { 
                                 targetId: targetId 
                             });
                         }
@@ -376,7 +398,7 @@ export class FriendList {
         if (!userId || !notifList) return;
 
         try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
             if (!response.ok) throw new Error('Failed to fetch pendings');
 
             const requests = await response.json();
@@ -445,7 +467,7 @@ export class FriendList {
         if (!itemDiv.dataset.friendshipId) return;
 
         try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: action }) 
@@ -458,7 +480,7 @@ export class FriendList {
                     if (action === 'validated') {
                         this.loadFriends(); 
                         
-                        const socket = SocketService.getInstance().socket;
+                        const socket = SocketService.getInstance().getChatSocket();
                         if (socket) {
                             socket.emit('acceptFriendRequest', { 
                                 targetId: requesterId 
