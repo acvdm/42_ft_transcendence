@@ -136,7 +136,6 @@ const clearGuestSession = () => {
 // .innerHTML remplace le HTML intérieur de cet élément par la chaîne html.
 
 
-// Remplacez votre handleLocationChange par celle-ci :
 const handleLocationChange = () => {
 	if (!appElement) return;
 
@@ -158,42 +157,44 @@ const handleLocationChange = () => {
 	}
 
 
-	// --- 2. GESTION DE LA NAVBAR ---
-	const navbar = document.getElementById('main-navbar');
-	if (navbar) {
-		// On cache la navbar si c'est un Guest
-		if (isGuest) {
-			navbar.style.display = 'none';
-		} else if (accessToken) {
-			navbar.style.display = 'flex';
-		} else {
-			navbar.style.display = 'none'; 
-		}
-	}
+	/////////////// NAVBAR 
 
-	// --- 3. SÉCURITÉ ET REDIRECTIONS ---
+    const navbar = document.getElementById('main-navbar');
+    
+    // nouvelle définition des menus
+    const userMenuHtml = `
+        <a href="/home" class="text-white hover:underline">Home</a>
+        <a href="/profile" class="text-white hover:underline">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
 
-	// CAS GUEST : Bloquer l'accès à Home et Profile
-	if (isGuest) {
-		if (path === '/home' || path === '/profile' || path === '/dashboard') {
-			window.history.pushState({}, '', '/guest');
-			path = '/guest';
-		}
-	}
-	// CAS USER CONNECTÉ (Normal) : Bloquer l'accès à Login/Register
-	else if (accessToken) {
-		if (path === '/' || path === '/login' || path === '/register' || path === '/guest') {
-			window.history.pushState({}, '', '/home');
-			path = '/home';
-		}
-	}
-	// CAS NON CONNECTÉ : Renvoyer vers l'accueil si page privée
-	else if (!publicRoutes.includes(path)) {
-		window.history.pushState({}, '', '/');
-		path = '/';
-	}
+    const guestMenuHtml = `
+        <a href="/guest" class="text-white hover:underline">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
 
-	// --- 4. AFFICHAGE DE LA PAGE ---
+    if (navbar) {
+        if (isGuest) {
+            navbar.style.display = 'flex'; // pour le guest on affiche quand meme la navbar personnalisée
+            if (!navbar.innerHTML.includes('Guest Area')) { // si ce n'est pas le guest on l'affiche pour eviter de reecrire a chaque fois
+                navbar.innerHTML = guestMenuHtml;
+            }
+        } 
+        else if (accessToken) {
+            navbar.style.display = 'flex'; // navbar pour le user
+			navbar.classList.add('justify-between');
+            if (!navbar.innerHTML.includes('Dashboard')) { // 
+                navbar.innerHTML = userMenuHtml;
+            }
+        } 
+        else {
+            navbar.style.display = 'none'; // si pas connecte2 --> on cache tout
+        }
+    }
+	
+	///////// AFFICHAGE DE LA PAGE 
+	
 	const page = routes[path] || routes['/404'];
 	appElement.innerHTML = page.render();
 

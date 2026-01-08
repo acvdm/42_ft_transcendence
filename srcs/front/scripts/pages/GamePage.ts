@@ -81,6 +81,9 @@ export function isGameRunning(): boolean {
 
 //aHelper pour recuperer le nom du n joueur
 async function getPlayerAlias(): Promise<string> {
+    const cachedAlias = sessionStorage.getItem('cachedAlias');
+    if (cachedAlias) return cachedAlias;
+
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
     const isGuest = sessionStorage.getItem('userRole') === 'guest';
     
@@ -90,6 +93,9 @@ async function getPlayerAlias(): Promise<string> {
         const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
             const userData = await response.json();
+            const alias = userData.alias || (isGuest ? "Guest" : "Player");
+            // Mettre en cache
+            sessionStorage.setItem('cachedAlias', alias);
             return userData.alias || (isGuest ? "Guest" : "Player");
         }
     } catch (err) {
@@ -384,6 +390,7 @@ export function initGamePage(mode: string): void {
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
+
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
 
     if (player1Display) {
@@ -1533,30 +1540,9 @@ export function initGamePage(mode: string): void {
         if (errorMsg) errorMsg.classList.add('hidden');
         nameInput.classList.remove('border-red-500');
     });
-
-
-    const backHomeButton = document.getElementById('back-home-button');
-    if (backHomeButton) {
-        backHomeButton.addEventListener('click', () => {
-            console.log("test");
-            if (activeGame && activeGame.isRunning) {
-                showExitConfirmationModal();
-            } else {
-                window.history.pushState(null, "", "/");
-                const navEvent = new PopStateEvent('popstate');
-                window.dispatchEvent(navEvent);
-
-                setTimeout(() => {
-                    if (window.location.pathname !== '/') {
-                        window.location.href = '/';
-                    }
-                }, 50);
-            }
-        });
-    } else {
-        console.error("Back home button not found in DOM");
-    }
 }
+
+
 
 //////////////////////////////////////////////
 //// LANCEMENT DE CONFETTIS A LA VICTOIRE ////
