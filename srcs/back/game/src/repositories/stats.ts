@@ -87,9 +87,11 @@ export async function getUserMatchHistory(
         pm.opponent as opponent_alias,
         m.game_type,
         m.finished_at,
-        m.match_id
+        m.match_id,
+        t.name as tournament_name
     FROM PLAYER_MATCH pm
     JOIN MATCHES m ON pm.match_id = m.match_id
+    LEFT JOIN TOURNAMENTS t ON m.fk_tournament_id = t.tournament_id
     WHERE pm.user_id = ?
     `;
 

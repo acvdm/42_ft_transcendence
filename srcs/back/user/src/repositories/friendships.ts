@@ -253,7 +253,7 @@ export async function reviewFriendshipRequest (
     status: string
 )
 {
-    const allowedStatuses = ['pending', 'validated', 'rejected', 'blocked'];
+    const allowedStatuses = ['pending', 'validated', 'rejected', 'blocked', 'deleted'];
     if (!allowedStatuses.includes(status))
     {
         throw new ValidationError(`Invalid status: ${status}`);
@@ -266,6 +266,20 @@ export async function reviewFriendshipRequest (
         [status, friendship_id, user_id, user_id]
     );
 }
+
+export async function markFriendshipsAsDeleted (
+    db: Database,
+    userId: number
+)
+{
+    await db.run(`
+       UPDATE FRIENDSHIPS
+       SET status = 'deleted'
+       WHERE user_id = ? OR friend_id = ?`,
+       [userId, userId]
+    );
+}
+
 
 //-------- DELETE / DELETE
 

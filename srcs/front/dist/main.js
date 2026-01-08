@@ -131,7 +131,7 @@
         isRefreshing = true;
         console.warn("Token expired (401). Atempt to refresh...");
         try {
-          const refreshRes = await fetch("/api/auth/refresh", { method: "POST" });
+          const refreshRes = await fetch("/api/auth/token", { method: "POST" });
           if (refreshRes.ok) {
             const data = await refreshRes.json();
             const newToken = data.accessToken;
@@ -4038,7 +4038,7 @@
       if (error2fa) error2fa.classList.add("hidden");
       if (!code || !tempToken) return;
       try {
-        const response = await fetch("/api/auth/2fa/verify", {
+        const response = await fetch("/api/auth/2fa/challenge", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -4617,7 +4617,12 @@
 
   // scripts/components/FriendList.ts
   var FriendList = class {
+    // cass: 
+    // init() interval est appele a chaque fois auon va sur la HomePage
+    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
+    // qui s'accumulent quand on change de page et quon revient sur la homePage
     constructor() {
+      this.notificationInterval = null;
       this.container = document.getElementById("contacts-list");
       this.userId = localStorage.getItem("userId");
     }
@@ -4630,7 +4635,15 @@
       this.listenToUpdates();
       this.setupBlockListener();
       this.registerSocketUser();
-      setInterval(() => this.checkNotifications(), 3e4);
+      if (this.notificationInterval) clearInterval(this.notificationInterval);
+      this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
+    }
+    // AJOUT
+    destroy() {
+      if (this.notificationInterval) {
+        clearInterval(this.notificationInterval);
+        this.notificationInterval = null;
+      }
     }
     registerSocketUser() {
       const socket = SocketService_default.getInstance().getChatSocket();
@@ -5792,6 +5805,7 @@
       if (this.socket) {
         this.socket.off("connect");
         this.socket.off("chatMessage");
+        this.socket.off("msg_history");
         this.socket.off("receivedWizz");
         this.socket.off("receivedAnimation");
         this.socket.off("systemMessage");
@@ -5886,18 +5900,21 @@
   };
 
   // scripts/pages/HomePage.ts
+  var friendListInstance = null;
+  var chatInstance = null;
+  var friendSelectedHandler = null;
   function render2() {
     return HomePage_default;
   }
   function afterRender() {
     const socketService = SocketService_default.getInstance();
     socketService.connectChat();
-    const friendList = new FriendList();
-    friendList.init();
+    friendListInstance = new FriendList();
+    friendListInstance.init();
     const userProfile = new UserProfile();
     userProfile.init();
-    const chat = new Chat();
-    chat.init();
+    chatInstance = new Chat();
+    chatInstance.init();
     const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
     const chatSocket = socketService.getChatSocket();
@@ -5929,7 +5946,7 @@
         }
       });
     }
-    window.addEventListener("friendSelected", (e) => {
+    friendSelectedHandler = (e) => {
       const { friend, friendshipId } = e.detail;
       currentChatFriendId = friend.id;
       console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
@@ -5955,8 +5972,11 @@
         headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
       }
       console.log("friendship homepage:", friendshipId);
-      chat.joinChannel(channelKey, friendshipId);
-    });
+      if (chatInstance) {
+        chatInstance.joinChannel(channelKey, friendshipId);
+      }
+    };
+    window.addEventListener("friendSelected", friendSelectedHandler);
     const viewProfileButton = document.getElementById("button-view-profile");
     viewProfileButton?.addEventListener("click", () => {
       document.getElementById("chat-options-dropdown")?.classList.add("hidden");
@@ -6663,7 +6683,7 @@
       if (!userId) return;
       const backendType = method === "qr" ? "APP" : "EMAIL";
       try {
-        const response = await fetchWithAuth(`api/auth/2fa/generate`, {
+        const response = await fetchWithAuth(`api/auth/2fa/secret`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ type: backendType })
@@ -6695,7 +6715,7 @@
       }
       const backendType = type === "qr" ? "APP" : "EMAIL";
       try {
-        const response = await fetchWithAuth(`api/auth/2fa/enable`, {
+        const response = await fetchWithAuth(`api/auth/2fa`, {
           method: "POST",
           // ou patch?? a tester
           headers: { "Content-Type": "application/json" },
@@ -6718,9 +6738,9 @@
     const disable2fa = async () => {
       if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) return;
       try {
-        const response = await fetchWithAuth(`api/auth/2fa/disable`, {
-          method: "POST"
-          // ou patch?? a tester
+        const response = await fetchWithAuth(`api/auth/2fa`, {
+          method: "DELETE"
+          // ou patch?? a tester --> MODIFICATION EN DELETE par Cassandre
         });
         if (response.ok) {
           update2faButton(false);
@@ -6763,7 +6783,7 @@
     downloadButton?.addEventListener("click", async () => {
       if (!userId) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/export`);
+        const response = await fetchWithAuth(`api/user/${userId}/export`);
         if (response.ok) {
           const blob = await response.blob();
           const url2 = window.URL.createObjectURL(blob);
@@ -6806,7 +6826,7 @@
       const confirmation = confirm("This action is irreversible. Are you really sure?");
       if (!confirmation) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}`, {
+        const response = await fetchWithAuth(`api/user/${userId}`, {
           method: "DELETE"
         });
         if (response.ok) {
@@ -9191,8 +9211,10 @@
             winner,
             participants: tournamentState.allPlayers,
             // Ajout des details complets pour le format JSON attendu
-            tournament_name: tournamentState.name,
-            match_list: tournamentState.matches,
+            tournamentName: tournamentState.name,
+            // modif de tournament_name en tournamentName pour le back
+            matchList: tournamentState.matches,
+            // modif de match_list en matchList pour le back
             startedAt: tournamentState.startedAt
           })
         });

@@ -41,7 +41,7 @@ export async function createMatch (
     endDate?: string | undefined
 
 ): Promise<number | undefined>
-{
+{    
     const newMatch = await db.run(`
         INSERT INTO MATCHES (
             game_type, 
@@ -52,12 +52,12 @@ export async function createMatch (
             winner_alias, 
             status, 
             round,
+            fk_tournament_id,
             started_at,
-            finished_at, 
-            fk_tournament_id
+            finished_at
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [type, p1Alias, p2Alias, p1Score, p2Score, winnerAlias, status, round, startDate, endDate, tournamentId]
+        [type, p1Alias, p2Alias, p1Score, p2Score, winnerAlias, status, round, tournamentId, startDate, endDate]
     );
 
     return newMatch?.lastID;
