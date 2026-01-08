@@ -6791,7 +6791,7 @@
     downloadButton?.addEventListener("click", async () => {
       if (!userId) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}/export`);
+        const response = await fetchWithAuth(`api/user/${userId}/export`);
         if (response.ok) {
           const blob = await response.blob();
           const url2 = window.URL.createObjectURL(blob);
@@ -6834,7 +6834,7 @@
       const confirmation = confirm("This action is irreversible. Are you really sure?");
       if (!confirmation) return;
       try {
-        const response = await fetchWithAuth(`api/users/${userId}`, {
+        const response = await fetchWithAuth(`api/user/${userId}`, {
           method: "DELETE"
         });
         if (response.ok) {

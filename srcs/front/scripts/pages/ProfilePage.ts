@@ -451,7 +451,7 @@ export function afterRender(): void {
 
 		try {
 			// je récupère les données via le backend
-			const response = await fetchWithAuth(`api/users/${userId}/export`);
+			const response = await fetchWithAuth(`api/user/${userId}/export`);
 			if (response.ok) {
 				//on convertit la réponse en blob (le fichier - big large object)
 				const blob = await response.blob();
@@ -512,7 +512,7 @@ export function afterRender(): void {
 		if (!confirmation) return;
 
 		try {
-			const response = await fetchWithAuth(`api/users/${userId}`, {
+			const response = await fetchWithAuth(`api/user/${userId}`, {
 				method: 'DELETE'
 			});
 
