@@ -8078,10 +8078,10 @@
         ctx.closePath();
       }
     }
-    reset(canvas) {
+    reset(canvas, direction = 1) {
       this.x = canvas.width / 2;
       this.y = canvas.height / 2;
-      this.velocityX = 5;
+      this.velocityX = 5 - direction;
       this.velocityY = 5;
     }
   };
@@ -8227,45 +8227,59 @@
       this.paddle2.draw(this.ctx);
       this.ball.draw(this.ctx);
     }
+    // ...
     checkCollisions() {
-      if (this.ball.velocityX < 0 && this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x && this.ball.y >= this.paddle1.y && this.ball.y <= this.paddle1.y + this.paddle1.height) {
-        let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
-        let angle = hitPos * (Math.PI / 4);
-        let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-        speed *= 1.05;
-        this.ball.velocityX = speed * Math.cos(angle);
-        this.ball.velocityY = speed * Math.sin(angle);
-        this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+      if (this.ball.velocityX < 0) {
+        if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x) {
+          if (this.ball.y + this.ball.radius >= this.paddle1.y && this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
+            let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
+            let angle = hitPos * (Math.PI / 4);
+            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed *= 1.05;
+            this.ball.velocityX = speed * Math.cos(angle);
+            this.ball.velocityY = speed * Math.sin(angle);
+            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+          }
+        }
       }
-      if (this.ball.velocityX > 0 && this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width && this.ball.y >= this.paddle2.y && this.ball.y <= this.paddle2.y + this.paddle2.height) {
-        let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
-        let angle = hitPos * (Math.PI / 4);
-        let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-        speed *= 1.05;
-        this.ball.velocityX = -speed * Math.cos(angle);
-        this.ball.velocityY = speed * Math.sin(angle);
-        this.ball.x = this.paddle2.x - this.ball.radius;
+      if (this.ball.velocityX > 0) {
+        if (this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
+          if (this.ball.y + this.ball.radius >= this.paddle2.y && this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
+            let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
+            let angle = hitPos * (Math.PI / 4);
+            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed *= 1.05;
+            this.ball.velocityX = -speed * Math.cos(angle);
+            this.ball.velocityY = speed * Math.sin(angle);
+            this.ball.x = this.paddle2.x - this.ball.radius;
+          }
+        }
       }
       if (this.ball.x < 0) {
         this.score.player2++;
         this.notifyScoreUpdate();
-        this.reset();
+        this.reset(1);
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
         this.notifyScoreUpdate();
-        this.reset();
+        this.reset(-1);
       }
+    }
+    reset(direction = 1) {
+      this.ball.reset(this.canvas, direction);
+      this.paddle1.reset(this.canvas.height);
+      this.paddle2.reset(this.canvas.height);
     }
     notifyScoreUpdate() {
       if (this.onScoreChange) {
         this.onScoreChange(this.score);
       }
     }
-    reset() {
-      this.ball.reset(this.canvas);
-      this.paddle1.reset(this.canvas.height);
-      this.paddle2.reset(this.canvas.height);
-    }
+    // reset() {
+    //     this.ball.reset(this.canvas);
+    //     this.paddle1.reset(this.canvas.height);
+    //     this.paddle2.reset(this.canvas.height);
+    // }
   };
   var Game_default = Game;
 

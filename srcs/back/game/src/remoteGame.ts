@@ -12,6 +12,7 @@ interface GameState {
     canvasWidth: number;
     canvasHeight: number;
     intervalId?: NodeJS.Timeout;
+    serveDirection: number; // 1 pour droite -1 pour gauche
 }
 
 let waitingQueue: string[] = []; // ID des sockets en attente
@@ -28,15 +29,17 @@ export function initGameState(roomId: string, p1: string, p2: string): GameState
         ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
         paddle1: { x: 30, y: 250, width: 10, height: 100 },
         paddle2: { x: 760, y: 250, width: 10, height: 100 },
-        score: { player1: 0, player2: 0 }
+        score: { player1: 0, player2: 0 },
+        serveDirection: 1
     };
 }
 
 function resetBall(game: GameState) {
     game.ball.x = game.canvasWidth / 2;
     game.ball.y = game.canvasHeight / 2;
+    game.serveDirection *= -1;
     // Vitesse aléatoire mais constante
-    const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4);
+    const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
     const speed = 7;
     const direction = Math.random() > 0.5 ? 1 : -1;
     game.ball.vx = direction * speed * Math.cos(angle);
@@ -58,31 +61,49 @@ function stopGame(roomId: string, io: Server) {
 
 export function updateGamePhysics(game: GameState, io: Server) {
     // Bouger la balle
-    game.ball.x += game.ball.vx;
-    game.ball.y += game.ball.vy;
+    let nextX = game.ball.x += game.ball.vx;
+    let nextY = game.ball.y += game.ball.vy;
 
     // Collision murs (Haut/Bas)
-    if (game.ball.y - game.ball.radius < 0 || game.ball.y + game.ball.radius > game.canvasHeight) {
+    if (nextY - game.ball.radius < 0 || nextY + game.ball.radius > game.canvasHeight) {
         game.ball.vy = -game.ball.vy;
+        nextY = game.ball.y + game.ball.vy;
     }
 
     // Collision Raquettes (Simplifiée)
     // P1
-    if (game.ball.x - game.ball.radius < game.paddle1.x + game.paddle1.width &&
-        game.ball.x + game.ball.radius > game.paddle1.x &&
-        game.ball.y > game.paddle1.y &&
-        game.ball.y < game.paddle1.y + game.paddle1.height) {
-            game.ball.vx = Math.abs(game.ball.vx); // Rebond vers la droite
-            game.ball.vx *= 1.05; // Accélération
+    if (game.ball.vx < 0) { // La balle va vers la gauche
+        // On vérifie si la balle "traverse" la face droite de la raquette entre cette frame et la prochaine
+        // ET si elle est au niveau Y de la raquette (en comptant le rayon pour les bords)
+        if (game.ball.x - game.ball.radius >= game.paddle1.x + game.paddle1.width && 
+            nextX - game.ball.radius <= game.paddle1.x + game.paddle1.width) {
+            
+            if (game.ball.y + game.ball.radius >= game.paddle1.y && 
+                game.ball.y - game.ball.radius <= game.paddle1.y + game.paddle1.height) {
+                
+                game.ball.vx = -game.ball.vx * 1.05; // Rebond + Accélération
+                // On replace la balle pile à la surface pour éviter qu'elle reste coincée
+                nextX = game.paddle1.x + game.paddle1.width + game.ball.radius;
+            }
+        }
     }
-    // P2
-    if (game.ball.x + game.ball.radius > game.paddle2.x &&
-        game.ball.x - game.ball.radius < game.paddle2.x + game.paddle2.width &&
-        game.ball.y > game.paddle2.y &&
-        game.ball.y < game.paddle2.y + game.paddle2.height) {
-            game.ball.vx = -Math.abs(game.ball.vx); // Rebond vers la gauche
-            game.ball.vx *= 1.05; // Accélération
+
+    // P2 (Droite)
+    if (game.ball.vx > 0) { // La balle va vers la droite
+        if (game.ball.x + game.ball.radius <= game.paddle2.x && 
+            nextX + game.ball.radius >= game.paddle2.x) {
+            
+            if (game.ball.y + game.ball.radius >= game.paddle2.y && 
+                game.ball.y - game.ball.radius <= game.paddle2.y + game.paddle2.height) {
+                
+                game.ball.vx = -game.ball.vx * 1.05;
+                nextX = game.paddle2.x - game.ball.radius;
+            }
+        }
     }
+
+    game.ball.x = nextX;
+    game.ball.y = nextY;
 
     // Score
     if (game.ball.x < 0) {

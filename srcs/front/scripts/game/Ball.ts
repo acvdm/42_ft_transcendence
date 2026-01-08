@@ -48,10 +48,10 @@ class Ball {
         }
     }
 
-    reset(canvas: HTMLCanvasElement) {
+    reset(canvas: HTMLCanvasElement, direction: number = 1) {
         this.x = canvas.width / 2; // Reset ball to center
         this.y = canvas.height / 2;
-        this.velocityX = 5; // Reset velocity
+        this.velocityX = 5 - direction; // Reset velocity
         this.velocityY = 5;
     }
 }
