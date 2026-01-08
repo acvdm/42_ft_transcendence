@@ -5537,15 +5537,51 @@
     addSystemMessage(message) {
       this.addMessage(`[b]${message}[/b]`, "System");
     }
+    //faustine
     addMessage(message, author) {
       if (!this.messagesContainer) return;
-      const msgElement = document.createElement("p");
-      msgElement.className = "mb-1";
-      const contentEmoticons = parseMessage(message);
-      msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+      const msgElement = document.createElement("div");
+      msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+      const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
+      const match = message.match(inviteRegex);
+      if (match) {
+        const friendshipId = match[1];
+        const isMe = author === localStorage.getItem("username");
+        msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
+        msgElement.innerHTML = `
+                <div class="flex flex-col gap-2">
+                    <strong>${author}</strong> veut jouer \xE0 Pong ! \u{1F3D3}<br>
+                    <button 
+                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
+                        onclick="
+                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
+                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                        "
+                    >
+                        ${isMe ? "Join my waitroom" : "Accept the match"}
+                    </button>
+                </div>
+            `;
+      } else {
+        msgElement.classList.add("bg-white");
+        const contentEmoticons = parseMessage(message);
+        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+      }
       this.messagesContainer.appendChild(msgElement);
       this.scrollToBottom();
     }
+    // private addMessage(message: string, author: string) {
+    //     if (!this.messagesContainer) return;
+    //     const msgElement = document.createElement('p');
+    //     msgElement.className = "mb-1";
+    //     // on securise le texte et on parse les emoticones
+    //     const contentEmoticons = parseMessage(message);
+    //     msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+    //     this.messagesContainer.appendChild(msgElement);
+    //     // rajouter un scroll automatique vers le bas
+    //     this.scrollToBottom();
+    // }
     addCustomContent(htmlContent) {
       if (!this.messagesContainer) return;
       const msgElement = document.createElement("div");
@@ -5726,37 +5762,26 @@
         });
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
-          if (this.currentFriendId) {
+          if (this.currentFriendId && this.currentFriendshipId) {
             const myName = localStorage.getItem("username");
             const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
-            if (this.gameSocket && this.gameSocket.connected) {
-              this.gameSocket.emit("sendGameInvite", {
-                targetId: this.currentFriendId,
-                senderName: myName
+            if (this.chatSocket && this.chatSocket.connected) {
+              console.log("chatSocket connected");
+              const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
+              this.chatSocket.emit("chatMessage", {
+                sender_id,
+                sender_alias: myName,
+                channel_key: this.currentChannel,
+                msg_content: inviteCode
+                // ici au lieu du message on "envois" le code d'invitation
               });
-              if (this.chatSocket && this.chatSocket.connected) {
-                console.log("chatSocket connected");
-                this.chatSocket.emit("chatMessage", {
-                  sender_id,
-                  sender_alias: myName,
-                  channel_key: this.currentChannel,
-                  msg_content: "\u{1F3AE}  Hey, want to play a game? Check your notifications"
-                });
-              } else {
-                console.log("chatSocket disconnected");
-              }
             } else {
-              console.error("Game socket not connected", this.gameSocket);
-              this.addSystemMessage("Error: Game server not reachable.");
+              console.log("chatSocket disconnected");
             }
           } else {
-            this.addSystemMessage("Error: Can't invite in this channel.");
+            console.error("Game socket not connected", this.gameSocket);
+            this.addSystemMessage("Error: Game server not reachable.");
           }
-          chatOptionsDropdown.classList.add("hidden");
-        });
-        document.getElementById("button-view-profile")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          console.log("Profile clicked");
           chatOptionsDropdown.classList.add("hidden");
         });
         document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
@@ -8889,6 +8914,8 @@
         sessionStorage.removeItem("pendingMatch");
         startGameFromData(data);
       }
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      console.log("privategame:", sessionStorage.getItem("privateGameId"));
       if (btn) {
         const newBtn = btn.cloneNode(true);
         btn.parentNode?.replaceChild(newBtn, btn);
@@ -8897,16 +8924,31 @@
             alert("Error: lost connexion to game server");
             return;
           }
-          if (status) status.innerText = "Recherche d'un adversaire...";
-          newBtn.disabled = true;
-          newBtn.innerText = "WAITING...";
           const myAlias = await getPlayerAlias();
-          gameSocket.off("matchFound");
-          gameSocket.on("matchFound", (data) => {
-            console.log(data);
-            startGameFromData(data);
-          });
-          gameSocket.emit("joinQueue");
+          newBtn.disabled = true;
+          if (privateRoomId) {
+            if (status) status.innerText = "Waiting for your friend in private room...";
+            newBtn.innerText = "WAITING FOR FRIEND...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              console.log("Private Match Started!", data);
+              sessionStorage.removeItem("privateGameId");
+              startGameFromData(data);
+            });
+            const selectedBall = ballInput ? ballInput.value : "classic";
+            gameSocket.emit("joinPrivateGame", {
+              roomId: privateRoomId,
+              skin: selectedBall
+            });
+          } else {
+            if (status) status.innerText = "Recherche d'un adversaire...";
+            newBtn.innerText = "WAITING...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              startGameFromData(data);
+            });
+            gameSocket.emit("joinQueue");
+          }
         });
       }
     }

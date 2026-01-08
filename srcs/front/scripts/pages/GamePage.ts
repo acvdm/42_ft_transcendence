@@ -233,6 +233,7 @@ function confirmExit() {
 
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
+    
     if (gameChat) {
         gameChat.destroy();
         gameChat = null;
@@ -725,38 +726,60 @@ export function initGamePage(mode: string): void {
             sessionStorage.removeItem('pendingMatch'); // On nettoie
             startGameFromData(data); // Lancement auto !
         }
+//faustine
+        const privateRoomId = sessionStorage.getItem('privateGameId'); // on recuperer notre id
+        console.log("privategame:", sessionStorage.getItem('privateGameId'));
 
-        // Gestion du bouton "JOUER"
+        // gestion du bouton de jeu
         if (btn) {
-            // On clone pour éviter les event listeners multiples si on revient sur la page
+
+            // on va cloner le bouton pour supprimer les anciens listeners et commencer avec un truc propre
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
+            // clic du bouton
             newBtn.addEventListener('click', async () => {
-
                 if (!gameSocket) {
                     alert("Error: lost connexion to game server");
-                    return ;
+                    return;
                 }
 
-                if (status) status.innerText = "Recherche d'un adversaire...";
-                newBtn.disabled = true;
-                newBtn.innerText = "WAITING...";
-
                 const myAlias = await getPlayerAlias();
+                newBtn.disabled = true;
 
-                // // Ecoute de l'événement de début de match
-                // socketService.socket.on('matchFound', (data: any) => {
-                //     console.log("Match Found!", data);
-                gameSocket.off('matchFound');
+                // on detecte que c'est une partie privee car j'ai le proviate room id 
+                if (privateRoomId) {
+                    if (status) status.innerText = "Waiting for your friend in private room...";
+                    newBtn.innerText = "WAITING FOR FRIEND...";
+                    
+                    // Écoute du début de match
+                    gameSocket.off('matchFound');
+                    gameSocket.on('matchFound', (data: any) => {
+                        console.log("Private Match Started!", data);
+                        // on nettoie l'id pour ne pas rester bloqué en mode privé au prochain passage dans la room
+                        sessionStorage.removeItem('privateGameId'); 
+                        startGameFromData(data);
+                    });
 
-                gameSocket.on('matchFound', (data: any) => {
-                    console.log(data);
-                    startGameFromData(data);
-                });
+                    // Envoi de la demande pour savoir quelle room et quelle balle
+                    const selectedBall = ballInput ? ballInput.value : 'classic';
+                    gameSocket.emit('joinPrivateGame', { 
+                        roomId: privateRoomId,
+                        skin: selectedBall 
+                    });
+                } 
+                // sinon c;est du public et on reste en remote classique
+                else {
+                    if (status) status.innerText = "Recherche d'un adversaire...";
+                    newBtn.innerText = "WAITING...";
 
-                // Envoi demande au server sur le game socket
-                gameSocket.emit('joinQueue');
+                    gameSocket.off('matchFound');
+                    gameSocket.on('matchFound', (data: any) => {
+                        startGameFromData(data);
+                    });
+
+                    gameSocket.emit('joinQueue');
+                }
             });
         }
     }

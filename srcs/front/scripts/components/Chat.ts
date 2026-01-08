@@ -242,19 +242,64 @@ export class Chat {
     }
 
 
+//faustine
     private addMessage(message: string, author: string) {
         if (!this.messagesContainer) return;
-        const msgElement = document.createElement('p');
-        msgElement.className = "mb-1";
-        
-        // on securise le texte et on parse les emoticones
-        const contentEmoticons = parseMessage(message);
-        
-        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+        const msgElement = document.createElement('div'); // changement par div pour mettre un bouton
+        msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+
+        ///// DÉTECTION DE L'INVITATION
+        const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
+        const match = message.match(inviteRegex);
+
+        if (match) {
+            // invitation
+            const friendshipId = match[1];
+            const isMe = author === localStorage.getItem('username');
+            
+            // style different selon qui invite
+            msgElement.classList.add(isMe ? 'bg-blue-100' : 'bg-green-100');
+
+            //on store le private id dans session storage pour qu'il soit pas garde quand on rejoins une autre roo,
+            msgElement.innerHTML = `
+                <div class="flex flex-col gap-2">
+                    <strong>${author}</strong> veut jouer à Pong ! 🏓<br>
+                    <button 
+                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
+                        onclick="
+                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
+                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                        "
+                    >
+                        ${isMe ? 'Join my waitroom' : 'Accept the match'}
+                    </button>
+                </div>
+            `;
+        } else {
+            // pour envoyer un message normal
+            msgElement.classList.add('bg-white'); // ou transparent a tester
+            const contentEmoticons = parseMessage(message);
+            msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+        }
+
         this.messagesContainer.appendChild(msgElement);
-        // rajouter un scroll automatique vers le bas
         this.scrollToBottom();
     }
+
+    // private addMessage(message: string, author: string) {
+    //     if (!this.messagesContainer) return;
+    //     const msgElement = document.createElement('p');
+    //     msgElement.className = "mb-1";
+        
+    //     // on securise le texte et on parse les emoticones
+    //     const contentEmoticons = parseMessage(message);
+        
+    //     msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+    //     this.messagesContainer.appendChild(msgElement);
+    //     // rajouter un scroll automatique vers le bas
+    //     this.scrollToBottom();
+    // }
 
     private addCustomContent(htmlContent: string) {
         if (!this.messagesContainer) return;
@@ -480,58 +525,37 @@ export class Chat {
                 }
             });
             
+            //faustine
             // GESTION DU BOUTON D'INVITATION
             document.getElementById('button-invite-game')?.addEventListener('click', (e) => {
                 e.stopPropagation();
 
-                if (this.currentFriendId) 
+                if (this.currentFriendId && this.currentFriendshipId) // on check aussi que le friendship id est pas nul
                 {
                     const myName = localStorage.getItem('username');
                     const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
-                    
-                    // Utilisation de la game socket ici
-                    if (this.gameSocket && this.gameSocket.connected) 
-                    {
-                             this.gameSocket.emit('sendGameInvite', {
-                                targetId: this.currentFriendId,
-                                senderName: myName
-                            });
+            
 
-                            // const sysMsg = `🎮 ${myName} wants to play a game`;
-                            // this.sendSystemNotification(sysMsg);
-
-                            // this.addSystemMessage("Game invitation sent!");
-
-                        if (this.chatSocket && this.chatSocket.connected) {
-                            console.log("chatSocket connected");
-                            this.chatSocket.emit("chatMessage", {
-                                sender_id: sender_id,
-                                sender_alias: myName,
-                                channel_key: this.currentChannel,
-                                msg_content: "🎮  Hey, want to play a game? Check your notifications"
-                            });
-                        }
-                        else
-                        {
-                            console.log("chatSocket disconnected");
-                        }
+                    if (this.chatSocket && this.chatSocket.connected) {
+                        console.log("chatSocket connected");
+                        const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`; // l'id de la room correspond au friendship id
+                        this.chatSocket.emit("chatMessage", {
+                            sender_id: sender_id,
+                            sender_alias: myName,
+                            channel_key: this.currentChannel,
+                            msg_content: inviteCode // ici au lieu du message on "envois" le code d'invitation
+                        });
+                    } else {
+                        console.log("chatSocket disconnected");
                     }
-                    else 
-                    {
-                        console.error("Game socket not connected", this.gameSocket)
-                        this.addSystemMessage("Error: Game server not reachable.");
-                    }
+                } else {
+                    console.error("Game socket not connected", this.gameSocket)
+                    this.addSystemMessage("Error: Game server not reachable.");
                 }
-                else {
-                    this.addSystemMessage("Error: Can't invite in this channel.");
-                }
-                
-                chatOptionsDropdown.classList.add('hidden');
-            });
 
-            document.getElementById('button-view-profile')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log("Profile clicked");
+            // document.getElementById('button-view-profile')?.addEventListener('click', (e) => {
+            //     e.stopPropagation();
+            //     console.log("Profile clicked");
                 chatOptionsDropdown.classList.add('hidden');
             });
 

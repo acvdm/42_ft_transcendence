@@ -1,5 +1,7 @@
 import { Socket, Server } from 'socket.io';
 
+const privateWaitingRooms = new Map<string, string>(); // faustine
+
 // --- STRUCTURES JEU REMOTE ---
 interface GameState {
     roomId: string;
@@ -275,6 +277,54 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
             stopGame(data.roomId, io);
         }
     });
+
+    //faustine
+    socket.on('joinPrivateGame', (data: { roomId: string, skin?: string }) => {
+        const { roomId } = data;
+        const mySocketId = socket.id;
+
+        console.log(`Player ${mySocketId} joining private room ${roomId}`);
+
+        // est-ce que mon ami est deja en train de m'attendre
+        if (privateWaitingRooms.has(roomId)) {
+            const opponentSocketId = privateWaitingRooms.get(roomId);
+
+            // il ne faut pas que ca soit moi (cas potentiel de double clic)
+            if (opponentSocketId && opponentSocketId !== mySocketId) {
+                // lancement du match et nettoyage de la waitroom
+                privateWaitingRooms.delete(roomId);
+
+                // creation de k;udee de la partie
+                const gameId = `private_${Date.now()}_${roomId}`;
+                const gameState = initGameState(gameId, opponentSocketId, mySocketId);
+                activeGames.set(gameId, gameState);
+
+                const sock1 = io.sockets.sockets.get(opponentSocketId);
+                const sock2 = io.sockets.sockets.get(mySocketId);
+
+                if (sock1 && sock2) {
+                    sock1.join(gameId);
+                    sock2.join(gameId);
+
+                    const p1UserId = (sock1 as any).user?.sub;
+                    const p2UserId = (sock2 as any).user?.sub;
+
+                    // lancement du jeu pour les deux 
+                    sock1.emit('matchFound', { roomId: gameId, role: 'player1', opponent: p2UserId });
+                    sock2.emit('matchFound', { roomId: gameId, role: 'player2', opponent: p1UserId });
+
+                    console.log(`Private Match started: ${gameId}`);
+                    gameState.intervalId = setInterval(() => {
+                        updateGamePhysics(gameState, io);
+                    }, GAMESPEED);
+                }
+            }
+        } else {
+            // sinon je dois attendre
+            privateWaitingRooms.set(roomId, mySocketId);
+            console.log(`Player ${mySocketId} is waiting in private room ${roomId}`);
+        }
+    });
     
     // 4. Gestion de la Déconnexion (Nettoyage Jeu)
     // Note: On ne gère pas le userSockets.delete ici car il est souvent géré dans le index.ts principal
@@ -283,6 +333,14 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
         // Retirer de la queue
         waitingQueue = waitingQueue.filter(id => id !== socket.id);
         
+        // on nettoie la private room
+        for (const [roomId, socketId] of privateWaitingRooms.entries()) {
+            if (socketId === socket.id) {
+                privateWaitingRooms.delete(roomId);
+                console.log(`Removed private room ${roomId} because waiting player disconnected`);
+            }
+        }
+
         // Arrêter les parties en cours
         for (const [roomId, game] of activeGames.entries()) {
             if (game.player1Id === socket.id || game.player2Id === socket.id) {
