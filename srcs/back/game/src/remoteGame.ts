@@ -162,6 +162,7 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 
     socket.on('acceptGameInvite', (data: { senderId: string }) => {
         console.log("accept game invite");
+        waitingQueue = waitingQueue.filter(id => id !== socket.id); // nettoyage pour eviter race condition
         const senderIdNum = Number(data.senderId);
         const senderSocketId = userSockets.get(senderIdNum);
         const acceptorSocketId = socket.id;
@@ -201,6 +202,12 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
     socket.on('joinQueue', () => {
         if (waitingQueue.includes(socket.id)) return;
 
+        //netoayge si on rejoint la auque on quitte les salles privees en attente
+        for (const [roomId, socketId] of privateWaitingRooms.entries()) {
+            if (socketId === socket.id) {
+                privateWaitingRooms.delete(roomId);
+            }
+        }
         console.log(`Player ${socket.id} joined Queue`);
         waitingQueue.push(socket.id);
 
@@ -283,6 +290,8 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
         const { roomId } = data;
         const mySocketId = socket.id;
 
+        // nettoyage
+        waitingQueue = waitingQueue.filter(id => id !== mySocketId);
         console.log(`Player ${mySocketId} joining private room ${roomId}`);
 
         // est-ce que mon ami est deja en train de m'attendre
@@ -302,6 +311,7 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
                 const sock1 = io.sockets.sockets.get(opponentSocketId);
                 const sock2 = io.sockets.sockets.get(mySocketId);
 
+                // on verifie que les deux sont tjrs connectes
                 if (sock1 && sock2) {
                     sock1.join(gameId);
                     sock2.join(gameId);
@@ -317,6 +327,9 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
                     gameState.intervalId = setInterval(() => {
                         updateGamePhysics(gameState, io);
                     }, GAMESPEED);
+                } else {
+                    if (!sock1) console.log("Opponent socket not found for private game");
+                    if (!sock2) console.log("My socket not found (weird)");
                 }
             }
         } else {
