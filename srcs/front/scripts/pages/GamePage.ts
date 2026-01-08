@@ -1527,12 +1527,34 @@ export function initGamePage(mode: string): void {
             console.error(e); 
         }
     }
-
+    
     // resrt erreur ecritur e
     nameInput.addEventListener('input', () => {
         if (errorMsg) errorMsg.classList.add('hidden');
         nameInput.classList.remove('border-red-500');
     });
+
+
+    const backHomeButton = document.getElementById('back-home-button');
+    if (backHomeButton) {
+        backHomeButton.addEventListener('click', () => {
+            if (activeGame && activeGame.isRunning) {
+                showExitConfirmationModal();
+            } else {
+                window.history.pushState(null, "", "/");
+                const navEvent = new PopStateEvent('popstate');
+                window.dispatchEvent(navEvent);
+
+                setTimeout(() => {
+                    if (window.location.pathname !== '/') {
+                        window.location.href = '/';
+                    }
+                }, 50);
+            }
+        });
+    } else {
+        console.error("Back home button not found in DOM");
+    }
 }
 
 //////////////////////////////////////////////
