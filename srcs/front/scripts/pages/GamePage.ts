@@ -1538,6 +1538,7 @@ export function initGamePage(mode: string): void {
     const backHomeButton = document.getElementById('back-home-button');
     if (backHomeButton) {
         backHomeButton.addEventListener('click', () => {
+            console.log("test");
             if (activeGame && activeGame.isRunning) {
                 showExitConfirmationModal();
             } else {

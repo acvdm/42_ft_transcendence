@@ -501,11 +501,6 @@ export class Chat {
                 console.log("Profile clicked");
                 chatOptionsDropdown.classList.add('hidden');
             });
-            document.getElementById('button-report-user')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log("Report clicked");
-                chatOptionsDropdown.classList.add('hidden');
-            });
 
             ////////////// ICI POUR LA LOGIQUE DE BLOCK/BLOCAGE D'UN AMI
             document.getElementById('button-block-user')?.addEventListener('click', async (e) => {
