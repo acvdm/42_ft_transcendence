@@ -9615,9 +9615,19 @@
       window.dispatchEvent(popStateEvent);
     }
   };
+  var clearGuestSession = () => {
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("userRole");
+    sessionStorage.removeItem("isGuest");
+  };
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
+    if (path === "/" && sessionStorage.getItem("isGuest") === "true") {
+      clearGuestSession();
+    }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
     if (isGameRunning() && path !== "game") cleanup();

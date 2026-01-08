@@ -111,6 +111,17 @@ const handleLogout = async () => {
 }
 
 
+// on clean la guest session pour ne pas avoir de persistance
+const clearGuestSession = () => {
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('isGuest');
+};
+
+
+
 /*
 ** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
 ** Une fois trouvée, il injecte le contenu dans la div app
@@ -131,6 +142,9 @@ const handleLocationChange = () => {
 
 	let path = window.location.pathname;
 	
+	if (path === '/' && sessionStorage.getItem('isGuest') === 'true') {
+        clearGuestSession();
+    }
 	// Récupération des tokens (User normal OU Guest)
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
