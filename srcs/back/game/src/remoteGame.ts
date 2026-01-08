@@ -42,7 +42,7 @@ function resetBall(game: GameState) {
     const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
     const speed = 7;
     const direction = Math.random() > 0.5 ? 1 : -1;
-    game.ball.vx = direction * speed * Math.cos(angle);
+    game.ball.vx = game.serveDirection * speed * Math.cos(angle);
     game.ball.vy = speed * Math.sin(angle);
 }
 

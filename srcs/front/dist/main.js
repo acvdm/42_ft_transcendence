@@ -8081,7 +8081,7 @@
     reset(canvas, direction = 1) {
       this.x = canvas.width / 2;
       this.y = canvas.height / 2;
-      this.velocityX = 5 - direction;
+      this.velocityX = 5 * direction;
       this.velocityY = 5;
     }
   };
