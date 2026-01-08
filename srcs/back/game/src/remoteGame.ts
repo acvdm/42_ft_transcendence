@@ -130,21 +130,36 @@ export function updateGamePhysics(game: GameState, io: Server) {
 
 
 export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets: Map<number, string>) {
-    
+    console.debug("registerRemoteGameEvent")
+
+    socket.on('registerGameSocket', () => {
+        console.log(`[SERVER] Register game socket pour user ${socket.user.sub} -> ${socket.id}`);
+        userSockets.set(socket.user.sub, socket.id);
+    })
     // 1. Gestion des Invitations
     socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
+        console.debug(`[SERVER] sendGameInvite reçue de ${socket.id}. Cible: ${data.targetId}`);
         const targetIdNum = Number(data.targetId);
+
+        console.debug(`[SERVER] UserSockets Map keys:`, [...userSockets.keys()]);
+        console.log(`🔍 [SERVER] Recherche socket pour User ID: ${targetIdNum} (Type: ${typeof targetIdNum})`);
+        
+
         const targetSocketId = userSockets.get(targetIdNum);
         
         if (targetSocketId) {
+            console.log(`✅ [SERVER] Envoi à socket ID: ${targetSocketId} pour User ${targetIdNum}`); // <--- REGARDE CET ID
             io.to(targetSocketId).emit('receiveGameInvite', {
                 senderId: socket.user.sub,
                 senderName: data.senderName
             });
-        }
+        } else {
+        console.error(`❌ [SERVER] Cible introuvable dans userSockets.`);
+    }
     });
 
     socket.on('acceptGameInvite', (data: { senderId: string }) => {
+        console.log("accept game invite");
         const senderIdNum = Number(data.senderId);
         const senderSocketId = userSockets.get(senderIdNum);
         const acceptorSocketId = socket.id;

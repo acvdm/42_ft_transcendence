@@ -4628,6 +4628,7 @@
     }
     init() {
       SocketService_default.getInstance().connectChat();
+      SocketService_default.getInstance().connectGame();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -4646,15 +4647,11 @@
       }
     }
     registerSocketUser() {
-      const socket = SocketService_default.getInstance().getChatSocket();
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
       const userId = this.userId;
-      if (!socket || !userId) return;
-      if (socket.connected) {
-        socket.emit("registerUser", userId);
+      if (gameSocket && gameSocket.connected) {
+        gameSocket.emit("registerGameSocket", userId);
       }
-      socket.on("connect", () => {
-        socket.emit("registerUser", userId);
-      });
     }
     async loadFriends() {
       const contactsList = this.container;
@@ -4716,40 +4713,69 @@
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
     sendInviteDirectly(friendId, friendName) {
-      const socket = SocketService_default.getInstance().getChatSocket();
-      if (!socket || !socket.connected) {
-        alert("You must be connected to the chat to invite");
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const myName = localStorage.getItem("username");
+      if (!gameSocket || !gameSocket.connected) {
+        alert("Game is disconnected, please refresh");
+        SocketService_default.getInstance().connectGame();
         return;
       }
+      console.debug(`Sending game invite to ${friendName} via GameSocket`);
+      gameSocket.emit("sendGameInvite", {
+        targetId: friendId,
+        senderName: myName
+      });
+      alert(`Invitation sent to ${friendName}`);
     }
     listenToUpdates() {
-      const socket = SocketService_default.getInstance().getChatSocket();
-      if (!socket) return;
-      socket.on("friendStatusUpdate", (data) => {
+      console.debug("listen to updates");
+      const socketService = SocketService_default.getInstance();
+      const chatSocket = socketService.getChatSocket();
+      const gameSocket = socketService.getGameSocket();
+      if (!chatSocket) return;
+      chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
       });
-      socket.on("userConnected", (data) => {
+      chatSocket.on("userConnected", (data) => {
         const currentUsername = localStorage.getItem("username");
         if (data.username !== currentUsername) {
           this.updateFriendUI(data.username, data.status);
         }
       });
-      socket.on("receiveFriendRequestNotif", () => {
+      chatSocket.on("receiveFriendRequestNotif", () => {
         console.log("New friend request received!");
         this.checkNotifications();
       });
-      socket.on("friendRequestAccepted", () => {
+      chatSocket.on("friendRequestAccepted", () => {
         console.log("Friend request accepted by other user!");
         this.loadFriends();
       });
-      socket.on("receiveGameInvite", (data) => {
-        console.log("Game invite received form", data.senderName);
-        this.showGameInviteNotification(data.senderId, data.senderName);
-      });
+      if (!gameSocket) {
+        console.error("GameSocket cannot be found");
+        return;
+      }
+      const attachGameListeners = () => {
+        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
+        gameSocket.emit("registerGameSocket");
+        gameSocket.off("receiveGameInvite");
+        gameSocket.on("receiveGameInvite", (data) => {
+          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+          this.showGameInviteNotification(data.senderId, data.senderName);
+        });
+      };
+      if (gameSocket.connected) {
+        attachGameListeners();
+      } else {
+        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
+        gameSocket.once("connect", () => {
+          attachGameListeners();
+        });
+      }
     }
     ///// pour la notification de l'invitation
     showGameInviteNotification(senderId, senderName) {
+      console.log("showGameInvite");
       const notifIcon = document.getElementById("notification-icon");
       if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
       const toast = document.createElement("div");
@@ -4764,25 +4790,28 @@
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        const socket = SocketService_default.getInstance().getChatSocket();
-        if (!socket) {
-          alert("Erreur de connexion");
+        const gameSocket = SocketService_default.getInstance().getGameSocket();
+        if (!gameSocket || !gameSocket.connected) {
+          alert("Error: connexion to server lost");
           toast.remove();
           return;
         }
         console.log("Accepting game invite from", senderName);
-        socket.once("matchFound", (data) => {
+        gameSocket.once("matchFound", (data) => {
           console.log("\u2705 Match found from invitation:", data);
           sessionStorage.setItem("pendingMatch", JSON.stringify(data));
           window.history.pushState({ gameMode: "remote" }, "", "/game");
           const event = new PopStateEvent("popstate");
           window.dispatchEvent(event);
         });
-        socket.emit("acceptGameInvite", { senderId });
+        gameSocket.emit("acceptGameInvite", { senderId });
         toast.remove();
       });
       toast.querySelector("#decline-invite")?.addEventListener("click", () => {
-        SocketService_default.getInstance().getChatSocket()?.emit("declineGameInvite", { senderId });
+        const gameSocket = SocketService_default.getInstance().getGameSocket()?.emit("declineGameInvite", { senderId });
+        if (gameSocket && gameSocket.connected) {
+          gameSocket.emit("declineGameInivite", { senderId });
+        }
         toast.remove();
       });
       setTimeout(() => {
@@ -5343,7 +5372,8 @@
   // scripts/components/Chat.ts
   var Chat = class {
     constructor() {
-      this.socket = null;
+      this.chatSocket = null;
+      this.gameSocket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
@@ -5354,8 +5384,12 @@
     init() {
       const socketService = SocketService_default.getInstance();
       socketService.connectChat();
-      this.socket = socketService.getChatSocket();
-      if (!this.socket) {
+      socketService.connectGame();
+      this.chatSocket = socketService.getChatSocket();
+      this.gameSocket = socketService.getGameSocket();
+      if (!this.gameSocket)
+        console.log("gamesocket n'existe pas");
+      if (!this.chatSocket) {
         console.error("Chat: Impossible to retrieve chat socket (not connected).");
         return;
       }
@@ -5368,8 +5402,9 @@
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
       this.currentFriendId = friendId || null;
-      if (this.socket)
-        this.socket.emit("joinChannel", channelKey);
+      console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
+      if (this.chatSocket)
+        this.chatSocket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
       }
@@ -5378,13 +5413,13 @@
     // ----      MISE EN ÉCOUTE DES SOCKETS           ----
     // ---------------------------------------------------
     setupSocketEvents() {
-      this.socket.on("connect", () => {
+      this.chatSocket.on("connect", () => {
         this.addMessage("You can now chat with your friend!", "System");
       });
-      this.socket.on("chatMessage", (data) => {
+      this.chatSocket.on("chatMessage", (data) => {
         this.addMessage(data.msg_content, data.sender_alias);
       });
-      this.socket.on("msg_history", (data) => {
+      this.chatSocket.on("msg_history", (data) => {
         if (this.messagesContainer) {
           this.messagesContainer.innerHTML = "";
           if (data.msg_history && data.msg_history.length > 0) {
@@ -5396,10 +5431,10 @@
           }
         }
       });
-      this.socket.on("systemMessage", (data) => {
+      this.chatSocket.on("systemMessage", (data) => {
         this.addSystemMessage(data.content);
       });
-      this.socket.on("receivedWizz", (data) => {
+      this.chatSocket.on("receivedWizz", (data) => {
         if (data.channel_key && data.channel_key !== this.currentChannel) return;
         const currentUser = localStorage.getItem("username");
         this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
@@ -5407,7 +5442,7 @@
           this.shakeElement(this.wizzContainer, 3e3);
         }
       });
-      this.socket.on("receivedAnimation", (data) => {
+      this.chatSocket.on("receivedAnimation", (data) => {
         const { animationKey, author } = data;
         const imgUrl = animations[animationKey];
         if (imgUrl) {
@@ -5422,7 +5457,7 @@
           this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
         }
       });
-      this.socket.on("disconnected", () => {
+      this.chatSocket.on("disconnected", () => {
         this.addMessage("Disconnected from chat server!", "System");
       });
     }
@@ -5436,7 +5471,7 @@
           const msg_content = this.messageInput.value;
           const sender_alias = localStorage.getItem("username");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
-          this.socket.emit("chatMessage", {
+          this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
             channel_key: this.currentChannel,
@@ -5454,16 +5489,16 @@
       if (wizzButton) {
         wizzButton.addEventListener("click", () => {
           const currentUsername = localStorage.getItem("username");
-          this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
           this.shakeElement(this.wizzContainer, 500);
         });
       }
     }
     // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
     emitWizzOnly() {
-      if (!this.socket) return;
+      if (!this.chatSocket) return;
       const currentUsername = localStorage.getItem("username");
-      this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
     // délcencher la secousse 
     shakeElement(element, duration = 500) {
@@ -5490,8 +5525,8 @@
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
     sendSystemNotification(message) {
-      if (this.socket) {
-        this.socket.emit("sendSystemMessage", {
+      if (this.chatSocket) {
+        this.chatSocket.emit("sendSystemMessage", {
           channel_key: this.currentChannel,
           content: message
         });
@@ -5577,17 +5612,14 @@
           const animationItem = document.createElement("div");
           animationItem.className = "cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
           animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
-          console.log("Envoi d'un message");
           animationItem.addEventListener("click", (event) => {
             event.stopPropagation();
             const currentUsername = localStorage.getItem("username");
-            console.log("Envoi d'un message");
-            this.socket.emit("sendAnimation", {
+            this.chatSocket.emit("sendAnimation", {
               animationKey: key,
               author: currentUsername,
               channel_key: this.currentChannel
             });
-            console.log("Envoi d'un message");
             animationDropdown.classList.add("hidden");
           });
           animationGrid.appendChild(animationItem);
@@ -5696,11 +5728,27 @@
           e.stopPropagation();
           if (this.currentFriendId) {
             const myName = localStorage.getItem("username");
-            this.socket.emit("sendGameInvite", {
-              targetId: this.currentFriendId,
-              senderName: myName
-            });
-            this.addSystemMessage("Game invitation sent!");
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+            if (this.gameSocket && this.gameSocket.connected) {
+              this.gameSocket.emit("sendGameInvite", {
+                targetId: this.currentFriendId,
+                senderName: myName
+              });
+              if (this.chatSocket && this.chatSocket.connected) {
+                console.log("chatSocket connected");
+                this.chatSocket.emit("chatMessage", {
+                  sender_id,
+                  sender_alias: myName,
+                  channel_key: this.currentChannel,
+                  msg_content: "\u{1F3AE}  Hey, want to play a game? Check your notifications"
+                });
+              } else {
+                console.log("chatSocket disconnected");
+              }
+            } else {
+              console.error("Game socket not connected", this.gameSocket);
+              this.addSystemMessage("Error: Game server not reachable.");
+            }
           } else {
             this.addSystemMessage("Error: Can't invite in this channel.");
           }
@@ -5973,7 +6021,7 @@
       }
       console.log("friendship homepage:", friendshipId);
       if (chatInstance) {
-        chatInstance.joinChannel(channelKey, friendshipId);
+        chatInstance.joinChannel(channelKey, friendshipId, friend.id);
       }
     };
     window.addEventListener("friendSelected", friendSelectedHandler);
@@ -8145,6 +8193,7 @@
     }
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId, role) {
+      console.log("startRemote");
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
