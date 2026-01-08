@@ -3,10 +3,10 @@ import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import { fetchWithAuth } from "../pages/api";
 import { Socket } from "socket.io-client";
-import SocketService from "../services/SocketService";
 
 export class Chat {
     private socket: Socket | null = null;
+    private gameSocket: Socket | null = null;
     private messagesContainer: HTMLElement | null;
     private messageInput: HTMLInputElement | null;
     private wizzContainer: HTMLElement | null;
@@ -26,11 +26,16 @@ export class Chat {
         // 1. On récupère l'instance du service
         const socketService = SocketService.getInstance();
 
-        // 2. On lance explicitement la connection au chat
+        // 2. On lance explicitement la connection au chat et au game
         socketService.connectChat();
+        socketService.connectGame()
 
         // 3. On récupère la socket spécifique au chat
         this.socket = socketService.getChatSocket();
+
+        this.gameSocket = socketService.getGameSocket();
+        if (!this.gameSocket)
+            console.log("gamesocket n'existe pas");
 
         // Si la connexion a échoué, on arrête
         if (!this.socket) {
@@ -50,6 +55,7 @@ export class Chat {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
         this.currentFriendId = friendId || null;
+        console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
 
         if (this.socket)
             this.socket.emit("joinChannel", channelKey);
@@ -480,17 +486,33 @@ export class Chat {
             // GESTION DU BOUTON D'INVITATION
             document.getElementById('button-invite-game')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-           
-                if (this.currentFriendId) {
+                console.log("bouton invite");
+                console.log("this.currentFriendId =", this.currentFriendId);
+                if (this.currentFriendId) 
+                {
                     const myName = localStorage.getItem('username');
                     
-                    this.socket.emit('sendGameInvite', {
-                        targetId: this.currentFriendId,
-                        senderName: myName
-                    });
-                    
-                    this.addSystemMessage("Game invitation sent!");
-                } else {
+                    // Utilisation de la game socket ici
+                    if (this.gameSocket) 
+                    {
+                        console.log("gamesocket existe");
+                        if (this.gameSocket.connected) 
+                        {
+                            this.gameSocket.emit('sendGameInvite', {
+                                targetId: this.currentFriendId,
+                                senderName: myName
+                            });
+
+                            this.addSystemMessage("Game invitation sent!");
+                        }
+                    } 
+                    else 
+                    {
+                        console.error("Game socket not connected", this.gameSocket)
+                        this.addSystemMessage("Error: Game server not reachable.");
+                    }
+                }
+                else {
                     this.addSystemMessage("Error: Can't invite in this channel.");
                 }
                 

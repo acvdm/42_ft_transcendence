@@ -58,6 +58,7 @@ class Game {
 
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId: string, role: 'player1' | 'player2') {
+        console.log("startRemote");
         this.isRemote = true;
         this.roomId = roomId;
         this.playerRole = role;

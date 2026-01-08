@@ -4631,6 +4631,7 @@
     }
     init() {
       SocketService_default.getInstance().connectChat();
+      SocketService_default.getInstance().connectGame();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -4649,15 +4650,11 @@
       }
     }
     registerSocketUser() {
-      const socket = SocketService_default.getInstance().getChatSocket();
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
       const userId = this.userId;
-      if (!socket || !userId) return;
-      if (socket.connected) {
-        socket.emit("registerUser", userId);
+      if (gameSocket && gameSocket.connected) {
+        gameSocket.emit("registerGameSocket", userId);
       }
-      socket.on("connect", () => {
-        socket.emit("registerUser", userId);
-      });
     }
     async loadFriends() {
       const contactsList = this.container;
@@ -4719,40 +4716,69 @@
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
     sendInviteDirectly(friendId, friendName) {
-      const socket = SocketService_default.getInstance().getChatSocket();
-      if (!socket || !socket.connected) {
-        alert("You must be connected to the chat to invite");
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const myName = localStorage.getItem("username");
+      if (!gameSocket || !gameSocket.connected) {
+        alert("Game is disconnected, please refresh");
+        SocketService_default.getInstance().connectGame();
         return;
       }
+      console.debug(`Sending game invite to ${friendName} via GameSocket`);
+      gameSocket.emit("sendGameInvite", {
+        targetId: friendId,
+        senderName: myName
+      });
+      alert(`Invitation sent to ${friendName}`);
     }
     listenToUpdates() {
-      const socket = SocketService_default.getInstance().getChatSocket();
-      if (!socket) return;
-      socket.on("friendStatusUpdate", (data) => {
+      console.debug("listen to updates");
+      const socketService = SocketService_default.getInstance();
+      const chatSocket = socketService.getChatSocket();
+      const gameSocket = socketService.getGameSocket();
+      if (!chatSocket) return;
+      chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
       });
-      socket.on("userConnected", (data) => {
+      chatSocket.on("userConnected", (data) => {
         const currentUsername = localStorage.getItem("username");
         if (data.username !== currentUsername) {
           this.updateFriendUI(data.username, data.status);
         }
       });
-      socket.on("receiveFriendRequestNotif", () => {
+      chatSocket.on("receiveFriendRequestNotif", () => {
         console.log("New friend request received!");
         this.checkNotifications();
       });
-      socket.on("friendRequestAccepted", () => {
+      chatSocket.on("friendRequestAccepted", () => {
         console.log("Friend request accepted by other user!");
         this.loadFriends();
       });
-      socket.on("receiveGameInvite", (data) => {
-        console.log("Game invite received form", data.senderName);
-        this.showGameInviteNotification(data.senderId, data.senderName);
-      });
+      if (!gameSocket) {
+        console.error("GameSocket cannot be found");
+        return;
+      }
+      const attachGameListeners = () => {
+        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
+        gameSocket.emit("registerGameSocket");
+        gameSocket.off("receiveGameInvite");
+        gameSocket.on("receiveGameInvite", (data) => {
+          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+          this.showGameInviteNotification(data.senderId, data.senderName);
+        });
+      };
+      if (gameSocket.connected) {
+        attachGameListeners();
+      } else {
+        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
+        gameSocket.once("connect", () => {
+          attachGameListeners();
+        });
+      }
     }
     ///// pour la notification de l'invitation
     showGameInviteNotification(senderId, senderName) {
+      console.log("showGameInvite");
       const notifIcon = document.getElementById("notification-icon");
       if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
       const toast = document.createElement("div");
@@ -4767,25 +4793,28 @@
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        const socket = SocketService_default.getInstance().getChatSocket();
-        if (!socket) {
-          alert("Erreur de connexion");
+        const gameSocket = SocketService_default.getInstance().getGameSocket();
+        if (!gameSocket || !gameSocket.connected) {
+          alert("Error: connexion to server lost");
           toast.remove();
           return;
         }
         console.log("Accepting game invite from", senderName);
-        socket.once("matchFound", (data) => {
+        gameSocket.once("matchFound", (data) => {
           console.log("\u2705 Match found from invitation:", data);
           sessionStorage.setItem("pendingMatch", JSON.stringify(data));
           window.history.pushState({ gameMode: "remote" }, "", "/game");
           const event = new PopStateEvent("popstate");
           window.dispatchEvent(event);
         });
-        socket.emit("acceptGameInvite", { senderId });
+        gameSocket.emit("acceptGameInvite", { senderId });
         toast.remove();
       });
       toast.querySelector("#decline-invite")?.addEventListener("click", () => {
-        SocketService_default.getInstance().getChatSocket()?.emit("declineGameInvite", { senderId });
+        const gameSocket = SocketService_default.getInstance().getGameSocket()?.emit("declineGameInvite", { senderId });
+        if (gameSocket && gameSocket.connected) {
+          gameSocket.emit("declineGameInivite", { senderId });
+        }
         toast.remove();
       });
       setTimeout(() => {
@@ -5347,6 +5376,7 @@
   var Chat = class {
     constructor() {
       this.socket = null;
+      this.gameSocket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
@@ -5357,7 +5387,11 @@
     init() {
       const socketService = SocketService_default.getInstance();
       socketService.connectChat();
+      socketService.connectGame();
       this.socket = socketService.getChatSocket();
+      this.gameSocket = socketService.getGameSocket();
+      if (!this.gameSocket)
+        console.log("gamesocket n'existe pas");
       if (!this.socket) {
         console.error("Chat: Impossible to retrieve chat socket (not connected).");
         return;
@@ -5371,6 +5405,7 @@
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
       this.currentFriendId = friendId || null;
+      console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
       if (this.socket)
         this.socket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
@@ -5697,13 +5732,23 @@
         });
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
+          console.log("bouton invite");
+          console.log("this.currentFriendId =", this.currentFriendId);
           if (this.currentFriendId) {
             const myName = localStorage.getItem("username");
-            this.socket.emit("sendGameInvite", {
-              targetId: this.currentFriendId,
-              senderName: myName
-            });
-            this.addSystemMessage("Game invitation sent!");
+            if (this.gameSocket) {
+              console.log("gamesocket existe");
+              if (this.gameSocket.connected) {
+                this.gameSocket.emit("sendGameInvite", {
+                  targetId: this.currentFriendId,
+                  senderName: myName
+                });
+                this.addSystemMessage("Game invitation sent!");
+              }
+            } else {
+              console.error("Game socket not connected", this.gameSocket);
+              this.addSystemMessage("Error: Game server not reachable.");
+            }
           } else {
             this.addSystemMessage("Error: Can't invite in this channel.");
           }
@@ -5981,7 +6026,7 @@
       }
       console.log("friendship homepage:", friendshipId);
       if (chatInstance) {
-        chatInstance.joinChannel(channelKey, friendshipId);
+        chatInstance.joinChannel(channelKey, friendshipId, friend.id);
       }
     };
     window.addEventListener("friendSelected", friendSelectedHandler);
@@ -8164,6 +8209,7 @@
     }
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId, role) {
+      console.log("startRemote");
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
