@@ -5375,7 +5375,7 @@
   // scripts/components/Chat.ts
   var Chat = class {
     constructor() {
-      this.socket = null;
+      this.chatSocket = null;
       this.gameSocket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
@@ -5388,11 +5388,11 @@
       const socketService = SocketService_default.getInstance();
       socketService.connectChat();
       socketService.connectGame();
-      this.socket = socketService.getChatSocket();
+      this.chatSocket = socketService.getChatSocket();
       this.gameSocket = socketService.getGameSocket();
       if (!this.gameSocket)
         console.log("gamesocket n'existe pas");
-      if (!this.socket) {
+      if (!this.chatSocket) {
         console.error("Chat: Impossible to retrieve chat socket (not connected).");
         return;
       }
@@ -5406,8 +5406,8 @@
       this.currentFriendshipId = friendshipId || null;
       this.currentFriendId = friendId || null;
       console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
-      if (this.socket)
-        this.socket.emit("joinChannel", channelKey);
+      if (this.chatSocket)
+        this.chatSocket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
       }
@@ -5416,13 +5416,13 @@
     // ----      MISE EN ÉCOUTE DES SOCKETS           ----
     // ---------------------------------------------------
     setupSocketEvents() {
-      this.socket.on("connect", () => {
+      this.chatSocket.on("connect", () => {
         this.addMessage("You can now chat with your friend!", "System");
       });
-      this.socket.on("chatMessage", (data) => {
+      this.chatSocket.on("chatMessage", (data) => {
         this.addMessage(data.msg_content, data.sender_alias);
       });
-      this.socket.on("msg_history", (data) => {
+      this.chatSocket.on("msg_history", (data) => {
         if (this.messagesContainer) {
           this.messagesContainer.innerHTML = "";
           if (data.msg_history && data.msg_history.length > 0) {
@@ -5434,10 +5434,10 @@
           }
         }
       });
-      this.socket.on("systemMessage", (data) => {
+      this.chatSocket.on("systemMessage", (data) => {
         this.addSystemMessage(data.content);
       });
-      this.socket.on("receivedWizz", (data) => {
+      this.chatSocket.on("receivedWizz", (data) => {
         if (data.channel_key && data.channel_key !== this.currentChannel) return;
         const currentUser = localStorage.getItem("username");
         this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
@@ -5445,7 +5445,7 @@
           this.shakeElement(this.wizzContainer, 3e3);
         }
       });
-      this.socket.on("receivedAnimation", (data) => {
+      this.chatSocket.on("receivedAnimation", (data) => {
         const { animationKey, author } = data;
         const imgUrl = animations[animationKey];
         if (imgUrl) {
@@ -5460,7 +5460,7 @@
           this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
         }
       });
-      this.socket.on("disconnected", () => {
+      this.chatSocket.on("disconnected", () => {
         this.addMessage("Disconnected from chat server!", "System");
       });
     }
@@ -5474,7 +5474,7 @@
           const msg_content = this.messageInput.value;
           const sender_alias = localStorage.getItem("username");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
-          this.socket.emit("chatMessage", {
+          this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
             channel_key: this.currentChannel,
@@ -5492,16 +5492,16 @@
       if (wizzButton) {
         wizzButton.addEventListener("click", () => {
           const currentUsername = localStorage.getItem("username");
-          this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
           this.shakeElement(this.wizzContainer, 500);
         });
       }
     }
     // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
     emitWizzOnly() {
-      if (!this.socket) return;
+      if (!this.chatSocket) return;
       const currentUsername = localStorage.getItem("username");
-      this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
     // délcencher la secousse 
     shakeElement(element, duration = 500) {
@@ -5528,8 +5528,8 @@
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
     sendSystemNotification(message) {
-      if (this.socket) {
-        this.socket.emit("sendSystemMessage", {
+      if (this.chatSocket) {
+        this.chatSocket.emit("sendSystemMessage", {
           channel_key: this.currentChannel,
           content: message
         });
@@ -5615,17 +5615,14 @@
           const animationItem = document.createElement("div");
           animationItem.className = "cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
           animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
-          console.log("Envoi d'un message");
           animationItem.addEventListener("click", (event) => {
             event.stopPropagation();
             const currentUsername = localStorage.getItem("username");
-            console.log("Envoi d'un message");
-            this.socket.emit("sendAnimation", {
+            this.chatSocket.emit("sendAnimation", {
               animationKey: key,
               author: currentUsername,
               channel_key: this.currentChannel
             });
-            console.log("Envoi d'un message");
             animationDropdown.classList.add("hidden");
           });
           animationGrid.appendChild(animationItem);
@@ -5732,18 +5729,24 @@
         });
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
-          console.log("bouton invite");
-          console.log("this.currentFriendId =", this.currentFriendId);
           if (this.currentFriendId) {
             const myName = localStorage.getItem("username");
-            if (this.gameSocket) {
-              console.log("gamesocket existe");
-              if (this.gameSocket.connected) {
-                this.gameSocket.emit("sendGameInvite", {
-                  targetId: this.currentFriendId,
-                  senderName: myName
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+            if (this.gameSocket && this.gameSocket.connected) {
+              this.gameSocket.emit("sendGameInvite", {
+                targetId: this.currentFriendId,
+                senderName: myName
+              });
+              if (this.chatSocket && this.chatSocket.connected) {
+                console.log("chatSocket connected");
+                this.chatSocket.emit("chatMessage", {
+                  sender_id,
+                  sender_alias: myName,
+                  channel_key: this.currentChannel,
+                  msg_content: "\u{1F3AE}  Hey, want to play a game? Check your notifications"
                 });
-                this.addSystemMessage("Game invitation sent!");
+              } else {
+                console.log("chatSocket disconnected");
               }
             } else {
               console.error("Game socket not connected", this.gameSocket);

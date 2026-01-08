@@ -5,7 +5,7 @@ import { fetchWithAuth } from "../pages/api";
 import { Socket } from "socket.io-client";
 
 export class Chat {
-    private socket: Socket | null = null;
+    private chatSocket: Socket | null = null;
     private gameSocket: Socket | null = null;
     private messagesContainer: HTMLElement | null;
     private messageInput: HTMLInputElement | null;
@@ -31,14 +31,14 @@ export class Chat {
         socketService.connectGame()
 
         // 3. On récupère la socket spécifique au chat
-        this.socket = socketService.getChatSocket();
+        this.chatSocket = socketService.getChatSocket();
 
         this.gameSocket = socketService.getGameSocket();
         if (!this.gameSocket)
             console.log("gamesocket n'existe pas");
 
         // Si la connexion a échoué, on arrête
-        if (!this.socket) {
+        if (!this.chatSocket) {
             console.error("Chat: Impossible to retrieve chat socket (not connected).");
             return;
         }
@@ -57,8 +57,8 @@ export class Chat {
         this.currentFriendId = friendId || null;
         console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
 
-        if (this.socket)
-            this.socket.emit("joinChannel", channelKey);
+        if (this.chatSocket)
+            this.chatSocket.emit("joinChannel", channelKey);
         
         // Reset affichage
         if (this.messagesContainer) {
@@ -72,17 +72,17 @@ export class Chat {
     // ---------------------------------------------------
 
     private setupSocketEvents() {
-        this.socket.on("connect", () => {
+        this.chatSocket.on("connect", () => {
             this.addMessage("You can now chat with your friend!", "System");
         });
 
         // on va écouter l'événement chatMessage venant du serveur
         // le backend va renvoyer data, il devrait plus renvoyer message: "" author: ""
-        this.socket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
+        this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
             this.addMessage(data.msg_content, data.sender_alias);
         });
 
-        this.socket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
+        this.chatSocket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
             if (this.messagesContainer) {
                 this.messagesContainer.innerHTML = '';
                 if (data.msg_history && data.msg_history.length > 0) {
@@ -95,12 +95,12 @@ export class Chat {
             }
         });
 
-        this.socket.on("systemMessage", (data: { content: string}) => {
+        this.chatSocket.on("systemMessage", (data: { content: string}) => {
             this.addSystemMessage(data.content);
         })
 
         // reception ici du serveur au client
-        this.socket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
+        this.chatSocket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
             if (data.channel_key && data.channel_key !== this.currentChannel) return;
             
             const currentUser = localStorage.getItem('username');
@@ -113,7 +113,7 @@ export class Chat {
             }
         });
 
-        this.socket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
+        this.chatSocket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
             const { animationKey, author } = data;
             const imgUrl = animations[animationKey];
             
@@ -131,7 +131,7 @@ export class Chat {
             }
         });
 
-        this.socket.on("disconnected", () => {
+        this.chatSocket.on("disconnected", () => {
             this.addMessage("Disconnected from chat server!", "System");
         });
     }
@@ -151,7 +151,7 @@ export class Chat {
                 const sender_alias = localStorage.getItem('username');
                 const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
                 
-                this.socket.emit("chatMessage", {
+                this.chatSocket.emit("chatMessage", {
                     sender_id: sender_id,
                     sender_alias: sender_alias,
                     channel_key: this.currentChannel,
@@ -175,7 +175,7 @@ export class Chat {
             wizzButton.addEventListener('click', () => {
                 const currentUsername = localStorage.getItem('username');
                 // on envois l'element snedWizz au serveur
-                this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+                this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
                 // secousse pour l'expediteur et le receveur
                 this.shakeElement(this.wizzContainer, 500);
             });
@@ -184,9 +184,9 @@ export class Chat {
 
     // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
     public emitWizzOnly() {
-        if (!this.socket) return;
+        if (!this.chatSocket) return;
         const currentUsername = localStorage.getItem('username');
-        this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+        this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
 
     // délcencher la secousse 
@@ -226,8 +226,8 @@ export class Chat {
 
 
     public sendSystemNotification(message: string) {
-        if (this.socket) {
-            this.socket.emit("sendSystemMessage", {
+        if (this.chatSocket) {
+            this.chatSocket.emit("sendSystemMessage", {
                 channel_key: this.currentChannel,
                 content: message
             });
@@ -341,19 +341,16 @@ export class Chat {
                 animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
 
                 // clic sur l'anumation
-                console.log("Envoi d'un message");
                 animationItem.addEventListener('click', (event) => {
                     event.stopPropagation();
                     const currentUsername = localStorage.getItem('username');
                     // envoi de l'animation via la sockettt
-                    console.log("Envoi d'un message");
 
-                    this.socket.emit("sendAnimation", {
+                    this.chatSocket.emit("sendAnimation", {
                         animationKey: key,
                         author: currentUsername,
                         channel_key: this.currentChannel
                     });
-                    console.log("Envoi d'un message");
                     animationDropdown.classList.add('hidden');
                 });
                 animationGrid.appendChild(animationItem);
@@ -486,26 +483,39 @@ export class Chat {
             // GESTION DU BOUTON D'INVITATION
             document.getElementById('button-invite-game')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                console.log("bouton invite");
-                console.log("this.currentFriendId =", this.currentFriendId);
+
                 if (this.currentFriendId) 
                 {
                     const myName = localStorage.getItem('username');
+                    const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
                     
                     // Utilisation de la game socket ici
-                    if (this.gameSocket) 
+                    if (this.gameSocket && this.gameSocket.connected) 
                     {
-                        console.log("gamesocket existe");
-                        if (this.gameSocket.connected) 
-                        {
-                            this.gameSocket.emit('sendGameInvite', {
+                             this.gameSocket.emit('sendGameInvite', {
                                 targetId: this.currentFriendId,
                                 senderName: myName
                             });
 
-                            this.addSystemMessage("Game invitation sent!");
+                            // const sysMsg = `🎮 ${myName} wants to play a game`;
+                            // this.sendSystemNotification(sysMsg);
+
+                            // this.addSystemMessage("Game invitation sent!");
+
+                        if (this.chatSocket && this.chatSocket.connected) {
+                            console.log("chatSocket connected");
+                            this.chatSocket.emit("chatMessage", {
+                                sender_id: sender_id,
+                                sender_alias: myName,
+                                channel_key: this.currentChannel,
+                                msg_content: "🎮  Hey, want to play a game? Check your notifications"
+                            });
                         }
-                    } 
+                        else
+                        {
+                            console.log("chatSocket disconnected");
+                        }
+                    }
                     else 
                     {
                         console.error("Game socket not connected", this.gameSocket)
