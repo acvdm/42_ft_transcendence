@@ -588,32 +588,7 @@ export function initGamePage(mode: string): void {
 
             const myAlias = await getPlayerAlias();
             let opponentAlias = "Opponent";
-            if (data.opponent) {
-                fetchWithAuth(`api/user/${data.opponent}`)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(userData => {
-                        if (userData && userData.alias) {
-                            console.log("Opponent alias loaded:", userData.alias);
-                            opponentAlias = userData.alias;
-                            
-                            // On met à jour les variables globales pour la fin du jeu
-                            if (data.role === 'player1') currentP2Alias = opponentAlias;
-                            else currentP1Alias = opponentAlias;
 
-                            // On met à jour l'affichage en direct
-                            const p1Display = document.getElementById('player-1-name');
-                            const p2Display = document.getElementById('player-2-name');
-                            
-                            if (data.role === 'player1' && p2Display) {
-                                p2Display.innerText = opponentAlias;
-                            } else if (data.role === 'player2' && p1Display) {
-                                p1Display.innerText = opponentAlias;
-                            }
-                        }
-                    })
-                    .catch(e => console.error("Error loading opponent alias:", e));
-            }
-            console.log("Opponent:", data.opponentAlias);
             if (data.role === 'player1') {
                 currentP1Alias = myAlias;
                 currentP2Alias = opponentAlias;
@@ -622,20 +597,36 @@ export function initGamePage(mode: string): void {
                 currentP2Alias = myAlias;
             }
 
-
+            // 3. Mise à jour de l'affichage INITIAL (Immédiat)
             const p1Display = document.getElementById('player-1-name');
             const p2Display = document.getElementById('player-2-name');
 
             if (p1Display && p2Display) {
-                p1Display.innerText =
-                    data.role === 'player1'
-                        ? `${currentP1Alias} (Me)`
-                        : currentP1Alias;
+                p1Display.innerText = (data.role === 'player1') ? `${currentP1Alias} (Me)` : currentP1Alias;
+                p2Display.innerText = (data.role === 'player2') ? `${currentP2Alias} (Me)` : currentP2Alias;
+            }
 
-                p2Display.innerText =
-                    data.role === 'player2'
-                        ? `${currentP2Alias} (Me)`
-                        : currentP2Alias;
+            // 4. Récupération de l'adversaire en arrière-plan (si disponible)
+            if (data.opponent) {
+                fetchWithAuth(`api/user/${data.opponent}`)
+                    .then(res => res.ok ? res.json() : null)
+                    .then(userData => {
+                        if (userData && userData.alias) {
+                            const realOpponentName = userData.alias;
+                            
+                            // On ne met à jour QUE l'élément qui correspond à l'adversaire
+                            if (data.role === 'player1') {
+                                // Je suis P1, donc l'adversaire est P2
+                                currentP2Alias = realOpponentName;
+                                if (p2Display) p2Display.innerText = realOpponentName;
+                            } else {
+                                // Je suis P2, donc l'adversaire est P1
+                                currentP1Alias = realOpponentName;
+                                if (p1Display) p1Display.innerText = realOpponentName;
+                            }
+                        }
+                    })
+                    .catch(e => console.error("Error retrieving opponent alias:", e));
             }
 
             // Sync du chat sur la room du jeu

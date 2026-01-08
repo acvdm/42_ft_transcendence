@@ -8725,24 +8725,6 @@
         console.log("Starting game from data:", data);
         const myAlias = await getPlayerAlias();
         let opponentAlias = "Opponent";
-        if (data.opponent) {
-          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
-            if (userData && userData.alias) {
-              console.log("Opponent alias loaded:", userData.alias);
-              opponentAlias = userData.alias;
-              if (data.role === "player1") currentP2Alias = opponentAlias;
-              else currentP1Alias = opponentAlias;
-              const p1Display2 = document.getElementById("player-1-name");
-              const p2Display2 = document.getElementById("player-2-name");
-              if (data.role === "player1" && p2Display2) {
-                p2Display2.innerText = opponentAlias;
-              } else if (data.role === "player2" && p1Display2) {
-                p1Display2.innerText = opponentAlias;
-              }
-            }
-          }).catch((e) => console.error("Error loading opponent alias:", e));
-        }
-        console.log("Opponent:", data.opponentAlias);
         if (data.role === "player1") {
           currentP1Alias = myAlias;
           currentP2Alias = opponentAlias;
@@ -8755,6 +8737,20 @@
         if (p1Display && p2Display) {
           p1Display.innerText = data.role === "player1" ? `${currentP1Alias} (Me)` : currentP1Alias;
           p2Display.innerText = data.role === "player2" ? `${currentP2Alias} (Me)` : currentP2Alias;
+        }
+        if (data.opponent) {
+          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            if (userData && userData.alias) {
+              const realOpponentName = userData.alias;
+              if (data.role === "player1") {
+                currentP2Alias = realOpponentName;
+                if (p2Display) p2Display.innerText = realOpponentName;
+              } else {
+                currentP1Alias = realOpponentName;
+                if (p1Display) p1Display.innerText = realOpponentName;
+              }
+            }
+          }).catch((e) => console.error("Error retrieving opponent alias:", e));
         }
         if (gameChat) {
           gameChat.joinChannel(data.roomId);
