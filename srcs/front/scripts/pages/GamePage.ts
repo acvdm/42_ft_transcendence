@@ -245,6 +245,8 @@ export function cleanup() {
         spaceKeyListener = null;
     }
 
+    document.getElementById('countdown-modal')?.remove();
+    
     window.removeEventListener('beforeunload', handleBeforeUnload);
     window.removeEventListener('popstate', handlePopState);
     isNavigationBlocked = false;
@@ -338,6 +340,41 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
     });
 }
 
+
+// =========================================================
+// ==========--====== TOP DEPART DECOMPTE ==================
+// =========================================================
+
+function launchCountdown(onComplete: () => void) {
+    const modal = document.getElementById('countdown-modal');
+    const text = document.getElementById('countdown-text');
+    
+    if (!modal || !text) {
+        onComplete();
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    
+    let count = 3;
+    text.innerText = count.toString();
+    text.className = "text-[150px] font-black text-white animate-bounce"; // Reset animation
+
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            text.innerText = count.toString();
+        } else if (count === 0) {
+            text.innerText = "GO!";
+            text.classList.remove('animate-bounce');
+            text.classList.add('animate-ping');
+        } else {
+            clearInterval(interval);
+            modal.classList.add('hidden');
+            onComplete(); // lancement du jeu 
+        }
+    }, 1000);
+}
 
 
 export function initGamePage(mode: string): void {
@@ -659,9 +696,11 @@ export function initGamePage(mode: string): void {
                         if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
                     };
 
-                    // Lancement moteur (Côté défini par data.role)
-                    activeGame.startRemote(data.roomId, data.role);
-                } // ← Fermeture du if (ctx)
+                    launchCountdown(() => {
+                        if (activeGame)
+                            activeGame.startRemote(data.roomId, data.role);
+                    });
+                }
 
             }
         };
@@ -1349,84 +1388,86 @@ export function initGamePage(mode: string): void {
                     modal.classList.remove('flex');
                 }
 
-                // ICI LANCEMENT DU JEU
-                const canvasContainer = document.getElementById('game-canvas-container');
-                if (!canvasContainer) {
-                    console.error("Conteneur canvas introuvable, creation auto...");
-                    const container = document.createElement('div');
-                    container.id = 'game-canvas-container';
-                    container.className = "w-full flex-1";
-                    gameField.appendChild(container);
-                } else {
-                    canvasContainer.innerHTML = '';
-                }
-
-                const scoreBoard = document.getElementById('score-board');
-                const canvas = document.createElement('canvas');
-                canvas.id = 'pong-canvas';
-                canvas.width = canvasContainer ? canvasContainer.clientWidth : 800; // verifier la taille
-                canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
-                console.log("heigh:", canvasContainer.clientHeight);
-                console.log("width:", canvasContainer.clientWidth);
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                //canvas.style.objectFit = 'contain';
-                canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
-
-                // Injection
-                const targetContainer = document.getElementById('game-canvas-container') || gameField;
-                targetContainer.appendChild(canvas);
-
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                    const input = new Input();
-                    if (activeGame) activeGame.isRunning = false;
-                    activeGame = new Game(canvas, ctx, input, selectedBall);
-                    
-                    activeGame.onScoreChange = (score) => {
-                        if (scoreBoard) {
-                            scoreBoard.innerText = `${score.player1} - ${score.player2}`;
-                        }
+                launchCountdown(() => {
+                    const canvasContainer = document.getElementById('game-canvas-container');
+                    if (!canvasContainer) {
+                        console.error("Conteneur canvas introuvable, creation auto...");
+                        const container = document.createElement('div');
+                        container.id = 'game-canvas-container';
+                        container.className = "w-full flex-1";
+                        gameField.appendChild(container);
+                    } else {
+                        canvasContainer.innerHTML = '';
                     }
-
-                    console.log("Démarrage du jeu Local...");
-                    activeGame.start();
-                    const startDate = getSqlDate();
-
-                    // checkeur du score
-                    const localLoop = setInterval(async () => {
-                        if (!activeGame || !activeGame.isRunning) {
-                            clearInterval(localLoop);
-                            return;
-                        }                    
-                    
-                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                        activeGame.isRunning = false; // STOP
-                        clearInterval(localLoop); 
+    
+                    const scoreBoard = document.getElementById('score-board');
+                    const canvas = document.createElement('canvas');
+                    canvas.id = 'pong-canvas';
+                    canvas.width = canvasContainer ? canvasContainer.clientWidth : 800; // verifier la taille
+                    canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+                    console.log("heigh:", canvasContainer.clientHeight);
+                    console.log("width:", canvasContainer.clientWidth);
+                    canvas.style.width = '100%';
+                    canvas.style.height = '100%';
+                    //canvas.style.objectFit = 'contain';
+                    canvas.style.backgroundColor = selectedBg; // faire la meme chose pour tous les modes 
+    
+                    // Injection
+                    const targetContainer = document.getElementById('game-canvas-container') || gameField;
+                    targetContainer.appendChild(canvas);
+    
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        const input = new Input();
+                        if (activeGame) activeGame.isRunning = false;
+                        activeGame = new Game(canvas, ctx, input, selectedBall);
                         
-                        // 1. Récupération des données
-                        const p1Score = activeGame.score.player1;
-                        const p2Score = activeGame.score.player2;
-                        const p1Alias = player1Display.innerText;
-                        const p2Alias = opponentName;
-                        const p1Wins = p1Score > p2Score;
-                        const winnerAlias = p1Wins ? p1Alias : p2Alias;
-
-                        // 2. Sauvegarde si l'utilistauer est connecté
-                        const userIdStr = localStorage.getItem('userId');
-                        if (userIdStr) {
-                            const userId = Number(userIdStr);
-                            // on sauvegarde les statistiques
-                            console.log(`gamepage, ${userId}`);
-                            await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                        activeGame.onScoreChange = (score) => {
+                            if (scoreBoard) {
+                                scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+                            }
                         }
+    
+                        console.log("Démarrage du jeu Local...");
+                        activeGame.start();
+                        const startDate = getSqlDate();
+    
+                        // checkeur du score
+                        const localLoop = setInterval(async () => {
+                            if (!activeGame || !activeGame.isRunning) {
+                                clearInterval(localLoop);
+                                return;
+                            }                    
                         
-                        // 3. Feedback et Reload
-                        showVictoryModal(winnerAlias);
+                            if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                                activeGame.isRunning = false; // STOP
+                                clearInterval(localLoop); 
+                                
+                                // 1. Récupération des données
+                                const p1Score = activeGame.score.player1;
+                                const p2Score = activeGame.score.player2;
+                                const p1Alias = player1Display.innerText;
+                                const p2Alias = opponentName;
+                                const p1Wins = p1Score > p2Score;
+                                const winnerAlias = p1Wins ? p1Alias : p2Alias;
+        
+                                // 2. Sauvegarde si l'utilistauer est connecté
+                                const userIdStr = localStorage.getItem('userId');
+                                if (userIdStr) {
+                                    const userId = Number(userIdStr);
+                                    // on sauvegarde les statistiques
+                                    console.log(`gamepage, ${userId}`);
+                                    await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                                }
+                                
+                                // 3. Feedback et Reload
+                                showVictoryModal(winnerAlias);
+                            }
+                        }, 500);
                     }
-                }, 500);
-            }
-        });
+                });
+            });
+        }
     }
 
     async function saveLocalGameToApi(
@@ -1566,77 +1607,3 @@ export function initGamePage(mode: string): void {
             document.head.appendChild(style);
         }
     }
-
-    // explosion depuis le centre
-    function launchConfettiExplosion() {
-        const colors = ['#FFD700', '#FFA500', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DFE6E9'];
-        const confettiCount = 100;
-        const container = document.body;
-
-        const confettiContainer = document.createElement('div');
-        confettiContainer.id = 'confetti-explosion-container';
-        confettiContainer.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            pointer-events: none;
-            z-index: 9999;
-        `;
-        container.appendChild(confettiContainer);
-
-        for (let i = 0; i < confettiCount; i++) {
-            createExplosionConfetti(confettiContainer, colors, i, confettiCount);
-        }
-
-        setTimeout(() => {
-            confettiContainer.remove();
-        }, 4000);
-    }
-
-    function createExplosionConfetti(container: HTMLElement, colors: string[], index: number, total: number) {
-        const confetti = document.createElement('div');
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const size = Math.random() * 12 + 6;
-        
-        // explosion en cerce
-        const angle = (index / total) * Math.PI * 2;
-        const velocity = Math.random() * 300 + 200; // Distance de projection
-        const endX = Math.cos(angle) * velocity;
-        const endY = Math.sin(angle) * velocity - 100; // Légère montée
-        
-        const rotation = Math.random() * 720;
-        const duration = Math.random() * 1.5 + 2;
-
-        confetti.style.cssText = `
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            background-color: ${color};
-            top: 0;
-            left: 0;
-            opacity: 1;
-            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
-            animation: explode-${index} ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        `;
-
-        container.appendChild(confetti);
-
-        // animation pour chaque confetti
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes explode-${index} {
-                0% {
-                    transform: translate(0, 0) rotate(0deg) scale(1);
-                    opacity: 1;
-                }
-                100% {
-                    transform: translate(${endX}px, ${endY + 500}px) rotate(${rotation}deg) scale(0.3);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-}
