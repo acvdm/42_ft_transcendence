@@ -27,7 +27,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		"/api/users/login",
 		"/api/users/token",
 		"/api/auth/token",
-		"/api/users/guest",
+		"/api/user/guest",
 		"/api/auth/login",
 		"/api/auth/sessions",
 		"/api/auth/logout",

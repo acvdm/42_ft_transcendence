@@ -9625,12 +9625,12 @@
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
-    if (path === "/" && sessionStorage.getItem("isGuest") === "true") {
+    if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
       clearGuestSession();
     }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    if (isGameRunning() && path !== "game") cleanup();
+    if (isGameRunning() && path !== "/game") cleanup();
     if (path === "/logout") {
       handleLogout();
       return;

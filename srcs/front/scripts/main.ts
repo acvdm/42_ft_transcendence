@@ -142,15 +142,15 @@ const handleLocationChange = () => {
 
 	let path = window.location.pathname;
 	
-	if (path === '/' && sessionStorage.getItem('isGuest') === 'true') {
+	if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
         clearGuestSession();
-    }
+    } // pour clean la session guest
 	// Récupération des tokens (User normal OU Guest)
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
 	// si le jeu est en train de tourner mais que l'url n'est pas game
-	if (isGameRunning() && path !== '\game') cleanup(); // on arrete le jeu et activegame devient nul
+	if (isGameRunning() && path !== '/game') cleanup(); // on arrete le jeu et activegame devient nul
 
 	if (path === '/logout') {
 		handleLogout();
