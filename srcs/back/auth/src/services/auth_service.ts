@@ -20,7 +20,7 @@ import { Database } from 'sqlite';
 export interface accAndRefTokens {
     accessToken: string,
     refreshToken: string,
-    expiresAt: Date
+    expiresAt: string
 }
 
 export interface authResponse {
@@ -296,8 +296,24 @@ export async function refreshUser(
     // verification expiration
     const now = new Date();
     const expiry = new Date(tokenRecord.expiresAt); // comparaison de string
+    
+    console.log("Token expiry check:", { 
+        now: now.toISOString(), 
+        expiryStored: tokenRecord.expiresAt,
+        expiryParsed: expiry.toISOString(),
+        isValidDate: !isNaN(expiry.getTime()),
+        expired: now > expiry 
+    });
 
-    if (now > expiry){
+    if (isNaN(expiry.getTime()))
+    {
+        console.error("❌ Invalid expiration date in DB:", tokenRecord.expiresAt);
+        throw new UnauthorizedError('Invalid refresh token expiration');
+    }
+
+    if (now > expiry)
+        {
+        console.error("refresh token expired");
         throw new UnauthorizedError('Refresh token expired');
     }
 
@@ -307,7 +323,9 @@ export async function refreshUser(
     const newExpiresAt = getExpirationDate(7);
 
     // mise a jour de la DB
+    console.log("Updating token in DB...");
     await tokenRepo.updateToken(db, tokenRecord.credentialId, newRefreshToken, newExpiresAt);
+    console.log("Token updated successfully");
 
     return {
         accessToken: newAccessToken,

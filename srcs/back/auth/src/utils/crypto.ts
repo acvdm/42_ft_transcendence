@@ -45,7 +45,7 @@ export function generateAccessToken(user_id: number, credential_id: number): str
         sub: user_id,
         cred_id: credential_id
     };
-    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '17m'}); // MODIF DE TEST 10s 7m
+    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '3m'}); // MODIF DE TEST 10s 7m
 }
 
 // Refresh Token : comme un pointeur vers la bdd (conserve en securite au niveau du cookie)

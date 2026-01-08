@@ -6,14 +6,14 @@ export interface Token {
     userId: number;
     credentialId: number,
     refreshToken: string,
-    expiresAt: Date
+    expiresAt: string
 }
 
 export interface CreateTokenData {
     userId: number;
     credentialId: number,
     refreshToken: string,
-    expiresAt: Date,
+    expiresAt: string,
 }
 
 //-------- POST / CREATE
@@ -40,7 +40,7 @@ export async function updateToken(
     db: Database,
     credentialId: number,
     refreshToken: string,
-    expiresAt: Date
+    expiresAt: string
 )
 {
     await db.run(`
@@ -55,7 +55,14 @@ export async function findByRefreshToken(
     token: string
 ): Promise<Token | undefined> {
     const result = await db.get(`
-        SELECT * FROM TOKENS WHERE refresh_token = ?`,
+        SELECT
+            id,
+            user_id as userId,
+            credential_id as credentialId,
+            refresh_token as refreshToken,
+            expires_at as expiresAt
+        FROM TOKENS
+        WHERE refresh_token = ?`,
     [token]
     );
     return result;
