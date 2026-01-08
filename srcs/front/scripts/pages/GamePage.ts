@@ -5,7 +5,7 @@ import { ballEmoticons, gameBackgrounds } from "../components/Data";
 import { fetchWithAuth } from "./api";
 import { Chat } from "../components/Chat";
 import SocketService from '../services/SocketService';
-
+import { applyTheme } from "./ProfilePage";
 import Game from "../game/Game";
 import Input from "../game/Input";
 
@@ -379,6 +379,8 @@ function launchCountdown(onComplete: () => void) {
 
 export function initGamePage(mode: string): void {
 
+    const currentTheme = localStorage.getItem('userTheme') || 'basic';
+    applyTheme(currentTheme);
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
@@ -587,15 +589,29 @@ export function initGamePage(mode: string): void {
             const myAlias = await getPlayerAlias();
             let opponentAlias = "Opponent";
             if (data.opponent) {
-                try {
-                    const response = await fetchWithAuth(`api/user/${data.opponent}`);
-                    if (response.ok) {
-                        const userData = await response.json();
-                        opponentAlias = userData.alias;
-                    }
-                } catch (e) {
-                    console.error("Error: could not retrieve opponent alias:", e);
-                }
+                fetchWithAuth(`api/user/${data.opponent}`)
+                    .then(res => res.ok ? res.json() : null)
+                    .then(userData => {
+                        if (userData && userData.alias) {
+                            console.log("Opponent alias loaded:", userData.alias);
+                            opponentAlias = userData.alias;
+                            
+                            // On met à jour les variables globales pour la fin du jeu
+                            if (data.role === 'player1') currentP2Alias = opponentAlias;
+                            else currentP1Alias = opponentAlias;
+
+                            // On met à jour l'affichage en direct
+                            const p1Display = document.getElementById('player-1-name');
+                            const p2Display = document.getElementById('player-2-name');
+                            
+                            if (data.role === 'player1' && p2Display) {
+                                p2Display.innerText = opponentAlias;
+                            } else if (data.role === 'player2' && p1Display) {
+                                p1Display.innerText = opponentAlias;
+                            }
+                        }
+                    })
+                    .catch(e => console.error("Error loading opponent alias:", e));
             }
             console.log("Opponent:", data.opponentAlias);
             if (data.role === 'player1') {
