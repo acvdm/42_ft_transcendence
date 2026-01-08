@@ -5310,7 +5310,7 @@
           if (response.ok) {
             const cleanAvatarUrl = result.data.avatar;
             if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
-            const socket = SocketService_default.getInstance().chatSocket();
+            const socket = SocketService_default.getInstance().getChatSocket();
             const username = localStorage.getItem("username");
             if (socket) {
               socket.emit("notifyProfileUpdate", {
@@ -6879,8 +6879,8 @@
                 }
                 winRateCalcul.innerText = `${rateValue}%`;
               }
-              if (avgScore) avgScore.innerText = stats.average_score?.toString() || "0";
-              if (streak) streak.innerText = stats.streak?.toString() || "0";
+              if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
+              if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
               if (opponent) opponent.innerText = stats.biggest_opponent || "-";
               if (favGame) favGame.innerText = stats.favorite_game || "Local";
             }
@@ -9026,8 +9026,8 @@
       });
     }
     function launchMatch(p1, p2) {
-      const p1Name = document.getElementById("game-p1-name");
-      const p2Name = document.getElementById("game-p2-name");
+      const p1Name = document.getElementById("player-1-name");
+      const p2Name = document.getElementById("player-2-name");
       const gameStartDate = getSqlDate();
       if (p1Name) p1Name.innerText = p1.alias;
       if (p2Name) p2Name.innerText = p2.alias;

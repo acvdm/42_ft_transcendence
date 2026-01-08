@@ -1013,8 +1013,8 @@ export function initGamePage(mode: string): void {
     }
 
     function launchMatch(p1: TournamentPlayer, p2: TournamentPlayer) {
-        const p1Name = document.getElementById('game-p1-name');
-        const p2Name = document.getElementById('game-p2-name');
+        const p1Name = document.getElementById('player-1-name');
+        const p2Name = document.getElementById('player-2-name');
 
         const gameStartDate = getSqlDate();
         // Mise à jour de l'UI du jeu

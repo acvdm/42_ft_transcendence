@@ -21,8 +21,8 @@ interface UserStats {
 	losses: number;
 	total_games: number;
 
-	average_score?: number;
-	streak?: number;
+	averageScore?: number;
+	current_win_streak?: number;
 	biggest_opponent?: string;
 	favorite_game?: string;
 }
@@ -611,8 +611,8 @@ export function afterRender(): void {
 							winRateCalcul.innerText = `${rateValue}%`;
 						}
 
-						if (avgScore) avgScore.innerText = stats.average_score?.toString() || "0";
-						if (streak) streak.innerText = stats.streak?.toString() || "0";
+						if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
+						if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
 						if (opponent) opponent.innerText = stats.biggest_opponent || "-";
 						if (favGame) favGame.innerText = stats.favorite_game || "Local";
 					}
