@@ -57,6 +57,7 @@ const authMiddleware = (socket: any, next: any) => {
 
 // 1. Définir la logique Socket (se lance quand Fastify est prêt)
 fastify.ready().then(() => {
+    console.log("container chat");
     // Application de sécurité
     fastify.io.use(authMiddleware);
     

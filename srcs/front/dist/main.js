@@ -4386,9 +4386,6 @@
 													class="w-5 h-5 object-cover rounded"
 													alt="avatar">
 											</div>
-											<button id="button-report-user" class="text-left text-sm text-gray-700 flex-1">
-												Report user
-											</button>
 										</div>
 
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
@@ -4662,6 +4659,7 @@
     }
     init() {
       SocketService_default.getInstance().connectChat();
+      SocketService_default.getInstance().connectGame();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -4680,15 +4678,11 @@
       }
     }
     registerSocketUser() {
-      const socket = SocketService_default.getInstance().getChatSocket();
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
       const userId = this.userId;
-      if (!socket || !userId) return;
-      if (socket.connected) {
-        socket.emit("registerUser", userId);
+      if (gameSocket && gameSocket.connected) {
+        gameSocket.emit("registerGameSocket", userId);
       }
-      socket.on("connect", () => {
-        socket.emit("registerUser", userId);
-      });
     }
     async loadFriends() {
       const contactsList = this.container;
@@ -4750,40 +4744,69 @@
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
     sendInviteDirectly(friendId, friendName) {
-      const socket = SocketService_default.getInstance().getChatSocket();
-      if (!socket || !socket.connected) {
-        alert("You must be connected to the chat to invite");
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const myName = localStorage.getItem("username");
+      if (!gameSocket || !gameSocket.connected) {
+        alert("Game is disconnected, please refresh");
+        SocketService_default.getInstance().connectGame();
         return;
       }
+      console.debug(`Sending game invite to ${friendName} via GameSocket`);
+      gameSocket.emit("sendGameInvite", {
+        targetId: friendId,
+        senderName: myName
+      });
+      alert(`Invitation sent to ${friendName}`);
     }
     listenToUpdates() {
-      const socket = SocketService_default.getInstance().getChatSocket();
-      if (!socket) return;
-      socket.on("friendStatusUpdate", (data) => {
+      console.debug("listen to updates");
+      const socketService = SocketService_default.getInstance();
+      const chatSocket = socketService.getChatSocket();
+      const gameSocket = socketService.getGameSocket();
+      if (!chatSocket) return;
+      chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
       });
-      socket.on("userConnected", (data) => {
+      chatSocket.on("userConnected", (data) => {
         const currentUsername = localStorage.getItem("username");
         if (data.username !== currentUsername) {
           this.updateFriendUI(data.username, data.status);
         }
       });
-      socket.on("receiveFriendRequestNotif", () => {
+      chatSocket.on("receiveFriendRequestNotif", () => {
         console.log("New friend request received!");
         this.checkNotifications();
       });
-      socket.on("friendRequestAccepted", () => {
+      chatSocket.on("friendRequestAccepted", () => {
         console.log("Friend request accepted by other user!");
         this.loadFriends();
       });
-      socket.on("receiveGameInvite", (data) => {
-        console.log("Game invite received form", data.senderName);
-        this.showGameInviteNotification(data.senderId, data.senderName);
-      });
+      if (!gameSocket) {
+        console.error("GameSocket cannot be found");
+        return;
+      }
+      const attachGameListeners = () => {
+        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
+        gameSocket.emit("registerGameSocket");
+        gameSocket.off("receiveGameInvite");
+        gameSocket.on("receiveGameInvite", (data) => {
+          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+          this.showGameInviteNotification(data.senderId, data.senderName);
+        });
+      };
+      if (gameSocket.connected) {
+        attachGameListeners();
+      } else {
+        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
+        gameSocket.once("connect", () => {
+          attachGameListeners();
+        });
+      }
     }
     ///// pour la notification de l'invitation
     showGameInviteNotification(senderId, senderName) {
+      console.log("showGameInvite");
       const notifIcon = document.getElementById("notification-icon");
       if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
       const toast = document.createElement("div");
@@ -4798,25 +4821,28 @@
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        const socket = SocketService_default.getInstance().getChatSocket();
-        if (!socket) {
-          alert("Erreur de connexion");
+        const gameSocket = SocketService_default.getInstance().getGameSocket();
+        if (!gameSocket || !gameSocket.connected) {
+          alert("Error: connexion to server lost");
           toast.remove();
           return;
         }
         console.log("Accepting game invite from", senderName);
-        socket.once("matchFound", (data) => {
+        gameSocket.once("matchFound", (data) => {
           console.log("\u2705 Match found from invitation:", data);
           sessionStorage.setItem("pendingMatch", JSON.stringify(data));
           window.history.pushState({ gameMode: "remote" }, "", "/game");
           const event = new PopStateEvent("popstate");
           window.dispatchEvent(event);
         });
-        socket.emit("acceptGameInvite", { senderId });
+        gameSocket.emit("acceptGameInvite", { senderId });
         toast.remove();
       });
       toast.querySelector("#decline-invite")?.addEventListener("click", () => {
-        SocketService_default.getInstance().getChatSocket()?.emit("declineGameInvite", { senderId });
+        const gameSocket = SocketService_default.getInstance().getGameSocket()?.emit("declineGameInvite", { senderId });
+        if (gameSocket && gameSocket.connected) {
+          gameSocket.emit("declineGameInivite", { senderId });
+        }
         toast.remove();
       });
       setTimeout(() => {
@@ -5377,7 +5403,8 @@
   // scripts/components/Chat.ts
   var Chat = class {
     constructor() {
-      this.socket = null;
+      this.chatSocket = null;
+      this.gameSocket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
@@ -5388,8 +5415,12 @@
     init() {
       const socketService = SocketService_default.getInstance();
       socketService.connectChat();
-      this.socket = socketService.getChatSocket();
-      if (!this.socket) {
+      socketService.connectGame();
+      this.chatSocket = socketService.getChatSocket();
+      this.gameSocket = socketService.getGameSocket();
+      if (!this.gameSocket)
+        console.log("gamesocket n'existe pas");
+      if (!this.chatSocket) {
         console.error("Chat: Impossible to retrieve chat socket (not connected).");
         return;
       }
@@ -5402,8 +5433,9 @@
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
       this.currentFriendId = friendId || null;
-      if (this.socket)
-        this.socket.emit("joinChannel", channelKey);
+      console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
+      if (this.chatSocket)
+        this.chatSocket.emit("joinChannel", channelKey);
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
       }
@@ -5412,13 +5444,13 @@
     // ----      MISE EN ÉCOUTE DES SOCKETS           ----
     // ---------------------------------------------------
     setupSocketEvents() {
-      this.socket.on("connect", () => {
+      this.chatSocket.on("connect", () => {
         this.addMessage("You can now chat with your friend!", "System");
       });
-      this.socket.on("chatMessage", (data) => {
+      this.chatSocket.on("chatMessage", (data) => {
         this.addMessage(data.msg_content, data.sender_alias);
       });
-      this.socket.on("msg_history", (data) => {
+      this.chatSocket.on("msg_history", (data) => {
         if (this.messagesContainer) {
           this.messagesContainer.innerHTML = "";
           if (data.msg_history && data.msg_history.length > 0) {
@@ -5430,10 +5462,10 @@
           }
         }
       });
-      this.socket.on("systemMessage", (data) => {
+      this.chatSocket.on("systemMessage", (data) => {
         this.addSystemMessage(data.content);
       });
-      this.socket.on("receivedWizz", (data) => {
+      this.chatSocket.on("receivedWizz", (data) => {
         if (data.channel_key && data.channel_key !== this.currentChannel) return;
         const currentUser = localStorage.getItem("username");
         this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
@@ -5441,7 +5473,7 @@
           this.shakeElement(this.wizzContainer, 3e3);
         }
       });
-      this.socket.on("receivedAnimation", (data) => {
+      this.chatSocket.on("receivedAnimation", (data) => {
         const { animationKey, author } = data;
         const imgUrl = animations[animationKey];
         if (imgUrl) {
@@ -5456,7 +5488,7 @@
           this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
         }
       });
-      this.socket.on("disconnected", () => {
+      this.chatSocket.on("disconnected", () => {
         this.addMessage("Disconnected from chat server!", "System");
       });
     }
@@ -5470,7 +5502,7 @@
           const msg_content = this.messageInput.value;
           const sender_alias = localStorage.getItem("username");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
-          this.socket.emit("chatMessage", {
+          this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
             channel_key: this.currentChannel,
@@ -5488,16 +5520,16 @@
       if (wizzButton) {
         wizzButton.addEventListener("click", () => {
           const currentUsername = localStorage.getItem("username");
-          this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
           this.shakeElement(this.wizzContainer, 500);
         });
       }
     }
     // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
     emitWizzOnly() {
-      if (!this.socket) return;
+      if (!this.chatSocket) return;
       const currentUsername = localStorage.getItem("username");
-      this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
     // délcencher la secousse 
     shakeElement(element, duration = 500) {
@@ -5524,8 +5556,8 @@
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
     sendSystemNotification(message) {
-      if (this.socket) {
-        this.socket.emit("sendSystemMessage", {
+      if (this.chatSocket) {
+        this.chatSocket.emit("sendSystemMessage", {
           channel_key: this.currentChannel,
           content: message
         });
@@ -5536,15 +5568,51 @@
     addSystemMessage(message) {
       this.addMessage(`[b]${message}[/b]`, "System");
     }
+    //faustine
     addMessage(message, author) {
       if (!this.messagesContainer) return;
-      const msgElement = document.createElement("p");
-      msgElement.className = "mb-1";
-      const contentEmoticons = parseMessage(message);
-      msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+      const msgElement = document.createElement("div");
+      msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+      const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
+      const match = message.match(inviteRegex);
+      if (match) {
+        const friendshipId = match[1];
+        const isMe = author === localStorage.getItem("username");
+        msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
+        msgElement.innerHTML = `
+                <div class="flex flex-col gap-2">
+                    <strong>${author}</strong> veut jouer \xE0 Pong ! \u{1F3D3}<br>
+                    <button 
+                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
+                        onclick="
+                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
+                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                        "
+                    >
+                        ${isMe ? "Join my waitroom" : "Accept the match"}
+                    </button>
+                </div>
+            `;
+      } else {
+        msgElement.classList.add("bg-white");
+        const contentEmoticons = parseMessage(message);
+        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+      }
       this.messagesContainer.appendChild(msgElement);
       this.scrollToBottom();
     }
+    // private addMessage(message: string, author: string) {
+    //     if (!this.messagesContainer) return;
+    //     const msgElement = document.createElement('p');
+    //     msgElement.className = "mb-1";
+    //     // on securise le texte et on parse les emoticones
+    //     const contentEmoticons = parseMessage(message);
+    //     msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+    //     this.messagesContainer.appendChild(msgElement);
+    //     // rajouter un scroll automatique vers le bas
+    //     this.scrollToBottom();
+    // }
     addCustomContent(htmlContent) {
       if (!this.messagesContainer) return;
       const msgElement = document.createElement("div");
@@ -5611,17 +5679,14 @@
           const animationItem = document.createElement("div");
           animationItem.className = "cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
           animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
-          console.log("Envoi d'un message");
           animationItem.addEventListener("click", (event) => {
             event.stopPropagation();
             const currentUsername = localStorage.getItem("username");
-            console.log("Envoi d'un message");
-            this.socket.emit("sendAnimation", {
+            this.chatSocket.emit("sendAnimation", {
               animationKey: key,
               author: currentUsername,
               channel_key: this.currentChannel
             });
-            console.log("Envoi d'un message");
             animationDropdown.classList.add("hidden");
           });
           animationGrid.appendChild(animationItem);
@@ -5728,26 +5793,26 @@
         });
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
-          if (this.currentFriendId) {
+          if (this.currentFriendId && this.currentFriendshipId) {
             const myName = localStorage.getItem("username");
-            this.socket.emit("sendGameInvite", {
-              targetId: this.currentFriendId,
-              senderName: myName
-            });
-            this.addSystemMessage("Game invitation sent!");
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+            if (this.chatSocket && this.chatSocket.connected) {
+              console.log("chatSocket connected");
+              const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
+              this.chatSocket.emit("chatMessage", {
+                sender_id,
+                sender_alias: myName,
+                channel_key: this.currentChannel,
+                msg_content: inviteCode
+                // ici au lieu du message on "envois" le code d'invitation
+              });
+            } else {
+              console.log("chatSocket disconnected");
+            }
           } else {
-            this.addSystemMessage("Error: Can't invite in this channel.");
+            console.error("Game socket not connected", this.gameSocket);
+            this.addSystemMessage("Error: Game server not reachable.");
           }
-          chatOptionsDropdown.classList.add("hidden");
-        });
-        document.getElementById("button-view-profile")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          console.log("Profile clicked");
-          chatOptionsDropdown.classList.add("hidden");
-        });
-        document.getElementById("button-report-user")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          console.log("Report clicked");
           chatOptionsDropdown.classList.add("hidden");
         });
         document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
@@ -6012,7 +6077,7 @@
       }
       console.log("friendship homepage:", friendshipId);
       if (chatInstance) {
-        chatInstance.joinChannel(channelKey, friendshipId);
+        chatInstance.joinChannel(channelKey, friendshipId, friend.id);
       }
     };
     window.addEventListener("friendSelected", friendSelectedHandler);
@@ -7772,7 +7837,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Games</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n                    \n\n                    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                        <div class="window w-[600px] shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Start the game</div>\n                                <div class="title-bar-controls">\n                                    <button aria-label="Close"></button>\n                                </div>\n                            </div>\n\n                            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                \n                                <div class="flex flex-col gap-1">\n                                    <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                    <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                    <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                    <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                        <label class="text-sm font-semibold">Choose your ball :</label>\n                                        \n                                        <div class="relative">\n                                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                            </button>\n\n                                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                    </div>\n                                            </div>\n                                        </div>\n\n                                        <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                    </div>\n\n                                    <div class="flex flex-row gap-2">\n                                        <label class="text-sm font-semibold">Choose your background :</label>\n                                        \n                                        <div class="relative">\n                                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                            </button>\n\n                                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                        </div>\n\n                                        <input type="hidden" id="bg-value" value="#E8F4F8">\n                                    </div>\n                                </fieldset>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-game-btn"\n                                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        PLAY\n                                    </button>\n                                </div>\n\n                            </div>\n                        </div>\n                    </div>\n                    \n\n\n                    <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">Ready, steady, go!</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                            </div>\n                        </div>\n                    </div>\n\n\n\n                    <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the game</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    \n                </div>\n                <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                    </button>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    \n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -7962,17 +8027,6 @@
 	
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
 											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/report.png" 
-													class="w-5 h-5 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-report-user" class="text-left text-sm text-gray-700 flex-1">
-												Report user
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
 												<img src="/assets/basic/block.png" 
 													class="w-6 h-6 object-cover rounded"
 													alt="avatar">
@@ -8148,10 +8202,10 @@
         ctx.closePath();
       }
     }
-    reset(canvas) {
+    reset(canvas, direction = 1) {
       this.x = canvas.width / 2;
       this.y = canvas.height / 2;
-      this.velocityX = 5;
+      this.velocityX = 5 * direction;
       this.velocityY = 5;
     }
   };
@@ -8195,6 +8249,7 @@
     }
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId, role) {
+      console.log("startRemote");
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
@@ -8297,45 +8352,59 @@
       this.paddle2.draw(this.ctx);
       this.ball.draw(this.ctx);
     }
+    // ...
     checkCollisions() {
-      if (this.ball.velocityX < 0 && this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x && this.ball.y >= this.paddle1.y && this.ball.y <= this.paddle1.y + this.paddle1.height) {
-        let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
-        let angle = hitPos * (Math.PI / 4);
-        let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-        speed *= 1.05;
-        this.ball.velocityX = speed * Math.cos(angle);
-        this.ball.velocityY = speed * Math.sin(angle);
-        this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+      if (this.ball.velocityX < 0) {
+        if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x) {
+          if (this.ball.y + this.ball.radius >= this.paddle1.y && this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
+            let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
+            let angle = hitPos * (Math.PI / 4);
+            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed *= 1.05;
+            this.ball.velocityX = speed * Math.cos(angle);
+            this.ball.velocityY = speed * Math.sin(angle);
+            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+          }
+        }
       }
-      if (this.ball.velocityX > 0 && this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width && this.ball.y >= this.paddle2.y && this.ball.y <= this.paddle2.y + this.paddle2.height) {
-        let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
-        let angle = hitPos * (Math.PI / 4);
-        let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-        speed *= 1.05;
-        this.ball.velocityX = -speed * Math.cos(angle);
-        this.ball.velocityY = speed * Math.sin(angle);
-        this.ball.x = this.paddle2.x - this.ball.radius;
+      if (this.ball.velocityX > 0) {
+        if (this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
+          if (this.ball.y + this.ball.radius >= this.paddle2.y && this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
+            let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
+            let angle = hitPos * (Math.PI / 4);
+            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed *= 1.05;
+            this.ball.velocityX = -speed * Math.cos(angle);
+            this.ball.velocityY = speed * Math.sin(angle);
+            this.ball.x = this.paddle2.x - this.ball.radius;
+          }
+        }
       }
       if (this.ball.x < 0) {
         this.score.player2++;
         this.notifyScoreUpdate();
-        this.reset();
+        this.reset(1);
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
         this.notifyScoreUpdate();
-        this.reset();
+        this.reset(-1);
       }
+    }
+    reset(direction = 1) {
+      this.ball.reset(this.canvas, direction);
+      this.paddle1.reset(this.canvas.height);
+      this.paddle2.reset(this.canvas.height);
     }
     notifyScoreUpdate() {
       if (this.onScoreChange) {
         this.onScoreChange(this.score);
       }
     }
-    reset() {
-      this.ball.reset(this.canvas);
-      this.paddle1.reset(this.canvas.height);
-      this.paddle2.reset(this.canvas.height);
-    }
+    // reset() {
+    //     this.ball.reset(this.canvas);
+    //     this.paddle1.reset(this.canvas.height);
+    //     this.paddle2.reset(this.canvas.height);
+    // }
   };
   var Game_default = Game;
 
@@ -8382,6 +8451,8 @@
     return activeGame !== null && activeGame.isRunning;
   }
   async function getPlayerAlias() {
+    const cachedAlias = sessionStorage.getItem("cachedAlias");
+    if (cachedAlias) return cachedAlias;
     const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
     const isGuest = sessionStorage.getItem("userRole") === "guest";
     if (!userId) return "Player";
@@ -8389,6 +8460,8 @@
       const response = await fetchWithAuth(`api/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
+        const alias2 = userData.alias || (isGuest ? "Guest" : "Player");
+        sessionStorage.setItem("cachedAlias", alias2);
         return userData.alias || (isGuest ? "Guest" : "Player");
       }
     } catch (err) {
@@ -8631,7 +8704,13 @@
     gameChat = new Chat();
     gameChat.init();
     if (mode == "remote") {
-      gameChat.joinChannel("remote_game_room");
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (privateRoomId) {
+        console.log(`Lancement d'un chat priv\xE9 dans la waitroom num\xE9ro${privateRoomId}`);
+        gameChat.joinChannel(`private_wait_${privateRoomId}`);
+      } else {
+        gameChat.joinChannel("remote_game_room");
+      }
       initRemoteMode();
     } else if (mode == "tournament") {
       gameChat.joinChannel("tournament_room");
@@ -8775,30 +8854,16 @@
       const startGameFromData = async (data, p1Alias, p2Alias) => {
         console.log("Starting game from data:", data);
         const myAlias = await getPlayerAlias();
+        const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+        const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
         let opponentAlias = "Opponent";
-        if (data.opponent) {
-          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
-            if (userData && userData.alias) {
-              console.log("Opponent alias loaded:", userData.alias);
-              opponentAlias = userData.alias;
-              if (data.role === "player1") currentP2Alias = opponentAlias;
-              else currentP1Alias = opponentAlias;
-              const p1Display2 = document.getElementById("player-1-name");
-              const p2Display2 = document.getElementById("player-2-name");
-              if (data.role === "player1" && p2Display2) {
-                p2Display2.innerText = opponentAlias;
-              } else if (data.role === "player2" && p1Display2) {
-                p1Display2.innerText = opponentAlias;
-              }
-            }
-          }).catch((e) => console.error("Error loading opponent alias:", e));
-        }
-        console.log("Opponent:", data.opponentAlias);
         if (data.role === "player1") {
           currentP1Alias = myAlias;
+          if (remoteP2Alias) opponentAlias = remoteP2Alias;
           currentP2Alias = opponentAlias;
         } else {
           currentP1Alias = opponentAlias;
+          if (remoteP1Alias) opponentAlias = remoteP1Alias;
           currentP2Alias = myAlias;
         }
         const p1Display = document.getElementById("player-1-name");
@@ -8806,6 +8871,20 @@
         if (p1Display && p2Display) {
           p1Display.innerText = data.role === "player1" ? `${currentP1Alias} (Me)` : currentP1Alias;
           p2Display.innerText = data.role === "player2" ? `${currentP2Alias} (Me)` : currentP2Alias;
+        }
+        if (data.opponent) {
+          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            if (userData && userData.alias) {
+              const realOpponentName = userData.alias;
+              if (data.role === "player1") {
+                currentP2Alias = realOpponentName;
+                if (p2Display) p2Display.innerText = realOpponentName;
+              } else {
+                currentP1Alias = realOpponentName;
+                if (p1Display) p1Display.innerText = realOpponentName;
+              }
+            }
+          }).catch((e) => console.error("Error retrieving opponent alias:", e));
         }
         if (gameChat) {
           gameChat.joinChannel(data.roomId);
@@ -8876,6 +8955,8 @@
         sessionStorage.removeItem("pendingMatch");
         startGameFromData(data);
       }
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      console.log("privategame:", sessionStorage.getItem("privateGameId"));
       if (btn) {
         const newBtn = btn.cloneNode(true);
         btn.parentNode?.replaceChild(newBtn, btn);
@@ -8884,23 +8965,38 @@
             alert("Error: lost connexion to game server");
             return;
           }
-          if (status) status.innerText = "Recherche d'un adversaire...";
-          newBtn.disabled = true;
-          newBtn.innerText = "WAITING...";
           const myAlias = await getPlayerAlias();
-          gameSocket.off("matchFound");
-          gameSocket.on("matchFound", (data) => {
-            console.log(data);
-            startGameFromData(data);
-          });
-          gameSocket.emit("joinQueue");
+          newBtn.disabled = true;
+          if (privateRoomId) {
+            if (status) status.innerText = "Waiting for your friend in private room...";
+            newBtn.innerText = "WAITING FOR FRIEND...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              console.log("Private Match Started!", data);
+              sessionStorage.removeItem("privateGameId");
+              startGameFromData(data);
+            });
+            const selectedBall = ballInput ? ballInput.value : "classic";
+            gameSocket.emit("joinPrivateGame", {
+              roomId: privateRoomId,
+              skin: selectedBall
+            });
+          } else {
+            if (status) status.innerText = "Recherche d'un adversaire...";
+            newBtn.innerText = "WAITING...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              startGameFromData(data);
+            });
+            gameSocket.emit("joinQueue");
+          }
         });
       }
     }
     function inittournamentMode() {
       const setupModal = document.getElementById("tournament-setup-modal");
       if (setupModal) setupModal.classList.remove("hidden");
-      const nameInput2 = document.getElementById("tournament-name-input");
+      const nameInput = document.getElementById("tournament-name-input");
       const player1Input = document.getElementById("player1-input");
       const player2Input = document.getElementById("player2-input");
       const player3Input = document.getElementById("player3-input");
@@ -8923,7 +9019,7 @@
       });
       console.log("Username du user: ", username);
       startButton?.addEventListener("click", () => {
-        const tName = nameInput2.value.trim();
+        const tName = nameInput.value.trim();
         const players = [
           player1Input.value.trim(),
           player2Input.value.trim(),
@@ -9265,8 +9361,8 @@
     function initLocalMode() {
       const modal = document.getElementById("game-setup-modal");
       const startButton = document.getElementById("start-game-btn");
-      const nameInput2 = document.getElementById("opponent-name");
-      const errorMsg2 = document.getElementById("error-message");
+      const nameInput = document.getElementById("opponent-name");
+      const errorMsg = document.getElementById("error-message");
       const ballButton = document.getElementById("ball-selector-button");
       const ballDropdown = document.getElementById("ball-selector-dropdown");
       const ballGrid = document.getElementById("ball-grid");
@@ -9363,10 +9459,10 @@
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
-          const opponentName = nameInput2.value.trim();
+          const opponentName = nameInput.value.trim();
           if (opponentName === "") {
-            if (errorMsg2) errorMsg2.classList.remove("hidden");
-            nameInput2.classList.add("border-red-500");
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            nameInput.classList.add("border-red-500");
             return;
           }
           if (gameChat) {
@@ -9447,6 +9543,12 @@
           });
         });
       }
+      if (nameInput) {
+        nameInput.addEventListener("input", () => {
+          if (errorMsg) errorMsg.classList.add("hidden");
+          nameInput.classList.remove("border-red-500");
+        });
+      }
     }
     async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
       try {
@@ -9484,10 +9586,6 @@
         console.error(e);
       }
     }
-    nameInput.addEventListener("input", () => {
-      if (errorMsg) errorMsg.classList.add("hidden");
-      nameInput.classList.remove("border-red-500");
-    });
   }
   function launchConfetti(duration = 3e3) {
     const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
@@ -9635,39 +9733,52 @@
       window.dispatchEvent(popStateEvent);
     }
   };
+  var clearGuestSession = () => {
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("userRole");
+    sessionStorage.removeItem("isGuest");
+  };
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
+    if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
+      clearGuestSession();
+    }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    if (isGameRunning() && path !== "game") cleanup();
+    if (isGameRunning() && path !== "/game") cleanup();
     if (path === "/logout") {
       handleLogout();
       return;
     }
     const navbar = document.getElementById("main-navbar");
+    const userMenuHtml = `
+        <a href="/home" class="text-white hover:underline">Home</a>
+        <a href="/profile" class="text-white hover:underline">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
+    const guestMenuHtml = `
+        <a href="/guest" class="text-white hover:underline">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
     if (navbar) {
       if (isGuest) {
-        navbar.style.display = "none";
+        navbar.style.display = "flex";
+        if (!navbar.innerHTML.includes("Guest Area")) {
+          navbar.innerHTML = guestMenuHtml;
+        }
       } else if (accessToken) {
         navbar.style.display = "flex";
+        navbar.classList.add("justify-between");
+        if (!navbar.innerHTML.includes("Dashboard")) {
+          navbar.innerHTML = userMenuHtml;
+        }
       } else {
         navbar.style.display = "none";
       }
-    }
-    if (isGuest) {
-      if (path === "/home" || path === "/profile" || path === "/dashboard") {
-        window.history.pushState({}, "", "/guest");
-        path = "/guest";
-      }
-    } else if (accessToken) {
-      if (path === "/" || path === "/login" || path === "/register" || path === "/guest") {
-        window.history.pushState({}, "", "/home");
-        path = "/home";
-      }
-    } else if (!publicRoutes.includes(path)) {
-      window.history.pushState({}, "", "/");
-      path = "/";
     }
     const page = routes[path] || routes["/404"];
     appElement.innerHTML = page.render();

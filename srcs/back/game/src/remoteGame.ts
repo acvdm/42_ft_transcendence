@@ -1,5 +1,7 @@
 import { Socket, Server } from 'socket.io';
 
+const privateWaitingRooms = new Map<string, string>(); // faustine
+
 // --- STRUCTURES JEU REMOTE ---
 interface GameState {
     roomId: string;
@@ -12,6 +14,7 @@ interface GameState {
     canvasWidth: number;
     canvasHeight: number;
     intervalId?: NodeJS.Timeout;
+    serveDirection: number; // 1 pour droite -1 pour gauche
 }
 
 let waitingQueue: string[] = []; // ID des sockets en attente
@@ -28,18 +31,20 @@ export function initGameState(roomId: string, p1: string, p2: string): GameState
         ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
         paddle1: { x: 30, y: 250, width: 10, height: 100 },
         paddle2: { x: 760, y: 250, width: 10, height: 100 },
-        score: { player1: 0, player2: 0 }
+        score: { player1: 0, player2: 0 },
+        serveDirection: 1
     };
 }
 
 function resetBall(game: GameState) {
     game.ball.x = game.canvasWidth / 2;
     game.ball.y = game.canvasHeight / 2;
+    game.serveDirection *= -1;
     // Vitesse aléatoire mais constante
-    const angle = (Math.random() * Math.PI / 2) - (Math.PI / 4);
+    const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
     const speed = 7;
     const direction = Math.random() > 0.5 ? 1 : -1;
-    game.ball.vx = direction * speed * Math.cos(angle);
+    game.ball.vx = game.serveDirection * speed * Math.cos(angle);
     game.ball.vy = speed * Math.sin(angle);
 }
 
@@ -55,34 +60,62 @@ function stopGame(roomId: string, io: Server) {
         activeGames.delete(roomId);
     }
 }
-
 export function updateGamePhysics(game: GameState, io: Server) {
-    // Bouger la balle
-    game.ball.x += game.ball.vx;
-    game.ball.y += game.ball.vy;
+    // 1. On sauvegarde la position AVANT mouvement pour la comparaison
+    const prevX = game.ball.x;
+    const prevY = game.ball.y;
+
+    // 2. On calcule la FUTURE position sans modifier l'objet tout de suite
+    let nextX = prevX + game.ball.vx;
+    let nextY = prevY + game.ball.vy;
 
     // Collision murs (Haut/Bas)
-    if (game.ball.y - game.ball.radius < 0 || game.ball.y + game.ball.radius > game.canvasHeight) {
+    if (nextY - game.ball.radius < 0 || nextY + game.ball.radius > game.canvasHeight) {
         game.ball.vy = -game.ball.vy;
+        nextY = prevY + game.ball.vy; // On recalcule nextY avec la nouvelle direction
     }
 
-    // Collision Raquettes (Simplifiée)
-    // P1
-    if (game.ball.x - game.ball.radius < game.paddle1.x + game.paddle1.width &&
-        game.ball.x + game.ball.radius > game.paddle1.x &&
-        game.ball.y > game.paddle1.y &&
-        game.ball.y < game.paddle1.y + game.paddle1.height) {
-            game.ball.vx = Math.abs(game.ball.vx); // Rebond vers la droite
-            game.ball.vx *= 1.05; // Accélération
+    // Collision Raquettes
+    // P1 (Gauche)
+    if (game.ball.vx < 0) { 
+        // La balle va vers la gauche. On regarde si elle traverse la face DROITE de la raquette.
+        // Condition: Elle était à droite (prevX) ET elle finit à gauche (nextX)
+        const paddleRightEdge = game.paddle1.x + game.paddle1.width;
+
+        if (prevX - game.ball.radius >= paddleRightEdge && 
+            nextX - game.ball.radius <= paddleRightEdge) {
+            
+            // Vérification verticale (Y)
+            if (game.ball.y + game.ball.radius >= game.paddle1.y && 
+                game.ball.y - game.ball.radius <= game.paddle1.y + game.paddle1.height) {
+                
+                game.ball.vx = -game.ball.vx * 1.05;
+                // On replace la balle juste devant la raquette pour éviter qu'elle reste coincée
+                nextX = paddleRightEdge + game.ball.radius;
+            }
+        }
     }
-    // P2
-    if (game.ball.x + game.ball.radius > game.paddle2.x &&
-        game.ball.x - game.ball.radius < game.paddle2.x + game.paddle2.width &&
-        game.ball.y > game.paddle2.y &&
-        game.ball.y < game.paddle2.y + game.paddle2.height) {
-            game.ball.vx = -Math.abs(game.ball.vx); // Rebond vers la gauche
-            game.ball.vx *= 1.05; // Accélération
+
+    // P2 (Droite)
+    if (game.ball.vx > 0) { 
+        // La balle va vers la droite. On regarde si elle traverse la face GAUCHE de la raquette.
+        const paddleLeftEdge = game.paddle2.x;
+
+        if (prevX + game.ball.radius <= paddleLeftEdge && 
+            nextX + game.ball.radius >= paddleLeftEdge) {
+            
+            if (game.ball.y + game.ball.radius >= game.paddle2.y && 
+                game.ball.y - game.ball.radius <= game.paddle2.y + game.paddle2.height) {
+                
+                game.ball.vx = -game.ball.vx * 1.05;
+                nextX = paddleLeftEdge - game.ball.radius;
+            }
+        }
     }
+
+    // 3. Mise à jour effective de la balle
+    game.ball.x = nextX;
+    game.ball.y = nextY;
 
     // Score
     if (game.ball.x < 0) {
@@ -93,7 +126,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
         resetBall(game);
     }
 
-    // Fin de partie (exemple: 5 points)
+    // Fin de partie
     if (game.score.player1 >= 5 || game.score.player2 >= 5) {
         stopGame(game.roomId, io);
     }
@@ -109,21 +142,37 @@ export function updateGamePhysics(game: GameState, io: Server) {
 
 
 export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets: Map<number, string>) {
-    
+    console.debug("registerRemoteGameEvent")
+
+    socket.on('registerGameSocket', () => {
+        console.log(`[SERVER] Register game socket pour user ${socket.user.sub} -> ${socket.id}`);
+        userSockets.set(socket.user.sub, socket.id);
+    })
     // 1. Gestion des Invitations
     socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
+        console.debug(`[SERVER] sendGameInvite reçue de ${socket.id}. Cible: ${data.targetId}`);
         const targetIdNum = Number(data.targetId);
+
+        console.debug(`[SERVER] UserSockets Map keys:`, [...userSockets.keys()]);
+        console.log(`🔍 [SERVER] Recherche socket pour User ID: ${targetIdNum} (Type: ${typeof targetIdNum})`);
+        
+
         const targetSocketId = userSockets.get(targetIdNum);
         
         if (targetSocketId) {
+            console.log(`✅ [SERVER] Envoi à socket ID: ${targetSocketId} pour User ${targetIdNum}`); // <--- REGARDE CET ID
             io.to(targetSocketId).emit('receiveGameInvite', {
                 senderId: socket.user.sub,
                 senderName: data.senderName
             });
-        }
+        } else {
+        console.error(`❌ [SERVER] Cible introuvable dans userSockets.`);
+    }
     });
 
     socket.on('acceptGameInvite', (data: { senderId: string }) => {
+        console.log("accept game invite");
+        waitingQueue = waitingQueue.filter(id => id !== socket.id); // nettoyage pour eviter race condition
         const senderIdNum = Number(data.senderId);
         const senderSocketId = userSockets.get(senderIdNum);
         const acceptorSocketId = socket.id;
@@ -163,6 +212,12 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
     socket.on('joinQueue', () => {
         if (waitingQueue.includes(socket.id)) return;
 
+        //netoayge si on rejoint la auque on quitte les salles privees en attente
+        for (const [roomId, socketId] of privateWaitingRooms.entries()) {
+            if (socketId === socket.id) {
+                privateWaitingRooms.delete(roomId);
+            }
+        }
         console.log(`Player ${socket.id} joined Queue`);
         waitingQueue.push(socket.id);
 
@@ -239,6 +294,60 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
             stopGame(data.roomId, io);
         }
     });
+
+    //faustine
+    socket.on('joinPrivateGame', (data: { roomId: string, skin?: string }) => {
+        const { roomId } = data;
+        const mySocketId = socket.id;
+
+        // nettoyage
+        waitingQueue = waitingQueue.filter(id => id !== mySocketId);
+        console.log(`Player ${mySocketId} joining private room ${roomId}`);
+
+        // est-ce que mon ami est deja en train de m'attendre
+        if (privateWaitingRooms.has(roomId)) {
+            const opponentSocketId = privateWaitingRooms.get(roomId);
+
+            // il ne faut pas que ca soit moi (cas potentiel de double clic)
+            if (opponentSocketId && opponentSocketId !== mySocketId) {
+                // lancement du match et nettoyage de la waitroom
+                privateWaitingRooms.delete(roomId);
+
+                // creation de k;udee de la partie
+                const gameId = `private_${Date.now()}_${roomId}`;
+                const gameState = initGameState(gameId, opponentSocketId, mySocketId);
+                activeGames.set(gameId, gameState);
+
+                const sock1 = io.sockets.sockets.get(opponentSocketId);
+                const sock2 = io.sockets.sockets.get(mySocketId);
+
+                // on verifie que les deux sont tjrs connectes
+                if (sock1 && sock2) {
+                    sock1.join(gameId);
+                    sock2.join(gameId);
+
+                    const p1UserId = (sock1 as any).user?.sub;
+                    const p2UserId = (sock2 as any).user?.sub;
+
+                    // lancement du jeu pour les deux 
+                    sock1.emit('matchFound', { roomId: gameId, role: 'player1', opponent: p2UserId });
+                    sock2.emit('matchFound', { roomId: gameId, role: 'player2', opponent: p1UserId });
+
+                    console.log(`Private Match started: ${gameId}`);
+                    gameState.intervalId = setInterval(() => {
+                        updateGamePhysics(gameState, io);
+                    }, GAMESPEED);
+                } else {
+                    if (!sock1) console.log("Opponent socket not found for private game");
+                    if (!sock2) console.log("My socket not found (weird)");
+                }
+            }
+        } else {
+            // sinon je dois attendre
+            privateWaitingRooms.set(roomId, mySocketId);
+            console.log(`Player ${mySocketId} is waiting in private room ${roomId}`);
+        }
+    });
     
     // 4. Gestion de la Déconnexion (Nettoyage Jeu)
     // Note: On ne gère pas le userSockets.delete ici car il est souvent géré dans le index.ts principal
@@ -247,6 +356,14 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
         // Retirer de la queue
         waitingQueue = waitingQueue.filter(id => id !== socket.id);
         
+        // on nettoie la private room
+        for (const [roomId, socketId] of privateWaitingRooms.entries()) {
+            if (socketId === socket.id) {
+                privateWaitingRooms.delete(roomId);
+                console.log(`Removed private room ${roomId} because waiting player disconnected`);
+            }
+        }
+
         // Arrêter les parties en cours
         for (const [roomId, game] of activeGames.entries()) {
             if (game.player1Id === socket.id || game.player2Id === socket.id) {

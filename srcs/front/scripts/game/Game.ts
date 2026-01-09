@@ -58,6 +58,7 @@ class Game {
 
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId: string, role: 'player1' | 'player2') {
+        console.log("startRemote");
         this.isRemote = true;
         this.roomId = roomId;
         this.playerRole = role;
@@ -200,60 +201,77 @@ class Game {
         this.ball.draw(this.ctx);
     }
 
+    // ...
     checkCollisions() {
-        // Ball collision with left paddle
-        if (this.ball.velocityX < 0 && 
-            this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width &&
-            this.ball.x - this.ball.radius >= this.paddle1.x &&
-            this.ball.y >= this.paddle1.y &&
-            this.ball.y <= this.paddle1.y + this.paddle1.height) {
-            
-            // Calculate where ball hit paddle (-1 to 1, center is 0)
-            let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
-            let angle = hitPos * (Math.PI / 4); // Max 45 degree angle
-            
-            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-            speed *= 1.05; // 5% speed increase on hit
-            
-            this.ball.velocityX = speed * Math.cos(angle);
-            this.ball.velocityY = speed * Math.sin(angle);
-            
-            // Push ball out of paddle to prevent double collision
-            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+        // [FIX LOCAL] Logique améliorée pour éviter le tunneling et gérer les bords
+
+        // 1. Collision avec PADDLE 1 (Gauche)
+        if (this.ball.velocityX < 0) {
+            // Si la balle est proche de la raquette en X
+            if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width &&
+                this.ball.x - this.ball.radius >= this.paddle1.x) {
+                
+                // Si la balle est au niveau de la raquette en Y (avec rayon inclus pour les bords)
+                if (this.ball.y + this.ball.radius >= this.paddle1.y && 
+                    this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
+                    
+                    // Calcul de l'angle (inchangé)
+                    let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
+                    let angle = hitPos * (Math.PI / 4);
+                    
+                    let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+                    speed *= 1.05;
+                    
+                    this.ball.velocityX = speed * Math.cos(angle);
+                    this.ball.velocityY = speed * Math.sin(angle);
+                    
+                    // Repousser la balle pour éviter qu'elle reste collée
+                    this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+                }
+            }
         }
 
-        // Ball collision with right paddle
-        if (this.ball.velocityX > 0 && 
-            this.ball.x + this.ball.radius >= this.paddle2.x &&
-            this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width &&
-            this.ball.y >= this.paddle2.y &&
-            this.ball.y <= this.paddle2.y + this.paddle2.height) {
+        // 2. Collision avec PADDLE 2 (Droite)
+        if (this.ball.velocityX > 0) {
+             if (this.ball.x + this.ball.radius >= this.paddle2.x &&
+                this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
             
-            // Calculate where ball hit paddle (-1 to 1, center is 0)
-            let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
-            let angle = hitPos * (Math.PI / 4); // Max 45 degree angle
-            
-            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-            speed *= 1.05; // 5% speed increase on hit
-            
-            this.ball.velocityX = -speed * Math.cos(angle);
-            this.ball.velocityY = speed * Math.sin(angle);
-            
-            // Push ball out of paddle to prevent double collision
-            this.ball.x = this.paddle2.x - this.ball.radius;
+                // [FIX] Gestion correcte des bords Y
+                if (this.ball.y + this.ball.radius >= this.paddle2.y && 
+                    this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
+                
+                    let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
+                    let angle = hitPos * (Math.PI / 4);
+                    
+                    let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+                    speed *= 1.05;
+                    
+                    this.ball.velocityX = -speed * Math.cos(angle);
+                    this.ball.velocityY = speed * Math.sin(angle);
+                    
+                    this.ball.x = this.paddle2.x - this.ball.radius;
+                }
+            }
         }
 
-        // Ball out of bounds (scoring)
+        // Scoring
         if (this.ball.x < 0) {
             this.score.player2++;
             this.notifyScoreUpdate();
-            this.reset();
+            this.reset(1); // [FIX] Joueur 2 marque, balle vers Joueur 1 (droite) ? Ou alternance : ici on envoie vers Droite (1)
         } else if (this.ball.x > this.canvas.width) {
             this.score.player1++;
             this.notifyScoreUpdate();
-            this.reset();
+            this.reset(-1); // [FIX] Joueur 1 marque, balle vers Joueur 2 (gauche)
         }
     }
+
+    reset(direction: number = 1) {
+        this.ball.reset(this.canvas, direction); // [FIX] On passe la direction
+        this.paddle1.reset(this.canvas.height);
+        this.paddle2.reset(this.canvas.height);
+    }
+
 
     notifyScoreUpdate() {
         if (this.onScoreChange) {
@@ -261,11 +279,11 @@ class Game {
         }
     }
 
-    reset() {
-        this.ball.reset(this.canvas);
-        this.paddle1.reset(this.canvas.height);
-        this.paddle2.reset(this.canvas.height);
-    }
+    // reset() {
+    //     this.ball.reset(this.canvas);
+    //     this.paddle1.reset(this.canvas.height);
+    //     this.paddle2.reset(this.canvas.height);
+    // }
 }
 
 export default Game;

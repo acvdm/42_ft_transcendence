@@ -44,9 +44,10 @@ export function cleanup() {
     // detacher les ecouteurs socket specifiques a cette page
     // sinon quand on revient le socket declenche l'evenement x fois
     const socketService = SocketService.getInstance();
-    if (socketService.socket) {
-        socketService.socket.off('friendProfileUpdated');
-        socketService.socket.off('friendStatusUpdate');
+    const chatSocket = socketService.getChatSocket();
+    if (chatSocket) {
+        chatSocket.off('friendProfileUpdated');
+        chatSocket.off('friendStatusUpdate');
     }
 }
 
@@ -148,7 +149,7 @@ export function afterRender(): void {
         // chat.joinChannel(channelKey, friendshipId);
 
         if (chatInstance) {
-            chatInstance.joinChannel(channelKey, friendshipId);
+            chatInstance.joinChannel(channelKey, friendshipId, friend.id);
         }
 
     };

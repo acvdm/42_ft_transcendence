@@ -81,6 +81,9 @@ export function isGameRunning(): boolean {
 
 //aHelper pour recuperer le nom du n joueur
 async function getPlayerAlias(): Promise<string> {
+    const cachedAlias = sessionStorage.getItem('cachedAlias');
+    if (cachedAlias) return cachedAlias;
+
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
     const isGuest = sessionStorage.getItem('userRole') === 'guest';
     
@@ -90,6 +93,9 @@ async function getPlayerAlias(): Promise<string> {
         const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
             const userData = await response.json();
+            const alias = userData.alias || (isGuest ? "Guest" : "Player");
+            // Mettre en cache
+            sessionStorage.setItem('cachedAlias', alias);
             return userData.alias || (isGuest ? "Guest" : "Player");
         }
     } catch (err) {
@@ -227,6 +233,7 @@ function confirmExit() {
 
 // pour nettoyer le tout quand on quitte la page
 export function cleanup() {
+    
     if (gameChat) {
         gameChat.destroy();
         gameChat = null;
@@ -384,6 +391,7 @@ export function initGamePage(mode: string): void {
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
+
     const player1Display = document.getElementById('player-1-name') as HTMLElement;
 
     if (player1Display) {
@@ -398,7 +406,15 @@ export function initGamePage(mode: string): void {
     gameChat.init();
 
     if (mode == 'remote') {
-        gameChat.joinChannel("remote_game_room"); // salle d'attente globale
+        const privateRoomId = sessionStorage.getItem('privateGameId');
+        if (privateRoomId) {
+            // si la partie est privée on fait une route dediée
+            console.log(`Lancement d'un chat privé dans la waitroom numéro${privateRoomId}`);
+            gameChat.joinChannel(`private_wait_${privateRoomId}`);
+            
+        } else {
+            gameChat.joinChannel("remote_game_room"); // salle d'attente globale
+        }
         // iniitailiastion de la logique de jeu en remote
         initRemoteMode();
     } else if (mode == 'tournament') {
@@ -587,55 +603,50 @@ export function initGamePage(mode: string): void {
             console.log("Starting game from data:", data);
 
             const myAlias = await getPlayerAlias();
+            const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+            const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
             let opponentAlias = "Opponent";
+
+            if (data.role === 'player1') {
+                currentP1Alias = myAlias;
+                if (remoteP2Alias) opponentAlias = remoteP2Alias;
+                currentP2Alias = opponentAlias;
+            } else {
+                currentP1Alias = opponentAlias;
+                if (remoteP1Alias) opponentAlias = remoteP1Alias;
+                currentP2Alias = myAlias;
+            }
+
+            // 3. Mise à jour de l'affichage INITIAL (Immédiat)
+            const p1Display = document.getElementById('player-1-name');
+            const p2Display = document.getElementById('player-2-name');
+
+            if (p1Display && p2Display) {
+                p1Display.innerText = (data.role === 'player1') ? `${currentP1Alias} (Me)` : currentP1Alias;
+                p2Display.innerText = (data.role === 'player2') ? `${currentP2Alias} (Me)` : currentP2Alias;
+            }
+
+            // 4. Récupération de l'adversaire en arrière-plan (si disponible)
             if (data.opponent) {
                 fetchWithAuth(`api/user/${data.opponent}`)
                     .then(res => res.ok ? res.json() : null)
                     .then(userData => {
                         if (userData && userData.alias) {
-                            console.log("Opponent alias loaded:", userData.alias);
-                            opponentAlias = userData.alias;
+                            const realOpponentName = userData.alias;
                             
-                            // On met à jour les variables globales pour la fin du jeu
-                            if (data.role === 'player1') currentP2Alias = opponentAlias;
-                            else currentP1Alias = opponentAlias;
-
-                            // On met à jour l'affichage en direct
-                            const p1Display = document.getElementById('player-1-name');
-                            const p2Display = document.getElementById('player-2-name');
-                            
-                            if (data.role === 'player1' && p2Display) {
-                                p2Display.innerText = opponentAlias;
-                            } else if (data.role === 'player2' && p1Display) {
-                                p1Display.innerText = opponentAlias;
+                            // On ne met à jour QUE l'élément qui correspond à l'adversaire
+                            if (data.role === 'player1') {
+                                // Je suis P1, donc l'adversaire est P2
+                                currentP2Alias = realOpponentName;
+                                if (p2Display) p2Display.innerText = realOpponentName;
+                            } else {
+                                // Je suis P2, donc l'adversaire est P1
+                                currentP1Alias = realOpponentName;
+                                if (p1Display) p1Display.innerText = realOpponentName;
                             }
                         }
                     })
-                    .catch(e => console.error("Error loading opponent alias:", e));
-            }
-            console.log("Opponent:", data.opponentAlias);
-            if (data.role === 'player1') {
-                currentP1Alias = myAlias;
-                currentP2Alias = opponentAlias;
-            } else {
-                currentP1Alias = opponentAlias;
-                currentP2Alias = myAlias;
-            }
-
-
-            const p1Display = document.getElementById('player-1-name');
-            const p2Display = document.getElementById('player-2-name');
-
-            if (p1Display && p2Display) {
-                p1Display.innerText =
-                    data.role === 'player1'
-                        ? `${currentP1Alias} (Me)`
-                        : currentP1Alias;
-
-                p2Display.innerText =
-                    data.role === 'player2'
-                        ? `${currentP2Alias} (Me)`
-                        : currentP2Alias;
+                    .catch(e => console.error("Error retrieving opponent alias:", e));
             }
 
             // Sync du chat sur la room du jeu
@@ -727,38 +738,60 @@ export function initGamePage(mode: string): void {
             sessionStorage.removeItem('pendingMatch'); // On nettoie
             startGameFromData(data); // Lancement auto !
         }
+//faustine
+        const privateRoomId = sessionStorage.getItem('privateGameId'); // on recuperer notre id
+        console.log("privategame:", sessionStorage.getItem('privateGameId'));
 
-        // Gestion du bouton "JOUER"
+        // gestion du bouton de jeu
         if (btn) {
-            // On clone pour éviter les event listeners multiples si on revient sur la page
+
+            // on va cloner le bouton pour supprimer les anciens listeners et commencer avec un truc propre
             const newBtn = btn.cloneNode(true) as HTMLButtonElement;
             btn.parentNode?.replaceChild(newBtn, btn);
 
+            // clic du bouton
             newBtn.addEventListener('click', async () => {
-
                 if (!gameSocket) {
                     alert("Error: lost connexion to game server");
-                    return ;
+                    return;
                 }
 
-                if (status) status.innerText = "Recherche d'un adversaire...";
-                newBtn.disabled = true;
-                newBtn.innerText = "WAITING...";
-
                 const myAlias = await getPlayerAlias();
+                newBtn.disabled = true;
 
-                // // Ecoute de l'événement de début de match
-                // socketService.socket.on('matchFound', (data: any) => {
-                //     console.log("Match Found!", data);
-                gameSocket.off('matchFound');
+                // on detecte que c'est une partie privee car j'ai le proviate room id 
+                if (privateRoomId) {
+                    if (status) status.innerText = "Waiting for your friend in private room...";
+                    newBtn.innerText = "WAITING FOR FRIEND...";
+                    
+                    // Écoute du début de match
+                    gameSocket.off('matchFound');
+                    gameSocket.on('matchFound', (data: any) => {
+                        console.log("Private Match Started!", data);
+                        // on nettoie l'id pour ne pas rester bloqué en mode privé au prochain passage dans la room
+                        sessionStorage.removeItem('privateGameId'); 
+                        startGameFromData(data);
+                    });
 
-                gameSocket.on('matchFound', (data: any) => {
-                    console.log(data);
-                    startGameFromData(data);
-                });
+                    // Envoi de la demande pour savoir quelle room et quelle balle
+                    const selectedBall = ballInput ? ballInput.value : 'classic';
+                    gameSocket.emit('joinPrivateGame', { 
+                        roomId: privateRoomId,
+                        skin: selectedBall 
+                    });
+                } 
+                // sinon c;est du public et on reste en remote classique
+                else {
+                    if (status) status.innerText = "Recherche d'un adversaire...";
+                    newBtn.innerText = "WAITING...";
 
-                // Envoi demande au server sur le game socket
-                gameSocket.emit('joinQueue');
+                    gameSocket.off('matchFound');
+                    gameSocket.on('matchFound', (data: any) => {
+                        startGameFromData(data);
+                    });
+
+                    gameSocket.emit('joinQueue');
+                }
             });
         }
     }
@@ -1484,6 +1517,13 @@ export function initGamePage(mode: string): void {
                 });
             });
         }
+         // resrt erreur ecritur e
+         if (nameInput) {
+             nameInput.addEventListener('input', () => {
+                 if (errorMsg) errorMsg.classList.add('hidden');
+                 nameInput.classList.remove('border-red-500');
+             });
+         }
     }
 
     async function saveLocalGameToApi(
@@ -1536,13 +1576,9 @@ export function initGamePage(mode: string): void {
             console.error(e); 
         }
     }
-
-    // resrt erreur ecritur e
-    nameInput.addEventListener('input', () => {
-        if (errorMsg) errorMsg.classList.add('hidden');
-        nameInput.classList.remove('border-red-500');
-    });
 }
+
+
 
 //////////////////////////////////////////////
 //// LANCEMENT DE CONFETTIS A LA VICTOIRE ////

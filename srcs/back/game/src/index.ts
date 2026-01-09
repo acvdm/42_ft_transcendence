@@ -67,6 +67,7 @@ const authMiddleware = (socket: any, next: any) => {
 // ------------------------------------
 
 fastify.ready().then(() => {
+	console.log("container game")
     // Application de sécurité
     fastify.io.use(authMiddleware);
     
