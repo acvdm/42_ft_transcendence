@@ -8962,7 +8962,12 @@
                 gameSocket.off("gameEnded");
                 const s1 = activeGame.score.player1;
                 const s2 = activeGame.score.player2;
-                const winnerAlias = data.role === "player1" ? currentP1Alias : currentP2Alias;
+                let winnerAlias = "";
+                if (data.role === "player1") {
+                  winnerAlias = currentP1Alias;
+                } else {
+                  winnerAlias = currentP2Alias;
+                }
                 await saveRemoteGameToApi(
                   currentP1Alias,
                   s1,

@@ -144,7 +144,7 @@ fastify.post('/games', async (request, reply) =>
 		{
 			const p1IsWinner = body.winner == body.p1.alias
 			p1Match = await addPlayerMatch(
-				db, "local", gameId,
+				db, body.type, gameId,
 				body.p1.userId, body.p2.alias,
 				body.p1.score, p1IsWinner ? 1 : 0
 			);
@@ -159,7 +159,7 @@ fastify.post('/games', async (request, reply) =>
 		{
 			const p2IsWinner = body.winner == body.p2.alias
 			p2Match = await addPlayerMatch(
-				db, "local", gameId,
+				db, body.type, gameId,
 				body.p2.userId, body.p1.alias,
 				body.p2.score, p2IsWinner ? 1 : 0
 			);

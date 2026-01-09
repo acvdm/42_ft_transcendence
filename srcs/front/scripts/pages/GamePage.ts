@@ -785,16 +785,18 @@ export function initGamePage(mode: string): void {
                             const s1 = activeGame.score.player1;
                             const s2 = activeGame.score.player2;
                             
-                            const winnerAlias = (data.role === 'player1') ? currentP1Alias : currentP2Alias;
+                            let winnerAlias = "";
 
-                            // let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
-
-                            // const myAlias = await getPlayerAlias();
-                            // const userIdStr = localStorage.getItem('userId');
-                            // if (userIdStr) {
-                            //     // saveGameStats(Number(userIdStr), myScore, true);
-                            //     saveRemoteGameToApi()
-                            // }
+                            if (data.role === 'player1')
+                            {
+                                // Je suis P1, mon adversaire P2 est parti -> je gagne
+                                winnerAlias = currentP1Alias;
+                            }
+                            else
+                            {
+                                // Je suis P2, mon adversaire P1 est parti -> Je gagne
+                                winnerAlias = currentP2Alias;
+                            }
 
                             await saveRemoteGameToApi (
                                 currentP1Alias, s1, p1Id,
@@ -822,6 +824,8 @@ export function initGamePage(mode: string): void {
                             const s1 = activeGame.score.player1;
                             const s2 = activeGame.score.player2;
 
+                            // Les 2 joueurs sont encore connectés
+                            // Seul le player1 envoie la requête
                             if (data.role === 'player1')
                             {
                                 await saveRemoteGameToApi(
