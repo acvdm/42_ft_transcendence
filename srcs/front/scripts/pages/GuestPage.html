@@ -1,0 +1,68 @@
+<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+    </div>
+
+    <div class="absolute z-10 top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+        
+        <div class="flex justify-center items-center flex-1 min-h-0">
+
+            <div class="window w-[500px] min-w-[500px] flex flex-col">
+                <div class="title-bar">
+                    <div class="title-bar-text">Guest Mode</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize"></button>
+                        <button aria-label="Maximize"></button>
+                        <button aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm">
+                    
+                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">
+                        <div class="flex flex-col items-center">
+                            <h1 class="text-2xl font-bold text-blue-900 p-4">Welcome on transcendence</h1>
+                            <p class="text-lg text-gray-700 italic text-center border-b border-gray-500 p-4">You are actually playing as a guest. If you want to access any game's feature, you need to register!</p>
+                            <p class="text-sm text-gray-500 mt-4">Select a mode to start playing</p>
+                        </div>
+
+                        <div class="flex flex-col gap-6 px-10">
+                            <button id="local-game" 
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
+                                LOCAL GAME
+                            </button>
+
+                            <button id="remote-game" 
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
+                                REMOTE GAME
+                            </button>
+
+                            <button id="tournament-game" 
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
+                                TOURNAMENT
+                            </button>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+
+
+
+            <div class="window flex flex-col flex-1 min-w-0"> <div class="title-bar">
+                    <div class="title-bar-text">Guest Chat</div>
+                </div>
+                <div class="window-body flex flex-col flex-1 bg-white p-2">
+                    <div id="chat-messages" class="flex-1 overflow-y-auto mb-2 border border-gray-300 p-2"></div>
+                    <input type="text" id="chat-input" placeholder="Say hello..." class="w-full border p-1">
+                    </div>
+            </div>
+        </div>
+    </div>
+</div>

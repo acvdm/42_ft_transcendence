@@ -9,7 +9,8 @@ services:
         - gateway
         - front
       networks:
-        - transcendence
+        - frontend
+        - backend
 
     gateway:
       container_name: gateway
@@ -17,14 +18,18 @@ services:
       expose:
         - "8080"            # Port interne uniquement, accessible depuis nginx  
       depends_on:
-        - auth
-        - user
-        - game
-        - chat
+        auth:
+          condition: service_healthy
+        user:
+          condition: service_healthy
+        game:
+          condition: service_healthy
+        chat:
+          condition: service_healthy
       env_file: 
         - .env
       networks: 
-        - transcendence 
+        - backend 
 
     front:
       container_name: front
@@ -34,7 +39,18 @@ services:
       depends_on:
         - gateway
       networks: 
-        - transcendence
+        - frontend
+      # a retirer seulement pour le dev
+      volumes:
+        - ./front/dist:/usr/share/nginx/html/dist
+        - ./front/public/index.html:/usr/share/nginx/html/index.html
+        - ./front/public/assets:/usr/share/nginx/html/assets
+        
+        # AJOUTEZ CES LIGNES POUR LE DEVELOPPEMENT :
+        - ./front/scripts:/usr/share/nginx/html/scripts
+        - ./front/styles:/usr/share/nginx/html/styles  # ou /styles selon votre structure
+        - ./front/tsconfig.json:/usr/share/nginx/html/tsconfig.json
+        - ./front/tailwind.config.js:/usr/share/nginx/html/tailwind.config.js
 
     auth:
       container_name: auth
@@ -43,10 +59,20 @@ services:
         - "3001"
       env_file: 
         - .env
+      environment:
+        - DATABASE_URL=/app/data/auth.sqlite
       networks: 
-        - transcendence
+        - backend
+      dns:
+        - 8.8.8.8
+        - 1.1.1.1
       volumes:
-        - ./back/game/data:/app/auth/data
+        # - auth_data:/app/data
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/auth.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
 
     chat:
       container_name: chat
@@ -55,10 +81,17 @@ services:
         - "3002"
       env_file: 
         - .env
+      environment:
+        - DATABASE_URL=/app/data/chat.sqlite
       networks: 
-        - transcendence
+        - backend
       volumes:
-        - ./back/chat/data:/app/chat/data
+        # - chat_data:/app/data
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/chat.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
 
     game:
       container_name: game
@@ -67,10 +100,17 @@ services:
         - "3003"
       env_file: 
         - .env
+      environment:
+        - DATABASE_URL=/app/data/game.sqlite
       networks:
-        - transcendence
+        - backend
       volumes:
-        - ./back/game/data:/app/game/data
+        # - game_data:/app/data
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/game.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
 
     user:
       container_name: user
@@ -79,13 +119,32 @@ services:
         - "3004"
       env_file: 
         - .env
+      environment:
+        - DATABASE_URL=/app/data/user.sqlite
       networks: 
-        - transcendence
+        - backend
       volumes:
-        - ./back/user/data:/app/user/data
-
+        # - user_data:/app/data
+        # - user_avatars:/app/user/avatars
+        - ./back/datadev:/app/data
+      healthcheck:
+        test: ["CMD", "sqlite3", "/app/data/user.sqlite", "SELECT 1;"]
+        interval: 2s
+        retries: 20
     
 networks:
-  transcendence:
-    name: transcendence
+  frontend:
+    name: transcendence_frontend
     driver: bridge
+  backend:
+    name: transcendence_backend
+    driver: bridge
+    # internal: true
+
+volumes:
+  # user_avatars:
+  # auth_data:
+  # chat_data:
+  # user_data:
+  # game_data:
+  datadev:

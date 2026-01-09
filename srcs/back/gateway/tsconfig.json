@@ -8,7 +8,8 @@
 		"esModuleInterop": true, // compatibilité -> 
 		"skipLibCheck": true, // ignore les erreurs dans les bibliothèques
 		"forceConsistentCasingInFileNames": true, // cohérence des noms de fichiers
+		"types": ["node"] // on force linclusion des types Node.js
 	},
 	"include": ["scripts/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
-	"exclude": ["node_modules"] // ne pas compiler les bibliothèques externes
+	"exclude": ["node_modules", "conf"] // ne pas compiler les bibliothèques externes
 }
