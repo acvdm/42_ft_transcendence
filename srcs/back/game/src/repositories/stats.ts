@@ -164,25 +164,30 @@ export async function updateUserStats (
     db: Database,
     userId: number,
     userScore: number,
-    isWinner: number
+    isWinner: number,
+    finalDuration: number
 ): Promise<Stat>
 {
+    console.log(`final_duration = ${finalDuration}`);
     const stats = await db.run(`
         UPDATE STATS SET 
             wins = wins + ?,
             losses = losses + ?,
             total_score = total_score + ?,
+            total_play_time_minutes = total_play_time_minutes + ?,
             current_win_streak = CASE
                 WHEN ? = 1 THEN current_win_streak +1
                 ELSE 0
             END
+            
         WHERE user_id = ?`,
         [
             isWinner ? 1 : 0,
             isWinner ? 0 : 1,
             userScore,
+            finalDuration,
             isWinner ? 1 : 0,
-            userId
+            userId            
         ]
     )
     

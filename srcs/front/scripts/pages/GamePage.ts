@@ -293,21 +293,21 @@ export function render(): string {
 }
 
 
-async function saveGameStats(userId: number, score: number, isWinner: boolean) {
-    try {
-        // ne renvoit pas correctement les stats -> trouver pourquoi 
-       await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-                userScore: score,
-                isWinner: isWinner ? 1 : 0
-            })
-        });
-        console.log(`Stats sauvegardées pour le user ${userId}`);
-    } catch (error) {
-        console.error("Erreur lors de la sauvegarde des stats:", error);
-    }
-}
+// async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+//     try {
+//         // ne renvoit pas correctement les stats -> trouver pourquoi 
+//        await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+//             method: 'PATCH',
+//             body: JSON.stringify({
+//                 userScore: score,
+//                 isWinner: isWinner ? 1 : 0
+//             })
+//         });
+//         console.log(`Stats sauvegardées pour le user ${userId}`);
+//     } catch (error) {
+//         console.error("Erreur lors de la sauvegarde des stats:", error);
+//     }
+// }
 
 
 

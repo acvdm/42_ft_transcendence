@@ -8587,20 +8587,6 @@
     }
     return LocalGame_default;
   }
-  async function saveGameStats(userId, score, isWinner) {
-    try {
-      await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          userScore: score,
-          isWinner: isWinner ? 1 : 0
-        })
-      });
-      console.log(`Stats sauvegard\xE9es pour le user ${userId}`);
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des stats:", error);
-    }
-  }
   function showRemoteEndModal(winnerName, message) {
     if (document.getElementById("remote-end-modal")) return;
     const modalHtml = `
