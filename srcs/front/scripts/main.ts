@@ -110,7 +110,7 @@ const handleLogout = async () => {
 	}
 }
 
-
+// faustine
 // on clean la guest session pour ne pas avoir de persistance
 const clearGuestSession = () => {
     sessionStorage.removeItem('accessToken');
@@ -141,6 +141,7 @@ const handleLocationChange = () => {
 
 	let path = window.location.pathname;
 	
+	// faustine
 	if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
         clearGuestSession();
     } // pour clean la session guest
