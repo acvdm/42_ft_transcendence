@@ -63,6 +63,28 @@ function getSqlDate(): string {
 
 }
 
+function showVictoryModal(winnerName: string) {
+    // modal
+    const modal = document.getElementById('local-summary-modal');
+    const winnerText = document.getElementById('winner-name');
+    const quitLocalBtn = document.getElementById('quit-local-btn');
+    const quitRemoteBtn = document.getElementById('quit-remote-btn');
+    if (modal && winnerText) {
+        winnerText.innerText = winnerName;
+        modal.classList.remove('hidden');
+        
+        if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
+        // lancement de confettis
+        launchConfetti(4000);
+    }
+    const backAction = () => {
+        window.history.back();
+    }
+    // gestion du bouton retour au menu
+    quitLocalBtn?.addEventListener('click', backAction);
+    quitRemoteBtn?.addEventListener('click', backAction);
+}
+
 // =========================================================
 
 let gameChat: Chat | null = null;
@@ -271,21 +293,21 @@ export function render(): string {
 }
 
 
-async function saveGameStats(userId: number, score: number, isWinner: boolean) {
-    try {
-        // ne renvoit pas correctement les stats -> trouver pourquoi 
-       await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-                userScore: score,
-                isWinner: isWinner ? 1 : 0
-            })
-        });
-        console.log(`Stats sauvegardées pour le user ${userId}`);
-    } catch (error) {
-        console.error("Erreur lors de la sauvegarde des stats:", error);
-    }
-}
+// async function saveGameStats(userId: number, score: number, isWinner: boolean) {
+//     try {
+//         // ne renvoit pas correctement les stats -> trouver pourquoi 
+//        await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
+//             method: 'PATCH',
+//             body: JSON.stringify({
+//                 userScore: score,
+//                 isWinner: isWinner ? 1 : 0
+//             })
+//         });
+//         console.log(`Stats sauvegardées pour le user ${userId}`);
+//     } catch (error) {
+//         console.error("Erreur lors de la sauvegarde des stats:", error);
+//     }
+// }
 
 
 
@@ -345,6 +367,82 @@ async function saveGameStats(userId: number, score: number, isWinner: boolean) {
         document.getElementById('remote-end-modal')?.remove();
         window.history.back();
     });
+}
+
+
+//////////////////////////////////////////////
+//// LANCEMENT DE CONFETTIS A LA VICTOIRE ////
+/////////////////////////////////////////////
+
+function launchConfetti(duration: number = 3000) 
+{
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+    const confettiCount = 150;
+    const container = document.body;
+    // CONTAINER A CONFFETI
+    const confettiContainer = document.createElement('div');
+    confettiContainer.id = 'confetti-container';
+    confettiContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+    `;
+    container.appendChild(confettiContainer);
+    // creation des confesttis
+    for (let i = 0; i < confettiCount; i++) {
+        createConfetti(confettiContainer, colors);
+    }
+    // renmove des confittos
+    setTimeout(() => {
+        confettiContainer.remove();
+    }, duration);
+}
+
+function createConfetti(container: HTMLElement, colors: string[]) {
+    const confetti = document.createElement('div');
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = Math.random() * 10 + 5; // 5-15px
+    const startX = Math.random() * window.innerWidth;
+    const endX = startX + (Math.random() - 0.5) * 200; // Dérive horizontale
+    const rotation = Math.random() * 360;
+    const duration = Math.random() * 2 + 2; // 2-4 secondes
+    const delay = Math.random() * 0.5; // Délai aléatoire
+    confetti.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: ${color};
+        top: -20px;
+        left: ${startX}px;
+        opacity: 1;
+        transform: rotate(${rotation}deg);
+        border-radius: ${Math.random() > 0.5 ? '50%' : '0'}; /* Rond ou carré */
+        animation: fall ${duration}s ease-in ${delay}s forwards;
+    `;
+    container.appendChild(confetti);
+    // css inline pour l'animation
+    const style = document.createElement('style');
+    if (!document.getElementById('confetti-animation-style')) {
+        style.id = 'confetti-animation-style';
+        style.textContent = `
+            @keyframes fall {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 }
 
 
@@ -426,34 +524,6 @@ export function initGamePage(mode: string): void {
         initLocalMode();
     }
 
-
-
-    function showVictoryModal(winnerName: string) {
-        // modal
-        const modal = document.getElementById('local-summary-modal');
-        const winnerText = document.getElementById('winner-name');
-        const quitLocalBtn = document.getElementById('quit-local-btn');
-        const quitRemoteBtn = document.getElementById('quit-remote-btn');
-
-        if (modal && winnerText) {
-            winnerText.innerText = winnerName;
-            modal.classList.remove('hidden');
-            
-            if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
-            // lancement de confettis
-            launchConfetti(4000);
-        }
-
-        const backAction = () => {
-            window.history.back();
-        }
-        // gestion du bouton retour au menu
-        quitLocalBtn?.addEventListener('click', backAction);
-        quitRemoteBtn?.addEventListener('click', backAction);
-
-    }
-
-
     // ---------------------------------------------------------
     // -------------- WIZZ AVEC BARRE D'ESPACE ------------
     // ---------------------------------------------------------
@@ -497,7 +567,8 @@ export function initGamePage(mode: string): void {
     // ---------------------------------------------------------
     // -------------- LOGIQUE DU JEU REMOTE (AJOUT) ------------
     // ---------------------------------------------------------
-    function initRemoteMode() {
+    function initRemoteMode() 
+    {
         const socketService = SocketService.getInstance();
 
         // 1. On lance le connexion spécifique au jeu
@@ -600,20 +671,31 @@ export function initGamePage(mode: string): void {
         let currentP2Alias = "Player 2";
 
         const startGameFromData = async (data: any, p1Alias?: string, p2Alias?: string) => {
-            console.log("Starting game from data:", data);
 
             const myAlias = await getPlayerAlias();
+            const myId = Number(localStorage.getItem('userId'));
+            let opponentId = data.opponent ? Number(data.opponent) : null;
+
             const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
             const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
+
+            let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
+            let p2Id: number | null = (data.role === 'player2') ? myId : opponentId;
+
             let opponentAlias = "Opponent";
 
-            if (data.role === 'player1') {
+            if (data.role === 'player1') 
+            {
                 currentP1Alias = myAlias;
-                if (remoteP2Alias) opponentAlias = remoteP2Alias;
+                if (remoteP2Alias) 
+                    opponentAlias = remoteP2Alias;
                 currentP2Alias = opponentAlias;
-            } else {
+            } 
+            else 
+            {
                 currentP1Alias = opponentAlias;
-                if (remoteP1Alias) opponentAlias = remoteP1Alias;
+                if (remoteP1Alias) 
+                    opponentAlias = remoteP1Alias;
                 currentP2Alias = myAlias;
             }
 
@@ -621,10 +703,13 @@ export function initGamePage(mode: string): void {
             const p1Display = document.getElementById('player-1-name');
             const p2Display = document.getElementById('player-2-name');
 
-            if (p1Display && p2Display) {
+            if (p1Display && p2Display) 
+            {
                 p1Display.innerText = (data.role === 'player1') ? `${currentP1Alias} (Me)` : currentP1Alias;
                 p2Display.innerText = (data.role === 'player2') ? `${currentP2Alias} (Me)` : currentP2Alias;
             }
+
+            let gameStartDate = getSqlDate();
 
             // 4. Récupération de l'adversaire en arrière-plan (si disponible)
             if (data.opponent) {
@@ -633,6 +718,8 @@ export function initGamePage(mode: string): void {
                     .then(userData => {
                         if (userData && userData.alias) {
                             const realOpponentName = userData.alias;
+                            const opponentId = userData.userId;
+                            console.log(`opponentId = ${opponentId}`);
                             
                             // On ne met à jour QUE l'élément qui correspond à l'adversaire
                             if (data.role === 'player1') {
@@ -682,40 +769,78 @@ export function initGamePage(mode: string): void {
                         activeGame = null;
                     }
 
-                    console.log("Player aliases set:", currentP1Alias, currentP2Alias);
                     activeGame = new Game(canvas, ctx, input, selectedBallSkin);
-                    console.log("Player aliases set:", currentP1Alias, currentP2Alias);
-                    // gestion quand on opposant se casse du jeu 
+
+                    // CAS 1: L'ADVERSAIRE QUITTE LE JEU
                     gameSocket.off('opponentLeft');
                     gameSocket.on('opponentLeft', async (eventData: any) => {
                         if (activeGame) {
-                            console.log("Opponent left the game! Victory by forfeit!");
+                            console.log("Opponent left the game! Victory by forfeit! Saving stats...");
                             activeGame.isRunning = false;
                             activeGame.stop();
 
                             gameSocket.off('gameState');
                             gameSocket.off('gameEnded');
-                            let myScore = data.role === 'player1' ? activeGame.score.player1 : activeGame.score.player2;
+                            
+                            const s1 = activeGame.score.player1;
+                            const s2 = activeGame.score.player2;
+                            
+                            let winnerAlias = "";
 
-                            const myAlias = await getPlayerAlias();
-                            const userIdStr = localStorage.getItem('userId');
-                            if (userIdStr) {
-                                saveGameStats(Number(userIdStr), myScore, true);
+                            if (data.role === 'player1')
+                            {
+                                // Je suis P1, mon adversaire P2 est parti -> je gagne
+                                winnerAlias = currentP1Alias;
                             }
+                            else
+                            {
+                                // Je suis P2, mon adversaire P1 est parti -> Je gagne
+                                winnerAlias = currentP2Alias;
+                            }
+
+                            await saveRemoteGameToApi (
+                                currentP1Alias, s1, p1Id,
+                                currentP2Alias, s2, p2Id,
+                                winnerAlias,
+                                gameStartDate
+                            )
 
                             showRemoteEndModal(myAlias, "(Opponent forfeit)");
                             activeGame = null;
                         }
                     });
 
-                    activeGame.onGameEnd = (endData) => {
-                        let winnerName = "Winner";
+                    // CAS 2: FIN NORMALE DE JEU
+                    activeGame.onGameEnd = async (endData) => {
+                        // const gameEndDate = getSqlDate();
+                        let winnerAlias = "Winner";
                         
-                        if (endData.winner === 'player1') winnerName = currentP1Alias;
-                        else if (endData.winner === 'player2') winnerName = currentP2Alias;
                         
-                        console.log("WinnerName:", winnerName);
-                        showVictoryModal(winnerName);
+                        if (endData.winner === 'player1') winnerAlias = currentP1Alias;
+                        else if (endData.winner === 'player2') winnerAlias = currentP2Alias;
+
+                        if (activeGame)
+                        {
+                            const s1 = activeGame.score.player1;
+                            const s2 = activeGame.score.player2;
+
+                            // Les 2 joueurs sont encore connectés
+                            // Seul le player1 envoie la requête
+                            if (data.role === 'player1')
+                            {
+                                await saveRemoteGameToApi(
+                                    currentP1Alias, s1, p1Id,
+                                    currentP2Alias, s2, p2Id,
+                                    winnerAlias,
+                                    gameStartDate
+                                )
+                            }
+                        }
+                        
+                        // console.log("WinnerName:", winnerName);
+
+                        showVictoryModal(winnerAlias);
+                        activeGame = null;
                     };
 
                     activeGame.onScoreChange = (score) => {
@@ -724,8 +849,10 @@ export function initGamePage(mode: string): void {
                     };
 
                     launchCountdown(() => {
-                        if (activeGame)
+                        if (activeGame) {
+                            gameStartDate = getSqlDate();
                             activeGame.startRemote(data.roomId, data.role);
+                        }
                     });
                 }
 
@@ -738,7 +865,6 @@ export function initGamePage(mode: string): void {
             sessionStorage.removeItem('pendingMatch'); // On nettoie
             startGameFromData(data); // Lancement auto !
         }
-//faustine
         const privateRoomId = sessionStorage.getItem('privateGameId'); // on recuperer notre id
         console.log("privategame:", sessionStorage.getItem('privateGameId'));
 
@@ -756,7 +882,7 @@ export function initGamePage(mode: string): void {
                     return;
                 }
 
-                const myAlias = await getPlayerAlias();
+                // const myAlias = await getPlayerAlias();
                 newBtn.disabled = true;
 
                 // on detecte que c'est une partie privee car j'ai le proviate room id 
@@ -794,14 +920,56 @@ export function initGamePage(mode: string): void {
                 }
             });
         }
+
+        async function saveRemoteGameToApi(
+            p1Alias: string, p1Score: number, p1Id: number | null,
+            p2Alias: string, p2Score: number, p2Id: number | null,
+            winnerAlias: string,
+            startDate: string,
+        ) {
+        
+            try 
+            {
+                const endDate = getSqlDate()
+                const response = await fetchWithAuth('api/game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: "remote",
+                        winner: winnerAlias,
+                        status: "finished",
+                        round: "1v1",
+                        startDate: startDate,
+                        endDate: endDate,
+                        p1: { alias: p1Alias, score: p1Score, userId: p1Id },
+                        p2: { alias: p2Alias, score: p2Score, userId: p2Id}
+                    })
+                });
+
+                if (!response.ok) {
+                    console.error("Error while saving remote game");
+                }
+                else {
+                    console.log("remote game successfully saved");
+                }
+            } 
+            catch (e) 
+            { 
+                console.error(e); 
+            }
+        }
     }
+
 
 
     // ---------------------------------------------------------
     // -------------- LOGIQUE DU JEU EN TOURNOI ----------------
     // ---------------------------------------------------------
 
-    function inittournamentMode() {
+    function inittournamentMode() 
+    {
         // Affiche la MODALE de setup (et non plus la div intégrée)
         const setupModal = document.getElementById('tournament-setup-modal');
         if (setupModal) setupModal.classList.remove('hidden');
@@ -872,7 +1040,6 @@ export function initGamePage(mode: string): void {
             // demarrage du tournoi 
             startTournamentLogic(tName, players, ballVal, bgVal);
         });
-    }
 
     function initTournamentSelectors() {
         const ballBtn = document.getElementById('tour-ball-selector-button');
@@ -1279,13 +1446,14 @@ export function initGamePage(mode: string): void {
             });
         } catch (e) { console.error(e); }
     }
-
+    }
 
 
 // =========================================================
 // =========       LOGIQUE LOCALE 1v1 ======================
 // =========================================================
-    function initLocalMode() {
+    function initLocalMode() 
+    {
         const modal = document.getElementById('game-setup-modal');
         const startButton = document.getElementById('start-game-btn');
         const nameInput = document.getElementById('opponent-name') as HTMLInputElement;
@@ -1399,7 +1567,10 @@ export function initGamePage(mode: string): void {
         }
 
         // on clique sur play
-        if (startButton) {
+        if (startButton) 
+        {
+            let p1Alias = localStorage.getItem('username');
+            console.log("clic sur play");
             // Clone pour éviter duplication d'events si on revient sur la page
             const newStartBtn = startButton.cloneNode(true);
             startButton.parentNode?.replaceChild(newStartBtn, startButton);
@@ -1416,7 +1587,7 @@ export function initGamePage(mode: string): void {
 
                 // envoi de la notifciation
                 if (gameChat) {
-                    gameChat.addSystemMessage(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+                    gameChat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
                 }
 
                 // valeur par default 
@@ -1495,14 +1666,16 @@ export function initGamePage(mode: string): void {
                                 // 1. Récupération des données
                                 const p1Score = activeGame.score.player1;
                                 const p2Score = activeGame.score.player2;
-                                const p1Alias = player1Display.innerText;
+                                // const p1Alias = player1Display.innerText;
+                                const p1Alias = localStorage.getItem('username') || "Player 1";
                                 const p2Alias = opponentName;
                                 const p1Wins = p1Score > p2Score;
                                 const winnerAlias = p1Wins ? p1Alias : p2Alias;
         
                                 // 2. Sauvegarde si l'utilistauer est connecté
                                 const userIdStr = localStorage.getItem('userId');
-                                if (userIdStr) {
+                                if (userIdStr) 
+                                {
                                     const userId = Number(userIdStr);
                                     // on sauvegarde les statistiques
                                     console.log(`gamepage, ${userId}`);
@@ -1524,138 +1697,56 @@ export function initGamePage(mode: string): void {
                  nameInput.classList.remove('border-red-500');
              });
          }
-    }
 
-    async function saveLocalGameToApi(
-        p1Alias: string,
-        p2Alias: string,
-        p1Score: number,
-        p2Score: number,
-        winnerAlias: string,
-        startDate: string,
-        userId: number
-    ) {
-    
-        try 
-        {
-            const endDate = getSqlDate()
-            const response = await fetchWithAuth('api/game', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    type: "local",
-                    winner: winnerAlias,
-                    status: "finished",
-                    round: "1v1",
-                    startDate: startDate,
-                    endDate: endDate,
-                    p1: {
-                        alias: p1Alias,
-                        score: p1Score,
-                        userId: userId
+        async function saveLocalGameToApi(
+            p1Alias: string,
+            p2Alias: string,
+            p1Score: number,
+            p2Score: number,
+            winnerAlias: string,
+            startDate: string,
+            userId: number
+        ) {
+        
+            try 
+            {
+                const endDate = getSqlDate()
+                const response = await fetchWithAuth('api/game', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
-                    p2: {
-                        alias: p2Alias,
-                        score: p2Score,
-                        userId: null                        
-                    }
-                })
-            });
+                    body: JSON.stringify({
+                        type: "local",
+                        winner: winnerAlias,
+                        status: "finished",
+                        round: "1v1",
+                        startDate: startDate,
+                        endDate: endDate,
+                        p1: {
+                            alias: p1Alias,
+                            score: p1Score,
+                            userId: userId
+                        },
+                        p2: {
+                            alias: p2Alias,
+                            score: p2Score,
+                            userId: null                        
+                        }
+                    })
+                });
 
-            if (!response.ok) {
-                console.error("Error while saving local game");
+                if (!response.ok) {
+                    console.error("Error while saving local game");
+                }
+                else {
+                    console.log("Local game successfully saved");
+                }
+            } 
+            catch (e) 
+            { 
+                console.error(e); 
             }
-            else {
-                console.log("Local game successfully saved");
-            }
-        } 
-        catch (e) 
-        { 
-            console.error(e); 
         }
     }
 }
-
-
-
-//////////////////////////////////////////////
-//// LANCEMENT DE CONFETTIS A LA VICTOIRE ////
-/////////////////////////////////////////////
-
-    function launchConfetti(duration: number = 3000) {
-        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
-        const confettiCount = 150;
-        const container = document.body;
-
-        // CONTAINER A CONFFETI
-        const confettiContainer = document.createElement('div');
-        confettiContainer.id = 'confetti-container';
-        confettiContainer.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-            overflow: hidden;
-        `;
-        container.appendChild(confettiContainer);
-
-        // creation des confesttis
-        for (let i = 0; i < confettiCount; i++) {
-            createConfetti(confettiContainer, colors);
-        }
-
-        // renmove des confittos
-        setTimeout(() => {
-            confettiContainer.remove();
-        }, duration);
-    }
-
-    function createConfetti(container: HTMLElement, colors: string[]) {
-        const confetti = document.createElement('div');
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const size = Math.random() * 10 + 5; // 5-15px
-        const startX = Math.random() * window.innerWidth;
-        const endX = startX + (Math.random() - 0.5) * 200; // Dérive horizontale
-        const rotation = Math.random() * 360;
-        const duration = Math.random() * 2 + 2; // 2-4 secondes
-        const delay = Math.random() * 0.5; // Délai aléatoire
-
-        confetti.style.cssText = `
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            background-color: ${color};
-            top: -20px;
-            left: ${startX}px;
-            opacity: 1;
-            transform: rotate(${rotation}deg);
-            border-radius: ${Math.random() > 0.5 ? '50%' : '0'}; /* Rond ou carré */
-            animation: fall ${duration}s ease-in ${delay}s forwards;
-        `;
-
-        container.appendChild(confetti);
-
-        // css inline pour l'animation
-        const style = document.createElement('style');
-        if (!document.getElementById('confetti-animation-style')) {
-            style.id = 'confetti-animation-style';
-            style.textContent = `
-                @keyframes fall {
-                    0% {
-                        transform: translateY(0) rotate(0deg);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-    }

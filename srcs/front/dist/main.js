@@ -8442,6 +8442,23 @@
     const now = /* @__PURE__ */ new Date();
     return now.toISOString().slice(0, 19).replace("T", " ");
   }
+  function showVictoryModal(winnerName) {
+    const modal = document.getElementById("local-summary-modal");
+    const winnerText = document.getElementById("winner-name");
+    const quitLocalBtn = document.getElementById("quit-local-btn");
+    const quitRemoteBtn = document.getElementById("quit-remote-btn");
+    if (modal && winnerText) {
+      winnerText.innerText = winnerName;
+      modal.classList.remove("hidden");
+      if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
+      launchConfetti(4e3);
+    }
+    const backAction = () => {
+      window.history.back();
+    };
+    quitLocalBtn?.addEventListener("click", backAction);
+    quitRemoteBtn?.addEventListener("click", backAction);
+  }
   var gameChat = null;
   var tournamentState = null;
   var activeGame = null;
@@ -8601,20 +8618,6 @@
     }
     return LocalGame_default;
   }
-  async function saveGameStats(userId, score, isWinner) {
-    try {
-      await fetchWithAuth(`api/game/users/${userId}/games/stats`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          userScore: score,
-          isWinner: isWinner ? 1 : 0
-        })
-      });
-      console.log(`Stats sauvegard\xE9es pour le user ${userId}`);
-    } catch (error) {
-      console.error("Erreur lors de la sauvegarde des stats:", error);
-    }
-  }
   function showRemoteEndModal(winnerName, message) {
     if (document.getElementById("remote-end-modal")) return;
     const modalHtml = `
@@ -8662,6 +8665,70 @@
       document.getElementById("remote-end-modal")?.remove();
       window.history.back();
     });
+  }
+  function launchConfetti(duration = 3e3) {
+    const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
+    const confettiCount = 150;
+    const container = document.body;
+    const confettiContainer = document.createElement("div");
+    confettiContainer.id = "confetti-container";
+    confettiContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+    `;
+    container.appendChild(confettiContainer);
+    for (let i = 0; i < confettiCount; i++) {
+      createConfetti(confettiContainer, colors);
+    }
+    setTimeout(() => {
+      confettiContainer.remove();
+    }, duration);
+  }
+  function createConfetti(container, colors) {
+    const confetti = document.createElement("div");
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = Math.random() * 10 + 5;
+    const startX = Math.random() * window.innerWidth;
+    const endX = startX + (Math.random() - 0.5) * 200;
+    const rotation = Math.random() * 360;
+    const duration = Math.random() * 2 + 2;
+    const delay = Math.random() * 0.5;
+    confetti.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: ${color};
+        top: -20px;
+        left: ${startX}px;
+        opacity: 1;
+        transform: rotate(${rotation}deg);
+        border-radius: ${Math.random() > 0.5 ? "50%" : "0"}; /* Rond ou carr\xE9 */
+        animation: fall ${duration}s ease-in ${delay}s forwards;
+    `;
+    container.appendChild(confetti);
+    const style = document.createElement("style");
+    if (!document.getElementById("confetti-animation-style")) {
+      style.id = "confetti-animation-style";
+      style.textContent = `
+            @keyframes fall {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
+                    opacity: 0;
+                }
+            }
+        `;
+      document.head.appendChild(style);
+    }
   }
   function launchCountdown(onComplete) {
     const modal = document.getElementById("countdown-modal");
@@ -8718,23 +8785,6 @@
     } else {
       gameChat.joinChannel("local_game_room");
       initLocalMode();
-    }
-    function showVictoryModal(winnerName) {
-      const modal = document.getElementById("local-summary-modal");
-      const winnerText = document.getElementById("winner-name");
-      const quitLocalBtn = document.getElementById("quit-local-btn");
-      const quitRemoteBtn = document.getElementById("quit-remote-btn");
-      if (modal && winnerText) {
-        winnerText.innerText = winnerName;
-        modal.classList.remove("hidden");
-        if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
-        launchConfetti(4e3);
-      }
-      const backAction = () => {
-        window.history.back();
-      };
-      quitLocalBtn?.addEventListener("click", backAction);
-      quitRemoteBtn?.addEventListener("click", backAction);
     }
     if (spaceKeyListener) {
       document.removeEventListener("keydown", spaceKeyListener);
@@ -8852,18 +8902,23 @@
       let currentP1Alias = "Player 1";
       let currentP2Alias = "Player 2";
       const startGameFromData = async (data, p1Alias, p2Alias) => {
-        console.log("Starting game from data:", data);
         const myAlias = await getPlayerAlias();
+        const myId = Number(localStorage.getItem("userId"));
+        let opponentId = data.opponent ? Number(data.opponent) : null;
         const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
         const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
+        let p1Id = data.role === "player1" ? myId : opponentId;
+        let p2Id = data.role === "player2" ? myId : opponentId;
         let opponentAlias = "Opponent";
         if (data.role === "player1") {
           currentP1Alias = myAlias;
-          if (remoteP2Alias) opponentAlias = remoteP2Alias;
+          if (remoteP2Alias)
+            opponentAlias = remoteP2Alias;
           currentP2Alias = opponentAlias;
         } else {
           currentP1Alias = opponentAlias;
-          if (remoteP1Alias) opponentAlias = remoteP1Alias;
+          if (remoteP1Alias)
+            opponentAlias = remoteP1Alias;
           currentP2Alias = myAlias;
         }
         const p1Display = document.getElementById("player-1-name");
@@ -8872,10 +8927,13 @@
           p1Display.innerText = data.role === "player1" ? `${currentP1Alias} (Me)` : currentP1Alias;
           p2Display.innerText = data.role === "player2" ? `${currentP2Alias} (Me)` : currentP2Alias;
         }
+        let gameStartDate = getSqlDate();
         if (data.opponent) {
           fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
             if (userData && userData.alias) {
               const realOpponentName = userData.alias;
+              const opponentId2 = userData.userId;
+              console.log(`opponentId = ${opponentId2}`);
               if (data.role === "player1") {
                 currentP2Alias = realOpponentName;
                 if (p2Display) p2Display.innerText = realOpponentName;
@@ -8910,41 +8968,69 @@
               activeGame.stop();
               activeGame = null;
             }
-            console.log("Player aliases set:", currentP1Alias, currentP2Alias);
             activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-            console.log("Player aliases set:", currentP1Alias, currentP2Alias);
             gameSocket.off("opponentLeft");
             gameSocket.on("opponentLeft", async (eventData) => {
               if (activeGame) {
-                console.log("Opponent left the game! Victory by forfeit!");
+                console.log("Opponent left the game! Victory by forfeit! Saving stats...");
                 activeGame.isRunning = false;
                 activeGame.stop();
                 gameSocket.off("gameState");
                 gameSocket.off("gameEnded");
-                let myScore = data.role === "player1" ? activeGame.score.player1 : activeGame.score.player2;
-                const myAlias2 = await getPlayerAlias();
-                const userIdStr = localStorage.getItem("userId");
-                if (userIdStr) {
-                  saveGameStats(Number(userIdStr), myScore, true);
+                const s1 = activeGame.score.player1;
+                const s2 = activeGame.score.player2;
+                let winnerAlias = "";
+                if (data.role === "player1") {
+                  winnerAlias = currentP1Alias;
+                } else {
+                  winnerAlias = currentP2Alias;
                 }
-                showRemoteEndModal(myAlias2, "(Opponent forfeit)");
+                await saveRemoteGameToApi(
+                  currentP1Alias,
+                  s1,
+                  p1Id,
+                  currentP2Alias,
+                  s2,
+                  p2Id,
+                  winnerAlias,
+                  gameStartDate
+                );
+                showRemoteEndModal(myAlias, "(Opponent forfeit)");
                 activeGame = null;
               }
             });
-            activeGame.onGameEnd = (endData) => {
-              let winnerName = "Winner";
-              if (endData.winner === "player1") winnerName = currentP1Alias;
-              else if (endData.winner === "player2") winnerName = currentP2Alias;
-              console.log("WinnerName:", winnerName);
-              showVictoryModal(winnerName);
+            activeGame.onGameEnd = async (endData) => {
+              let winnerAlias = "Winner";
+              if (endData.winner === "player1") winnerAlias = currentP1Alias;
+              else if (endData.winner === "player2") winnerAlias = currentP2Alias;
+              if (activeGame) {
+                const s1 = activeGame.score.player1;
+                const s2 = activeGame.score.player2;
+                if (data.role === "player1") {
+                  await saveRemoteGameToApi(
+                    currentP1Alias,
+                    s1,
+                    p1Id,
+                    currentP2Alias,
+                    s2,
+                    p2Id,
+                    winnerAlias,
+                    gameStartDate
+                  );
+                }
+              }
+              showVictoryModal(winnerAlias);
+              activeGame = null;
             };
             activeGame.onScoreChange = (score) => {
               const sb = document.getElementById("score-board");
               if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
             };
             launchCountdown(() => {
-              if (activeGame)
+              if (activeGame) {
+                gameStartDate = getSqlDate();
                 activeGame.startRemote(data.roomId, data.role);
+              }
             });
           }
         }
@@ -8965,7 +9051,6 @@
             alert("Error: lost connexion to game server");
             return;
           }
-          const myAlias = await getPlayerAlias();
           newBtn.disabled = true;
           if (privateRoomId) {
             if (status) status.innerText = "Waiting for your friend in private room...";
@@ -8991,6 +9076,34 @@
             gameSocket.emit("joinQueue");
           }
         });
+      }
+      async function saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
+        try {
+          const endDate = getSqlDate();
+          const response = await fetchWithAuth("api/game", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              type: "remote",
+              winner: winnerAlias,
+              status: "finished",
+              round: "1v1",
+              startDate,
+              endDate,
+              p1: { alias: p1Alias, score: p1Score, userId: p1Id },
+              p2: { alias: p2Alias, score: p2Score, userId: p2Id }
+            })
+          });
+          if (!response.ok) {
+            console.error("Error while saving remote game");
+          } else {
+            console.log("remote game successfully saved");
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
     }
     function inittournamentMode() {
@@ -9045,317 +9158,317 @@
         const bgVal = document.getElementById("tour-bg-value")?.value || "#E8F4F8";
         startTournamentLogic(tName, players, ballVal, bgVal);
       });
-    }
-    function initTournamentSelectors() {
-      const ballBtn = document.getElementById("tour-ball-selector-button");
-      const ballDrop = document.getElementById("tour-ball-selector-dropdown");
-      const ballGrid = document.getElementById("tour-ball-grid");
-      const ballImg = document.getElementById("tour-selected-ball-img");
-      const ballInput = document.getElementById("tour-ball-value");
-      const bgBtn = document.getElementById("tour-bg-selector-button");
-      const bgDrop = document.getElementById("tour-bg-selector-dropdown");
-      const bgGrid = document.getElementById("tour-bg-grid");
-      const bgPrev = document.getElementById("tour-selected-bg-preview");
-      const bgInput = document.getElementById("tour-bg-value");
-      const bgResetBtn = document.getElementById("bg-reset-button");
-      const gameContainer = document.getElementById("left");
-      if (ballBtn && ballDrop && ballGrid) {
-        const uniqueUrls = /* @__PURE__ */ new Set();
-        ballGrid.innerHTML = "";
-        Object.keys(ballEmoticons).forEach((key) => {
-          const imgUrl = ballEmoticons[key];
-          if (!uniqueUrls.has(imgUrl)) {
-            uniqueUrls.add(imgUrl);
+      function initTournamentSelectors() {
+        const ballBtn = document.getElementById("tour-ball-selector-button");
+        const ballDrop = document.getElementById("tour-ball-selector-dropdown");
+        const ballGrid = document.getElementById("tour-ball-grid");
+        const ballImg = document.getElementById("tour-selected-ball-img");
+        const ballInput = document.getElementById("tour-ball-value");
+        const bgBtn = document.getElementById("tour-bg-selector-button");
+        const bgDrop = document.getElementById("tour-bg-selector-dropdown");
+        const bgGrid = document.getElementById("tour-bg-grid");
+        const bgPrev = document.getElementById("tour-selected-bg-preview");
+        const bgInput = document.getElementById("tour-bg-value");
+        const bgResetBtn = document.getElementById("bg-reset-button");
+        const gameContainer = document.getElementById("left");
+        if (ballBtn && ballDrop && ballGrid) {
+          const uniqueUrls = /* @__PURE__ */ new Set();
+          ballGrid.innerHTML = "";
+          Object.keys(ballEmoticons).forEach((key) => {
+            const imgUrl = ballEmoticons[key];
+            if (!uniqueUrls.has(imgUrl)) {
+              uniqueUrls.add(imgUrl);
+              const div = document.createElement("div");
+              div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+              div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+              div.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (ballImg) ballImg.src = imgUrl;
+                if (ballInput) ballInput.value = imgUrl;
+                ballDrop.classList.add("hidden");
+              });
+              ballGrid.appendChild(div);
+            }
+          });
+          ballBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            ballDrop.classList.toggle("hidden");
+          });
+          document.addEventListener("click", (e) => {
+            if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
+          });
+        }
+        if (bgBtn && bgDrop && bgGrid) {
+          bgGrid.innerHTML = "";
+          Object.keys(gameBackgrounds).forEach((key) => {
+            const color = gameBackgrounds[key];
             const div = document.createElement("div");
-            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
-            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+            div.style.width = "35px";
+            div.style.height = "35px";
+            div.style.padding = "2px";
+            const circle = document.createElement("div");
+            circle.className = "w-full h-full rounded-full border border-gray-300";
+            circle.style.backgroundColor = color;
+            div.appendChild(circle);
             div.addEventListener("click", (e) => {
               e.stopPropagation();
-              if (ballImg) ballImg.src = imgUrl;
-              if (ballInput) ballInput.value = imgUrl;
-              ballDrop.classList.add("hidden");
+              if (bgPrev) bgPrev.style.backgroundColor = color;
+              if (bgInput) bgInput.value = color;
+              if (gameContainer) gameContainer.style.backgroundColor = color;
+              bgDrop.classList.add("hidden");
             });
-            ballGrid.appendChild(div);
+            bgGrid.appendChild(div);
+          });
+          if (bgResetBtn) {
+            bgResetBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              const resetColor = "#E8F4F8";
+              if (bgPrev) bgPrev.style.backgroundColor = resetColor;
+              if (bgInput) bgInput.value = resetColor;
+              if (gameContainer) gameContainer.style.backgroundColor = resetColor;
+              bgDrop.classList.add("hidden");
+            });
+          }
+          bgBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            bgDrop.classList.toggle("hidden");
+          });
+          document.addEventListener("click", (e) => {
+            if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
+          });
+        }
+      }
+      function startTournamentLogic(name, playersAliases, ballSkin, bgSkin) {
+        document.getElementById("tournament-setup-modal")?.classList.add("hidden");
+        const userIdStr = localStorage.getItem("userId");
+        const userIdNb = userIdStr ? Number(userIdStr) : null;
+        const playersObjects = playersAliases.map((alias2, index) => ({
+          alias: alias2,
+          userId: index === 0 ? userIdNb : null,
+          score: 0
+        }));
+        const startDate = getSqlDate();
+        tournamentState = {
+          name,
+          startedAt: startDate,
+          allPlayers: playersObjects,
+          matches: [
+            { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
+            // 1er duo
+            { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
+            // 2eme duo
+            { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
+            // finale
+          ],
+          currentMatchIdx: 0,
+          // on defini l'id du match pour le stocker dans la db
+          currentStep: "semi_final_1",
+          settings: { ballSkin, bgSkin }
+        };
+        if (gameChat) {
+          gameChat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
+        }
+        showBracketModal();
+      }
+      function showBracketModal() {
+        const bracketModal = document.getElementById("tournament-bracket-modal");
+        if (!bracketModal || !tournamentState) return;
+        const sf1 = document.getElementById("bracket-sf1");
+        const sf2 = document.getElementById("bracket-sf2");
+        const fin = document.getElementById("bracket-final");
+        const msg = document.getElementById("bracket-status-msg");
+        const m1 = tournamentState.matches[0];
+        const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
+        if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
+        const m2 = tournamentState.matches[1];
+        const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
+        if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
+        const mf = tournamentState.matches[2];
+        const p1Final = mf.p1 ? mf.p1.alias : "?";
+        const p2Final = mf.p2 ? mf.p2.alias : "?";
+        if (fin) fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
+        const idx = tournamentState.currentMatchIdx;
+        if (msg) {
+          if (idx === 0) msg.innerText = "Next: Semi-Final 1";
+          else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
+          else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+        }
+        bracketModal.classList.remove("hidden");
+        const btn = document.getElementById("bracket-continue-btn");
+        const newBtn = btn?.cloneNode(true);
+        btn?.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", () => {
+          bracketModal.classList.add("hidden");
+          showNextMatchModal();
+        });
+      }
+      function showNextMatchModal() {
+        const nextMatchModal = document.getElementById("tournament-next-match-modal");
+        const title = document.getElementById("match-title");
+        const player1Text = document.getElementById("next-p1");
+        const player2Text = document.getElementById("next-p2");
+        const playButton = document.getElementById("launch-match-btn");
+        if (!nextMatchModal || !tournamentState) return;
+        const matchIdx = tournamentState.currentMatchIdx;
+        const match = tournamentState.matches[matchIdx];
+        const p1Alias = match.p1 ? match.p1.alias : "???";
+        const p2Alias = match.p2 ? match.p2.alias : "???";
+        if (matchIdx === 0) {
+          if (title) title.innerText = "SEMI-FINAL 1";
+          if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+        } else if (matchIdx === 1) {
+          if (title) title.innerText = "SEMI-FINAL 2";
+          if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+        } else {
+          if (title) title.innerText = "FINALE";
+          if (gameChat) gameChat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
+        }
+        if (player1Text) player1Text.innerText = p1Alias;
+        if (player2Text) player2Text.innerText = p2Alias;
+        nextMatchModal.classList.remove("hidden");
+        const newButton = playButton.cloneNode(true);
+        playButton.parentNode.replaceChild(newButton, playButton);
+        newButton.addEventListener("click", () => {
+          nextMatchModal.classList.add("hidden");
+          if (match.p1 && match.p2) {
+            launchMatch(match.p1, match.p2);
           }
         });
-        ballBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          ballDrop.classList.toggle("hidden");
-        });
-        document.addEventListener("click", (e) => {
-          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
-        });
       }
-      if (bgBtn && bgDrop && bgGrid) {
-        bgGrid.innerHTML = "";
-        Object.keys(gameBackgrounds).forEach((key) => {
-          const color = gameBackgrounds[key];
-          const div = document.createElement("div");
-          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
-          div.style.width = "35px";
-          div.style.height = "35px";
-          div.style.padding = "2px";
-          const circle = document.createElement("div");
-          circle.className = "w-full h-full rounded-full border border-gray-300";
-          circle.style.backgroundColor = color;
-          div.appendChild(circle);
-          div.addEventListener("click", (e) => {
-            e.stopPropagation();
-            if (bgPrev) bgPrev.style.backgroundColor = color;
-            if (bgInput) bgInput.value = color;
-            if (gameContainer) gameContainer.style.backgroundColor = color;
-            bgDrop.classList.add("hidden");
+      function launchMatch(p1, p2) {
+        const p1Name = document.getElementById("player-1-name");
+        const p2Name = document.getElementById("player-2-name");
+        const gameStartDate = getSqlDate();
+        if (p1Name) p1Name.innerText = p1.alias;
+        if (p2Name) p2Name.innerText = p2.alias;
+        const scoreBoard = document.getElementById("score-board");
+        if (scoreBoard) {
+          scoreBoard.innerText = "0 - 0";
+        }
+        const container = document.getElementById("left");
+        if (container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
+        console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
+        let canvasContainer = document.getElementById("game-canvas-container");
+        if (canvasContainer) {
+          canvasContainer.innerHTML = "";
+          const canvas = document.createElement("canvas");
+          canvas.id = "pong-canvas-tournament";
+          canvas.width = canvasContainer.clientWidth;
+          canvas.height = canvasContainer.clientHeight;
+          console.log("heigh:", canvasContainer.clientHeight);
+          console.log("width:", canvasContainer.clientWidth);
+          canvas.style.width = "100%";
+          canvas.style.height = "100%";
+          canvasContainer.appendChild(canvas);
+          const ctx = canvas.getContext("2d");
+          if (ctx && tournamentState) {
+            const input = new Input_default();
+            if (activeGame) activeGame.isRunning = false;
+            activeGame = new Game_default(canvas, ctx, input, tournamentState.settings.ballSkin);
+            activeGame.onScoreChange = (score) => {
+              const scoreBoard2 = document.getElementById("score-board");
+              if (scoreBoard2) {
+                scoreBoard2.innerText = `${score.player1} - ${score.player2}`;
+              }
+            };
+            activeGame.start();
+            const checkInterval = setInterval(() => {
+              if (!activeGame || !activeGame.isRunning) {
+                clearInterval(checkInterval);
+                return;
+              }
+              if (activeGame.score.player1 >= 5 || activeGame.score.player2 >= 5) {
+                activeGame.isRunning = false;
+                clearInterval(checkInterval);
+                const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
+                endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate);
+              }
+            }, 500);
+          }
+        }
+      }
+      function endMatch(winner, scoreP1, scoreP2, gameStartDate) {
+        if (!tournamentState) return;
+        const idx = tournamentState.currentMatchIdx;
+        const match = tournamentState.matches[idx];
+        match.startDate = gameStartDate;
+        match.endDate = getSqlDate();
+        match.winner = winner;
+        if (match.p1) match.p1.score = scoreP1;
+        if (match.p2) match.p2.score = scoreP2;
+        if (match.p1 && match.p1.userId) {
+          const isWinner = match.p1.alias === winner;
+        }
+        if (match.p2 && match.p2.userId) {
+          const isWinner = match.p2.alias === winner;
+        }
+        if (gameChat) gameChat.addSystemMessage(`${winner} wins the match!`);
+        if (idx === 0) {
+          const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
+          tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+          tournamentState.currentMatchIdx++;
+          tournamentState.currentStep = "semi_final_2";
+          showBracketModal();
+        } else if (idx === 1) {
+          const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
+          tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+          tournamentState.currentMatchIdx++;
+          tournamentState.currentStep = "final";
+          showBracketModal();
+        } else {
+          tournamentState.currentStep = "finished";
+          showSummary(winner);
+        }
+      }
+      function showSummary(champion) {
+        launchConfetti(4e3);
+        const container = document.getElementById("left");
+        if (container) container.style.backgroundColor = "white";
+        const summaryModal = document.getElementById("tournament-summary-modal");
+        if (summaryModal) {
+          summaryModal.classList.remove("hidden");
+          const winnerDisplay = document.getElementById("winner-name");
+          const tourNameDisplay = document.getElementById("tour-name-display");
+          if (winnerDisplay) winnerDisplay.innerText = champion;
+          if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
+          if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
+          const userId2 = localStorage.getItem("userId");
+          if (userId2) {
+            saveTournamentToApi(champion);
+          }
+          document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
+            window.history.back();
           });
-          bgGrid.appendChild(div);
-        });
-        if (bgResetBtn) {
-          bgResetBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const resetColor = "#E8F4F8";
-            if (bgPrev) bgPrev.style.backgroundColor = resetColor;
-            if (bgInput) bgInput.value = resetColor;
-            if (gameContainer) gameContainer.style.backgroundColor = resetColor;
-            bgDrop.classList.add("hidden");
+          document.getElementById("quit-remote-btn")?.addEventListener("click", () => {
+            window.history.back();
           });
         }
-        bgBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          bgDrop.classList.toggle("hidden");
-        });
-        document.addEventListener("click", (e) => {
-          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
-        });
       }
-    }
-    function startTournamentLogic(name, playersAliases, ballSkin, bgSkin) {
-      document.getElementById("tournament-setup-modal")?.classList.add("hidden");
-      const userIdStr = localStorage.getItem("userId");
-      const userIdNb = userIdStr ? Number(userIdStr) : null;
-      const playersObjects = playersAliases.map((alias2, index) => ({
-        alias: alias2,
-        userId: index === 0 ? userIdNb : null,
-        score: 0
-      }));
-      const startDate = getSqlDate();
-      tournamentState = {
-        name,
-        startedAt: startDate,
-        allPlayers: playersObjects,
-        matches: [
-          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
-          // 1er duo
-          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
-          // 2eme duo
-          { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
-          // finale
-        ],
-        currentMatchIdx: 0,
-        // on defini l'id du match pour le stocker dans la db
-        currentStep: "semi_final_1",
-        settings: { ballSkin, bgSkin }
-      };
-      if (gameChat) {
-        gameChat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
-      }
-      showBracketModal();
-    }
-    function showBracketModal() {
-      const bracketModal = document.getElementById("tournament-bracket-modal");
-      if (!bracketModal || !tournamentState) return;
-      const sf1 = document.getElementById("bracket-sf1");
-      const sf2 = document.getElementById("bracket-sf2");
-      const fin = document.getElementById("bracket-final");
-      const msg = document.getElementById("bracket-status-msg");
-      const m1 = tournamentState.matches[0];
-      const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
-      if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
-      const m2 = tournamentState.matches[1];
-      const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
-      if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
-      const mf = tournamentState.matches[2];
-      const p1Final = mf.p1 ? mf.p1.alias : "?";
-      const p2Final = mf.p2 ? mf.p2.alias : "?";
-      if (fin) fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
-      const idx = tournamentState.currentMatchIdx;
-      if (msg) {
-        if (idx === 0) msg.innerText = "Next: Semi-Final 1";
-        else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
-        else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
-      }
-      bracketModal.classList.remove("hidden");
-      const btn = document.getElementById("bracket-continue-btn");
-      const newBtn = btn?.cloneNode(true);
-      btn?.parentNode?.replaceChild(newBtn, btn);
-      newBtn.addEventListener("click", () => {
-        bracketModal.classList.add("hidden");
-        showNextMatchModal();
-      });
-    }
-    function showNextMatchModal() {
-      const nextMatchModal = document.getElementById("tournament-next-match-modal");
-      const title = document.getElementById("match-title");
-      const player1Text = document.getElementById("next-p1");
-      const player2Text = document.getElementById("next-p2");
-      const playButton = document.getElementById("launch-match-btn");
-      if (!nextMatchModal || !tournamentState) return;
-      const matchIdx = tournamentState.currentMatchIdx;
-      const match = tournamentState.matches[matchIdx];
-      const p1Alias = match.p1 ? match.p1.alias : "???";
-      const p2Alias = match.p2 ? match.p2.alias : "???";
-      if (matchIdx === 0) {
-        if (title) title.innerText = "SEMI-FINAL 1";
-        if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
-      } else if (matchIdx === 1) {
-        if (title) title.innerText = "SEMI-FINAL 2";
-        if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
-      } else {
-        if (title) title.innerText = "FINALE";
-        if (gameChat) gameChat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
-      }
-      if (player1Text) player1Text.innerText = p1Alias;
-      if (player2Text) player2Text.innerText = p2Alias;
-      nextMatchModal.classList.remove("hidden");
-      const newButton = playButton.cloneNode(true);
-      playButton.parentNode.replaceChild(newButton, playButton);
-      newButton.addEventListener("click", () => {
-        nextMatchModal.classList.add("hidden");
-        if (match.p1 && match.p2) {
-          launchMatch(match.p1, match.p2);
+      async function saveTournamentToApi(winner) {
+        if (!tournamentState) return;
+        else {
+          console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", tournamentState.matches);
+          console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
         }
-      });
-    }
-    function launchMatch(p1, p2) {
-      const p1Name = document.getElementById("player-1-name");
-      const p2Name = document.getElementById("player-2-name");
-      const gameStartDate = getSqlDate();
-      if (p1Name) p1Name.innerText = p1.alias;
-      if (p2Name) p2Name.innerText = p2.alias;
-      const scoreBoard = document.getElementById("score-board");
-      if (scoreBoard) {
-        scoreBoard.innerText = "0 - 0";
-      }
-      const container = document.getElementById("left");
-      if (container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
-      console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
-      let canvasContainer = document.getElementById("game-canvas-container");
-      if (canvasContainer) {
-        canvasContainer.innerHTML = "";
-        const canvas = document.createElement("canvas");
-        canvas.id = "pong-canvas-tournament";
-        canvas.width = canvasContainer.clientWidth;
-        canvas.height = canvasContainer.clientHeight;
-        console.log("heigh:", canvasContainer.clientHeight);
-        console.log("width:", canvasContainer.clientWidth);
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvasContainer.appendChild(canvas);
-        const ctx = canvas.getContext("2d");
-        if (ctx && tournamentState) {
-          const input = new Input_default();
-          if (activeGame) activeGame.isRunning = false;
-          activeGame = new Game_default(canvas, ctx, input, tournamentState.settings.ballSkin);
-          activeGame.onScoreChange = (score) => {
-            const scoreBoard2 = document.getElementById("score-board");
-            if (scoreBoard2) {
-              scoreBoard2.innerText = `${score.player1} - ${score.player2}`;
-            }
-          };
-          activeGame.start();
-          const checkInterval = setInterval(() => {
-            if (!activeGame || !activeGame.isRunning) {
-              clearInterval(checkInterval);
-              return;
-            }
-            if (activeGame.score.player1 >= 5 || activeGame.score.player2 >= 5) {
-              activeGame.isRunning = false;
-              clearInterval(checkInterval);
-              const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-              endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate);
-            }
-          }, 500);
+        try {
+          await fetchWithAuth("api/game/tournaments", {
+            method: "POST",
+            body: JSON.stringify({
+              name: tournamentState.name,
+              winner,
+              participants: tournamentState.allPlayers,
+              // Ajout des details complets pour le format JSON attendu
+              tournamentName: tournamentState.name,
+              // modif de tournament_name en tournamentName pour le back
+              matchList: tournamentState.matches,
+              // modif de match_list en matchList pour le back
+              startedAt: tournamentState.startedAt
+            })
+          });
+        } catch (e) {
+          console.error(e);
         }
-      }
-    }
-    function endMatch(winner, scoreP1, scoreP2, gameStartDate) {
-      if (!tournamentState) return;
-      const idx = tournamentState.currentMatchIdx;
-      const match = tournamentState.matches[idx];
-      match.startDate = gameStartDate;
-      match.endDate = getSqlDate();
-      match.winner = winner;
-      if (match.p1) match.p1.score = scoreP1;
-      if (match.p2) match.p2.score = scoreP2;
-      if (match.p1 && match.p1.userId) {
-        const isWinner = match.p1.alias === winner;
-      }
-      if (match.p2 && match.p2.userId) {
-        const isWinner = match.p2.alias === winner;
-      }
-      if (gameChat) gameChat.addSystemMessage(`${winner} wins the match!`);
-      if (idx === 0) {
-        const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-        tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
-        tournamentState.currentMatchIdx++;
-        tournamentState.currentStep = "semi_final_2";
-        showBracketModal();
-      } else if (idx === 1) {
-        const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-        tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
-        tournamentState.currentMatchIdx++;
-        tournamentState.currentStep = "final";
-        showBracketModal();
-      } else {
-        tournamentState.currentStep = "finished";
-        showSummary(winner);
-      }
-    }
-    function showSummary(champion) {
-      launchConfetti(4e3);
-      const container = document.getElementById("left");
-      if (container) container.style.backgroundColor = "white";
-      const summaryModal = document.getElementById("tournament-summary-modal");
-      if (summaryModal) {
-        summaryModal.classList.remove("hidden");
-        const winnerDisplay = document.getElementById("winner-name");
-        const tourNameDisplay = document.getElementById("tour-name-display");
-        if (winnerDisplay) winnerDisplay.innerText = champion;
-        if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
-        if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          saveTournamentToApi(champion);
-        }
-        document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
-          window.history.back();
-        });
-        document.getElementById("quit-remote-btn")?.addEventListener("click", () => {
-          window.history.back();
-        });
-      }
-    }
-    async function saveTournamentToApi(winner) {
-      if (!tournamentState) return;
-      else {
-        console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", tournamentState.matches);
-        console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
-      }
-      try {
-        await fetchWithAuth("api/game/tournaments", {
-          method: "POST",
-          body: JSON.stringify({
-            name: tournamentState.name,
-            winner,
-            participants: tournamentState.allPlayers,
-            // Ajout des details complets pour le format JSON attendu
-            tournamentName: tournamentState.name,
-            // modif de tournament_name en tournamentName pour le back
-            matchList: tournamentState.matches,
-            // modif de match_list en matchList pour le back
-            startedAt: tournamentState.startedAt
-          })
-        });
-      } catch (e) {
-        console.error(e);
       }
     }
     function initLocalMode() {
@@ -9456,6 +9569,8 @@
         });
       }
       if (startButton) {
+        let p1Alias = localStorage.getItem("username");
+        console.log("clic sur play");
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
@@ -9466,7 +9581,7 @@
             return;
           }
           if (gameChat) {
-            gameChat.addSystemMessage(`Game is about to start! Match: ${player1Display.innerText} vs ${opponentName}`);
+            gameChat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
           }
           const selectedBall = ballValueInput ? ballValueInput.value : "classic";
           const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
@@ -9526,15 +9641,15 @@
                   clearInterval(localLoop);
                   const p1Score = activeGame.score.player1;
                   const p2Score = activeGame.score.player2;
-                  const p1Alias = player1Display.innerText;
+                  const p1Alias2 = localStorage.getItem("username") || "Player 1";
                   const p2Alias = opponentName;
                   const p1Wins = p1Score > p2Score;
-                  const winnerAlias = p1Wins ? p1Alias : p2Alias;
+                  const winnerAlias = p1Wins ? p1Alias2 : p2Alias;
                   const userIdStr = localStorage.getItem("userId");
                   if (userIdStr) {
                     const userId = Number(userIdStr);
                     console.log(`gamepage, ${userId}`);
-                    await saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                    await saveLocalGameToApi(p1Alias2, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
                   }
                   showVictoryModal(winnerAlias);
                 }
@@ -9549,106 +9664,42 @@
           nameInput.classList.remove("border-red-500");
         });
       }
-    }
-    async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
-      try {
-        const endDate = getSqlDate();
-        const response = await fetchWithAuth("api/game", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            type: "local",
-            winner: winnerAlias,
-            status: "finished",
-            round: "1v1",
-            startDate,
-            endDate,
-            p1: {
-              alias: p1Alias,
-              score: p1Score,
-              userId
+      async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
+        try {
+          const endDate = getSqlDate();
+          const response = await fetchWithAuth("api/game", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
             },
-            p2: {
-              alias: p2Alias,
-              score: p2Score,
-              userId: null
-            }
-          })
-        });
-        if (!response.ok) {
-          console.error("Error while saving local game");
-        } else {
-          console.log("Local game successfully saved");
+            body: JSON.stringify({
+              type: "local",
+              winner: winnerAlias,
+              status: "finished",
+              round: "1v1",
+              startDate,
+              endDate,
+              p1: {
+                alias: p1Alias,
+                score: p1Score,
+                userId
+              },
+              p2: {
+                alias: p2Alias,
+                score: p2Score,
+                userId: null
+              }
+            })
+          });
+          if (!response.ok) {
+            console.error("Error while saving local game");
+          } else {
+            console.log("Local game successfully saved");
+          }
+        } catch (e) {
+          console.error(e);
         }
-      } catch (e) {
-        console.error(e);
       }
-    }
-  }
-  function launchConfetti(duration = 3e3) {
-    const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
-    const confettiCount = 150;
-    const container = document.body;
-    const confettiContainer = document.createElement("div");
-    confettiContainer.id = "confetti-container";
-    confettiContainer.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 9999;
-            overflow: hidden;
-        `;
-    container.appendChild(confettiContainer);
-    for (let i = 0; i < confettiCount; i++) {
-      createConfetti(confettiContainer, colors);
-    }
-    setTimeout(() => {
-      confettiContainer.remove();
-    }, duration);
-  }
-  function createConfetti(container, colors) {
-    const confetti = document.createElement("div");
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    const size = Math.random() * 10 + 5;
-    const startX = Math.random() * window.innerWidth;
-    const endX = startX + (Math.random() - 0.5) * 200;
-    const rotation = Math.random() * 360;
-    const duration = Math.random() * 2 + 2;
-    const delay = Math.random() * 0.5;
-    confetti.style.cssText = `
-            position: absolute;
-            width: ${size}px;
-            height: ${size}px;
-            background-color: ${color};
-            top: -20px;
-            left: ${startX}px;
-            opacity: 1;
-            transform: rotate(${rotation}deg);
-            border-radius: ${Math.random() > 0.5 ? "50%" : "0"}; /* Rond ou carr\xE9 */
-            animation: fall ${duration}s ease-in ${delay}s forwards;
-        `;
-    container.appendChild(confetti);
-    const style = document.createElement("style");
-    if (!document.getElementById("confetti-animation-style")) {
-      style.id = "confetti-animation-style";
-      style.textContent = `
-                @keyframes fall {
-                    0% {
-                        transform: translateY(0) rotate(0deg);
-                        opacity: 1;
-                    }
-                    100% {
-                        transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
-                        opacity: 0;
-                    }
-                }
-            `;
-      document.head.appendChild(style);
     }
   }
 

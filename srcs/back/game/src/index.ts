@@ -110,6 +110,9 @@ fastify.post('/games', async (request, reply) =>
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;
+	let start = null;
+	let end = null;
+	let finalDuration = 1;
 
 	const body = request.body as localMatchResult;
 
@@ -129,6 +132,15 @@ fastify.post('/games', async (request, reply) =>
 			body.endDate
 		);
 
+		if (body.startDate && body.endDate)
+		{
+			start = new Date(body.startDate).getTime();
+			end = new Date(body.endDate).getTime();
+			const diffInMins = end - start;
+			const durationMinutes = Math.round(diffInMins / 60000);
+			finalDuration = durationMinutes > 0 ? durationMinutes : 1;
+		}
+
 		console.log(`DEBUG DATES REÇUES -> Start: ${body.startDate} | End: ${body.endDate}`);
 
 
@@ -144,14 +156,15 @@ fastify.post('/games', async (request, reply) =>
 		{
 			const p1IsWinner = body.winner == body.p1.alias
 			p1Match = await addPlayerMatch(
-				db, "local", gameId,
+				db, body.type, gameId,
 				body.p1.userId, body.p2.alias,
 				body.p1.score, p1IsWinner ? 1 : 0
 			);
 
 			await updateUserStats(
 				db, body.p1.userId,
-				body.p1.score, p1IsWinner ? 1 : 0
+				body.p1.score, p1IsWinner ? 1 : 0,
+				finalDuration
 			);
 		}
 
@@ -159,14 +172,15 @@ fastify.post('/games', async (request, reply) =>
 		{
 			const p2IsWinner = body.winner == body.p2.alias
 			p2Match = await addPlayerMatch(
-				db, "local", gameId,
+				db, body.type, gameId,
 				body.p2.userId, body.p1.alias,
 				body.p2.score, p2IsWinner ? 1 : 0
 			);
 
 			await updateUserStats(
 				db, body.p2.userId,
-				body.p2.score, p2IsWinner ? 1 : 0
+				body.p2.score, p2IsWinner ? 1 : 0,
+				finalDuration
 			);
 		}
 		return reply.status(201).send({
@@ -340,44 +354,45 @@ fastify.get('/games/users/:id/history', async (request, reply) =>
 });
 
 
-/* -- UPDATE STATS FOR ONE USER -- */
-fastify.patch('/users/:id/stats', async (request, reply) => 
-{
-	try
-	{
-		const { id } = request.params as { id: string }
-		const userId = Number(id);
+// /* -- UPDATE STATS FOR ONE USER -- */
+// fastify.patch('/users/:id/stats', async (request, reply) => 
+// {
+// 	try
+// 	{
+// 		console.log("ici");
+// 		const { id } = request.params as { id: string }
+// 		const userId = Number(id);
 
-		console.log("userId = ", userId);
-		const body = request.body as {
-			gameType: string,
-			matchId: number,
-			opponent: string,
-			userScore: number,
-			isWinner: number
-		}
+// 		console.log("userId = ", userId);
+// 		const body = request.body as {
+// 			gameType: string,
+// 			matchId: number,
+// 			opponent: string,
+// 			userScore: number,
+// 			isWinner: number
+// 		}
 		
-		// const gameType = "Local";
-		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
-		if (!userStats)
-			throw new Error(`Error: could not update stats for user ${userId}`);
+// 		// const gameType = "Local";
+// 		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
+// 		if (!userStats)
+// 			throw new Error(`Error: could not update stats for user ${userId}`);
 
-		return reply.status(200).send({
-			success: true,
-			data: userStats,
-			error: null
-		})
-	}
-	catch (err: any)
-	{
-		const statusCode = err.statusCode || 500;
-		return reply.status(statusCode).send({
-			success: false,
-			data: null,
-			error: { message: (err as Error).message }
-		})
-	}
-})
+// 		return reply.status(200).send({
+// 			success: true,
+// 			data: userStats,
+// 			error: null
+// 		})
+// 	}
+// 	catch (err: any)
+// 	{
+// 		const statusCode = err.statusCode || 500;
+// 		return reply.status(statusCode).send({
+// 			success: false,
+// 			data: null,
+// 			error: { message: (err as Error).message }
+// 		})
+// 	}
+// })
 
 /* -- STAT EXPORT FOR ONE USER -- */
 fastify.get('/users/:id/export', async (request, reply) =>
