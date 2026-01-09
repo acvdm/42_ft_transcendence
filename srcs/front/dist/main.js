@@ -8965,7 +8965,7 @@
     function inittournamentMode() {
       const setupModal = document.getElementById("tournament-setup-modal");
       if (setupModal) setupModal.classList.remove("hidden");
-      const nameInput2 = document.getElementById("tournament-name-input");
+      const nameInput = document.getElementById("tournament-name-input");
       const player1Input = document.getElementById("player1-input");
       const player2Input = document.getElementById("player2-input");
       const player3Input = document.getElementById("player3-input");
@@ -8988,7 +8988,7 @@
       });
       console.log("Username du user: ", username);
       startButton?.addEventListener("click", () => {
-        const tName = nameInput2.value.trim();
+        const tName = nameInput.value.trim();
         const players = [
           player1Input.value.trim(),
           player2Input.value.trim(),
@@ -9330,8 +9330,8 @@
     function initLocalMode() {
       const modal = document.getElementById("game-setup-modal");
       const startButton = document.getElementById("start-game-btn");
-      const nameInput2 = document.getElementById("opponent-name");
-      const errorMsg2 = document.getElementById("error-message");
+      const nameInput = document.getElementById("opponent-name");
+      const errorMsg = document.getElementById("error-message");
       const ballButton = document.getElementById("ball-selector-button");
       const ballDropdown = document.getElementById("ball-selector-dropdown");
       const ballGrid = document.getElementById("ball-grid");
@@ -9428,10 +9428,10 @@
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
-          const opponentName = nameInput2.value.trim();
+          const opponentName = nameInput.value.trim();
           if (opponentName === "") {
-            if (errorMsg2) errorMsg2.classList.remove("hidden");
-            nameInput2.classList.add("border-red-500");
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            nameInput.classList.add("border-red-500");
             return;
           }
           if (gameChat) {
@@ -9512,6 +9512,12 @@
           });
         });
       }
+      if (nameInput) {
+        nameInput.addEventListener("input", () => {
+          if (errorMsg) errorMsg.classList.add("hidden");
+          nameInput.classList.remove("border-red-500");
+        });
+      }
     }
     async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
       try {
@@ -9549,10 +9555,6 @@
         console.error(e);
       }
     }
-    nameInput.addEventListener("input", () => {
-      if (errorMsg) errorMsg.classList.add("hidden");
-      nameInput.classList.remove("border-red-500");
-    });
   }
   function launchConfetti(duration = 3e3) {
     const colors = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];

@@ -1517,6 +1517,13 @@ export function initGamePage(mode: string): void {
                 });
             });
         }
+         // resrt erreur ecritur e
+         if (nameInput) {
+             nameInput.addEventListener('input', () => {
+                 if (errorMsg) errorMsg.classList.add('hidden');
+                 nameInput.classList.remove('border-red-500');
+             });
+         }
     }
 
     async function saveLocalGameToApi(
@@ -1569,12 +1576,6 @@ export function initGamePage(mode: string): void {
             console.error(e); 
         }
     }
-    
-    // resrt erreur ecritur e
-    nameInput.addEventListener('input', () => {
-        if (errorMsg) errorMsg.classList.add('hidden');
-        nameInput.classList.remove('border-red-500');
-    });
 }
 
 
