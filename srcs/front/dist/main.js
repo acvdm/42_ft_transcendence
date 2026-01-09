@@ -4667,11 +4667,11 @@
           return;
         }
         friendList.forEach((friendship) => {
-          const user2 = friendship.user;
+          const user = friendship.user;
           const friend = friendship.friend;
-          if (!user2 || !friend) return;
+          if (!user || !friend) return;
           const currentUserId = Number(this.userId);
-          const selectedFriend = user2.id === currentUserId ? friend : user2;
+          const selectedFriend = user.id === currentUserId ? friend : user;
           let rawStatus = selectedFriend.status || "offline";
           const status = rawStatus.toLowerCase();
           const friendItem = document.createElement("div");
@@ -5053,7 +5053,7 @@
   var escapeRegex = (string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   };
-  var parseMessage2 = (message) => {
+  var parseMessage = (message) => {
     let formattedMessage = escapeHTML(message);
     const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
     sortedKeys.forEach((key) => {
@@ -5109,7 +5109,7 @@
         }
         if (this.bioText && userData.bio) {
           this.bioText.dataset.raw = userData.bio;
-          this.bioText.innerHTML = parseMessage2(userData.bio);
+          this.bioText.innerHTML = parseMessage(userData.bio);
         }
         if (this.userProfileImg) {
           this.userProfileImg.src = userData.avatar_url || userData.avatar;
@@ -5166,7 +5166,7 @@
             console.error("Error: Cannot exceed 70 characters.");
             alert(`Your message cannot exceed 70 characters. Stop talking!`);
             this.bioWrapper.replaceChild(this.bioText, input);
-            this.bioText.innerHTML = parseMessage2(this.bioText.dataset.raw || "Share a quick message");
+            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || "Share a quick message");
             return false;
           }
           try {
@@ -5177,7 +5177,7 @@
             });
             if (response.ok) {
               this.bioText.dataset.raw = trimmedBio;
-              this.bioText.innerHTML = parseMessage2(trimmedBio) || "Share a quick message";
+              this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
               this.bioWrapper.replaceChild(this.bioText, input);
               console.log("Message updated");
               const socket = SocketService_default.getInstance().socket;
@@ -5565,7 +5565,7 @@
             `;
       } else {
         msgElement.classList.add("bg-white");
-        const contentEmoticons = parseMessage2(message);
+        const contentEmoticons = parseMessage(message);
         msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
       }
       this.messagesContainer.appendChild(msgElement);
@@ -5927,13 +5927,13 @@
           fetchWithAuth(`api/game/users/${friendId}/stats`)
         ]);
         if (userRes.ok) {
-          const user2 = await userRes.json();
+          const user = await userRes.json();
           let stats = null;
           if (statsRes.ok) {
             const statsJson = await statsRes.json();
             stats = statsJson.data || statsJson;
           }
-          this.updateUI(user2, stats);
+          this.updateUI(user, stats);
           this.modal.classList.remove("hidden");
           this.modal.classList.add("flex");
         }
@@ -5941,11 +5941,11 @@
         console.error("Error modal:", error);
       }
     }
-    updateUI(user2, stats) {
-      if (this.avatar) this.avatar.src = user2.avatar_url || user2.avatar || "/assets/basic/default.png";
-      if (this.status && user2.status) this.status.src = statusImages[user2.status.toLowerCase()] || statusImages["invisible"];
-      if (this.username) this.username.innerText = user2.alias;
-      if (this.bio) this.bio.innerHTML = user2.bio ? parseMessage2(user2.bio) : "No bio.";
+    updateUI(user, stats) {
+      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
+      if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
+      if (this.username) this.username.innerText = user.alias;
+      if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
       if (stats) {
         const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
         const wins = stats.wins || 0;
@@ -5997,7 +5997,7 @@
         if (currentChatFriendId === data.userId) {
           const headerBio = document.getElementById("chat-header-bio");
           if (headerBio && data.bio) {
-            headerBio.innerHTML = parseMessage2(data.bio);
+            headerBio.innerHTML = parseMessage(data.bio);
           }
           const headerAvatar = document.getElementById("chat-header-avatar");
           if (headerAvatar && data.avatar) {
@@ -6036,7 +6036,7 @@
       const headerStatus = document.getElementById("chat-header-status");
       const headerBio = document.getElementById("chat-header-bio");
       if (headerName) headerName.textContent = friend.alias;
-      if (headerBio) headerBio.innerHTML = parseMessage2(friend.bio || "");
+      if (headerBio) headerBio.innerHTML = parseMessage(friend.bio || "");
       if (headerAvatar) {
         const avatarSrc = friend.avatar || friend.avatar_url || "/assets/profile/default.png";
         headerAvatar.src = avatarSrc;
@@ -6583,13 +6583,13 @@
     }
   }
   function afterRender2() {
-    const mainAvatar2 = document.getElementById("current-avatar");
+    const mainAvatar = document.getElementById("current-avatar");
     const statusFrame = document.getElementById("current-statut");
-    const usernameDisplay2 = document.getElementById("username-profile");
-    const bioDisplay2 = document.getElementById("bio-profile");
+    const usernameDisplay = document.getElementById("username-profile");
+    const bioDisplay = document.getElementById("bio-profile");
     const modal = document.getElementById("picture-modal");
-    const statusSelect2 = document.querySelector("select");
-    const fieldContainers2 = document.querySelectorAll(".flex.flex-row.gap-2[data-field]");
+    const statusSelect = document.querySelector("select");
+    const fieldContainers = document.querySelectorAll(".flex.flex-row.gap-2[data-field]");
     const editButton = document.getElementById("edit-picture-button");
     const closeButton = document.getElementById("close-modal");
     const cancelButton = document.getElementById("cancel-button");
@@ -6619,7 +6619,7 @@
     const input2faQr = document.getElementById("2fa-input-code");
     const qrCodeImg = document.getElementById("2fa-qr-code");
     const userId = localStorage.getItem("userId");
-    let selectedImageSrc2 = mainAvatar2?.src || "";
+    let selectedImageSrc = mainAvatar?.src || "";
     let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
     let currentUserEmail = "";
     const statusImages3 = {
@@ -6635,7 +6635,7 @@
       "Away": "away",
       "Appear offline": "invisible"
     };
-    const reverseStatusMapping2 = {
+    const reverseStatusMapping = {
       "available": "Available",
       "online": "Available",
       "busy": "Busy",
@@ -6700,7 +6700,7 @@
       if (e.target === themeModal) closeThemeFunc();
     });
     let current2FAMethod = "APP";
-    const update2faButton2 = (enabled) => {
+    const update2faButton = (enabled) => {
       is2faEnabled = enabled;
       if (enabled) {
         button2faToggle.innerText = "Disable 2FA authentication";
@@ -6712,7 +6712,7 @@
         button2faToggle.classList.add("bg-green-600");
       }
     };
-    update2faButton2(is2faEnabled);
+    update2faButton(is2faEnabled);
     const close2fa = () => {
       if (modal2fa) {
         modal2fa.classList.add("hidden");
@@ -6795,7 +6795,7 @@
           body: JSON.stringify({ code, type: backendType })
         });
         if (response.ok) {
-          update2faButton2(true);
+          update2faButton(true);
           localStorage.setItem("is2faEnabled", "true");
           close2fa();
           alert("2FA is now enabled!");
@@ -6816,7 +6816,7 @@
           // ou patch?? a tester --> MODIFICATION EN DELETE par Cassandre
         });
         if (response.ok) {
-          update2faButton2(false);
+          update2faButton(false);
           localStorage.setItem("is2faEnabled", "false");
           alert("2FA disabled.");
         } else {
@@ -6926,9 +6926,9 @@
       modal.classList.remove("flex");
     };
     const openModalFunc = () => {
-      if (!modal || !previewAvatar || !mainAvatar2) return;
-      selectedImageSrc2 = mainAvatar2.src;
-      previewAvatar.src = selectedImageSrc2;
+      if (!modal || !previewAvatar || !mainAvatar) return;
+      selectedImageSrc = mainAvatar.src;
+      previewAvatar.src = selectedImageSrc;
       modal.classList.remove("hidden");
       modal.classList.add("flex");
     };
@@ -6938,8 +6938,8 @@
       try {
         const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
-          const user2 = await response.json();
-          currentUserEmail = user2.email || "";
+          const user = await response.json();
+          currentUserEmail = user.email || "";
           const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
           if (statResponse.ok) {
             const jsonResponse = await statResponse.json();
@@ -6972,33 +6972,33 @@
           } else {
             console.warn("Could not fetch user stats");
           }
-          if (user2.theme) {
-            localStorage.setItem("userTheme", user2.theme);
-            applyTheme(user2.theme);
+          if (user.theme) {
+            localStorage.setItem("userTheme", user.theme);
+            applyTheme(user.theme);
           }
-          if (user2.avatar_url && mainAvatar2) {
-            mainAvatar2.src = user2.avatar_url;
-            selectedImageSrc2 = user2.avatar_url;
+          if (user.avatar_url && mainAvatar) {
+            mainAvatar.src = user.avatar_url;
+            selectedImageSrc = user.avatar_url;
           }
-          if (user2.is2faEnabled !== void 0) {
-            update2faButton2(user2.is2faEnabled);
+          if (user.is2faEnabled !== void 0) {
+            update2faButton(user.is2faEnabled);
           }
-          fieldContainers2.forEach((container) => {
+          fieldContainers.forEach((container) => {
             const fieldName = container.dataset.field;
             const display = container.querySelector(".field-display");
             const input = container.querySelector(".field-input");
             if (fieldName && display && input) {
               let value2;
               if (fieldName === "alias") {
-                value2 = user2.alias || "";
-                if (usernameDisplay2)
-                  usernameDisplay2.innerText = value2;
+                value2 = user.alias || "";
+                if (usernameDisplay)
+                  usernameDisplay.innerText = value2;
               } else if (fieldName === "bio") {
-                value2 = user2.bio || "";
-                if (bioDisplay2)
-                  bioDisplay2.innerHTML = parseMessage2(value2) || "Share a quick message";
+                value2 = user.bio || "";
+                if (bioDisplay)
+                  bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
               } else if (fieldName === "email") {
-                value2 = user2.email || "";
+                value2 = user.email || "";
               } else if (fieldName === "password") {
                 value2 = "********";
               }
@@ -7010,13 +7010,13 @@
               }
             }
           });
-          if (user2.status) {
-            const normalizedStatus = user2.status.toLowerCase();
-            const statusValue = reverseStatusMapping2[normalizedStatus] || "Appear offline";
-            if (statusSelect2) statusSelect2.value = statusValue;
-            updateStatusFrame2(normalizedStatus);
+          if (user.status) {
+            const normalizedStatus = user.status.toLowerCase();
+            const statusValue = reverseStatusMapping[normalizedStatus] || "Appear offline";
+            if (statusSelect) statusSelect.value = statusValue;
+            updateStatusFrame(normalizedStatus);
           }
-          fieldContainers2.forEach((container) => {
+          fieldContainers.forEach((container) => {
             if (container.dataset.field === "password") return;
             const display = container.querySelector(".field-display");
             const input = container.querySelector(".field-input");
@@ -7024,7 +7024,7 @@
             const confirmButton = container.querySelector(".confirm-button");
             if (display && input && changeButton && confirmButton) {
               const fieldElements = { container, display, input, changeButton, confirmButton };
-              setupField2(fieldElements, container.dataset.field);
+              setupField(fieldElements, container.dataset.field);
             }
           });
         }
@@ -7032,7 +7032,7 @@
         console.error("Erreur while charging profile:", error);
       }
     };
-    const updateStatusFrame2 = (status) => {
+    const updateStatusFrame = (status) => {
       if (statusFrame && statusImages3[status]) {
         statusFrame.src = statusImages3[status];
       }
@@ -7049,7 +7049,7 @@
         const result = await response.json();
         if (response.ok) {
           alert("Username updated successfully!");
-          if (usernameDisplay2) usernameDisplay2.innerText = newUsername;
+          if (usernameDisplay) usernameDisplay.innerText = newUsername;
           localStorage.setItem("username", newUsername);
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
@@ -7087,7 +7087,7 @@
           body: JSON.stringify({ bio: trimmedBio })
         });
         if (response.ok) {
-          if (bioDisplay2) bioDisplay2.innerHTML = parseMessage2(trimmedBio) || "Share a quick message";
+          if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             bio: trimmedBio,
@@ -7114,15 +7114,15 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: newEmail })
         });
-        const user2 = await response.json();
+        const user = await response.json();
         if (response.ok) {
           alert("Email updated successfully!");
           currentUserEmail = newEmail;
           console.log("Email updated");
           return true;
         } else {
-          console.error(user2.error.message);
-          alert(user2.error.message);
+          console.error(user.error.message);
+          alert(user.error.message);
           return false;
         }
       } catch (error) {
@@ -7149,7 +7149,7 @@
         console.error("Network error saving theme:", error);
       }
     };
-    const setupField2 = (elements, fieldName) => {
+    const setupField = (elements, fieldName) => {
       const { display, input, changeButton, confirmButton } = elements;
       let initialValue = display.innerText;
       const MAX_BIO_LENGTH = 70;
@@ -7280,7 +7280,7 @@
           body: JSON.stringify({ status: newStatus })
         });
         if (response.ok) {
-          updateStatusFrame2(newStatus);
+          updateStatusFrame(newStatus);
           localStorage.setItem("userStatus", newStatus);
           console.log("Status mis \xE0 jour:", newStatus);
           const username = localStorage.getItem("username");
@@ -7298,8 +7298,8 @@
         alert("Erreur lors de la sauvegarde du status");
       }
     };
-    statusSelect2?.addEventListener("change", () => {
-      const selectedValue = statusSelect2.value;
+    statusSelect?.addEventListener("change", () => {
+      const selectedValue = statusSelect.value;
       const statusKey = statusMapping[selectedValue];
       if (statusKey) {
         updateStatus(statusKey);
@@ -7401,8 +7401,8 @@
       const gridImages = gridContainer.querySelectorAll("img");
       gridImages.forEach((img) => {
         img.addEventListener("click", () => {
-          selectedImageSrc2 = img.src;
-          if (previewAvatar) previewAvatar.src = selectedImageSrc2;
+          selectedImageSrc = img.src;
+          if (previewAvatar) previewAvatar.src = selectedImageSrc;
           gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
           img.classList.add("border-[#0078D7]");
         });
@@ -7416,7 +7416,7 @@
         reader.onload = (e) => {
           if (e.target?.result) {
             const result = e.target.result;
-            selectedImageSrc2 = result;
+            selectedImageSrc = result;
             if (previewAvatar) previewAvatar.src = result;
           }
         };
@@ -7425,7 +7425,7 @@
     });
     deleteButton?.addEventListener("click", () => {
       const defaultAvatar = "/assets/basic/default.png";
-      selectedImageSrc2 = defaultAvatar;
+      selectedImageSrc = defaultAvatar;
       if (previewAvatar) previewAvatar.src = defaultAvatar;
     });
     okButton?.addEventListener("click", async () => {
@@ -7438,12 +7438,12 @@
         const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ avatar: selectedImageSrc2 })
+          body: JSON.stringify({ avatar: selectedImageSrc })
         });
         const result = await response.json();
         if (response.ok) {
           const cleanAvatarUrl = result.data.avatar;
-          if (mainAvatar2) mainAvatar2.src = cleanAvatarUrl;
+          if (mainAvatar) mainAvatar.src = cleanAvatarUrl;
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             avatar: cleanAvatarUrl,
@@ -9622,20 +9622,19 @@
   }
 
   // scripts/pages/DashboardPage.html
-  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Win losse evolution. On a 30 days timeline</span>\n                        </div>\n                    </div>\n\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Pie chart with percentage of games played</span>\n                        </div>\n                    </div>\n\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Podium with the 3 biggest rivals</span>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" >\n                        <label class="text-xs font-semibold text-gray-600 pr-4" style="padding-right: 10px;">Filter by:</label>\n                        \n                        <input type="text" id="filter-opponent" placeholder="Type in rival name" \n                               class="text-xs p-1.5 border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 w-[150px]" style="padding-right: 10px;">\n                        \n                        <select id="filter-mode" class="text-xs p-1.5 border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 bg-white" style="padding-right: 15px;">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1"></div>\n\n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-semibold hover:from-gray-200 hover:to-gray-400 active:border-blue-400">\n                            Apply\n                        </button>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0">\n                        <div class="grid grid-cols-12 bg-gray-100 border-b border-gray-300 p-2 text-xs font-bold text-gray-600 select-none">\n                            <div class="col-span-2">Date</div>\n                            <div class="col-span-3">Rival</div>\n                            <div class="col-span-2 text-center">Score</div>\n                            <div class="col-span-2 text-center">Type</div>\n                            <div class="col-span-1 text-center">Round</div>\n                            <div class="col-span-2 text-center">Result</div>\n                        </div>\n\n                        <div id="match-history-list" class="overflow-y-auto flex-1 p-1 space-y-1">\n                            <div class="grid grid-cols-5 items-center p-2 text-sm border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors group">\n                                <div id="dashboard-match-date" class="col-span-2 text-gray-500 text-xs">07-01-2026</div>\n                                <div id="dashboard-rival-name" class="col-span-3 font-semibold text-gray-700 flex items-center gap-2">\n                                    <span>Faustochedu49</span>\n                                </div>\n                                <div id="dashboard-match-score" class="col-span-2 text-center font-mono">0 - 0</div>\n                                <div id="dashboard-game-type" class="col-span-2 text-center font-mono">Local</div>\n                                <div id="dashboard-match-round" class="col-span-2 text-center font-mono">1v1</div>\n                                <div id="dashboard-match-result" class="col-span-2 text-center font-mono">VICTORY</div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Win losse evolution. On a 30 days timeline</span>\n                        </div>\n                    </div>\n\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Pie chart with percentage of games played</span>\n                        </div>\n                    </div>\n\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Podium with the 3 biggest rivals</span>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" >\n                        <label class="text-xs font-semibold text-gray-600 pr-4" style="padding-right: 10px;">Filter by:</label>\n                        \n                        <input type="text" id="filter-opponent" placeholder="Type in rival name" \n                               class="text-xs p-1.5 border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 w-[150px]" style="padding-right: 10px;">\n                        \n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 bg-white pr-5" style="pr:">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1"></div>\n\n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-semibold hover:from-gray-200 hover:to-gray-400 active:border-blue-400">\n                            Apply\n                        </button>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0">\n                        <div class="grid grid-cols-12 bg-gray-100 border-b border-gray-300 p-2 text-xs font-bold text-gray-600 select-none">\n                            <div class="col-span-2">Date</div>\n                            <div class="col-span-3">Rival</div>\n                            <div class="col-span-2 text-center">Score</div>\n                            <div class="col-span-2 text-center">Type</div>\n                            <div class="col-span-1 text-center">Round</div>\n                            <div class="col-span-2 text-center">Result</div>\n                        </div>\n\n                        <div id="match-history-list" class="overflow-y-auto flex-1 p-1 space-y-1">\n                            <div class="grid grid-cols-5 items-center p-2 text-sm border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors group">\n                                <div id="dashboard-match-date" class="col-span-2 text-gray-500 text-xs">07-01-2026</div>\n                                <div id="dashboard-rival-name" class="col-span-3 font-semibold text-gray-700 flex items-center gap-2">\n                                    <span>Faustochedu49</span>\n                                </div>\n                                <div id="dashboard-match-score" class="col-span-2 text-center font-mono">0 - 0</div>\n                                <div id="dashboard-game-type" class="col-span-2 text-center font-mono">Local</div>\n                                <div id="dashboard-match-round" class="col-span-2 text-center font-mono">1v1</div>\n                                <div id="dashboard-match-result" class="col-span-2 text-center font-mono">VICTORY</div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
 
   // scripts/pages/DashboardPage.ts
   function render7() {
     return DashboardPage_default;
   }
   function afterRender4() {
-    const dashboardOverview = document.getElementById("dashboard-overview");
-    const totalGames = document.getElementById("dashboard-total-games");
+    const totalGame = document.getElementById("dashboard-total-games");
     const avgScore = document.getElementById("dashboard-avg-score");
     const playTime = document.getElementById("dashboard-play-time");
-    const totalWins = document.getElementById("dashboard-wins");
-    const totalLosses = document.getElementById("dashboard-losses");
-    const winRate = document.getElementById("dashboard-win-rate");
+    const wins = document.getElementById("dashboard-wins");
+    const losses = document.getElementById("dashboard-losses");
+    const winRateCalcul = document.getElementById("dashboard-win-rate");
     const evolutionGraph = document.getElementById("dashboard-evolution-graph");
     const typeGameChart = document.getElementById("dashboard-game-chart");
     const rivalPodium = document.getElementById("dashboard-rival-podium");
@@ -9656,11 +9655,6 @@
             const jsonResponse = await statResponse.json();
             console.log("Stats re\xE7ues du Backend:", jsonResponse);
             const stats = jsonResponse.data || jsonResponse;
-            const totalGame = document.getElementById("stats-total-games");
-            const wins = document.getElementById("stats-wins");
-            const losses = document.getElementById("stats-losses");
-            const winRateCalcul = document.getElementById("stats-win-rate");
-            const avgScore2 = document.getElementById("stats-average-score");
             const streak = document.getElementById("stats-streak");
             const opponent = document.getElementById("stats-opponent");
             const favGame = document.getElementById("stats-fav-game");
@@ -9675,7 +9669,7 @@
                 }
                 winRateCalcul.innerText = `${rateValue}%`;
               }
-              if (avgScore2) avgScore2.innerText = stats.averageScore?.toString() || "0";
+              if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
               if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
               if (opponent) opponent.innerText = stats.biggest_opponent || "-";
               if (favGame) favGame.innerText = stats.favorite_game || "Local";
@@ -9683,66 +9677,12 @@
           } else {
             console.warn("Could not fetch user stats");
           }
-          if (user.theme) {
-            localStorage.setItem("userTheme", user.theme);
-            applyTheme(user.theme);
-          }
-          if (user.avatar_url && mainAvatar) {
-            mainAvatar.src = user.avatar_url;
-            selectedImageSrc = user.avatar_url;
-          }
-          if (user.is2faEnabled !== void 0) {
-            update2faButton(user.is2faEnabled);
-          }
-          fieldContainers.forEach((container) => {
-            const fieldName = container.dataset.field;
-            const display = container.querySelector(".field-display");
-            const input = container.querySelector(".field-input");
-            if (fieldName && display && input) {
-              let value2;
-              if (fieldName === "alias") {
-                value2 = user.alias || "";
-                if (usernameDisplay)
-                  usernameDisplay.innerText = value2;
-              } else if (fieldName === "bio") {
-                value2 = user.bio || "";
-                if (bioDisplay)
-                  bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
-              } else if (fieldName === "email") {
-                value2 = user.email || "";
-              } else if (fieldName === "password") {
-                value2 = "********";
-              }
-              if (value2 !== void 0) {
-                display.innerText = value2 || (fieldName === "email" ? "No email" : "Empty");
-                if (fieldName !== "password") {
-                  input.placeholder = value2 || "Empty";
-                }
-              }
-            }
-          });
-          if (user.status) {
-            const normalizedStatus = user.status.toLowerCase();
-            const statusValue = reverseStatusMapping[normalizedStatus] || "Appear offline";
-            if (statusSelect) statusSelect.value = statusValue;
-            updateStatusFrame(normalizedStatus);
-          }
-          fieldContainers.forEach((container) => {
-            if (container.dataset.field === "password") return;
-            const display = container.querySelector(".field-display");
-            const input = container.querySelector(".field-input");
-            const changeButton = container.querySelector(".change-button");
-            const confirmButton = container.querySelector(".confirm-button");
-            if (display && input && changeButton && confirmButton) {
-              const fieldElements = { container, display, input, changeButton, confirmButton };
-              setupField(fieldElements, container.dataset.field);
-            }
-          });
         }
       } catch (error) {
         console.error("Erreur while charging profile:", error);
       }
     };
+    loadUserData();
   }
 
   // scripts/main.ts
