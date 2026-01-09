@@ -1160,7 +1160,7 @@ export function initGamePage(mode: string): void {
                         return;
                     }
                     // condition de victoire : PREMIER A 11
-                    if (activeGame.score.player1 >= 3 || activeGame.score.player2 >= 3) {
+                    if (activeGame.score.player1 >= 5 || activeGame.score.player2 >= 5) {
                         activeGame.isRunning = false; // STOP LE JEU
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
