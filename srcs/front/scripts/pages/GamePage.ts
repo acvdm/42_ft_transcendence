@@ -406,7 +406,15 @@ export function initGamePage(mode: string): void {
     gameChat.init();
 
     if (mode == 'remote') {
-        gameChat.joinChannel("remote_game_room"); // salle d'attente globale
+        const privateRoomId = sessionStorage.getItem('privateGameId');
+        if (privateRoomId) {
+            // si la partie est privée on fait une route dediée
+            console.log(`Lancement d'un chat privé dans la waitroom numéro${privateRoomId}`);
+            gameChat.joinChannel(`private_wait_${privateRoomId}`);
+            
+        } else {
+            gameChat.joinChannel("remote_game_room"); // salle d'attente globale
+        }
         // iniitailiastion de la logique de jeu en remote
         initRemoteMode();
     } else if (mode == 'tournament') {
@@ -595,13 +603,17 @@ export function initGamePage(mode: string): void {
             console.log("Starting game from data:", data);
 
             const myAlias = await getPlayerAlias();
+            const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+            const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
             let opponentAlias = "Opponent";
 
             if (data.role === 'player1') {
                 currentP1Alias = myAlias;
+                if (remoteP2Alias) opponentAlias = remoteP2Alias;
                 currentP2Alias = opponentAlias;
             } else {
                 currentP1Alias = opponentAlias;
+                if (remoteP1Alias) opponentAlias = remoteP1Alias;
                 currentP2Alias = myAlias;
             }
 

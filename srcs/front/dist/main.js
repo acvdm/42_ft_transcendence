@@ -8673,7 +8673,13 @@
     gameChat = new Chat();
     gameChat.init();
     if (mode == "remote") {
-      gameChat.joinChannel("remote_game_room");
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (privateRoomId) {
+        console.log(`Lancement d'un chat priv\xE9 dans la waitroom num\xE9ro${privateRoomId}`);
+        gameChat.joinChannel(`private_wait_${privateRoomId}`);
+      } else {
+        gameChat.joinChannel("remote_game_room");
+      }
       initRemoteMode();
     } else if (mode == "tournament") {
       gameChat.joinChannel("tournament_room");
@@ -8817,12 +8823,16 @@
       const startGameFromData = async (data, p1Alias, p2Alias) => {
         console.log("Starting game from data:", data);
         const myAlias = await getPlayerAlias();
+        const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+        const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
         let opponentAlias = "Opponent";
         if (data.role === "player1") {
           currentP1Alias = myAlias;
+          if (remoteP2Alias) opponentAlias = remoteP2Alias;
           currentP2Alias = opponentAlias;
         } else {
           currentP1Alias = opponentAlias;
+          if (remoteP1Alias) opponentAlias = remoteP1Alias;
           currentP2Alias = myAlias;
         }
         const p1Display = document.getElementById("player-1-name");
