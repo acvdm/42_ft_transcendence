@@ -60,50 +60,60 @@ function stopGame(roomId: string, io: Server) {
         activeGames.delete(roomId);
     }
 }
-
 export function updateGamePhysics(game: GameState, io: Server) {
-    // Bouger la balle
-    let nextX = game.ball.x += game.ball.vx;
-    let nextY = game.ball.y += game.ball.vy;
+    // 1. On sauvegarde la position AVANT mouvement pour la comparaison
+    const prevX = game.ball.x;
+    const prevY = game.ball.y;
+
+    // 2. On calcule la FUTURE position sans modifier l'objet tout de suite
+    let nextX = prevX + game.ball.vx;
+    let nextY = prevY + game.ball.vy;
 
     // Collision murs (Haut/Bas)
     if (nextY - game.ball.radius < 0 || nextY + game.ball.radius > game.canvasHeight) {
         game.ball.vy = -game.ball.vy;
-        nextY = game.ball.y + game.ball.vy;
+        nextY = prevY + game.ball.vy; // On recalcule nextY avec la nouvelle direction
     }
 
-    // Collision Raquettes (Simplifiée)
-    // P1
-    if (game.ball.vx < 0) { // La balle va vers la gauche
-        // On vérifie si la balle "traverse" la face droite de la raquette entre cette frame et la prochaine
-        // ET si elle est au niveau Y de la raquette (en comptant le rayon pour les bords)
-        if (game.ball.x - game.ball.radius >= game.paddle1.x + game.paddle1.width && 
-            nextX - game.ball.radius <= game.paddle1.x + game.paddle1.width) {
+    // Collision Raquettes
+    // P1 (Gauche)
+    if (game.ball.vx < 0) { 
+        // La balle va vers la gauche. On regarde si elle traverse la face DROITE de la raquette.
+        // Condition: Elle était à droite (prevX) ET elle finit à gauche (nextX)
+        const paddleRightEdge = game.paddle1.x + game.paddle1.width;
+
+        if (prevX - game.ball.radius >= paddleRightEdge && 
+            nextX - game.ball.radius <= paddleRightEdge) {
             
+            // Vérification verticale (Y)
             if (game.ball.y + game.ball.radius >= game.paddle1.y && 
                 game.ball.y - game.ball.radius <= game.paddle1.y + game.paddle1.height) {
                 
-                game.ball.vx = -game.ball.vx * 1.05; // Rebond + Accélération
-                // On replace la balle pile à la surface pour éviter qu'elle reste coincée
-                nextX = game.paddle1.x + game.paddle1.width + game.ball.radius;
+                game.ball.vx = -game.ball.vx * 1.05;
+                // On replace la balle juste devant la raquette pour éviter qu'elle reste coincée
+                nextX = paddleRightEdge + game.ball.radius;
             }
         }
     }
 
     // P2 (Droite)
-    if (game.ball.vx > 0) { // La balle va vers la droite
-        if (game.ball.x + game.ball.radius <= game.paddle2.x && 
-            nextX + game.ball.radius >= game.paddle2.x) {
+    if (game.ball.vx > 0) { 
+        // La balle va vers la droite. On regarde si elle traverse la face GAUCHE de la raquette.
+        const paddleLeftEdge = game.paddle2.x;
+
+        if (prevX + game.ball.radius <= paddleLeftEdge && 
+            nextX + game.ball.radius >= paddleLeftEdge) {
             
             if (game.ball.y + game.ball.radius >= game.paddle2.y && 
                 game.ball.y - game.ball.radius <= game.paddle2.y + game.paddle2.height) {
                 
                 game.ball.vx = -game.ball.vx * 1.05;
-                nextX = game.paddle2.x - game.ball.radius;
+                nextX = paddleLeftEdge - game.ball.radius;
             }
         }
     }
 
+    // 3. Mise à jour effective de la balle
     game.ball.x = nextX;
     game.ball.y = nextY;
 
@@ -116,7 +126,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
         resetBall(game);
     }
 
-    // Fin de partie (exemple: 5 points)
+    // Fin de partie
     if (game.score.player1 >= 5 || game.score.player2 >= 5) {
         stopGame(game.roomId, io);
     }
