@@ -1,0 +1,33 @@
+
+Format des fichiers de langue : JSON (en.json, fr.json, ...)
+utilisation dun syst de cle valeur imbrique pour organiser le contenu par page ou composant
+-> import au demarage ou fetch
+
+Frontend - Creation du "Service de langue"\
+Classe cheffe d'orchestre
+- retient la langue active
+- chercher le fichier json
+- traduction brute -> cherche la cle et retourne le texte brute
+- mise a jour du DOM -> parcourt toute la page html pour remplacer les textes
+- detection initiale du langage
+
+Backend - Modification de la DB
+- Mise a jour de la table USers -> colonne language
+- Mise a jour des routes API -> GET /users/me doit renvoyre la langue enregistree
+- PATCH /users/settings dois permettre la modif de cette langue
+
+Migration du contenu 
+- Nettoyage des HTML : supprimer les textes en dur, remplacer par des balises vides contenant un attribut special
+- Nettoyage des scripts typescript (generation de texte dynamique -> alert(), modales, notifications, ...) -> appel de methode de traduciton
+- remplissage des fichiers JSON
+
+Interface utilisateur
+- Selecteur : menu deroulant ou drapeaux cliquables dans la barre de navigatuon ou page de parametres (Change Language)
+- Reactivite -> changement immediat + changer attribut lang de la balise html
+
+Persistance et experience utilisateur
+- dans le localStorage
+- Synchroniisation DB -> sauvegarder choix den DB
+- Formatage Dates/Heures
+
+**** utilisation de librairies externes : i18n-next, FormatJS (pour Javascript) ??
