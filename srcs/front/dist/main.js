@@ -1,5 +1,6 @@
 "use strict";
 (() => {
+<<<<<<< HEAD
   var __defProp = Object.defineProperty;
   var __export = (target, all) => {
     for (var name in all)
@@ -9792,4 +9793,11 @@
   document.addEventListener("DOMContentLoaded", () => {
     handleLocationChange();
   });
+=======
+  // scripts/main.ts
+  console.log("TypeScript est pr\xEAt et fonctionnel.");
+  var appElement = document.getElementById("app");
+  if (appElement)
+    appElement.innerHTML += '<h2 class="text-green-500 p-4">Test TypeScript: Inject\xE9 avec succ\xE8s! </h2>';
+>>>>>>> main
 })();
