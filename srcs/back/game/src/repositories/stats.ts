@@ -7,7 +7,8 @@ export interface Stat {
     totalGames: number,
     totalScore: number,
     averageScore: number,
-    currentWinStreak: number
+    currentWinStreak: number,
+    totalPlayTime: number
 }
 
 export interface HistoryFilters {
@@ -45,6 +46,7 @@ export async function findStatsByUserId (
         SELECT * FROM STATS WHERE user_id = ?`,
         [userId]
     )
+    console.log(`stats = ${stats.userId}, ${stats.total_duration_in_minutes}`);
 
     if (!stats) {
         return {
@@ -54,7 +56,8 @@ export async function findStatsByUserId (
             totalGames: 0,
             totalScore: 0,
             averageScore: 0,
-            currentWinStreak: 0
+            currentWinStreak: 0,
+            totalPlayTime: 0
         } as any;
     }
 
