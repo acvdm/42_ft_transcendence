@@ -269,10 +269,17 @@ fastify.post('/sessions', async (request, reply) =>
 fastify.post('/token', async (request, reply) => {
   
   // lire le cookie signe
+
+  console.log(" /token route called");
+  console.log(" Coockies received:",request.cookies);
+
   const cookie = request.cookies.refreshToken;
+
+  console.log("refresToken cookie: ", cookie ? "exists" : "missing");
   
   // verification de la signature
   const result = request.unsignCookie(cookie || '');
+  console.log("Cookieunsign result:", { valid: result.valid, hasValue: !!result.value });
 
   if (!result.valid || !result.value) {
     return reply.status(401).send({ error: "Invalid or missing refresh token"});
@@ -300,8 +307,9 @@ fastify.post('/token', async (request, reply) => {
       userId: authResponse.userId
     });
   } catch (err: any){
-      reply.clearCookie('refreshToken');
-      return reply.status(403).send({error: err.message});
+		console.error("❌ Refresh error:", err);
+		reply.clearCookie('refreshToken');
+		return reply.status(403).send({error: err.message});
   }
 });
 

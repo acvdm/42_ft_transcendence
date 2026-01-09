@@ -100,6 +100,7 @@
   // scripts/pages/api.ts
   var isRefreshing = false;
   var refreshSubscribers = [];
+  var refreshPromise = null;
   function subscribeTokenRefresh(cb) {
     refreshSubscribers.push(cb);
   }
@@ -111,54 +112,84 @@
     return sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
   }
   async function fetchWithAuth(url2, options = {}) {
-    const token = getAuthToken();
-    const getHeaders = (currentToken) => {
-      const headers = new Headers(options.headers || {});
-      if (!headers.has("Content-Type") && options.body) {
+    let token = getAuthToken();
+    const getConfigWithAuth = (tokenToUse, originalOptions) => {
+      const headers = new Headers(originalOptions.headers || {});
+      if (headers.has("Authorization"))
+        headers.delete("Authorization");
+      if (!headers.has("Content-Type") && originalOptions.body)
         headers.set("Content-Type", "application/json");
+      if (tokenToUse) {
+        headers.set("Authorization", `Bearer ${tokenToUse}`);
       }
-      if (currentToken) {
-        headers.set("Authorization", `Bearer ${currentToken}`);
-      }
-      return headers;
+      return {
+        ...originalOptions,
+        headers
+        // remplace/ajoute headers aux parametresdeoriginalOptions (method,body,....)
+      };
     };
-    let response = await fetch(url2, {
-      ...options,
-      headers: getHeaders(token)
-    });
+    let response = await fetch(url2, getConfigWithAuth(token, options));
     if (response.status === 401) {
+      console.warn(`401 detected fo ${url2}`);
       if (!isRefreshing) {
         isRefreshing = true;
-        console.warn("Token expired (401). Atempt to refresh...");
-        try {
-          const refreshRes = await fetch("/api/auth/token", { method: "POST" });
-          if (refreshRes.ok) {
-            const data = await refreshRes.json();
-            const newToken = data.accessToken;
-            localStorage.setItem("accessToken", newToken);
+        refreshPromise = (async () => {
+          try {
+            const refreshRes = await fetch("/api/auth/token", {
+              method: "POST",
+              credentials: "include"
+            });
+            if (refreshRes.ok) {
+              const data = await refreshRes.json();
+              console.log("Refresh successful, data:", data);
+              const newToken = data.accessToken;
+              if (!newToken)
+                throw new Error("No accessToken in refresh response");
+              localStorage.setItem("accessToken", newToken);
+              onRefreshed(newToken);
+              return newToken;
+            } else {
+              const errorText = await refreshRes.text();
+              console.error("Refresh failed:", errorText);
+              throw new Error(`Refresh failed:, ${refreshRes.status}`);
+            }
+          } catch (error) {
+            console.error("Refresh error:", error);
+            throw error;
+          } finally {
             isRefreshing = false;
-            onRefreshed(newToken);
-            return await fetch(url2, { ...options, headers: getHeaders(newToken) });
-          } else {
-            isRefreshing = false;
-            refreshSubscribers = [];
-            console.error("Refresh impossible. Deconnection.");
-            localStorage.removeItem("accessToken");
-            localStorage.removeItem("userId");
-            window.history.pushState({}, "", "/login");
-            window.dispatchEvent(new PopStateEvent("popstate"));
-            throw new Error("Session expired");
+            refreshPromise = null;
           }
+        })();
+        try {
+          const newToken = await refreshPromise;
+          console.log("Refreshing original request with new token");
+          return await fetch(url2, getConfigWithAuth(newToken, options));
         } catch (error) {
-          isRefreshing = false;
+          console.error("Refresh impossible. Deconnection");
+          refreshSubscribers = [];
+          console.error("Refresh impossible. Deconnection.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("userId");
+          window.history.pushState({}, "", "/login");
+          window.dispatchEvent(new PopStateEvent("popstate"));
           throw error;
         }
       } else {
         console.log("Token expired. Waiting the refreshing of the other token...");
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           subscribeTokenRefresh(async (newToken) => {
-            resolve(await fetch(url2, { ...options, headers: getHeaders(newToken) }));
+            try {
+              const retryResponse = await fetch(url2, getConfigWithAuth(newToken, options));
+              resolve(retryResponse);
+            } catch (err) {
+              console.error(`Error retrying queud for ${url2}:`, err);
+              reject(err);
+            }
           });
+          setTimeout(() => {
+            reject(new Error(`Token refresh timeout`));
+          }, 1e4);
         });
       }
     }
