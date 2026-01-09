@@ -33,8 +33,8 @@ export function afterRender(): void {
 	const winRateCalcul = document.getElementById('dashboard-win-rate');
 
 	// les graphs
-	const evolutionCanvas = document.getElementById('dashboard-evolution-graph');
-	const gameTypeCanvas = document.getElementById('dashboard-game-chart');
+	const evolutionCanvas = document.getElementById('dashboard-evolution-graph') as HTMLCanvasElement;
+	const gameTypeCanvas = document.getElementById('dashboard-game-chart') as HTMLCanvasElement;
 	
 	// gestion du thème
     const currentTheme = localStorage.getItem('userTheme') || 'basic';
@@ -98,8 +98,121 @@ export function afterRender(): void {
 	//======== RENDERING EVOLUTION CHART ==========
 	//=============================================
 
-	// function renderEvolutionChart(c)
 
+	function renderEvolutionChart(canvas: HTMLCanvasElement, data: any) {
+		if (!canvas) return;
 
+		// destruction de ce qu'il y avait avant
+		if (evolutionChartInstance) {
+			evolutionChartInstance.destroy();
+		}
+
+		evolutionChartInstance = new Chart(canvas, {
+			type: 'line',
+			data: {
+				labels: data.labels,
+				datasets: [
+					{
+						label: 'Wins',
+						data: data.wins,
+						borderColor: 'rgba(34, 197, 94, 1)',
+						backgroundColor: 'rgba(34, 197, 94, 0.2)',
+						fill: true,
+						tension: 0.4,
+						pointRadius: 2
+					},
+					{
+						label: 'Losses',
+						data: data.losses,
+						borderColor: 'rgba(239, 68, 68, 1)',
+						backgroundColor: 'rgba(239, 68, 68, 0.2)',
+						fill: true,
+						tension: 0.4,
+						pointRadius: 2
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: {
+						display: true,
+						labels: { boxWidth: 10, font: { size: 10 } }
+					}
+				},
+				scales: {
+					x: { display: false },
+					y: { display: false }
+				}
+			}
+		});
+	}
+
+	function renderGameTypeChart(canvas: HTMLCanvasElement, distribution: { local: number, remote: number, tournament: number }) {
+		if (!canvas) return;
+
+		if (gameTypeChartInstance) {
+			gameTypeChartInstance.destroy();
+		}
+
+		gameTypeChartInstance = new Chart(canvas, {
+			type: 'pie',
+			data: {
+				labels: ['Local', 'Remote', 'Tournament'],
+				datasets: [{
+					data: [distribution.local, distribution.remote, distribution.tournament],
+					backgroundColor: [
+						'rgba(59, 130, 246, 0.8)',
+						'rgba(168, 85, 247, 0.8)',
+						'rgba(249, 115, 22, 0.8)'
+					],
+					borderWidth: 0,
+					hoverOffset: 4
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					legend: {
+						position: 'right',
+						labels: { boxWidth: 10, font: { size: 10 } }
+					}
+				}
+			}
+		});
+	}
+
+	// ---------------------------------------------------------
+	// UTILITAIRES (MOCK DATA)
+	// ---------------------------------------------------------
+
+	function generateMockHistory(totalWins: number, totalLosses: number) {
+		const days = 10;
+		const labels = [];
+		const winsData = [];
+		const lossesData = [];
+
+		let currentWins = Math.max(0, totalWins - 5);
+		let currentLosses = Math.max(0, totalLosses - 5);
+
+		for (let i = 0; i < days; i++) {
+			labels.push(`Day ${i}`);
+
+			if (i === days - 1) {
+				winsData.push(totalWins);
+				lossesData.push(totalLosses);
+			} else {
+				winsData.push(currentWins);
+				lossesData.push(currentLosses);
+				
+				if (currentWins < totalWins) currentWins += Math.random() > 0.5 ? 1 : 0;
+				if (currentLosses < totalLosses) currentLosses += Math.random() > 0.5 ? 1 : 0;
+			}
+		}
+
+		return { labels, wins: winsData, losses: lossesData };
+	}
 
 }
