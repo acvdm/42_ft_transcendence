@@ -5434,8 +5434,9 @@
       socketService.connectGame();
       this.chatSocket = socketService.getChatSocket();
       this.gameSocket = socketService.getGameSocket();
-      if (!this.gameSocket)
-        console.log("gamesocket n'existe pas");
+      if (!this.gameSocket) {
+        console.log("Gamesocket does not exist");
+      }
       if (!this.chatSocket) {
         console.error("Chat: Impossible to retrieve chat socket (not connected).");
         return;
@@ -5449,9 +5450,9 @@
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
       this.currentFriendId = friendId || null;
-      console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
-      if (this.chatSocket)
+      if (this.chatSocket) {
         this.chatSocket.emit("joinChannel", channelKey);
+      }
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
       }
@@ -5482,7 +5483,9 @@
         this.addSystemMessage(data.content);
       });
       this.chatSocket.on("receivedWizz", (data) => {
-        if (data.channel_key && data.channel_key !== this.currentChannel) return;
+        if (data.channel_key && data.channel_key !== this.currentChannel) {
+          return;
+        }
         const currentUser = localStorage.getItem("username");
         this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
         if (data.author !== currentUser) {
@@ -5512,7 +5515,9 @@
     // ----           GESTION DE L'INPUT              ----
     // ---------------------------------------------------
     setupInputListeners() {
-      if (!this.messageInput) return;
+      if (!this.messageInput) {
+        return;
+      }
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
@@ -5541,16 +5546,20 @@
         });
       }
     }
-    // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
     emitWizzOnly() {
-      if (!this.chatSocket) return;
+      if (!this.chatSocket) {
+        return;
+      }
       const currentUsername = localStorage.getItem("username");
       this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
-    // délcencher la secousse 
     shakeElement(element, duration = 500) {
-      if (!element) return;
-      if (this.shakeTimeout) clearTimeout(this.shakeTimeout);
+      if (!element) {
+        return;
+      }
+      if (this.shakeTimeout) {
+        clearTimeout(this.shakeTimeout);
+      }
       element.classList.remove("wizz-shake");
       void element.offsetWidth;
       element.classList.add("wizz-shake");
@@ -5618,17 +5627,6 @@
       this.messagesContainer.appendChild(msgElement);
       this.scrollToBottom();
     }
-    // private addMessage(message: string, author: string) {
-    //     if (!this.messagesContainer) return;
-    //     const msgElement = document.createElement('p');
-    //     msgElement.className = "mb-1";
-    //     // on securise le texte et on parse les emoticones
-    //     const contentEmoticons = parseMessage(message);
-    //     msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
-    //     this.messagesContainer.appendChild(msgElement);
-    //     // rajouter un scroll automatique vers le bas
-    //     this.scrollToBottom();
-    // }
     addCustomContent(htmlContent) {
       if (!this.messagesContainer) return;
       const msgElement = document.createElement("div");
@@ -6603,6 +6601,290 @@
     
 </div>`;
 
+  // scripts/components/AvatarManager.ts
+  var AvatarManager = class {
+    constructor(userId) {
+      this.selectedImageSrc = "";
+      this.userId = userId;
+      this.modal = document.getElementById("picture-modal");
+      this.mainAvatar = document.getElementById("current-avatar");
+      this.previewAvatar = document.getElementById("modal-preview-avatar");
+    }
+    init() {
+      if (!this.modal || !this.mainAvatar) {
+        return;
+      }
+      const editButton = document.getElementById("edit-picture-button");
+      const closeButton = document.getElementById("close-modal");
+      const cancelButton = document.getElementById("cancel-button");
+      const okButton = document.getElementById("validation-button");
+      const browseButton = document.getElementById("browse-button");
+      const fileInput = document.getElementById("file-input");
+      const deleteButton = document.getElementById("delete-button");
+      const gridContainer = document.getElementById("modal-grid");
+      editButton?.addEventListener("click", () => this.openModal());
+      closeButton?.addEventListener("click", () => this.closeModal());
+      cancelButton?.addEventListener("click", () => this.closeModal());
+      this.modal.addEventListener("click", (e) => {
+        if (e.target === this.modal) {
+          this.closeModal();
+        }
+      });
+      if (gridContainer) {
+        const gridImages = gridContainer.querySelectorAll("img");
+        gridImages.forEach((img) => {
+          img.addEventListener("click", () => {
+            this.selectedImageSrc = img.src;
+            if (this.previewAvatar) {
+              this.previewAvatar.src = this.selectedImageSrc;
+            }
+            gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
+            img.classList.add("border-[#0078D7]");
+          });
+        });
+      }
+      browseButton?.addEventListener("click", () => fileInput?.click());
+      fileInput?.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              this.selectedImageSrc = e.target.result;
+              if (this.previewAvatar) {
+                this.previewAvatar.src = this.selectedImageSrc;
+              }
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      deleteButton?.addEventListener("click", () => {
+        const defaultAvatar = "/assets/basic/default.png";
+        this.selectedImageSrc = defaultAvatar;
+        if (this.previewAvatar) {
+          this.previewAvatar.src = defaultAvatar;
+        }
+      });
+      okButton?.addEventListener("click", async () => this.saveAvatar());
+    }
+    openModal() {
+      if (!this.modal || !this.previewAvatar || !this.mainAvatar) {
+        return;
+      }
+      this.selectedImageSrc = this.mainAvatar.src;
+      this.previewAvatar.src = this.selectedImageSrc;
+      this.modal.classList.remove("hidden");
+      this.modal.classList.add("flex");
+    }
+    closeModal() {
+      this.modal?.classList.add("hidden");
+      this.modal?.classList.remove("flex");
+    }
+    async saveAvatar() {
+      if (!this.userId) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${this.userId}/avatar`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ avatar: this.selectedImageSrc })
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const cleanAvatarUrl = result.data.avatar;
+          if (this.mainAvatar) {
+            this.mainAvatar.src = cleanAvatarUrl;
+          }
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(this.userId),
+            avatar: cleanAvatarUrl,
+            username: localStorage.getItem("username")
+          });
+          this.closeModal();
+        } else {
+          alert("Error while saving");
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+      }
+    }
+  };
+
+  // scripts/components/TwoFactorManager.ts
+  var TwoFactorManager = class {
+    constructor(userId) {
+      // Elements DOM stockés pour usage interne
+      this.elements = {};
+      this.userId = userId;
+      this.is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
+      this.modal2fa = document.getElementById("2fa-modal");
+      this.cacheElements();
+    }
+    cacheElements() {
+      this.elements = {
+        toggleButton: document.getElementById("2fa-modal-button"),
+        qrImg: document.getElementById("2fa-qr-code"),
+        inputQr: document.getElementById("2fa-input-code"),
+        inputEmailCode: document.getElementById("2fa-input-code-email"),
+        methodSelection: document.getElementById("method-selection"),
+        qrContent: document.getElementById("qr-content"),
+        emailContent: document.getElementById("email-content"),
+        inputEmail: document.getElementById("2fa-email-input"),
+        codeVerifSection: document.getElementById("code-verification"),
+        sendCodeBtn: document.getElementById("send-code-button")
+      };
+    }
+    init() {
+      this.updateToggleButton();
+      this.setupListeners();
+    }
+    // Met à jour l'état initial (appelé depuis ProfilePage si besoin)
+    setStatus(enabled) {
+      this.is2faEnabled = enabled;
+      this.updateToggleButton();
+    }
+    updateToggleButton() {
+      const btn = this.elements.toggleButton;
+      if (!btn) return;
+      if (this.is2faEnabled) {
+        btn.innerText = "Disable 2FA authentication";
+        btn.classList.remove("bg-green-600");
+        btn.classList.add("bg-red-600");
+      } else {
+        btn.innerText = "Enable 2FA authentication";
+        btn.classList.remove("bg-red-600");
+        btn.classList.add("bg-green-600");
+      }
+    }
+    setupListeners() {
+      this.elements.toggleButton?.addEventListener("click", () => {
+        if (this.is2faEnabled) this.disable2fa();
+        else this.openModal();
+      });
+      document.querySelector('[data-method="qr"]')?.addEventListener("click", () => this.initiateSetup("qr"));
+      document.querySelector('[data-method="email"]')?.addEventListener("click", () => this.initiateSetup("email"));
+      document.getElementById("close-2fa-modal")?.addEventListener("click", () => this.closeModal());
+      document.getElementById("confirm-2fa-button")?.addEventListener(
+        "click",
+        () => this.enable2fa(this.elements.inputQr.value.trim(), "qr")
+      );
+      document.getElementById("confirm-2fa-email")?.addEventListener(
+        "click",
+        () => this.enable2fa(this.elements.inputEmailCode.value.trim(), "email")
+      );
+      this.modal2fa?.addEventListener("click", (e) => {
+        if (e.target === this.modal2fa) this.closeModal();
+      });
+    }
+    openModal() {
+      if (!this.modal2fa) return;
+      this.modal2fa.classList.remove("hidden");
+      this.modal2fa.classList.add("flex");
+      this.switchView("selection");
+    }
+    closeModal() {
+      if (!this.modal2fa) return;
+      this.modal2fa.classList.add("hidden");
+      this.modal2fa.classList.remove("flex");
+      if (this.elements.inputQr) this.elements.inputQr.value = "";
+      if (this.elements.inputEmailCode) this.elements.inputEmailCode.value = "";
+    }
+    switchView(view) {
+      const { methodSelection, qrContent, emailContent } = this.elements;
+      [methodSelection, qrContent, emailContent].forEach((el) => {
+        el?.classList.add("hidden");
+        el?.classList.remove("flex");
+      });
+      if (view === "selection") {
+        methodSelection?.classList.remove("hidden");
+        methodSelection?.classList.add("flex");
+      } else if (view === "qr") {
+        qrContent?.classList.remove("hidden");
+        qrContent?.classList.add("flex");
+      } else if (view === "email") {
+        emailContent?.classList.remove("hidden");
+        emailContent?.classList.add("flex");
+        this.prepareEmailView();
+      }
+    }
+    prepareEmailView() {
+      const displayedEmail = document.querySelector('div[data-field="email"] .field-display')?.textContent;
+      if (displayedEmail && this.elements.inputEmail) {
+        this.elements.inputEmail.value = displayedEmail.trim();
+        this.elements.inputEmail.disabled = true;
+      }
+      this.elements.codeVerifSection?.classList.remove("hidden");
+      this.elements.codeVerifSection?.classList.add("flex");
+      this.elements.sendCodeBtn?.classList.add("hidden");
+    }
+    async initiateSetup(method) {
+      if (!this.userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
+      try {
+        const response = await fetchWithAuth(`api/auth/2fa/secret`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: backendType })
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (method === "qr" && result.data?.qrCodeUrl) {
+            this.elements.qrImg.src = result.data.qrCodeUrl;
+            this.switchView("qr");
+          } else if (method === "email") {
+            this.switchView("email");
+          }
+        } else {
+          alert("Error initializing 2FA setup");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    async enable2fa(code, type) {
+      if (!code || code.length < 6) {
+        alert("Invalid code");
+        return;
+      }
+      const backendType = type === "qr" ? "APP" : "EMAIL";
+      try {
+        const response = await fetchWithAuth(`api/auth/2fa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, type: backendType })
+        });
+        if (response.ok) {
+          this.is2faEnabled = true;
+          localStorage.setItem("is2faEnabled", "true");
+          this.updateToggleButton();
+          this.closeModal();
+          alert("2FA enabled!");
+        } else {
+          const res = await response.json();
+          alert(res.message || "Invalid code");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    async disable2fa() {
+      if (!confirm("Disable 2FA?")) return;
+      try {
+        const response = await fetchWithAuth(`api/auth/2fa`, { method: "DELETE" });
+        if (response.ok) {
+          this.is2faEnabled = false;
+          localStorage.setItem("is2faEnabled", "false");
+          this.updateToggleButton();
+          alert("2FA disabled");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
   // scripts/pages/ProfilePage.ts
   function render3() {
     return ProfilePage_default;
@@ -6630,44 +6912,17 @@
     }
   }
   function afterRender2() {
+    const userId = localStorage.getItem("userId");
+    const avatarManager = new AvatarManager(userId);
+    const twoFactorManager = new TwoFactorManager(userId);
+    avatarManager.init();
+    twoFactorManager.init();
     const mainAvatar = document.getElementById("current-avatar");
     const statusFrame = document.getElementById("current-statut");
     const usernameDisplay = document.getElementById("username-profile");
     const bioDisplay = document.getElementById("bio-profile");
-    const modal = document.getElementById("picture-modal");
     const statusSelect = document.querySelector("select");
     const fieldContainers = document.querySelectorAll(".flex.flex-row.gap-2[data-field]");
-    const editButton = document.getElementById("edit-picture-button");
-    const closeButton = document.getElementById("close-modal");
-    const cancelButton = document.getElementById("cancel-button");
-    const okButton = document.getElementById("validation-button");
-    const browseButton = document.getElementById("browse-button");
-    const deleteButton = document.getElementById("delete-button");
-    const gridContainer = document.getElementById("modal-grid");
-    const previewAvatar = document.getElementById("modal-preview-avatar");
-    const fileInput = document.getElementById("file-input");
-    const methodSelection = document.getElementById("method-selection");
-    const qrContent = document.getElementById("qr-content");
-    const emailContent = document.getElementById("email-content");
-    const buttonSelectQr = document.querySelector('[data-method="qr"]');
-    const buttonSelectEmail = document.querySelector('[data-method="email"]');
-    const buttonBackQr = document.getElementById("back-from-qr");
-    const buttonBackEmail = document.getElementById("back-from-email");
-    const inputEmail2fa = document.getElementById("2fa-email-input");
-    const buttonSendCode = document.getElementById("send-code-button");
-    const codeVerif = document.getElementById("code-verification");
-    const inputCodeEmail = document.getElementById("2fa-input-code-email");
-    const buttonConfirmEmail = document.getElementById("confirm-2fa-email");
-    const button2faToggle = document.getElementById("2fa-modal-button");
-    const modal2fa = document.getElementById("2fa-modal");
-    const close2faButton = document.getElementById("close-2fa-modal");
-    const cancel2faButton = document.getElementById("cancel-2fa-button");
-    const confirm2faQrButton = document.getElementById("confirm-2fa-button");
-    const input2faQr = document.getElementById("2fa-input-code");
-    const qrCodeImg = document.getElementById("2fa-qr-code");
-    const userId = localStorage.getItem("userId");
-    let selectedImageSrc = mainAvatar?.src || "";
-    let is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
     let currentUserEmail = "";
     const statusImages3 = {
       "available": "/assets/basic/status_frame_online_large.png",
@@ -6746,162 +7001,11 @@
     themeModal?.addEventListener("click", (e) => {
       if (e.target === themeModal) closeThemeFunc();
     });
-    let current2FAMethod = "APP";
-    const update2faButton = (enabled) => {
-      is2faEnabled = enabled;
-      if (enabled) {
-        button2faToggle.innerText = "Disable 2FA authentication";
-        button2faToggle.classList.remove("bg-green-600");
-        button2faToggle.classList.add("bg-red-600");
-      } else {
-        button2faToggle.innerText = "Enable 2FA authentication";
-        button2faToggle.classList.remove("bg-red-600");
-        button2faToggle.classList.add("bg-green-600");
-      }
-    };
-    update2faButton(is2faEnabled);
-    const close2fa = () => {
-      if (modal2fa) {
-        modal2fa.classList.add("hidden");
-        modal2fa.classList.remove("flex");
-        if (input2faQr) input2faQr.value = "";
-        if (inputCodeEmail) inputCodeEmail.value = "";
-        if (qrCodeImg) qrCodeImg.src = "";
-      }
-    };
-    const switch2faView = (view) => {
-      methodSelection?.classList.add("hidden");
-      qrContent?.classList.add("hidden");
-      emailContent?.classList.add("hidden");
-      methodSelection?.classList.remove("flex");
-      qrContent?.classList.remove("flex");
-      emailContent?.classList.remove("flex");
-      if (view === "selection") {
-        methodSelection?.classList.remove("hidden");
-        methodSelection?.classList.add("flex");
-      } else if (view === "qr") {
-        qrContent?.classList.remove("hidden");
-        qrContent?.classList.add("flex");
-      } else if (view === "email") {
-        emailContent?.classList.remove("hidden");
-        emailContent?.classList.add("flex");
-        const displayedEmail = document.querySelector('div[data-field="email"] .field-display')?.textContent;
-        if (displayedEmail && displayedEmail.trim() !== "")
-          currentUserEmail = displayedEmail.trim();
-        if (inputEmail2fa) {
-          inputEmail2fa.value = currentUserEmail;
-          inputEmail2fa.disabled = true;
-        }
-        if (codeVerif) {
-          codeVerif.classList.remove("hidden");
-          codeVerif.classList.add("flex");
-        }
-        if (buttonSendCode) buttonSendCode.classList.add("hidden");
-      }
-    };
-    const initiate2faSetup = async (method) => {
-      if (!userId) return;
-      const backendType = method === "qr" ? "APP" : "EMAIL";
-      try {
-        const response = await fetchWithAuth(`api/auth/2fa/secret`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: backendType })
-        });
-        if (response.ok) {
-          const result = await response.json();
-          if (method === "qr") {
-            if (result.data && result.data.qrCodeUrl) {
-              if (qrCodeImg) qrCodeImg.src = result.data.qrCodeUrl;
-              switch2faView("qr");
-            }
-          } else {
-            console.log("Email code sent");
-            switch2faView("email");
-          }
-        } else {
-          console.error("Failed to initiate 2FA");
-          alert("Error initializing 2FA setup");
-        }
-      } catch (error) {
-        console.error("Network error 2FA generate:", error);
-        alert("Network error");
-      }
-    };
-    const enable2fa = async (code, type) => {
-      if (!code || code.length < 6) {
-        alert("Please enter a valid 6-digit code.");
-        return;
-      }
-      const backendType = type === "qr" ? "APP" : "EMAIL";
-      try {
-        const response = await fetchWithAuth(`api/auth/2fa`, {
-          method: "POST",
-          // ou patch?? a tester
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, type: backendType })
-        });
-        if (response.ok) {
-          update2faButton(true);
-          localStorage.setItem("is2faEnabled", "true");
-          close2fa();
-          alert("2FA is now enabled!");
-        } else {
-          const result = await response.json();
-          alert(result.message || "Invalid code. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error enabling 2FA:", error);
-        alert("An error occurred.");
-      }
-    };
-    const disable2fa = async () => {
-      if (!confirm("Are you sure you want to disable Two-Factor Authentication?")) return;
-      try {
-        const response = await fetchWithAuth(`api/auth/2fa`, {
-          method: "DELETE"
-          // ou patch?? a tester --> MODIFICATION EN DELETE par Cassandre
-        });
-        if (response.ok) {
-          update2faButton(false);
-          localStorage.setItem("is2faEnabled", "false");
-          alert("2FA disabled.");
-        } else {
-          alert("Error disabling 2FA.");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    buttonSelectQr?.addEventListener("click", () => initiate2faSetup("qr"));
-    buttonSelectEmail?.addEventListener("click", () => initiate2faSetup("email"));
-    buttonBackQr?.addEventListener("click", () => switch2faView("selection"));
-    buttonBackEmail?.addEventListener("click", () => switch2faView("selection"));
-    confirm2faQrButton?.addEventListener("click", () => enable2fa(input2faQr.value.trim(), "qr"));
-    buttonConfirmEmail?.addEventListener("click", () => enable2fa(inputCodeEmail.value.trim(), "email"));
-    button2faToggle?.addEventListener("click", () => {
-      if (is2faEnabled) {
-        disable2fa();
-      } else {
-        if (modal2fa) {
-          modal2fa.classList.remove("hidden");
-          modal2fa.classList.add("flex");
-          if (input2faQr) input2faQr.value = "";
-          if (inputCodeEmail) inputCodeEmail.value = "";
-          switch2faView("selection");
-        }
-      }
-    });
-    close2faButton?.addEventListener("click", close2fa);
-    cancel2faButton?.addEventListener("click", close2fa);
-    const cancelEmailButton = document.getElementById("cancel-2fa-email");
-    cancelEmailButton?.addEventListener("click", close2fa);
-    modal2fa?.addEventListener("click", (e) => {
-      if (e.target === modal2fa) close2fa();
-    });
     const downloadButton = document.getElementById("download-data-button");
     downloadButton?.addEventListener("click", async () => {
-      if (!userId) return;
+      if (!userId) {
+        return;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}/export`);
         if (response.ok) {
@@ -6914,7 +7018,6 @@
           a.click();
           window.URL.revokeObjectURL(url2);
           a.remove();
-          console.log("Export data downloaded successfully!");
         } else {
           console.error("Failed to download data");
         }
@@ -6939,12 +7042,18 @@
     closeDeleteModalButton?.addEventListener("click", closeDeleteModal);
     cancelDeleteButton?.addEventListener("click", closeDeleteModal);
     deleteModal?.addEventListener("click", (e) => {
-      if (e.target === deleteModal) closeDeleteModal();
+      if (e.target === deleteModal) {
+        closeDeleteModal();
+      }
     });
     confirmDeleteButton?.addEventListener("click", async () => {
-      if (!userId) return;
+      if (!userId) {
+        return;
+      }
       const confirmation = confirm("This action is irreversible. Are you really sure?");
-      if (!confirmation) return;
+      if (!confirmation) {
+        return;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}`, {
           method: "DELETE"
@@ -6967,21 +7076,10 @@
         alert("Network error. Please try again.");
       }
     });
-    const closeModalFunc = () => {
-      if (!modal) return;
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    };
-    const openModalFunc = () => {
-      if (!modal || !previewAvatar || !mainAvatar) return;
-      selectedImageSrc = mainAvatar.src;
-      previewAvatar.src = selectedImageSrc;
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    };
     const loadUserData = async () => {
-      if (!userId)
+      if (!userId) {
         return;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
@@ -6990,7 +7088,6 @@
           const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
           if (statResponse.ok) {
             const jsonResponse = await statResponse.json();
-            console.log("Stats re\xE7ues du Backend:", jsonResponse);
             const stats = jsonResponse.data || jsonResponse;
             const totalGame = document.getElementById("stats-total-games");
             const wins = document.getElementById("stats-wins");
@@ -7004,6 +7101,10 @@
               if (totalGame) totalGame.innerText = stats.total_games.toString();
               if (wins) wins.innerText = stats.wins.toString();
               if (losses) losses.innerText = stats.losses.toString();
+              if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
+              if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
+              if (opponent) opponent.innerText = stats.biggest_opponent || "-";
+              if (favGame) favGame.innerText = stats.favorite_game || "Local";
               if (winRateCalcul) {
                 let rateValue = 0;
                 if (stats.total_games > 0) {
@@ -7011,10 +7112,6 @@
                 }
                 winRateCalcul.innerText = `${rateValue}%`;
               }
-              if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
-              if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
-              if (opponent) opponent.innerText = stats.biggest_opponent || "-";
-              if (favGame) favGame.innerText = stats.favorite_game || "Local";
             }
           } else {
             console.warn("Could not fetch user stats");
@@ -7025,10 +7122,9 @@
           }
           if (user.avatar_url && mainAvatar) {
             mainAvatar.src = user.avatar_url;
-            selectedImageSrc = user.avatar_url;
           }
           if (user.is2faEnabled !== void 0) {
-            update2faButton(user.is2faEnabled);
+            twoFactorManager.setStatus(user.is2faEnabled);
           }
           fieldContainers.forEach((container) => {
             const fieldName = container.dataset.field;
@@ -7038,12 +7134,14 @@
               let value2;
               if (fieldName === "alias") {
                 value2 = user.alias || "";
-                if (usernameDisplay)
+                if (usernameDisplay) {
                   usernameDisplay.innerText = value2;
+                }
               } else if (fieldName === "bio") {
                 value2 = user.bio || "";
-                if (bioDisplay)
+                if (bioDisplay) {
                   bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
+                }
               } else if (fieldName === "email") {
                 value2 = user.email || "";
               } else if (fieldName === "password") {
@@ -7064,7 +7162,9 @@
             updateStatusFrame(normalizedStatus);
           }
           fieldContainers.forEach((container) => {
-            if (container.dataset.field === "password") return;
+            if (container.dataset.field === "password") {
+              return;
+            }
             const display = container.querySelector(".field-display");
             const input = container.querySelector(".field-input");
             const changeButton = container.querySelector(".change-button");
@@ -7086,7 +7186,9 @@
     };
     loadUserData();
     const updateUsername = async (newUsername) => {
-      if (!userId || !newUsername.trim()) return false;
+      if (!userId || !newUsername.trim()) {
+        return false;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}/alias`, {
           method: "PATCH",
@@ -7096,35 +7198,39 @@
         const result = await response.json();
         if (response.ok) {
           alert("Username updated successfully!");
-          if (usernameDisplay) usernameDisplay.innerText = newUsername;
+          if (usernameDisplay) {
+            usernameDisplay.innerText = newUsername;
+          }
           localStorage.setItem("username", newUsername);
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             username: newUsername
           });
-          console.log("Username updated");
           return true;
         } else {
           console.error("Error while updating username");
-          if (result.error && result.error.message)
+          if (result.error && result.error.message) {
             alert(result.error.message);
-          else
+          } else {
             alert("Error while saving username");
+          }
           return false;
         }
       } catch (error) {
-        console.error("Erreur r\xE9seau:", error);
+        console.error("Network error:", error);
         alert("Error while saving username");
         return false;
       }
     };
     const updateBio = async (newBio) => {
-      if (!userId) return false;
+      if (!userId) {
+        return false;
+      }
       const MAX_BIO_LENGTH = 70;
       const trimmedBio = newBio.trim();
       if (trimmedBio.length > MAX_BIO_LENGTH) {
-        console.error("Erreur: Bio d\xE9passe la limite de 70 caract\xE8res.");
-        alert(`La biographie ne doit pas d\xE9passer ${MAX_BIO_LENGTH} caract\xE8res.`);
+        console.error("	Error: Bio is longer than the 70 characters limits.");
+        alert(`Bio cannot be longer than ${MAX_BIO_LENGTH} characteres.`);
         return false;
       }
       try {
@@ -7134,27 +7240,30 @@
           body: JSON.stringify({ bio: trimmedBio })
         });
         if (response.ok) {
-          if (bioDisplay) bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+          if (bioDisplay) {
+            bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+          }
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             bio: trimmedBio,
             username: localStorage.getItem("username")
           });
-          console.log("Bio mise \xE0 jour");
           return true;
         } else {
-          console.error("Erreur lors de la mise \xE0 jour de la bio");
-          alert("Erreur lors de la sauvegarde de la bio");
+          console.error("Error updating bio");
+          alert("Error updating bio");
           return false;
         }
       } catch (error) {
-        console.error("Erreur r\xE9seau:", error);
-        alert("Erreur lors de la sauvegarde de la bio");
+        console.error("Network error:", error);
+        alert("Error updating bio");
         return false;
       }
     };
     const updateEmail = async (newEmail) => {
-      if (!userId || !newEmail.trim()) return false;
+      if (!userId || !newEmail.trim()) {
+        return false;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}/email`, {
           method: "PATCH",
@@ -7165,7 +7274,6 @@
         if (response.ok) {
           alert("Email updated successfully!");
           currentUserEmail = newEmail;
-          console.log("Email updated");
           return true;
         } else {
           console.error(user.error.message);
@@ -7179,7 +7287,9 @@
       }
     };
     const updateTheme = async (newTheme) => {
-      if (!userId) return;
+      if (!userId) {
+        return;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}/theme`, {
           method: "PATCH",
@@ -7187,7 +7297,6 @@
           body: JSON.stringify({ theme: newTheme })
         });
         if (response.ok) {
-          console.log("Theme saved to database:", newTheme);
           localStorage.setItem("userTheme", newTheme);
         } else {
           console.error("Failed to save theme to database");
@@ -7319,7 +7428,9 @@
       });
     };
     const updateStatus = async (newStatus) => {
-      if (!userId) return;
+      if (!userId) {
+        return;
+      }
       try {
         const response = await fetchWithAuth(`api/user/${userId}/status`, {
           method: "PATCH",
@@ -7329,7 +7440,6 @@
         if (response.ok) {
           updateStatusFrame(newStatus);
           localStorage.setItem("userStatus", newStatus);
-          console.log("Status mis \xE0 jour:", newStatus);
           const username = localStorage.getItem("username");
           SocketService_default.getInstance().socket?.emit("notifyStatusChange", {
             userId: Number(userId),
@@ -7337,12 +7447,12 @@
             username
           });
         } else {
-          console.error("Erreur lors de la mise \xE0 jour du status");
-          alert("Erreur lors de la sauvegarde du status");
+          console.error("Error updating status");
+          alert("Error updating status");
         }
       } catch (error) {
-        console.error("Erreur r\xE9seau:", error);
-        alert("Erreur lors de la sauvegarde du status");
+        console.error("Network error:", error);
+        alert("Error updating status");
       }
     };
     statusSelect?.addEventListener("change", () => {
@@ -7363,9 +7473,15 @@
     const passwordContainer = document.querySelector('div[data-field="password"]');
     const openPwdModalButton = passwordContainer?.querySelector(".change-button");
     const resetPwdForm = () => {
-      if (currentPwdInput) currentPwdInput.value = "";
-      if (newPwdInput) newPwdInput.value = "";
-      if (confirmPwdInput) confirmPwdInput.value = "";
+      if (currentPwdInput) {
+        currentPwdInput.value = "";
+      }
+      if (newPwdInput) {
+        newPwdInput.value = "";
+      }
+      if (confirmPwdInput) {
+        confirmPwdInput.value = "";
+      }
       if (pwdError) {
         pwdError.innerText = "";
         pwdError.classList.add("hidden");
@@ -7435,77 +7551,6 @@
     });
     pwdModal?.addEventListener("click", (e) => {
       if (e.target === pwdModal) closePwdModal();
-    });
-    editButton?.addEventListener("click", openModalFunc);
-    closeButton?.addEventListener("click", closeModalFunc);
-    cancelButton?.addEventListener("click", () => {
-      closeModalFunc();
-    });
-    modal?.addEventListener("click", (e) => {
-      if (e.target === modal) closeModalFunc();
-    });
-    if (gridContainer) {
-      const gridImages = gridContainer.querySelectorAll("img");
-      gridImages.forEach((img) => {
-        img.addEventListener("click", () => {
-          selectedImageSrc = img.src;
-          if (previewAvatar) previewAvatar.src = selectedImageSrc;
-          gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
-          img.classList.add("border-[#0078D7]");
-        });
-      });
-    }
-    browseButton?.addEventListener("click", () => fileInput?.click());
-    fileInput?.addEventListener("change", (event) => {
-      const file = event.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            const result = e.target.result;
-            selectedImageSrc = result;
-            if (previewAvatar) previewAvatar.src = result;
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    deleteButton?.addEventListener("click", () => {
-      const defaultAvatar = "/assets/basic/default.png";
-      selectedImageSrc = defaultAvatar;
-      if (previewAvatar) previewAvatar.src = defaultAvatar;
-    });
-    okButton?.addEventListener("click", async () => {
-      if (!userId) {
-        alert("Error: no user found");
-        return;
-      }
-      try {
-        console.log("avatar charge");
-        const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ avatar: selectedImageSrc })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          const cleanAvatarUrl = result.data.avatar;
-          if (mainAvatar) mainAvatar.src = cleanAvatarUrl;
-          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
-            userId: Number(userId),
-            avatar: cleanAvatarUrl,
-            username: localStorage.getItem("username")
-            // On renvoie le nom pour identifier
-          });
-          closeModalFunc();
-          console.log("avatar maj:", cleanAvatarUrl);
-        } else {
-          console.error("Error while updating");
-          alert("Error while saving");
-        }
-      } catch (error) {
-        console.error("Network error:", error);
-      }
     });
   }
 
@@ -8458,234 +8503,10 @@
   };
   var Input_default = Input;
 
-  // scripts/pages/GamePage.ts
+  // scripts/components/game/GameUI.ts
   function getSqlDate() {
     const now = /* @__PURE__ */ new Date();
     return now.toISOString().slice(0, 19).replace("T", " ");
-  }
-  function showVictoryModal(winnerName) {
-    const modal = document.getElementById("local-summary-modal");
-    const winnerText = document.getElementById("winner-name");
-    const quitLocalBtn = document.getElementById("quit-local-btn");
-    const quitRemoteBtn = document.getElementById("quit-remote-btn");
-    if (modal && winnerText) {
-      winnerText.innerText = winnerName;
-      modal.classList.remove("hidden");
-      if (gameChat) gameChat.addSystemMessage(`${winnerName} wins the match!`);
-      launchConfetti(4e3);
-    }
-    const backAction = () => {
-      window.history.back();
-    };
-    quitLocalBtn?.addEventListener("click", backAction);
-    quitRemoteBtn?.addEventListener("click", backAction);
-  }
-  var gameChat = null;
-  var tournamentState = null;
-  var activeGame = null;
-  var spaceKeyListener = null;
-  var isNavigationBlocked = false;
-  function isGameRunning() {
-    return activeGame !== null && activeGame.isRunning;
-  }
-  async function getPlayerAlias() {
-    const cachedAlias = sessionStorage.getItem("cachedAlias");
-    if (cachedAlias) return cachedAlias;
-    const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
-    const isGuest = sessionStorage.getItem("userRole") === "guest";
-    if (!userId) return "Player";
-    try {
-      const response = await fetchWithAuth(`api/user/${userId}`);
-      if (response.ok) {
-        const userData = await response.json();
-        const alias2 = userData.alias || (isGuest ? "Guest" : "Player");
-        sessionStorage.setItem("cachedAlias", alias2);
-        return userData.alias || (isGuest ? "Guest" : "Player");
-      }
-    } catch (err) {
-      console.error("Cannot fetch player alias:", err);
-    }
-    const result = sessionStorage.getItem("username") || (isGuest ? "Guest" : "Player");
-    return result;
-  }
-  function handleBeforeUnload(e) {
-    if (isGameRunning()) {
-      e.preventDefault();
-      e.returnValue = "A game is in progress. Are you sure you want to leave?";
-      return e.returnValue;
-    }
-  }
-  function handlePopState(e) {
-    if (isGameRunning() && !isNavigationBlocked) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      window.history.pushState({ gameMode: window.history.state?.gameMode || "local" }, "", "/game");
-      showExitConfirmationModal();
-    }
-  }
-  function showExitConfirmationModal() {
-    if (document.getElementById("exit-confirm-modal")) return;
-    if (activeGame) {
-      activeGame.pause();
-    }
-    const modalHtml = `
-        <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
-            
-            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
-                
-                <div class="title-bar">
-                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
-                    <div class="title-bar-controls">
-                        <button aria-label="Close" id="modal-close-x"></button>
-                    </div>
-                </div>
-
-                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
-                    
-                    <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
-                        WAIT A MINUTE !
-                    </h2>
-                    
-                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
-                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
-                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
-                    </div>
-
-                    <div class="flex gap-6 w-full justify-center">
-                        
-                        <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                            GO BACK TO GAME
-                        </button>
-                        
-                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                            LEAVE
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    `;
-    const div = document.createElement("div");
-    div.innerHTML = modalHtml;
-    document.body.appendChild(div);
-    document.getElementById("confirm-exit-btn")?.addEventListener("click", () => {
-      confirmExit();
-    });
-    const closeFunc = () => {
-      document.getElementById("exit-confirm-modal")?.remove();
-      if (activeGame) {
-        activeGame.resume();
-      }
-    };
-    document.getElementById("cancel-exit-btn")?.addEventListener("click", closeFunc);
-    document.getElementById("modal-close-x")?.addEventListener("click", closeFunc);
-  }
-  function confirmExit() {
-    isNavigationBlocked = true;
-    if (activeGame) {
-      const wasRemote = activeGame.isRemote;
-      const roomId = activeGame.roomId;
-      const playerRole = activeGame.playerRole;
-      const currentScore = { ...activeGame.score };
-      activeGame.isRunning = false;
-      activeGame.stop();
-      if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
-        SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
-        const userIdStr = localStorage.getItem("userId");
-        if (userIdStr && playerRole) {
-          const myScore = playerRole === "player1" ? currentScore.player1 : currentScore.player2;
-          saveGameStats(Number(userIdStr), myScore, false);
-        }
-      }
-      activeGame = null;
-    }
-    cleanup();
-    document.getElementById("exit-confirm-modal")?.remove();
-    setTimeout(() => {
-      isNavigationBlocked = false;
-      window.history.back();
-    }, 100);
-  }
-  function cleanup() {
-    if (gameChat) {
-      gameChat.destroy();
-      gameChat = null;
-    }
-    tournamentState = null;
-    if (activeGame) {
-      activeGame.isRunning = false;
-      activeGame.stop();
-      activeGame = null;
-    }
-    if (spaceKeyListener) {
-      document.removeEventListener("keydown", spaceKeyListener);
-      spaceKeyListener = null;
-    }
-    document.getElementById("countdown-modal")?.remove();
-    window.removeEventListener("beforeunload", handleBeforeUnload);
-    window.removeEventListener("popstate", handlePopState);
-    isNavigationBlocked = false;
-  }
-  function render7() {
-    const state = window.history.state;
-    if (state && state.gameMode === "remote") {
-      return RemoteGame_default;
-    } else if (state && state.gameMode === "tournament") {
-      return TournamentPage_default;
-    }
-    return LocalGame_default;
-  }
-  function showRemoteEndModal(winnerName, message) {
-    if (document.getElementById("remote-end-modal")) return;
-    const modalHtml = `
-        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
-            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
-
-                <div class="title-bar">
-                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
-                    <div class="title-bar-controls"></div>
-                </div>
-
-                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
-
-                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
-
-                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
-                        <p class="text-2xl font-bold text-gray-800 text-center">
-                            ${winnerName}
-                        </p>
-                        <p class="text-sm text-gray-600 font-semibold italic text-center">
-                            ${message}
-                        </p>
-                    </div>
-
-                    <div class="flex gap-6 w-full justify-center">
-                        <button id="remote-quit-btn"
-                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
-                                    px-6 py-4 text-base font-semibold shadow-sm
-                                    hover:from-gray-200 hover:to-gray-400
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                    transition-all duration-200 hover:shadow-md"
-                                style="width: 200px; padding: 4px;">
-                            RETURN TO MENU
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    `;
-    const div = document.createElement("div");
-    div.innerHTML = modalHtml;
-    document.body.appendChild(div);
-    document.getElementById("remote-quit-btn")?.addEventListener("click", () => {
-      document.getElementById("remote-end-modal")?.remove();
-      window.history.back();
-    });
   }
   function launchConfetti(duration = 3e3) {
     const colors2 = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
@@ -8751,6 +8572,75 @@
       document.head.appendChild(style);
     }
   }
+  function showVictoryModal(winnerName, gameChat2) {
+    const modal = document.getElementById("local-summary-modal");
+    const winnerText = document.getElementById("winner-name");
+    const quitLocalBtn = document.getElementById("quit-local-btn");
+    const quitRemoteBtn = document.getElementById("quit-remote-btn");
+    if (modal && winnerText) {
+      winnerText.innerText = winnerName;
+      modal.classList.remove("hidden");
+      if (gameChat2) {
+        gameChat2.addSystemMessage(`${winnerName} wins the match!`);
+      }
+      launchConfetti(4e3);
+    }
+    const backAction = () => {
+      window.history.back();
+    };
+    quitLocalBtn?.addEventListener("click", backAction);
+    quitRemoteBtn?.addEventListener("click", backAction);
+  }
+  function showRemoteEndModal(winnerName, message) {
+    if (document.getElementById("remote-end-modal")) {
+      return;
+    }
+    const modalHtml = `
+        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-controls"></div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
+
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">
+                            ${winnerName}
+                        </p>
+                        <p class="text-sm text-gray-600 font-semibold italic text-center">
+                            ${message}
+                        </p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        <button id="remote-quit-btn"
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
+                                    px-6 py-4 text-base font-semibold shadow-sm
+                                    hover:from-gray-200 hover:to-gray-400
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                    transition-all duration-200 hover:shadow-md"
+                                style="width: 200px; padding: 4px;">
+                            RETURN TO MENU
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+    const div = document.createElement("div");
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+    document.getElementById("remote-quit-btn")?.addEventListener("click", () => {
+      document.getElementById("remote-end-modal")?.remove();
+      window.history.back();
+    });
+  }
   function launchCountdown(onComplete) {
     const modal = document.getElementById("countdown-modal");
     const text = document.getElementById("countdown-text");
@@ -8777,722 +8667,13 @@
       }
     }, 1e3);
   }
-  function initGamePage(mode) {
-    const currentTheme = localStorage.getItem("userTheme") || "basic";
-    applyTheme(currentTheme);
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    window.addEventListener("popstate", handlePopState);
-    const player1Display = document.getElementById("player-1-name");
-    if (player1Display) {
-      getPlayerAlias().then((alias2) => {
-        player1Display.innerText = alias2;
-      });
+
+  // scripts/components/game/LocalGameManager.ts
+  var LocalGameManager = class {
+    constructor(context) {
+      this.context = context;
     }
-    if (gameChat) gameChat.destroy();
-    gameChat = new Chat();
-    gameChat.init();
-    if (mode == "remote") {
-      const privateRoomId = sessionStorage.getItem("privateGameId");
-      if (privateRoomId) {
-        console.log(`Lancement d'un chat priv\xE9 dans la waitroom num\xE9ro${privateRoomId}`);
-        gameChat.joinChannel(`private_wait_${privateRoomId}`);
-      } else {
-        gameChat.joinChannel("remote_game_room");
-      }
-      initRemoteMode();
-    } else if (mode == "tournament") {
-      gameChat.joinChannel("tournament_room");
-      inittournamentMode();
-    } else {
-      gameChat.joinChannel("local_game_room");
-      initLocalMode();
-    }
-    if (spaceKeyListener) {
-      document.removeEventListener("keydown", spaceKeyListener);
-    }
-    spaceKeyListener = (e) => {
-      if (e.code === "Space" || e.key === " ") {
-        const target = e.target;
-        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
-        if (!activeGame || !activeGame.isRunning) return;
-        e.preventDefault();
-        if (gameChat) {
-          if (activeGame.isRemote) {
-            gameChat.emitWizzOnly();
-            console.log("Wizz envoy\xE9 \xE0 l'adversaire (Remote)");
-          } else {
-            const wizzContainer = document.getElementById("wizz-container");
-            gameChat.shakeElement(wizzContainer);
-            console.log("Wizz local d\xE9clench\xE9");
-          }
-        }
-      }
-    };
-    document.addEventListener("keydown", spaceKeyListener);
-    function initRemoteMode() {
-      const socketService = SocketService_default.getInstance();
-      socketService.connectGame();
-      const gameSocket = socketService.getGameSocket();
-      if (!gameSocket) {
-        console.error("Cannot connect to server");
-        return;
-      }
-      const btn = document.getElementById("start-game-btn");
-      const status = document.getElementById("queue-status");
-      const modal = document.getElementById("game-setup-modal");
-      const container = document.getElementById("game-canvas-container");
-      const ballBtn = document.getElementById("ball-selector-button");
-      const ballDrop = document.getElementById("ball-selector-dropdown");
-      const ballGrid = document.getElementById("ball-grid");
-      const ballImg = document.getElementById("selected-ball-img");
-      const ballInput = document.getElementById("ball-value");
-      const bgBtn = document.getElementById("bg-selector-button");
-      const bgDrop = document.getElementById("bg-selector-dropdown");
-      const bgGrid = document.getElementById("bg-grid");
-      const bgPrev = document.getElementById("selected-bg-preview");
-      const bgInput = document.getElementById("bg-value");
-      const bgResetBtn = document.getElementById("bg-reset-button");
-      const gameContainer = document.getElementById("left");
-      if (ballBtn && ballDrop && ballGrid) {
-        const uniqueUrls = /* @__PURE__ */ new Set();
-        ballGrid.innerHTML = "";
-        Object.keys(ballEmoticons).forEach((key) => {
-          const imgUrl = ballEmoticons[key];
-          if (!uniqueUrls.has(imgUrl)) {
-            uniqueUrls.add(imgUrl);
-            const div = document.createElement("div");
-            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
-            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
-            div.addEventListener("click", (e) => {
-              e.stopPropagation();
-              if (ballImg) ballImg.src = imgUrl;
-              if (ballInput) ballInput.value = imgUrl;
-              ballDrop.classList.add("hidden");
-            });
-            ballGrid.appendChild(div);
-          }
-        });
-        ballBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          ballDrop.classList.toggle("hidden");
-        });
-        document.addEventListener("click", (e) => {
-          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
-        });
-      }
-      if (bgBtn && bgDrop && bgGrid) {
-        bgGrid.innerHTML = "";
-        Object.keys(gameBackgrounds).forEach((key) => {
-          const color2 = gameBackgrounds[key];
-          const div = document.createElement("div");
-          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
-          div.style.width = "35px";
-          div.style.height = "35px";
-          div.style.padding = "2px";
-          const circle = document.createElement("div");
-          circle.className = "w-full h-full rounded-full border border-gray-300";
-          circle.style.backgroundColor = color2;
-          div.appendChild(circle);
-          div.addEventListener("click", (e) => {
-            e.stopPropagation();
-            if (bgPrev) bgPrev.style.backgroundColor = color2;
-            if (bgInput) bgInput.value = color2;
-            if (gameContainer) gameContainer.style.backgroundColor = color2;
-            bgDrop.classList.add("hidden");
-          });
-          bgGrid.appendChild(div);
-        });
-        if (bgResetBtn) {
-          bgResetBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const resetColor = "#E8F4F8";
-            if (bgPrev) bgPrev.style.backgroundColor = resetColor;
-            if (bgInput) bgInput.value = resetColor;
-            if (gameContainer) gameContainer.style.backgroundColor = resetColor;
-            bgDrop.classList.add("hidden");
-          });
-        }
-        bgBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          bgDrop.classList.toggle("hidden");
-        });
-        document.addEventListener("click", (e) => {
-          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
-        });
-      }
-      let currentP1Alias = "Player 1";
-      let currentP2Alias = "Player 2";
-      const startGameFromData = async (data, p1Alias, p2Alias) => {
-        const myAlias = await getPlayerAlias();
-        const myId = Number(localStorage.getItem("userId"));
-        let opponentId = data.opponent ? Number(data.opponent) : null;
-        const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
-        const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
-        let p1Id = data.role === "player1" ? myId : opponentId;
-        let p2Id = data.role === "player2" ? myId : opponentId;
-        let opponentAlias = "Opponent";
-        if (data.role === "player1") {
-          currentP1Alias = myAlias;
-          if (remoteP2Alias)
-            opponentAlias = remoteP2Alias;
-          currentP2Alias = opponentAlias;
-        } else {
-          currentP1Alias = opponentAlias;
-          if (remoteP1Alias)
-            opponentAlias = remoteP1Alias;
-          currentP2Alias = myAlias;
-        }
-        const p1Display = document.getElementById("player-1-name");
-        const p2Display = document.getElementById("player-2-name");
-        if (p1Display && p2Display) {
-          p1Display.innerText = data.role === "player1" ? `${currentP1Alias} (Me)` : currentP1Alias;
-          p2Display.innerText = data.role === "player2" ? `${currentP2Alias} (Me)` : currentP2Alias;
-        }
-        let gameStartDate = getSqlDate();
-        if (data.opponent) {
-          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
-            if (userData && userData.alias) {
-              const realOpponentName = userData.alias;
-              const opponentId2 = userData.userId;
-              console.log(`opponentId = ${opponentId2}`);
-              if (data.role === "player1") {
-                currentP2Alias = realOpponentName;
-                if (p2Display) p2Display.innerText = realOpponentName;
-              } else {
-                currentP1Alias = realOpponentName;
-                if (p1Display) p1Display.innerText = realOpponentName;
-              }
-            }
-          }).catch((e) => console.error("Error retrieving opponent alias:", e));
-        }
-        if (gameChat) {
-          gameChat.joinChannel(data.roomId);
-          gameChat.addSystemMessage(`Match started!`);
-        }
-        if (status) status.innerText = "We found an opponent ! Starting the game...";
-        if (modal) modal.style.display = "none";
-        if (container) {
-          container.innerHTML = "";
-          const canvas = document.createElement("canvas");
-          canvas.width = container.clientWidth;
-          canvas.height = container.clientHeight;
-          canvas.style.width = "100%";
-          canvas.style.height = "100%";
-          container.appendChild(canvas);
-          if (canvas.width === 0) canvas.width = 800;
-          if (canvas.height === 0) canvas.height = 600;
-          const ctx = canvas.getContext("2d");
-          const input = new Input_default();
-          const selectedBallSkin = ballInput ? ballInput.value : "classic";
-          if (ctx) {
-            if (activeGame) {
-              activeGame.stop();
-              activeGame = null;
-            }
-            activeGame = new Game_default(canvas, ctx, input, selectedBallSkin);
-            gameSocket.off("opponentLeft");
-            gameSocket.on("opponentLeft", async (eventData) => {
-              if (activeGame) {
-                console.log("Opponent left the game! Victory by forfeit! Saving stats...");
-                activeGame.isRunning = false;
-                activeGame.stop();
-                gameSocket.off("gameState");
-                gameSocket.off("gameEnded");
-                const s1 = activeGame.score.player1;
-                const s2 = activeGame.score.player2;
-                let winnerAlias = "";
-                if (data.role === "player1") {
-                  winnerAlias = currentP1Alias;
-                } else {
-                  winnerAlias = currentP2Alias;
-                }
-                await saveRemoteGameToApi(
-                  currentP1Alias,
-                  s1,
-                  p1Id,
-                  currentP2Alias,
-                  s2,
-                  p2Id,
-                  winnerAlias,
-                  gameStartDate
-                );
-                showRemoteEndModal(myAlias, "(Opponent forfeit)");
-                activeGame = null;
-              }
-            });
-            activeGame.onGameEnd = async (endData) => {
-              let winnerAlias = "Winner";
-              if (endData.winner === "player1") winnerAlias = currentP1Alias;
-              else if (endData.winner === "player2") winnerAlias = currentP2Alias;
-              if (activeGame) {
-                const s1 = activeGame.score.player1;
-                const s2 = activeGame.score.player2;
-                if (data.role === "player1") {
-                  await saveRemoteGameToApi(
-                    currentP1Alias,
-                    s1,
-                    p1Id,
-                    currentP2Alias,
-                    s2,
-                    p2Id,
-                    winnerAlias,
-                    gameStartDate
-                  );
-                }
-              }
-              showVictoryModal(winnerAlias);
-              activeGame = null;
-            };
-            activeGame.onScoreChange = (score) => {
-              const sb = document.getElementById("score-board");
-              if (sb) sb.innerText = `${score.player1} - ${score.player2}`;
-            };
-            launchCountdown(() => {
-              if (activeGame) {
-                gameStartDate = getSqlDate();
-                activeGame.startRemote(data.roomId, data.role);
-              }
-            });
-          }
-        }
-      };
-      const pendingMatch = sessionStorage.getItem("pendingMatch");
-      if (pendingMatch) {
-        const data = JSON.parse(pendingMatch);
-        sessionStorage.removeItem("pendingMatch");
-        startGameFromData(data);
-      }
-      const privateRoomId = sessionStorage.getItem("privateGameId");
-      console.log("privategame:", sessionStorage.getItem("privateGameId"));
-      if (btn) {
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode?.replaceChild(newBtn, btn);
-        newBtn.addEventListener("click", async () => {
-          if (!gameSocket) {
-            alert("Error: lost connexion to game server");
-            return;
-          }
-          newBtn.disabled = true;
-          if (privateRoomId) {
-            if (status) status.innerText = "Waiting for your friend in private room...";
-            newBtn.innerText = "WAITING FOR FRIEND...";
-            gameSocket.off("matchFound");
-            gameSocket.on("matchFound", (data) => {
-              console.log("Private Match Started!", data);
-              sessionStorage.removeItem("privateGameId");
-              startGameFromData(data);
-            });
-            const selectedBall = ballInput ? ballInput.value : "classic";
-            gameSocket.emit("joinPrivateGame", {
-              roomId: privateRoomId,
-              skin: selectedBall
-            });
-          } else {
-            if (status) status.innerText = "Recherche d'un adversaire...";
-            newBtn.innerText = "WAITING...";
-            gameSocket.off("matchFound");
-            gameSocket.on("matchFound", (data) => {
-              startGameFromData(data);
-            });
-            gameSocket.emit("joinQueue");
-          }
-        });
-      }
-      async function saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
-        try {
-          const endDate = getSqlDate();
-          const response = await fetchWithAuth("api/game", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              type: "remote",
-              winner: winnerAlias,
-              status: "finished",
-              round: "1v1",
-              startDate,
-              endDate,
-              p1: { alias: p1Alias, score: p1Score, userId: p1Id },
-              p2: { alias: p2Alias, score: p2Score, userId: p2Id }
-            })
-          });
-          if (!response.ok) {
-            console.error("Error while saving remote game");
-          } else {
-            console.log("remote game successfully saved");
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-    function inittournamentMode() {
-      const setupModal = document.getElementById("tournament-setup-modal");
-      if (setupModal) setupModal.classList.remove("hidden");
-      const nameInput = document.getElementById("tournament-name-input");
-      const player1Input = document.getElementById("player1-input");
-      const player2Input = document.getElementById("player2-input");
-      const player3Input = document.getElementById("player3-input");
-      const player4Input = document.getElementById("player4-input");
-      const startButton = document.getElementById("start-tournament-btn");
-      const errorDiv = document.getElementById("setup-error");
-      initTournamentSelectors();
-      const userId = localStorage.getItem("userId");
-      const username = localStorage.getItem("username");
-      const isGuest = sessionStorage.getItem("userRole") === "guest";
-      getPlayerAlias().then((alias2) => {
-        player1Input.value = alias2;
-        if (!isGuest) {
-          player1Input.readOnly = true;
-          player1Input.classList.add("bg-gray-200", "cursor-not-allowed");
-        } else {
-          player1Input.readOnly = false;
-          player1Input.classList.remove("bg-gray-200", "cursor-not-allowed");
-        }
-      });
-      console.log("Username du user: ", username);
-      startButton?.addEventListener("click", () => {
-        const tName = nameInput.value.trim();
-        const players = [
-          player1Input.value.trim(),
-          player2Input.value.trim(),
-          player3Input.value.trim(),
-          player4Input.value.trim()
-        ];
-        if (!tName || players.some((p) => !p)) {
-          if (errorDiv) {
-            errorDiv.innerText = "Please fill all fields.";
-            errorDiv.classList.remove("hidden");
-          }
-          return;
-        }
-        const uniqueCheck = new Set(players);
-        if (uniqueCheck.size !== 4) {
-          if (errorDiv) {
-            errorDiv.innerText = "All player aliases must be unique.";
-            errorDiv.classList.remove("hidden");
-          }
-          return;
-        }
-        const ballVal = document.getElementById("tour-ball-value")?.value || "classic";
-        const bgVal = document.getElementById("tour-bg-value")?.value || "#E8F4F8";
-        startTournamentLogic(tName, players, ballVal, bgVal);
-      });
-      function initTournamentSelectors() {
-        const ballBtn = document.getElementById("tour-ball-selector-button");
-        const ballDrop = document.getElementById("tour-ball-selector-dropdown");
-        const ballGrid = document.getElementById("tour-ball-grid");
-        const ballImg = document.getElementById("tour-selected-ball-img");
-        const ballInput = document.getElementById("tour-ball-value");
-        const bgBtn = document.getElementById("tour-bg-selector-button");
-        const bgDrop = document.getElementById("tour-bg-selector-dropdown");
-        const bgGrid = document.getElementById("tour-bg-grid");
-        const bgPrev = document.getElementById("tour-selected-bg-preview");
-        const bgInput = document.getElementById("tour-bg-value");
-        const bgResetBtn = document.getElementById("bg-reset-button");
-        const gameContainer = document.getElementById("left");
-        if (ballBtn && ballDrop && ballGrid) {
-          const uniqueUrls = /* @__PURE__ */ new Set();
-          ballGrid.innerHTML = "";
-          Object.keys(ballEmoticons).forEach((key) => {
-            const imgUrl = ballEmoticons[key];
-            if (!uniqueUrls.has(imgUrl)) {
-              uniqueUrls.add(imgUrl);
-              const div = document.createElement("div");
-              div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
-              div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
-              div.addEventListener("click", (e) => {
-                e.stopPropagation();
-                if (ballImg) ballImg.src = imgUrl;
-                if (ballInput) ballInput.value = imgUrl;
-                ballDrop.classList.add("hidden");
-              });
-              ballGrid.appendChild(div);
-            }
-          });
-          ballBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            ballDrop.classList.toggle("hidden");
-          });
-          document.addEventListener("click", (e) => {
-            if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
-          });
-        }
-        if (bgBtn && bgDrop && bgGrid) {
-          bgGrid.innerHTML = "";
-          Object.keys(gameBackgrounds).forEach((key) => {
-            const color2 = gameBackgrounds[key];
-            const div = document.createElement("div");
-            div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
-            div.style.width = "35px";
-            div.style.height = "35px";
-            div.style.padding = "2px";
-            const circle = document.createElement("div");
-            circle.className = "w-full h-full rounded-full border border-gray-300";
-            circle.style.backgroundColor = color2;
-            div.appendChild(circle);
-            div.addEventListener("click", (e) => {
-              e.stopPropagation();
-              if (bgPrev) bgPrev.style.backgroundColor = color2;
-              if (bgInput) bgInput.value = color2;
-              if (gameContainer) gameContainer.style.backgroundColor = color2;
-              bgDrop.classList.add("hidden");
-            });
-            bgGrid.appendChild(div);
-          });
-          if (bgResetBtn) {
-            bgResetBtn.addEventListener("click", (e) => {
-              e.stopPropagation();
-              const resetColor = "#E8F4F8";
-              if (bgPrev) bgPrev.style.backgroundColor = resetColor;
-              if (bgInput) bgInput.value = resetColor;
-              if (gameContainer) gameContainer.style.backgroundColor = resetColor;
-              bgDrop.classList.add("hidden");
-            });
-          }
-          bgBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            bgDrop.classList.toggle("hidden");
-          });
-          document.addEventListener("click", (e) => {
-            if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
-          });
-        }
-      }
-      function startTournamentLogic(name, playersAliases, ballSkin, bgSkin) {
-        document.getElementById("tournament-setup-modal")?.classList.add("hidden");
-        const userIdStr = localStorage.getItem("userId");
-        const userIdNb = userIdStr ? Number(userIdStr) : null;
-        const playersObjects = playersAliases.map((alias2, index2) => ({
-          alias: alias2,
-          userId: index2 === 0 ? userIdNb : null,
-          score: 0
-        }));
-        const startDate = getSqlDate();
-        tournamentState = {
-          name,
-          startedAt: startDate,
-          allPlayers: playersObjects,
-          matches: [
-            { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
-            // 1er duo
-            { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
-            // 2eme duo
-            { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
-            // finale
-          ],
-          currentMatchIdx: 0,
-          // on defini l'id du match pour le stocker dans la db
-          currentStep: "semi_final_1",
-          settings: { ballSkin, bgSkin }
-        };
-        if (gameChat) {
-          gameChat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
-        }
-        showBracketModal();
-      }
-      function showBracketModal() {
-        const bracketModal = document.getElementById("tournament-bracket-modal");
-        if (!bracketModal || !tournamentState) return;
-        const sf1 = document.getElementById("bracket-sf1");
-        const sf2 = document.getElementById("bracket-sf2");
-        const fin = document.getElementById("bracket-final");
-        const msg = document.getElementById("bracket-status-msg");
-        const m1 = tournamentState.matches[0];
-        const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
-        if (sf1) sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
-        const m2 = tournamentState.matches[1];
-        const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
-        if (sf2) sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
-        const mf = tournamentState.matches[2];
-        const p1Final = mf.p1 ? mf.p1.alias : "?";
-        const p2Final = mf.p2 ? mf.p2.alias : "?";
-        if (fin) fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
-        const idx = tournamentState.currentMatchIdx;
-        if (msg) {
-          if (idx === 0) msg.innerText = "Next: Semi-Final 1";
-          else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
-          else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
-        }
-        bracketModal.classList.remove("hidden");
-        const btn = document.getElementById("bracket-continue-btn");
-        const newBtn = btn?.cloneNode(true);
-        btn?.parentNode?.replaceChild(newBtn, btn);
-        newBtn.addEventListener("click", () => {
-          bracketModal.classList.add("hidden");
-          showNextMatchModal();
-        });
-      }
-      function showNextMatchModal() {
-        const nextMatchModal = document.getElementById("tournament-next-match-modal");
-        const title = document.getElementById("match-title");
-        const player1Text = document.getElementById("next-p1");
-        const player2Text = document.getElementById("next-p2");
-        const playButton = document.getElementById("launch-match-btn");
-        if (!nextMatchModal || !tournamentState) return;
-        const matchIdx = tournamentState.currentMatchIdx;
-        const match = tournamentState.matches[matchIdx];
-        const p1Alias = match.p1 ? match.p1.alias : "???";
-        const p2Alias = match.p2 ? match.p2.alias : "???";
-        if (matchIdx === 0) {
-          if (title) title.innerText = "SEMI-FINAL 1";
-          if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
-        } else if (matchIdx === 1) {
-          if (title) title.innerText = "SEMI-FINAL 2";
-          if (gameChat) gameChat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
-        } else {
-          if (title) title.innerText = "FINALE";
-          if (gameChat) gameChat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
-        }
-        if (player1Text) player1Text.innerText = p1Alias;
-        if (player2Text) player2Text.innerText = p2Alias;
-        nextMatchModal.classList.remove("hidden");
-        const newButton = playButton.cloneNode(true);
-        playButton.parentNode.replaceChild(newButton, playButton);
-        newButton.addEventListener("click", () => {
-          nextMatchModal.classList.add("hidden");
-          if (match.p1 && match.p2) {
-            launchMatch(match.p1, match.p2);
-          }
-        });
-      }
-      function launchMatch(p1, p2) {
-        const p1Name = document.getElementById("player-1-name");
-        const p2Name = document.getElementById("player-2-name");
-        const gameStartDate = getSqlDate();
-        if (p1Name) p1Name.innerText = p1.alias;
-        if (p2Name) p2Name.innerText = p2.alias;
-        const scoreBoard = document.getElementById("score-board");
-        if (scoreBoard) {
-          scoreBoard.innerText = "0 - 0";
-        }
-        const container = document.getElementById("left");
-        if (container && tournamentState) container.style.backgroundColor = tournamentState.settings.bgSkin;
-        console.log(`Lancement du jeu: ${p1.alias} vs ${p2.alias}`);
-        let canvasContainer = document.getElementById("game-canvas-container");
-        if (canvasContainer) {
-          canvasContainer.innerHTML = "";
-          const canvas = document.createElement("canvas");
-          canvas.id = "pong-canvas-tournament";
-          canvas.width = canvasContainer.clientWidth;
-          canvas.height = canvasContainer.clientHeight;
-          console.log("heigh:", canvasContainer.clientHeight);
-          console.log("width:", canvasContainer.clientWidth);
-          canvas.style.width = "100%";
-          canvas.style.height = "100%";
-          canvasContainer.appendChild(canvas);
-          const ctx = canvas.getContext("2d");
-          if (ctx && tournamentState) {
-            const input = new Input_default();
-            if (activeGame) activeGame.isRunning = false;
-            activeGame = new Game_default(canvas, ctx, input, tournamentState.settings.ballSkin);
-            activeGame.onScoreChange = (score) => {
-              const scoreBoard2 = document.getElementById("score-board");
-              if (scoreBoard2) {
-                scoreBoard2.innerText = `${score.player1} - ${score.player2}`;
-              }
-            };
-            activeGame.start();
-            const checkInterval = setInterval(() => {
-              if (!activeGame || !activeGame.isRunning) {
-                clearInterval(checkInterval);
-                return;
-              }
-              if (activeGame.score.player1 >= 5 || activeGame.score.player2 >= 5) {
-                activeGame.isRunning = false;
-                clearInterval(checkInterval);
-                const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-                endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate);
-              }
-            }, 500);
-          }
-        }
-      }
-      function endMatch(winner, scoreP1, scoreP2, gameStartDate) {
-        if (!tournamentState) return;
-        const idx = tournamentState.currentMatchIdx;
-        const match = tournamentState.matches[idx];
-        match.startDate = gameStartDate;
-        match.endDate = getSqlDate();
-        match.winner = winner;
-        if (match.p1) match.p1.score = scoreP1;
-        if (match.p2) match.p2.score = scoreP2;
-        if (match.p1 && match.p1.userId) {
-          const isWinner = match.p1.alias === winner;
-        }
-        if (match.p2 && match.p2.userId) {
-          const isWinner = match.p2.alias === winner;
-        }
-        if (gameChat) gameChat.addSystemMessage(`${winner} wins the match!`);
-        if (idx === 0) {
-          const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-          tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
-          tournamentState.currentMatchIdx++;
-          tournamentState.currentStep = "semi_final_2";
-          showBracketModal();
-        } else if (idx === 1) {
-          const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
-          tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
-          tournamentState.currentMatchIdx++;
-          tournamentState.currentStep = "final";
-          showBracketModal();
-        } else {
-          tournamentState.currentStep = "finished";
-          showSummary(winner);
-        }
-      }
-      function showSummary(champion) {
-        launchConfetti(4e3);
-        const container = document.getElementById("left");
-        if (container) container.style.backgroundColor = "white";
-        const summaryModal = document.getElementById("tournament-summary-modal");
-        if (summaryModal) {
-          summaryModal.classList.remove("hidden");
-          const winnerDisplay = document.getElementById("winner-name");
-          const tourNameDisplay = document.getElementById("tour-name-display");
-          if (winnerDisplay) winnerDisplay.innerText = champion;
-          if (tourNameDisplay && tournamentState) tourNameDisplay.innerText = tournamentState.name;
-          if (gameChat) gameChat.addSystemMessage(`${champion} wins the match!`);
-          const userId2 = localStorage.getItem("userId");
-          if (userId2) {
-            saveTournamentToApi(champion);
-          }
-          document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
-            window.history.back();
-          });
-          document.getElementById("quit-remote-btn")?.addEventListener("click", () => {
-            window.history.back();
-          });
-        }
-      }
-      async function saveTournamentToApi(winner) {
-        if (!tournamentState) return;
-        else {
-          console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", tournamentState.matches);
-          console.log("DEBUG FRONTEND - Nombre de matches :", tournamentState.matches.length);
-        }
-        try {
-          await fetchWithAuth("api/game/tournaments", {
-            method: "POST",
-            body: JSON.stringify({
-              name: tournamentState.name,
-              winner,
-              participants: tournamentState.allPlayers,
-              // Ajout des details complets pour le format JSON attendu
-              tournamentName: tournamentState.name,
-              // modif de tournament_name en tournamentName pour le back
-              matchList: tournamentState.matches,
-              // modif de match_list en matchList pour le back
-              startedAt: tournamentState.startedAt
-            })
-          });
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-    function initLocalMode() {
+    init() {
       const modal = document.getElementById("game-setup-modal");
       const startButton = document.getElementById("start-game-btn");
       const nameInput = document.getElementById("opponent-name");
@@ -9591,7 +8772,6 @@
       }
       if (startButton) {
         let p1Alias = localStorage.getItem("username");
-        console.log("clic sur play");
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
@@ -9601,8 +8781,8 @@
             nameInput.classList.add("border-red-500");
             return;
           }
-          if (gameChat) {
-            gameChat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
+          if (this.context.chat) {
+            this.context.chat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
           }
           const selectedBall = ballValueInput ? ballValueInput.value : "classic";
           const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
@@ -9632,8 +8812,8 @@
             canvas.id = "pong-canvas";
             canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
             canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
-            console.log("heigh:", canvasContainer.clientHeight);
-            console.log("width:", canvasContainer.clientWidth);
+            console.log("heigh:", canvasContainer?.clientHeight);
+            console.log("width:", canvasContainer?.clientWidth);
             canvas.style.width = "100%";
             canvas.style.height = "100%";
             canvas.style.backgroundColor = selectedBg;
@@ -9642,26 +8822,29 @@
             const ctx = canvas.getContext("2d");
             if (ctx) {
               const input = new Input_default();
-              if (activeGame) activeGame.isRunning = false;
-              activeGame = new Game_default(canvas, ctx, input, selectedBall);
-              activeGame.onScoreChange = (score) => {
+              if (this.context.getGame()) {
+                this.context.getGame().isRunning = false;
+              }
+              const newGame = new Game_default(canvas, ctx, input, selectedBall);
+              this.context.setGame(newGame);
+              newGame.onScoreChange = (score) => {
                 if (scoreBoard) {
                   scoreBoard.innerText = `${score.player1} - ${score.player2}`;
                 }
               };
-              console.log("D\xE9marrage du jeu Local...");
-              activeGame.start();
+              newGame.start();
               const startDate = getSqlDate();
               const localLoop = setInterval(async () => {
-                if (!activeGame || !activeGame.isRunning) {
+                const activeGame2 = this.context.getGame();
+                if (!activeGame2 || !activeGame2.isRunning) {
                   clearInterval(localLoop);
                   return;
                 }
-                if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
-                  activeGame.isRunning = false;
+                if (activeGame2.score.player1 >= 11 || activeGame2.score.player2 >= 11) {
+                  activeGame2.isRunning = false;
                   clearInterval(localLoop);
-                  const p1Score = activeGame.score.player1;
-                  const p2Score = activeGame.score.player2;
+                  const p1Score = activeGame2.score.player1;
+                  const p2Score = activeGame2.score.player2;
                   const p1Alias2 = localStorage.getItem("username") || "Player 1";
                   const p2Alias = opponentName;
                   const p1Wins = p1Score > p2Score;
@@ -9669,10 +8852,9 @@
                   const userIdStr = localStorage.getItem("userId");
                   if (userIdStr) {
                     const userId = Number(userIdStr);
-                    console.log(`gamepage, ${userId}`);
-                    await saveLocalGameToApi(p1Alias2, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                    await this.saveLocalGameToApi(p1Alias2, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
                   }
-                  showVictoryModal(winnerAlias);
+                  showVictoryModal(winnerAlias, this.context.chat);
                 }
               }, 500);
             }
@@ -9685,43 +8867,1016 @@
           nameInput.classList.remove("border-red-500");
         });
       }
-      async function saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
-        try {
-          const endDate = getSqlDate();
-          const response = await fetchWithAuth("api/game", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
+    }
+    //================================================
+    //================= SAVING DATAS =================
+    //================================================
+    async saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
+      try {
+        const endDate = getSqlDate();
+        const response = await fetchWithAuth("api/game", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "local",
+            winner: winnerAlias,
+            status: "finished",
+            round: "1v1",
+            startDate,
+            endDate,
+            p1: {
+              alias: p1Alias,
+              score: p1Score,
+              userId
             },
-            body: JSON.stringify({
-              type: "local",
-              winner: winnerAlias,
-              status: "finished",
-              round: "1v1",
-              startDate,
-              endDate,
-              p1: {
-                alias: p1Alias,
-                score: p1Score,
-                userId
-              },
-              p2: {
-                alias: p2Alias,
-                score: p2Score,
-                userId: null
-              }
-            })
-          });
-          if (!response.ok) {
-            console.error("Error while saving local game");
-          } else {
-            console.log("Local game successfully saved");
+            p2: {
+              alias: p2Alias,
+              score: p2Score,
+              userId: null
+            }
+          })
+        });
+        if (!response.ok) {
+          console.error("Error while saving local game");
+        } else {
+          console.log("Local game successfully saved");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/components/game/RemoteGameManager.ts
+  var RemoteGameManager = class {
+    constructor(context) {
+      this.currentP1Alias = "Player 1";
+      this.currentP2Alias = "Player 2";
+      this.context = context;
+    }
+    init() {
+      const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      const gameSocket = socketService.getGameSocket();
+      if (!gameSocket) {
+        console.error("Cannot connect to server");
+        return;
+      }
+      const btn = document.getElementById("start-game-btn");
+      const status = document.getElementById("queue-status");
+      const modal = document.getElementById("game-setup-modal");
+      const container = document.getElementById("game-canvas-container");
+      const ballBtn = document.getElementById("ball-selector-button");
+      const ballDrop = document.getElementById("ball-selector-dropdown");
+      const ballGrid = document.getElementById("ball-grid");
+      const ballImg = document.getElementById("selected-ball-img");
+      const ballInput = document.getElementById("ball-value");
+      const bgBtn = document.getElementById("bg-selector-button");
+      const bgDrop = document.getElementById("bg-selector-dropdown");
+      const bgGrid = document.getElementById("bg-grid");
+      const bgPrev = document.getElementById("selected-bg-preview");
+      const bgInput = document.getElementById("bg-value");
+      const bgResetBtn = document.getElementById("bg-reset-button");
+      const gameContainer = document.getElementById("left");
+      if (ballBtn && ballDrop && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (ballImg) ballImg.src = imgUrl;
+              if (ballInput) ballInput.value = imgUrl;
+              ballDrop.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
           }
-        } catch (e) {
-          console.error(e);
+        });
+        ballBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
+        });
+      }
+      if (bgBtn && bgDrop && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color2 = gameBackgrounds[key];
+          const div = document.createElement("div");
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+          div.style.width = "35px";
+          div.style.height = "35px";
+          div.style.padding = "2px";
+          const circle = document.createElement("div");
+          circle.className = "w-full h-full rounded-full border border-gray-300";
+          circle.style.backgroundColor = color2;
+          div.appendChild(circle);
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (bgPrev) bgPrev.style.backgroundColor = color2;
+            if (bgInput) bgInput.value = color2;
+            if (gameContainer) gameContainer.style.backgroundColor = color2;
+            bgDrop.classList.add("hidden");
+          });
+          bgGrid.appendChild(div);
+        });
+        if (bgResetBtn) {
+          bgResetBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const resetColor = "#E8F4F8";
+            if (bgPrev) bgPrev.style.backgroundColor = resetColor;
+            if (bgInput) bgInput.value = resetColor;
+            if (gameContainer) gameContainer.style.backgroundColor = resetColor;
+            bgDrop.classList.add("hidden");
+          });
+        }
+        bgBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
+        });
+      }
+      const startGameFromData = async (data, p1Alias, p2Alias) => {
+        const myAlias = await getPlayerAlias();
+        const myId = Number(localStorage.getItem("userId"));
+        let opponentId = data.opponent ? Number(data.opponent) : null;
+        const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+        const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
+        let p1Id = data.role === "player1" ? myId : opponentId;
+        let p2Id = data.role === "player2" ? myId : opponentId;
+        let opponentAlias = "Opponent";
+        if (data.role === "player1") {
+          this.currentP1Alias = myAlias;
+          if (remoteP2Alias) {
+            opponentAlias = remoteP2Alias;
+          }
+          this.currentP2Alias = opponentAlias;
+        } else {
+          this.currentP1Alias = opponentAlias;
+          if (remoteP1Alias) {
+            opponentAlias = remoteP1Alias;
+          }
+          this.currentP2Alias = myAlias;
+        }
+        const p1Display = document.getElementById("player-1-name");
+        const p2Display = document.getElementById("player-2-name");
+        if (p1Display && p2Display) {
+          p1Display.innerText = data.role === "player1" ? `${this.currentP1Alias} (Me)` : this.currentP1Alias;
+          p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} (Me)` : this.currentP2Alias;
+        }
+        let gameStartDate = getSqlDate();
+        if (data.opponent) {
+          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            if (userData && userData.alias) {
+              const realOpponentName = userData.alias;
+              if (data.role === "player1") {
+                this.currentP2Alias = realOpponentName;
+                if (p2Display) {
+                  p2Display.innerText = realOpponentName;
+                }
+              } else {
+                this.currentP1Alias = realOpponentName;
+                if (p1Display) {
+                  p1Display.innerText = realOpponentName;
+                }
+              }
+            }
+          }).catch((e) => console.error("Error retrieving opponent alias:", e));
+        }
+        if (this.context.chat) {
+          this.context.chat.joinChannel(data.roomId);
+          this.context.chat.addSystemMessage(`Match started!`);
+        }
+        if (status) {
+          status.innerText = "We found an opponent ! Starting the game...";
+        }
+        if (modal) {
+          modal.style.display = "none";
+        }
+        if (container) {
+          container.innerHTML = "";
+          const canvas = document.createElement("canvas");
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+          canvas.style.width = "100%";
+          canvas.style.height = "100%";
+          container.appendChild(canvas);
+          if (canvas.width === 0) {
+            canvas.width = 800;
+          }
+          if (canvas.height === 0) {
+            canvas.height = 600;
+          }
+          const ctx = canvas.getContext("2d");
+          const input = new Input_default();
+          const selectedBallSkin = ballInput ? ballInput.value : "classic";
+          if (ctx) {
+            if (this.context.getGame()) {
+              this.context.getGame().stop();
+              this.context.setGame(null);
+            }
+            const newGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+            this.context.setGame(newGame);
+            gameSocket.off("opponentLeft");
+            gameSocket.on("opponentLeft", async (eventData) => {
+              const activeGame2 = this.context.getGame();
+              if (activeGame2) {
+                activeGame2.isRunning = false;
+                activeGame2.stop();
+                gameSocket.off("gameState");
+                gameSocket.off("gameEnded");
+                const s1 = activeGame2.score.player1;
+                const s2 = activeGame2.score.player2;
+                let winnerAlias = "";
+                if (data.role === "player1") {
+                  winnerAlias = this.currentP1Alias;
+                } else {
+                  winnerAlias = this.currentP2Alias;
+                }
+                await this.saveRemoteGameToApi(
+                  this.currentP1Alias,
+                  s1,
+                  p1Id,
+                  this.currentP2Alias,
+                  s2,
+                  p2Id,
+                  winnerAlias,
+                  gameStartDate
+                );
+                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                this.context.setGame(null);
+              }
+            });
+            newGame.onGameEnd = async (endData) => {
+              let winnerAlias = "Winner";
+              if (endData.winner === "player1") {
+                winnerAlias = this.currentP1Alias;
+              } else if (endData.winner === "player2") {
+                winnerAlias = this.currentP2Alias;
+              }
+              const activeGame2 = this.context.getGame();
+              if (activeGame2) {
+                const s1 = activeGame2.score.player1;
+                const s2 = activeGame2.score.player2;
+                if (data.role === "player1") {
+                  await this.saveRemoteGameToApi(
+                    this.currentP1Alias,
+                    s1,
+                    p1Id,
+                    this.currentP2Alias,
+                    s2,
+                    p2Id,
+                    winnerAlias,
+                    gameStartDate
+                  );
+                }
+              }
+              showVictoryModal(winnerAlias, this.context.chat);
+              this.context.setGame(null);
+            };
+            newGame.onScoreChange = (score) => {
+              const sb = document.getElementById("score-board");
+              if (sb) {
+                sb.innerText = `${score.player1} - ${score.player2}`;
+              }
+            };
+            launchCountdown(() => {
+              const activeGame2 = this.context.getGame();
+              if (activeGame2) {
+                gameStartDate = getSqlDate();
+                activeGame2.startRemote(data.roomId, data.role);
+              }
+            });
+          }
+        }
+      };
+      const pendingMatch = sessionStorage.getItem("pendingMatch");
+      if (pendingMatch) {
+        const data = JSON.parse(pendingMatch);
+        sessionStorage.removeItem("pendingMatch");
+        startGameFromData(data);
+      }
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (btn) {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", async () => {
+          if (!gameSocket) {
+            alert("Error: lost connexion to game server");
+            return;
+          }
+          newBtn.disabled = true;
+          if (privateRoomId) {
+            if (status) {
+              status.innerText = "Waiting for your friend in private room...";
+            }
+            newBtn.innerText = "WAITING FOR FRIEND...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              sessionStorage.removeItem("privateGameId");
+              startGameFromData(data);
+            });
+            const selectedBall = ballInput ? ballInput.value : "classic";
+            gameSocket.emit("joinPrivateGame", {
+              roomId: privateRoomId,
+              skin: selectedBall
+            });
+          } else {
+            if (status) {
+              status.innerText = "Looking for a rival...";
+            }
+            newBtn.innerText = "WAITING...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              startGameFromData(data);
+            });
+            gameSocket.emit("joinQueue");
+          }
+        });
+      }
+    }
+    async saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
+      try {
+        const endDate = getSqlDate();
+        const response = await fetchWithAuth("api/game", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "remote",
+            winner: winnerAlias,
+            status: "finished",
+            round: "1v1",
+            startDate,
+            endDate,
+            p1: { alias: p1Alias, score: p1Score, userId: p1Id },
+            p2: { alias: p2Alias, score: p2Score, userId: p2Id }
+          })
+        });
+        if (!response.ok) {
+          console.error("Error while saving remote game");
+        } else {
+          console.log("remote game successfully saved");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/components/game/TournamentManager.ts
+  var TournamentManager = class {
+    constructor(context) {
+      this.tournamentState = null;
+      this.context = context;
+    }
+    init() {
+      const setupModal = document.getElementById("tournament-setup-modal");
+      if (setupModal) {
+        setupModal.classList.remove("hidden");
+      }
+      const nameInput = document.getElementById("tournament-name-input");
+      const player1Input = document.getElementById("player1-input");
+      const player2Input = document.getElementById("player2-input");
+      const player3Input = document.getElementById("player3-input");
+      const player4Input = document.getElementById("player4-input");
+      const startButton = document.getElementById("start-tournament-btn");
+      const errorDiv = document.getElementById("setup-error");
+      this.initTournamentSelectors();
+      const username = localStorage.getItem("username");
+      const isGuest = sessionStorage.getItem("userRole") === "guest";
+      getPlayerAlias().then((alias2) => {
+        player1Input.value = alias2;
+        if (!isGuest) {
+          player1Input.readOnly = true;
+          player1Input.classList.add("bg-gray-200", "cursor-not-allowed");
+        } else {
+          player1Input.readOnly = false;
+          player1Input.classList.remove("bg-gray-200", "cursor-not-allowed");
+        }
+      });
+      startButton?.addEventListener("click", () => {
+        const tName = nameInput.value.trim();
+        const players = [
+          player1Input.value.trim(),
+          player2Input.value.trim(),
+          player3Input.value.trim(),
+          player4Input.value.trim()
+        ];
+        if (!tName || players.some((p) => !p)) {
+          if (errorDiv) {
+            errorDiv.innerText = "Please fill all fields.";
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        const uniqueCheck = new Set(players);
+        if (uniqueCheck.size !== 4) {
+          if (errorDiv) {
+            errorDiv.innerText = "All player aliases must be unique.";
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        const ballVal = document.getElementById("tour-ball-value")?.value || "classic";
+        const bgVal = document.getElementById("tour-bg-value")?.value || "#E8F4F8";
+        this.startTournamentLogic(tName, players, ballVal, bgVal);
+      });
+    }
+    initTournamentSelectors() {
+      const ballBtn = document.getElementById("tour-ball-selector-button");
+      const ballDrop = document.getElementById("tour-ball-selector-dropdown");
+      const ballGrid = document.getElementById("tour-ball-grid");
+      const ballImg = document.getElementById("tour-selected-ball-img");
+      const ballInput = document.getElementById("tour-ball-value");
+      const bgBtn = document.getElementById("tour-bg-selector-button");
+      const bgDrop = document.getElementById("tour-bg-selector-dropdown");
+      const bgGrid = document.getElementById("tour-bg-grid");
+      const bgPrev = document.getElementById("tour-selected-bg-preview");
+      const bgInput = document.getElementById("tour-bg-value");
+      const bgResetBtn = document.getElementById("bg-reset-button");
+      const gameContainer = document.getElementById("left");
+      if (ballBtn && ballDrop && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (ballImg) {
+                ballImg.src = imgUrl;
+              }
+              if (ballInput) {
+                ballInput.value = imgUrl;
+              }
+              ballDrop.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
+          }
+        });
+        ballBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
+        });
+      }
+      if (bgBtn && bgDrop && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color2 = gameBackgrounds[key];
+          const div = document.createElement("div");
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+          div.style.width = "35px";
+          div.style.height = "35px";
+          div.style.padding = "2px";
+          const circle = document.createElement("div");
+          circle.className = "w-full h-full rounded-full border border-gray-300";
+          circle.style.backgroundColor = color2;
+          div.appendChild(circle);
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (bgPrev) {
+              bgPrev.style.backgroundColor = color2;
+            }
+            if (bgInput) {
+              bgInput.value = color2;
+            }
+            if (gameContainer) {
+              gameContainer.style.backgroundColor = color2;
+            }
+            bgDrop.classList.add("hidden");
+          });
+          bgGrid.appendChild(div);
+        });
+        if (bgResetBtn) {
+          bgResetBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const resetColor = "#E8F4F8";
+            if (bgPrev) {
+              bgPrev.style.backgroundColor = resetColor;
+            }
+            if (bgInput) {
+              bgInput.value = resetColor;
+            }
+            if (gameContainer) {
+              gameContainer.style.backgroundColor = resetColor;
+            }
+            bgDrop.classList.add("hidden");
+          });
+        }
+        bgBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
+        });
+      }
+    }
+    startTournamentLogic(name, playersAliases, ballSkin, bgSkin) {
+      document.getElementById("tournament-setup-modal")?.classList.add("hidden");
+      const userIdStr = localStorage.getItem("userId");
+      const userIdNb = userIdStr ? Number(userIdStr) : null;
+      const playersObjects = playersAliases.map((alias2, index2) => ({
+        alias: alias2,
+        userId: index2 === 0 ? userIdNb : null,
+        score: 0
+      }));
+      const startDate = getSqlDate();
+      this.tournamentState = {
+        name,
+        startedAt: startDate,
+        allPlayers: playersObjects,
+        matches: [
+          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
+          // 1er duo
+          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
+          // 2eme duo
+          { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
+          // finale
+        ],
+        currentMatchIdx: 0,
+        currentStep: "semi_final_1",
+        settings: { ballSkin, bgSkin }
+      };
+      if (this.context.chat) {
+        this.context.chat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
+      }
+      this.showBracketModal();
+    }
+    showBracketModal() {
+      const bracketModal = document.getElementById("tournament-bracket-modal");
+      if (!bracketModal || !this.tournamentState) {
+        return;
+      }
+      const sf1 = document.getElementById("bracket-sf1");
+      const sf2 = document.getElementById("bracket-sf2");
+      const fin = document.getElementById("bracket-final");
+      const msg = document.getElementById("bracket-status-msg");
+      const m1 = this.tournamentState.matches[0];
+      const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
+      if (sf1) {
+        sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
+      }
+      const m2 = this.tournamentState.matches[1];
+      const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
+      if (sf2) {
+        sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
+      }
+      const mf = this.tournamentState.matches[2];
+      const p1Final = mf.p1 ? mf.p1.alias : "?";
+      const p2Final = mf.p2 ? mf.p2.alias : "?";
+      if (fin) {
+        fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
+      }
+      const idx = this.tournamentState.currentMatchIdx;
+      if (msg) {
+        if (idx === 0) msg.innerText = "Next: Semi-Final 1";
+        else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
+        else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+      }
+      bracketModal.classList.remove("hidden");
+      const btn = document.getElementById("bracket-continue-btn");
+      const newBtn = btn?.cloneNode(true);
+      btn?.parentNode?.replaceChild(newBtn, btn);
+      newBtn.addEventListener("click", () => {
+        bracketModal.classList.add("hidden");
+        this.showNextMatchModal();
+      });
+    }
+    showNextMatchModal() {
+      const nextMatchModal = document.getElementById("tournament-next-match-modal");
+      const title = document.getElementById("match-title");
+      const player1Text = document.getElementById("next-p1");
+      const player2Text = document.getElementById("next-p2");
+      const playButton = document.getElementById("launch-match-btn");
+      if (!nextMatchModal || !this.tournamentState) return;
+      const matchIdx = this.tournamentState.currentMatchIdx;
+      const match = this.tournamentState.matches[matchIdx];
+      const p1Alias = match.p1 ? match.p1.alias : "???";
+      const p2Alias = match.p2 ? match.p2.alias : "???";
+      if (matchIdx === 0) {
+        if (title) title.innerText = "SEMI-FINAL 1";
+        if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+      } else if (matchIdx === 1) {
+        if (title) title.innerText = "SEMI-FINAL 2";
+        if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+      } else {
+        if (title) title.innerText = "FINALE";
+        if (this.context.chat) this.context.chat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
+      }
+      if (player1Text) player1Text.innerText = p1Alias;
+      if (player2Text) player2Text.innerText = p2Alias;
+      nextMatchModal.classList.remove("hidden");
+      const newButton = playButton.cloneNode(true);
+      playButton.parentNode.replaceChild(newButton, playButton);
+      newButton.addEventListener("click", () => {
+        nextMatchModal.classList.add("hidden");
+        if (match.p1 && match.p2) {
+          this.launchMatch(match.p1, match.p2);
+        }
+      });
+    }
+    launchMatch(p1, p2) {
+      const p1Name = document.getElementById("player-1-name");
+      const p2Name = document.getElementById("player-2-name");
+      const gameStartDate = getSqlDate();
+      if (p1Name) p1Name.innerText = p1.alias;
+      if (p2Name) p2Name.innerText = p2.alias;
+      const scoreBoard = document.getElementById("score-board");
+      if (scoreBoard) {
+        scoreBoard.innerText = "0 - 0";
+      }
+      const container = document.getElementById("left");
+      if (container && this.tournamentState) {
+        container.style.backgroundColor = this.tournamentState.settings.bgSkin;
+      }
+      let canvasContainer = document.getElementById("game-canvas-container");
+      if (canvasContainer) {
+        canvasContainer.innerHTML = "";
+        const canvas = document.createElement("canvas");
+        canvas.id = "pong-canvas-tournament";
+        canvas.width = canvasContainer.clientWidth;
+        canvas.height = canvasContainer.clientHeight;
+        console.log("heigh:", canvasContainer.clientHeight);
+        console.log("width:", canvasContainer.clientWidth);
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvasContainer.appendChild(canvas);
+        const ctx = canvas.getContext("2d");
+        if (ctx && this.tournamentState) {
+          const input = new Input_default();
+          if (this.context.getGame()) {
+            this.context.getGame().isRunning = false;
+          }
+          const newGame = new Game_default(canvas, ctx, input, this.tournamentState.settings.ballSkin);
+          this.context.setGame(newGame);
+          newGame.onScoreChange = (score) => {
+            const scoreBoard2 = document.getElementById("score-board");
+            if (scoreBoard2) {
+              scoreBoard2.innerText = `${score.player1} - ${score.player2}`;
+            }
+          };
+          newGame.start();
+          const checkInterval = setInterval(() => {
+            const activeGame2 = this.context.getGame();
+            if (!activeGame2 || !activeGame2.isRunning) {
+              clearInterval(checkInterval);
+              return;
+            }
+            if (activeGame2.score.player1 >= 5 || activeGame2.score.player2 >= 5) {
+              activeGame2.isRunning = false;
+              clearInterval(checkInterval);
+              const winnerAlias = activeGame2.score.player1 > activeGame2.score.player2 ? p1.alias : p2.alias;
+              this.endMatch(winnerAlias, activeGame2.score.player1, activeGame2.score.player2, gameStartDate);
+            }
+          }, 500);
         }
       }
     }
+    endMatch(winner, scoreP1, scoreP2, gameStartDate) {
+      if (!this.tournamentState) {
+        return;
+      }
+      const idx = this.tournamentState.currentMatchIdx;
+      const match = this.tournamentState.matches[idx];
+      match.startDate = gameStartDate;
+      match.endDate = getSqlDate();
+      match.winner = winner;
+      if (match.p1) {
+        match.p1.score = scoreP1;
+      }
+      if (match.p2) {
+        match.p2.score = scoreP2;
+      }
+      if (match.p1 && match.p1.userId) {
+        const isWinner = match.p1.alias === winner;
+      }
+      if (match.p2 && match.p2.userId) {
+        const isWinner = match.p2.alias === winner;
+      }
+      if (this.context.chat) {
+        this.context.chat.addSystemMessage(`${winner} wins the match!`);
+      }
+      if (idx === 0) {
+        const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
+        this.tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+        this.tournamentState.currentMatchIdx++;
+        this.tournamentState.currentStep = "semi_final_2";
+        this.showBracketModal();
+      } else if (idx === 1) {
+        const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
+        this.tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+        this.tournamentState.currentMatchIdx++;
+        this.tournamentState.currentStep = "final";
+        this.showBracketModal();
+      } else {
+        this.tournamentState.currentStep = "finished";
+        this.showSummary(winner);
+      }
+    }
+    showSummary(champion) {
+      launchConfetti(4e3);
+      const container = document.getElementById("left");
+      if (container) {
+        container.style.backgroundColor = "white";
+      }
+      const summaryModal = document.getElementById("tournament-summary-modal");
+      if (summaryModal) {
+        summaryModal.classList.remove("hidden");
+        const winnerDisplay = document.getElementById("winner-name");
+        const tourNameDisplay = document.getElementById("tour-name-display");
+        if (winnerDisplay) {
+          winnerDisplay.innerText = champion;
+        }
+        if (tourNameDisplay && this.tournamentState) {
+          tourNameDisplay.innerText = this.tournamentState.name;
+        }
+        if (this.context.chat) {
+          this.context.chat.addSystemMessage(`${champion} wins the match!`);
+        }
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          this.saveTournamentToApi(champion);
+        }
+        document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
+          window.history.back();
+        });
+        document.getElementById("quit-remote-btn")?.addEventListener("click", () => {
+          window.history.back();
+        });
+      }
+    }
+    async saveTournamentToApi(winner) {
+      if (!this.tournamentState) {
+        return;
+      } else {
+        console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", this.tournamentState.matches);
+        console.log("DEBUG FRONTEND - Nombre de matches :", this.tournamentState.matches.length);
+      }
+      try {
+        await fetchWithAuth("api/game/tournaments", {
+          method: "POST",
+          body: JSON.stringify({
+            name: this.tournamentState.name,
+            winner,
+            participants: this.tournamentState.allPlayers,
+            tournamentName: this.tournamentState.name,
+            matchList: this.tournamentState.matches,
+            startedAt: this.tournamentState.startedAt
+          })
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/pages/GamePage.ts
+  var gameChat = null;
+  var activeGame = null;
+  var spaceKeyListener = null;
+  var isNavigationBlocked = false;
+  function isGameRunning() {
+    return activeGame !== null && activeGame.isRunning;
+  }
+  async function getPlayerAlias() {
+    const cachedAlias = sessionStorage.getItem("cachedAlias");
+    if (cachedAlias) {
+      return cachedAlias;
+    }
+    const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
+    const isGuest = sessionStorage.getItem("userRole") === "guest";
+    if (!userId) {
+      return "Player";
+    }
+    try {
+      const response = await fetchWithAuth(`api/user/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        const alias2 = userData.alias || (isGuest ? "Guest" : "Player");
+        sessionStorage.setItem("cachedAlias", alias2);
+        return userData.alias || (isGuest ? "Guest" : "Player");
+      }
+    } catch (err) {
+      console.error("Cannot fetch player alias:", err);
+    }
+    const result = sessionStorage.getItem("username") || (isGuest ? "Guest" : "Player");
+    return result;
+  }
+  function handleBeforeUnload(e) {
+    if (isGameRunning()) {
+      e.preventDefault();
+      e.returnValue = "A game is in progress. Are you sure you want to leave?";
+      return e.returnValue;
+    }
+  }
+  function handlePopState(e) {
+    if (isGameRunning() && !isNavigationBlocked) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.history.pushState({ gameMode: window.history.state?.gameMode || "local" }, "", "/game");
+      showExitConfirmationModal();
+    }
+  }
+  function showExitConfirmationModal() {
+    if (document.getElementById("exit-confirm-modal")) {
+      return;
+    }
+    if (activeGame) {
+      activeGame.pause();
+    }
+    const modalHtml = `
+        <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+                
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close" id="modal-close-x"></button>
+                    </div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
+                    
+                    <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
+                        WAIT A MINUTE !
+                    </h2>
+                    
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        
+                        <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                                px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                                transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            GO BACK TO GAME
+                        </button>
+                        
+                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            LEAVE
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+    const div = document.createElement("div");
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+    document.getElementById("confirm-exit-btn")?.addEventListener("click", () => {
+      confirmExit();
+    });
+    const closeFunc = () => {
+      document.getElementById("exit-confirm-modal")?.remove();
+      if (activeGame) {
+        activeGame.resume();
+      }
+    };
+    document.getElementById("cancel-exit-btn")?.addEventListener("click", closeFunc);
+    document.getElementById("modal-close-x")?.addEventListener("click", closeFunc);
+  }
+  function confirmExit() {
+    isNavigationBlocked = true;
+    if (activeGame) {
+      const wasRemote = activeGame.isRemote;
+      const roomId = activeGame.roomId;
+      const playerRole = activeGame.playerRole;
+      activeGame.isRunning = false;
+      activeGame.stop();
+      if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
+        SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
+        const userIdStr = localStorage.getItem("userId");
+        if (userIdStr && playerRole) {
+        }
+      }
+      activeGame = null;
+    }
+    cleanup();
+    document.getElementById("exit-confirm-modal")?.remove();
+    setTimeout(() => {
+      isNavigationBlocked = false;
+      window.history.back();
+    }, 100);
+  }
+  function cleanup() {
+    if (gameChat) {
+      gameChat.destroy();
+      gameChat = null;
+    }
+    if (activeGame) {
+      activeGame.isRunning = false;
+      activeGame.stop();
+      activeGame = null;
+    }
+    if (spaceKeyListener) {
+      document.removeEventListener("keydown", spaceKeyListener);
+      spaceKeyListener = null;
+    }
+    document.getElementById("countdown-modal")?.remove();
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.removeEventListener("popstate", handlePopState);
+    isNavigationBlocked = false;
+  }
+  function render7() {
+    const state = window.history.state;
+    if (state && state.gameMode === "remote") {
+      return RemoteGame_default;
+    } else if (state && state.gameMode === "tournament") {
+      return TournamentPage_default;
+    }
+    return LocalGame_default;
+  }
+  function initGamePage(mode) {
+    const currentTheme = localStorage.getItem("userTheme") || "basic";
+    applyTheme(currentTheme);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    const player1Display = document.getElementById("player-1-name");
+    if (player1Display) {
+      getPlayerAlias().then((alias2) => {
+        player1Display.innerText = alias2;
+      });
+    }
+    if (gameChat) {
+      gameChat.destroy();
+    }
+    gameChat = new Chat();
+    gameChat.init();
+    const gameContext = {
+      setGame: (game) => {
+        activeGame = game;
+      },
+      getGame: () => activeGame,
+      chat: gameChat
+    };
+    if (mode == "remote") {
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (privateRoomId) {
+        gameChat.joinChannel(`private_wait_${privateRoomId}`);
+      } else {
+        gameChat.joinChannel("remote_game_room");
+      }
+      const remoteManager = new RemoteGameManager(gameContext);
+      remoteManager.init();
+    } else if (mode == "tournament") {
+      gameChat.joinChannel("tournament_room");
+      const tournamentManager = new TournamentManager(gameContext);
+      tournamentManager.init();
+    } else {
+      gameChat.joinChannel("local_game_room");
+      const localManager = new LocalGameManager(gameContext);
+      localManager.init();
+    }
+    if (spaceKeyListener) {
+      document.removeEventListener("keydown", spaceKeyListener);
+    }
+    spaceKeyListener = (e) => {
+      if (e.code === "Space" || e.key === " ") {
+        const target = e.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+          return;
+        }
+        if (!activeGame || !activeGame.isRunning) {
+          return;
+        }
+        e.preventDefault();
+        if (gameChat) {
+          if (activeGame.isRemote) {
+            gameChat.emitWizzOnly();
+          } else {
+            const wizzContainer = document.getElementById("wizz-container");
+            gameChat.shakeElement(wizzContainer);
+          }
+        }
+      }
+    };
+    document.addEventListener("keydown", spaceKeyListener);
   }
 
   // scripts/pages/DashboardPage.html
