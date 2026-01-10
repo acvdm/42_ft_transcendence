@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "./api";
+import { fetchWithAuth } from "../services/api";
 import htmlContent from "./LandingPage.html"
 
 export function render(): string {

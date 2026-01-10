@@ -1,10 +1,10 @@
 import htmlContentLocal from "./LocalGame.html";
 import htmlContentRemote from "./RemoteGame.html";
 import htmlContentTournament from "./TournamentPage.html";
-import { fetchWithAuth } from "./api";
+import { fetchWithAuth } from "../services/api";
 import { Chat } from "../components/Chat";
 import SocketService from '../services/SocketService';
-import { applyTheme } from "./ProfilePage";
+import { applyTheme } from "../components/ProfilePage";
 import Game from "../game/Game";
 import { LocalGameManager } from "../components/game/LocalGameManager";
 import { RemoteGameManager } from "../components/game/RemoteGameManager";

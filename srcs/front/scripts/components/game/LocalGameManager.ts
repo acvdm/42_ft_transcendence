@@ -1,5 +1,5 @@
 // srcs/front/scripts/components/game/LocalGameManager.ts
-import { fetchWithAuth } from "../../pages/api";
+import { fetchWithAuth } from "../../services/api";
 import { ballEmoticons, gameBackgrounds } from "../Data";
 import Game from "../../game/Game";
 import Input from "../../game/Input";

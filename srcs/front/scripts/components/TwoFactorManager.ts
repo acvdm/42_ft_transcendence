@@ -1,5 +1,5 @@
 // srcs/front/scripts/components/profile/TwoFactorManager.ts
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 
 export class TwoFactorManager {
     private userId: string | null;

@@ -1,6 +1,6 @@
 import htmlContent from "../pages/DashboardPage.html";
-import { applyTheme } from "./ProfilePage";
-import { fetchWithAuth } from "./api";
+import { applyTheme } from "../components/ProfilePage";
+import { fetchWithAuth } from "../services/api";
 import { Chart } from "chart.js/auto";
 
 // Match's info interface

@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { statusImages } from "./Data";
 import { parseMessage } from "./ChatUtils";
 

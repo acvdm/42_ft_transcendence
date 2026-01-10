@@ -1,11 +1,11 @@
-import { fetchWithAuth } from "../../pages/api";
+import { fetchWithAuth } from "../../services/api";
 import SocketService from '../../services/SocketService';
 import { ballEmoticons, gameBackgrounds } from "../Data";
 import Game from "../../game/Game";
 import Input from "../../game/Input";
 import { getSqlDate, launchCountdown, showVictoryModal, showRemoteEndModal } from "./GameUI";
 import { Chat } from "../Chat";
-import { getPlayerAlias } from "../../pages/GamePage";
+import { getPlayerAlias } from "../../controllers/GamePage";
 
 interface GameContext {
     setGame: (game: Game | null) => void;

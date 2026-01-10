@@ -1,7 +1,7 @@
 import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { Socket } from "socket.io-client";
 
 export class Chat {

@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import SocketService from "../services/SocketService";
 
 let globalPath = "/assets/emoticons/";
