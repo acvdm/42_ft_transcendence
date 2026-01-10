@@ -1,4 +1,4 @@
-import htmlContent from "./HomePage.html";
+import htmlContent from "../pages/HomePage.html";
 import SocketService from "../services/SocketService";
 import { FriendList } from "../components/FriendList";
 import { UserProfile } from "../components/UserProfile";

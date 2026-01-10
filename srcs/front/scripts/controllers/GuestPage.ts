@@ -1,4 +1,4 @@
-import htmlContent from "./GuestPage.html";
+import htmlContent from "../pages/GuestPage.html";
 import { Chat } from "../components/Chat";
 
 export function render(): string {

@@ -1,4 +1,4 @@
-import htmlContent from "./RegisterPage.html"
+import htmlContent from "../pages/RegisterPage.html"
 
 export function render(): string {
 	return htmlContent;

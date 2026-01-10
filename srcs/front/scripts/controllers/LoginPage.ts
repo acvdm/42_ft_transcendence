@@ -1,4 +1,4 @@
-import htmlContent from "./LoginPage.html";
+import htmlContent from "../pages/LoginPage.html";
 import { fetchWithAuth } from "../services/api";
 import { updateUserStatus } from "../components/Data";
 

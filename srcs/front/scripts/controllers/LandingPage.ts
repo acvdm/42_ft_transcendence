@@ -1,5 +1,5 @@
 import { fetchWithAuth } from "../services/api";
-import htmlContent from "./LandingPage.html"
+import htmlContent from "../pages/LandingPage.html"
 
 export function render(): string {
 	return htmlContent;

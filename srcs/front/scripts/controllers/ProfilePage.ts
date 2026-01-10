@@ -1,4 +1,4 @@
-import htmlContent from "./ProfilePage.html";
+import htmlContent from "../pages/ProfilePage.html";
 import { fetchWithAuth } from "../services/api";
 import { parseMessage } from "../components/ChatUtils";
 import { appThemes } from "../components/Data";

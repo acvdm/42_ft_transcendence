@@ -1,6 +1,6 @@
-import htmlContentLocal from "./LocalGame.html";
-import htmlContentRemote from "./RemoteGame.html";
-import htmlContentTournament from "./TournamentPage.html";
+import htmlContentLocal from "../pages/LocalGame.html";
+import htmlContentRemote from "../pages/RemoteGame.html";
+import htmlContentTournament from "../pages/TournamentPage.html";
 import { fetchWithAuth } from "../services/api";
 import { Chat } from "../components/Chat";
 import SocketService from '../services/SocketService';
