@@ -5,6 +5,10 @@ export function render(): string {
 	return htmlContent;
 };
 
+	//================================================
+	//============= LANDING PAGE BUTTONS =============
+	//================================================
+
 export function initLandingPage() {
 	const loginButton = document.getElementById('login-button');
 	const registerButton = document.getElementById('register-button');
@@ -30,14 +34,17 @@ export function initLandingPage() {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({})
-				
-			}); // a verifier
+			});
 
 			if (response.ok) {
 				const data = await response.json();
 
-				if (data.accessToken) sessionStorage.setItem('accessToken', data.accessToken);
-				if (data.userId) sessionStorage.setItem('userId', data.userId.toString());
+				if (data.accessToken) {
+					sessionStorage.setItem('accessToken', data.accessToken);
+				}
+				if (data.userId) {
+					sessionStorage.setItem('userId', data.userId.toString());
+				}
 				
 				sessionStorage.setItem('isGuest', 'true');
 				sessionStorage.setItem('userRole', 'guest');
@@ -60,12 +67,16 @@ export function initLandingPage() {
                 } catch (fetchErr) {
                     console.error("Cannot retrieve guest username", fetchErr);
                 }
+
 				handleNavigation('/guest');
+
 			} else {
 				console.error("Error: guest creation");
 			}
+
 		} catch (err) {
 			console.error("Network error while guest login: ", err);
+			
 			if (guestError) {
 				guestError.textContent = "Network error. Please try again";
 				guestError.classList.remove('hidden');

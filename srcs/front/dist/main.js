@@ -98,8 +98,8 @@
 </div>`;
 
   // scripts/pages/api.ts
-  var isRefreshing = false;
   var refreshSubscribers = [];
+  var isRefreshing = false;
   var refreshPromise = null;
   function subscribeTokenRefresh(cb) {
     refreshSubscribers.push(cb);
@@ -115,22 +115,23 @@
     let token = getAuthToken();
     const getConfigWithAuth = (tokenToUse, originalOptions) => {
       const headers = new Headers(originalOptions.headers || {});
-      if (headers.has("Authorization"))
+      if (headers.has("Authorization")) {
         headers.delete("Authorization");
-      if (!headers.has("Content-Type") && originalOptions.body)
+      }
+      if (!headers.has("Content-Type") && originalOptions.body) {
         headers.set("Content-Type", "application/json");
+      }
       if (tokenToUse) {
         headers.set("Authorization", `Bearer ${tokenToUse}`);
       }
       return {
         ...originalOptions,
         headers
-        // remplace/ajoute headers aux parametresdeoriginalOptions (method,body,....)
       };
     };
     let response = await fetch(url2, getConfigWithAuth(token, options));
     if (response.status === 401) {
-      console.warn(`401 detected fo ${url2}`);
+      console.warn(`401 detected for ${url2}`);
       if (!isRefreshing) {
         isRefreshing = true;
         refreshPromise = (async () => {
@@ -143,8 +144,9 @@
               const data = await refreshRes.json();
               console.log("Refresh successful, data:", data);
               const newToken = data.accessToken;
-              if (!newToken)
+              if (!newToken) {
                 throw new Error("No accessToken in refresh response");
+              }
               localStorage.setItem("accessToken", newToken);
               onRefreshed(newToken);
               return newToken;
@@ -3932,8 +3934,12 @@
     return LoginPage_default;
   }
   async function init2faLogin(accessToken, userId, selectedStatus) {
-    if (accessToken) localStorage.setItem("accessToken", accessToken);
-    if (userId) localStorage.setItem("userId", userId.toString());
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    }
+    if (userId) {
+      localStorage.setItem("userId", userId.toString());
+    }
     if (userId && accessToken) {
       try {
         const userRes = await fetch(`/api/user/${userId}`, {
@@ -3971,7 +3977,6 @@
     window.dispatchEvent(new PopStateEvent("popstate"));
   }
   function handleLogin() {
-    console.log("handleLogin");
     const button = document.getElementById("login-button");
     const errorElement = document.getElementById("error-message");
     const modal2fa = document.getElementById("2fa-modal");
@@ -4004,7 +4009,6 @@
         });
         const result = await response.json();
         if (result.require2fa) {
-          console.log("2FA require");
           localStorage.setItem("is2faEnabled", "true");
           tempToken = result.tempToken;
           if (modal2fa) {
@@ -4019,8 +4023,12 @@
           localStorage.setItem("is2faEnabled", "false");
           const { accessToken, userId } = result.data;
           await init2faLogin(accessToken, userId, cachedStatus);
-          if (accessToken) localStorage.setItem("accessToken", accessToken);
-          if (userId) localStorage.setItem("userId", userId.toString());
+          if (accessToken) {
+            localStorage.setItem("accessToken", accessToken);
+          }
+          if (userId) {
+            localStorage.setItem("userId", userId.toString());
+          }
           if (userId && accessToken) {
             try {
               const userRes = await fetchWithAuth(`/api/user/${userId}`, {
@@ -4028,10 +4036,12 @@
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
-                if (userData.alias)
+                if (userData.alias) {
                   localStorage.setItem("username", userData.alias);
-                if (userData.theme)
+                }
+                if (userData.theme) {
                   localStorage.setItem("userTheme", userData.theme);
+                }
               }
             } catch (err) {
               console.error("Can't get user's profile", err);
@@ -4041,7 +4051,7 @@
                 method: "PATCH",
                 body: JSON.stringify({ status: selectedStatus })
               });
-              console.log("Status updated to DB:", selectedStatus);
+              console.log("Status updated to database:", selectedStatus);
             } catch (err) {
               console.error("Failed to update status on login", err);
             }
@@ -4066,8 +4076,12 @@
     });
     confirm2fa?.addEventListener("click", async () => {
       const code = input2fa.value.trim();
-      if (error2fa) error2fa.classList.add("hidden");
-      if (!code || !tempToken) return;
+      if (error2fa) {
+        error2fa.classList.add("hidden");
+      }
+      if (!code || !tempToken) {
+        return;
+      }
       try {
         const response = await fetch("/api/auth/2fa/challenge", {
           method: "POST",
@@ -4081,7 +4095,9 @@
         if (response.ok && result.success) {
           localStorage.setItem("is2faEnabled", "true");
           const { accessToken, userId } = result;
-          if (modal2fa) modal2fa.classList.add("hidden");
+          if (modal2fa) {
+            modal2fa.classList.add("hidden");
+          }
           await updateUserStatus("online");
           await init2faLogin(accessToken, userId, cachedStatus);
         } else {
@@ -6019,12 +6035,11 @@
     userProfile.init();
     chatInstance = new Chat();
     chatInstance.init();
-    const friendProfileModal = new FriendProfileModal();
     let currentChatFriendId = null;
+    const friendProfileModal = new FriendProfileModal();
     const chatSocket = socketService.getChatSocket();
     if (chatSocket) {
       chatSocket.on("friendProfileUpdated", (data) => {
-        console.log("Mise \xE0 jour re\xE7ue pour :", data.username);
         if (currentChatFriendId === data.userId) {
           const headerBio = document.getElementById("chat-header-bio");
           if (headerBio && data.bio) {
@@ -6053,21 +6068,27 @@
     friendSelectedHandler = (e) => {
       const { friend, friendshipId } = e.detail;
       currentChatFriendId = friend.id;
-      console.log("Ami s\xE9lectionn\xE9:", friend.alias, "Friendship ID:", friendshipId);
       const myId = parseInt(localStorage.getItem("userId") || "0");
       const ids = [myId, friend.id].sort((a, b) => a - b);
       const channelKey = `channel_${ids[0]}_${ids[1]}`;
-      console.log("channelKey: ", channelKey);
       const chatPlaceholder = document.getElementById("chat-placeholder");
       const channelChat = document.getElementById("channel-chat");
-      if (chatPlaceholder) chatPlaceholder.classList.add("hidden");
-      if (channelChat) channelChat.classList.remove("hidden");
+      if (chatPlaceholder) {
+        chatPlaceholder.classList.add("hidden");
+      }
+      if (channelChat) {
+        channelChat.classList.remove("hidden");
+      }
       const headerName = document.getElementById("chat-header-username");
       const headerAvatar = document.getElementById("chat-header-avatar");
       const headerStatus = document.getElementById("chat-header-status");
       const headerBio = document.getElementById("chat-header-bio");
-      if (headerName) headerName.textContent = friend.alias;
-      if (headerBio) headerBio.innerHTML = parseMessage(friend.bio || "");
+      if (headerName) {
+        headerName.textContent = friend.alias;
+      }
+      if (headerBio) {
+        headerBio.innerHTML = parseMessage(friend.bio || "");
+      }
       if (headerAvatar) {
         const avatarSrc = friend.avatar || friend.avatar_url || "/assets/profile/default.png";
         headerAvatar.src = avatarSrc;
@@ -6075,7 +6096,6 @@
       if (headerStatus) {
         headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
       }
-      console.log("friendship homepage:", friendshipId);
       if (chatInstance) {
         chatInstance.joinChannel(channelKey, friendshipId, friend.id);
       }
@@ -6084,7 +6104,6 @@
     const viewProfileButton = document.getElementById("button-view-profile");
     viewProfileButton?.addEventListener("click", () => {
       document.getElementById("chat-options-dropdown")?.classList.add("hidden");
-      console.log("current chat friend id:", currentChatFriendId);
       if (currentChatFriendId) {
         friendProfileModal.open(currentChatFriendId);
       }
@@ -6092,7 +6111,6 @@
     const localGameButton = document.getElementById("local-game");
     if (localGameButton) {
       localGameButton.addEventListener("click", () => {
-        console.log("Lancement d'une partie locale...");
         window.history.pushState({ gameMode: "local" }, "", "/game");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
@@ -6101,7 +6119,6 @@
     const remoteGameButton = document.getElementById("remote-game");
     if (remoteGameButton) {
       remoteGameButton.addEventListener("click", () => {
-        console.log("Lancement d'une partie remote...");
         window.history.pushState({ gameMode: "remote" }, "", "/game");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
@@ -6110,7 +6127,6 @@
     const tournamentGameButton = document.getElementById("tournament-game");
     if (tournamentGameButton) {
       tournamentGameButton.addEventListener("click", () => {
-        console.log("Lancement d'une partie en tournoi...");
         window.history.pushState({ gameMode: "tournament" }, "", "/game");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
@@ -7560,8 +7576,12 @@
         });
         if (response.ok) {
           const data = await response.json();
-          if (data.accessToken) sessionStorage.setItem("accessToken", data.accessToken);
-          if (data.userId) sessionStorage.setItem("userId", data.userId.toString());
+          if (data.accessToken) {
+            sessionStorage.setItem("accessToken", data.accessToken);
+          }
+          if (data.userId) {
+            sessionStorage.setItem("userId", data.userId.toString());
+          }
           sessionStorage.setItem("isGuest", "true");
           sessionStorage.setItem("userRole", "guest");
           try {
@@ -7595,10 +7615,8 @@
     });
   }
 
-  // scripts/pages/RegisterPage.ts
-  function RegisterPage() {
-    return `
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  // scripts/pages/RegisterPage.html
+  var RegisterPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -7634,8 +7652,11 @@
 				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
 			</div>
 	</div>
-	</div>
-	`;
+</div>`;
+
+  // scripts/pages/RegisterPage.ts
+  function render5() {
+    return RegisterPage_default;
   }
   function handleRegister() {
     const button = document.getElementById("register-button");
@@ -7672,16 +7693,16 @@
           sessionStorage.removeItem("isGuest");
           sessionStorage.removeItem("userRole");
           const { accessToken, userId } = result;
-          console.log("User ID:", userId);
-          console.log("Access Token:", accessToken);
-          if (accessToken)
+          if (accessToken) {
             localStorage.setItem("accessToken", accessToken);
-          if (userId)
+          }
+          if (userId) {
             localStorage.setItem("userId", userId.toString());
+          }
           if (userId) {
             try {
               const userRes = await fetch(`/api/user/${userId}`, {
-                headers: { "Authorization": `Bearer ${access_token}` }
+                headers: { "Authorization": `Bearer ${accessToken}` }
               });
               if (userRes.ok) {
                 const userData = await userRes.json();
@@ -7790,7 +7811,7 @@
 </div>`;
 
   // scripts/pages/GuestPage.ts
-  function render5() {
+  function render6() {
     return GuestPage_default;
   }
   function afterRender3() {
@@ -8609,7 +8630,7 @@
     window.removeEventListener("popstate", handlePopState);
     isNavigationBlocked = false;
   }
-  function render6() {
+  function render7() {
     const state = window.history.state;
     if (state && state.gameMode === "remote") {
       return RemoteGame_default;
@@ -9704,7 +9725,7 @@
   }
 
   // scripts/pages/DashboardPage.html
-  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Win losse evolution. On a 30 days timeline</span>\n                        </div>\n                    </div>\n\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Pie chart with percentage of games played</span>\n                        </div>\n                    </div>\n\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                            <span class="absolute text-xs text-gray-400 pointer-events-none">Podium with the 3 biggest rivals</span>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" >\n                        <label class="text-xs font-semibold text-gray-600 pr-4" style="padding-right: 10px;">Filter by:</label>\n                        \n                        <input type="text" id="filter-opponent" placeholder="Type in rival name" \n                               class="text-xs p-1.5 border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 w-[150px]" style="padding-right: 10px;">\n                        \n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm focus:outline-none focus:border-blue-400 bg-white" style="padding-right: 10px;">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1"></div>\n\n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-semibold hover:from-gray-200 hover:to-gray-400 active:border-blue-400">\n                            Apply\n                        </button>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0">\n                        <div class="grid grid-cols-12 bg-gray-100 border-b border-gray-300 p-2 text-xs font-bold text-gray-600 select-none">\n                            <div class="col-span-2">Date</div>\n                            <div class="col-span-3">Rival</div>\n                            <div class="col-span-2 text-center">Score</div>\n                            <div class="col-span-2 text-center">Type</div>\n                            <div class="col-span-1 text-center">Round</div>\n                            <div class="col-span-2 text-center">Result</div>\n                        </div>\n\n                        <div id="match-history-list" class="overflow-y-auto flex-1 p-1 space-y-1">\n                            <div class="grid grid-cols-5 items-center p-2 text-sm border-b border-gray-100 hover:bg-blue-50 cursor-pointer transition-colors group">\n                                <div id="dashboard-match-date" class="col-span-2 text-gray-500 text-xs">07-01-2026</div>\n                                <div id="dashboard-rival-name" class="col-span-3 font-semibold text-gray-700 flex items-center gap-2">\n                                    <span>Faustochedu49</span>\n                                </div>\n                                <div id="dashboard-match-score" class="col-span-2 text-center font-mono">0 - 0</div>\n                                <div id="dashboard-game-type" class="col-span-2 text-center font-mono">Local</div>\n                                <div id="dashboard-match-round" class="col-span-2 text-center font-mono">1v1</div>\n                                <div id="dashboard-match-result" class="col-span-2 text-center font-mono">VICTORY</div>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" >\n                        <label class="text-xs font-semibold text-gray-600 pr-2">Filter:</label>\n                        <input type="text" id="filter-opponent" placeholder="Rival name" class="text-xs p-1.5 border border-gray-300 rounded-sm w-[120px]">\n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm bg-white p-1">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n                        \n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-bold hover:from-gray-200">Apply</button>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1"></div>\n                        \n                        <label class="text-xs font-semibold text-gray-600 pl-1">Sort:</label>\n                        <select id="sort-order" class="text-xs border border-gray-300 rounded-sm bg-white p-1 focus:outline-none focus:border-blue-400 cursor-pointer">\n                            <option value="date-desc">Date \u2193 (Newest)</option>\n                            <option value="date-asc">Date \u2191 (Oldest)</option>\n                            <option value="name-asc">Rival (A-Z)</option>\n                            <option value="name-desc">Rival (Z-A)</option>\n                        </select>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0 overflow-hidden">\n                        <div class="overflow-y-auto h-full">\n                            <table class="w-full text-xs text-center border-collapse table-fixed">\n                                <thead class="text-gray-600 font-bold bg-gray-100 sticky top-0 shadow-sm z-10">\n                                    <tr>\n                                        <th class="py-2 border-b border-gray-300 w-2/12">Date</th>\n                                        <th class="py-2 border-b border-gray-300 w-3/12">Rival</th>\n                                        <th class="py-2 border-b border-gray-300 w-2/12">Score</th>\n                                        <th class="py-2 border-b border-gray-300 w-2/12">Type</th>\n                                        <th class="py-2 border-b border-gray-300 w-1/12">Round</th>\n                                        <th class="py-2 border-b border-gray-300 w-2/12">Result</th>\n                                    </tr>\n                                </thead>\n                                <tbody id="match-history-list" class="divide-y divide-gray-100">\n                                    <tr class="hover:bg-blue-50 transition-colors">\n                                        <td class="py-2 text-gray-500">Loading...</td>\n                                    </tr>\n                                </tbody>\n                            </table>\n                        </div>\n                    </div>\n\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
 
   // node_modules/@kurkle/color/dist/color.esm.js
   function round(v) {
@@ -24179,9 +24200,11 @@
   Chart.register(...registerables);
 
   // scripts/pages/DashboardPage.ts
-  var evolutionChartInstance = null;
-  var gameTypeChartInstance = null;
-  function render7() {
+  var evolutionChart = null;
+  var gameTypeChart = null;
+  var rivalChart = null;
+  var globalMatchHistory = [];
+  function render8() {
     return DashboardPage_default;
   }
   function afterRender4() {
@@ -24193,146 +24216,274 @@
     const winRateCalcul = document.getElementById("dashboard-win-rate");
     const evolutionCanvas = document.getElementById("dashboard-evolution-graph");
     const gameTypeCanvas = document.getElementById("dashboard-game-chart");
+    const rivalCanvas = document.getElementById("dashboard-rival-podium");
+    const filterOpponent = document.getElementById("filter-opponent");
+    const filterMode = document.getElementById("filter-mode");
+    const sortOrder = document.getElementById("sort-order");
+    const applyFilterButton = document.getElementById("apply-filters");
     const currentTheme = localStorage.getItem("userTheme") || "basic";
     applyTheme(currentTheme);
     const loadUserData = async () => {
       const userId = localStorage.getItem("userId");
-      if (!userId)
+      if (!userId) {
         return;
+      }
       try {
-        await fetchWithAuth(`api/user/${userId}`);
         const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
         if (statResponse.ok) {
           const jsonResponse = await statResponse.json();
-          console.log("Stats re\xE7ues du Backend:", jsonResponse);
-          const stats = jsonResponse.data || jsonResponse;
-          if (stats) {
-            if (totalGame) totalGame.innerText = stats.total_games.toString();
-            if (wins) wins.innerText = stats.wins.toString();
-            if (losses) losses.innerText = stats.losses.toString();
-            if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
-            if (winRateCalcul) {
-              let rateValue = 0;
-              if (stats.total_games > 0) {
-                rateValue = Math.round(stats.wins / stats.total_games * 100);
-              }
-              winRateCalcul.innerText = `${rateValue}%`;
+          const statsData = jsonResponse.data || jsonResponse;
+          if (statsData) {
+            if (totalGame) totalGame.innerText = statsData.total_games.toString();
+            if (wins) wins.innerText = statsData.wins.toString();
+            if (losses) losses.innerText = statsData.losses.toString();
+            if (avgScore) avgScore.innerText = statsData.averageScore?.toString() || "0";
+            if (winRateCalcul && statsData.total_games > 0) {
+              winRateCalcul.innerText = `${Math.round(statsData.wins / statsData.total_games * 100)}%`;
             }
-            const mockHistoryData = generateMockHistory(stats.wins, stats.losses);
-            renderEvolutionChart(evolutionCanvas, mockHistoryData);
-            const distribution = stats.gameType || {
-              local: Math.round(stats.total_games * 0.4),
-              remote: Math.round(stats.total_games * 0.4),
-              tournament: Math.round(stats.total_games * 0.2)
-            };
-            renderGameTypeChart(gameTypeCanvas, distribution);
-          } else {
-            console.warn("Could not fetch user stats");
+            if (playTime) {
+              const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
+              playTime.innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min`;
+            }
           }
         }
+        const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&LIMIT=250`);
+        if (historyResponse.ok) {
+          const historyJson = await historyResponse.json();
+          const historyData = historyJson.data || [];
+          globalMatchHistory = historyData;
+          renderGameTypeChart(gameTypeCanvas, calculateGameDistribution(historyData));
+          renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
+          renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
+          setupFilters();
+        }
       } catch (error) {
-        console.error("Erreur while charging profile:", error);
+        console.error("Error on dashboard:", error);
       }
     };
     loadUserData();
-    function renderEvolutionChart(canvas, data) {
-      if (!canvas) return;
-      if (evolutionChartInstance) {
-        evolutionChartInstance.destroy();
+    function setupFilters() {
+      if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder) {
+        return;
       }
-      evolutionChartInstance = new Chart(canvas, {
-        type: "line",
-        data: {
-          labels: data.labels,
-          datasets: [
-            {
-              label: "Wins",
-              data: data.wins,
-              borderColor: "rgba(34, 197, 94, 1)",
-              backgroundColor: "rgba(34, 197, 94, 0.2)",
-              fill: true,
-              tension: 0.4,
-              pointRadius: 2
-            },
-            {
-              label: "Losses",
-              data: data.losses,
-              borderColor: "rgba(239, 68, 68, 1)",
-              backgroundColor: "rgba(239, 68, 68, 0.2)",
-              fill: true,
-              tension: 0.4,
-              pointRadius: 2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: true,
-              labels: { boxWidth: 10, font: { size: 10 } }
-            }
-          },
-          scales: {
-            x: { display: false },
-            y: { display: false }
+      const applyFiltersAndSort = () => {
+        const opponentValue = filterOpponent.value.toLowerCase().trim();
+        const modeValue = filterMode.value;
+        const sortValue = sortOrder.value;
+        let resultData = globalMatchHistory.filter((match) => {
+          const matchOpponent = (match.opponent_alias || "").toLowerCase();
+          const matchType = (match.game_type || "").toLowerCase();
+          const matchName = opponentValue === "" || matchOpponent.includes(opponentValue);
+          const matchMode = modeValue === "all" || matchType.includes(modeValue);
+          return matchName && matchMode;
+        });
+        resultData.sort((a, b) => {
+          const dateA = new Date(a.finished_at).getTime();
+          const dateB = new Date(b.finished_at).getTime();
+          const nameA = (a.opponent_alias || "").toLowerCase();
+          const nameB = (b.opponent_alias || "").toLowerCase();
+          switch (sortValue) {
+            case "date-ascending":
+              return dateA - dateB;
+            case "date-descending":
+              return dateB - dateA;
+            case "name-ascending":
+              return nameA.localeCompare(nameB);
+            case "name-descending":
+              return nameB.localeCompare(nameA);
+              ;
+            default:
+              return dateB - dateA;
           }
+        });
+        renderMatchHistoryList(resultData);
+      };
+      applyFilterButton.addEventListener("click", applyFiltersAndSort);
+      filterOpponent.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+          applyFiltersAndSort();
         }
       });
+      filterMode.addEventListener("change", applyFiltersAndSort);
+      sortOrder.addEventListener("changer", applyFiltersAndSort);
+      applyFiltersAndSort();
     }
-    function renderGameTypeChart(canvas, distribution) {
-      if (!canvas) return;
-      if (gameTypeChartInstance) {
-        gameTypeChartInstance.destroy();
+    function renderMatchHistoryList(history) {
+      const listContainer = document.getElementById("match-history-list");
+      if (!listContainer) {
+        return;
       }
-      gameTypeChartInstance = new Chart(canvas, {
-        type: "pie",
+      listContainer.innerHTML = "";
+      if (history.length === 0) {
+        listContainer.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 italic">No matches yet.</td></tr>`;
+        return;
+      }
+      history.forEach((match) => {
+        const date = new Date(match.finished_at);
+        const dateString = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
+        const isWin = match.is_winner === 1;
+        const resultText = isWin ? "VICTORY" : "DEFEAT";
+        const resultColor = isWin ? "text-green-600" : "text-red-500";
+        const scoreString = `${match.my_score} - ${match.opponent_score !== void 0 ? match.opponent_score : 0}`;
+        const roundString = match.round ? match.round : match.game_type === "tournament" ? "Final" : "1v1";
+        const row = document.createElement("tr");
+        row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
+        row.innerHTML = `
+                <td class="py-2 text-gray-500">${dateString}</td>
+                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${match.opponent_alias}">${match.opponent_alias || "Unknown"}</td>
+                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+                <td class="py-2 font-mono text-gray-500 capitalize">${match.game_type || "Local"}</td>
+                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
+            `;
+        listContainer.appendChild(row);
+      });
+    }
+    function calculateGameDistribution(history) {
+      const graph = { local: 0, remote: 0, tournament: 0 };
+      history.forEach((match) => {
+        const type = (match.game_type || "").toLowerCase();
+        if (type.includes("tournament")) {
+          graph.tournament++;
+        } else if (type.includes("remote")) {
+          graph.remote++;
+        } else {
+          graph.local++;
+        }
+      });
+      return graph;
+    }
+    function calculateEvolutionData(history) {
+      if (!history || history.length === 0) {
+        return { labels: ["Start"], data: [0] };
+      }
+      const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime());
+      const labels = [];
+      const netScoreData = [];
+      let currentNetScore = 0;
+      sorted.forEach((match) => {
+        const date = new Date(match.finished_at);
+        const dateLabel = `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+        if (match.is_winner === 1) {
+          currentNetScore++;
+        } else {
+          currentNetScore--;
+        }
+        labels.push(dateLabel);
+        netScoreData.push(currentNetScore);
+      });
+      return { labels, data: netScoreData };
+    }
+    function calculateRivalsPodium(history) {
+      const rivalsMap = {};
+      history.forEach((match) => {
+        if (match.opponent_alias && match.opponent_alias !== "Unknown") {
+          rivalsMap[match.opponent_alias] = (rivalsMap[match.opponent_alias] || 0) + 1;
+        }
+      });
+      const sortedRivals = Object.entries(rivalsMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      if (sortedRivals.length === 0) {
+        return { labels: [], data: [], colors: [], realCounts: [] };
+      }
+      const podiumLabels = [];
+      const podiumHeights = [];
+      const podiumRealCounts = [];
+      const podiumColors = [];
+      if (sortedRivals.length >= 2) {
+        podiumLabels.push(sortedRivals[1][0]);
+        podiumHeights.push(2);
+        podiumRealCounts.push(sortedRivals[1][1]);
+        podiumColors.push("rgba(192, 192, 192, 0.8)");
+      }
+      if (sortedRivals.length >= 1) {
+        podiumLabels.push(sortedRivals[0][0]);
+        podiumHeights.push(3);
+        podiumRealCounts.push(sortedRivals[0][1]);
+        podiumColors.push("rgba(255, 215, 0, 0.8)");
+      }
+      if (sortedRivals.length >= 3) {
+        podiumLabels.push(sortedRivals[2][0]);
+        podiumHeights.push(1);
+        podiumRealCounts.push(sortedRivals[2][1]);
+        podiumColors.push("rgba(205, 127, 50, 0.8)");
+      }
+      return { labels: podiumLabels, data: podiumHeights, realCounts: podiumRealCounts, colors: podiumColors };
+    }
+    function renderEvolutionChart(canvas, chartData) {
+      if (!canvas) {
+        return;
+      }
+      if (evolutionChart) {
+        evolutionChart.destroy();
+      }
+      const mainColor = "rgba(59, 130, 246, 1)";
+      const bgColor = "rgba(59, 130, 246, 0.1)";
+      evolutionChart = new Chart(canvas, {
+        type: "line",
         data: {
-          labels: ["Local", "Remote", "Tournament"],
+          labels: chartData.labels,
           datasets: [{
-            data: [distribution.local, distribution.remote, distribution.tournament],
-            backgroundColor: [
-              "rgba(59, 130, 246, 0.8)",
-              "rgba(168, 85, 247, 0.8)",
-              "rgba(249, 115, 22, 0.8)"
-            ],
-            borderWidth: 0,
-            hoverOffset: 4
+            label: "Net Score",
+            data: chartData.data,
+            borderColor: mainColor,
+            backgroundColor: bgColor,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 2,
+            pointHoverRadius: 5
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "right",
-              labels: { boxWidth: 10, font: { size: 10 } }
-            }
-          }
+          plugins: { legend: { display: false } },
+          scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? "#666" : "#eee", lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
         }
       });
     }
-    function generateMockHistory(totalWins, totalLosses) {
-      const days = 10;
-      const labels = [];
-      const winsData = [];
-      const lossesData = [];
-      let currentWins = Math.max(0, totalWins - 5);
-      let currentLosses = Math.max(0, totalLosses - 5);
-      for (let i = 0; i < days; i++) {
-        labels.push(`Day ${i}`);
-        if (i === days - 1) {
-          winsData.push(totalWins);
-          lossesData.push(totalLosses);
-        } else {
-          winsData.push(currentWins);
-          lossesData.push(currentLosses);
-          if (currentWins < totalWins) currentWins += Math.random() > 0.5 ? 1 : 0;
-          if (currentLosses < totalLosses) currentLosses += Math.random() > 0.5 ? 1 : 0;
-        }
+    function renderGameTypeChart(canvas, graph) {
+      if (!canvas) {
+        return;
       }
-      return { labels, wins: winsData, losses: lossesData };
+      if (gameTypeChart) {
+        gameTypeChart.destroy();
+      }
+      const total = graph.local + graph.remote + graph.tournament;
+      const isEmpty = total === 0;
+      gameTypeChart = new Chart(canvas, {
+        type: "pie",
+        data: {
+          labels: isEmpty ? ["No Data"] : ["Local", "Remote", "Tournament"],
+          datasets: [{ data: isEmpty ? [1] : [graph.local, graph.remote, graph.tournament], backgroundColor: isEmpty ? ["#ddd"] : ["#3b82f6", "#a855f7", "#f97316"], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right", labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+    }
+    function renderRivalChart(canvas, data) {
+      if (!canvas) {
+        return;
+      }
+      if (rivalChart) {
+        rivalChart.destroy();
+      }
+      rivalChart = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: data.labels,
+          datasets: [{ label: "Games Played", data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1, categoryPercentage: 1 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Games played: ${data.realCounts[context.dataIndex]}` } } },
+          scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: "bold" }, callback: function(val, index2) {
+            const name = data.labels[index2];
+            const count = data.realCounts[index2];
+            const displayName = name.length > 10 ? name.substr(0, 8) + ".." : name;
+            return [`${displayName}`, `(${count} games)`];
+          } } } }
+        }
+      });
     }
   }
 
@@ -24353,11 +24504,11 @@
       afterRender: afterRender2
     },
     "/dashboard": {
-      render: render7,
+      render: render8,
       afterRender: afterRender4
     },
     "/register": {
-      render: RegisterPage,
+      render: render5,
       afterRender: registerEvents
     },
     "/login": {
@@ -24365,11 +24516,11 @@
       afterRender: loginEvents
     },
     "/guest": {
-      render: render5,
+      render: render6,
       afterRender: afterRender3
     },
     "/game": {
-      render: render6,
+      render: render7,
       // La fonction HTML
       afterRender: () => {
         const state = window.history.state;

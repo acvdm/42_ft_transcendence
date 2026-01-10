@@ -4,7 +4,7 @@ import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/
 import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./pages/ProfilePage"
 import { NotFoundPage } from "./pages/NotFound";
 import { render as LandingPage, initLandingPage } from "./pages/LandingPage";
-import { RegisterPage, registerEvents } from "./pages/RegisterPage";
+import { render as RegisterPage, registerEvents } from "./pages/RegisterPage";
 import { render as GuestPage, afterRender as GuestAfterRender } from "./pages/GuestPage";
 import { applyTheme } from "./pages/ProfilePage";
 import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./pages/GamePage";
