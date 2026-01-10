@@ -1,15 +1,13 @@
-// j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { render as LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
-import { render as HomePage, afterRender as HomePageAfterRender } from "./controllers/HomePage"
-import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./components/ProfilePage"
-import { NotFoundPage } from "./pages/NotFound";
+import { render as LoginPage, loginEvents } from "./controllers/LoginPage"; 
+import { render as HomePage, afterRender as HomePageAfterRender } from "./controllers/HomePage";
+import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./controllers/ProfilePage";
+import { NotFoundPage } from "./pages/NotFound"; // Celui-ci semble correct s'il est resté dans pages/
 import { render as LandingPage, initLandingPage } from "./controllers/LandingPage";
 import { render as RegisterPage, registerEvents } from "./controllers/RegisterPage";
 import { render as GuestPage, afterRender as GuestAfterRender } from "./controllers/GuestPage";
-import { applyTheme } from "./components/ProfilePage";
+import { applyTheme } from "./controllers/ProfilePage";
 import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./controllers/GamePage";
 import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
-
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
 

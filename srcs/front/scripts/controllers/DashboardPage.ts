@@ -1,5 +1,5 @@
 import htmlContent from "../pages/DashboardPage.html";
-import { applyTheme } from "../components/ProfilePage";
+import { applyTheme } from "../controllers/ProfilePage";
 import { fetchWithAuth } from "../services/api";
 import { Chart } from "chart.js/auto";
 

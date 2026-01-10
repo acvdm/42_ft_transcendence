@@ -1,10 +1,10 @@
 import htmlContent from "./ProfilePage.html";
 import { fetchWithAuth } from "../services/api";
-import { parseMessage } from "./ChatUtils";
-import { appThemes } from "./Data";
+import { parseMessage } from "../components/ChatUtils";
+import { appThemes } from "../components/Data";
 import SocketService from "../services/SocketService";
-import { AvatarManager } from "./AvatarManager";
-import { TwoFactorManager } from "./TwoFactorManager";
+import { AvatarManager } from "../components/AvatarManager";
+import { TwoFactorManager } from "../components/TwoFactorManager";
 
 //================================================
 //================== INTERFACES ==================

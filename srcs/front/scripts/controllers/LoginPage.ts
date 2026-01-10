@@ -1,5 +1,5 @@
 import htmlContent from "./LoginPage.html";
-import { fetchWithAuth } from "./api";
+import { fetchWithAuth } from "../services/api";
 import { updateUserStatus } from "../components/Data";
 
 export function render(): string {

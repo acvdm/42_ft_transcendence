@@ -4,7 +4,7 @@ import htmlContentTournament from "./TournamentPage.html";
 import { fetchWithAuth } from "../services/api";
 import { Chat } from "../components/Chat";
 import SocketService from '../services/SocketService';
-import { applyTheme } from "../components/ProfilePage";
+import { applyTheme } from "../controllers/ProfilePage";
 import Game from "../game/Game";
 import { LocalGameManager } from "../components/game/LocalGameManager";
 import { RemoteGameManager } from "../components/game/RemoteGameManager";
