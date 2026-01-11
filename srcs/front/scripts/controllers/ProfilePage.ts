@@ -57,7 +57,7 @@ export function applyTheme(themeKey: string) {
 		navbar.style.background = theme.navColor;
 	}
 
-	const headerIds = ['profile-header', 'home-header'];
+	const headerIds = ['profile-header', 'home-header', 'dashboard-header'];
 	headerIds.forEach(id => {
 		const header = document.getElementById(id);
 		if (header) {
@@ -71,6 +71,7 @@ export function applyTheme(themeKey: string) {
 		body.style.background = theme.bgColor;
 		body.style.backgroundRepeat = "no-repeat";
 		body.style.backgroundAttachment = "fixed"; 
+		body.style.color = theme.textColor;
 	}
 }
 
