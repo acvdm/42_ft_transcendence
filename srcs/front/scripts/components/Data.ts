@@ -27,7 +27,7 @@ export const appThemes: { [key: string]: Theme } = {
     headerUrl: '/assets/headers/bamboo_header.jpg',
     navColor: 'linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)',
     bgColor: 'linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)',
-    textColor: '#1f2937'
+    textColor: '#33691E'
     },
 
     'cherry': {
@@ -35,7 +35,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/blossoms_header.jpg',
         navColor: 'linear-gradient(to bottom, #F48FB1 0%, #EC407A 50%, #C2185B 100%)',
         bgColor: 'linear-gradient(to bottom, #FFBBB4 0%, #ffffff 50%, #FFBBB4 100%)',
-        textColor: '#1f2937'
+        textColor: '#C2185B'
     },
 
     'mountain': {
@@ -43,7 +43,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/dawn_header.png',
         navColor: 'linear-gradient(to bottom, #5C6BC0 0%, #3949AB 50%, #283593 100%)',
         bgColor: 'linear-gradient(to bottom, #6F94BF 0%, #ffffff 50%, #6F94BF 100%)',
-        textColor: '#1f2937'
+        textColor: '#283593'
     },
 
     'punk': {
@@ -51,7 +51,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/punk_header.jpg',
         navColor: 'linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)',
         bgColor: 'linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)',
-        textColor: '#1f2937'
+        textColor: '#340547'
     },
 
     'dotted': {
@@ -59,7 +59,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/dott_header.png',
         navColor: 'linear-gradient(to bottom, #9CCC65 0%, #7CB342 50%, #558B2F 100%)',
         bgColor: 'linear-gradient(to bottom, #8BC72C 0%, #ffffff 50%, #8BC72C 100%)',
-        textColor: '#1f2937'
+        textColor: '#558B2F'
     },
 
     'sunset': {
@@ -67,7 +67,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/field_header.png',
         navColor: 'linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)',
         bgColor: 'linear-gradient(to bottom, #F7A624 0%, #ffffff 50%, #F7A624 100%)',
-        textColor: '#1f2937'
+        textColor: '#E65100'
     },
 
     'football': {
@@ -75,7 +75,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/football_header.png',
         navColor: 'linear-gradient(to bottom, #66BB6A 0%, #43A047 50%, #2E7D32 100%)',
         bgColor: 'linear-gradient(to bottom, #73AD4E 0%, #ffffff 50%, #73AD4E 100%)',
-        textColor: '#1f2937'
+        textColor: '#2E7D32'
     },
 
     'spring': {
@@ -83,7 +83,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/hill_header.png',
         navColor: 'linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)',
         bgColor: 'linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)',
-        textColor: '#1f2937'
+        textColor: '#80C432'
     },
 
     'love': {
@@ -91,14 +91,14 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/love_header.jpg',
         navColor: 'linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)',
         bgColor: 'linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)',
-        textColor: '#1f2937'
+        textColor: '#5A0908'
     },
     'diary': {
         name: 'Dear Diary',
         headerUrl: '/assets/headers/diary_header.jpg',
         navColor: 'linear-gradient(to bottom, #D658A4 0%, #BA3083 50%, #D90082 100%)',
         bgColor: 'linear-gradient(to bottom, #E297B6 0%, #ffffff 50%, #E297B6 100%)',
-        textColor: '#1f2937'
+        textColor: '#D90082'
     },
 
     'branches': {
@@ -106,7 +106,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/silhouette_header.jpg',
         navColor: 'linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)',
         bgColor: 'linear-gradient(to bottom, #F79B34 0%, #ffffff 50%, #F79B34 100%)',
-        textColor: '#1f2937'
+        textColor: '#E65100'
     },
 
     'purple': {
@@ -114,7 +114,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/spring_header.png',
         navColor: 'linear-gradient(to bottom, #9C27B0 0%, #7B1FA2 50%, #6A1B9A 100%)',
         bgColor: 'linear-gradient(to bottom, #663A92 0%, #ffffff 50%, #663A92 100%)',
-        textColor: '#1f2937'
+        textColor: '#6A1B9A'
     },
 
     'abstract': {
@@ -122,7 +122,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/weird_header.jpg',
         navColor: 'linear-gradient(to bottom, #FF6B9D 0%, #FF1744 50%, #D50000 100%)',
         bgColor: 'linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)',
-        textColor: '#1f2937'
+        textColor: '#D50000'
     }
 };
 

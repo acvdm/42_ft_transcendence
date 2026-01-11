@@ -71,8 +71,13 @@ export function applyTheme(themeKey: string) {
 		body.style.background = theme.bgColor;
 		body.style.backgroundRepeat = "no-repeat";
 		body.style.backgroundAttachment = "fixed"; 
-		body.style.color = theme.textColor;
 	}
+
+	const labels = document.querySelectorAll('.theme-label');
+
+    labels.forEach((element) => {
+        (element as HTMLElement).style.color = theme.textColor;
+    });
 }
 
 export function afterRender(): void {
