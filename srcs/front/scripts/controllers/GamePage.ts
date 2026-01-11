@@ -24,14 +24,20 @@ export function isGameRunning(): boolean {
 //============ RETRIEVE PLAYER ALIAS =============
 //================================================
 
+// Dans srcs/front/scripts/controllers/GamePage.ts
+
 export async function getPlayerAlias(): Promise<string> {
-    const cachedAlias = sessionStorage.getItem('cachedAlias');
-    if (cachedAlias) {
-        return cachedAlias;
+
+    const isGuest = sessionStorage.getItem('userRole') === 'guest';
+
+    if (isGuest) {
+        const cachedAlias = sessionStorage.getItem('cachedAlias');
+        if (cachedAlias) {
+            return cachedAlias;
+        }
     }
 
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-    const isGuest = sessionStorage.getItem('userRole') === 'guest';
     
     if (!userId) {
         return "Player";
@@ -42,8 +48,11 @@ export async function getPlayerAlias(): Promise<string> {
         if (response.ok) {
             const userData = await response.json();
             const alias = userData.alias || (isGuest ? "Guest" : "Player");
-            sessionStorage.setItem('cachedAlias', alias);
-            return userData.alias || (isGuest ? "Guest" : "Player");
+            
+            if (isGuest) {
+                sessionStorage.setItem('cachedAlias', alias);
+            }
+            return alias;
         }
     } catch (err) {
         console.error('Cannot fetch player alias:', err);

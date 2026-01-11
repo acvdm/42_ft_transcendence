@@ -133,10 +133,10 @@ export class RemoteGameManager {
             } 
             else 
             {
-                this.currentP1Alias = opponentAlias;
                 if (remoteP1Alias) {
                     opponentAlias = remoteP1Alias;
 				}
+                this.currentP1Alias = opponentAlias;
                 this.currentP2Alias = myAlias;
             }
 

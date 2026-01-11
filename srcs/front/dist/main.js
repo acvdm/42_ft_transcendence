@@ -7842,15 +7842,14 @@
             </div>
 
 
-
-            <div class="window flex flex-col flex-1 min-w-0"> <div class="title-bar">
+            <!-- <div class="window flex flex-col flex-1 min-w-0"> <div class="title-bar">
                     <div class="title-bar-text">Guest Chat</div>
                 </div>
                 <div class="window-body flex flex-col flex-1 bg-white p-2">
                     <div id="chat-messages" class="flex-1 overflow-y-auto mb-2 border border-gray-300 p-2"></div>
                     <input type="text" id="chat-input" placeholder="Say hello..." class="w-full border p-1">
                     </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </div>`;
@@ -9023,10 +9022,10 @@
           }
           this.currentP2Alias = opponentAlias;
         } else {
-          this.currentP1Alias = opponentAlias;
           if (remoteP1Alias) {
             opponentAlias = remoteP1Alias;
           }
+          this.currentP1Alias = opponentAlias;
           this.currentP2Alias = myAlias;
         }
         const p1Display = document.getElementById("player-1-name");
@@ -9660,12 +9659,14 @@
     return activeGame !== null && activeGame.isRunning;
   }
   async function getPlayerAlias() {
-    const cachedAlias = sessionStorage.getItem("cachedAlias");
-    if (cachedAlias) {
-      return cachedAlias;
+    const isGuest = sessionStorage.getItem("userRole") === "guest";
+    if (isGuest) {
+      const cachedAlias = sessionStorage.getItem("cachedAlias");
+      if (cachedAlias) {
+        return cachedAlias;
+      }
     }
     const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
-    const isGuest = sessionStorage.getItem("userRole") === "guest";
     if (!userId) {
       return "Player";
     }
@@ -9674,8 +9675,10 @@
       if (response.ok) {
         const userData = await response.json();
         const alias2 = userData.alias || (isGuest ? "Guest" : "Player");
-        sessionStorage.setItem("cachedAlias", alias2);
-        return userData.alias || (isGuest ? "Guest" : "Player");
+        if (isGuest) {
+          sessionStorage.setItem("cachedAlias", alias2);
+        }
+        return alias2;
       }
     } catch (err) {
       console.error("Cannot fetch player alias:", err);
