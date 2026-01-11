@@ -30,6 +30,8 @@ let evolutionChart: Chart | null = null;
 let gameTypeChart: Chart | null = null;
 let rivalChart: Chart | null = null;
 let globalMatchHistory: MatchHistoryElement[] = []
+let currentPage = 1;
+const itemsPerPage = 10;
 
 export function render(): string { return htmlContent; }
 
@@ -46,13 +48,13 @@ export function afterRender(): void {
 	// Canvas
 	const evolutionCanvas = document.getElementById('dashboard-evolution-graph') as HTMLCanvasElement;
 	const gameTypeCanvas = document.getElementById('dashboard-game-chart') as HTMLCanvasElement;
-    const rivalCanvas = document.getElementById('dashboard-rival-podium') as HTMLCanvasElement;
+	const rivalCanvas = document.getElementById('dashboard-rival-podium') as HTMLCanvasElement;
 	
 	// Match analysis
 	const filterOpponent = document.getElementById('filter-opponent') as HTMLInputElement;
-    const filterMode = document.getElementById('filter-mode') as HTMLSelectElement;
-    const sortOrder = document.getElementById('sort-order') as HTMLSelectElement;
-    const applyFilterButton = document.getElementById('apply-filters');
+	const filterMode = document.getElementById('filter-mode') as HTMLSelectElement;
+	const sortOrder = document.getElementById('sort-order') as HTMLSelectElement;
+	const applyFilterButton = document.getElementById('apply-filters');
 
 	// Current theme for header
 	const currentTheme = localStorage.getItem('userTheme') || 'basic';
@@ -83,18 +85,18 @@ export function afterRender(): void {
 					if (wins) wins.innerText = statsData.wins.toString();
 					if (losses) losses.innerText = statsData.losses.toString();
 					if (avgScore) avgScore.innerText = statsData.averageScore?.toString() || "0";
-                    if (winRateCalcul && statsData.total_games > 0) {
+					if (winRateCalcul && statsData.total_games > 0) {
 						winRateCalcul.innerText = `${Math.round((statsData.wins / statsData.total_games) * 100)}%`;
 					}
-                    if (playTime) {
-                        const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
-                        playTime.innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min`;
-                    }
+					if (playTime) {
+						const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
+						playTime.innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min`;
+					}
 				}
 			}
 
 			// Match analysis
-			const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&LIMIT=250`); // Est-ce qu'on augmente la limite?
+			const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`); // Est-ce qu'on augmente la limite?
 			if (historyResponse.ok) {
 				const historyJson = await historyResponse.json();
 				const historyData: MatchHistoryElement[] = historyJson.data || [];
@@ -122,7 +124,13 @@ export function afterRender(): void {
 
 	function setupFilters() {
 		
-		if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder) {
+		const prevButton = document.getElementById('prev-page') as HTMLButtonElement;
+		const nextButton = document.getElementById('next-page') as HTMLButtonElement;
+		const pageInfo = document.getElementById('page-info');
+
+		let totalPages = 1;
+
+		if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
 			return;
 		}
 
@@ -161,21 +169,71 @@ export function afterRender(): void {
 				}
 			});
 
+			// Pagination
+			totalPages = Math.ceil(resultData.length / itemsPerPage) || 1;
+
+			if (currentPage > totalPages) {
+				currentPage = totalPages;
+			}
+			if (currentPage < 1) {
+				currentPage = 1;
+			}
+
+			const start = (currentPage - 1) * itemsPerPage;
+			const end = start + itemsPerPage;
+			const paginatedData = resultData.slice(start, end);
+
 			// Showing sorted list updated
-			renderMatchHistoryList(resultData);
+			renderMatchHistoryList(paginatedData);
+
+			if (pageInfo) {
+				pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+			}
+			if (prevButton) {
+				prevButton.disabled = currentPage === 1;
+				prevButton.classList.toggle('opacity-50', currentPage === 1); // Ajout visuel
+				prevButton.classList.toggle('cursor-not-allowed', currentPage === 1);
+			}
+			if (nextButton) {
+				nextButton.disabled = currentPage === totalPages;
+				nextButton.classList.toggle('opacity-50', currentPage === totalPages);
+				nextButton.classList.toggle('cursor-not-allowed', currentPage === totalPages);
+			}
+		};
+
+		// Reset at page 1
+		const resetPageAndApply = () => {
+			currentPage = 1;
+			applyFiltersAndSort();
 		};
 
 		// Listening events
-		applyFilterButton.addEventListener('click', applyFiltersAndSort);
+		applyFilterButton.addEventListener('click', resetPageAndApply);
 		filterOpponent.addEventListener('keyup', (e) => {
 			if (e.key === 'Enter') {
-				applyFiltersAndSort();
+				resetPageAndApply();
 			}
 		});
 
 		// Immediat filter/sort
-		filterMode.addEventListener('change', applyFiltersAndSort);
-		sortOrder.addEventListener('changer', applyFiltersAndSort);
+		filterMode.addEventListener('change', resetPageAndApply);
+		sortOrder.addEventListener('change', resetPageAndApply);
+
+		// Previous button
+		prevButton.addEventListener('click', () => {
+			if (currentPage > 1) {
+				currentPage--;
+				applyFiltersAndSort();
+			}
+		});
+
+		// Next button
+		nextButton.addEventListener('click', () => {
+			if (currentPage < totalPages) {
+				currentPage++;
+				applyFiltersAndSort();
+			}
+		});
 
 		// Default list
 		applyFiltersAndSort();
@@ -215,13 +273,13 @@ export function afterRender(): void {
 			row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
 
 			row.innerHTML = `
-                <td class="py-2 text-gray-500">${dateString}</td>
-                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${match.opponent_alias}">${match.opponent_alias || 'Unknown'}</td>
-                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-                <td class="py-2 font-mono text-gray-500 capitalize">${match.game_type || 'Local'}</td>
-                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
-            `;
+				<td class="py-2 text-gray-500">${dateString}</td>
+				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${match.opponent_alias}">${match.opponent_alias || 'Unknown'}</td>
+				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+				<td class="py-2 font-mono text-gray-500 capitalize">${match.game_type || 'Local'}</td>
+				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
+			`;
 
 			listContainer.appendChild(row);
 		});
@@ -270,8 +328,8 @@ export function afterRender(): void {
 
 		sorted.forEach(match => {
 			const date = new Date(match.finished_at);
-            const dateLabel = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            
+			const dateLabel = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+			
 			if (match.is_winner === 1) {
 				currentNetScore++;
 			} else {
@@ -305,15 +363,15 @@ export function afterRender(): void {
 		}
 
 		const podiumLabels = []; const podiumHeights = []; const podiumRealCounts = []; const podiumColors = [];
-        if (sortedRivals.length >= 2) {
-            podiumLabels.push(sortedRivals[1][0]); podiumHeights.push(2); podiumRealCounts.push(sortedRivals[1][1]); podiumColors.push('rgba(192, 192, 192, 0.8)');
-        }
-        if (sortedRivals.length >= 1) {
-            podiumLabels.push(sortedRivals[0][0]); podiumHeights.push(3); podiumRealCounts.push(sortedRivals[0][1]); podiumColors.push('rgba(255, 215, 0, 0.8)');
-        }
-        if (sortedRivals.length >= 3) {
-            podiumLabels.push(sortedRivals[2][0]); podiumHeights.push(1); podiumRealCounts.push(sortedRivals[2][1]); podiumColors.push('rgba(205, 127, 50, 0.8)');
-        }
+		if (sortedRivals.length >= 2) {
+			podiumLabels.push(sortedRivals[1][0]); podiumHeights.push(2); podiumRealCounts.push(sortedRivals[1][1]); podiumColors.push('rgba(192, 192, 192, 0.8)');
+		}
+		if (sortedRivals.length >= 1) {
+			podiumLabels.push(sortedRivals[0][0]); podiumHeights.push(3); podiumRealCounts.push(sortedRivals[0][1]); podiumColors.push('rgba(255, 215, 0, 0.8)');
+		}
+		if (sortedRivals.length >= 3) {
+			podiumLabels.push(sortedRivals[2][0]); podiumHeights.push(1); podiumRealCounts.push(sortedRivals[2][1]); podiumColors.push('rgba(205, 127, 50, 0.8)');
+		}
 		return { labels: podiumLabels, data: podiumHeights, realCounts: podiumRealCounts, colors: podiumColors };
 	}
 
@@ -390,14 +448,14 @@ export function afterRender(): void {
 
 		rivalChart = new Chart(canvas, {
 			type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{ label: 'Games Played', data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1.0, categoryPercentage: 1.0 }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Games played: ${data.realCounts[context.dataIndex]}` } } },
-                scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, callback: function(val, index) { const name = data.labels[index]; const count = data.realCounts[index]; const displayName = name.length > 10 ? name.substr(0, 8) + '..' : name; return [`${displayName}`, `(${count} games)`]; } } } }
-            }
+			data: {
+				labels: data.labels,
+				datasets: [{ label: 'Games Played', data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1.0, categoryPercentage: 1.0 }]
+			},
+			options: {
+				responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Games played: ${data.realCounts[context.dataIndex]}` } } },
+				scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, callback: function(val, index) { const name = data.labels[index]; const count = data.realCounts[index]; const displayName = name.length > 10 ? name.substr(0, 8) + '..' : name; return [`${displayName}`, `(${count} games)`]; } } } }
+			}
 		});
 	}
 }
