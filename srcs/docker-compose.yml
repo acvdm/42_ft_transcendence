@@ -66,9 +66,9 @@ services:
       dns:
         - 8.8.8.8
         - 1.1.1.1
-      volumes:
-        # - auth_data:/app/data
-        - ./back/datadev:/app/data
+      # volumes:
+      # - auth_data:/app/data
+      #   - ./back/datadev:/app/data
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/auth.sqlite", "SELECT 1;"]
         interval: 2s
@@ -85,9 +85,9 @@ services:
         - DATABASE_URL=/app/data/chat.sqlite
       networks: 
         - backend
-      volumes:
+      # volumes:
         # - chat_data:/app/data
-        - ./back/datadev:/app/data
+        # - ./back/datadev:/app/data
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/chat.sqlite", "SELECT 1;"]
         interval: 2s
@@ -104,9 +104,9 @@ services:
         - DATABASE_URL=/app/data/game.sqlite
       networks:
         - backend
-      volumes:
-        # - game_data:/app/data
-        - ./back/datadev:/app/data
+      # volumes:
+      #   # - game_data:/app/data
+      #   - ./back/datadev:/app/data
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/game.sqlite", "SELECT 1;"]
         interval: 2s
@@ -123,10 +123,10 @@ services:
         - DATABASE_URL=/app/data/user.sqlite
       networks: 
         - backend
-      volumes:
+      # volumes:
         # - user_data:/app/data
         # - user_avatars:/app/user/avatars
-        - ./back/datadev:/app/data
+        # - ./back/datadev:/app/data
       healthcheck:
         test: ["CMD", "sqlite3", "/app/data/user.sqlite", "SELECT 1;"]
         interval: 2s
@@ -141,10 +141,10 @@ networks:
     driver: bridge
     # internal: true
 
-volumes:
+# volumes:
   # user_avatars:
   # auth_data:
   # chat_data:
   # user_data:
   # game_data:
-  datadev:
+  # datadev:
