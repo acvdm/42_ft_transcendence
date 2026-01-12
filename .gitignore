@@ -7,5 +7,7 @@ zdata.old/
 
 datadev/
 
+.gitignore
+
 certificate.crt 
 private_key.key
