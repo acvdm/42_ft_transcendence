@@ -245,19 +245,19 @@ export class Chat {
             //on store le private id dans session storage pour qu'il soit pas garde quand on rejoins une autre roo,
             msgElement.innerHTML = `
                 <div class="flex flex-col gap-2">
-                    <strong>${author}</strong> veut jouer à Pong ! 🏓<br>
+                    <strong>${author}</strong> want to play Pong with you ! <br>
+
                     <button 
-                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
-                        onclick="
-                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
-                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                        "
+                        id="join-${friendshipId}"
+                        class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
                     >
                         ${isMe ? 'Join my waitroom' : 'Accept the match'}
                     </button>
                 </div>
             `;
+
         } else {
             // pour envoyer un message normal
             msgElement.classList.add('bg-white'); // ou transparent a tester

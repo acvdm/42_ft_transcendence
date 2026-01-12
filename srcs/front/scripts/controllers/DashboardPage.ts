@@ -401,7 +401,7 @@ export function afterRender(): void {
 			},
 			options: {
 				responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-				scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? '#666' : '#eee', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
+				scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, callback: (value) => Number(value).toString() }, display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? '#666' : '#eee', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
 			}
 		});
 	}

@@ -113,28 +113,15 @@ export class RemoteGameManager {
 
 
         const startGameFromData = async (data: any, p1Alias?: string, p2Alias?: string) => {
-            console.log("startGameFromData");
 
-            // 1. Nettoyage des sockets
             const gameSocket = SocketService.getInstance().getGameSocket();
             if (gameSocket)
             {
-                console.log("Nettoyage préventif des écouteurs sockets");
                 gameSocket.off('gameState');
                 gameSocket.off('gameEnded');
                 gameSocket.off('opponentLeft');
             }
 
-            // 2. Nettoyage de l'ancienne instance de jeu
-            if (this.context.getGame())
-            {
-                console.log("🛑 Arrêt de l'ancien jeu");
-                this.context.getGame()!.stop(); // Appelle stop() qui doit mettre isRunning = false
-                this.context.getGame()!.onScoreChange = undefined; // On coupe le lien avec l'UI
-                this.context.setGame(null);
-            }
-
-            // 1. AJOUT : Réinitialisation immédiate du score visuel
             const scoreBoard = document.getElementById('score-board');
             if (scoreBoard) {
                 scoreBoard.innerText = "0 - 0";
@@ -143,6 +130,27 @@ export class RemoteGameManager {
             const myAlias = await getPlayerAlias();
             const myId = Number(localStorage.getItem('userId'));
             let opponentId = data.opponent ? Number(data.opponent) : null;
+
+            if (opponentId && myId === opponentId) {
+                console.error("Error: cannot play against yourself");
+                if (status) {
+                    status.innerText = "You cannot play against yourself";
+                    status.style.color = "red";
+                }
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "PLAY (QUEUE)";
+                }
+
+                const socket = SocketService.getInstance().getGameSocket();
+                if (socket) {
+                    socket.emit('leaveQueue');
+                }
+                return ;
+            }
+
+
             const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
             const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
             let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
