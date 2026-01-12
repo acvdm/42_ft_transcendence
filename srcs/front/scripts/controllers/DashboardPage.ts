@@ -31,7 +31,7 @@ let gameTypeChart: Chart | null = null;
 let rivalChart: Chart | null = null;
 let globalMatchHistory: MatchHistoryElement[] = []
 let currentPage = 1;
-const itemsPerPage = 10;
+const itemsPerPage = 20;
 
 export function render(): string { return htmlContent; }
 

@@ -3650,7 +3650,7 @@
       headerUrl: "/assets/basic/background.jpg",
       navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
       bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)",
-      textColor: "#1f2937"
+      textColor: "#3E73B0"
     },
     "bamboo": {
       name: "Zen Bamboo",
@@ -3678,7 +3678,7 @@
       headerUrl: "/assets/headers/punk_header.jpg",
       navColor: "linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)",
       bgColor: "linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)",
-      textColor: "#340547"
+      textColor: "#631C6E"
     },
     "dotted": {
       name: "Spring Dots",
@@ -3706,14 +3706,14 @@
       headerUrl: "/assets/headers/hill_header.png",
       navColor: "linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)",
       bgColor: "linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)",
-      textColor: "#80C432"
+      textColor: "#6CB85A"
     },
     "love": {
       name: "Lovely Heart",
       headerUrl: "/assets/headers/love_header.jpg",
       navColor: "linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)",
       bgColor: "linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)",
-      textColor: "#5A0908"
+      textColor: "#7E2223"
     },
     "diary": {
       name: "Dear Diary",
@@ -5503,11 +5503,11 @@
         const imgUrl = animations[animationKey];
         if (imgUrl) {
           const animationHTML = `
-                    <div>
-                        <strong>${author} said:</strong><br>
-                        <img src="${imgUrl}" alt="${animationKey}">
-                    </div>
-                `;
+					<div>
+						<strong>${author} said:</strong><br>
+						<img src="${imgUrl}" alt="${animationKey}">
+					</div>
+				`;
           this.addCustomContent(animationHTML);
         } else {
           this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
@@ -5611,19 +5611,19 @@
         const isMe = author === localStorage.getItem("username");
         msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
         msgElement.innerHTML = `
-                <div class="flex flex-col gap-2">
-                    <strong>${author}</strong> want to play Pong with you ! <br>
+				<div class="flex flex-col gap-2">
+					<strong>${author}</strong> want to play Pong with you ! <br>
 
-                    <button 
-                        id="join-${friendshipId}"
-                        class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
-                    >
-                        ${isMe ? "Join my waitroom" : "Accept the match"}
-                    </button>
-                </div>
-            `;
+					<button 
+						id="join-${friendshipId}"
+						class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+							px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+							active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
+					>
+						${isMe ? "Join my waitroom" : "Accept the match"}
+					</button>
+				</div>
+			`;
       } else {
         msgElement.classList.add("bg-white");
         const contentEmoticons = parseMessage(message);
@@ -5925,14 +5925,14 @@
       this.messageInput.focus();
     }
     destroy() {
-      if (this.socket) {
-        this.socket.off("connect");
-        this.socket.off("chatMessage");
-        this.socket.off("msg_history");
-        this.socket.off("receivedWizz");
-        this.socket.off("receivedAnimation");
-        this.socket.off("systemMessage");
-        this.socket.off("disconnected");
+      if (this.chatSocket) {
+        this.chatSocket.off("connect");
+        this.chatSocket.off("chatMessage");
+        this.chatSocket.off("msg_history");
+        this.chatSocket.off("receivedWizz");
+        this.chatSocket.off("receivedAnimation");
+        this.chatSocket.off("systemMessage");
+        this.chatSocket.off("disconnected");
       }
     }
   };
@@ -9119,6 +9119,16 @@
             const newGame = new Game_default(canvas, ctx, input, selectedBallSkin);
             newGame.resetScore();
             this.context.setGame(newGame);
+            const spaceHandler = (e) => {
+              if (e.code === "Space") {
+                const game = this.context.getGame();
+                if (game && game.isRunning) {
+                  e.preventDefault();
+                  this.context.chat?.emitWizzOnly();
+                }
+              }
+            };
+            document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
               const activeGame2 = this.context.getGame();
@@ -9127,6 +9137,7 @@
                 activeGame2.stop();
                 gameSocket2.off("gameState");
                 gameSocket2.off("gameEnded");
+                document.removeEventListener("keydown", spaceHandler);
                 const s1 = activeGame2.score.player1;
                 const s2 = activeGame2.score.player2;
                 let winnerAlias = "";
@@ -9150,6 +9161,7 @@
               }
             });
             newGame.onGameEnd = async (endData) => {
+              document.removeEventListener("keydown", spaceHandler);
               let winnerAlias = "Winner";
               if (endData.winner === "player1") {
                 winnerAlias = this.currentP1Alias;
@@ -24396,7 +24408,7 @@
   var rivalChart = null;
   var globalMatchHistory = [];
   var currentPage = 1;
-  var itemsPerPage = 10;
+  var itemsPerPage = 20;
   function render8() {
     return DashboardPage_default;
   }

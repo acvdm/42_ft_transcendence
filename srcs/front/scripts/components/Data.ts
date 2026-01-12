@@ -20,7 +20,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/basic/background.jpg',
         navColor: 'linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)',
         bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)',
-        textColor: '#1f2937'
+        textColor: '#3E73B0'
     },
     'bamboo': {
     name: 'Zen Bamboo',
@@ -51,7 +51,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/punk_header.jpg',
         navColor: 'linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)',
         bgColor: 'linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)',
-        textColor: '#340547'
+        textColor: '#631C6E'
     },
 
     'dotted': {
@@ -83,7 +83,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/hill_header.png',
         navColor: 'linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)',
         bgColor: 'linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)',
-        textColor: '#80C432'
+        textColor: '#6CB85A'
     },
 
     'love': {
@@ -91,7 +91,7 @@ export const appThemes: { [key: string]: Theme } = {
         headerUrl: '/assets/headers/love_header.jpg',
         navColor: 'linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)',
         bgColor: 'linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)',
-        textColor: '#5A0908'
+        textColor: '#7E2223'
     },
     'diary': {
         name: 'Dear Diary',
