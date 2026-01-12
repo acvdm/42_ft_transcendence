@@ -14,6 +14,7 @@ interface GameState {
     canvasWidth: number;
     canvasHeight: number;
     intervalId?: NodeJS.Timeout;
+    startAt: number;
     serveDirection: number; // 1 pour droite -1 pour gauche
 }
 
@@ -22,6 +23,7 @@ const activeGames = new Map<string, GameState>();
 const GAMESPEED = 1000 / 60; // 60 FPS
 
 export function initGameState(roomId: string, p1: string, p2: string): GameState {
+    console.log("initRemotGameState");
     return {
         roomId,
         player1Id: p1,
@@ -32,6 +34,7 @@ export function initGameState(roomId: string, p1: string, p2: string): GameState
         paddle1: { x: 30, y: 250, width: 10, height: 100 },
         paddle2: { x: 760, y: 250, width: 10, height: 100 },
         score: { player1: 0, player2: 0 },
+        startAt: Date.now() + 3500,
         serveDirection: 1
     };
 }
@@ -49,6 +52,7 @@ function resetBall(game: GameState) {
 }
 
 function stopGame(roomId: string, io: Server) {
+    console.log("stop game");
     const game = activeGames.get(roomId);
     if (game) {
         if (game.intervalId) clearInterval(game.intervalId);
@@ -57,10 +61,27 @@ function stopGame(roomId: string, io: Server) {
         if (game.score.player1 > game.score.player2) winnerRole = 'player1';
         if (game.score.player2 > game.score.player1) winnerRole = 'player2';
         io.to(roomId).emit('gameEnded', { finalScore: game.score, winner: winnerRole });
+        
+        
         activeGames.delete(roomId);
+        console.log(`Game ${roomId} stopped and cleaned`);
     }
 }
 export function updateGamePhysics(game: GameState, io: Server) {
+    // Gestion du délai de démarrage (countdown)
+    if (game.startAt && Date.now() < game.startAt) {
+        io.to(game.roomId).emit('gameState', {
+            ball: game.ball,
+            paddle1: game.paddle1,
+            paddle2: game.paddle2,
+            score: game.score,
+            waiting: true // Petit indicateur optionnel
+        });
+
+        return ;
+    }
+
+
     // 1. On sauvegarde la position AVANT mouvement pour la comparaison
     const prevX = game.ball.x;
     const prevY = game.ball.y;

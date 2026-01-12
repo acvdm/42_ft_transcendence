@@ -1,6 +1,6 @@
 import SocketService from "../services/SocketService";
 import { getStatusDot, statusImages } from "./Data";
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { Friendship } from '../../../back/user/src/repositories/friendships';
 
 export class FriendList {
