@@ -10,6 +10,10 @@ import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfi
 import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
 import SocketService from "./services/SocketService";
 
+/* translations */
+import { initI18n } from "./i18n";
+import i18next from "./i18n";
+
 const appElement = document.getElementById('app');
 
 interface Page {
@@ -158,36 +162,101 @@ const handleLocationChange = () => {
 	/////////////// NAVBAR 
 
     const navbar = document.getElementById('main-navbar');
+	const currentLang = i18next.language; // on recupere la langue actuelle
     
     // nouvelle définition des menus
-    const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline">Home</a>
-        <a href="/profile" class="text-white hover:underline">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
-    `;
+    // const userMenuHtml = `
+    //     <a href="/home" class="text-white hover:underline">Home</a>
+    //     <a href="/profile" class="text-white hover:underline">Profile</a>
+    //     <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+    //     <a href="/logout" class="text-white hover:underline">Log out</a>
+    // `;
 
+    // const guestMenuHtml = `
+    //     <a href="/guest" class="text-white hover:underline">Guest Area</a>
+    //     <a href="/logout" class="text-white hover:underline">Log out</a>
+    // `;
+
+	const userMenuHtml = `
+        <a href="/home" class="text-white hover:underline">${i18next.t('nav.home')}</a>
+        <a href="/profile" class="text-white hover:underline">${i18next.t('nav.profile')}</a>
+        <a href="/dashboard" class="text-white hover:underline">${i18next.t('nav.dashboard')}</a>
+        <a href="/logout" class="text-white hover:underline">${i18next.t('nav.logout')}</a>
+
+		<div id="language-switcher" class="flex gap-2 items-center ml-4">
+		<button data-lang="en" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">EN</button>
+		<button data-lang="fr" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">FR</button>
+		<button data-lang="es" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">ES</button>
+		</div>
+    `;
+	
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/guest" class="text-white hover:underline">${i18next.t('nav.guest_area')}</a>
+        <a href="/logout" class="text-white hover:underline">${i18next.t('nav.logout')}</a>
     `;
 
     if (navbar) {
+		// on recupere letat actuel de la navBar
+		const activeMenu = navbar.getAttribute('data-menu');
+		const activeLang = navbar.getAttribute('data-lang');
+
+		console.log("🔍 Navbar trouvée");
+    	console.log("🔍 accessToken:", accessToken ? "OUI" : "NON");
+    	console.log("🔍 isGuest:", isGuest);
+    	console.log("🔍 activeMenu:", activeMenu);
+    	console.log("🔍 activeLang:", activeLang);
+    	console.log("🔍 currentLang:", currentLang);
+
         if (isGuest) {
             navbar.style.display = 'flex'; // pour le guest on affiche quand meme la navbar personnalisée
-            if (!navbar.innerHTML.includes('Guest Area')) { // si ce n'est pas le guest on l'affiche pour eviter de reecrire a chaque fois
-                navbar.innerHTML = guestMenuHtml;
+            // MODIFICATION POUR LA TRAD -> TEXTE EN BRUT ENLEVE
+            if (activeMenu !== 'guest' || activeLang !== currentLang) {    
+				navbar.innerHTML = guestMenuHtml;
+
+				// on met a jour l'etat
+				navbar.setAttribute('data-menu', 'guest');
+				navbar.setAttribute('data-lang', currentLang);
             }
         } 
         else if (accessToken) {
             navbar.style.display = 'flex'; // navbar pour le user
 			navbar.classList.add('justify-between');
-            if (!navbar.innerHTML.includes('Dashboard')) { // 
+
+            // MODIFICATION POUR LA TRAD -> TEXTE EN BRUT ENLEVE
+            if (activeMenu !== 'user' || activeLang !== currentLang) { // 
                 navbar.innerHTML = userMenuHtml;
-            }
+
+				// on met a jour l'etat
+				navbar.setAttribute('data-menu', 'user');
+				navbar.setAttribute('data-lang', currentLang);
+			}
+
+			// ecouteurs d'evenements
+			const langButtons = document.querySelectorAll('.lang-btn');
+			langButtons.forEach(btn => {
+				// retirer les anciens listener avant dajouter
+				// const newBtn = btn.cloneNode(true) as HTMLElement;
+				// btn.parentNode?.replaceChild(newBtn, btn);
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					const target = e.currentTarget as HTMLElement;
+					const lang = target.getAttribute('data-lang');
+					
+					if (lang && lang !== currentLang) {
+						console.log(`Changement de langue vers: ${lang}`);
+						localStorage.setItem('preferedLanguage', lang);
+						i18next.changeLanguage(lang);
+					}
+				});
+			});
+
         } 
         else {
             navbar.style.display = 'none'; // si pas connecte2 --> on cache tout
+			// on met a jour l'etat
+			navbar.removeAttribute('data-menu');
+			navbar.removeAttribute('data-lang');
         }
     }
 	
