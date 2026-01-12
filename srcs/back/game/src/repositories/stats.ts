@@ -90,6 +90,7 @@ export async function getUserMatchHistory(
         pm.opponent as opponent_alias,
         m.game_type,
         m.finished_at,
+        m.total_duration_in_minutes,
         m.match_id,
         t.name as tournament_name
     FROM PLAYER_MATCH pm
