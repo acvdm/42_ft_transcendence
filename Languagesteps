@@ -31,3 +31,4 @@ Persistance et experience utilisateur
 - Formatage Dates/Heures
 
 **** utilisation de librairies externes : i18n-next, FormatJS (pour Javascript) ??
+i18n -> internationalization framework pour le javascript

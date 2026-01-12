@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "profile": "Profil",
+    "dashboard": "Tableau de bord",
+    "logout": "Déconnexion",
+    "guest_area": "Espace invité"
+  },
+  "profile": {
+    "title": "Profil",
+    "username": "Nom d'utilisateur",
+    "bio": "Partagez un message rapide",
+    "status": {
+      "available": "Disponible",
+      "busy": "Occupé",
+      "away": "Absent",
+      "invisible": "Hors ligne"
+    }
+  },
+  "games": {
+    "title": "Jeux",
+    "choose_mode": "CHOISISSEZ VOTRE MODE DE JEU",
+    "local": "JEU LOCAL",
+    "remote": "JEU EN LIGNE",
+    "tournament": "TOURNOI"
+  },
+  "chat": {
+    "title": "Messagerie",
+    "friends": "MES AMIS",
+    "add_friend": "Ajouter un ami",
+    "send_request": "Send request",
+    "cancel": "Cancel",
+    "contact": "⭐ Contacts",
+    "placeholder": "Sélectionnez un ami pour commencer à discuter",
+    "input_placeholder": "Écrire un message...",
+    "view_profile": "Voir le profil",
+    "invite_game": "Inviter à jouer",
+    "block_user": "Bloquer l'utilisateur"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "no_notification": "Aucune notification"
+  },
+  "modal": {
+    "user_profile": "User Profile",
+    "statistics": "Statistics",
+    "games_played": "Games Played:",
+    "wins": "Wins:",
+    "losses": "Losses:",
+    "winning_streak": "Winning streak:",
+    "close": "Close",
+    "change_picture": "Change Picture",
+    "select_picture": "Select a picture",
+    "picture_description": "Choose how you want to appear on transcendence.",
+    "browse": "BROWSE",
+    "delete": "DELETE",
+    "ok": "OK",
+    "cancel": "CANCEL"
+  }
+}

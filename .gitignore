@@ -9,3 +9,5 @@ datadev/
 
 certificate.crt 
 private_key.key
+
+.gitignore
