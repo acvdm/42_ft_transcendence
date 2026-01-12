@@ -142,11 +142,7 @@ export class RemoteGameManager {
 
             const p1Display = document.getElementById('player-1-name');
             const p2Display = document.getElementById('player-2-name');
-            const scoreBoard = document.getElementById('score-board');
 
-            if (scoreBoard) {
-                scoreBoard.innerText = "0 - 0";
-            }
             if (p1Display && p2Display) 
             {
                 p1Display.innerText = (data.role === 'player1') ? `${this.currentP1Alias} (Me)` : this.currentP1Alias;
@@ -317,12 +313,6 @@ export class RemoteGameManager {
                 if (!gameSocket) {
                     alert("Error: lost connexion to game server");
                     return;
-                }
-
-                const scoreBoard = document.getElementById('score-board');
-
-                if (scoreBoard) {
-                    scoreBoard.innerText = "0 - 0";
                 }
 
                 newBtn.disabled = true;
