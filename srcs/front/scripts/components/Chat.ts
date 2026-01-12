@@ -139,8 +139,8 @@ export class Chat {
 			if (event.key == 'Enter' && this.messageInput?.value.trim() != '') {
 				
 				const msg_content = this.messageInput.value;
-				const sender_alias = localStorage.getItem('username');
-				const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+				const sender_alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || "Guest";
+				const sender_id = Number.parseInt(localStorage.getItem('userId') || sessionStorage.getItem('userId') || "0");
 				
 				this.chatSocket.emit("chatMessage", {
 					sender_id: sender_id,
@@ -238,7 +238,8 @@ export class Chat {
 		if (match) {
 			// invitation
 			const friendshipId = match[1];
-			const isMe = author === localStorage.getItem('username');
+			const myUsername = localStorage.getItem('username') || sessionStorage.getItem('username') || "Guest";
+			const isMe = author === myUsername;
 			
 			// style different selon qui invite
 			msgElement.classList.add(isMe ? 'bg-blue-100' : 'bg-green-100');
@@ -509,8 +510,8 @@ export class Chat {
 
 				if (this.currentFriendId && this.currentFriendshipId) // on check aussi que le friendship id est pas nul
 				{
-					const myName = localStorage.getItem('username');
-					const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+					const myName = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
+					const sender_id = Number.parseInt(localStorage.getItem('userId') || sessionStorage.getItem('userId') || "0");
 			
 
 					if (this.chatSocket && this.chatSocket.connected) {
@@ -549,7 +550,7 @@ export class Chat {
 				const currentChatUser = document.getElementById('chat-header-username')?.textContent;
 				if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
 					try {
-						const userId = localStorage.getItem('userId');
+						const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
 						const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
 							method: 'PATCH',
 							body: JSON.stringify({ status: 'blocked' })

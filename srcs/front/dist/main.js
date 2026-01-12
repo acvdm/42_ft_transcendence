@@ -53,6 +53,10 @@
 			<div class="flex flex-col gap-2 w-48">
 				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
 			</div>
+
+			<div>
+				<button id="back-button" class="text-sm" style="color: grey;">Back to landing page</button>
+			</div>
 	</div>
 
 
@@ -3574,7 +3578,7 @@
     // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
     // Méthode privée pour ne pas dupliquer le code de config
     createSocketConnection(path) {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
         return null;
@@ -5527,8 +5531,8 @@
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
-          const sender_alias = localStorage.getItem("username");
-          const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+          const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+          const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
           this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
@@ -5608,7 +5612,8 @@
       const match = message.match(inviteRegex);
       if (match) {
         const friendshipId = match[1];
-        const isMe = author === localStorage.getItem("username");
+        const myUsername = localStorage.getItem("username") || sessionStorage.getItem("username") || "Guest";
+        const isMe = author === myUsername;
         msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
         msgElement.innerHTML = `
 				<div class="flex flex-col gap-2">
@@ -5819,8 +5824,8 @@
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
           if (this.currentFriendId && this.currentFriendshipId) {
-            const myName = localStorage.getItem("username");
-            const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+            const myName = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
             if (this.chatSocket && this.chatSocket.connected) {
               console.log("chatSocket connected");
               const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
@@ -5851,7 +5856,7 @@
           const currentChatUser = document.getElementById("chat-header-username")?.textContent;
           if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
             try {
-              const userId = localStorage.getItem("userId");
+              const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
               const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: "blocked" })
@@ -7694,6 +7699,10 @@
 			<div class="flex flex-col gap-2 w-48">
 				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
 			</div>
+
+			<div>
+				<button id="back-button" class="text-sm text-gray-400" style="color: grey;">Back to landing page</button>
+			</div>
 	</div>
 </div>`;
 
@@ -8056,52 +8065,6 @@
 								
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<p>Chat room</p>
-								<div class="relative self-start mt-2">
-									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
-									</button>
-	
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-		
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-													<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												View profile
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												Invite to play
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												Block user
-											</button>
-										</div>
-	
-									</div>
-	
-								</div>
 							</div>
 	
 							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
@@ -24802,6 +24765,7 @@
     } catch (error) {
       console.error("Error during the deconnection from the server: ", error);
     } finally {
+      SocketService_default.getInstance().disconnectAll();
       localStorage.removeItem("accessToken");
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
@@ -24813,6 +24777,7 @@
     }
   };
   var clearGuestSession = () => {
+    SocketService_default.getInstance().disconnectAll();
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("userId");
     sessionStorage.removeItem("username");

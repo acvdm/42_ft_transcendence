@@ -8,10 +8,10 @@ import { render as GuestPage, afterRender as GuestAfterRender } from "./controll
 import { applyTheme } from "./controllers/ProfilePage";
 import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./controllers/GamePage";
 import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
-// 1. C'est l'élément principal où le contenu des 'pages' sera injecté
+import SocketService from "./services/SocketService";
+
 const appElement = document.getElementById('app');
 
-// 2. ON defini a quoi ressemble une page -> fonction qui donne le html (render) et une fonction qui lance la logique de la page?
 interface Page {
 	render: () => string;
 	afterRender?: () => void;
@@ -19,10 +19,6 @@ interface Page {
 
 const publicRoutes = ['/', '/login', '/register', '/404', '/guest'];
 
-
-// 3. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
-// Une fois qu'on aura fait les pages de base, on sera en mesure de link vers les bonnes pages
-// on associe chaque route a l'affiche et a la fonction concernée pour faire fonctionner la page
 const routes: { [key: string]: Page } = {
 	'/': {
 		render: LandingPage,
@@ -94,6 +90,7 @@ const handleLogout = async () => {
 		console.error("Error during the deconnection from the server: ", error);
 	} finally {
 		// on nettoie le client
+		SocketService.getInstance().disconnectAll();
 		localStorage.removeItem('accessToken');
 		localStorage.removeItem('userId');
 		localStorage.removeItem('username');
@@ -111,6 +108,8 @@ const handleLogout = async () => {
 // faustine
 // on clean la guest session pour ne pas avoir de persistance
 const clearGuestSession = () => {
+	
+	SocketService.getInstance().disconnectAll();
     sessionStorage.removeItem('accessToken');
     sessionStorage.removeItem('userId');
     sessionStorage.removeItem('username');
