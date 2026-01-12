@@ -215,30 +215,33 @@ class Game {
 
     // ...
     checkCollisions() {
-        // [FIX LOCAL] Logique améliorée pour éviter le tunneling et gérer les bords
-
+        // Pour éviter le tunneling et gérer les bords
+        let speed = Math.sqrt(this.ball.velocityX ** 2 + this.ball.velocityY ** 2);
+        const MAX_SPEED = 10; // Limite la vitesse max
+        if (speed > MAX_SPEED) {
+            const ratio = MAX_SPEED / speed;
+            this.ball.velocityX *= ratio;
+            this.ball.velocityY *= ratio;
+        }
         // 1. Collision avec PADDLE 1 (Gauche)
         if (this.ball.velocityX < 0) {
-            // Si la balle est proche de la raquette en X
             if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width &&
                 this.ball.x - this.ball.radius >= this.paddle1.x) {
                 
-                // Si la balle est au niveau de la raquette en Y (avec rayon inclus pour les bords)
                 if (this.ball.y + this.ball.radius >= this.paddle1.y && 
                     this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
                     
-                    // Calcul de l'angle (inchangé)
                     let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
-                    let angle = hitPos * (Math.PI / 4);
+                    let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
                     
                     let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
                     speed *= 1.05;
-                    
+                    if (speed > MAX_SPEED) speed = MAX_SPEED;
+
                     this.ball.velocityX = speed * Math.cos(angle);
                     this.ball.velocityY = speed * Math.sin(angle);
                     
-                    // Repousser la balle pour éviter qu'elle reste collée
-                    this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+                    this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius + 2;
                 }
             }
         }
@@ -248,12 +251,11 @@ class Game {
              if (this.ball.x + this.ball.radius >= this.paddle2.x &&
                 this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
             
-                // [FIX] Gestion correcte des bords Y
                 if (this.ball.y + this.ball.radius >= this.paddle2.y && 
                     this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
                 
                     let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
-                    let angle = hitPos * (Math.PI / 4);
+                    let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
                     
                     let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
                     speed *= 1.05;
@@ -261,20 +263,20 @@ class Game {
                     this.ball.velocityX = -speed * Math.cos(angle);
                     this.ball.velocityY = speed * Math.sin(angle);
                     
-                    this.ball.x = this.paddle2.x - this.ball.radius;
+                    this.ball.x = this.paddle2.x - this.ball.radius - 2;
                 }
             }
         }
 
-        // Scoring
+        // Scoring balle au perdant
         if (this.ball.x < 0) {
             this.score.player2++;
             this.notifyScoreUpdate();
-            this.reset(1); // [FIX] Joueur 2 marque, balle vers Joueur 1 (droite) ? Ou alternance : ici on envoie vers Droite (1)
+            this.reset(-1);
         } else if (this.ball.x > this.canvas.width) {
             this.score.player1++;
             this.notifyScoreUpdate();
-            this.reset(-1); // [FIX] Joueur 1 marque, balle vers Joueur 2 (gauche)
+            this.reset(1);
         }
     }
 
