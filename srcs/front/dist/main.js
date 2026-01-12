@@ -4185,7 +4185,7 @@
 								<!-- username, bio et status -->
 								<div class="flex flex-col justify-center pl-4 flex-1">
 									<div class="flex items-center gap-2 mb-1">
-										<p class="theme-label text-xl font-semibold" id="user-name">Username</p>
+										<p class="text-xl font-semibold" id="user-name">Username</p>
 		
 										<!-- selection du status = dynamique -->
 										<div class="relative">
@@ -4343,7 +4343,7 @@
 							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
 
 								<details open class="group">
-									<summary class="theme-label flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
 										\u2B50 Contacts
 									</summary>
 
@@ -9048,6 +9048,10 @@
         }
         const p1Display = document.getElementById("player-1-name");
         const p2Display = document.getElementById("player-2-name");
+        const scoreBoard = document.getElementById("score-board");
+        if (scoreBoard) {
+          scoreBoard.innerText = "0 - 0";
+        }
         if (p1Display && p2Display) {
           p1Display.innerText = data.role === "player1" ? `${this.currentP1Alias} (Me)` : this.currentP1Alias;
           p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} (Me)` : this.currentP2Alias;
@@ -9192,6 +9196,10 @@
           if (!gameSocket) {
             alert("Error: lost connexion to game server");
             return;
+          }
+          const scoreBoard = document.getElementById("score-board");
+          if (scoreBoard) {
+            scoreBoard.innerText = "0 - 0";
           }
           newBtn.disabled = true;
           if (privateRoomId) {
