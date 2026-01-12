@@ -213,6 +213,7 @@ export class RemoteGameManager {
                     }
 
                     const newGame = new Game(canvas, ctx, input, selectedBallSkin);
+                    newGame.resetScore();
                     this.context.setGame(newGame);
 
 					// Rival is leaving the game

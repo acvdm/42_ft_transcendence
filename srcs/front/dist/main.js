@@ -8330,12 +8330,17 @@
         this.gameLoop();
       }
     }
+    resetScore() {
+      this.score = { player1: 0, player2: 0 };
+      this.notifyScoreUpdate();
+    }
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId, role) {
-      console.log("startRemote");
+      console.log("startRemote Initial score:", this.score);
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
+      this.score = { player1: 0, player2: 0 };
       const socketService = SocketService_default.getInstance();
       socketService.connectGame();
       this.socket = socketService.getGameSocket();
@@ -9104,6 +9109,7 @@
               this.context.setGame(null);
             }
             const newGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+            newGame.resetScore();
             this.context.setGame(newGame);
             gameSocket.off("opponentLeft");
             gameSocket.on("opponentLeft", async (eventData) => {
