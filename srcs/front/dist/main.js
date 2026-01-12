@@ -8250,9 +8250,10 @@
   var friendListInstance = null;
   var chatInstance = null;
   var friendSelectedHandler = null;
+  console.log("Avant render");
   function render2() {
     let html = HomePage_default;
-    console.log("HTML CONTENT:", HomePage_default);
+    console.log("\u{1F525} RENDER HOMEPAGE - LANGUE ACTUELLE:", i18n_default.language);
     html = html.replace(/\{\{profile\.title\}\}/g, i18n_default.t("profile.title"));
     html = html.replace(/\{\{profile\.bio\}\}/g, i18n_default.t("profile.bio"));
     html = html.replace(/\{\{profile\.username\}\}/g, i18n_default.t("profile.username"));

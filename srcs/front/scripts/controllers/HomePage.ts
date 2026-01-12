@@ -17,10 +17,12 @@ let friendSelectedHandler: ((e: any) => void) | null = null;
 //     return htmlContent;
 // }
 
+console.log('Avant render');
 
 export function render(): string {
     let html = htmlContent;
-    console.log("HTML CONTENT:", htmlContent);
+    // console.log("HTML CONTENT:", htmlContent);
+    console.log("🔥 RENDER HOMEPAGE - LANGUE ACTUELLE:", i18next.language); // Ajoute ça
 
     // html = html.replace(/\{\{nav\.home\}\}/g, i18next.t('nav.home'));
     // html = html.replace(/\{\{nav\.profile\}\}/g, i18next.t('nav.profile'));
