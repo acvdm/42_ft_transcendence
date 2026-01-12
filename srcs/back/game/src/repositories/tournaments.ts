@@ -97,7 +97,8 @@ export async function saveLocalTournament (
             await addPlayerMatch(
                 db, "tournament", matchId, 
                 match.p1.userId, match.p2.alias, 
-                match.p1.score, p1IsWinner ? 1 : 0
+                match.p1.score, match.p2.score, 
+                p1IsWinner ? 1 : 0
             );
 
             console.log(`match.p1.score: ${match.p1.score}`);
@@ -119,7 +120,8 @@ export async function saveLocalTournament (
             await addPlayerMatch(
                 db, "tournament", matchId,
                 match.p2.userId, match.p1.alias,
-                match.p2.score, p2IsWinner ? 1 : 0
+                match.p2.score, match.p1.score,
+                p2IsWinner ? 1 : 0
             );
 
             console.log(`match.p1.score: ${match.p2.score}`);

@@ -7,7 +7,8 @@ export async function addPlayerMatch(
     matchId: number,
     userId: number,
     opponent: string,
-    score: number,
+    userScore: number,
+    opponentScore: number,
     isWinner: number
 ): Promise<number | undefined>
 {
@@ -18,13 +19,15 @@ export async function addPlayerMatch(
             user_id,
             opponent,
             score,
+            opponent_score,
             is_winner)
-        VALUES(?, ?, ?, ?, ?, ?)`,
+        VALUES(?, ?, ?, ?, ?, ?, ?)`,
         [   matchId,
             gameType,
             userId,
             opponent,
-            score,
+            userScore,
+            opponentScore,
             isWinner ? 1 : 0,
         ]
     )

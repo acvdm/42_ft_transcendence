@@ -42,6 +42,7 @@ export async function initDatabase(): Promise<Database>{
             user_id INTEGER,
             opponent TEXT,
             score INTEGER DEFAULT 0,
+            opponent_score INTEGER DEFAULT 0,
             is_winner INTEGER DEFAULT 0,
             FOREIGN KEY (match_id) REFERENCES MATCHES(match_id)
         )

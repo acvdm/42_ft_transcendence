@@ -113,6 +113,32 @@ export class RemoteGameManager {
 
 
         const startGameFromData = async (data: any, p1Alias?: string, p2Alias?: string) => {
+            console.log("startGameFromData");
+
+            // 1. Nettoyage des sockets
+            const gameSocket = SocketService.getInstance().getGameSocket();
+            if (gameSocket)
+            {
+                console.log("Nettoyage préventif des écouteurs sockets");
+                gameSocket.off('gameState');
+                gameSocket.off('gameEnded');
+                gameSocket.off('opponentLeft');
+            }
+
+            // 2. Nettoyage de l'ancienne instance de jeu
+            if (this.context.getGame())
+            {
+                console.log("🛑 Arrêt de l'ancien jeu");
+                this.context.getGame()!.stop(); // Appelle stop() qui doit mettre isRunning = false
+                this.context.getGame()!.onScoreChange = undefined; // On coupe le lien avec l'UI
+                this.context.setGame(null);
+            }
+
+            // 1. AJOUT : Réinitialisation immédiate du score visuel
+            const scoreBoard = document.getElementById('score-board');
+            if (scoreBoard) {
+                scoreBoard.innerText = "0 - 0";
+            }
 
             const myAlias = await getPlayerAlias();
             const myId = Number(localStorage.getItem('userId'));

@@ -67,7 +67,6 @@ const authMiddleware = (socket: any, next: any) => {
 // ------------------------------------
 
 fastify.ready().then(() => {
-	console.log("container game")
     // Application de sécurité
     fastify.io.use(authMiddleware);
     
@@ -104,9 +103,6 @@ fastify.ready().then(() => {
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
 {
-
-	console.log("route games")
-	
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;
@@ -147,18 +143,14 @@ fastify.post('/games', async (request, reply) =>
 		if (!gameId)
 			throw new Error(`Error could not create game`);
 
-		// playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
-		// playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
-		// if (!playerMatchOneId || !playerMatchTwoId)
-		// 	throw new Error(`Error could not associate players with the game ${gameId}`);
-
 		if (body.p1.userId)
 		{
 			const p1IsWinner = body.winner == body.p1.alias
 			p1Match = await addPlayerMatch(
 				db, body.type, gameId,
 				body.p1.userId, body.p2.alias,
-				body.p1.score, p1IsWinner ? 1 : 0
+				body.p1.score, body.p2.score,
+				p1IsWinner ? 1 : 0
 			);
 
 			await updateUserStats(
@@ -174,7 +166,8 @@ fastify.post('/games', async (request, reply) =>
 			p2Match = await addPlayerMatch(
 				db, body.type, gameId,
 				body.p2.userId, body.p1.alias,
-				body.p2.score, p2IsWinner ? 1 : 0
+				body.p2.score, body.p1.score,
+				p2IsWinner ? 1 : 0
 			);
 
 			await updateUserStats(
@@ -352,47 +345,6 @@ fastify.get('/games/users/:id/history', async (request, reply) =>
 	}
 
 });
-
-
-// /* -- UPDATE STATS FOR ONE USER -- */
-// fastify.patch('/users/:id/stats', async (request, reply) => 
-// {
-// 	try
-// 	{
-// 		console.log("ici");
-// 		const { id } = request.params as { id: string }
-// 		const userId = Number(id);
-
-// 		console.log("userId = ", userId);
-// 		const body = request.body as {
-// 			gameType: string,
-// 			matchId: number,
-// 			opponent: string,
-// 			userScore: number,
-// 			isWinner: number
-// 		}
-		
-// 		// const gameType = "Local";
-// 		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
-// 		if (!userStats)
-// 			throw new Error(`Error: could not update stats for user ${userId}`);
-
-// 		return reply.status(200).send({
-// 			success: true,
-// 			data: userStats,
-// 			error: null
-// 		})
-// 	}
-// 	catch (err: any)
-// 	{
-// 		const statusCode = err.statusCode || 500;
-// 		return reply.status(statusCode).send({
-// 			success: false,
-// 			data: null,
-// 			error: { message: (err as Error).message }
-// 		})
-// 	}
-// })
 
 /* -- STAT EXPORT FOR ONE USER -- */
 fastify.get('/users/:id/export', async (request, reply) =>

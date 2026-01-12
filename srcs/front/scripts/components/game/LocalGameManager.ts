@@ -181,6 +181,7 @@ export class LocalGameManager {
                     }
     
                     const scoreBoard = document.getElementById('score-board');
+                    console.log("localGameManager line 184");
                     const canvas = document.createElement('canvas');
                     canvas.id = 'pong-canvas';
                     canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;

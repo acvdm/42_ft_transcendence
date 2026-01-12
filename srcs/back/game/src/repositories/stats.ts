@@ -86,9 +86,11 @@ export async function getUserMatchHistory(
     let sql = 
     `SELECT
         pm.score as my_score,
+        pm.opponent_score as opponent_score,
         pm.is_winner,
         pm.opponent as opponent_alias,
         m.game_type,
+        m.round,
         m.finished_at,
         m.total_duration_in_minutes,
         m.match_id,
