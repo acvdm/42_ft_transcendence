@@ -8425,8 +8425,14 @@
       const SERVER_HEIGHT = 600;
       const scaleX = this.canvas.width / SERVER_WIDTH;
       const scaleY = this.canvas.height / SERVER_HEIGHT;
-      this.ball.x = data.ball.x * scaleX;
-      this.ball.y = data.ball.y * scaleY;
+      const prevBallX = this.ball.x;
+      const prevBallY = this.ball.y;
+      const newBallX = data.ball.x * scaleX;
+      const newBallY = data.ball.y * scaleY;
+      this.ball.x = prevBallX + (newBallX - prevBallX) * 0.7;
+      this.ball.y = prevBallY + (newBallY - prevBallY) * 0.7;
+      this.ball.velocityX = data.ball.velocityX;
+      this.ball.velocityY = data.ball.velocityY;
       this.paddle1.y = data.paddle1.y * scaleY;
       this.paddle1.x = data.paddle1.x * scaleX;
       this.paddle2.y = data.paddle2.y * scaleY;

@@ -134,11 +134,9 @@ class Game {
                 up: up,
                 down: down
             });
-            // On ne calcule PAS la physique locale, on attend le 'gameState' du serveur
             return; 
         }
-        // -------------------
-
+        // --- MODE LOCAL ---
         if (inputState.player1.up) {
             this.paddle1.move(true);
         }
@@ -176,10 +174,21 @@ class Game {
         const scaleX = this.canvas.width / SERVER_WIDTH;
         const scaleY = this.canvas.height / SERVER_HEIGHT;
         
+        // Interpolation simple (linéaire)
+        const prevBallX = this.ball.x;
+        const prevBallY = this.ball.y;
+        const newBallX = data.ball.x * scaleX;
+        const newBallY = data.ball.y * scaleY;
+
         // Adapter les positions de la balle
-        this.ball.x = data.ball.x * scaleX;
-        this.ball.y = data.ball.y * scaleY;
-        
+        this.ball.x = prevBallX + (newBallX - prevBallX) * 0.7; // 70% nouvelle position
+        this.ball.y = prevBallY + (newBallY - prevBallY) * 0.7;
+
+        // Mettre à jour la vélocité depuis le serveur
+        this.ball.velocityX = data.ball.velocityX;
+        this.ball.velocityY = data.ball.velocityY;
+
+
         // Adapter les raquettes
         this.paddle1.y = data.paddle1.y * scaleY;
         this.paddle1.x = data.paddle1.x * scaleX;
