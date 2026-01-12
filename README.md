@@ -38,7 +38,8 @@ docker compose version
 ### Installation
 ```bash
 # 1. Cloner le projet
-git clone https://github.com/acvdm/42_ft_transcendence.git
+git clone https://github.com/acvdm/42_ft_transcendence.git transcendence
+cd transcendence
 
 # 2. Lancer les services
 Make
