@@ -615,6 +615,7 @@ export function afterRender(): void {
 						if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
 						if (opponent) opponent.innerText = stats.biggest_opponent || "-";
 						if (favGame) favGame.innerText = stats.favorite_game || "Local";
+						
 					}
 				} else {
 					console.warn("Could not fetch user stats");
