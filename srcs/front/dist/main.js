@@ -7,7 +7,28 @@
   };
 
   // scripts/pages/LoginPage.html
-  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var LoginPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -4002,8 +4023,13 @@
     const confirm2fa = document.getElementById("confirm-2fa-button");
     const close2fa = document.getElementById("close-2fa-modal");
     const error2fa = document.getElementById("2fa-error-message");
+    const backButton = document.getElementById("back-button");
     let tempToken = null;
     let cachedStatus = "available";
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -4146,6 +4172,27 @@
   }
   function loginEvents() {
     handleLogin();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
   }
 
   // scripts/pages/HomePage.html
@@ -7575,7 +7622,28 @@
   }
 
   // scripts/pages/LandingPage.html
-  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var LandingPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(37, 44, 83)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
@@ -7600,7 +7668,33 @@
   function render4() {
     return LandingPage_default;
   }
+  function setupPageLangDropdown() {
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) {
+          menuContent.classList.add("hidden");
+        }
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
+  }
   function initLandingPage() {
+    setupPageLangDropdown();
     const loginButton = document.getElementById("login-button");
     const registerButton = document.getElementById("register-button");
     const guestButton = document.getElementById("guest-button");
@@ -7664,7 +7758,28 @@
   }
 
   // scripts/pages/RegisterPage.html
-  var RegisterPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var RegisterPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -7713,10 +7828,15 @@
   function handleRegister() {
     const button = document.getElementById("register-button");
     const errorElement = document.getElementById("error-message");
+    const backButton = document.getElementById("back-button");
     if (!button) {
       console.error("Can't find register button in DOM");
       return;
     }
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     button.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -7790,6 +7910,27 @@
   }
   function registerEvents() {
     handleRegister();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
   }
 
   // scripts/pages/GuestPage.html
@@ -24738,7 +24879,6 @@
     },
     "/game": {
       render: render7,
-      // La fonction HTML
       afterRender: () => {
         const state = window.history.state;
         const mode = state && state.gameMode ? state.gameMode : "local";
@@ -24756,12 +24896,9 @@
         headers: {
           "Content-Type": "application/json"
         },
-        // force l'envoi du cookie HttpOnly au serveur
         credentials: "include",
         body: JSON.stringify({})
-        // force le format JSON
       });
-      console.log("Deconnection from the backend server succeed");
     } catch (error) {
       console.error("Error during the deconnection from the server: ", error);
     } finally {
@@ -24792,33 +24929,87 @@
     }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    if (isGameRunning() && path !== "/game") cleanup();
+    if (isGameRunning() && path !== "/game") {
+      cleanup();
+    }
     if (path === "/logout") {
       handleLogout();
       return;
     }
+    const setupLangDropdown = () => {
+      const toggleBtn = document.getElementById("lang-toggle-btn");
+      const menuContent = document.getElementById("lang-menu-content");
+      if (toggleBtn && menuContent) {
+        const newToggle = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode?.replaceChild(newToggle, toggleBtn);
+        newToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          menuContent.classList.toggle("hidden");
+        });
+        window.addEventListener("click", () => {
+          if (!menuContent.classList.contains("hidden")) {
+            menuContent.classList.add("hidden");
+          }
+        });
+      }
+      document.querySelectorAll(".lang-select").forEach((btn) => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", (e) => {
+          const target = e.target;
+          const lang = target.getAttribute("data-lang");
+          if (lang) {
+            console.log("Langue chang\xE9e vers :", lang);
+            const display = document.getElementById("current-lang-display");
+            if (display) display.textContent = lang.toUpperCase();
+          }
+        });
+      });
+    };
+    const langDropdownHtml = `
+        <div class="relative" id="lang-dropdown">
+            <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
+                <span class="text-lg">\u{1F310}</span>
+                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+                <span class="text-[10px] opacity-70">\u25BC</span>
+            </button>
+            
+            <div id="lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                    <span>\u{1F1EC}\u{1F1E7}</span> English
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                    <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                    <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+                </button>
+            </div>
+        </div>
+    `;
     const navbar = document.getElementById("main-navbar");
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline">Home</a>
-        <a href="/profile" class="text-white hover:underline">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
     if (navbar) {
-      if (isGuest) {
+      if (isGuest || accessToken) {
         navbar.style.display = "flex";
-        if (!navbar.innerHTML.includes("Guest Area")) {
-          navbar.innerHTML = guestMenuHtml;
-        }
-      } else if (accessToken) {
-        navbar.style.display = "flex";
-        navbar.classList.add("justify-between");
-        if (!navbar.innerHTML.includes("Dashboard")) {
-          navbar.innerHTML = userMenuHtml;
+        navbar.classList.add("justify-between", "items-center", "px-8");
+        const currentHTML = navbar.innerHTML;
+        const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
+        const isCurrentGuest = currentHTML.includes("Guest Area");
+        if (isGuest && !isCurrentGuest || !isGuest && isCurrentGuest || !currentHTML.includes("lang-dropdown")) {
+          navbar.innerHTML = targetHTML;
+          setupLangDropdown();
         }
       } else {
         navbar.style.display = "none";

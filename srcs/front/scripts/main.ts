@@ -17,6 +17,10 @@ interface Page {
 	afterRender?: () => void;
 }
 
+	//================================================
+	//==================== ROUTES ====================
+	//================================================
+
 const publicRoutes = ['/', '/login', '/register', '/404', '/guest'];
 
 const routes: { [key: string]: Page } = {
@@ -49,7 +53,7 @@ const routes: { [key: string]: Page } = {
 		afterRender: GuestAfterRender
 	},
 	'/game': {
-        render: GamePage, // La fonction HTML
+        render: GamePage,
         afterRender: () => {
 			const state = window.history.state;
 			const mode = state && state.gameMode ? state.gameMode : 'local';
@@ -62,51 +66,51 @@ const routes: { [key: string]: Page } = {
 };
 
 
-const getAccessToken = (): string | null => {
-	return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
-};
+// const getAccessToken = (): string | null => {
+// 	return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+// };
 
-const isGuestUser = (): boolean => {
-	return sessionStorage.getItem('userRole') === 'guest';
-}
+// const isGuestUser = (): boolean => {
+// 	return sessionStorage.getItem('userRole') === 'guest';
+// }
 
-// gestion du logout
+	//================================================
+	//==================== LOGOUT ====================
+	//================================================
+
 const handleLogout = async () => {
 
 	try {
-		// appel au backend
 		await fetch('/api/auth/logout', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			// force l'envoi du cookie HttpOnly au serveur
 			credentials: 'include',
-			body: JSON.stringify({}) // force le format JSON
+			body: JSON.stringify({})
 		});
 
-		console.log("Deconnection from the backend server succeed");
 	} catch (error) {
 		console.error("Error during the deconnection from the server: ", error);
 	} finally {
-		// on nettoie le client
+
 		SocketService.getInstance().disconnectAll();
 		localStorage.removeItem('accessToken');
 		localStorage.removeItem('userId');
 		localStorage.removeItem('username');
 		localStorage.removeItem('userStatus');
-		sessionStorage.clear(); // faustine: faut le mettre ailleurs pour gérer le guest
-	
-		// redirection vers la page d'accueil
+		sessionStorage.clear();
+
 		window.history.pushState({}, '', '/');
-		// manuellement chargement pour recharger la vue
 		const popStateEvent = new PopStateEvent('popstate');
 		window.dispatchEvent(popStateEvent);
 	}
 }
 
-// faustine
-// on clean la guest session pour ne pas avoir de persistance
+	//================================================
+	//==================== CLEAN =====================
+	//================================================
+
 const clearGuestSession = () => {
 	
 	SocketService.getInstance().disconnectAll();
@@ -118,133 +122,187 @@ const clearGuestSession = () => {
 };
 
 
-
-/*
-** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
-** Une fois trouvée, il injecte le contenu dans la div app
-** Fonction fléchée qui mets à jour le DOM (page html affichée) en fonction de l'URL courant -> pour les SPA
-*/
-// appElement est un element DOM. est-ce que appElement est nul?
-// window est un objet global cote navigateur -> represente la fenetre du navigateur
-// donc window.location contient l'url actuelle. Pathname est la partie du chemin d'apres le nom d'hote -> localhost/game/
-// on stocke ce chemin dans la constate oaht
-// routes est un objet qui mappe des chemins vers des morceaux de html. il va tenter de recuperer la valeur pour la clé path -> on utilise renderpage pour trouver la fonction corresponde a la page qu'on souhaite 
-// appElement est l'élément DOM où tu veux afficher le contenu (par ex. <div id="app"></div>).
-// .innerHTML remplace le HTML intérieur de cet élément par la chaîne html.
-
+	//================================================
+	//================ CHANGING PAGE =================
+	//================================================
 
 const handleLocationChange = () => {
-	if (!appElement) return;
+    if (!appElement) return;
 
-	let path = window.location.pathname;
-	
-	// faustine
-	if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
+    let path = window.location.pathname;
+    
+    // Cleaning guest session
+    if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
         clearGuestSession();
-    } // pour clean la session guest
-	// Récupération des tokens (User normal OU Guest)
-	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-	const isGuest = sessionStorage.getItem('isGuest') === 'true';
+    } 
+    
+    const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
-	// si le jeu est en train de tourner mais que l'url n'est pas game
-	if (isGameRunning() && path !== '/game') cleanup(); // on arrete le jeu et activegame devient nul
-
-	if (path === '/logout') {
-		handleLogout();
-		return; // On arrête tout ici pour laisser le logout se faire
+    if (isGameRunning() && path !== '/game') {
+		cleanup();
 	}
+    if (path === '/logout') {
+        handleLogout();
+        return; 
+    }
 
+	//================================================
+	//============= NAVIGATION BAR LOGIC =============
+	//================================================
 
-	/////////////// NAVBAR 
+    const setupLangDropdown = () => {
+        const toggleBtn = document.getElementById('lang-toggle-btn');
+        const menuContent = document.getElementById('lang-menu-content');
+        //const currentLangDisplay = document.getElementById('current-lang-display');
+        
+        // Opening and closing of lang menu
+        if (toggleBtn && menuContent) {
+            const newToggle = toggleBtn.cloneNode(true) as HTMLElement;
+            toggleBtn.parentNode?.replaceChild(newToggle, toggleBtn);
+
+            newToggle.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                menuContent.classList.toggle('hidden');
+            });
+
+            window.addEventListener('click', () => {
+                if (!menuContent.classList.contains('hidden')) {
+                    menuContent.classList.add('hidden');
+                }
+            });
+        }
+
+        // Choose langage
+        document.querySelectorAll('.lang-select').forEach(btn => {
+            const newBtn = btn.cloneNode(true); 
+            btn.parentNode?.replaceChild(newBtn, btn);
+            
+            newBtn.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                const lang = target.getAttribute('data-lang');
+                if (lang) {
+                    console.log("Langue changée vers :", lang);
+                    
+                    const display = document.getElementById('current-lang-display');
+                    if (display) display.textContent = lang.toUpperCase();
+                }
+            });
+        });
+    };
+    
+    // Dropdown HTML
+    const langDropdownHtml = `
+        <div class="relative" id="lang-dropdown">
+            <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
+                <span class="text-lg">🌐</span>
+                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+                <span class="text-[10px] opacity-70">▼</span>
+            </button>
+            
+            <div id="lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                    <span>🇬🇧</span> English
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                    <span>🇫🇷</span> Français
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                    <span>🇪🇸</span> Español
+                </button>
+            </div>
+        </div>
+    `;
 
     const navbar = document.getElementById('main-navbar');
-    
-    // nouvelle définition des menus
+
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline">Home</a>
-        <a href="/profile" class="text-white hover:underline">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
 
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
 
     if (navbar) {
-        if (isGuest) {
-            navbar.style.display = 'flex'; // pour le guest on affiche quand meme la navbar personnalisée
-            if (!navbar.innerHTML.includes('Guest Area')) { // si ce n'est pas le guest on l'affiche pour eviter de reecrire a chaque fois
-                navbar.innerHTML = guestMenuHtml;
-            }
-        } 
-        else if (accessToken) {
-            navbar.style.display = 'flex'; // navbar pour le user
-			navbar.classList.add('justify-between');
-            if (!navbar.innerHTML.includes('Dashboard')) { // 
-                navbar.innerHTML = userMenuHtml;
+        if (isGuest || accessToken) {
+            navbar.style.display = 'flex';
+            navbar.classList.add('justify-between', 'items-center', 'px-8'); 
+            
+            const currentHTML = navbar.innerHTML;
+            const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
+            //const isTargetGuest = targetHTML.includes('Guest Area');
+            const isCurrentGuest = currentHTML.includes('Guest Area');
+
+            if ((isGuest && !isCurrentGuest) || (!isGuest && isCurrentGuest) || !currentHTML.includes('lang-dropdown')) {
+                navbar.innerHTML = targetHTML;
+                setupLangDropdown();
             }
         } 
         else {
-            navbar.style.display = 'none'; // si pas connecte2 --> on cache tout
+            navbar.style.display = 'none';
         }
     }
-	
-	///////// AFFICHAGE DE LA PAGE 
-	
-	const page = routes[path] || routes['/404'];
-	appElement.innerHTML = page.render();
 
-	if (page.afterRender) {
-		page.afterRender();
-	}
+	//================================================
+	//================ PAGE RENDERING ================
+	//================================================
+    
+    const page = routes[path] || routes['/404'];
+    appElement.innerHTML = page.render();
 
-	// Gestion du thème
-	if (publicRoutes.includes(path) || isGuest)
-		applyTheme('basic');
-	else {
-		const savedTheme = localStorage.getItem('userTheme') || 'basic';
-		applyTheme(savedTheme);
-	}
-
-	if (path === '/guest' && !isGuest) {
-        // On redirige vers l'accueil pour se faire éjecter par la sécurité
+    if (page.afterRender) {
+        page.afterRender();
+    }
+    if (publicRoutes.includes(path) || isGuest)
+        applyTheme('basic');
+    else {
+        const savedTheme = localStorage.getItem('userTheme') || 'basic';
+        applyTheme(savedTheme);
+    }
+    if (path === '/guest' && !isGuest) {
         window.history.replaceState({}, '', '/'); 
         handleLocationChange();
     }
 };
+
+
 /*
 ** Fonction pour la navigation. Elle met à jour l'url dans recharger la page
 ** Appelé quand on clique sur un lien
 ** @param event = l'événement de clic
 */
 
-const navigate = (event : MouseEvent) => {
-	event.preventDefault(); //on empeche le navigateur de recharger la page
-	const target = event.target as HTMLAnchorElement; // cible du clic (lien <a>)
+// const navigate = (event : MouseEvent) => {
+// 	event.preventDefault(); //on empeche le navigateur de recharger la page
+// 	const target = event.target as HTMLAnchorElement; // cible du clic (lien <a>)
 
-	// si on clique sur la page des active alors on ne touche a rien
-	if (target.href == window.location.href)
-		return;
+// 	// si on clique sur la page des active alors on ne touche a rien
+// 	if (target.href == window.location.href)
+// 		return;
 
-	window.history.pushState({}, '', target.href); // mis a jour de l'url dans la barre de recherche
-	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
-};
+// 	window.history.pushState({}, '', target.href); // mis a jour de l'url dans la barre de recherche
+// 	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
+// };
 
-// ---------- Initialisation du routeur ----------
+	//================================================
+	//============ ROUTEUR INITIALISATION ============
+	//================================================
 
-// 1. gestion des clics sur toutes les liens <a> de la page
 window.addEventListener('click', (event) => {
 	
 	const target = event.target as HTMLElement;
 	const anchor = target.closest('a');
-	// on va verifier si la cible est un lien interne
+
 
 	if (anchor && anchor.href.startsWith(window.location.origin)) {
-		// On convertit l'event original pour notre fonction navigate
-        // (Astuce: on passe l'event, et dans navigate on récupère la cible via l'event)
-        // Note: Ici on simplifie l'appel en passant l'event original
+
         event.preventDefault();
 		if (isGameRunning()) {
 			event.stopImmediatePropagation();
@@ -258,12 +316,9 @@ window.addEventListener('click', (event) => {
         
         window.history.pushState({}, '', href);
         handleLocationChange();
-
-		// pourquoi faire ça?
 	}
 });
 
-// 2. Gestion des contenus suivant/precedent
 window.addEventListener('popstate', () => {
 	if (isGameRunning()) {
 		window.history.pushState(null, '', '/game');
@@ -273,7 +328,6 @@ window.addEventListener('popstate', () => {
 	handleLocationChange();
 });
 
-// 3. Charge le contenu de la page initiale au premier chargement
 document.addEventListener('DOMContentLoaded', () => {
 	handleLocationChange();
 });
