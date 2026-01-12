@@ -258,6 +258,14 @@ export class Chat {
 					</button>
 				</div>
 			`;
+			
+			const joinButton = msgElement.querySelector(`#join-${friendshipId}`) as HTMLButtonElement;
+
+			joinButton?.addEventListener('click', () => {
+				sessionStorage.setItem('privateGameId', friendshipId);
+				window.history.pushState({ gameMode: 'remote' }, '', '/game');
+				window.dispatchEvent(new PopStateEvent('popstate'));
+			});
 
 		} else {
 			// pour envoyer un message normal

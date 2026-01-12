@@ -5624,6 +5624,12 @@
 					</button>
 				</div>
 			`;
+        const joinButton = msgElement.querySelector(`#join-${friendshipId}`);
+        joinButton?.addEventListener("click", () => {
+          sessionStorage.setItem("privateGameId", friendshipId);
+          window.history.pushState({ gameMode: "remote" }, "", "/game");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        });
       } else {
         msgElement.classList.add("bg-white");
         const contentEmoticons = parseMessage(message);
