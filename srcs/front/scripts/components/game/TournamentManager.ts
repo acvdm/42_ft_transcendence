@@ -346,6 +346,7 @@ export class TournamentManager {
 
         const scoreBoard = document.getElementById('score-board');
             if (scoreBoard) {
+                console.log("TournamentManager.ts, line 349");
                 scoreBoard.innerText = "0 - 0";
             }
 

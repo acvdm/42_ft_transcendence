@@ -8351,6 +8351,7 @@
       this.socket.off("gameState");
       this.socket.off("gameEnded");
       console.log(`Starting Remote Game in room ${roomId} as ${role}`);
+      this.notifyScoreUpdate();
       this.socket.on("gameState", (data) => {
         this.updateFromRemote(data);
       });
@@ -8369,6 +8370,7 @@
     }
     start() {
       this.isRunning = true;
+      this.notifyScoreUpdate();
       this.gameLoop();
     }
     gameLoop() {
@@ -8411,6 +8413,10 @@
     }
     // Nouvelle fonction pour mettre à jour l'état visuel depuis le serveur
     updateFromRemote(data) {
+      if (this.roomId && data.roomId && data.roomId !== this.roomId) {
+        console.warn("\u{1F47B} Paquet fant\xF4me ignor\xE9 venant de :", data.roomId);
+        return;
+      }
       const SERVER_WIDTH = 800;
       const SERVER_HEIGHT = 600;
       const scaleX = this.canvas.width / SERVER_WIDTH;
@@ -8422,6 +8428,7 @@
       this.paddle2.y = data.paddle2.y * scaleY;
       this.paddle2.x = data.paddle2.x * scaleX;
       if (this.score.player1 !== data.score.player1 || this.score.player2 !== data.score.player2) {
+        console.log("\u{1F4C8} Score update re\xE7u du serveur:", data.score);
         this.score = data.score;
         this.notifyScoreUpdate();
       }
@@ -8830,6 +8837,7 @@
               canvasContainer.innerHTML = "";
             }
             const scoreBoard = document.getElementById("score-board");
+            console.log("localGameManager line 184");
             const canvas = document.createElement("canvas");
             canvas.id = "pong-canvas";
             canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
@@ -9030,6 +9038,24 @@
         });
       }
       const startGameFromData = async (data, p1Alias, p2Alias) => {
+        console.log("startGameFromData");
+        const gameSocket2 = SocketService_default.getInstance().getGameSocket();
+        if (gameSocket2) {
+          console.log("Nettoyage pr\xE9ventif des \xE9couteurs sockets");
+          gameSocket2.off("gameState");
+          gameSocket2.off("gameEnded");
+          gameSocket2.off("opponentLeft");
+        }
+        if (this.context.getGame()) {
+          console.log("\u{1F6D1} Arr\xEAt de l'ancien jeu");
+          this.context.getGame().stop();
+          this.context.getGame().onScoreChange = void 0;
+          this.context.setGame(null);
+        }
+        const scoreBoard = document.getElementById("score-board");
+        if (scoreBoard) {
+          scoreBoard.innerText = "0 - 0";
+        }
         const myAlias = await getPlayerAlias();
         const myId = Number(localStorage.getItem("userId"));
         let opponentId = data.opponent ? Number(data.opponent) : null;
@@ -9111,14 +9137,14 @@
             const newGame = new Game_default(canvas, ctx, input, selectedBallSkin);
             newGame.resetScore();
             this.context.setGame(newGame);
-            gameSocket.off("opponentLeft");
-            gameSocket.on("opponentLeft", async (eventData) => {
+            gameSocket2.off("opponentLeft");
+            gameSocket2.on("opponentLeft", async (eventData) => {
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
                 activeGame2.isRunning = false;
                 activeGame2.stop();
-                gameSocket.off("gameState");
-                gameSocket.off("gameEnded");
+                gameSocket2.off("gameState");
+                gameSocket2.off("gameEnded");
                 const s1 = activeGame2.score.player1;
                 const s2 = activeGame2.score.player2;
                 let winnerAlias = "";
@@ -9527,6 +9553,7 @@
       if (p2Name) p2Name.innerText = p2.alias;
       const scoreBoard = document.getElementById("score-board");
       if (scoreBoard) {
+        console.log("TournamentManager.ts, line 349");
         scoreBoard.innerText = "0 - 0";
       }
       const container = document.getElementById("left");
