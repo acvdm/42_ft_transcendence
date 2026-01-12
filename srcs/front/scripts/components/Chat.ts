@@ -1,46 +1,61 @@
 import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
+import { Socket } from "socket.io-client";
 
 export class Chat {
-    private socket: any;
+    private chatSocket: Socket | null = null;
+    private gameSocket: Socket | null = null;
     private messagesContainer: HTMLElement | null;
     private messageInput: HTMLInputElement | null;
     private wizzContainer: HTMLElement | null;
     private currentChannel: string = "general";
     private currentFriendshipId: number | null = null;
+    private currentFriendId: number | null = null;
     private shakeTimeout: number | undefined;
 
     constructor() {
-        this.socket = SocketService.getInstance().socket;
         this.messagesContainer = document.getElementById('chat-messages');
         this.messageInput = document.getElementById('chat-input') as HTMLInputElement;
         this.wizzContainer = document.getElementById('wizz-container');
     }
 
     public init() {
-        if (!this.socket) return;
-        
+        const socketService = SocketService.getInstance();
+
+        socketService.connectChat();
+        socketService.connectGame()
+
+        this.chatSocket = socketService.getChatSocket();
+        this.gameSocket = socketService.getGameSocket();
+
+        if (!this.gameSocket) {
+            console.log("Gamesocket does not exist");
+        }
+        if (!this.chatSocket) {
+            console.error("Chat: Impossible to retrieve chat socket (not connected).");
+            return;
+        }
+
         this.setupSocketEvents();
         this.setupInputListeners();
         this.setupWizz();
-        this.setupTools(); // Animations, Fonts, Emoticons, Backgrounds
+        this.setupTools();
     }
+    
 
-    public joinChannel(channelKey: string, friendshipId?: number) {
+    public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
+        this.currentFriendId = friendId || null;
 
-        if (this.socket)
-            this.socket.emit("joinChannel", channelKey);
-        
-        // Reset affichage
+        if (this.chatSocket) {
+            this.chatSocket.emit("joinChannel", channelKey);
+        }
         if (this.messagesContainer) {
             this.messagesContainer.innerHTML = '';
         }
-
-        //if (this.messageInput) this.messageInput.disabled = false;
     }
 
     // ---------------------------------------------------
@@ -48,17 +63,15 @@ export class Chat {
     // ---------------------------------------------------
 
     private setupSocketEvents() {
-        this.socket.on("connect", () => {
+        this.chatSocket.on("connect", () => {
             this.addMessage("You can now chat with your friend!", "System");
         });
 
-        // on va écouter l'événement chatMessage venant du serveur
-        // le backend va renvoyer data, il devrait plus renvoyer message: "" author: ""
-        this.socket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
+        this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
             this.addMessage(data.msg_content, data.sender_alias);
         });
 
-        this.socket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
+        this.chatSocket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
             if (this.messagesContainer) {
                 this.messagesContainer.innerHTML = '';
                 if (data.msg_history && data.msg_history.length > 0) {
@@ -71,24 +84,30 @@ export class Chat {
             }
         });
 
-        this.socket.on("systemMessage", (data: { content: string}) => {
+        this.chatSocket.on("systemMessage", (data: { content: string}) => {
             this.addSystemMessage(data.content);
         })
 
-        // reception ici du serveur au client
-        this.socket.on("receivedWizz", (data: { author: string }) => {
-            // on affiche le message -> xx send a nudge (poke?)
+        this.chatSocket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
+            
+            if (data.channel_key && data.channel_key !== this.currentChannel) {
+                return;
+            }
+            
+            const currentUser = localStorage.getItem('username');
             this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
-            // on declenche la secousse
-            this.shakeElement(this.wizzContainer, 3000);
+
+            if (data.author !== currentUser) {
+                this.shakeElement(this.wizzContainer, 3000);
+            }
         });
 
-        this.socket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
+        this.chatSocket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
+            
             const { animationKey, author } = data;
             const imgUrl = animations[animationKey];
             
             if (imgUrl) {
-                // Utilise une mise en forme spéciale pour les animations
                 const animationHTML = `
                     <div>
                         <strong>${author} said:</strong><br>
@@ -101,7 +120,7 @@ export class Chat {
             }
         });
 
-        this.socket.on("disconnected", () => {
+        this.chatSocket.on("disconnected", () => {
             this.addMessage("Disconnected from chat server!", "System");
         });
     }
@@ -111,29 +130,27 @@ export class Chat {
     // ---------------------------------------------------
 
     private setupInputListeners() {
-        if (!this.messageInput) return;
+        if (!this.messageInput) {
+            return;
+        }
 
-        // a partir du moment ou on appuie sur entree-> envoi de l'input
         this.messageInput.addEventListener('keyup', (event) => {
             if (event.key == 'Enter' && this.messageInput?.value.trim() != '') {
+                
                 const msg_content = this.messageInput.value;
-                // on envoie le message au serveur avec emit
                 const sender_alias = localStorage.getItem('username');
                 const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
                 
-                this.socket.emit("chatMessage", {
+                this.chatSocket.emit("chatMessage", {
                     sender_id: sender_id,
                     sender_alias: sender_alias,
                     channel_key: this.currentChannel,
                     msg_content: msg_content 
                 });
-                this.messageInput.value = ''; // on vide l'input
+                this.messageInput.value = '';
             }
         });
     }
-
-
-
 
     // ---------------------------------------------------
     // ----            LOGIQUE DU WIZZ                ----
@@ -144,33 +161,37 @@ export class Chat {
         if (wizzButton) {
             wizzButton.addEventListener('click', () => {
                 const currentUsername = localStorage.getItem('username');
-                // on envois l'element snedWizz au serveur
-                this.socket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
-                // secousse pour l'expediteur et le receveur
+                this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
                 this.shakeElement(this.wizzContainer, 500);
             });
         }
     }
 
-    // délcencher la secousse 
-    private shakeElement(element: HTMLElement | null, duration: number = 500) {
-        if (!element) return;
+    public emitWizzOnly() {
+        if (!this.chatSocket) {
+            return;
+        }
+        const currentUsername = localStorage.getItem('username');
+        this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+    }
 
-        // annuler le tem,ps de la secousse rpecedence
-        if (this.shakeTimeout) clearTimeout(this.shakeTimeout);
+    public shakeElement(element: HTMLElement | null, duration: number = 500) {
+        if (!element) {
+            return;
+        }
+        if (this.shakeTimeout) {
+            clearTimeout(this.shakeTimeout);
+        }
 
-        // on applique la classe d'animation avec le css personnalisé -> keyframe
         element.classList.remove('wizz-shake');
-        void element.offsetWidth; // force d'un reflow
+        void element.offsetWidth;
         element.classList.add('wizz-shake');
 
-        // on retire la classe une fois que l'amination est terminé
         this.shakeTimeout = window.setTimeout(() => {
             element.classList.remove('wizz-shake');
             this.shakeTimeout = undefined;
         }, duration);
 
-        // on essaie de mettre un son
         try {
             const wizzSound = new Audio('/assets/chat/wizz_sound.mp3');
             wizzSound.play().catch(e => console.log("Could not play wizz sound:", e.message));
@@ -179,39 +200,72 @@ export class Chat {
         }
     }
 
+    public getWizzContainer(): HTMLElement | null {
+        return this.wizzContainer;
+    }
+
     // ---------------------------------------------------
     // ----         AFFICHAGE DES MESSAGES            ----
     // ---------------------------------------------------
 
 
     public sendSystemNotification(message: string) {
-        if (this.socket) {
-            this.socket.emit("sendSystemMessage", {
+        if (this.chatSocket) {
+            this.chatSocket.emit("sendSystemMessage", {
                 channel_key: this.currentChannel,
                 content: message
             });
         } else {
-            // ajout d'un fallback
             this.addSystemMessage(message);
         }
     }
     
     public addSystemMessage(message: string) {
-        this.addMessage(`[b]${message}[/b]`, "System"); // ou autre chose que system? "game?"
+        this.addMessage(`[b]${message}[/b]`, "System");
     }
 
-
+//faustine
     private addMessage(message: string, author: string) {
         if (!this.messagesContainer) return;
-        const msgElement = document.createElement('p');
-        msgElement.className = "mb-1";
-        
-        // on securise le texte et on parse les emoticones
-        const contentEmoticons = parseMessage(message);
-        
-        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+        const msgElement = document.createElement('div'); // changement par div pour mettre un bouton
+        msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+
+        ///// DÉTECTION DE L'INVITATION
+        const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
+        const match = message.match(inviteRegex);
+
+        if (match) {
+            // invitation
+            const friendshipId = match[1];
+            const isMe = author === localStorage.getItem('username');
+            
+            // style different selon qui invite
+            msgElement.classList.add(isMe ? 'bg-blue-100' : 'bg-green-100');
+
+            //on store le private id dans session storage pour qu'il soit pas garde quand on rejoins une autre roo,
+            msgElement.innerHTML = `
+                <div class="flex flex-col gap-2">
+                    <strong>${author}</strong> veut jouer à Pong ! 🏓<br>
+                    <button 
+                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
+                        onclick="
+                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
+                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                        "
+                    >
+                        ${isMe ? 'Join my waitroom' : 'Accept the match'}
+                    </button>
+                </div>
+            `;
+        } else {
+            // pour envoyer un message normal
+            msgElement.classList.add('bg-white'); // ou transparent a tester
+            const contentEmoticons = parseMessage(message);
+            msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+        }
+
         this.messagesContainer.appendChild(msgElement);
-        // rajouter un scroll automatique vers le bas
         this.scrollToBottom();
     }
 
@@ -300,19 +354,16 @@ export class Chat {
                 animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
 
                 // clic sur l'anumation
-                console.log("Envoi d'un message");
                 animationItem.addEventListener('click', (event) => {
                     event.stopPropagation();
                     const currentUsername = localStorage.getItem('username');
                     // envoi de l'animation via la sockettt
-                    console.log("Envoi d'un message");
 
-                    this.socket.emit("sendAnimation", {
+                    this.chatSocket.emit("sendAnimation", {
                         animationKey: key,
                         author: currentUsername,
                         channel_key: this.currentChannel
                     });
-                    console.log("Envoi d'un message");
                     animationDropdown.classList.add('hidden');
                 });
                 animationGrid.appendChild(animationItem);
@@ -442,20 +493,37 @@ export class Chat {
                 }
             });
             
-            // Tes boutons (Code existant conservé)
+            //faustine
+            // GESTION DU BOUTON D'INVITATION
             document.getElementById('button-invite-game')?.addEventListener('click', (e) => {
                 e.stopPropagation();
-                console.log("Invite clicked");
-                chatOptionsDropdown.classList.add('hidden');
-            });
-            document.getElementById('button-view-profile')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log("Profile clicked");
-                chatOptionsDropdown.classList.add('hidden');
-            });
-            document.getElementById('button-report-user')?.addEventListener('click', (e) => {
-                e.stopPropagation();
-                console.log("Report clicked");
+
+                if (this.currentFriendId && this.currentFriendshipId) // on check aussi que le friendship id est pas nul
+                {
+                    const myName = localStorage.getItem('username');
+                    const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+            
+
+                    if (this.chatSocket && this.chatSocket.connected) {
+                        console.log("chatSocket connected");
+                        const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`; // l'id de la room correspond au friendship id
+                        this.chatSocket.emit("chatMessage", {
+                            sender_id: sender_id,
+                            sender_alias: myName,
+                            channel_key: this.currentChannel,
+                            msg_content: inviteCode // ici au lieu du message on "envois" le code d'invitation
+                        });
+                    } else {
+                        console.log("chatSocket disconnected");
+                    }
+                } else {
+                    console.error("Game socket not connected", this.gameSocket)
+                    this.addSystemMessage("Error: Game server not reachable.");
+                }
+
+            // document.getElementById('button-view-profile')?.addEventListener('click', (e) => {
+            //     e.stopPropagation();
+            //     console.log("Profile clicked");
                 chatOptionsDropdown.classList.add('hidden');
             });
 
@@ -473,7 +541,7 @@ export class Chat {
                 if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
                     try {
                         const userId = localStorage.getItem('userId');
-                        const response = await fetchWithAuth(`api/users/${userId}/friendships/${this.currentFriendshipId}`, {
+                        const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: 'blocked' })
                         });
@@ -574,6 +642,7 @@ export class Chat {
         if (this.socket) {
             this.socket.off("connect");
             this.socket.off("chatMessage");
+            this.socket.off("msg_history"); // ajout
             this.socket.off("receivedWizz");
             this.socket.off("receivedAnimation");
             this.socket.off("systemMessage");

@@ -2,6 +2,14 @@ import { isAliasUsed } from "../repositories/users.js"
 import { Database } from 'sqlite';
 
 
+function getRandomInt()
+{
+    const min = Math.ceil(1);
+    const max = Math.floor(100);
+
+    return Math.floor(Math.random() * (max - min) + min);
+}
+
 export async function generateRandomAlias(
     db: Database
 ): Promise<string>
@@ -48,7 +56,8 @@ export async function generateRandomAlias(
     {
         const animal = animals[Math.floor(Math.random() * animals.length)];
         const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-        randomAlias = `${adjective}${animal}`; // faustine: j'inverse les deux 
+        const randomNumber = String(getRandomInt());
+        randomAlias = `${adjective}${animal}${randomNumber}`; // faustine: j'inverse les deux 
         checkAlias = await isAliasUsed(db, randomAlias);
     } while (checkAlias);
 

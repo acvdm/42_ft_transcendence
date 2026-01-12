@@ -1,11 +1,16 @@
 import SocketService from "../services/SocketService";
 import { getStatusDot, statusImages } from "./Data";
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { Friendship } from '../../../back/user/src/repositories/friendships';
 
 export class FriendList {
     private container: HTMLElement | null;
     private userId: string | null;
+    private notificationInterval: any = null;
+    // cass: 
+    // init() interval est appele a chaque fois auon va sur la HomePage
+    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
+    // qui s'accumulent quand on change de page et quon revient sur la homePage
 
     constructor() {
         this.container = document.getElementById('contacts-list');
@@ -13,6 +18,8 @@ export class FriendList {
     }
 
     public init() {
+        SocketService.getInstance().connectChat();
+        SocketService.getInstance().connectGame();
         this.loadFriends();
         this.setupFriendRequests();
         this.setupNotifications(); 
@@ -21,22 +28,45 @@ export class FriendList {
         this.setupBlockListener();
         this.registerSocketUser();
 
-        setInterval(() => this.checkNotifications(), 30000);
+        // setInterval(() => this.checkNotifications(), 30000);
+
+        // AJOUT
+        // nettoyer l'ancien si il existe
+        if (this.notificationInterval) clearInterval(this.notificationInterval);
+
+        // stocker l'id
+        this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
+    }
+
+    // AJOUT
+    public destroy() {
+        if (this.notificationInterval) {
+            clearInterval(this.notificationInterval);
+            this.notificationInterval = null;
+        }
     }
 
     private registerSocketUser() {
-        const socket = SocketService.getInstance().socket;
+        // // const socket = SocketService.getInstance().socket;
+        // const socket = SocketService.getInstance().getChatSocket();
+        // const userId = this.userId;
+
+        // if (!socket || !userId) return;
+
+        // if (socket.connected) {
+        //     socket.emit('registerUser', userId);
+        // }
+
+        // socket.on('connect', () => {
+        //     socket.emit('registerUser', userId);
+        // });
+        const gameSocket = SocketService.getInstance().getGameSocket();
         const userId = this.userId;
 
-        if (!socket || !userId) return;
-
-        if (socket.connected) {
-            socket.emit('registerUser', userId);
+        if (gameSocket && gameSocket.connected)
+        {
+            gameSocket.emit('registerGameSocket', userId);
         }
-
-        socket.on('connect', () => {
-            socket.emit('registerUser', userId);
-        });
     }
 
     private async loadFriends() {
@@ -45,7 +75,7 @@ export class FriendList {
 
         try {
             // Timestamp pour éviter le cache navigateur
-            const response = await fetchWithAuth(`/api/users/${this.userId}/friends?t=${new Date().getTime()}`);
+            const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${new Date().getTime()}`);
             
             if (!response.ok) throw new Error('Failed to fetch friends');
             
@@ -97,11 +127,21 @@ export class FriendList {
 
                 contactsList.appendChild(friendItem);
                 
-                friendItem.addEventListener('click', () => {
+                friendItem.addEventListener('click', (e) => {
+                    // Si on clique sur le bouton inviter, on ne déclenche pas l'ouverture du chat ici
+                    if ((e.target as HTMLElement).closest('.invite-btn')) return;
+
                     const event = new CustomEvent('friendSelected', { 
                         detail: { friend: selectedFriend, friendshipId: friendship.id } 
                     });
                     window.dispatchEvent(event);
+                });
+
+                // AJOUT: Clic sur le bouton d'invitation
+                const inviteBtn = friendItem.querySelector('.invite-btn');
+                inviteBtn?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
                 });
             });
         } catch (error) {
@@ -110,32 +150,163 @@ export class FriendList {
         }
     }
 
+    // AJOUT: Fonction pour envoyer une invitation depuis la liste
+    private sendInviteDirectly(friendId: number, friendName: string) {
+        const gameSocket = SocketService.getInstance().getGameSocket();
+        const myName = localStorage.getItem('username');
+
+        if (!gameSocket || !gameSocket.connected) 
+        {
+            alert("Game is disconnected, please refresh");
+            SocketService.getInstance().connectGame();
+            return ;
+        }
+
+        console.debug(`Sending game invite to ${friendName} via GameSocket`);
+        gameSocket.emit('sendGameInvite', {
+            targetId: friendId,
+            senderName: myName
+        });
+
+        alert(`Invitation sent to ${friendName}`);
+    }
+
     private listenToUpdates() {
-        const socket = SocketService.getInstance().socket;
-        if (!socket) return;
+        console.debug("listen to updates");
+        const socketService = SocketService.getInstance();
+        const chatSocket = socketService.getChatSocket();
+        const gameSocket = socketService.getGameSocket();
+
+        if (!chatSocket) return;
         
-        socket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
+        chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
             this.updateFriendUI(data.username, data.status);
         });
 
-        socket.on("userConnected", (data: { username: string, status: string }) => {
+        chatSocket.on("userConnected", (data: { username: string, status: string }) => {
              const currentUsername = localStorage.getItem('username');
              if (data.username !== currentUsername) {
                 this.updateFriendUI(data.username, data.status);
              }
         });
 
-        socket.on('receiveFriendRequestNotif', () => {
+        chatSocket.on('receiveFriendRequestNotif', () => {
             console.log("New friend request received!");
             this.checkNotifications(); 
         });
 
-        socket.on('friendRequestAccepted', () => {
+        chatSocket.on('friendRequestAccepted', () => {
             console.log("Friend request accepted by other user!");
             // rechargement pour l'affichage
             this.loadFriends();
         });
+
+        if (!gameSocket)
+        {
+            console.error("GameSocket cannot be found");
+            return ;
+        }
+        
+        // Fonction interne pour attacher les écouteurs une fois qu'on est prêts
+        const attachGameListeners = () => {
+            console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
+
+            gameSocket.emit('registerGameSocket');
+            
+            // On retire l'écouteur précédent
+            gameSocket.off('receiveGameInvite');
+
+            gameSocket.on('receiveGameInvite', (data: { senderId: string, senderName: string }) => {
+                console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+                this.showGameInviteNotification(data.senderId, data.senderName);
+            });
+        }
+
+        if (gameSocket.connected)
+        { 
+            // 1. la socket était déjà connectée 
+            attachGameListeners();
+        }
+        else
+        {
+            // 2. La connexion est en cours
+            console.log("⏳ [CLIENT] GameSocket en cours de connexion...");
+            gameSocket.once('connect', () => {
+                attachGameListeners();
+        });            
+        }
+
+    }
+
+    ///// pour la notification de l'invitation
+    private showGameInviteNotification(senderId: string, senderName: string) {
+        console.log("showGameInvite");
+        const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+        
+        // on active l'icone de notif
+        if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+
+        const toast = document.createElement('div');
+        toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
+        // changer l'emoji pour l'image du jeu 
+        toast.innerHTML = `
+            <div class="font-bold text-gray-800">🎮 Game Invite</div> 
+            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="flex gap-2 mt-2">
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+
+        toast.querySelector('#accept-invite')?.addEventListener('click', () => {
+            const gameSocket = SocketService.getInstance().getGameSocket();
+        
+            if (!gameSocket || !gameSocket.connected) {
+                alert("Error: connexion to server lost");
+                toast.remove();
+                return;
+            }
+
+            console.log("Accepting game invite from", senderName);
+
+            // ✅ ÉTAPE 1 : Attacher le listener AVANT d'accepter
+            gameSocket.once('matchFound', (data: any) => {
+                console.log("✅ Match found from invitation:", data);
+                
+                // Sauvegarder les infos
+                sessionStorage.setItem('pendingMatch', JSON.stringify(data));
+                
+                // Redirection
+                window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                
+                // Trigger le rendu
+                const event = new PopStateEvent('popstate');
+                window.dispatchEvent(event);
+            });
+
+            // ✅ ÉTAPE 2 : Maintenant on peut accepter
+            gameSocket.emit('acceptGameInvite', { senderId: senderId });
+            
+            toast.remove();
+        });
+
+        // Bouton Decline
+        toast.querySelector('#decline-invite')?.addEventListener('click', () => {
+            const gameSocket = SocketService.getInstance().getGameSocket()?.emit('declineGameInvite', { senderId: senderId });
+            if (gameSocket && gameSocket.connected)
+            {
+                gameSocket.emit('declineGameInivite', { senderId: senderId });
+            }
+            toast.remove();
+        });
+
+        // Auto-suppression après 10s
+        setTimeout(() => { 
+            if(document.body.contains(toast)) toast.remove(); 
+        }, 10000);
     }
 
     private updateFriendUI(loginOrUsername: string, newStatus: string) {
@@ -201,7 +372,7 @@ export class FriendList {
                 }
                 const userId = localStorage.getItem('userId');
                 try {
-                    const response = await fetchWithAuth(`/api/users/${userId}/friendships`, {
+                    const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ alias: searchValue })
@@ -213,7 +384,7 @@ export class FriendList {
                         
                         const targetId = data.data.friend_id || data.data.friend?.id;
                         if (targetId) {
-                            SocketService.getInstance().socket?.emit('sendFriendRequestNotif', { 
+                            SocketService.getInstance().getChatSocket()?.emit('sendFriendRequestNotif', { 
                                 targetId: targetId 
                             });
                         }
@@ -286,7 +457,7 @@ export class FriendList {
         if (!userId || !notifList) return;
 
         try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships/pendings`);
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
             if (!response.ok) throw new Error('Failed to fetch pendings');
 
             const requests = await response.json();
@@ -355,7 +526,7 @@ export class FriendList {
         if (!itemDiv.dataset.friendshipId) return;
 
         try {
-            const response = await fetchWithAuth(`/api/users/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: action }) 
@@ -368,7 +539,7 @@ export class FriendList {
                     if (action === 'validated') {
                         this.loadFriends(); 
                         
-                        const socket = SocketService.getInstance().socket;
+                        const socket = SocketService.getInstance().getChatSocket();
                         if (socket) {
                             socket.emit('acceptFriendRequest', { 
                                 targetId: requesterId 

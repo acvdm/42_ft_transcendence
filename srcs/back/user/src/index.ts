@@ -46,7 +46,7 @@ fastify.post('/users', async (request, reply) => {
         body.avatar = body.avatar.substring(body.avatar.indexOf('/assets/'));
     }
 
-	let user_id = null; 
+	let userId = null; 
 
 	try 
 	{
@@ -55,8 +55,8 @@ fastify.post('/users', async (request, reply) => {
 		  throw new ValidationError('Error: Alias is too long, max 30 characters');
 		}		
 		// 1. Créer le user localement dans user.sqlite
-		user_id = await userRepo.createUserInDB(db, body)		
-		if (!user_id)
+		userId = await userRepo.createUserInDB(db, body)		
+		if (!userId)
 		{
 			return reply.status(500).send({
 				success: false,
@@ -65,7 +65,7 @@ fastify.post('/users', async (request, reply) => {
 			});
 		}
 
-		const authURL = `http://auth:3001/users/${user_id}/credentials`;
+		const authURL = `http://auth:3001/users/${userId}/credentials`;
 
 		// 3. Appeler le service auth pour créer les credentials
 		const authResponse = await fetch(authURL, {
@@ -74,7 +74,7 @@ fastify.post('/users', async (request, reply) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ 
-				user_id: user_id, 
+				userId: userId, 
 				email: body.email, 
 				password: body.password, 
 			}),
@@ -106,13 +106,13 @@ fastify.post('/users', async (request, reply) => {
 		if (authJson.success)
 		{
 
-    		const { refresh_token, access_token, user_id } = authJson;//.data?
+    		const { refreshToken, accessToken, userId } = authJson;//.data?
 
-			if (!access_token || !user_id) {
+			if (!accessToken || !userId) {
 				throw new Error("Tokens manquants dans la reponse de l'Auth")
 			}
-    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
-    		reply.setCookie('refresh_token', refresh_token, {
+    		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refreshToken', refreshToken, {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
     		  secure: true, // acces au cookie uniquement via https
@@ -120,15 +120,15 @@ fastify.post('/users', async (request, reply) => {
     		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
     		  signed: true
     		});
-
-			const statsURL = `http://game:3003/users/${user_id}/games/stats`;
+			console.log("user_id dans user = ", userId)
+			const statsURL = `http://game:3003/games/users/${userId}/stats`;
 			const statResponse = await fetch(statsURL, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					user_id: user_id
+					userId: userId
 				}),
 			});
 
@@ -160,8 +160,8 @@ fastify.post('/users', async (request, reply) => {
     		return reply.status(201).send({
 				// success: true,
 					// data: {
-    					access_token: access_token,
-    					user_id: user_id
+    					accessToken: accessToken,
+    					userId: userId
 					// },
 				// error: null
     		});
@@ -170,11 +170,11 @@ fastify.post('/users', async (request, reply) => {
 	catch (err: any) 
 	{
 		// 5. Rollback
-		if (user_id) 
+		if (userId) 
 		{
-		  console.log(`Rollback: delele orphan ID ${user_id}`);
-		  await userRepo.rollbackDeleteUser(db, user_id);
-		  console.log(`User ID ${user_id} successfully deleted`);
+		  console.log(`Rollback: delele orphan ID ${userId}`);
+		  await userRepo.rollbackDeleteUser(db, userId);
+		  console.log(`User ID ${userId} successfully deleted`);
 		}	
 
 		const statusCode = err.statusCode || 500;
@@ -217,7 +217,7 @@ fastify.post('/users/guest', async (request, reply) => {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ 
-				user_id: userId, 
+				userId: userId, 
 				email: email, 
 			}),
 		});
@@ -253,16 +253,16 @@ fastify.post('/users/guest', async (request, reply) => {
 		if (authJson.success)
 		{
 			// const authPayload = data; //.data MODIF
-			// if (!authPayload || !authPayload.refresh_token)
+			// if (!authPayload || !authPayload.refreshToken)
 			// 	throw new Error("Auth service response is missing tokens inside data object");
 
-    		const { refresh_token, access_token, user_id } = authJson;//.data?
+    		const { refreshToken, accessToken, userId } = authJson;//.data?
 
-			if (!access_token || !user_id) {
+			if (!accessToken || !userId) {
 				throw new Error("Tokens manquants dans la reponse de l'Auth")
 			}
-    		// on stocke le refresh_token dans un cookie httpOnly (pas lisible par le javascript)
-    		reply.setCookie('refresh_token', refresh_token, {
+    		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
+    		reply.setCookie('refreshToken', refreshToken, {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
     		  secure: true, // acces au cookie uniquement via https
@@ -277,8 +277,8 @@ fastify.post('/users/guest', async (request, reply) => {
     		return reply.status(201).send({
 				// success: true,
 					// data: {
-    					access_token: access_token,
-    					user_id: user_id
+    					accessToken: accessToken,
+    					userId: userId
 					// },
 				// error: null
     		});
@@ -524,19 +524,24 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 		// Gérer les erreurs du service auth
 		if (!authResponse.ok)
 		{
-			const authJson = await authResponse.json().catch(() => ({}));
+			const authJson = await authResponse.json().catch(() => null);
+
+			const errorMessage = authJson?.error?.message || authJson?.message || `Error Auth service (${authResponse.status})`;
+			const error: any = new Error(errorMessage);
+			error.statusCode = authResponse.status;
+			throw error;
 
 			// Propoager le code d'erreur du service auth
-			if (authResponse.status >= 400 && authResponse.status < 500)
-			{
-				const error: any = new Error(
-					authJson.error?.message || `Auth service error: ${authResponse.status}`
-				);
-				error.statusCode = authResponse.status;
-				throw error;
-			}
+			// if (authResponse.status >= 400 && authResponse.status < 500)
+			// {
+			// 	const error: any = new Error(
+			// 		authJson.error?.message || `Auth service error: ${authResponse.status}`
+			// 	);
+			// 	error.statusCode = authResponse.status;
+			// 	throw error;
+			// }
 
-			throw new ServiceUnavailableError(`Auth service is unavailable`);
+			// throw new ServiceUnavailableError(`Auth service is unavailable`);
 		}
 
 		const authJson = await authResponse.json();
@@ -630,6 +635,181 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
     }
 });
 
+//---------------------------------------
+//----------------- GDPR ----------------
+//---------------------------------------
+
+/* ---- DELETE USER ---- */
+/* AJOUTER reviewFriendshipRequest pour mettre un ami en 'deleted' et ne plus l'afficher dans la liste */
+fastify.delete('/users/:id', async (request, reply) =>
+{
+	console.log("Processsing account deletion...");
+
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	if (!userId) {
+		return reply.status(404).send({
+			success: false,
+			error: { message: "User not found" }
+		});
+	}
+
+	const authURL = `http://auth:3001/users/${userId}/`;
+
+	try
+	{
+		console.log("- Mark friendships as deleted...");
+		await friendRepo.markFriendshipsAsDeleted(db, userId);
+
+		console.log("- Calling Auth service...");
+		const authResponse = await fetch(authURL, {
+			method: "DELETE",
+		});
+	
+		// Gérer les erreurs du service auth
+		if (!authResponse.ok)
+		{
+			const authJson = await authResponse.json().catch(() => ({}));
+
+			// Propager le code d'erreur du service auth
+			const error: any = new Error(
+				authJson.error?.message || `Auth service error: ${authResponse.status}`
+			);
+			error.statusCode = authResponse.status;
+			throw error;
+		}
+
+		console.log("- Anonymising user profile...");
+		// remplace le pseudo par Deleted_User_XXX et l'avatar par defaut
+		await userRepo.anonymizeUser(db, userId);
+
+		// deconnection -> suppression du cookie pour que le navigateur sache quil nest plus connecte
+		reply.clearCookie('refreshToken', { path: '/' });
+
+		return reply.status(200).send({
+			success: true,
+			message: "Account successfully deleted",
+			error: null
+		});
+	}
+	catch (err: any)
+	{
+		console.error("Error during account deletion:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: err.message || "Failed to delete account" }
+		});
+	}
+})
+
+/* ---- EXPORT ----- */
+fastify.get('/users/:id/export', async (request, reply) =>
+{
+	console.log("Processsing account export...");
+	
+	let authPayload: any = {};
+	let gamePayload: any = {};
+
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	if (!userId) {
+		return reply.status(404).send({
+			success: false,
+			error: { message: "User not found" }
+		});
+	}
+
+	try
+	{
+		/* EXPORT FROM USER */
+		const userProfile = await userRepo.findUserByID(db, userId);
+		if (!userProfile) {
+			return reply.status(404).send({
+				success: false,
+				error: { message: "User not found" }
+			});
+		}
+
+		const friendList = await friendRepo.listFriends(db, userId);
+
+		/* EXPORT FROM AUTH */	
+		console.log("- Calling Auth service...");
+		const authURL = `http://auth:3001/users/${userId}/export`;
+		const authResponse = await fetch(authURL, {
+			method: "GET",
+		});
+		if (!authResponse.ok)
+			console.error("Problem with fetch with the Auth service");
+		else
+		{
+			const authJson = await authResponse.json();
+			authPayload = authJson.data;
+		}
+
+		/* EXPORT FROM GAME */
+		console.log("- Calling Game service...");
+		const gameURL = `http://game:3003/users/${userId}/export`;
+		const gameResponse = await fetch(gameURL, {
+			method: "GET",
+		});
+		if (!gameResponse.ok)
+			console.error("Problem with fetch with the Game service");
+		else
+		{
+			const gameJson = await gameResponse.json();
+			gamePayload = gameJson.data;
+		}
+
+		/* object final envoye */
+		const exportData = {
+			identity: {
+				id: authPayload?.id,
+				email: authPayload?.email || "Not available",
+				twoFaMethod: authPayload?.twoFaMethod || "Not available",
+				createdAt: authPayload?.createdAt || "Not available",
+			},
+			profile: {
+				alias: userProfile.alias,
+				bio: userProfile.bio,
+				avatar: userProfile.avatar_url,
+				theme: userProfile.theme,
+				status: userProfile.status
+			},
+			social: {
+				friend: friendList.map((f: any) => {
+					return (f.user_id == userId) ? f.friend?.alias : f.user?.alias;
+				})
+			},
+			gaming: {
+				summary: gamePayload?.stats || "Not available",
+				matchHistory: gamePayload?.history || "Not available",				
+			},
+			export_date: new Date().toISOString()
+		};
+
+		// fichier json
+		reply.header('Content-Type', 'application/json');
+
+		// COntent-Disposition= header pour gerer les telechargementsne pas afficher mais telecharger sous le nom specifie
+		reply.header('Content-Disposition', `attachment; filename="user_data_${userId}.json"`);
+
+		return reply.status(200).send(exportData);
+	}
+	catch (err: any)
+	{
+		console.error("Error during download data:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			data: null,
+			error: { message: err.message || "Failed to download account data" }
+		});
+	}
+})
 
 //---------------------------------------
 //--------------- FRIENDS ---------------
@@ -670,12 +850,12 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 	const { id } = request.params as { id: string};
 	const { friendshipId } = request.params as {friendshipId: string}
 	const { status } = request.body as { status: string };
-	const user_id = Number(id);
+	const userId = Number(id);
 	const friendship_id = Number(friendshipId);
 
 	try
 	{
-		friendRepo.reviewFriendshipRequest(db, user_id, friendship_id, status);
+		friendRepo.reviewFriendshipRequest(db, userId, friendship_id, status);
 		return reply.status(200).send({ 
 			success: true,
 			data: null,
@@ -731,10 +911,10 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 
 	try
 	{
-		const pending_requests: friendRepo.Friendship [] = await friendRepo.listRequests(db, userId);
+		const pendingRequests: friendRepo.Friendship [] = await friendRepo.listRequests(db, userId);
 		return reply.status(200).send({
 			success: true,
-			data: pending_requests,
+			data: pendingRequests,
 			error: null
 		});
 	}
@@ -749,6 +929,8 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 		});
 	}
 })
+
+
 
 
 

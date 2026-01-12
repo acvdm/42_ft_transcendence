@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { statusImages } from "./Data";
 import { parseMessage } from "./ChatUtils";
 
@@ -66,8 +66,8 @@ export class FriendProfileModal {
             if (this.username) this.username.innerText = "Loading...";
             
             const [userRes, statsRes] = await Promise.all([
-                fetchWithAuth(`api/users/${friendId}`),
-                fetchWithAuth(`api/game/users/${friendId}/games/stats`)
+                fetchWithAuth(`api/user/${friendId}`),
+                fetchWithAuth(`api/game/users/${friendId}/stats`)
             ]);
 
             if (userRes.ok) {

@@ -37,8 +37,8 @@ class Paddle {
         }
     }
 
-    reset() {
-        this.y = 100; // Reset to initial position
+    reset(canvasHeight: number) {
+        this.y = (canvasHeight / 2) - (this.height / 2); // Reset to initial position
     }
 }
 

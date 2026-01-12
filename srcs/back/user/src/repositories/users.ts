@@ -14,6 +14,7 @@ export interface User {
     bio: string,
     status: string,
     theme: string,
+    created_at?: string
 }
 
 
@@ -284,5 +285,26 @@ export async function updateAlias (
     await db.run(`
         UPDATE USERS SET alias = ? WHERE id = ?`,
         [alias, user_id]
+    );
+}
+
+export async function anonymizeUser(
+    db: Database,
+    userId: number
+): Promise<void>
+{
+    // generer un alias anonyme unique -> slice(-4) permet de recuperer les 4 derniers caracteres de la chaine
+    const anonymousAlias = `Deleted_User_${userId}_${Date.now().toString().slice(-4)}`;
+
+    await db.run(`
+        UPDATE USERS 
+        SET
+            alias = ?,
+            avatar_url = '/assets/basic/default.png',
+            bio = 'This user has been deleted.',
+            status = 'offline',
+            theme = 'Blue'
+        WHERE id = ?`,
+    [anonymousAlias, userId]
     );
 }

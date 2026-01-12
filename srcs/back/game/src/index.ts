@@ -1,25 +1,99 @@
 import Fastify from 'fastify'; // on importe la bibliothèque fastify
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import FastifyIO from 'fastify-socket.io';
+import { Socket, Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
+// import sqlite3 from 'sqlite3';
+// import { open } from 'sqlite';
 import { Database } from 'sqlite';
 import { initDatabase } from './database.js';
 import { createMatch, rollbackDeleteGame } from './repositories/matches.js';
-import { addPlayerToMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
-import { createStatLineforOneUser, findStatsByUserId, updateUserStats } from './repositories/stats.js';
+import { addPlayerMatch, rollbackDeletePlayerFromMatch } from './repositories/player_match.js';
+import { createStatLineforOneUser, findStatsByUserId, getUserMatchHistory, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
-import { localTournament } from './repositories/tournament_interfaces.js';
-import { NotFoundError } from './utils/error.js';
+import { localMatchResult, localTournament } from './repositories/tournament_interfaces.js';
+import { NotFoundError, UnauthorizedError } from './utils/error.js';
+import { initGameState, registerRemoteGameEvents, updateGamePhysics } from './remoteGame.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    io: Server;
+  }
+}
+
+declare module 'socket.io' {
+    interface Socket {
+        user: any; // On ajoute la propriété user (type any ou { sub: number, ... })
+    }
+}
 
 const fastify = Fastify({ logger: true });
 
-let db: Database;
+// On enregistre le plugin socket io
+fastify.register(FastifyIO as any, {
+    cors: {
+        origin: "*", // Pense à mettre l'URL du front en prod
+        methods: ["GET", "POST"]
+    },
+    path: '/socket.io/',
+    transports: ['websocket', 'polling']
+});
 
-async function main() 
-{
-	db = await initDatabase();
-	console.log('game database initialised');
+let db: Database;
+const JWT_SECRET = process.env.JWT_SECRET!;
+const userSockets = new Map<number, string>();
+
+// Middleware de sécurité
+const authMiddleware = (socket: any, next: any) => {
+    const token = socket.handshake.auth.token?.replace('Bearer ', '');
+    if (!token)
+        return next(new Error("No token"));
+
+    try
+    {
+        socket.user = jwt.verify(token, JWT_SECRET);
+        next();
+    }
+    catch (e)
+    {
+        next(new UnauthorizedError("Invalid token"));
+    }
 }
 
+
+
+
+// ------------------------------------
+// --- EVENTS DU JEU REMOTE (AJOUT) ---
+// ------------------------------------
+
+fastify.ready().then(() => {
+    // Application de sécurité
+    fastify.io.use(authMiddleware);
+    
+    // Toute la logique Socket se passe ICI
+    fastify.io.on('connection', (socket: Socket) => {
+        console.log(`Client connected (Fastify): ${socket.id}`);
+
+        if (socket.user && socket.user.sub) {
+            userSockets.set(socket.user.sub, socket.id);
+        }
+
+        registerRemoteGameEvents(fastify.io, socket, userSockets);
+
+		
+        socket.on('disconnect', () => {
+            console.log(`Client disconnected: ${socket.id}`);
+            // Nettoyage map userSockets
+            for (const [uid, sid] of userSockets.entries()) {
+                if (sid === socket.id) {
+                    userSockets.delete(uid);
+                    break;
+                }
+            }
+
+        });
+    });
+});
 
 
 //---------------------------------------
@@ -30,28 +104,78 @@ async function main()
 fastify.post('/games', async (request, reply) =>
 {
 	let gameId = null;
-	let playerMatchOneId = null;
-	let playerMatchTwoId = null;
+	let p1Match = null;
+	let p2Match = null;
+	let start = null;
+	let end = null;
+	let finalDuration = 1;
 
-	const body = request.body as { 
-		playerOneId: number;
-		playerTwoId: number; 
-		type: string; 
-		name: string; 
-		tournamentId: number; 
-	};	
+	const body = request.body as localMatchResult;
 
 	try
 	{
-		gameId = await createMatch(db, body.type, body.tournamentId);
+		console.log(`Body: ${body.type}, ${body.p1.alias}, ${body.p1.userId}, ${body.p2.userId}`);
+
+		const gameId = await createMatch(
+			db, body.type,
+			body.p1.alias, body.p2.alias,
+			body.p1.score, body.p2.score,
+			body.winner, 
+			"finished", // status
+			"1v1", // round
+			null, // tournamentId
+			body.startDate,
+			body.endDate
+		);
+
+		if (body.startDate && body.endDate)
+		{
+			start = new Date(body.startDate).getTime();
+			end = new Date(body.endDate).getTime();
+			const diffInMins = end - start;
+			const durationMinutes = Math.round(diffInMins / 60000);
+			finalDuration = durationMinutes > 0 ? durationMinutes : 1;
+		}
+
+		console.log(`DEBUG DATES REÇUES -> Start: ${body.startDate} | End: ${body.endDate}`);
+
+
 		if (!gameId)
 			throw new Error(`Error could not create game`);
 
-		playerMatchOneId = await addPlayerToMatch(db, gameId, body.playerOneId);
-		playerMatchTwoId = await addPlayerToMatch(db, gameId, body.playerTwoId);
-		if (!playerMatchOneId || !playerMatchTwoId)
-			throw new Error(`Error could not associate players with the game ${gameId}`);
+		if (body.p1.userId)
+		{
+			const p1IsWinner = body.winner == body.p1.alias
+			p1Match = await addPlayerMatch(
+				db, body.type, gameId,
+				body.p1.userId, body.p2.alias,
+				body.p1.score, body.p2.score,
+				p1IsWinner ? 1 : 0
+			);
 
+			await updateUserStats(
+				db, body.p1.userId,
+				body.p1.score, p1IsWinner ? 1 : 0,
+				finalDuration
+			);
+		}
+
+		if (body.p2.userId)
+		{
+			const p2IsWinner = body.winner == body.p2.alias
+			p2Match = await addPlayerMatch(
+				db, body.type, gameId,
+				body.p2.userId, body.p1.alias,
+				body.p2.score, body.p1.score,
+				p2IsWinner ? 1 : 0
+			);
+
+			await updateUserStats(
+				db, body.p2.userId,
+				body.p2.score, p2IsWinner ? 1 : 0,
+				finalDuration
+			);
+		}
 		return reply.status(201).send({
 			success: true,
 			data: gameId,
@@ -61,11 +185,11 @@ fastify.post('/games', async (request, reply) =>
 	}
 	catch (err:any)
 	{
-		if (gameId && playerMatchOneId)
-			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchOneId);
+		if (gameId && p1Match)
+			await rollbackDeletePlayerFromMatch(db, gameId, p1Match);
 
-		if (gameId && playerMatchTwoId)
-			await rollbackDeletePlayerFromMatch(db, gameId, playerMatchTwoId);
+		if (gameId && p2Match)
+			await rollbackDeletePlayerFromMatch(db, gameId, p2Match);
 
 		if (gameId)
 			await rollbackDeleteGame(db, gameId);
@@ -88,12 +212,13 @@ Sinon tout se passe dans la memoire du navigateur
 */
 
 // changer pour que ce soi restfull /game/tournament
-fastify.post('/tournament', async (request, reply) => 
+fastify.post('/games/tournaments', async (request, reply) => 
 {
 	try
 	{
 		const body = request.body as localTournament; // === interface dans tournament_interfaces
-		if (!body.match_list || body.match_list.length !== 3)
+		
+		if (!body.matchList || body.matchList.length !== 3)
 		{
 			return reply.status(400).send({
 				success: false,
@@ -131,7 +256,7 @@ fastify.post('/tournament', async (request, reply) =>
 //---------------------------------------
 
 /* -- CREATE A NEW STATS LINE FOR A NEW USER -- */
-fastify.post('/users/:id/games/stats', async (request, reply) =>
+fastify.post('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -163,7 +288,7 @@ fastify.post('/users/:id/games/stats', async (request, reply) =>
 
 
 /* -- GET STATS FOR ONE USER -- */
-fastify.get('/users/:id/games/stats', async (request, reply) =>
+fastify.get('/games/users/:id/stats', async (request, reply) =>
 {
 	try
 	{
@@ -193,27 +318,54 @@ fastify.get('/users/:id/games/stats', async (request, reply) =>
 	}
 })
 
+/* -- GET HISTORY FOR ONE USER -- */
+fastify.get('/games/users/:id/history', async (request, reply) => 
+{
+	const query = request.query as any;
+	const userId = Number(query.userId);
 
-/* -- UPDATE STATS FOR ONE USER -- */
-fastify.patch('/users/:id/games/stats', async (request, reply) => 
+	if (!userId) 
+	{
+		return reply.status(400).send({error: "userId is required"});
+	}
+
+	try 
+	{
+		const result = await getUserMatchHistory(db, userId, {
+				page: Number(query.page),
+				limit: Number(query.limit),
+				onlyWins: query.filter == 'wins',
+				gameType: query.type
+			});
+		return reply.send(result);
+	}
+	catch (err)
+	{
+		return reply.status(500).send({ error: "Failed to fetch history" });
+	}
+
+});
+
+/* -- STAT EXPORT FOR ONE USER -- */
+fastify.get('/users/:id/export', async (request, reply) =>
 {
 	try
 	{
 		const { id } = request.params as { id: string }
 		const userId = Number(id);
+		if (!userId)
+				return reply.status(400).send({ error: "Invalid ID" });
 
-		const body = request.body as {
-			userScore: number,
-			isWinner: number
-		}
+
+		const stats = await findStatsByUserId(db, userId);
+		const historyResult = await getUserMatchHistory(db, userId, { limit: 10000, page: 1});
 		
-		const userStats = await updateUserStats(db, userId, body.userScore, body.isWinner);
-		if (!userStats)
-			throw new Error(`Error: could not update stats for user ${userId}`);
-
 		return reply.status(200).send({
 			success: true,
-			data: userStats,
+			data: {
+				stats: stats,
+				history: historyResult.data
+			},
 			error: null
 		})
 	}
@@ -236,6 +388,12 @@ fastify.get('/health', async (request, reply) =>
 {
 	return { service: 'game', status: 'ready', port: 3003 };
 });
+
+async function main() 
+{
+	db = await initDatabase();
+	console.log('game database initialised');
+}
 
 // on demarre le serveur
 const start = async () => 

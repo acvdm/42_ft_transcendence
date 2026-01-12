@@ -29,13 +29,48 @@ export async function findMatchById (
 export async function createMatch (
     db: Database,
     type: string,
-    tournamentId: number
+    p1Alias: string,
+    p2Alias: string,
+    p1Score: number,
+    p2Score: number,
+    winnerAlias: string,
+    status: string,
+    round: string,
+    tournamentId: number | null,
+    startDate?: string | undefined,
+    endDate?: string | undefined
+
 ): Promise<number | undefined>
-{
+{    
+
+    let finalDuration = 1;
+
+    if (startDate && endDate)
+	{
+		let start = new Date(startDate).getTime();
+		let end = new Date(endDate).getTime();
+		const diffInMins = end - start;
+		const durationMinutes = Math.round(diffInMins / 60000);
+		finalDuration = durationMinutes > 0 ? durationMinutes : 1;
+	}
+
     const newMatch = await db.run(`
-        INSERT INTO MATCHES (game_type, fk_tournament_id)
-        VALUES (?, ?)`,
-        [type, tournamentId]
+        INSERT INTO MATCHES (
+            game_type, 
+            player1_alias, 
+            player2_alias, 
+            score_p1, 
+            score_p2, 
+            winner_alias, 
+            status, 
+            round,
+            fk_tournament_id,
+            started_at,
+            finished_at,
+            total_duration_in_minutes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [type, p1Alias, p2Alias, p1Score, p2Score, winnerAlias, status, round, tournamentId, startDate, endDate, finalDuration]
     );
 
     return newMatch?.lastID;

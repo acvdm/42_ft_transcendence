@@ -14,6 +14,12 @@ declare module 'fastify' {
   }
 }
 
+declare module 'socket.io' {
+    interface Socket {
+        user: any; // On ajoute la propriété user (type any ou { sub: number, ... })
+    }
+}
+
 // Creation of Fastify server
 const fastify = Fastify({ logger: true });
 
@@ -29,6 +35,7 @@ fastify.register(FastifyIO, {
 
 let db: Database;
 const JWT_SECRET = process.env.JWT_SECRET!;
+const userSockets = new Map<number, string>();
 
 // Middleware de sécurité
 const authMiddleware = (socket: any, next: any) => {
@@ -47,8 +54,10 @@ const authMiddleware = (socket: any, next: any) => {
     }
 }
 
+
 // 1. Définir la logique Socket (se lance quand Fastify est prêt)
 fastify.ready().then(() => {
+    console.log("container chat");
     // Application de sécurité
     fastify.io.use(authMiddleware);
     
@@ -57,6 +66,8 @@ fastify.ready().then(() => {
         console.log(`Client connected (Fastify): ${socket.id}`);
 
         socket.on('registerUser', (userId: string) => {
+            const id = Number(userId);
+            userSockets.set(id, socket.id); // AJOUT: on stocke le socket id
             socket.join(`user_${userId}`);
             console.log(`User ${userId} registered for notifications`);
         });
@@ -127,22 +138,30 @@ fastify.ready().then(() => {
                 });
             }
         });
-
-
-        socket.on('disconnect', () => {
-            console.log(`Client disconnected: ${socket.id}`);
-        });
     });
 });
+
 
 // 2. Fonctions de logique métier
 async function joinChannel(socket: Socket, io: Server, channelKey: string) {
     try {
-        const isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+        let isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
         
         // Si le channel n'existe pas en base, on le crée (simplifié)
         if (!isExistingChannel?.id) {
-            await chanRepo.createChannel(db, channelKey);
+            try {
+                await chanRepo.createChannel(db, channelKey);
+                isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+            }
+            catch (createErr: any) {
+                if (createErr.code === 'SQLITE_CONSTRAINT')
+                {
+                    console.log("Channel créé simultanément par l'autre joueur");
+                    isExistingChannel = await chanRepo.findChannelByKey(db, channelKey);
+                }
+                else
+                    throw createErr;
+            }
         }
         
         // IMPORTANT: Le socket rejoint la "room" Socket.IO
@@ -162,6 +181,7 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 
 async function chatMessage(io: Server, data: messRepo.Message) {
     const { channel_key, sender_id, sender_alias, msg_content } = data;
+    console.log("Back: chatMessage ligne 654")
 
     try {
         const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);

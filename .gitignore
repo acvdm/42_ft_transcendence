@@ -1,0 +1,11 @@
+.env
+
+node_modules/
+
+data/
+zdata.old/
+
+datadev/
+
+certificate.crt 
+private_key.key

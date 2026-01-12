@@ -14,9 +14,16 @@ export async function initDatabase(): Promise<Database>{
         CREATE TABLE IF NOT EXISTS MATCHES (
             match_id INTEGER PRIMARY KEY AUTOINCREMENT,
             game_type TEXT,
+            player1_alias TEXT,
+            player2_alias TEXT,
+            score_p1 INTEGER,
+            score_p2 INTEGER,
+            winner_alias TEXT,
             status TEXT DEFAULT 'pending',
             started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             finished_at DATETIME,
+            total_duration_in_minutes INTEGER DEFAULT 0,
+            round default '1v1',
             fk_tournament_id INTEGER,
             FOREIGN KEY (fk_tournament_id) REFERENCES TOURNAMENTS(tournament_id)
         )
@@ -31,12 +38,12 @@ export async function initDatabase(): Promise<Database>{
     await db.exec(`
         CREATE TABLE IF NOT EXISTS PLAYER_MATCH (
             match_id INTEGER NOT NULL,
+            game_type TEXT NOT NULL,
             user_id INTEGER,
-            guest_alias TEXT,
+            opponent TEXT,
             score INTEGER DEFAULT 0,
+            opponent_score INTEGER DEFAULT 0,
             is_winner INTEGER DEFAULT 0,
-    
-            CHECK (user_id IS NOT NULL OR guest_alias IS NOT NULL),
             FOREIGN KEY (match_id) REFERENCES MATCHES(match_id)
         )
     `);
@@ -63,8 +70,9 @@ export async function initDatabase(): Promise<Database>{
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
             total_games INTEGER GENERATED ALWAYS AS (wins + losses) STORED,
-            total_score INTEGER,
+            total_score INTEGER DEFAULT 0,
             current_win_streak INTEGER DEFAULT 0,
+            total_play_time_minutes INTEGER DEFAULT 0,
             PRIMARY KEY (user_id)
         )
     `);

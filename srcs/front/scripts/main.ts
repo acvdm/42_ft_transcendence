@@ -1,14 +1,13 @@
-// j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { render as LoginPage, loginEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
-import { render as HomePage, afterRender as HomePageAfterRender } from "./pages/HomePage"
-import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./pages/ProfilePage"
-import { NotFoundPage } from "./pages/NotFound";
-import { render as LandingPage, initLandingPage } from "./pages/LandingPage";
-import { RegisterPage, registerEvents } from "./pages/RegisterPage";
-import { render as GuestPage } from "./pages/GuestPage";
-import { applyTheme } from "./pages/ProfilePage";
-import { render as GamePage, initGamePage } from "./pages/GamePage";
-
+import { render as LoginPage, loginEvents } from "./controllers/LoginPage"; 
+import { render as HomePage, afterRender as HomePageAfterRender } from "./controllers/HomePage";
+import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./controllers/ProfilePage";
+import { NotFoundPage } from "./pages/NotFound"; // Celui-ci semble correct s'il est resté dans pages/
+import { render as LandingPage, initLandingPage } from "./controllers/LandingPage";
+import { render as RegisterPage, registerEvents } from "./controllers/RegisterPage";
+import { render as GuestPage, afterRender as GuestAfterRender } from "./controllers/GuestPage";
+import { applyTheme } from "./controllers/ProfilePage";
+import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./controllers/GamePage";
+import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
 
@@ -37,6 +36,10 @@ const routes: { [key: string]: Page } = {
 		render: ProfilePage,
 		afterRender: ProfilePageAfterRender
 	},
+	'/dashboard': {
+		render: DashboardPage,
+		afterRender: DashboardPageAfterRender
+	},
 	'/register': {
 		render: RegisterPage,
 		afterRender: registerEvents
@@ -46,7 +49,8 @@ const routes: { [key: string]: Page } = {
 		afterRender: loginEvents
 	},
 	'/guest': {
-		render: GuestPage
+		render: GuestPage,
+		afterRender: GuestAfterRender
 	},
 	'/game': {
         render: GamePage, // La fonction HTML
@@ -104,6 +108,17 @@ const handleLogout = async () => {
 	}
 }
 
+// faustine
+// on clean la guest session pour ne pas avoir de persistance
+const clearGuestSession = () => {
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('isGuest');
+};
+
+
 
 /*
 ** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
@@ -119,59 +134,66 @@ const handleLogout = async () => {
 // .innerHTML remplace le HTML intérieur de cet élément par la chaîne html.
 
 
-// Remplacez votre handleLocationChange par celle-ci :
 const handleLocationChange = () => {
 	if (!appElement) return;
 
 	let path = window.location.pathname;
 	
+	// faustine
+	if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
+        clearGuestSession();
+    } // pour clean la session guest
 	// Récupération des tokens (User normal OU Guest)
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
-	// --- 1. GESTION DU LOGOUT (C'est ça qu'il manquait !) ---
+	// si le jeu est en train de tourner mais que l'url n'est pas game
+	if (isGameRunning() && path !== '/game') cleanup(); // on arrete le jeu et activegame devient nul
+
 	if (path === '/logout') {
 		handleLogout();
 		return; // On arrête tout ici pour laisser le logout se faire
 	}
 
-	// --- 2. GESTION DE LA NAVBAR ---
-	const navbar = document.getElementById('main-navbar');
-	if (navbar) {
-		// On cache la navbar si c'est un Guest
-		if (isGuest) {
-			navbar.style.display = 'none';
-		} else if (accessToken) {
-			navbar.style.display = 'flex';
-		} else {
-			// Optionnel : cacher sur la landing page si vous le souhaitez
-			// navbar.style.display = 'none'; 
-		}
-	}
 
-	// --- 3. SÉCURITÉ ET REDIRECTIONS ---
+	/////////////// NAVBAR 
 
-	// CAS GUEST : Bloquer l'accès à Home et Profile
-	if (isGuest) {
-		if (path === '/home' || path === '/profile') {
-			window.history.pushState({}, '', '/guest');
-			path = '/guest';
-		}
-	}
-	// CAS USER CONNECTÉ (Normal) : Bloquer l'accès à Login/Register
-	else if (accessToken) {
-		if (path === '/' || path === '/login' || path === '/register' || path === '/guest') {
-			window.history.pushState({}, '', '/home');
-			path = '/home';
-		}
-	}
-	// CAS NON CONNECTÉ : Renvoyer vers l'accueil si page privée
-	else if (!publicRoutes.includes(path)) {
-		window.history.pushState({}, '', '/');
-		path = '/';
-	}
+    const navbar = document.getElementById('main-navbar');
+    
+    // nouvelle définition des menus
+    const userMenuHtml = `
+        <a href="/home" class="text-white hover:underline">Home</a>
+        <a href="/profile" class="text-white hover:underline">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
 
-	// --- 4. AFFICHAGE DE LA PAGE ---
+    const guestMenuHtml = `
+        <a href="/guest" class="text-white hover:underline">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
+
+    if (navbar) {
+        if (isGuest) {
+            navbar.style.display = 'flex'; // pour le guest on affiche quand meme la navbar personnalisée
+            if (!navbar.innerHTML.includes('Guest Area')) { // si ce n'est pas le guest on l'affiche pour eviter de reecrire a chaque fois
+                navbar.innerHTML = guestMenuHtml;
+            }
+        } 
+        else if (accessToken) {
+            navbar.style.display = 'flex'; // navbar pour le user
+			navbar.classList.add('justify-between');
+            if (!navbar.innerHTML.includes('Dashboard')) { // 
+                navbar.innerHTML = userMenuHtml;
+            }
+        } 
+        else {
+            navbar.style.display = 'none'; // si pas connecte2 --> on cache tout
+        }
+    }
+	
+	///////// AFFICHAGE DE LA PAGE 
+	
 	const page = routes[path] || routes['/404'];
 	appElement.innerHTML = page.render();
 
@@ -225,6 +247,12 @@ window.addEventListener('click', (event) => {
         // (Astuce: on passe l'event, et dans navigate on récupère la cible via l'event)
         // Note: Ici on simplifie l'appel en passant l'event original
         event.preventDefault();
+		if (isGameRunning()) {
+			event.stopImmediatePropagation();
+			showExitConfirmationModal();
+			return ;
+		}
+
         const href = anchor.href;
         
         if (href === window.location.href) return;
@@ -238,6 +266,11 @@ window.addEventListener('click', (event) => {
 
 // 2. Gestion des contenus suivant/precedent
 window.addEventListener('popstate', () => {
+	if (isGameRunning()) {
+		window.history.pushState(null, '', '/game');
+		showExitConfirmationModal();
+		return ;
+	}
 	handleLocationChange();
 });
 
