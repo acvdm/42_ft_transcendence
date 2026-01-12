@@ -40,7 +40,6 @@ class Game {
         if (this.socket) {
             this.socket.off('gameState');
             this.socket.off('gameEnded');
-            //this.socket.off('opponentLeft');
         }
     }
 
