@@ -40,7 +40,6 @@ class Game {
         if (this.socket) {
             this.socket.off('gameState');
             this.socket.off('gameEnded');
-            //this.socket.off('opponentLeft');
         }
     }
 
@@ -56,14 +55,20 @@ class Game {
         }
     }
 
+    resetScore() {
+        this.score = { player1: 0, player2: 0 };
+        this.notifyScoreUpdate();
+    }
+
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId: string, role: 'player1' | 'player2') {
-        console.log("startRemote");
+        console.log("startRemote Initial score:", this.score);
         this.isRemote = true;
         this.roomId = roomId;
         this.playerRole = role;
         // this.socket = SocketService.getInstance().socket;
 
+        this.score = { player1: 0, player2: 0 };
         const socketService = SocketService.getInstance();
         socketService.connectGame();
         this.socket = socketService.getGameSocket();
@@ -77,6 +82,7 @@ class Game {
         this.socket.off('gameEnded');
         
         console.log(`Starting Remote Game in room ${roomId} as ${role}`);
+        this.notifyScoreUpdate();
 
         // Écouter les mises à jour du serveur
         this.socket.on('gameState', (data: any) => {
@@ -101,6 +107,7 @@ class Game {
 
     start() {
         this.isRunning = true;
+        this.notifyScoreUpdate();
         this.gameLoop();
     }
 
@@ -158,6 +165,10 @@ class Game {
 
     // Nouvelle fonction pour mettre à jour l'état visuel depuis le serveur
     updateFromRemote(data: any) {
+        if (this.roomId && data.roomId && data.roomId !== this.roomId) {
+            console.warn("👻 Paquet fantôme ignoré venant de :", data.roomId);
+            return;
+        }
         // Le serveur utilise une base 800x600, on adapte à notre canvas
         const SERVER_WIDTH = 800;
         const SERVER_HEIGHT = 600;
@@ -178,6 +189,7 @@ class Game {
 
         // Score
         if (this.score.player1 !== data.score.player1 || this.score.player2 !== data.score.player2) {
+            console.log("📈 Score update reçu du serveur:", data.score); // <--- REGARDE CE LOG
             this.score = data.score;
             this.notifyScoreUpdate();
         }

@@ -53,6 +53,10 @@ export async function saveLocalTournament (
     // la valeur match prend la valeur du premier objet de la liste
     for (const match of data.matchList)
     {
+        let start = null;
+        let end = null;
+        let finalDuration = 1;
+
         if (!match.p1.alias || !match.p2.alias)
         {
             console.error("One game is missing players");
@@ -70,6 +74,15 @@ export async function saveLocalTournament (
             match.startDate, match.endDate
         );
 
+        if (match.startDate && match.endDate)
+		{
+			start = new Date(match.startDate).getTime();
+			end = new Date(match.endDate).getTime();
+			const diffInMins = end - start;
+			const durationMinutes = Math.round(diffInMins / 60000);
+			finalDuration = durationMinutes > 0 ? durationMinutes : 1;
+		}
+
         if (!matchId) {
             throw new Error("Failed to save match: ID is missing");
         }
@@ -84,13 +97,15 @@ export async function saveLocalTournament (
             await addPlayerMatch(
                 db, "tournament", matchId, 
                 match.p1.userId, match.p2.alias, 
-                match.p1.score, p1IsWinner ? 1 : 0
+                match.p1.score, match.p2.score, 
+                p1IsWinner ? 1 : 0
             );
 
             console.log(`match.p1.score: ${match.p1.score}`);
             await updateUserStats(
                 db, match.p1.userId,
-                match.p1.score, p1IsWinner ? 1 : 0
+                match.p1.score, p1IsWinner ? 1 : 0,
+                finalDuration
             );
         };
 
@@ -105,13 +120,15 @@ export async function saveLocalTournament (
             await addPlayerMatch(
                 db, "tournament", matchId,
                 match.p2.userId, match.p1.alias,
-                match.p2.score, p2IsWinner ? 1 : 0
+                match.p2.score, match.p1.score,
+                p2IsWinner ? 1 : 0
             );
 
             console.log(`match.p1.score: ${match.p2.score}`);
             await updateUserStats(
                 db, match.p2.userId,
-                match.p2.score, p2IsWinner ? 1 : 0
+                match.p2.score, p2IsWinner ? 1 : 0,
+                finalDuration
             );
         }
     }

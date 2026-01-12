@@ -22,6 +22,7 @@ export async function initDatabase(): Promise<Database>{
             status TEXT DEFAULT 'pending',
             started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             finished_at DATETIME,
+            total_duration_in_minutes INTEGER DEFAULT 0,
             round default '1v1',
             fk_tournament_id INTEGER,
             FOREIGN KEY (fk_tournament_id) REFERENCES TOURNAMENTS(tournament_id)
@@ -41,6 +42,7 @@ export async function initDatabase(): Promise<Database>{
             user_id INTEGER,
             opponent TEXT,
             score INTEGER DEFAULT 0,
+            opponent_score INTEGER DEFAULT 0,
             is_winner INTEGER DEFAULT 0,
             FOREIGN KEY (match_id) REFERENCES MATCHES(match_id)
         )
@@ -70,6 +72,7 @@ export async function initDatabase(): Promise<Database>{
             total_games INTEGER GENERATED ALWAYS AS (wins + losses) STORED,
             total_score INTEGER DEFAULT 0,
             current_win_streak INTEGER DEFAULT 0,
+            total_play_time_minutes INTEGER DEFAULT 0,
             PRIMARY KEY (user_id)
         )
     `);
