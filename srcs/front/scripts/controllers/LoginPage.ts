@@ -1,17 +1,25 @@
-import htmlContent from "./LoginPage.html";
-import { fetchWithAuth } from "./api";
+import htmlContent from "../pages/LoginPage.html";
+import { fetchWithAuth } from "../services/api";
 import { updateUserStatus } from "../components/Data";
 
 export function render(): string {
 	return htmlContent;
 };
 
+//================================================
+//================ LOGIN WITH 2FA ================
+//================================================
 
 async function init2faLogin(accessToken: string, userId: number, selectedStatus: string) {
-    if (accessToken) localStorage.setItem('accessToken', accessToken);
-    if (userId) localStorage.setItem('userId', userId.toString());
+    
+    if (accessToken) {
+        localStorage.setItem('accessToken', accessToken);
+    }
+    if (userId) {
+        localStorage.setItem('userId', userId.toString());
+    }
 
-    // on recupere le profil
+    // Getting back user profil
     if (userId && accessToken) {
         try {
             const userRes = await fetch(`/api/user/${userId}`, {
@@ -33,7 +41,7 @@ async function init2faLogin(accessToken: string, userId: number, selectedStatus:
             console.error("Can't get user's profile", err);
         }
 
-        // on met a jour le status 
+        // Updating status
         try {
             await fetch(`/api/user/${userId}/status`, {
                 method: 'PATCH',
@@ -54,12 +62,14 @@ async function init2faLogin(accessToken: string, userId: number, selectedStatus:
 }
 
 
+//================================================
+//=============== LOGIN CONNECTION ===============
+//================================================
+
 function handleLogin() {
-    console.log("handleLogin");
+
     const button = document.getElementById('login-button');
     const errorElement = document.getElementById('error-message');
-
-    // les elements du 2fa
     const modal2fa = document.getElementById('2fa-modal');
     const input2fa = document.getElementById('2fa-input-code') as HTMLInputElement;
     const confirm2fa = document.getElementById('confirm-2fa-button');
@@ -68,7 +78,6 @@ function handleLogin() {
 
     let tempToken: string | null = null;
     let cachedStatus = 'available';
-
 
     button?.addEventListener('click', async () => {
         const email = (document.getElementById('email-input') as HTMLInputElement).value;
@@ -88,8 +97,8 @@ function handleLogin() {
             return;
         }
 
+        // Authentication
         try {
-            // Authentification
             const response = await fetch('/api/auth/sessions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -98,18 +107,18 @@ function handleLogin() {
 
             const result = await response.json();
 
-            // cas 1: 2fa required
+            // 1st case: 2fa is required
             if (result.require2fa) {
-                console.log("2FA require");
                 localStorage.setItem('is2faEnabled', 'true');
                 tempToken = result.tempToken;
+
                 if (modal2fa) {
                     modal2fa.classList.remove('hidden');
                     modal2fa.classList.add('flex');
                     input2fa.value = '';
                     input2fa.focus();
                 }
-                return; // attente de validation du code
+                return;
             }
 
 
@@ -118,11 +127,13 @@ function handleLogin() {
 				const { accessToken, userId } = result.data;
                 await init2faLogin(accessToken, userId, cachedStatus);
 
-                // Stockage des tokens
-                if (accessToken) localStorage.setItem('accessToken', accessToken);
-                if (userId) localStorage.setItem('userId', userId.toString());
-
-                // Récupération du profil (Username) (on verrifie qu'on a bien un access token)
+                // Tokens and infos storage
+                if (accessToken) {
+                    localStorage.setItem('accessToken', accessToken);
+                }
+                if (userId) {
+                    localStorage.setItem('userId', userId.toString());
+                }
                 if (userId && accessToken) {
                     try {
 
@@ -132,10 +143,12 @@ function handleLogin() {
 
                         if (userRes.ok) {
                             const userData = await userRes.json();
-                            if (userData.alias)
+                            if (userData.alias) {
                                 localStorage.setItem('username', userData.alias);
-                            if (userData.theme)
+                            }
+                            if (userData.theme) {
                                 localStorage.setItem('userTheme', userData.theme);
+                            }
                         }
                     } catch (err) {
                         console.error("Can't get user's profile", err);
@@ -146,7 +159,7 @@ function handleLogin() {
                             method: 'PATCH',
                             body: JSON.stringify({ status: selectedStatus })
                         });
-                        console.log("Status updated to DB:", selectedStatus);
+                        console.log("Status updated to database:", selectedStatus);
                     } catch (err) {
                         console.error("Failed to update status on login", err);
                     }
@@ -157,7 +170,6 @@ function handleLogin() {
                 window.dispatchEvent(new PopStateEvent('popstate'));
 
             } else {
-                // Gestion d'erreur login
                 console.error("Login error:", result.error);
                 if (errorElement) {
                     errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
@@ -175,14 +187,18 @@ function handleLogin() {
 
 
     confirm2fa?.addEventListener('click', async () => {
+
         const code = input2fa.value.trim();
 
-        if (error2fa) error2fa.classList.add('hidden');
+        if (error2fa) {
+            error2fa.classList.add('hidden');
+        }
 
-        if (!code || !tempToken) return;
+        if (!code || !tempToken) {
+            return;
+        }
 
         try {
-            // ici pas de fetch with auth car token temporaire
             const response = await fetch('/api/auth/2fa/challenge', {
                 method: 'POST',
                 headers: { 
@@ -194,13 +210,14 @@ function handleLogin() {
 
             const result = await response.json();
 
+            // If 2fa worked, we generate real tokens
             if (response.ok && result.success) {
-                // reussite du 2fa -> rvraim tokens
                 localStorage.setItem('is2faEnabled', 'true');
-                const { accessToken, userId } = result; // structure de retour de verify
-                
-                // fermeutr modale
-                if (modal2fa) modal2fa.classList.add('hidden');
+                const { accessToken, userId } = result;
+
+                if (modal2fa) {
+                    modal2fa.classList.add('hidden');
+                }
             
                 await updateUserStatus('online');
                 await init2faLogin(accessToken, userId, cachedStatus);
@@ -223,7 +240,7 @@ function handleLogin() {
         if (modal2fa) {
             modal2fa.classList.add('hidden');
             modal2fa.classList.remove('flex');
-            tempToken = null; // reset du toekn
+            tempToken = null;
         }
     };
 

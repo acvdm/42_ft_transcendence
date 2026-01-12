@@ -1,7 +1,7 @@
 import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { Socket } from "socket.io-client";
 
 export class Chat {
@@ -16,38 +16,32 @@ export class Chat {
     private shakeTimeout: number | undefined;
 
     constructor() {
-        // this.socket = SocketService.getInstance().socket;
         this.messagesContainer = document.getElementById('chat-messages');
         this.messageInput = document.getElementById('chat-input') as HTMLInputElement;
         this.wizzContainer = document.getElementById('wizz-container');
     }
 
     public init() {
-        // 1. On récupère l'instance du service
         const socketService = SocketService.getInstance();
 
-        // 2. On lance explicitement la connection au chat et au game
         socketService.connectChat();
         socketService.connectGame()
 
-        // 3. On récupère la socket spécifique au chat
         this.chatSocket = socketService.getChatSocket();
-
         this.gameSocket = socketService.getGameSocket();
-        if (!this.gameSocket)
-            console.log("gamesocket n'existe pas");
 
-        // Si la connexion a échoué, on arrête
+        if (!this.gameSocket) {
+            console.log("Gamesocket does not exist");
+        }
         if (!this.chatSocket) {
             console.error("Chat: Impossible to retrieve chat socket (not connected).");
             return;
         }
 
-        // 4. On lance les listeners
         this.setupSocketEvents();
         this.setupInputListeners();
         this.setupWizz();
-        this.setupTools(); // Animations, Fonts, Emoticons, Backgrounds
+        this.setupTools();
     }
     
 
@@ -55,16 +49,13 @@ export class Chat {
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
         this.currentFriendId = friendId || null;
-        console.log(`currentChannelKey = ${this.currentChannel}, currentFriendshipId = ${this.currentFriendshipId}, currentFriendId = ${this.currentFriendId}`);
 
-        if (this.chatSocket)
+        if (this.chatSocket) {
             this.chatSocket.emit("joinChannel", channelKey);
-        
-        // Reset affichage
+        }
         if (this.messagesContainer) {
             this.messagesContainer.innerHTML = '';
         }
-
     }
 
     // ---------------------------------------------------
@@ -76,8 +67,6 @@ export class Chat {
             this.addMessage("You can now chat with your friend!", "System");
         });
 
-        // on va écouter l'événement chatMessage venant du serveur
-        // le backend va renvoyer data, il devrait plus renvoyer message: "" author: ""
         this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
             this.addMessage(data.msg_content, data.sender_alias);
         });
@@ -99,13 +88,13 @@ export class Chat {
             this.addSystemMessage(data.content);
         })
 
-        // reception ici du serveur au client
         this.chatSocket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
-            if (data.channel_key && data.channel_key !== this.currentChannel) return;
+            
+            if (data.channel_key && data.channel_key !== this.currentChannel) {
+                return;
+            }
             
             const currentUser = localStorage.getItem('username');
-
-            // On affiche toujours le message dans le chat
             this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
 
             if (data.author !== currentUser) {
@@ -114,11 +103,11 @@ export class Chat {
         });
 
         this.chatSocket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
+            
             const { animationKey, author } = data;
             const imgUrl = animations[animationKey];
             
             if (imgUrl) {
-                // Utilise une mise en forme spéciale pour les animations
                 const animationHTML = `
                     <div>
                         <strong>${author} said:</strong><br>
@@ -141,13 +130,14 @@ export class Chat {
     // ---------------------------------------------------
 
     private setupInputListeners() {
-        if (!this.messageInput) return;
+        if (!this.messageInput) {
+            return;
+        }
 
-        // a partir du moment ou on appuie sur entree-> envoi de l'input
         this.messageInput.addEventListener('keyup', (event) => {
             if (event.key == 'Enter' && this.messageInput?.value.trim() != '') {
+                
                 const msg_content = this.messageInput.value;
-                // on envoie le message au serveur avec emit
                 const sender_alias = localStorage.getItem('username');
                 const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
                 
@@ -157,13 +147,10 @@ export class Chat {
                     channel_key: this.currentChannel,
                     msg_content: msg_content 
                 });
-                this.messageInput.value = ''; // on vide l'input
+                this.messageInput.value = '';
             }
         });
     }
-
-
-
 
     // ---------------------------------------------------
     // ----            LOGIQUE DU WIZZ                ----
@@ -174,40 +161,37 @@ export class Chat {
         if (wizzButton) {
             wizzButton.addEventListener('click', () => {
                 const currentUsername = localStorage.getItem('username');
-                // on envois l'element snedWizz au serveur
                 this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
-                // secousse pour l'expediteur et le receveur
                 this.shakeElement(this.wizzContainer, 500);
             });
         }
     }
 
-    // envoi du wizz pour le remote -> il ne s'envoit qu'a l'opposant
     public emitWizzOnly() {
-        if (!this.chatSocket) return;
+        if (!this.chatSocket) {
+            return;
+        }
         const currentUsername = localStorage.getItem('username');
         this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
 
-    // délcencher la secousse 
     public shakeElement(element: HTMLElement | null, duration: number = 500) {
-        if (!element) return;
+        if (!element) {
+            return;
+        }
+        if (this.shakeTimeout) {
+            clearTimeout(this.shakeTimeout);
+        }
 
-        // annuler le tem,ps de la secousse rpecedence
-        if (this.shakeTimeout) clearTimeout(this.shakeTimeout);
-
-        // on applique la classe d'animation avec le css personnalisé -> keyframe
         element.classList.remove('wizz-shake');
-        void element.offsetWidth; // force d'un reflow
+        void element.offsetWidth;
         element.classList.add('wizz-shake');
 
-        // on retire la classe une fois que l'amination est terminé
         this.shakeTimeout = window.setTimeout(() => {
             element.classList.remove('wizz-shake');
             this.shakeTimeout = undefined;
         }, duration);
 
-        // on essaie de mettre un son
         try {
             const wizzSound = new Audio('/assets/chat/wizz_sound.mp3');
             wizzSound.play().catch(e => console.log("Could not play wizz sound:", e.message));
@@ -232,15 +216,13 @@ export class Chat {
                 content: message
             });
         } else {
-            // ajout d'un fallback
             this.addSystemMessage(message);
         }
     }
     
     public addSystemMessage(message: string) {
-        this.addMessage(`[b]${message}[/b]`, "System"); // ou autre chose que system? "game?"
+        this.addMessage(`[b]${message}[/b]`, "System");
     }
-
 
 //faustine
     private addMessage(message: string, author: string) {
@@ -263,19 +245,19 @@ export class Chat {
             //on store le private id dans session storage pour qu'il soit pas garde quand on rejoins une autre roo,
             msgElement.innerHTML = `
                 <div class="flex flex-col gap-2">
-                    <strong>${author}</strong> veut jouer à Pong ! 🏓<br>
+                    <strong>${author}</strong> want to play Pong with you ! <br>
+
                     <button 
-                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
-                        onclick="
-                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
-                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                        "
+                        id="join-${friendshipId}"
+                        class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
                     >
                         ${isMe ? 'Join my waitroom' : 'Accept the match'}
                     </button>
                 </div>
             `;
+
         } else {
             // pour envoyer un message normal
             msgElement.classList.add('bg-white'); // ou transparent a tester
@@ -286,20 +268,6 @@ export class Chat {
         this.messagesContainer.appendChild(msgElement);
         this.scrollToBottom();
     }
-
-    // private addMessage(message: string, author: string) {
-    //     if (!this.messagesContainer) return;
-    //     const msgElement = document.createElement('p');
-    //     msgElement.className = "mb-1";
-        
-    //     // on securise le texte et on parse les emoticones
-    //     const contentEmoticons = parseMessage(message);
-        
-    //     msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
-    //     this.messagesContainer.appendChild(msgElement);
-    //     // rajouter un scroll automatique vers le bas
-    //     this.scrollToBottom();
-    // }
 
     private addCustomContent(htmlContent: string) {
         if (!this.messagesContainer) return;

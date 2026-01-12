@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "../pages/api"; 
+import { fetchWithAuth } from "../services/api"; 
 import { statusImages, statusLabels } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import SocketService from "../services/SocketService";

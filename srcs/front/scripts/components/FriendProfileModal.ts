@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "../pages/api";
+import { fetchWithAuth } from "../services/api";
 import { statusImages } from "./Data";
 import { parseMessage } from "./ChatUtils";
 
@@ -101,8 +101,10 @@ export class FriendProfileModal {
             if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
             if (this.stats.wins) this.stats.wins.innerText = wins.toString();
             if (this.stats.losses) this.stats.losses.innerText = (stats.losses || 0).toString();
-            if (this.stats.streak) this.stats.streak.innerText = (stats.streak ?? 0).toString();
             if (this.stats.avgScore) this.stats.avgScore.innerText = (stats.average_score ?? 0).toString();
+
+            const streak = stats.streak ?? stats.current_win_streak ?? stats.currentWinStreak ?? 0;
+            if (this.stats.streak) this.stats.streak.innerText = streak.toString();
             
             if (this.stats.winRate) {
                 let rate = 0;

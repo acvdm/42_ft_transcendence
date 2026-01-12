@@ -1,8 +1,6 @@
-import htmlContent from "./GuestPage.html";
+import htmlContent from "../pages/GuestPage.html";
 import { Chat } from "../components/Chat";
 
-
-// on va exportrter une fonction qui renvoie du html 
 export function render(): string {
     return htmlContent;
 }
@@ -47,8 +45,8 @@ export function afterRender(): void {
         console.log("Error: Button tournament-game cannot be found in the DOM");
     }
 
+    // Adding a message in the notification chat
     try {
-        // pour la partie chat/notifcations
         const guestChat = new Chat();
         guestChat.init();
         guestChat.joinChannel("general_guest");

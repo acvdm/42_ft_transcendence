@@ -7,7 +7,8 @@ export interface Stat {
     totalGames: number,
     totalScore: number,
     averageScore: number,
-    currentWinStreak: number
+    currentWinStreak: number,
+    totalPlayTime: number
 }
 
 export interface HistoryFilters {
@@ -45,6 +46,7 @@ export async function findStatsByUserId (
         SELECT * FROM STATS WHERE user_id = ?`,
         [userId]
     )
+    console.log(`stats = ${stats.userId}, ${stats.total_duration_in_minutes}`);
 
     if (!stats) {
         return {
@@ -54,7 +56,8 @@ export async function findStatsByUserId (
             totalGames: 0,
             totalScore: 0,
             averageScore: 0,
-            currentWinStreak: 0
+            currentWinStreak: 0,
+            totalPlayTime: 0
         } as any;
     }
 
@@ -83,10 +86,13 @@ export async function getUserMatchHistory(
     let sql = 
     `SELECT
         pm.score as my_score,
+        pm.opponent_score as opponent_score,
         pm.is_winner,
         pm.opponent as opponent_alias,
         m.game_type,
+        m.round,
         m.finished_at,
+        m.total_duration_in_minutes,
         m.match_id,
         t.name as tournament_name
     FROM PLAYER_MATCH pm
@@ -164,25 +170,30 @@ export async function updateUserStats (
     db: Database,
     userId: number,
     userScore: number,
-    isWinner: number
+    isWinner: number,
+    finalDuration: number
 ): Promise<Stat>
 {
+    console.log(`final_duration = ${finalDuration}`);
     const stats = await db.run(`
         UPDATE STATS SET 
             wins = wins + ?,
             losses = losses + ?,
             total_score = total_score + ?,
+            total_play_time_minutes = total_play_time_minutes + ?,
             current_win_streak = CASE
                 WHEN ? = 1 THEN current_win_streak +1
                 ELSE 0
             END
+            
         WHERE user_id = ?`,
         [
             isWinner ? 1 : 0,
             isWinner ? 0 : 1,
             userScore,
+            finalDuration,
             isWinner ? 1 : 0,
-            userId
+            userId            
         ]
     )
     

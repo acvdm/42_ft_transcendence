@@ -23,7 +23,7 @@
                         <div class="flex flex-row gap-6 w-full">
                             
                             <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
-                                <h1 class="text-lg font-normal mb-4 text-gray-700">My profile</h1>
+                                <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700">My profile</h1>
 
                                 <div class="relative w-[170px] h-[170px] mb-3">
                                     <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
@@ -82,7 +82,7 @@
                             <div class="flex flex-col justify-between flex-1">
                                 <div class="flex flex-col gap-4">
 
-                                    <label class="text-sm">Username:</label>
+                                    <label class="theme-label text-sm">Username:</label>
                                     <div class="flex flex-row gap-2" data-field="alias">
                                         <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
                                         <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
@@ -91,7 +91,7 @@
                                         <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                     </div>
 
-                                    <label class="text-sm">Share a quick message:</label>
+                                    <label class="theme-label text-sm">Share a quick message:</label>
                                     <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
                                         <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
                                         <input
@@ -108,7 +108,7 @@
                 
                                 <div class="mt-8 border-t border-gray-300 pt-4">
                                     <div class="flex flex-col gap-4">
-                                        <label class="text-sm">Email:</label>
+                                        <label class="theme-label text-sm">Email:</label>
                                         <div class="flex flex-row gap-2" data-field="email">
                                             <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
                                             <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
@@ -117,7 +117,7 @@
                                             <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
                                         </div>
 
-                                        <label class="text-sm">Password:</label>
+                                        <label class="theme-label text-sm">Password:</label>
                                         <div class="flex flex-row gap-2" data-field="password">
                                             <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
                                             <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
@@ -142,48 +142,30 @@
                         </div>
 
                     </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
-                        <h1 class="text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
+                        <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
 
                         <div class="grid grid-cols-4 gap-4 mb-8">
                             <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
-                                <span class="text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
+                                <span class="theme-label text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
                                 <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
                             </div>
                             
                             <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
-                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
                                 <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
+                                <span class="theme-label text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
                                 <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
-                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
                                 <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
-                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
-                            </div>
 
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
-                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
-                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
-                            </div>
                         </div>
                     </div>
                 </div>
