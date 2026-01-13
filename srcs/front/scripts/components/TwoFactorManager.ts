@@ -72,6 +72,7 @@ export class TwoFactorManager {
         document.querySelector('[data-method="email"]')?.addEventListener('click', () => this.initiateSetup('email'));
         
         document.getElementById('close-2fa-modal')?.addEventListener('click', () => this.closeModal());
+        document.getElementById('cancel-2fa-button')?.addEventListener('click', () => this.closeModal());
         document.getElementById('confirm-2fa-button')?.addEventListener('click', () => 
             this.enable2fa(this.elements.inputQr.value.trim(), 'qr')
         );
