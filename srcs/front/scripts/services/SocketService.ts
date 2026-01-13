@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { Data } from '../components/Data'
+import { Data } from '../components/Data'; // Assure-toi que ce chemin est bon
 
 export class SocketService {
     private static instance: SocketService;
@@ -16,12 +16,10 @@ export class SocketService {
         return SocketService.instance;
     }
 
-
     private createSocketConnection(path: string): Socket | null {
         const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
-        if (!token)
-        {
+        if (!token) {
             console.error(`SocketService: No token found, cannot connect to ${path}`);
             return null;
         }
@@ -29,14 +27,13 @@ export class SocketService {
         const socket = io("/", {
             path: path,
             auth: {
-                token: `Bearer ${token}` // On envoie le JWT
+                token: `Bearer ${token}`
             },
             reconnection: true,
-            reconnectionAttemps: 5,
+            reconnectionAttempts: 5, // Correction typo: reconnectionAttemps -> reconnectionAttempts
             transports: ['websocket', 'polling']            
         });
 
-        // Listeners pour le debug
         socket.on("connect", () => {
             console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
         });
@@ -47,16 +44,32 @@ export class SocketService {
 
         return socket;
     }
+
     // ---------------------
-
-
     // -- GESTION DU CHAT --
+    // ---------------------
     public connectChat() {
-        // Sécurité: On ne se connecte pas si on déjà connecté
         if (this.chatSocket) return;
 
         console.log("SocketService: Connecting to Chat...");
         this.chatSocket = this.createSocketConnection("/socket-chat/");
+
+        // --- CORRECTION MAJEURE ICI ---
+        if (this.chatSocket) {
+            // 1. On écoute le BON événement envoyé par le back (unreadNotification)
+            // 2. On le place ICI, pas dans connectGame
+            this.chatSocket.on('unreadNotification', (payload: any) => {
+                console.log("SocketService: Notification reçue (Global):", payload);
+
+                // Si l'URL ne contient pas 'chat', on considère que c'est non lu
+                // (Tu peux affiner cette condition si tu veux)
+                if (!window.location.href.includes('/chat')) { 
+                    console.log("-> Activation de la notif persistante");
+                    Data.hasUnreadMessage = true; // Sauvegarde dans localStorage via ton setter
+                    this.showNotificationIcon();  // Affichage visuel immédiat
+                }
+            });
+        }
     }
 
     public disconnectChat() {
@@ -70,33 +83,15 @@ export class SocketService {
     public getChatSocket(): Socket | null {
         return this.chatSocket;
     }
+
     // ---------------------
-
-
     // -- GESTION DU GAME --
+    // ---------------------
     public connectGame() {
         if (this.gameSocket) return;
         console.log("SocketService: Connecting to Game...");
         this.gameSocket = this.createSocketConnection("/socket-game/");
-        if (this.chatSocket) {
-            // On écoute globalement les messages entrants
-            this.chatSocket.on('receive_message', (payload: any) => {
-                console.log("SocketService: Message reçu (Global):", payload);
-
-                // 1. On vérifie si on est PAS DÉJÀ en train de lire ce chat
-                // (Optionnel : tu peux affiner cette condition si tu veux que la notif
-                // apparaisse même si tu es dans le chat)
-                const isChatOpen = window.location.hash === '#chat'; 
-                
-                if (!isChatOpen) {
-                    // 2. On met à jour la variable globale pour la persistance
-                    Data.hasUnreadMessage = true; 
-
-                    // 3. On met à jour l'interface visuelle tout de suite
-                    this.showNotificationIcon();
-                }
-            });
-        }
+        // J'ai retiré le code du chat qui était ici par erreur
     }
 
     public disconnectGame() {
@@ -110,24 +105,23 @@ export class SocketService {
     public getGameSocket(): Socket | null {
         return this.gameSocket;
     }
+
+    // ---------------------
+    // -- UTILITAIRES    --
     // ---------------------
 
+    // Méthode privée pour manipuler le DOM direct
     private showNotificationIcon() {
-        // Remplace 'message-notification' par l'ID réel de ton élément HTML de notif
         const notifElement = document.getElementById('message-notification'); 
         if (notifElement) {
-            notifElement.style.display = 'block'; // Ou remove la classe 'hidden'
+            notifElement.style.display = 'block';
         }
     }
 
-    // -- UTILITAIRE GLOBAL --
     public disconnectAll() {
         this.disconnectChat();
         this.disconnectGame();
     }
-
-
-    
 }
 
 export default SocketService;

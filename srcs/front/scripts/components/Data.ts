@@ -2,9 +2,14 @@ import { fetchWithAuth } from "../services/api";
 import SocketService from "../services/SocketService";
 
 export class Data {
-    // Cette variable statique permet de garder l'état de la notif
-    // même quand tu navigues entre les pages de la SPA.
-    public static hasUnreadMessage: boolean = false;
+    static get hasUnreadMessage(): boolean {
+        return localStorage.getItem('hasUnreadMessage') === 'true';
+    }
+
+    // Écriture dans le localStorage
+    static set hasUnreadMessage(value: boolean) {
+        localStorage.setItem('hasUnreadMessage', String(value));
+    }
 }
 
 let globalPath = "/assets/emoticons/";

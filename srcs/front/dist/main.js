@@ -3606,10 +3606,10 @@
         path,
         auth: {
           token: `Bearer ${token}`
-          // On envoie le JWT
         },
         reconnection: true,
-        reconnectionAttemps: 5,
+        reconnectionAttempts: 5,
+        // Correction typo: reconnectionAttemps -> reconnectionAttempts
         transports: ["websocket", "polling"]
       });
       socket.on("connect", () => {
@@ -3622,10 +3622,21 @@
     }
     // ---------------------
     // -- GESTION DU CHAT --
+    // ---------------------
     connectChat() {
       if (this.chatSocket) return;
       console.log("SocketService: Connecting to Chat...");
       this.chatSocket = this.createSocketConnection("/socket-chat/");
+      if (this.chatSocket) {
+        this.chatSocket.on("unreadNotification", (payload) => {
+          console.log("SocketService: Notification re\xE7ue (Global):", payload);
+          if (!window.location.href.includes("/chat")) {
+            console.log("-> Activation de la notif persistante");
+            Data.hasUnreadMessage = true;
+            this.showNotificationIcon();
+          }
+        });
+      }
     }
     disconnectChat() {
       if (this.chatSocket) {
@@ -3639,20 +3650,11 @@
     }
     // ---------------------
     // -- GESTION DU GAME --
+    // ---------------------
     connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
       this.gameSocket = this.createSocketConnection("/socket-game/");
-      if (this.chatSocket) {
-        this.chatSocket.on("receive_message", (payload) => {
-          console.log("SocketService: Message re\xE7u (Global):", payload);
-          const isChatOpen = window.location.hash === "#chat";
-          if (!isChatOpen) {
-            Data.hasUnreadMessage = true;
-            this.showNotificationIcon();
-          }
-        });
-      }
     }
     disconnectGame() {
       if (this.gameSocket) {
@@ -3665,13 +3667,15 @@
       return this.gameSocket;
     }
     // ---------------------
+    // -- UTILITAIRES    --
+    // ---------------------
+    // Méthode privée pour manipuler le DOM direct
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
         notifElement.style.display = "block";
       }
     }
-    // -- UTILITAIRE GLOBAL --
     disconnectAll() {
       this.disconnectChat();
       this.disconnectGame();
@@ -3681,10 +3685,12 @@
 
   // scripts/components/Data.ts
   var Data = class {
-    static {
-      // Cette variable statique permet de garder l'état de la notif
-      // même quand tu navigues entre les pages de la SPA.
-      this.hasUnreadMessage = false;
+    static get hasUnreadMessage() {
+      return localStorage.getItem("hasUnreadMessage") === "true";
+    }
+    // Écriture dans le localStorage
+    static set hasUnreadMessage(value2) {
+      localStorage.setItem("hasUnreadMessage", String(value2));
     }
   };
   var globalPath = "/assets/emoticons/";
@@ -6243,6 +6249,12 @@
     socketService.connectChat();
     friendListInstance = new FriendList();
     friendListInstance.init();
+    if (Data.hasUnreadMessage) {
+      const notifElement = document.getElementById("message-notification");
+      if (notifElement) {
+        notifElement.style.display = "block";
+      }
+    }
     const userProfile = new UserProfile();
     userProfile.init();
     chatInstance = new Chat();
@@ -6278,6 +6290,11 @@
       });
     }
     friendSelectedHandler = (e) => {
+      Data.hasUnreadMessage = false;
+      const notifElement = document.getElementById("message-notification");
+      if (notifElement) {
+        notifElement.style.display = "none";
+      }
       const { friend, friendshipId } = e.detail;
       currentChatFriendId = friend.id;
       const myId = parseInt(localStorage.getItem("userId") || "0");

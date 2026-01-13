@@ -3,7 +3,7 @@ import SocketService from "../services/SocketService";
 import { FriendList } from "../components/FriendList";
 import { UserProfile } from "../components/UserProfile";
 import { Chat } from "../components/Chat";
-import { statusImages } from "../components/Data";
+import { statusImages, Data } from "../components/Data";
 import { FriendProfileModal } from "../components/FriendProfileModal";
 import { parseMessage } from "../components/ChatUtils";
 
@@ -49,6 +49,13 @@ export function afterRender(): void {
     socketService.connectChat();
     friendListInstance = new FriendList();
     friendListInstance.init();
+
+    if (Data.hasUnreadMessage) {
+        const notifElement = document.getElementById('message-notification');
+        if (notifElement) {
+            notifElement.style.display = 'block'; // Ou remove la classe 'hidden'
+        }
+    }
 
     const userProfile = new UserProfile();
     userProfile.init();
@@ -101,6 +108,13 @@ export function afterRender(): void {
 
     friendSelectedHandler = (e: any) => {
 
+  
+        Data.hasUnreadMessage = false;
+        const notifElement = document.getElementById('message-notification');
+        if (notifElement) {
+            notifElement.style.display = 'none';
+        }
+        
         const { friend, friendshipId } = e.detail;
 
         currentChatFriendId = friend.id;
