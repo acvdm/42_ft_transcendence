@@ -1,14 +1,22 @@
 {
 	"compilerOptions": {
-		"target": "ES2022", // version de javascript modern (pour avoir async/await)
-		"module": "ES2022", // système d'import
-		"outDir": "./dist", // où mettre le code compilé -> .ts devient .js dans ce dossier
+		"target": "es2016", // version de javascript modern (pour avoir async/await)
+		"module": "esnext", // système d'import"
+		"noEmit": true,
+		"moduleResolution": "node",
+		//"outDir": "./dist", // où mettre le code compilé -> .ts devient .js dans ce dossier
 		"rootDir": "./scripts", // où est le code source -> le typescript doit être dans src
 		"strict": true, // mode strict activé -> ts devient exigeant pour éviter les bugs
 		"esModuleInterop": true, // compatibilité -> 
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"preserveConstEnums": true,
+    	"declaration": false,
+		"removeComments": false,
 		"skipLibCheck": true, // ignore les erreurs dans les bibliothèques
 		"forceConsistentCasingInFileNames": true, // cohérence des noms de fichiers
+		"preserveWatchOutput": true
 	},
 	"include": ["scripts/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
-	"exclude": ["node_modules"] // ne pas compiler les bibliothèques externes
+	"exclude": ["node_modules", "dist"] // ne pas compiler les bibliothèques externes
 }

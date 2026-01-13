@@ -1,8 +1,24924 @@
 "use strict";
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
+  // scripts/pages/LoginPage.html
+  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+		<!-- Main div -->
+	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
+		<!-- Picture div -->
+		<div class="relative w-[170px] h-[170px] mb-4">
+			<!-- le cadre -->
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
+			<!-- l'image -->
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
+		</div>
+		<h1 class="font-sans text-xl font-normal text-blue-950">
+			Sign in to Transcendence
+		</h1>
+		<!-- Login div -->
+		<div class="flex flex-col justify-center items-center gap-6">
+			<div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">
+				<!-- Email -->
+				<input type="email" placeholder="Example555@hotmail.com" id="email-input"
+					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+		
+				<!-- Mot de passe -->
+				<input type="password" placeholder="Enter your password" id="password-input"
+					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+
+				<!-- Status -> disponible, busy, not displayed -->
+				<div class="flex items-center justify-between mb-3 text-sm">
+					<div class="flex items-center gap-1 mb-3">
+						<span> Sign in as:</span>
+						<div class="flex items-center gap-1">
+							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
+								<option value="available">Available</option>
+								<option value="busy">Busy</option>
+								<option value="away">Away</option>
+								<option value="offline">Appear offline</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="flex flex-col items-center justify-center">
+					<p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+				</div>
+			</div>
+			<!-- Bouton de connexion/Register/Guest -->
+			<div class="flex flex-col gap-2 w-48">
+				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
+			</div>
+	</div>
+
+
+
+	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Two-Factor Authentication</div>
+                <div class="title-bar-controls">
+                    <button id="close-2fa-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col items-center gap-4">
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Security Check</h2>
+                    <p class="text-xs text-gray-600 mb-4">Please enter the security code.</p>
+                </div>
+
+                <div class="w-full flex flex-col gap-2 mt-2">
+                    <input type="text" id="2fa-input-code" placeholder="------" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                </div>
+
+                <div class="flex flex-col items-center justify-center">
+                    <p id="2fa-error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+                </div>
+
+                <div class="flex justify-center gap-4 mt-4 w-full">
+                    <button id="confirm-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+                        VERIFY
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>`;
+
+  // scripts/services/api.ts
+  var refreshSubscribers = [];
+  var isRefreshing = false;
+  var refreshPromise = null;
+  function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+  }
+  function onRefreshed(token) {
+    refreshSubscribers.forEach((cb) => cb(token));
+    refreshSubscribers = [];
+  }
+  function getAuthToken() {
+    return sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+  }
+  async function fetchWithAuth(url2, options = {}) {
+    let token = getAuthToken();
+    const getConfigWithAuth = (tokenToUse, originalOptions) => {
+      const headers = new Headers(originalOptions.headers || {});
+      if (headers.has("Authorization")) {
+        headers.delete("Authorization");
+      }
+      if (!headers.has("Content-Type") && originalOptions.body) {
+        headers.set("Content-Type", "application/json");
+      }
+      if (tokenToUse) {
+        headers.set("Authorization", `Bearer ${tokenToUse}`);
+      }
+      return {
+        ...originalOptions,
+        headers
+      };
+    };
+    let response = await fetch(url2, getConfigWithAuth(token, options));
+    if (response.status === 401) {
+      console.warn(`401 detected for ${url2}`);
+      if (!isRefreshing) {
+        isRefreshing = true;
+        refreshPromise = (async () => {
+          try {
+            const refreshRes = await fetch("/api/auth/token", {
+              method: "POST",
+              credentials: "include"
+            });
+            if (refreshRes.ok) {
+              const data = await refreshRes.json();
+              console.log("Refresh successful, data:", data);
+              const newToken = data.accessToken;
+              if (!newToken) {
+                throw new Error("No accessToken in refresh response");
+              }
+              localStorage.setItem("accessToken", newToken);
+              onRefreshed(newToken);
+              return newToken;
+            } else {
+              const errorText = await refreshRes.text();
+              console.error("Refresh failed:", errorText);
+              throw new Error(`Refresh failed:, ${refreshRes.status}`);
+            }
+          } catch (error) {
+            console.error("Refresh error:", error);
+            throw error;
+          } finally {
+            isRefreshing = false;
+            refreshPromise = null;
+          }
+        })();
+        try {
+          const newToken = await refreshPromise;
+          console.log("Refreshing original request with new token");
+          return await fetch(url2, getConfigWithAuth(newToken, options));
+        } catch (error) {
+          console.error("Refresh impossible. Deconnection");
+          refreshSubscribers = [];
+          console.error("Refresh impossible. Deconnection.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("userId");
+          window.history.pushState({}, "", "/login");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+          throw error;
+        }
+      } else {
+        console.log("Token expired. Waiting the refreshing of the other token...");
+        return new Promise((resolve2, reject) => {
+          subscribeTokenRefresh(async (newToken) => {
+            try {
+              const retryResponse = await fetch(url2, getConfigWithAuth(newToken, options));
+              resolve2(retryResponse);
+            } catch (err) {
+              console.error(`Error retrying queud for ${url2}:`, err);
+              reject(err);
+            }
+          });
+          setTimeout(() => {
+            reject(new Error(`Token refresh timeout`));
+          }, 1e4);
+        });
+      }
+    }
+    return response;
+  }
+
+  // node_modules/engine.io-parser/build/esm/commons.js
+  var PACKET_TYPES = /* @__PURE__ */ Object.create(null);
+  PACKET_TYPES["open"] = "0";
+  PACKET_TYPES["close"] = "1";
+  PACKET_TYPES["ping"] = "2";
+  PACKET_TYPES["pong"] = "3";
+  PACKET_TYPES["message"] = "4";
+  PACKET_TYPES["upgrade"] = "5";
+  PACKET_TYPES["noop"] = "6";
+  var PACKET_TYPES_REVERSE = /* @__PURE__ */ Object.create(null);
+  Object.keys(PACKET_TYPES).forEach((key) => {
+    PACKET_TYPES_REVERSE[PACKET_TYPES[key]] = key;
+  });
+  var ERROR_PACKET = { type: "error", data: "parser error" };
+
+  // node_modules/engine.io-parser/build/esm/encodePacket.browser.js
+  var withNativeBlob = typeof Blob === "function" || typeof Blob !== "undefined" && Object.prototype.toString.call(Blob) === "[object BlobConstructor]";
+  var withNativeArrayBuffer = typeof ArrayBuffer === "function";
+  var isView = (obj) => {
+    return typeof ArrayBuffer.isView === "function" ? ArrayBuffer.isView(obj) : obj && obj.buffer instanceof ArrayBuffer;
+  };
+  var encodePacket = ({ type, data }, supportsBinary, callback2) => {
+    if (withNativeBlob && data instanceof Blob) {
+      if (supportsBinary) {
+        return callback2(data);
+      } else {
+        return encodeBlobAsBase64(data, callback2);
+      }
+    } else if (withNativeArrayBuffer && (data instanceof ArrayBuffer || isView(data))) {
+      if (supportsBinary) {
+        return callback2(data);
+      } else {
+        return encodeBlobAsBase64(new Blob([data]), callback2);
+      }
+    }
+    return callback2(PACKET_TYPES[type] + (data || ""));
+  };
+  var encodeBlobAsBase64 = (data, callback2) => {
+    const fileReader = new FileReader();
+    fileReader.onload = function() {
+      const content = fileReader.result.split(",")[1];
+      callback2("b" + (content || ""));
+    };
+    return fileReader.readAsDataURL(data);
+  };
+  function toArray(data) {
+    if (data instanceof Uint8Array) {
+      return data;
+    } else if (data instanceof ArrayBuffer) {
+      return new Uint8Array(data);
+    } else {
+      return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+    }
+  }
+  var TEXT_ENCODER;
+  function encodePacketToBinary(packet, callback2) {
+    if (withNativeBlob && packet.data instanceof Blob) {
+      return packet.data.arrayBuffer().then(toArray).then(callback2);
+    } else if (withNativeArrayBuffer && (packet.data instanceof ArrayBuffer || isView(packet.data))) {
+      return callback2(toArray(packet.data));
+    }
+    encodePacket(packet, false, (encoded) => {
+      if (!TEXT_ENCODER) {
+        TEXT_ENCODER = new TextEncoder();
+      }
+      callback2(TEXT_ENCODER.encode(encoded));
+    });
+  }
+
+  // node_modules/engine.io-parser/build/esm/contrib/base64-arraybuffer.js
+  var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  var lookup = typeof Uint8Array === "undefined" ? [] : new Uint8Array(256);
+  for (let i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
+  }
+  var decode = (base64) => {
+    let bufferLength = base64.length * 0.75, len = base64.length, i, p = 0, encoded1, encoded2, encoded3, encoded4;
+    if (base64[base64.length - 1] === "=") {
+      bufferLength--;
+      if (base64[base64.length - 2] === "=") {
+        bufferLength--;
+      }
+    }
+    const arraybuffer = new ArrayBuffer(bufferLength), bytes = new Uint8Array(arraybuffer);
+    for (i = 0; i < len; i += 4) {
+      encoded1 = lookup[base64.charCodeAt(i)];
+      encoded2 = lookup[base64.charCodeAt(i + 1)];
+      encoded3 = lookup[base64.charCodeAt(i + 2)];
+      encoded4 = lookup[base64.charCodeAt(i + 3)];
+      bytes[p++] = encoded1 << 2 | encoded2 >> 4;
+      bytes[p++] = (encoded2 & 15) << 4 | encoded3 >> 2;
+      bytes[p++] = (encoded3 & 3) << 6 | encoded4 & 63;
+    }
+    return arraybuffer;
+  };
+
+  // node_modules/engine.io-parser/build/esm/decodePacket.browser.js
+  var withNativeArrayBuffer2 = typeof ArrayBuffer === "function";
+  var decodePacket = (encodedPacket, binaryType) => {
+    if (typeof encodedPacket !== "string") {
+      return {
+        type: "message",
+        data: mapBinary(encodedPacket, binaryType)
+      };
+    }
+    const type = encodedPacket.charAt(0);
+    if (type === "b") {
+      return {
+        type: "message",
+        data: decodeBase64Packet(encodedPacket.substring(1), binaryType)
+      };
+    }
+    const packetType = PACKET_TYPES_REVERSE[type];
+    if (!packetType) {
+      return ERROR_PACKET;
+    }
+    return encodedPacket.length > 1 ? {
+      type: PACKET_TYPES_REVERSE[type],
+      data: encodedPacket.substring(1)
+    } : {
+      type: PACKET_TYPES_REVERSE[type]
+    };
+  };
+  var decodeBase64Packet = (data, binaryType) => {
+    if (withNativeArrayBuffer2) {
+      const decoded = decode(data);
+      return mapBinary(decoded, binaryType);
+    } else {
+      return { base64: true, data };
+    }
+  };
+  var mapBinary = (data, binaryType) => {
+    switch (binaryType) {
+      case "blob":
+        if (data instanceof Blob) {
+          return data;
+        } else {
+          return new Blob([data]);
+        }
+      case "arraybuffer":
+      default:
+        if (data instanceof ArrayBuffer) {
+          return data;
+        } else {
+          return data.buffer;
+        }
+    }
+  };
+
+  // node_modules/engine.io-parser/build/esm/index.js
+  var SEPARATOR = String.fromCharCode(30);
+  var encodePayload = (packets, callback2) => {
+    const length = packets.length;
+    const encodedPackets = new Array(length);
+    let count = 0;
+    packets.forEach((packet, i) => {
+      encodePacket(packet, false, (encodedPacket) => {
+        encodedPackets[i] = encodedPacket;
+        if (++count === length) {
+          callback2(encodedPackets.join(SEPARATOR));
+        }
+      });
+    });
+  };
+  var decodePayload = (encodedPayload, binaryType) => {
+    const encodedPackets = encodedPayload.split(SEPARATOR);
+    const packets = [];
+    for (let i = 0; i < encodedPackets.length; i++) {
+      const decodedPacket = decodePacket(encodedPackets[i], binaryType);
+      packets.push(decodedPacket);
+      if (decodedPacket.type === "error") {
+        break;
+      }
+    }
+    return packets;
+  };
+  function createPacketEncoderStream() {
+    return new TransformStream({
+      transform(packet, controller) {
+        encodePacketToBinary(packet, (encodedPacket) => {
+          const payloadLength = encodedPacket.length;
+          let header;
+          if (payloadLength < 126) {
+            header = new Uint8Array(1);
+            new DataView(header.buffer).setUint8(0, payloadLength);
+          } else if (payloadLength < 65536) {
+            header = new Uint8Array(3);
+            const view = new DataView(header.buffer);
+            view.setUint8(0, 126);
+            view.setUint16(1, payloadLength);
+          } else {
+            header = new Uint8Array(9);
+            const view = new DataView(header.buffer);
+            view.setUint8(0, 127);
+            view.setBigUint64(1, BigInt(payloadLength));
+          }
+          if (packet.data && typeof packet.data !== "string") {
+            header[0] |= 128;
+          }
+          controller.enqueue(header);
+          controller.enqueue(encodedPacket);
+        });
+      }
+    });
+  }
+  var TEXT_DECODER;
+  function totalLength(chunks) {
+    return chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  }
+  function concatChunks(chunks, size) {
+    if (chunks[0].length === size) {
+      return chunks.shift();
+    }
+    const buffer = new Uint8Array(size);
+    let j = 0;
+    for (let i = 0; i < size; i++) {
+      buffer[i] = chunks[0][j++];
+      if (j === chunks[0].length) {
+        chunks.shift();
+        j = 0;
+      }
+    }
+    if (chunks.length && j < chunks[0].length) {
+      chunks[0] = chunks[0].slice(j);
+    }
+    return buffer;
+  }
+  function createPacketDecoderStream(maxPayload, binaryType) {
+    if (!TEXT_DECODER) {
+      TEXT_DECODER = new TextDecoder();
+    }
+    const chunks = [];
+    let state = 0;
+    let expectedLength = -1;
+    let isBinary2 = false;
+    return new TransformStream({
+      transform(chunk, controller) {
+        chunks.push(chunk);
+        while (true) {
+          if (state === 0) {
+            if (totalLength(chunks) < 1) {
+              break;
+            }
+            const header = concatChunks(chunks, 1);
+            isBinary2 = (header[0] & 128) === 128;
+            expectedLength = header[0] & 127;
+            if (expectedLength < 126) {
+              state = 3;
+            } else if (expectedLength === 126) {
+              state = 1;
+            } else {
+              state = 2;
+            }
+          } else if (state === 1) {
+            if (totalLength(chunks) < 2) {
+              break;
+            }
+            const headerArray = concatChunks(chunks, 2);
+            expectedLength = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length).getUint16(0);
+            state = 3;
+          } else if (state === 2) {
+            if (totalLength(chunks) < 8) {
+              break;
+            }
+            const headerArray = concatChunks(chunks, 8);
+            const view = new DataView(headerArray.buffer, headerArray.byteOffset, headerArray.length);
+            const n = view.getUint32(0);
+            if (n > Math.pow(2, 53 - 32) - 1) {
+              controller.enqueue(ERROR_PACKET);
+              break;
+            }
+            expectedLength = n * Math.pow(2, 32) + view.getUint32(4);
+            state = 3;
+          } else {
+            if (totalLength(chunks) < expectedLength) {
+              break;
+            }
+            const data = concatChunks(chunks, expectedLength);
+            controller.enqueue(decodePacket(isBinary2 ? data : TEXT_DECODER.decode(data), binaryType));
+            state = 0;
+          }
+          if (expectedLength === 0 || expectedLength > maxPayload) {
+            controller.enqueue(ERROR_PACKET);
+            break;
+          }
+        }
+      }
+    });
+  }
+  var protocol = 4;
+
+  // node_modules/@socket.io/component-emitter/lib/esm/index.js
+  function Emitter(obj) {
+    if (obj) return mixin(obj);
+  }
+  function mixin(obj) {
+    for (var key in Emitter.prototype) {
+      obj[key] = Emitter.prototype[key];
+    }
+    return obj;
+  }
+  Emitter.prototype.on = Emitter.prototype.addEventListener = function(event, fn) {
+    this._callbacks = this._callbacks || {};
+    (this._callbacks["$" + event] = this._callbacks["$" + event] || []).push(fn);
+    return this;
+  };
+  Emitter.prototype.once = function(event, fn) {
+    function on2() {
+      this.off(event, on2);
+      fn.apply(this, arguments);
+    }
+    on2.fn = fn;
+    this.on(event, on2);
+    return this;
+  };
+  Emitter.prototype.off = Emitter.prototype.removeListener = Emitter.prototype.removeAllListeners = Emitter.prototype.removeEventListener = function(event, fn) {
+    this._callbacks = this._callbacks || {};
+    if (0 == arguments.length) {
+      this._callbacks = {};
+      return this;
+    }
+    var callbacks = this._callbacks["$" + event];
+    if (!callbacks) return this;
+    if (1 == arguments.length) {
+      delete this._callbacks["$" + event];
+      return this;
+    }
+    var cb;
+    for (var i = 0; i < callbacks.length; i++) {
+      cb = callbacks[i];
+      if (cb === fn || cb.fn === fn) {
+        callbacks.splice(i, 1);
+        break;
+      }
+    }
+    if (callbacks.length === 0) {
+      delete this._callbacks["$" + event];
+    }
+    return this;
+  };
+  Emitter.prototype.emit = function(event) {
+    this._callbacks = this._callbacks || {};
+    var args = new Array(arguments.length - 1), callbacks = this._callbacks["$" + event];
+    for (var i = 1; i < arguments.length; i++) {
+      args[i - 1] = arguments[i];
+    }
+    if (callbacks) {
+      callbacks = callbacks.slice(0);
+      for (var i = 0, len = callbacks.length; i < len; ++i) {
+        callbacks[i].apply(this, args);
+      }
+    }
+    return this;
+  };
+  Emitter.prototype.emitReserved = Emitter.prototype.emit;
+  Emitter.prototype.listeners = function(event) {
+    this._callbacks = this._callbacks || {};
+    return this._callbacks["$" + event] || [];
+  };
+  Emitter.prototype.hasListeners = function(event) {
+    return !!this.listeners(event).length;
+  };
+
+  // node_modules/engine.io-client/build/esm/globals.js
+  var nextTick = (() => {
+    const isPromiseAvailable = typeof Promise === "function" && typeof Promise.resolve === "function";
+    if (isPromiseAvailable) {
+      return (cb) => Promise.resolve().then(cb);
+    } else {
+      return (cb, setTimeoutFn) => setTimeoutFn(cb, 0);
+    }
+  })();
+  var globalThisShim = (() => {
+    if (typeof self !== "undefined") {
+      return self;
+    } else if (typeof window !== "undefined") {
+      return window;
+    } else {
+      return Function("return this")();
+    }
+  })();
+  var defaultBinaryType = "arraybuffer";
+  function createCookieJar() {
+  }
+
+  // node_modules/engine.io-client/build/esm/util.js
+  function pick(obj, ...attr) {
+    return attr.reduce((acc, k) => {
+      if (obj.hasOwnProperty(k)) {
+        acc[k] = obj[k];
+      }
+      return acc;
+    }, {});
+  }
+  var NATIVE_SET_TIMEOUT = globalThisShim.setTimeout;
+  var NATIVE_CLEAR_TIMEOUT = globalThisShim.clearTimeout;
+  function installTimerFunctions(obj, opts) {
+    if (opts.useNativeTimers) {
+      obj.setTimeoutFn = NATIVE_SET_TIMEOUT.bind(globalThisShim);
+      obj.clearTimeoutFn = NATIVE_CLEAR_TIMEOUT.bind(globalThisShim);
+    } else {
+      obj.setTimeoutFn = globalThisShim.setTimeout.bind(globalThisShim);
+      obj.clearTimeoutFn = globalThisShim.clearTimeout.bind(globalThisShim);
+    }
+  }
+  var BASE64_OVERHEAD = 1.33;
+  function byteLength(obj) {
+    if (typeof obj === "string") {
+      return utf8Length(obj);
+    }
+    return Math.ceil((obj.byteLength || obj.size) * BASE64_OVERHEAD);
+  }
+  function utf8Length(str) {
+    let c = 0, length = 0;
+    for (let i = 0, l = str.length; i < l; i++) {
+      c = str.charCodeAt(i);
+      if (c < 128) {
+        length += 1;
+      } else if (c < 2048) {
+        length += 2;
+      } else if (c < 55296 || c >= 57344) {
+        length += 3;
+      } else {
+        i++;
+        length += 4;
+      }
+    }
+    return length;
+  }
+  function randomString() {
+    return Date.now().toString(36).substring(3) + Math.random().toString(36).substring(2, 5);
+  }
+
+  // node_modules/engine.io-client/build/esm/contrib/parseqs.js
+  function encode(obj) {
+    let str = "";
+    for (let i in obj) {
+      if (obj.hasOwnProperty(i)) {
+        if (str.length)
+          str += "&";
+        str += encodeURIComponent(i) + "=" + encodeURIComponent(obj[i]);
+      }
+    }
+    return str;
+  }
+  function decode2(qs) {
+    let qry = {};
+    let pairs = qs.split("&");
+    for (let i = 0, l = pairs.length; i < l; i++) {
+      let pair = pairs[i].split("=");
+      qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+    }
+    return qry;
+  }
+
+  // node_modules/engine.io-client/build/esm/transport.js
+  var TransportError = class extends Error {
+    constructor(reason, description, context) {
+      super(reason);
+      this.description = description;
+      this.context = context;
+      this.type = "TransportError";
+    }
+  };
+  var Transport = class extends Emitter {
+    /**
+     * Transport abstract constructor.
+     *
+     * @param {Object} opts - options
+     * @protected
+     */
+    constructor(opts) {
+      super();
+      this.writable = false;
+      installTimerFunctions(this, opts);
+      this.opts = opts;
+      this.query = opts.query;
+      this.socket = opts.socket;
+      this.supportsBinary = !opts.forceBase64;
+    }
+    /**
+     * Emits an error.
+     *
+     * @param {String} reason
+     * @param description
+     * @param context - the error context
+     * @return {Transport} for chaining
+     * @protected
+     */
+    onError(reason, description, context) {
+      super.emitReserved("error", new TransportError(reason, description, context));
+      return this;
+    }
+    /**
+     * Opens the transport.
+     */
+    open() {
+      this.readyState = "opening";
+      this.doOpen();
+      return this;
+    }
+    /**
+     * Closes the transport.
+     */
+    close() {
+      if (this.readyState === "opening" || this.readyState === "open") {
+        this.doClose();
+        this.onClose();
+      }
+      return this;
+    }
+    /**
+     * Sends multiple packets.
+     *
+     * @param {Array} packets
+     */
+    send(packets) {
+      if (this.readyState === "open") {
+        this.write(packets);
+      } else {
+      }
+    }
+    /**
+     * Called upon open
+     *
+     * @protected
+     */
+    onOpen() {
+      this.readyState = "open";
+      this.writable = true;
+      super.emitReserved("open");
+    }
+    /**
+     * Called with data.
+     *
+     * @param {String} data
+     * @protected
+     */
+    onData(data) {
+      const packet = decodePacket(data, this.socket.binaryType);
+      this.onPacket(packet);
+    }
+    /**
+     * Called with a decoded packet.
+     *
+     * @protected
+     */
+    onPacket(packet) {
+      super.emitReserved("packet", packet);
+    }
+    /**
+     * Called upon close.
+     *
+     * @protected
+     */
+    onClose(details) {
+      this.readyState = "closed";
+      super.emitReserved("close", details);
+    }
+    /**
+     * Pauses the transport, in order not to lose packets during an upgrade.
+     *
+     * @param onPause
+     */
+    pause(onPause) {
+    }
+    createUri(schema, query = {}) {
+      return schema + "://" + this._hostname() + this._port() + this.opts.path + this._query(query);
+    }
+    _hostname() {
+      const hostname = this.opts.hostname;
+      return hostname.indexOf(":") === -1 ? hostname : "[" + hostname + "]";
+    }
+    _port() {
+      if (this.opts.port && (this.opts.secure && Number(this.opts.port !== 443) || !this.opts.secure && Number(this.opts.port) !== 80)) {
+        return ":" + this.opts.port;
+      } else {
+        return "";
+      }
+    }
+    _query(query) {
+      const encodedQuery = encode(query);
+      return encodedQuery.length ? "?" + encodedQuery : "";
+    }
+  };
+
+  // node_modules/engine.io-client/build/esm/transports/polling.js
+  var Polling = class extends Transport {
+    constructor() {
+      super(...arguments);
+      this._polling = false;
+    }
+    get name() {
+      return "polling";
+    }
+    /**
+     * Opens the socket (triggers polling). We write a PING message to determine
+     * when the transport is open.
+     *
+     * @protected
+     */
+    doOpen() {
+      this._poll();
+    }
+    /**
+     * Pauses polling.
+     *
+     * @param {Function} onPause - callback upon buffers are flushed and transport is paused
+     * @package
+     */
+    pause(onPause) {
+      this.readyState = "pausing";
+      const pause = () => {
+        this.readyState = "paused";
+        onPause();
+      };
+      if (this._polling || !this.writable) {
+        let total = 0;
+        if (this._polling) {
+          total++;
+          this.once("pollComplete", function() {
+            --total || pause();
+          });
+        }
+        if (!this.writable) {
+          total++;
+          this.once("drain", function() {
+            --total || pause();
+          });
+        }
+      } else {
+        pause();
+      }
+    }
+    /**
+     * Starts polling cycle.
+     *
+     * @private
+     */
+    _poll() {
+      this._polling = true;
+      this.doPoll();
+      this.emitReserved("poll");
+    }
+    /**
+     * Overloads onData to detect payloads.
+     *
+     * @protected
+     */
+    onData(data) {
+      const callback2 = (packet) => {
+        if ("opening" === this.readyState && packet.type === "open") {
+          this.onOpen();
+        }
+        if ("close" === packet.type) {
+          this.onClose({ description: "transport closed by the server" });
+          return false;
+        }
+        this.onPacket(packet);
+      };
+      decodePayload(data, this.socket.binaryType).forEach(callback2);
+      if ("closed" !== this.readyState) {
+        this._polling = false;
+        this.emitReserved("pollComplete");
+        if ("open" === this.readyState) {
+          this._poll();
+        } else {
+        }
+      }
+    }
+    /**
+     * For polling, send a close packet.
+     *
+     * @protected
+     */
+    doClose() {
+      const close = () => {
+        this.write([{ type: "close" }]);
+      };
+      if ("open" === this.readyState) {
+        close();
+      } else {
+        this.once("open", close);
+      }
+    }
+    /**
+     * Writes a packets payload.
+     *
+     * @param {Array} packets - data packets
+     * @protected
+     */
+    write(packets) {
+      this.writable = false;
+      encodePayload(packets, (data) => {
+        this.doWrite(data, () => {
+          this.writable = true;
+          this.emitReserved("drain");
+        });
+      });
+    }
+    /**
+     * Generates uri for connection.
+     *
+     * @private
+     */
+    uri() {
+      const schema = this.opts.secure ? "https" : "http";
+      const query = this.query || {};
+      if (false !== this.opts.timestampRequests) {
+        query[this.opts.timestampParam] = randomString();
+      }
+      if (!this.supportsBinary && !query.sid) {
+        query.b64 = 1;
+      }
+      return this.createUri(schema, query);
+    }
+  };
+
+  // node_modules/engine.io-client/build/esm/contrib/has-cors.js
+  var value = false;
+  try {
+    value = typeof XMLHttpRequest !== "undefined" && "withCredentials" in new XMLHttpRequest();
+  } catch (err) {
+  }
+  var hasCORS = value;
+
+  // node_modules/engine.io-client/build/esm/transports/polling-xhr.js
+  function empty() {
+  }
+  var BaseXHR = class extends Polling {
+    /**
+     * XHR Polling constructor.
+     *
+     * @param {Object} opts
+     * @package
+     */
+    constructor(opts) {
+      super(opts);
+      if (typeof location !== "undefined") {
+        const isSSL = "https:" === location.protocol;
+        let port = location.port;
+        if (!port) {
+          port = isSSL ? "443" : "80";
+        }
+        this.xd = typeof location !== "undefined" && opts.hostname !== location.hostname || port !== opts.port;
+      }
+    }
+    /**
+     * Sends data.
+     *
+     * @param {String} data to send.
+     * @param {Function} called upon flush.
+     * @private
+     */
+    doWrite(data, fn) {
+      const req = this.request({
+        method: "POST",
+        data
+      });
+      req.on("success", fn);
+      req.on("error", (xhrStatus, context) => {
+        this.onError("xhr post error", xhrStatus, context);
+      });
+    }
+    /**
+     * Starts a poll cycle.
+     *
+     * @private
+     */
+    doPoll() {
+      const req = this.request();
+      req.on("data", this.onData.bind(this));
+      req.on("error", (xhrStatus, context) => {
+        this.onError("xhr poll error", xhrStatus, context);
+      });
+      this.pollXhr = req;
+    }
+  };
+  var Request = class _Request extends Emitter {
+    /**
+     * Request constructor
+     *
+     * @param {Object} options
+     * @package
+     */
+    constructor(createRequest, uri, opts) {
+      super();
+      this.createRequest = createRequest;
+      installTimerFunctions(this, opts);
+      this._opts = opts;
+      this._method = opts.method || "GET";
+      this._uri = uri;
+      this._data = void 0 !== opts.data ? opts.data : null;
+      this._create();
+    }
+    /**
+     * Creates the XHR object and sends the request.
+     *
+     * @private
+     */
+    _create() {
+      var _a;
+      const opts = pick(this._opts, "agent", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "autoUnref");
+      opts.xdomain = !!this._opts.xd;
+      const xhr = this._xhr = this.createRequest(opts);
+      try {
+        xhr.open(this._method, this._uri, true);
+        try {
+          if (this._opts.extraHeaders) {
+            xhr.setDisableHeaderCheck && xhr.setDisableHeaderCheck(true);
+            for (let i in this._opts.extraHeaders) {
+              if (this._opts.extraHeaders.hasOwnProperty(i)) {
+                xhr.setRequestHeader(i, this._opts.extraHeaders[i]);
+              }
+            }
+          }
+        } catch (e) {
+        }
+        if ("POST" === this._method) {
+          try {
+            xhr.setRequestHeader("Content-type", "text/plain;charset=UTF-8");
+          } catch (e) {
+          }
+        }
+        try {
+          xhr.setRequestHeader("Accept", "*/*");
+        } catch (e) {
+        }
+        (_a = this._opts.cookieJar) === null || _a === void 0 ? void 0 : _a.addCookies(xhr);
+        if ("withCredentials" in xhr) {
+          xhr.withCredentials = this._opts.withCredentials;
+        }
+        if (this._opts.requestTimeout) {
+          xhr.timeout = this._opts.requestTimeout;
+        }
+        xhr.onreadystatechange = () => {
+          var _a2;
+          if (xhr.readyState === 3) {
+            (_a2 = this._opts.cookieJar) === null || _a2 === void 0 ? void 0 : _a2.parseCookies(
+              // @ts-ignore
+              xhr.getResponseHeader("set-cookie")
+            );
+          }
+          if (4 !== xhr.readyState)
+            return;
+          if (200 === xhr.status || 1223 === xhr.status) {
+            this._onLoad();
+          } else {
+            this.setTimeoutFn(() => {
+              this._onError(typeof xhr.status === "number" ? xhr.status : 0);
+            }, 0);
+          }
+        };
+        xhr.send(this._data);
+      } catch (e) {
+        this.setTimeoutFn(() => {
+          this._onError(e);
+        }, 0);
+        return;
+      }
+      if (typeof document !== "undefined") {
+        this._index = _Request.requestsCount++;
+        _Request.requests[this._index] = this;
+      }
+    }
+    /**
+     * Called upon error.
+     *
+     * @private
+     */
+    _onError(err) {
+      this.emitReserved("error", err, this._xhr);
+      this._cleanup(true);
+    }
+    /**
+     * Cleans up house.
+     *
+     * @private
+     */
+    _cleanup(fromError) {
+      if ("undefined" === typeof this._xhr || null === this._xhr) {
+        return;
+      }
+      this._xhr.onreadystatechange = empty;
+      if (fromError) {
+        try {
+          this._xhr.abort();
+        } catch (e) {
+        }
+      }
+      if (typeof document !== "undefined") {
+        delete _Request.requests[this._index];
+      }
+      this._xhr = null;
+    }
+    /**
+     * Called upon load.
+     *
+     * @private
+     */
+    _onLoad() {
+      const data = this._xhr.responseText;
+      if (data !== null) {
+        this.emitReserved("data", data);
+        this.emitReserved("success");
+        this._cleanup();
+      }
+    }
+    /**
+     * Aborts the request.
+     *
+     * @package
+     */
+    abort() {
+      this._cleanup();
+    }
+  };
+  Request.requestsCount = 0;
+  Request.requests = {};
+  if (typeof document !== "undefined") {
+    if (typeof attachEvent === "function") {
+      attachEvent("onunload", unloadHandler);
+    } else if (typeof addEventListener === "function") {
+      const terminationEvent = "onpagehide" in globalThisShim ? "pagehide" : "unload";
+      addEventListener(terminationEvent, unloadHandler, false);
+    }
+  }
+  function unloadHandler() {
+    for (let i in Request.requests) {
+      if (Request.requests.hasOwnProperty(i)) {
+        Request.requests[i].abort();
+      }
+    }
+  }
+  var hasXHR2 = (function() {
+    const xhr = newRequest({
+      xdomain: false
+    });
+    return xhr && xhr.responseType !== null;
+  })();
+  var XHR = class extends BaseXHR {
+    constructor(opts) {
+      super(opts);
+      const forceBase64 = opts && opts.forceBase64;
+      this.supportsBinary = hasXHR2 && !forceBase64;
+    }
+    request(opts = {}) {
+      Object.assign(opts, { xd: this.xd }, this.opts);
+      return new Request(newRequest, this.uri(), opts);
+    }
+  };
+  function newRequest(opts) {
+    const xdomain = opts.xdomain;
+    try {
+      if ("undefined" !== typeof XMLHttpRequest && (!xdomain || hasCORS)) {
+        return new XMLHttpRequest();
+      }
+    } catch (e) {
+    }
+    if (!xdomain) {
+      try {
+        return new globalThisShim[["Active"].concat("Object").join("X")]("Microsoft.XMLHTTP");
+      } catch (e) {
+      }
+    }
+  }
+
+  // node_modules/engine.io-client/build/esm/transports/websocket.js
+  var isReactNative = typeof navigator !== "undefined" && typeof navigator.product === "string" && navigator.product.toLowerCase() === "reactnative";
+  var BaseWS = class extends Transport {
+    get name() {
+      return "websocket";
+    }
+    doOpen() {
+      const uri = this.uri();
+      const protocols = this.opts.protocols;
+      const opts = isReactNative ? {} : pick(this.opts, "agent", "perMessageDeflate", "pfx", "key", "passphrase", "cert", "ca", "ciphers", "rejectUnauthorized", "localAddress", "protocolVersion", "origin", "maxPayload", "family", "checkServerIdentity");
+      if (this.opts.extraHeaders) {
+        opts.headers = this.opts.extraHeaders;
+      }
+      try {
+        this.ws = this.createSocket(uri, protocols, opts);
+      } catch (err) {
+        return this.emitReserved("error", err);
+      }
+      this.ws.binaryType = this.socket.binaryType;
+      this.addEventListeners();
+    }
+    /**
+     * Adds event listeners to the socket
+     *
+     * @private
+     */
+    addEventListeners() {
+      this.ws.onopen = () => {
+        if (this.opts.autoUnref) {
+          this.ws._socket.unref();
+        }
+        this.onOpen();
+      };
+      this.ws.onclose = (closeEvent) => this.onClose({
+        description: "websocket connection closed",
+        context: closeEvent
+      });
+      this.ws.onmessage = (ev) => this.onData(ev.data);
+      this.ws.onerror = (e) => this.onError("websocket error", e);
+    }
+    write(packets) {
+      this.writable = false;
+      for (let i = 0; i < packets.length; i++) {
+        const packet = packets[i];
+        const lastPacket = i === packets.length - 1;
+        encodePacket(packet, this.supportsBinary, (data) => {
+          try {
+            this.doWrite(packet, data);
+          } catch (e) {
+          }
+          if (lastPacket) {
+            nextTick(() => {
+              this.writable = true;
+              this.emitReserved("drain");
+            }, this.setTimeoutFn);
+          }
+        });
+      }
+    }
+    doClose() {
+      if (typeof this.ws !== "undefined") {
+        this.ws.onerror = () => {
+        };
+        this.ws.close();
+        this.ws = null;
+      }
+    }
+    /**
+     * Generates uri for connection.
+     *
+     * @private
+     */
+    uri() {
+      const schema = this.opts.secure ? "wss" : "ws";
+      const query = this.query || {};
+      if (this.opts.timestampRequests) {
+        query[this.opts.timestampParam] = randomString();
+      }
+      if (!this.supportsBinary) {
+        query.b64 = 1;
+      }
+      return this.createUri(schema, query);
+    }
+  };
+  var WebSocketCtor = globalThisShim.WebSocket || globalThisShim.MozWebSocket;
+  var WS = class extends BaseWS {
+    createSocket(uri, protocols, opts) {
+      return !isReactNative ? protocols ? new WebSocketCtor(uri, protocols) : new WebSocketCtor(uri) : new WebSocketCtor(uri, protocols, opts);
+    }
+    doWrite(_packet, data) {
+      this.ws.send(data);
+    }
+  };
+
+  // node_modules/engine.io-client/build/esm/transports/webtransport.js
+  var WT = class extends Transport {
+    get name() {
+      return "webtransport";
+    }
+    doOpen() {
+      try {
+        this._transport = new WebTransport(this.createUri("https"), this.opts.transportOptions[this.name]);
+      } catch (err) {
+        return this.emitReserved("error", err);
+      }
+      this._transport.closed.then(() => {
+        this.onClose();
+      }).catch((err) => {
+        this.onError("webtransport error", err);
+      });
+      this._transport.ready.then(() => {
+        this._transport.createBidirectionalStream().then((stream) => {
+          const decoderStream = createPacketDecoderStream(Number.MAX_SAFE_INTEGER, this.socket.binaryType);
+          const reader = stream.readable.pipeThrough(decoderStream).getReader();
+          const encoderStream = createPacketEncoderStream();
+          encoderStream.readable.pipeTo(stream.writable);
+          this._writer = encoderStream.writable.getWriter();
+          const read = () => {
+            reader.read().then(({ done, value: value2 }) => {
+              if (done) {
+                return;
+              }
+              this.onPacket(value2);
+              read();
+            }).catch((err) => {
+            });
+          };
+          read();
+          const packet = { type: "open" };
+          if (this.query.sid) {
+            packet.data = `{"sid":"${this.query.sid}"}`;
+          }
+          this._writer.write(packet).then(() => this.onOpen());
+        });
+      });
+    }
+    write(packets) {
+      this.writable = false;
+      for (let i = 0; i < packets.length; i++) {
+        const packet = packets[i];
+        const lastPacket = i === packets.length - 1;
+        this._writer.write(packet).then(() => {
+          if (lastPacket) {
+            nextTick(() => {
+              this.writable = true;
+              this.emitReserved("drain");
+            }, this.setTimeoutFn);
+          }
+        });
+      }
+    }
+    doClose() {
+      var _a;
+      (_a = this._transport) === null || _a === void 0 ? void 0 : _a.close();
+    }
+  };
+
+  // node_modules/engine.io-client/build/esm/transports/index.js
+  var transports = {
+    websocket: WS,
+    webtransport: WT,
+    polling: XHR
+  };
+
+  // node_modules/engine.io-client/build/esm/contrib/parseuri.js
+  var re = /^(?:(?![^:@\/?#]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@\/?#]*)(?::([^:@\/?#]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
+  var parts = [
+    "source",
+    "protocol",
+    "authority",
+    "userInfo",
+    "user",
+    "password",
+    "host",
+    "port",
+    "relative",
+    "path",
+    "directory",
+    "file",
+    "query",
+    "anchor"
+  ];
+  function parse(str) {
+    if (str.length > 8e3) {
+      throw "URI too long";
+    }
+    const src = str, b = str.indexOf("["), e = str.indexOf("]");
+    if (b != -1 && e != -1) {
+      str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ";") + str.substring(e, str.length);
+    }
+    let m = re.exec(str || ""), uri = {}, i = 14;
+    while (i--) {
+      uri[parts[i]] = m[i] || "";
+    }
+    if (b != -1 && e != -1) {
+      uri.source = src;
+      uri.host = uri.host.substring(1, uri.host.length - 1).replace(/;/g, ":");
+      uri.authority = uri.authority.replace("[", "").replace("]", "").replace(/;/g, ":");
+      uri.ipv6uri = true;
+    }
+    uri.pathNames = pathNames(uri, uri["path"]);
+    uri.queryKey = queryKey(uri, uri["query"]);
+    return uri;
+  }
+  function pathNames(obj, path) {
+    const regx = /\/{2,9}/g, names2 = path.replace(regx, "/").split("/");
+    if (path.slice(0, 1) == "/" || path.length === 0) {
+      names2.splice(0, 1);
+    }
+    if (path.slice(-1) == "/") {
+      names2.splice(names2.length - 1, 1);
+    }
+    return names2;
+  }
+  function queryKey(uri, query) {
+    const data = {};
+    query.replace(/(?:^|&)([^&=]*)=?([^&]*)/g, function($0, $1, $2) {
+      if ($1) {
+        data[$1] = $2;
+      }
+    });
+    return data;
+  }
+
+  // node_modules/engine.io-client/build/esm/socket.js
+  var withEventListeners = typeof addEventListener === "function" && typeof removeEventListener === "function";
+  var OFFLINE_EVENT_LISTENERS = [];
+  if (withEventListeners) {
+    addEventListener("offline", () => {
+      OFFLINE_EVENT_LISTENERS.forEach((listener) => listener());
+    }, false);
+  }
+  var SocketWithoutUpgrade = class _SocketWithoutUpgrade extends Emitter {
+    /**
+     * Socket constructor.
+     *
+     * @param {String|Object} uri - uri or options
+     * @param {Object} opts - options
+     */
+    constructor(uri, opts) {
+      super();
+      this.binaryType = defaultBinaryType;
+      this.writeBuffer = [];
+      this._prevBufferLen = 0;
+      this._pingInterval = -1;
+      this._pingTimeout = -1;
+      this._maxPayload = -1;
+      this._pingTimeoutTime = Infinity;
+      if (uri && "object" === typeof uri) {
+        opts = uri;
+        uri = null;
+      }
+      if (uri) {
+        const parsedUri = parse(uri);
+        opts.hostname = parsedUri.host;
+        opts.secure = parsedUri.protocol === "https" || parsedUri.protocol === "wss";
+        opts.port = parsedUri.port;
+        if (parsedUri.query)
+          opts.query = parsedUri.query;
+      } else if (opts.host) {
+        opts.hostname = parse(opts.host).host;
+      }
+      installTimerFunctions(this, opts);
+      this.secure = null != opts.secure ? opts.secure : typeof location !== "undefined" && "https:" === location.protocol;
+      if (opts.hostname && !opts.port) {
+        opts.port = this.secure ? "443" : "80";
+      }
+      this.hostname = opts.hostname || (typeof location !== "undefined" ? location.hostname : "localhost");
+      this.port = opts.port || (typeof location !== "undefined" && location.port ? location.port : this.secure ? "443" : "80");
+      this.transports = [];
+      this._transportsByName = {};
+      opts.transports.forEach((t) => {
+        const transportName = t.prototype.name;
+        this.transports.push(transportName);
+        this._transportsByName[transportName] = t;
+      });
+      this.opts = Object.assign({
+        path: "/engine.io",
+        agent: false,
+        withCredentials: false,
+        upgrade: true,
+        timestampParam: "t",
+        rememberUpgrade: false,
+        addTrailingSlash: true,
+        rejectUnauthorized: true,
+        perMessageDeflate: {
+          threshold: 1024
+        },
+        transportOptions: {},
+        closeOnBeforeunload: false
+      }, opts);
+      this.opts.path = this.opts.path.replace(/\/$/, "") + (this.opts.addTrailingSlash ? "/" : "");
+      if (typeof this.opts.query === "string") {
+        this.opts.query = decode2(this.opts.query);
+      }
+      if (withEventListeners) {
+        if (this.opts.closeOnBeforeunload) {
+          this._beforeunloadEventListener = () => {
+            if (this.transport) {
+              this.transport.removeAllListeners();
+              this.transport.close();
+            }
+          };
+          addEventListener("beforeunload", this._beforeunloadEventListener, false);
+        }
+        if (this.hostname !== "localhost") {
+          this._offlineEventListener = () => {
+            this._onClose("transport close", {
+              description: "network connection lost"
+            });
+          };
+          OFFLINE_EVENT_LISTENERS.push(this._offlineEventListener);
+        }
+      }
+      if (this.opts.withCredentials) {
+        this._cookieJar = createCookieJar();
+      }
+      this._open();
+    }
+    /**
+     * Creates transport of the given type.
+     *
+     * @param {String} name - transport name
+     * @return {Transport}
+     * @private
+     */
+    createTransport(name) {
+      const query = Object.assign({}, this.opts.query);
+      query.EIO = protocol;
+      query.transport = name;
+      if (this.id)
+        query.sid = this.id;
+      const opts = Object.assign({}, this.opts, {
+        query,
+        socket: this,
+        hostname: this.hostname,
+        secure: this.secure,
+        port: this.port
+      }, this.opts.transportOptions[name]);
+      return new this._transportsByName[name](opts);
+    }
+    /**
+     * Initializes transport to use and starts probe.
+     *
+     * @private
+     */
+    _open() {
+      if (this.transports.length === 0) {
+        this.setTimeoutFn(() => {
+          this.emitReserved("error", "No transports available");
+        }, 0);
+        return;
+      }
+      const transportName = this.opts.rememberUpgrade && _SocketWithoutUpgrade.priorWebsocketSuccess && this.transports.indexOf("websocket") !== -1 ? "websocket" : this.transports[0];
+      this.readyState = "opening";
+      const transport = this.createTransport(transportName);
+      transport.open();
+      this.setTransport(transport);
+    }
+    /**
+     * Sets the current transport. Disables the existing one (if any).
+     *
+     * @private
+     */
+    setTransport(transport) {
+      if (this.transport) {
+        this.transport.removeAllListeners();
+      }
+      this.transport = transport;
+      transport.on("drain", this._onDrain.bind(this)).on("packet", this._onPacket.bind(this)).on("error", this._onError.bind(this)).on("close", (reason) => this._onClose("transport close", reason));
+    }
+    /**
+     * Called when connection is deemed open.
+     *
+     * @private
+     */
+    onOpen() {
+      this.readyState = "open";
+      _SocketWithoutUpgrade.priorWebsocketSuccess = "websocket" === this.transport.name;
+      this.emitReserved("open");
+      this.flush();
+    }
+    /**
+     * Handles a packet.
+     *
+     * @private
+     */
+    _onPacket(packet) {
+      if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
+        this.emitReserved("packet", packet);
+        this.emitReserved("heartbeat");
+        switch (packet.type) {
+          case "open":
+            this.onHandshake(JSON.parse(packet.data));
+            break;
+          case "ping":
+            this._sendPacket("pong");
+            this.emitReserved("ping");
+            this.emitReserved("pong");
+            this._resetPingTimeout();
+            break;
+          case "error":
+            const err = new Error("server error");
+            err.code = packet.data;
+            this._onError(err);
+            break;
+          case "message":
+            this.emitReserved("data", packet.data);
+            this.emitReserved("message", packet.data);
+            break;
+        }
+      } else {
+      }
+    }
+    /**
+     * Called upon handshake completion.
+     *
+     * @param {Object} data - handshake obj
+     * @private
+     */
+    onHandshake(data) {
+      this.emitReserved("handshake", data);
+      this.id = data.sid;
+      this.transport.query.sid = data.sid;
+      this._pingInterval = data.pingInterval;
+      this._pingTimeout = data.pingTimeout;
+      this._maxPayload = data.maxPayload;
+      this.onOpen();
+      if ("closed" === this.readyState)
+        return;
+      this._resetPingTimeout();
+    }
+    /**
+     * Sets and resets ping timeout timer based on server pings.
+     *
+     * @private
+     */
+    _resetPingTimeout() {
+      this.clearTimeoutFn(this._pingTimeoutTimer);
+      const delay = this._pingInterval + this._pingTimeout;
+      this._pingTimeoutTime = Date.now() + delay;
+      this._pingTimeoutTimer = this.setTimeoutFn(() => {
+        this._onClose("ping timeout");
+      }, delay);
+      if (this.opts.autoUnref) {
+        this._pingTimeoutTimer.unref();
+      }
+    }
+    /**
+     * Called on `drain` event
+     *
+     * @private
+     */
+    _onDrain() {
+      this.writeBuffer.splice(0, this._prevBufferLen);
+      this._prevBufferLen = 0;
+      if (0 === this.writeBuffer.length) {
+        this.emitReserved("drain");
+      } else {
+        this.flush();
+      }
+    }
+    /**
+     * Flush write buffers.
+     *
+     * @private
+     */
+    flush() {
+      if ("closed" !== this.readyState && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
+        const packets = this._getWritablePackets();
+        this.transport.send(packets);
+        this._prevBufferLen = packets.length;
+        this.emitReserved("flush");
+      }
+    }
+    /**
+     * Ensure the encoded size of the writeBuffer is below the maxPayload value sent by the server (only for HTTP
+     * long-polling)
+     *
+     * @private
+     */
+    _getWritablePackets() {
+      const shouldCheckPayloadSize = this._maxPayload && this.transport.name === "polling" && this.writeBuffer.length > 1;
+      if (!shouldCheckPayloadSize) {
+        return this.writeBuffer;
+      }
+      let payloadSize = 1;
+      for (let i = 0; i < this.writeBuffer.length; i++) {
+        const data = this.writeBuffer[i].data;
+        if (data) {
+          payloadSize += byteLength(data);
+        }
+        if (i > 0 && payloadSize > this._maxPayload) {
+          return this.writeBuffer.slice(0, i);
+        }
+        payloadSize += 2;
+      }
+      return this.writeBuffer;
+    }
+    /**
+     * Checks whether the heartbeat timer has expired but the socket has not yet been notified.
+     *
+     * Note: this method is private for now because it does not really fit the WebSocket API, but if we put it in the
+     * `write()` method then the message would not be buffered by the Socket.IO client.
+     *
+     * @return {boolean}
+     * @private
+     */
+    /* private */
+    _hasPingExpired() {
+      if (!this._pingTimeoutTime)
+        return true;
+      const hasExpired = Date.now() > this._pingTimeoutTime;
+      if (hasExpired) {
+        this._pingTimeoutTime = 0;
+        nextTick(() => {
+          this._onClose("ping timeout");
+        }, this.setTimeoutFn);
+      }
+      return hasExpired;
+    }
+    /**
+     * Sends a message.
+     *
+     * @param {String} msg - message.
+     * @param {Object} options.
+     * @param {Function} fn - callback function.
+     * @return {Socket} for chaining.
+     */
+    write(msg, options, fn) {
+      this._sendPacket("message", msg, options, fn);
+      return this;
+    }
+    /**
+     * Sends a message. Alias of {@link Socket#write}.
+     *
+     * @param {String} msg - message.
+     * @param {Object} options.
+     * @param {Function} fn - callback function.
+     * @return {Socket} for chaining.
+     */
+    send(msg, options, fn) {
+      this._sendPacket("message", msg, options, fn);
+      return this;
+    }
+    /**
+     * Sends a packet.
+     *
+     * @param {String} type: packet type.
+     * @param {String} data.
+     * @param {Object} options.
+     * @param {Function} fn - callback function.
+     * @private
+     */
+    _sendPacket(type, data, options, fn) {
+      if ("function" === typeof data) {
+        fn = data;
+        data = void 0;
+      }
+      if ("function" === typeof options) {
+        fn = options;
+        options = null;
+      }
+      if ("closing" === this.readyState || "closed" === this.readyState) {
+        return;
+      }
+      options = options || {};
+      options.compress = false !== options.compress;
+      const packet = {
+        type,
+        data,
+        options
+      };
+      this.emitReserved("packetCreate", packet);
+      this.writeBuffer.push(packet);
+      if (fn)
+        this.once("flush", fn);
+      this.flush();
+    }
+    /**
+     * Closes the connection.
+     */
+    close() {
+      const close = () => {
+        this._onClose("forced close");
+        this.transport.close();
+      };
+      const cleanupAndClose = () => {
+        this.off("upgrade", cleanupAndClose);
+        this.off("upgradeError", cleanupAndClose);
+        close();
+      };
+      const waitForUpgrade = () => {
+        this.once("upgrade", cleanupAndClose);
+        this.once("upgradeError", cleanupAndClose);
+      };
+      if ("opening" === this.readyState || "open" === this.readyState) {
+        this.readyState = "closing";
+        if (this.writeBuffer.length) {
+          this.once("drain", () => {
+            if (this.upgrading) {
+              waitForUpgrade();
+            } else {
+              close();
+            }
+          });
+        } else if (this.upgrading) {
+          waitForUpgrade();
+        } else {
+          close();
+        }
+      }
+      return this;
+    }
+    /**
+     * Called upon transport error
+     *
+     * @private
+     */
+    _onError(err) {
+      _SocketWithoutUpgrade.priorWebsocketSuccess = false;
+      if (this.opts.tryAllTransports && this.transports.length > 1 && this.readyState === "opening") {
+        this.transports.shift();
+        return this._open();
+      }
+      this.emitReserved("error", err);
+      this._onClose("transport error", err);
+    }
+    /**
+     * Called upon transport close.
+     *
+     * @private
+     */
+    _onClose(reason, description) {
+      if ("opening" === this.readyState || "open" === this.readyState || "closing" === this.readyState) {
+        this.clearTimeoutFn(this._pingTimeoutTimer);
+        this.transport.removeAllListeners("close");
+        this.transport.close();
+        this.transport.removeAllListeners();
+        if (withEventListeners) {
+          if (this._beforeunloadEventListener) {
+            removeEventListener("beforeunload", this._beforeunloadEventListener, false);
+          }
+          if (this._offlineEventListener) {
+            const i = OFFLINE_EVENT_LISTENERS.indexOf(this._offlineEventListener);
+            if (i !== -1) {
+              OFFLINE_EVENT_LISTENERS.splice(i, 1);
+            }
+          }
+        }
+        this.readyState = "closed";
+        this.id = null;
+        this.emitReserved("close", reason, description);
+        this.writeBuffer = [];
+        this._prevBufferLen = 0;
+      }
+    }
+  };
+  SocketWithoutUpgrade.protocol = protocol;
+  var SocketWithUpgrade = class extends SocketWithoutUpgrade {
+    constructor() {
+      super(...arguments);
+      this._upgrades = [];
+    }
+    onOpen() {
+      super.onOpen();
+      if ("open" === this.readyState && this.opts.upgrade) {
+        for (let i = 0; i < this._upgrades.length; i++) {
+          this._probe(this._upgrades[i]);
+        }
+      }
+    }
+    /**
+     * Probes a transport.
+     *
+     * @param {String} name - transport name
+     * @private
+     */
+    _probe(name) {
+      let transport = this.createTransport(name);
+      let failed = false;
+      SocketWithoutUpgrade.priorWebsocketSuccess = false;
+      const onTransportOpen = () => {
+        if (failed)
+          return;
+        transport.send([{ type: "ping", data: "probe" }]);
+        transport.once("packet", (msg) => {
+          if (failed)
+            return;
+          if ("pong" === msg.type && "probe" === msg.data) {
+            this.upgrading = true;
+            this.emitReserved("upgrading", transport);
+            if (!transport)
+              return;
+            SocketWithoutUpgrade.priorWebsocketSuccess = "websocket" === transport.name;
+            this.transport.pause(() => {
+              if (failed)
+                return;
+              if ("closed" === this.readyState)
+                return;
+              cleanup2();
+              this.setTransport(transport);
+              transport.send([{ type: "upgrade" }]);
+              this.emitReserved("upgrade", transport);
+              transport = null;
+              this.upgrading = false;
+              this.flush();
+            });
+          } else {
+            const err = new Error("probe error");
+            err.transport = transport.name;
+            this.emitReserved("upgradeError", err);
+          }
+        });
+      };
+      function freezeTransport() {
+        if (failed)
+          return;
+        failed = true;
+        cleanup2();
+        transport.close();
+        transport = null;
+      }
+      const onerror = (err) => {
+        const error = new Error("probe error: " + err);
+        error.transport = transport.name;
+        freezeTransport();
+        this.emitReserved("upgradeError", error);
+      };
+      function onTransportClose() {
+        onerror("transport closed");
+      }
+      function onclose() {
+        onerror("socket closed");
+      }
+      function onupgrade(to2) {
+        if (transport && to2.name !== transport.name) {
+          freezeTransport();
+        }
+      }
+      const cleanup2 = () => {
+        transport.removeListener("open", onTransportOpen);
+        transport.removeListener("error", onerror);
+        transport.removeListener("close", onTransportClose);
+        this.off("close", onclose);
+        this.off("upgrading", onupgrade);
+      };
+      transport.once("open", onTransportOpen);
+      transport.once("error", onerror);
+      transport.once("close", onTransportClose);
+      this.once("close", onclose);
+      this.once("upgrading", onupgrade);
+      if (this._upgrades.indexOf("webtransport") !== -1 && name !== "webtransport") {
+        this.setTimeoutFn(() => {
+          if (!failed) {
+            transport.open();
+          }
+        }, 200);
+      } else {
+        transport.open();
+      }
+    }
+    onHandshake(data) {
+      this._upgrades = this._filterUpgrades(data.upgrades);
+      super.onHandshake(data);
+    }
+    /**
+     * Filters upgrades, returning only those matching client transports.
+     *
+     * @param {Array} upgrades - server upgrades
+     * @private
+     */
+    _filterUpgrades(upgrades) {
+      const filteredUpgrades = [];
+      for (let i = 0; i < upgrades.length; i++) {
+        if (~this.transports.indexOf(upgrades[i]))
+          filteredUpgrades.push(upgrades[i]);
+      }
+      return filteredUpgrades;
+    }
+  };
+  var Socket = class extends SocketWithUpgrade {
+    constructor(uri, opts = {}) {
+      const o = typeof uri === "object" ? uri : opts;
+      if (!o.transports || o.transports && typeof o.transports[0] === "string") {
+        o.transports = (o.transports || ["polling", "websocket", "webtransport"]).map((transportName) => transports[transportName]).filter((t) => !!t);
+      }
+      super(uri, o);
+    }
+  };
+
+  // node_modules/engine.io-client/build/esm/index.js
+  var protocol2 = Socket.protocol;
+
+  // node_modules/socket.io-client/build/esm/url.js
+  function url(uri, path = "", loc) {
+    let obj = uri;
+    loc = loc || typeof location !== "undefined" && location;
+    if (null == uri)
+      uri = loc.protocol + "//" + loc.host;
+    if (typeof uri === "string") {
+      if ("/" === uri.charAt(0)) {
+        if ("/" === uri.charAt(1)) {
+          uri = loc.protocol + uri;
+        } else {
+          uri = loc.host + uri;
+        }
+      }
+      if (!/^(https?|wss?):\/\//.test(uri)) {
+        if ("undefined" !== typeof loc) {
+          uri = loc.protocol + "//" + uri;
+        } else {
+          uri = "https://" + uri;
+        }
+      }
+      obj = parse(uri);
+    }
+    if (!obj.port) {
+      if (/^(http|ws)$/.test(obj.protocol)) {
+        obj.port = "80";
+      } else if (/^(http|ws)s$/.test(obj.protocol)) {
+        obj.port = "443";
+      }
+    }
+    obj.path = obj.path || "/";
+    const ipv6 = obj.host.indexOf(":") !== -1;
+    const host = ipv6 ? "[" + obj.host + "]" : obj.host;
+    obj.id = obj.protocol + "://" + host + ":" + obj.port + path;
+    obj.href = obj.protocol + "://" + host + (loc && loc.port === obj.port ? "" : ":" + obj.port);
+    return obj;
+  }
+
+  // node_modules/socket.io-parser/build/esm/index.js
+  var esm_exports = {};
+  __export(esm_exports, {
+    Decoder: () => Decoder,
+    Encoder: () => Encoder,
+    PacketType: () => PacketType,
+    protocol: () => protocol3
+  });
+
+  // node_modules/socket.io-parser/build/esm/is-binary.js
+  var withNativeArrayBuffer3 = typeof ArrayBuffer === "function";
+  var isView2 = (obj) => {
+    return typeof ArrayBuffer.isView === "function" ? ArrayBuffer.isView(obj) : obj.buffer instanceof ArrayBuffer;
+  };
+  var toString = Object.prototype.toString;
+  var withNativeBlob2 = typeof Blob === "function" || typeof Blob !== "undefined" && toString.call(Blob) === "[object BlobConstructor]";
+  var withNativeFile = typeof File === "function" || typeof File !== "undefined" && toString.call(File) === "[object FileConstructor]";
+  function isBinary(obj) {
+    return withNativeArrayBuffer3 && (obj instanceof ArrayBuffer || isView2(obj)) || withNativeBlob2 && obj instanceof Blob || withNativeFile && obj instanceof File;
+  }
+  function hasBinary(obj, toJSON) {
+    if (!obj || typeof obj !== "object") {
+      return false;
+    }
+    if (Array.isArray(obj)) {
+      for (let i = 0, l = obj.length; i < l; i++) {
+        if (hasBinary(obj[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+    if (isBinary(obj)) {
+      return true;
+    }
+    if (obj.toJSON && typeof obj.toJSON === "function" && arguments.length === 1) {
+      return hasBinary(obj.toJSON(), true);
+    }
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key) && hasBinary(obj[key])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // node_modules/socket.io-parser/build/esm/binary.js
+  function deconstructPacket(packet) {
+    const buffers = [];
+    const packetData = packet.data;
+    const pack = packet;
+    pack.data = _deconstructPacket(packetData, buffers);
+    pack.attachments = buffers.length;
+    return { packet: pack, buffers };
+  }
+  function _deconstructPacket(data, buffers) {
+    if (!data)
+      return data;
+    if (isBinary(data)) {
+      const placeholder = { _placeholder: true, num: buffers.length };
+      buffers.push(data);
+      return placeholder;
+    } else if (Array.isArray(data)) {
+      const newData = new Array(data.length);
+      for (let i = 0; i < data.length; i++) {
+        newData[i] = _deconstructPacket(data[i], buffers);
+      }
+      return newData;
+    } else if (typeof data === "object" && !(data instanceof Date)) {
+      const newData = {};
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          newData[key] = _deconstructPacket(data[key], buffers);
+        }
+      }
+      return newData;
+    }
+    return data;
+  }
+  function reconstructPacket(packet, buffers) {
+    packet.data = _reconstructPacket(packet.data, buffers);
+    delete packet.attachments;
+    return packet;
+  }
+  function _reconstructPacket(data, buffers) {
+    if (!data)
+      return data;
+    if (data && data._placeholder === true) {
+      const isIndexValid = typeof data.num === "number" && data.num >= 0 && data.num < buffers.length;
+      if (isIndexValid) {
+        return buffers[data.num];
+      } else {
+        throw new Error("illegal attachments");
+      }
+    } else if (Array.isArray(data)) {
+      for (let i = 0; i < data.length; i++) {
+        data[i] = _reconstructPacket(data[i], buffers);
+      }
+    } else if (typeof data === "object") {
+      for (const key in data) {
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+          data[key] = _reconstructPacket(data[key], buffers);
+        }
+      }
+    }
+    return data;
+  }
+
+  // node_modules/socket.io-parser/build/esm/index.js
+  var RESERVED_EVENTS = [
+    "connect",
+    "connect_error",
+    "disconnect",
+    "disconnecting",
+    "newListener",
+    "removeListener"
+    // used by the Node.js EventEmitter
+  ];
+  var protocol3 = 5;
+  var PacketType;
+  (function(PacketType2) {
+    PacketType2[PacketType2["CONNECT"] = 0] = "CONNECT";
+    PacketType2[PacketType2["DISCONNECT"] = 1] = "DISCONNECT";
+    PacketType2[PacketType2["EVENT"] = 2] = "EVENT";
+    PacketType2[PacketType2["ACK"] = 3] = "ACK";
+    PacketType2[PacketType2["CONNECT_ERROR"] = 4] = "CONNECT_ERROR";
+    PacketType2[PacketType2["BINARY_EVENT"] = 5] = "BINARY_EVENT";
+    PacketType2[PacketType2["BINARY_ACK"] = 6] = "BINARY_ACK";
+  })(PacketType || (PacketType = {}));
+  var Encoder = class {
+    /**
+     * Encoder constructor
+     *
+     * @param {function} replacer - custom replacer to pass down to JSON.parse
+     */
+    constructor(replacer) {
+      this.replacer = replacer;
+    }
+    /**
+     * Encode a packet as a single string if non-binary, or as a
+     * buffer sequence, depending on packet type.
+     *
+     * @param {Object} obj - packet object
+     */
+    encode(obj) {
+      if (obj.type === PacketType.EVENT || obj.type === PacketType.ACK) {
+        if (hasBinary(obj)) {
+          return this.encodeAsBinary({
+            type: obj.type === PacketType.EVENT ? PacketType.BINARY_EVENT : PacketType.BINARY_ACK,
+            nsp: obj.nsp,
+            data: obj.data,
+            id: obj.id
+          });
+        }
+      }
+      return [this.encodeAsString(obj)];
+    }
+    /**
+     * Encode packet as string.
+     */
+    encodeAsString(obj) {
+      let str = "" + obj.type;
+      if (obj.type === PacketType.BINARY_EVENT || obj.type === PacketType.BINARY_ACK) {
+        str += obj.attachments + "-";
+      }
+      if (obj.nsp && "/" !== obj.nsp) {
+        str += obj.nsp + ",";
+      }
+      if (null != obj.id) {
+        str += obj.id;
+      }
+      if (null != obj.data) {
+        str += JSON.stringify(obj.data, this.replacer);
+      }
+      return str;
+    }
+    /**
+     * Encode packet as 'buffer sequence' by removing blobs, and
+     * deconstructing packet into object with placeholders and
+     * a list of buffers.
+     */
+    encodeAsBinary(obj) {
+      const deconstruction = deconstructPacket(obj);
+      const pack = this.encodeAsString(deconstruction.packet);
+      const buffers = deconstruction.buffers;
+      buffers.unshift(pack);
+      return buffers;
+    }
+  };
+  function isObject(value2) {
+    return Object.prototype.toString.call(value2) === "[object Object]";
+  }
+  var Decoder = class _Decoder extends Emitter {
+    /**
+     * Decoder constructor
+     *
+     * @param {function} reviver - custom reviver to pass down to JSON.stringify
+     */
+    constructor(reviver) {
+      super();
+      this.reviver = reviver;
+    }
+    /**
+     * Decodes an encoded packet string into packet JSON.
+     *
+     * @param {String} obj - encoded packet
+     */
+    add(obj) {
+      let packet;
+      if (typeof obj === "string") {
+        if (this.reconstructor) {
+          throw new Error("got plaintext data when reconstructing a packet");
+        }
+        packet = this.decodeString(obj);
+        const isBinaryEvent = packet.type === PacketType.BINARY_EVENT;
+        if (isBinaryEvent || packet.type === PacketType.BINARY_ACK) {
+          packet.type = isBinaryEvent ? PacketType.EVENT : PacketType.ACK;
+          this.reconstructor = new BinaryReconstructor(packet);
+          if (packet.attachments === 0) {
+            super.emitReserved("decoded", packet);
+          }
+        } else {
+          super.emitReserved("decoded", packet);
+        }
+      } else if (isBinary(obj) || obj.base64) {
+        if (!this.reconstructor) {
+          throw new Error("got binary data when not reconstructing a packet");
+        } else {
+          packet = this.reconstructor.takeBinaryData(obj);
+          if (packet) {
+            this.reconstructor = null;
+            super.emitReserved("decoded", packet);
+          }
+        }
+      } else {
+        throw new Error("Unknown type: " + obj);
+      }
+    }
+    /**
+     * Decode a packet String (JSON data)
+     *
+     * @param {String} str
+     * @return {Object} packet
+     */
+    decodeString(str) {
+      let i = 0;
+      const p = {
+        type: Number(str.charAt(0))
+      };
+      if (PacketType[p.type] === void 0) {
+        throw new Error("unknown packet type " + p.type);
+      }
+      if (p.type === PacketType.BINARY_EVENT || p.type === PacketType.BINARY_ACK) {
+        const start = i + 1;
+        while (str.charAt(++i) !== "-" && i != str.length) {
+        }
+        const buf = str.substring(start, i);
+        if (buf != Number(buf) || str.charAt(i) !== "-") {
+          throw new Error("Illegal attachments");
+        }
+        p.attachments = Number(buf);
+      }
+      if ("/" === str.charAt(i + 1)) {
+        const start = i + 1;
+        while (++i) {
+          const c = str.charAt(i);
+          if ("," === c)
+            break;
+          if (i === str.length)
+            break;
+        }
+        p.nsp = str.substring(start, i);
+      } else {
+        p.nsp = "/";
+      }
+      const next = str.charAt(i + 1);
+      if ("" !== next && Number(next) == next) {
+        const start = i + 1;
+        while (++i) {
+          const c = str.charAt(i);
+          if (null == c || Number(c) != c) {
+            --i;
+            break;
+          }
+          if (i === str.length)
+            break;
+        }
+        p.id = Number(str.substring(start, i + 1));
+      }
+      if (str.charAt(++i)) {
+        const payload = this.tryParse(str.substr(i));
+        if (_Decoder.isPayloadValid(p.type, payload)) {
+          p.data = payload;
+        } else {
+          throw new Error("invalid payload");
+        }
+      }
+      return p;
+    }
+    tryParse(str) {
+      try {
+        return JSON.parse(str, this.reviver);
+      } catch (e) {
+        return false;
+      }
+    }
+    static isPayloadValid(type, payload) {
+      switch (type) {
+        case PacketType.CONNECT:
+          return isObject(payload);
+        case PacketType.DISCONNECT:
+          return payload === void 0;
+        case PacketType.CONNECT_ERROR:
+          return typeof payload === "string" || isObject(payload);
+        case PacketType.EVENT:
+        case PacketType.BINARY_EVENT:
+          return Array.isArray(payload) && (typeof payload[0] === "number" || typeof payload[0] === "string" && RESERVED_EVENTS.indexOf(payload[0]) === -1);
+        case PacketType.ACK:
+        case PacketType.BINARY_ACK:
+          return Array.isArray(payload);
+      }
+    }
+    /**
+     * Deallocates a parser's resources
+     */
+    destroy() {
+      if (this.reconstructor) {
+        this.reconstructor.finishedReconstruction();
+        this.reconstructor = null;
+      }
+    }
+  };
+  var BinaryReconstructor = class {
+    constructor(packet) {
+      this.packet = packet;
+      this.buffers = [];
+      this.reconPack = packet;
+    }
+    /**
+     * Method to be called when binary data received from connection
+     * after a BINARY_EVENT packet.
+     *
+     * @param {Buffer | ArrayBuffer} binData - the raw binary data received
+     * @return {null | Object} returns null if more binary data is expected or
+     *   a reconstructed packet object if all buffers have been received.
+     */
+    takeBinaryData(binData) {
+      this.buffers.push(binData);
+      if (this.buffers.length === this.reconPack.attachments) {
+        const packet = reconstructPacket(this.reconPack, this.buffers);
+        this.finishedReconstruction();
+        return packet;
+      }
+      return null;
+    }
+    /**
+     * Cleans up binary packet reconstruction variables.
+     */
+    finishedReconstruction() {
+      this.reconPack = null;
+      this.buffers = [];
+    }
+  };
+
+  // node_modules/socket.io-client/build/esm/on.js
+  function on(obj, ev, fn) {
+    obj.on(ev, fn);
+    return function subDestroy() {
+      obj.off(ev, fn);
+    };
+  }
+
+  // node_modules/socket.io-client/build/esm/socket.js
+  var RESERVED_EVENTS2 = Object.freeze({
+    connect: 1,
+    connect_error: 1,
+    disconnect: 1,
+    disconnecting: 1,
+    // EventEmitter reserved events: https://nodejs.org/api/events.html#events_event_newlistener
+    newListener: 1,
+    removeListener: 1
+  });
+  var Socket2 = class extends Emitter {
+    /**
+     * `Socket` constructor.
+     */
+    constructor(io, nsp, opts) {
+      super();
+      this.connected = false;
+      this.recovered = false;
+      this.receiveBuffer = [];
+      this.sendBuffer = [];
+      this._queue = [];
+      this._queueSeq = 0;
+      this.ids = 0;
+      this.acks = {};
+      this.flags = {};
+      this.io = io;
+      this.nsp = nsp;
+      if (opts && opts.auth) {
+        this.auth = opts.auth;
+      }
+      this._opts = Object.assign({}, opts);
+      if (this.io._autoConnect)
+        this.open();
+    }
+    /**
+     * Whether the socket is currently disconnected
+     *
+     * @example
+     * const socket = io();
+     *
+     * socket.on("connect", () => {
+     *   console.log(socket.disconnected); // false
+     * });
+     *
+     * socket.on("disconnect", () => {
+     *   console.log(socket.disconnected); // true
+     * });
+     */
+    get disconnected() {
+      return !this.connected;
+    }
+    /**
+     * Subscribe to open, close and packet events
+     *
+     * @private
+     */
+    subEvents() {
+      if (this.subs)
+        return;
+      const io = this.io;
+      this.subs = [
+        on(io, "open", this.onopen.bind(this)),
+        on(io, "packet", this.onpacket.bind(this)),
+        on(io, "error", this.onerror.bind(this)),
+        on(io, "close", this.onclose.bind(this))
+      ];
+    }
+    /**
+     * Whether the Socket will try to reconnect when its Manager connects or reconnects.
+     *
+     * @example
+     * const socket = io();
+     *
+     * console.log(socket.active); // true
+     *
+     * socket.on("disconnect", (reason) => {
+     *   if (reason === "io server disconnect") {
+     *     // the disconnection was initiated by the server, you need to manually reconnect
+     *     console.log(socket.active); // false
+     *   }
+     *   // else the socket will automatically try to reconnect
+     *   console.log(socket.active); // true
+     * });
+     */
+    get active() {
+      return !!this.subs;
+    }
+    /**
+     * "Opens" the socket.
+     *
+     * @example
+     * const socket = io({
+     *   autoConnect: false
+     * });
+     *
+     * socket.connect();
+     */
+    connect() {
+      if (this.connected)
+        return this;
+      this.subEvents();
+      if (!this.io["_reconnecting"])
+        this.io.open();
+      if ("open" === this.io._readyState)
+        this.onopen();
+      return this;
+    }
+    /**
+     * Alias for {@link connect()}.
+     */
+    open() {
+      return this.connect();
+    }
+    /**
+     * Sends a `message` event.
+     *
+     * This method mimics the WebSocket.send() method.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send
+     *
+     * @example
+     * socket.send("hello");
+     *
+     * // this is equivalent to
+     * socket.emit("message", "hello");
+     *
+     * @return self
+     */
+    send(...args) {
+      args.unshift("message");
+      this.emit.apply(this, args);
+      return this;
+    }
+    /**
+     * Override `emit`.
+     * If the event is in `events`, it's emitted normally.
+     *
+     * @example
+     * socket.emit("hello", "world");
+     *
+     * // all serializable datastructures are supported (no need to call JSON.stringify)
+     * socket.emit("hello", 1, "2", { 3: ["4"], 5: Uint8Array.from([6]) });
+     *
+     * // with an acknowledgement from the server
+     * socket.emit("hello", "world", (val) => {
+     *   // ...
+     * });
+     *
+     * @return self
+     */
+    emit(ev, ...args) {
+      var _a, _b, _c;
+      if (RESERVED_EVENTS2.hasOwnProperty(ev)) {
+        throw new Error('"' + ev.toString() + '" is a reserved event name');
+      }
+      args.unshift(ev);
+      if (this._opts.retries && !this.flags.fromQueue && !this.flags.volatile) {
+        this._addToQueue(args);
+        return this;
+      }
+      const packet = {
+        type: PacketType.EVENT,
+        data: args
+      };
+      packet.options = {};
+      packet.options.compress = this.flags.compress !== false;
+      if ("function" === typeof args[args.length - 1]) {
+        const id = this.ids++;
+        const ack = args.pop();
+        this._registerAckCallback(id, ack);
+        packet.id = id;
+      }
+      const isTransportWritable = (_b = (_a = this.io.engine) === null || _a === void 0 ? void 0 : _a.transport) === null || _b === void 0 ? void 0 : _b.writable;
+      const isConnected = this.connected && !((_c = this.io.engine) === null || _c === void 0 ? void 0 : _c._hasPingExpired());
+      const discardPacket = this.flags.volatile && !isTransportWritable;
+      if (discardPacket) {
+      } else if (isConnected) {
+        this.notifyOutgoingListeners(packet);
+        this.packet(packet);
+      } else {
+        this.sendBuffer.push(packet);
+      }
+      this.flags = {};
+      return this;
+    }
+    /**
+     * @private
+     */
+    _registerAckCallback(id, ack) {
+      var _a;
+      const timeout = (_a = this.flags.timeout) !== null && _a !== void 0 ? _a : this._opts.ackTimeout;
+      if (timeout === void 0) {
+        this.acks[id] = ack;
+        return;
+      }
+      const timer = this.io.setTimeoutFn(() => {
+        delete this.acks[id];
+        for (let i = 0; i < this.sendBuffer.length; i++) {
+          if (this.sendBuffer[i].id === id) {
+            this.sendBuffer.splice(i, 1);
+          }
+        }
+        ack.call(this, new Error("operation has timed out"));
+      }, timeout);
+      const fn = (...args) => {
+        this.io.clearTimeoutFn(timer);
+        ack.apply(this, args);
+      };
+      fn.withError = true;
+      this.acks[id] = fn;
+    }
+    /**
+     * Emits an event and waits for an acknowledgement
+     *
+     * @example
+     * // without timeout
+     * const response = await socket.emitWithAck("hello", "world");
+     *
+     * // with a specific timeout
+     * try {
+     *   const response = await socket.timeout(1000).emitWithAck("hello", "world");
+     * } catch (err) {
+     *   // the server did not acknowledge the event in the given delay
+     * }
+     *
+     * @return a Promise that will be fulfilled when the server acknowledges the event
+     */
+    emitWithAck(ev, ...args) {
+      return new Promise((resolve2, reject) => {
+        const fn = (arg1, arg2) => {
+          return arg1 ? reject(arg1) : resolve2(arg2);
+        };
+        fn.withError = true;
+        args.push(fn);
+        this.emit(ev, ...args);
+      });
+    }
+    /**
+     * Add the packet to the queue.
+     * @param args
+     * @private
+     */
+    _addToQueue(args) {
+      let ack;
+      if (typeof args[args.length - 1] === "function") {
+        ack = args.pop();
+      }
+      const packet = {
+        id: this._queueSeq++,
+        tryCount: 0,
+        pending: false,
+        args,
+        flags: Object.assign({ fromQueue: true }, this.flags)
+      };
+      args.push((err, ...responseArgs) => {
+        if (packet !== this._queue[0]) {
+          return;
+        }
+        const hasError = err !== null;
+        if (hasError) {
+          if (packet.tryCount > this._opts.retries) {
+            this._queue.shift();
+            if (ack) {
+              ack(err);
+            }
+          }
+        } else {
+          this._queue.shift();
+          if (ack) {
+            ack(null, ...responseArgs);
+          }
+        }
+        packet.pending = false;
+        return this._drainQueue();
+      });
+      this._queue.push(packet);
+      this._drainQueue();
+    }
+    /**
+     * Send the first packet of the queue, and wait for an acknowledgement from the server.
+     * @param force - whether to resend a packet that has not been acknowledged yet
+     *
+     * @private
+     */
+    _drainQueue(force = false) {
+      if (!this.connected || this._queue.length === 0) {
+        return;
+      }
+      const packet = this._queue[0];
+      if (packet.pending && !force) {
+        return;
+      }
+      packet.pending = true;
+      packet.tryCount++;
+      this.flags = packet.flags;
+      this.emit.apply(this, packet.args);
+    }
+    /**
+     * Sends a packet.
+     *
+     * @param packet
+     * @private
+     */
+    packet(packet) {
+      packet.nsp = this.nsp;
+      this.io._packet(packet);
+    }
+    /**
+     * Called upon engine `open`.
+     *
+     * @private
+     */
+    onopen() {
+      if (typeof this.auth == "function") {
+        this.auth((data) => {
+          this._sendConnectPacket(data);
+        });
+      } else {
+        this._sendConnectPacket(this.auth);
+      }
+    }
+    /**
+     * Sends a CONNECT packet to initiate the Socket.IO session.
+     *
+     * @param data
+     * @private
+     */
+    _sendConnectPacket(data) {
+      this.packet({
+        type: PacketType.CONNECT,
+        data: this._pid ? Object.assign({ pid: this._pid, offset: this._lastOffset }, data) : data
+      });
+    }
+    /**
+     * Called upon engine or manager `error`.
+     *
+     * @param err
+     * @private
+     */
+    onerror(err) {
+      if (!this.connected) {
+        this.emitReserved("connect_error", err);
+      }
+    }
+    /**
+     * Called upon engine `close`.
+     *
+     * @param reason
+     * @param description
+     * @private
+     */
+    onclose(reason, description) {
+      this.connected = false;
+      delete this.id;
+      this.emitReserved("disconnect", reason, description);
+      this._clearAcks();
+    }
+    /**
+     * Clears the acknowledgement handlers upon disconnection, since the client will never receive an acknowledgement from
+     * the server.
+     *
+     * @private
+     */
+    _clearAcks() {
+      Object.keys(this.acks).forEach((id) => {
+        const isBuffered = this.sendBuffer.some((packet) => String(packet.id) === id);
+        if (!isBuffered) {
+          const ack = this.acks[id];
+          delete this.acks[id];
+          if (ack.withError) {
+            ack.call(this, new Error("socket has been disconnected"));
+          }
+        }
+      });
+    }
+    /**
+     * Called with socket packet.
+     *
+     * @param packet
+     * @private
+     */
+    onpacket(packet) {
+      const sameNamespace = packet.nsp === this.nsp;
+      if (!sameNamespace)
+        return;
+      switch (packet.type) {
+        case PacketType.CONNECT:
+          if (packet.data && packet.data.sid) {
+            this.onconnect(packet.data.sid, packet.data.pid);
+          } else {
+            this.emitReserved("connect_error", new Error("It seems you are trying to reach a Socket.IO server in v2.x with a v3.x client, but they are not compatible (more information here: https://socket.io/docs/v3/migrating-from-2-x-to-3-0/)"));
+          }
+          break;
+        case PacketType.EVENT:
+        case PacketType.BINARY_EVENT:
+          this.onevent(packet);
+          break;
+        case PacketType.ACK:
+        case PacketType.BINARY_ACK:
+          this.onack(packet);
+          break;
+        case PacketType.DISCONNECT:
+          this.ondisconnect();
+          break;
+        case PacketType.CONNECT_ERROR:
+          this.destroy();
+          const err = new Error(packet.data.message);
+          err.data = packet.data.data;
+          this.emitReserved("connect_error", err);
+          break;
+      }
+    }
+    /**
+     * Called upon a server event.
+     *
+     * @param packet
+     * @private
+     */
+    onevent(packet) {
+      const args = packet.data || [];
+      if (null != packet.id) {
+        args.push(this.ack(packet.id));
+      }
+      if (this.connected) {
+        this.emitEvent(args);
+      } else {
+        this.receiveBuffer.push(Object.freeze(args));
+      }
+    }
+    emitEvent(args) {
+      if (this._anyListeners && this._anyListeners.length) {
+        const listeners = this._anyListeners.slice();
+        for (const listener of listeners) {
+          listener.apply(this, args);
+        }
+      }
+      super.emit.apply(this, args);
+      if (this._pid && args.length && typeof args[args.length - 1] === "string") {
+        this._lastOffset = args[args.length - 1];
+      }
+    }
+    /**
+     * Produces an ack callback to emit with an event.
+     *
+     * @private
+     */
+    ack(id) {
+      const self2 = this;
+      let sent = false;
+      return function(...args) {
+        if (sent)
+          return;
+        sent = true;
+        self2.packet({
+          type: PacketType.ACK,
+          id,
+          data: args
+        });
+      };
+    }
+    /**
+     * Called upon a server acknowledgement.
+     *
+     * @param packet
+     * @private
+     */
+    onack(packet) {
+      const ack = this.acks[packet.id];
+      if (typeof ack !== "function") {
+        return;
+      }
+      delete this.acks[packet.id];
+      if (ack.withError) {
+        packet.data.unshift(null);
+      }
+      ack.apply(this, packet.data);
+    }
+    /**
+     * Called upon server connect.
+     *
+     * @private
+     */
+    onconnect(id, pid) {
+      this.id = id;
+      this.recovered = pid && this._pid === pid;
+      this._pid = pid;
+      this.connected = true;
+      this.emitBuffered();
+      this.emitReserved("connect");
+      this._drainQueue(true);
+    }
+    /**
+     * Emit buffered events (received and emitted).
+     *
+     * @private
+     */
+    emitBuffered() {
+      this.receiveBuffer.forEach((args) => this.emitEvent(args));
+      this.receiveBuffer = [];
+      this.sendBuffer.forEach((packet) => {
+        this.notifyOutgoingListeners(packet);
+        this.packet(packet);
+      });
+      this.sendBuffer = [];
+    }
+    /**
+     * Called upon server disconnect.
+     *
+     * @private
+     */
+    ondisconnect() {
+      this.destroy();
+      this.onclose("io server disconnect");
+    }
+    /**
+     * Called upon forced client/server side disconnections,
+     * this method ensures the manager stops tracking us and
+     * that reconnections don't get triggered for this.
+     *
+     * @private
+     */
+    destroy() {
+      if (this.subs) {
+        this.subs.forEach((subDestroy) => subDestroy());
+        this.subs = void 0;
+      }
+      this.io["_destroy"](this);
+    }
+    /**
+     * Disconnects the socket manually. In that case, the socket will not try to reconnect.
+     *
+     * If this is the last active Socket instance of the {@link Manager}, the low-level connection will be closed.
+     *
+     * @example
+     * const socket = io();
+     *
+     * socket.on("disconnect", (reason) => {
+     *   // console.log(reason); prints "io client disconnect"
+     * });
+     *
+     * socket.disconnect();
+     *
+     * @return self
+     */
+    disconnect() {
+      if (this.connected) {
+        this.packet({ type: PacketType.DISCONNECT });
+      }
+      this.destroy();
+      if (this.connected) {
+        this.onclose("io client disconnect");
+      }
+      return this;
+    }
+    /**
+     * Alias for {@link disconnect()}.
+     *
+     * @return self
+     */
+    close() {
+      return this.disconnect();
+    }
+    /**
+     * Sets the compress flag.
+     *
+     * @example
+     * socket.compress(false).emit("hello");
+     *
+     * @param compress - if `true`, compresses the sending data
+     * @return self
+     */
+    compress(compress) {
+      this.flags.compress = compress;
+      return this;
+    }
+    /**
+     * Sets a modifier for a subsequent event emission that the event message will be dropped when this socket is not
+     * ready to send messages.
+     *
+     * @example
+     * socket.volatile.emit("hello"); // the server may or may not receive it
+     *
+     * @returns self
+     */
+    get volatile() {
+      this.flags.volatile = true;
+      return this;
+    }
+    /**
+     * Sets a modifier for a subsequent event emission that the callback will be called with an error when the
+     * given number of milliseconds have elapsed without an acknowledgement from the server:
+     *
+     * @example
+     * socket.timeout(5000).emit("my-event", (err) => {
+     *   if (err) {
+     *     // the server did not acknowledge the event in the given delay
+     *   }
+     * });
+     *
+     * @returns self
+     */
+    timeout(timeout) {
+      this.flags.timeout = timeout;
+      return this;
+    }
+    /**
+     * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+     * callback.
+     *
+     * @example
+     * socket.onAny((event, ...args) => {
+     *   console.log(`got ${event}`);
+     * });
+     *
+     * @param listener
+     */
+    onAny(listener) {
+      this._anyListeners = this._anyListeners || [];
+      this._anyListeners.push(listener);
+      return this;
+    }
+    /**
+     * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+     * callback. The listener is added to the beginning of the listeners array.
+     *
+     * @example
+     * socket.prependAny((event, ...args) => {
+     *   console.log(`got event ${event}`);
+     * });
+     *
+     * @param listener
+     */
+    prependAny(listener) {
+      this._anyListeners = this._anyListeners || [];
+      this._anyListeners.unshift(listener);
+      return this;
+    }
+    /**
+     * Removes the listener that will be fired when any event is emitted.
+     *
+     * @example
+     * const catchAllListener = (event, ...args) => {
+     *   console.log(`got event ${event}`);
+     * }
+     *
+     * socket.onAny(catchAllListener);
+     *
+     * // remove a specific listener
+     * socket.offAny(catchAllListener);
+     *
+     * // or remove all listeners
+     * socket.offAny();
+     *
+     * @param listener
+     */
+    offAny(listener) {
+      if (!this._anyListeners) {
+        return this;
+      }
+      if (listener) {
+        const listeners = this._anyListeners;
+        for (let i = 0; i < listeners.length; i++) {
+          if (listener === listeners[i]) {
+            listeners.splice(i, 1);
+            return this;
+          }
+        }
+      } else {
+        this._anyListeners = [];
+      }
+      return this;
+    }
+    /**
+     * Returns an array of listeners that are listening for any event that is specified. This array can be manipulated,
+     * e.g. to remove listeners.
+     */
+    listenersAny() {
+      return this._anyListeners || [];
+    }
+    /**
+     * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+     * callback.
+     *
+     * Note: acknowledgements sent to the server are not included.
+     *
+     * @example
+     * socket.onAnyOutgoing((event, ...args) => {
+     *   console.log(`sent event ${event}`);
+     * });
+     *
+     * @param listener
+     */
+    onAnyOutgoing(listener) {
+      this._anyOutgoingListeners = this._anyOutgoingListeners || [];
+      this._anyOutgoingListeners.push(listener);
+      return this;
+    }
+    /**
+     * Adds a listener that will be fired when any event is emitted. The event name is passed as the first argument to the
+     * callback. The listener is added to the beginning of the listeners array.
+     *
+     * Note: acknowledgements sent to the server are not included.
+     *
+     * @example
+     * socket.prependAnyOutgoing((event, ...args) => {
+     *   console.log(`sent event ${event}`);
+     * });
+     *
+     * @param listener
+     */
+    prependAnyOutgoing(listener) {
+      this._anyOutgoingListeners = this._anyOutgoingListeners || [];
+      this._anyOutgoingListeners.unshift(listener);
+      return this;
+    }
+    /**
+     * Removes the listener that will be fired when any event is emitted.
+     *
+     * @example
+     * const catchAllListener = (event, ...args) => {
+     *   console.log(`sent event ${event}`);
+     * }
+     *
+     * socket.onAnyOutgoing(catchAllListener);
+     *
+     * // remove a specific listener
+     * socket.offAnyOutgoing(catchAllListener);
+     *
+     * // or remove all listeners
+     * socket.offAnyOutgoing();
+     *
+     * @param [listener] - the catch-all listener (optional)
+     */
+    offAnyOutgoing(listener) {
+      if (!this._anyOutgoingListeners) {
+        return this;
+      }
+      if (listener) {
+        const listeners = this._anyOutgoingListeners;
+        for (let i = 0; i < listeners.length; i++) {
+          if (listener === listeners[i]) {
+            listeners.splice(i, 1);
+            return this;
+          }
+        }
+      } else {
+        this._anyOutgoingListeners = [];
+      }
+      return this;
+    }
+    /**
+     * Returns an array of listeners that are listening for any event that is specified. This array can be manipulated,
+     * e.g. to remove listeners.
+     */
+    listenersAnyOutgoing() {
+      return this._anyOutgoingListeners || [];
+    }
+    /**
+     * Notify the listeners for each packet sent
+     *
+     * @param packet
+     *
+     * @private
+     */
+    notifyOutgoingListeners(packet) {
+      if (this._anyOutgoingListeners && this._anyOutgoingListeners.length) {
+        const listeners = this._anyOutgoingListeners.slice();
+        for (const listener of listeners) {
+          listener.apply(this, packet.data);
+        }
+      }
+    }
+  };
+
+  // node_modules/socket.io-client/build/esm/contrib/backo2.js
+  function Backoff(opts) {
+    opts = opts || {};
+    this.ms = opts.min || 100;
+    this.max = opts.max || 1e4;
+    this.factor = opts.factor || 2;
+    this.jitter = opts.jitter > 0 && opts.jitter <= 1 ? opts.jitter : 0;
+    this.attempts = 0;
+  }
+  Backoff.prototype.duration = function() {
+    var ms = this.ms * Math.pow(this.factor, this.attempts++);
+    if (this.jitter) {
+      var rand = Math.random();
+      var deviation = Math.floor(rand * this.jitter * ms);
+      ms = (Math.floor(rand * 10) & 1) == 0 ? ms - deviation : ms + deviation;
+    }
+    return Math.min(ms, this.max) | 0;
+  };
+  Backoff.prototype.reset = function() {
+    this.attempts = 0;
+  };
+  Backoff.prototype.setMin = function(min) {
+    this.ms = min;
+  };
+  Backoff.prototype.setMax = function(max) {
+    this.max = max;
+  };
+  Backoff.prototype.setJitter = function(jitter) {
+    this.jitter = jitter;
+  };
+
+  // node_modules/socket.io-client/build/esm/manager.js
+  var Manager = class extends Emitter {
+    constructor(uri, opts) {
+      var _a;
+      super();
+      this.nsps = {};
+      this.subs = [];
+      if (uri && "object" === typeof uri) {
+        opts = uri;
+        uri = void 0;
+      }
+      opts = opts || {};
+      opts.path = opts.path || "/socket.io";
+      this.opts = opts;
+      installTimerFunctions(this, opts);
+      this.reconnection(opts.reconnection !== false);
+      this.reconnectionAttempts(opts.reconnectionAttempts || Infinity);
+      this.reconnectionDelay(opts.reconnectionDelay || 1e3);
+      this.reconnectionDelayMax(opts.reconnectionDelayMax || 5e3);
+      this.randomizationFactor((_a = opts.randomizationFactor) !== null && _a !== void 0 ? _a : 0.5);
+      this.backoff = new Backoff({
+        min: this.reconnectionDelay(),
+        max: this.reconnectionDelayMax(),
+        jitter: this.randomizationFactor()
+      });
+      this.timeout(null == opts.timeout ? 2e4 : opts.timeout);
+      this._readyState = "closed";
+      this.uri = uri;
+      const _parser = opts.parser || esm_exports;
+      this.encoder = new _parser.Encoder();
+      this.decoder = new _parser.Decoder();
+      this._autoConnect = opts.autoConnect !== false;
+      if (this._autoConnect)
+        this.open();
+    }
+    reconnection(v) {
+      if (!arguments.length)
+        return this._reconnection;
+      this._reconnection = !!v;
+      if (!v) {
+        this.skipReconnect = true;
+      }
+      return this;
+    }
+    reconnectionAttempts(v) {
+      if (v === void 0)
+        return this._reconnectionAttempts;
+      this._reconnectionAttempts = v;
+      return this;
+    }
+    reconnectionDelay(v) {
+      var _a;
+      if (v === void 0)
+        return this._reconnectionDelay;
+      this._reconnectionDelay = v;
+      (_a = this.backoff) === null || _a === void 0 ? void 0 : _a.setMin(v);
+      return this;
+    }
+    randomizationFactor(v) {
+      var _a;
+      if (v === void 0)
+        return this._randomizationFactor;
+      this._randomizationFactor = v;
+      (_a = this.backoff) === null || _a === void 0 ? void 0 : _a.setJitter(v);
+      return this;
+    }
+    reconnectionDelayMax(v) {
+      var _a;
+      if (v === void 0)
+        return this._reconnectionDelayMax;
+      this._reconnectionDelayMax = v;
+      (_a = this.backoff) === null || _a === void 0 ? void 0 : _a.setMax(v);
+      return this;
+    }
+    timeout(v) {
+      if (!arguments.length)
+        return this._timeout;
+      this._timeout = v;
+      return this;
+    }
+    /**
+     * Starts trying to reconnect if reconnection is enabled and we have not
+     * started reconnecting yet
+     *
+     * @private
+     */
+    maybeReconnectOnOpen() {
+      if (!this._reconnecting && this._reconnection && this.backoff.attempts === 0) {
+        this.reconnect();
+      }
+    }
+    /**
+     * Sets the current transport `socket`.
+     *
+     * @param {Function} fn - optional, callback
+     * @return self
+     * @public
+     */
+    open(fn) {
+      if (~this._readyState.indexOf("open"))
+        return this;
+      this.engine = new Socket(this.uri, this.opts);
+      const socket = this.engine;
+      const self2 = this;
+      this._readyState = "opening";
+      this.skipReconnect = false;
+      const openSubDestroy = on(socket, "open", function() {
+        self2.onopen();
+        fn && fn();
+      });
+      const onError = (err) => {
+        this.cleanup();
+        this._readyState = "closed";
+        this.emitReserved("error", err);
+        if (fn) {
+          fn(err);
+        } else {
+          this.maybeReconnectOnOpen();
+        }
+      };
+      const errorSub = on(socket, "error", onError);
+      if (false !== this._timeout) {
+        const timeout = this._timeout;
+        const timer = this.setTimeoutFn(() => {
+          openSubDestroy();
+          onError(new Error("timeout"));
+          socket.close();
+        }, timeout);
+        if (this.opts.autoUnref) {
+          timer.unref();
+        }
+        this.subs.push(() => {
+          this.clearTimeoutFn(timer);
+        });
+      }
+      this.subs.push(openSubDestroy);
+      this.subs.push(errorSub);
+      return this;
+    }
+    /**
+     * Alias for open()
+     *
+     * @return self
+     * @public
+     */
+    connect(fn) {
+      return this.open(fn);
+    }
+    /**
+     * Called upon transport open.
+     *
+     * @private
+     */
+    onopen() {
+      this.cleanup();
+      this._readyState = "open";
+      this.emitReserved("open");
+      const socket = this.engine;
+      this.subs.push(
+        on(socket, "ping", this.onping.bind(this)),
+        on(socket, "data", this.ondata.bind(this)),
+        on(socket, "error", this.onerror.bind(this)),
+        on(socket, "close", this.onclose.bind(this)),
+        // @ts-ignore
+        on(this.decoder, "decoded", this.ondecoded.bind(this))
+      );
+    }
+    /**
+     * Called upon a ping.
+     *
+     * @private
+     */
+    onping() {
+      this.emitReserved("ping");
+    }
+    /**
+     * Called with data.
+     *
+     * @private
+     */
+    ondata(data) {
+      try {
+        this.decoder.add(data);
+      } catch (e) {
+        this.onclose("parse error", e);
+      }
+    }
+    /**
+     * Called when parser fully decodes a packet.
+     *
+     * @private
+     */
+    ondecoded(packet) {
+      nextTick(() => {
+        this.emitReserved("packet", packet);
+      }, this.setTimeoutFn);
+    }
+    /**
+     * Called upon socket error.
+     *
+     * @private
+     */
+    onerror(err) {
+      this.emitReserved("error", err);
+    }
+    /**
+     * Creates a new socket for the given `nsp`.
+     *
+     * @return {Socket}
+     * @public
+     */
+    socket(nsp, opts) {
+      let socket = this.nsps[nsp];
+      if (!socket) {
+        socket = new Socket2(this, nsp, opts);
+        this.nsps[nsp] = socket;
+      } else if (this._autoConnect && !socket.active) {
+        socket.connect();
+      }
+      return socket;
+    }
+    /**
+     * Called upon a socket close.
+     *
+     * @param socket
+     * @private
+     */
+    _destroy(socket) {
+      const nsps = Object.keys(this.nsps);
+      for (const nsp of nsps) {
+        const socket2 = this.nsps[nsp];
+        if (socket2.active) {
+          return;
+        }
+      }
+      this._close();
+    }
+    /**
+     * Writes a packet.
+     *
+     * @param packet
+     * @private
+     */
+    _packet(packet) {
+      const encodedPackets = this.encoder.encode(packet);
+      for (let i = 0; i < encodedPackets.length; i++) {
+        this.engine.write(encodedPackets[i], packet.options);
+      }
+    }
+    /**
+     * Clean up transport subscriptions and packet buffer.
+     *
+     * @private
+     */
+    cleanup() {
+      this.subs.forEach((subDestroy) => subDestroy());
+      this.subs.length = 0;
+      this.decoder.destroy();
+    }
+    /**
+     * Close the current socket.
+     *
+     * @private
+     */
+    _close() {
+      this.skipReconnect = true;
+      this._reconnecting = false;
+      this.onclose("forced close");
+    }
+    /**
+     * Alias for close()
+     *
+     * @private
+     */
+    disconnect() {
+      return this._close();
+    }
+    /**
+     * Called when:
+     *
+     * - the low-level engine is closed
+     * - the parser encountered a badly formatted packet
+     * - all sockets are disconnected
+     *
+     * @private
+     */
+    onclose(reason, description) {
+      var _a;
+      this.cleanup();
+      (_a = this.engine) === null || _a === void 0 ? void 0 : _a.close();
+      this.backoff.reset();
+      this._readyState = "closed";
+      this.emitReserved("close", reason, description);
+      if (this._reconnection && !this.skipReconnect) {
+        this.reconnect();
+      }
+    }
+    /**
+     * Attempt a reconnection.
+     *
+     * @private
+     */
+    reconnect() {
+      if (this._reconnecting || this.skipReconnect)
+        return this;
+      const self2 = this;
+      if (this.backoff.attempts >= this._reconnectionAttempts) {
+        this.backoff.reset();
+        this.emitReserved("reconnect_failed");
+        this._reconnecting = false;
+      } else {
+        const delay = this.backoff.duration();
+        this._reconnecting = true;
+        const timer = this.setTimeoutFn(() => {
+          if (self2.skipReconnect)
+            return;
+          this.emitReserved("reconnect_attempt", self2.backoff.attempts);
+          if (self2.skipReconnect)
+            return;
+          self2.open((err) => {
+            if (err) {
+              self2._reconnecting = false;
+              self2.reconnect();
+              this.emitReserved("reconnect_error", err);
+            } else {
+              self2.onreconnect();
+            }
+          });
+        }, delay);
+        if (this.opts.autoUnref) {
+          timer.unref();
+        }
+        this.subs.push(() => {
+          this.clearTimeoutFn(timer);
+        });
+      }
+    }
+    /**
+     * Called upon successful reconnect.
+     *
+     * @private
+     */
+    onreconnect() {
+      const attempt = this.backoff.attempts;
+      this._reconnecting = false;
+      this.backoff.reset();
+      this.emitReserved("reconnect", attempt);
+    }
+  };
+
+  // node_modules/socket.io-client/build/esm/index.js
+  var cache = {};
+  function lookup2(uri, opts) {
+    if (typeof uri === "object") {
+      opts = uri;
+      uri = void 0;
+    }
+    opts = opts || {};
+    const parsed = url(uri, opts.path || "/socket.io");
+    const source = parsed.source;
+    const id = parsed.id;
+    const path = parsed.path;
+    const sameNamespace = cache[id] && path in cache[id]["nsps"];
+    const newConnection = opts.forceNew || opts["force new connection"] || false === opts.multiplex || sameNamespace;
+    let io;
+    if (newConnection) {
+      io = new Manager(source, opts);
+    } else {
+      if (!cache[id]) {
+        cache[id] = new Manager(source, opts);
+      }
+      io = cache[id];
+    }
+    if (parsed.query && !opts.query) {
+      opts.query = parsed.queryKey;
+    }
+    return io.socket(parsed.path, opts);
+  }
+  Object.assign(lookup2, {
+    Manager,
+    Socket: Socket2,
+    io: lookup2,
+    connect: lookup2
+  });
+
+  // scripts/services/SocketService.ts
+  var SocketService = class _SocketService {
+    constructor() {
+      this.chatSocket = null;
+      this.gameSocket = null;
+    }
+    static getInstance() {
+      if (!_SocketService.instance) {
+        _SocketService.instance = new _SocketService();
+      }
+      return _SocketService.instance;
+    }
+    // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
+    // Méthode privée pour ne pas dupliquer le code de config
+    createSocketConnection(path) {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        console.error(`SocketService: No token found, cannot connect to ${path}`);
+        return null;
+      }
+      const socket = lookup2("/", {
+        path,
+        auth: {
+          token: `Bearer ${token}`
+          // On envoie le JWT
+        },
+        reconnection: true,
+        reconnectionAttemps: 5,
+        transports: ["websocket", "polling"]
+      });
+      socket.on("connect", () => {
+        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
+      });
+      socket.on("connect_error", (err) => {
+        console.error(`SocketService: Connection error on ${path}`, err.message);
+      });
+      return socket;
+    }
+    // ---------------------
+    // -- GESTION DU CHAT --
+    connectChat() {
+      if (this.chatSocket) return;
+      console.log("SocketService: Connecting to Chat...");
+      this.chatSocket = this.createSocketConnection("/socket-chat/");
+    }
+    disconnectChat() {
+      if (this.chatSocket) {
+        this.chatSocket.disconnect();
+        this.chatSocket = null;
+        console.log("SocketService: Chat disconnected");
+      }
+    }
+    getChatSocket() {
+      return this.chatSocket;
+    }
+    // ---------------------
+    // -- GESTION DU GAME --
+    connectGame() {
+      if (this.gameSocket) return;
+      console.log("SocketService: Connecting to Game...");
+      this.gameSocket = this.createSocketConnection("/socket-game/");
+    }
+    disconnectGame() {
+      if (this.gameSocket) {
+        this.gameSocket.disconnect();
+        this.gameSocket = null;
+        console.log("SocketService: Game disconnected");
+      }
+    }
+    getGameSocket() {
+      return this.gameSocket;
+    }
+    // ---------------------
+    // -- UTILITAIRE GLOBAL --
+    disconnectAll() {
+      this.disconnectChat();
+      this.disconnectGame();
+    }
+  };
+  var SocketService_default = SocketService;
+
+  // scripts/components/Data.ts
+  var globalPath = "/assets/emoticons/";
+  var animationPath = "/assets/animated/";
+  var gamePath = "/assets/game/";
+  var appThemes = {
+    "basic": {
+      name: "Classic Blue",
+      headerUrl: "/assets/basic/background.jpg",
+      navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
+      bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)",
+      textColor: "#1f2937"
+    },
+    "bamboo": {
+      name: "Zen Bamboo",
+      headerUrl: "/assets/headers/bamboo_header.jpg",
+      navColor: "linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)",
+      bgColor: "linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)",
+      textColor: "#33691E"
+    },
+    "cherry": {
+      name: "Cherry Blossom",
+      headerUrl: "/assets/headers/blossoms_header.jpg",
+      navColor: "linear-gradient(to bottom, #F48FB1 0%, #EC407A 50%, #C2185B 100%)",
+      bgColor: "linear-gradient(to bottom, #FFBBB4 0%, #ffffff 50%, #FFBBB4 100%)",
+      textColor: "#C2185B"
+    },
+    "mountain": {
+      name: "Misty Mountains",
+      headerUrl: "/assets/headers/dawn_header.png",
+      navColor: "linear-gradient(to bottom, #5C6BC0 0%, #3949AB 50%, #283593 100%)",
+      bgColor: "linear-gradient(to bottom, #6F94BF 0%, #ffffff 50%, #6F94BF 100%)",
+      textColor: "#283593"
+    },
+    "punk": {
+      name: "Cyber Punk",
+      headerUrl: "/assets/headers/punk_header.jpg",
+      navColor: "linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)",
+      bgColor: "linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)",
+      textColor: "#340547"
+    },
+    "dotted": {
+      name: "Spring Dots",
+      headerUrl: "/assets/headers/dott_header.png",
+      navColor: "linear-gradient(to bottom, #9CCC65 0%, #7CB342 50%, #558B2F 100%)",
+      bgColor: "linear-gradient(to bottom, #8BC72C 0%, #ffffff 50%, #8BC72C 100%)",
+      textColor: "#558B2F"
+    },
+    "sunset": {
+      name: "Golden Sunset",
+      headerUrl: "/assets/headers/field_header.png",
+      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
+      bgColor: "linear-gradient(to bottom, #F7A624 0%, #ffffff 50%, #F7A624 100%)",
+      textColor: "#E65100"
+    },
+    "football": {
+      name: "Stadium",
+      headerUrl: "/assets/headers/football_header.png",
+      navColor: "linear-gradient(to bottom, #66BB6A 0%, #43A047 50%, #2E7D32 100%)",
+      bgColor: "linear-gradient(to bottom, #73AD4E 0%, #ffffff 50%, #73AD4E 100%)",
+      textColor: "#2E7D32"
+    },
+    "spring": {
+      name: "Spring Garden",
+      headerUrl: "/assets/headers/hill_header.png",
+      navColor: "linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)",
+      bgColor: "linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)",
+      textColor: "#80C432"
+    },
+    "love": {
+      name: "Lovely Heart",
+      headerUrl: "/assets/headers/love_header.jpg",
+      navColor: "linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)",
+      bgColor: "linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)",
+      textColor: "#5A0908"
+    },
+    "diary": {
+      name: "Dear Diary",
+      headerUrl: "/assets/headers/diary_header.jpg",
+      navColor: "linear-gradient(to bottom, #D658A4 0%, #BA3083 50%, #D90082 100%)",
+      bgColor: "linear-gradient(to bottom, #E297B6 0%, #ffffff 50%, #E297B6 100%)",
+      textColor: "#D90082"
+    },
+    "branches": {
+      name: "Winter Branches",
+      headerUrl: "/assets/headers/silhouette_header.jpg",
+      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
+      bgColor: "linear-gradient(to bottom, #F79B34 0%, #ffffff 50%, #F79B34 100%)",
+      textColor: "#E65100"
+    },
+    "purple": {
+      name: "Purple Dreams",
+      headerUrl: "/assets/headers/spring_header.png",
+      navColor: "linear-gradient(to bottom, #9C27B0 0%, #7B1FA2 50%, #6A1B9A 100%)",
+      bgColor: "linear-gradient(to bottom, #663A92 0%, #ffffff 50%, #663A92 100%)",
+      textColor: "#6A1B9A"
+    },
+    "abstract": {
+      name: "Abstract Flow",
+      headerUrl: "/assets/headers/weird_header.jpg",
+      navColor: "linear-gradient(to bottom, #FF6B9D 0%, #FF1744 50%, #D50000 100%)",
+      bgColor: "linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)",
+      textColor: "#D50000"
+    }
+  };
+  var ballEmoticons = {
+    "smile": gamePath + "smile.png",
+    "surprised": gamePath + "surprised.png",
+    "confused": gamePath + "confused.png",
+    "hot": gamePath + "hot.png",
+    "teeth_smile": gamePath + "teeth_smile.png",
+    "tongue": gamePath + "tongue_smile.png",
+    "sad": gamePath + "sad.png",
+    "disappointed": gamePath + "disappointed.png",
+    "embarrassed": gamePath + "embarrassed.png",
+    "angry": gamePath + "angry.png",
+    "nerd": gamePath + "nerd.png",
+    "teeth": gamePath + "teeth.png",
+    "sarcastic": gamePath + "sarcastic.png",
+    "sick": gamePath + "sick.png",
+    "devil": gamePath + "devil_smile.png"
+  };
+  var gameBackgrounds = {
+    "classic": "#B8E8F9",
+    // Bleu pastel clair
+    "mint": "#D4F1E8",
+    // Vert menthe
+    "lavender": "#E6E6FA",
+    // Lavande
+    "rose": "#FFE1E9",
+    // Rose
+    "lemon": "#FFFACD",
+    // Citron
+    "sky": "#B0E0E6",
+    // Bleu ciel
+    "coral": "#FFCCCB",
+    // Corail
+    "lilac": "#DCD0FF",
+    // Lilas
+    "sage": "#C8E6C9",
+    // Vert sauge
+    "powder": "#B0C4DE",
+    // Bleu poudré
+    "blush": "#FFC0CB",
+    // Rose poudré
+    "apricot": "#FFDAB9"
+    // Abricot
+  };
+  var statusImages = {
+    "available": "/assets/basic/status_online_small.png",
+    "online": "/assets/basic/status_online_small.png",
+    "busy": "/assets/basic/status_busy_small.png",
+    "away": "/assets/basic/status_away_small.png",
+    "invisible": "/assets/basic/status_offline_small.png",
+    "offline": "/assets/basic/status_offline_small.png"
+  };
+  var statusLabels = {
+    "available": "(Available)",
+    "busy": "(Busy)",
+    "away": "(Away)",
+    "invisible": "(Appear offline)"
+  };
+  var getStatusDot = (status) => {
+    switch (status) {
+      case "available":
+        return "/assets/friends/online-dot.png";
+      case "busy":
+        return "/assets/friends/busy-dot.png";
+      case "away":
+        return "/assets/friends/away-dot.png";
+      default:
+        return "/assets/friends/offline-dot.png";
+    }
+  };
+  var animations = {
+    "(boucy_ball)": animationPath + "bouncy_ball.gif",
+    "(bow)": animationPath + "bow.gif",
+    "(crying)": animationPath + "crying.gif",
+    "(dancer)": animationPath + "dancer.gif",
+    "(dancing_pig)": animationPath + "dancing_pig.gif",
+    "(frog)": animationPath + "frog.gif",
+    "(guitar_smash)": animationPath + "guitar_smash.gif",
+    "(heart)": animationPath + "heart.gif",
+    "(kiss)": animationPath + "kiss.gif",
+    "(knock)": animationPath + "knock.gif",
+    "(silly_face)": animationPath + "silly_face.gif",
+    "(ufo)": animationPath + "ufo.gif",
+    "(water_balloon)": animationPath + "water_balloon.gif"
+  };
+  var icons = {
+    "(boucy_ball)": animationPath + "bouncy_ball.png",
+    "(bow)": animationPath + "bow.jpg",
+    "(crying)": animationPath + "crying.png",
+    "(dancer)": animationPath + "dancer.png",
+    "(dancing_pig)": animationPath + "dancing_pig.png",
+    "(frog)": animationPath + "frog.png",
+    "(guitar_smash)": animationPath + "guitar_smash.png",
+    "(heart)": animationPath + "heart.png",
+    "(kiss)": animationPath + "kiss.png",
+    "(knock)": animationPath + "knock.png",
+    "(silly_face)": animationPath + "silly_face.png",
+    "(ufo)": animationPath + "ufo.png",
+    "(water_balloon)": animationPath + "water_balloon.png"
+  };
+  var emoticons = {};
+  function alias(keys, file) {
+    keys.forEach((k) => emoticons[k] = globalPath + file);
+  }
+  Object.assign(emoticons, {
+    ":-)": globalPath + "smile.gif",
+    ":-O": globalPath + "surprised.gif",
+    ";-)": globalPath + "wink_smile.gif",
+    ":-S": globalPath + "confused.gif",
+    ":'(": globalPath + "crying.gif",
+    ":-#": globalPath + "silence.gif",
+    "8-|": globalPath + "nerd.gif",
+    ":-*": globalPath + "secret.gif",
+    ":^)": globalPath + "unknow.gif",
+    "|-)": globalPath + "sleepy.gif",
+    "({)": globalPath + "guy_hug.gif",
+    ":-[": globalPath + "bat.gif",
+    "(@)": globalPath + "cat.gif",
+    "(8)": globalPath + "note.gif",
+    "(*)": globalPath + "star.gif",
+    "(sn)": globalPath + "snail.gif",
+    "(pl)": globalPath + "plate.gif",
+    "(pi)": globalPath + "pizza.gif",
+    "(au)": globalPath + "car.gif",
+    "(um)": globalPath + "umbrella.gif",
+    "(co)": globalPath + "computer.gif",
+    "(st)": globalPath + "storm.gif",
+    "(mo)": globalPath + "money.gif",
+    "8o|": globalPath + "teeth.gif",
+    "^o)": globalPath + "sarcastic.gif",
+    "+o(": globalPath + "sick.gif",
+    "*-)": globalPath + "thinking.gif",
+    "8-)": globalPath + "eye_roll.gif",
+    "(6)": globalPath + "devil_smile.gif",
+    "(bah)": globalPath + "sheep.gif",
+    "(||)": globalPath + "bowl.gif",
+    "(so)": globalPath + "soccer.gif",
+    "(ap)": globalPath + "airplane.gif",
+    "(ip)": globalPath + "island.gif",
+    "(mp)": globalPath + "portable.gif",
+    "(li)": globalPath + "lightning.gif"
+  });
+  alias([":)", ":-)"], "smile.gif");
+  alias([":o", ":-O"], "surprised.gif");
+  alias([";)", ";-)"], "wink_smile.gif");
+  alias([":s", ":-S"], "confused.gif");
+  alias(["(H)", "(h)"], "hot.gif");
+  alias(["(A)", "(a)"], "angel.gif");
+  alias([":[", ":-["], "bat.gif");
+  alias(["(L)", "(l)"], "heart.gif");
+  alias(["(K)", "(k)"], "kiss.gif");
+  alias(["(F)", "(f)"], "rose.gif");
+  alias(["(P)", "(p)"], "camera.gif");
+  alias(["(T)", "(t)"], "phone.gif");
+  alias(["(O)", "(o)"], "clock.gif");
+  alias([":D", ":-D"], "teeth_smile.gif");
+  alias([":p", ":-P"], "tongue_smile.gif");
+  alias([":(", ":-("], "sad.gif");
+  alias([":|", ":-|"], "disappointed.gif");
+  alias([":$", ":-$"], "embarrassed.gif");
+  alias([":@", ":-@"], "angry.gif");
+  alias(["(C)", "(c)"], "coffee.gif");
+  alias(["(N)", "(n)"], "thumbs_down.gif");
+  alias(["(D)", "(d)"], "martini.gif");
+  alias(["(Z)", "(z)"], "guy.gif");
+  alias(["(})", "({)"], "guy_hug.gif");
+  alias(["(U)", "(u)"], "broken_heart.gif");
+  alias(["(G)", "(g)"], "present.gif");
+  alias(["(W)", "(w)"], "wilted_rose.gif");
+  alias(["(E)", "(e)"], "email.gif");
+  alias(["(I)", "(i)"], "lightbulb.gif");
+  alias(["(M)", "(m)"], "messenger.gif");
+  alias(["(Y)", "(y)"], "thumbs_up.gif");
+  alias(["(B)", "(b)"], "beer_mug.gif");
+  alias(["(X)", "(x)"], "girl.gif");
+  async function updateUserStatus(newStatus) {
+    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
+    if (!userId) return;
+    try {
+      await fetchWithAuth(`/api/user/${userId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const socket = SocketService_default.getInstance().socket;
+      if (socket && username) {
+        socket.emit("notifyStatusChange", {
+          userId: Number(userId),
+          status: newStatus,
+          username
+        });
+        console.log(`[Status] Updated to ${newStatus} for ${username}`);
+      }
+      localStorage.setItem("userStatus", newStatus);
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  }
+
+  // scripts/controllers/LoginPage.ts
+  function render() {
+    return LoginPage_default;
+  }
+  async function init2faLogin(accessToken, userId, selectedStatus) {
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    }
+    if (userId) {
+      localStorage.setItem("userId", userId.toString());
+    }
+    if (userId && accessToken) {
+      try {
+        const userRes = await fetch(`/api/user/${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.alias)
+            localStorage.setItem("username", userData.alias);
+          if (userData.theme)
+            localStorage.setItem("userTheme", userData.theme);
+        }
+      } catch (err) {
+        console.error("Can't get user's profile", err);
+      }
+      try {
+        await fetch(`/api/user/${userId}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({ status: selectedStatus })
+        });
+      } catch (err) {
+        console.error("Failed to update status on login", err);
+      }
+    }
+    localStorage.setItem("userStatus", selectedStatus);
+    window.history.pushState({}, "", "/home");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }
+  function handleLogin() {
+    const button = document.getElementById("login-button");
+    const errorElement = document.getElementById("error-message");
+    const modal2fa = document.getElementById("2fa-modal");
+    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2fa = document.getElementById("confirm-2fa-button");
+    const close2fa = document.getElementById("close-2fa-modal");
+    const error2fa = document.getElementById("2fa-error-message");
+    let tempToken = null;
+    let cachedStatus = "available";
+    button?.addEventListener("click", async () => {
+      const email = document.getElementById("email-input").value;
+      const password = document.getElementById("password-input").value;
+      const selectedStatus = document.getElementById("status-input").value;
+      if (errorElement) {
+        errorElement.classList.add("hidden");
+        errorElement.textContent = "";
+      }
+      if (!email || !password) {
+        if (errorElement) {
+          errorElement.textContent = "Please fill all inputs";
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const result = await response.json();
+        if (result.require2fa) {
+          localStorage.setItem("is2faEnabled", "true");
+          tempToken = result.tempToken;
+          if (modal2fa) {
+            modal2fa.classList.remove("hidden");
+            modal2fa.classList.add("flex");
+            input2fa.value = "";
+            input2fa.focus();
+          }
+          return;
+        }
+        if (result.success) {
+          localStorage.setItem("is2faEnabled", "false");
+          const { accessToken, userId } = result.data;
+          await init2faLogin(accessToken, userId, cachedStatus);
+          if (accessToken) {
+            localStorage.setItem("accessToken", accessToken);
+          }
+          if (userId) {
+            localStorage.setItem("userId", userId.toString());
+          }
+          if (userId && accessToken) {
+            try {
+              const userRes = await fetchWithAuth(`/api/user/${userId}`, {
+                method: "GET"
+              });
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+                if (userData.theme) {
+                  localStorage.setItem("userTheme", userData.theme);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
+            try {
+              await fetchWithAuth(`/api/user/${userId}/status`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              console.log("Status updated to database:", selectedStatus);
+            } catch (err) {
+              console.error("Failed to update status on login", err);
+            }
+          }
+          localStorage.setItem("userStatus", selectedStatus);
+          window.history.pushState({}, "", "/home");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          console.error("Login error:", result.error);
+          if (errorElement) {
+            errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
+            errorElement.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        if (errorElement) {
+          errorElement.textContent = "Network error, please try again";
+          errorElement.classList.remove("hidden");
+        }
+      }
+    });
+    confirm2fa?.addEventListener("click", async () => {
+      const code = input2fa.value.trim();
+      if (error2fa) {
+        error2fa.classList.add("hidden");
+      }
+      if (!code || !tempToken) {
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/2fa/challenge", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tempToken}`
+          },
+          body: JSON.stringify({ code })
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          localStorage.setItem("is2faEnabled", "true");
+          const { accessToken, userId } = result;
+          if (modal2fa) {
+            modal2fa.classList.add("hidden");
+          }
+          await updateUserStatus("online");
+          await init2faLogin(accessToken, userId, cachedStatus);
+        } else {
+          if (error2fa) {
+            error2fa.textContent = "Invalid code.";
+            error2fa.classList.remove("hidden");
+            console.error("2FA Error:", result.error.message);
+          }
+        }
+      } catch (error) {
+        if (error2fa) {
+          error2fa.textContent = "Error during verification.";
+          error2fa.classList.remove("hidden");
+        }
+      }
+    });
+    const closeFunc = () => {
+      if (modal2fa) {
+        modal2fa.classList.add("hidden");
+        modal2fa.classList.remove("flex");
+        tempToken = null;
+      }
+    };
+    close2fa?.addEventListener("click", closeFunc);
+    modal2fa?.addEventListener("click", (e) => {
+      if (e.target === modal2fa) closeFunc();
+    });
+  }
+  function loginEvents() {
+    handleLogin();
+  }
+
+  // scripts/pages/HomePage.html
+  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+	</div>
+
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+		
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+
+			<!-- ========= LEFT COLUMN ========= -->
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
+				
+				<!-- ========= PROFILE WINDOW ========= -->
+				<div class="window flex flex-col">
+					<div class="title-bar">
+						<div class="title-bar-text">Profile</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
+
+					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
+						<div class="flex flex-row w-full rounded-sm p-2"> 
+							<!-- Cadre du profil -->
+							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
+								<div class="relative w-[110px] h-[110px] flex-shrink-0">
+									<!-- l'image (profil principal) -->
+									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+									<!-- le cadre -->
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+								</div>
+		
+								<!-- username, bio et status -->
+								<div class="flex flex-col justify-center pl-4 flex-1">
+									<div class="flex items-center gap-2 mb-1">
+										<p class="text-xl font-semibold" id="user-name">Username</p>
+		
+										<!-- selection du status = dynamique -->
+										<div class="relative">
+											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+												<span id="current-status-text">(Available)</span>
+												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+											</button>
+		
+											<!-- Menu dropdown pour le status -->
+											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Available</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Busy</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Away</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>Offline</span>
+												</button>
+											</div>
+										</div>
+									</div>
+									<div id="bio-wrapper">
+										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+									</div>
+								</div>
+		
+								<!-- Notifications -->
+								<div class="ml-auto flex items-start relative">
+									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+										<img id="notification-icon" 
+											src="/assets/basic/no_notification.png" 
+											alt="Notifications" 
+											class="w-full h-full object-contain">
+											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
+									</button>
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+												Notifications
+											</h3>
+										</div>
+										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
+											<div class="p-4 text-center text-xs text-gray-500">No notification</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- ========= GAMES WINDOW ========= -->
+				<div class="window flex flex-col flex-1">
+					<div class="title-bar">
+						<div class="title-bar-text">Games</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
+
+					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
+						<div class="bg-white p-6 flex flex-col flex-1">
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">CHOOSE YOUR GAME MODE</h1>
+
+							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
+								<button id="local-game" 
+									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+									LOCAL GAME
+								</button>
+
+								<button id="remote-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									REMOTE GAME
+								</button>
+
+								<button id="tournament-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									TOURNAMENT
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+
+			<!-- ========= RIGHT WINDOW ========= -->
+			<div class="window flex flex-col flex-1 min-w-0">
+				<div class="title-bar">
+					<div class="title-bar-text">Messenger</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
+
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
+							<div class="flex flex-row items-center justify-between">
+								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">MY FRIENDS</p>
+								
+								<div class="ml-auto flex items-center mb-3 relative">
+									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
+										<img id="add-friend-icon" 
+											src="/assets/basic/1441.png" 
+											alt="Friends button" 
+											class="w-full h-full object-contain">
+									</button>
+									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
+										<p class="text-sm font-semibold mb-2 text-center">Add a friend</p>
+										<input type="text" 
+											id="friend-search-input" 
+											placeholder="Type in username or email" 
+											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<div class="flex gap-2">
+											<button id="send-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Send request
+											</button>
+											<button id="cancel-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												Cancel
+											</button>
+										</div>
+										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
+
+								<details open class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										\u2B50 Contacts
+									</summary>
+
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
+										</div>
+								</details>
+							</div>
+						</div>
+
+						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
+							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
+							<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
+						</div>
+
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+							
+							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+								<div class="flex gap-4 items-center">
+									<div class="relative w-[80px] h-[80px] flex-shrink-0">
+										<img id="chat-header-avatar" 
+											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+											src="" 
+											alt="User avatar">
+										<img id="chat-header-status" 
+											class="absolute inset-0 w-full h-full object-contain" 
+											src="/assets/basic/status_online_small.png" 
+											alt="Status frame">
+									</div>
+									<div class="flex flex-col justify-start leading-tight">
+										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+									</div>
+								</div>
+								
+								<div class="relative self-start mt-2">
+									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
+										<img src="/assets/chat/meatball.png"
+											 alt="options"
+											 class="w-6 h-6 object-contain"
+											 style="width: 15px; height: 15px; vertical-align: -25px;">
+									</button>
+
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
+    
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/view_profile.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
+												View profile
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/game_notification.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
+												Invite to play
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/report.png" 
+													class="w-5 h-5 object-cover rounded"
+													alt="avatar">
+											</div>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/block.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
+												Block user
+											</button>
+										</div>
+
+									</div>
+
+								</div>
+
+
+							</div>
+
+
+
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+
+										</div>
+									</button>
+
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
+						</div>
+					</div> 
+				</div>
+			</div> 
+		</div>
+
+	</div>
+
+<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">User Profile</div>
+            <div class="title-bar-controls">
+                <button id="close-friend-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="window-body p-6">
+            
+            <div class="flex flex-row gap-6 mb-6 items-center">
+                
+                <div class="relative w-[130px] h-[130px] flex-shrink-0">
+                    <img id="friend-modal-status" 
+                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                            src="/assets/basic/status_frame_online_large.png">
+                    
+                    <img id="friend-modal-avatar" 
+                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
+                            src="/assets/basic/default.png">
+                </div>
+
+                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
+                    
+                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
+                </div>	
+            </div>
+
+            <fieldset class="border border-gray-300 p-4 rounded-sm">
+                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Games Played:</span>
+                        <span id="friend-stat-games" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Wins:</span>
+                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Losses:</span>
+                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Winning streak:</span>
+                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end mt-4">
+                    <button id="close-friend-modal-button" 
+                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <!-- MODALE POUR L'AVATAR -->
+
+
+    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button id="close-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl mb-1">Select a picture</h2>
+                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                </div>
+                
+                <div class="flex flex-row gap-6">
+                    <div class="flex-1">
+                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
+                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4 w-[200px]">
+                        <div class="relative w-[170px] h-[170px]">
+                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            src="/assets/basic/status_frame_offline_large.png">
+                            
+                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                            src="/assets/basic/default.png">
+                        </div>
+
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
+                            <input type="file" id="file-input" accept="image/*" hidden>
+
+                            <button id="browse-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            BROWSE
+                            </button>
+                            
+                            <button id="delete-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            DELETE
+                            </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+  // scripts/components/FriendList.ts
+  var FriendList = class {
+    // cass: 
+    // init() interval est appele a chaque fois auon va sur la HomePage
+    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
+    // qui s'accumulent quand on change de page et quon revient sur la homePage
+    constructor() {
+      this.notificationInterval = null;
+      this.container = document.getElementById("contacts-list");
+      this.userId = localStorage.getItem("userId");
+    }
+    init() {
+      SocketService_default.getInstance().connectChat();
+      SocketService_default.getInstance().connectGame();
+      this.loadFriends();
+      this.setupFriendRequests();
+      this.setupNotifications();
+      this.checkNotifications();
+      this.listenToUpdates();
+      this.setupBlockListener();
+      this.registerSocketUser();
+      if (this.notificationInterval) clearInterval(this.notificationInterval);
+      this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
+    }
+    // AJOUT
+    destroy() {
+      if (this.notificationInterval) {
+        clearInterval(this.notificationInterval);
+        this.notificationInterval = null;
+      }
+    }
+    registerSocketUser() {
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const userId = this.userId;
+      if (gameSocket && gameSocket.connected) {
+        gameSocket.emit("registerGameSocket", userId);
+      }
+    }
+    async loadFriends() {
+      const contactsList = this.container;
+      if (!this.userId || !contactsList) return;
+      try {
+        const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
+        if (!response.ok) throw new Error("Failed to fetch friends");
+        const responseData = await response.json();
+        const friendList = responseData.data;
+        contactsList.innerHTML = "";
+        if (!friendList || friendList.length === 0) {
+          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+          return;
+        }
+        friendList.forEach((friendship) => {
+          const user = friendship.user;
+          const friend = friendship.friend;
+          if (!user || !friend) return;
+          const currentUserId = Number(this.userId);
+          const selectedFriend = user.id === currentUserId ? friend : user;
+          let rawStatus = selectedFriend.status || "offline";
+          const status = rawStatus.toLowerCase();
+          const friendItem = document.createElement("div");
+          friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          friendItem.dataset.id = selectedFriend.id;
+          friendItem.dataset.friendshipId = friendship.id;
+          friendItem.dataset.login = selectedFriend.username;
+          friendItem.dataset.alias = selectedFriend.alias;
+          friendItem.dataset.status = status;
+          friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+          friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
+          friendItem.innerHTML = `
+                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
+                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                             src="${getStatusDot(status)}" alt="status">
+                    </div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
+                    </div>
+                `;
+          contactsList.appendChild(friendItem);
+          friendItem.addEventListener("click", (e) => {
+            if (e.target.closest(".invite-btn")) return;
+            const event = new CustomEvent("friendSelected", {
+              detail: { friend: selectedFriend, friendshipId: friendship.id }
+            });
+            window.dispatchEvent(event);
+          });
+          const inviteBtn = friendItem.querySelector(".invite-btn");
+          inviteBtn?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
+          });
+        });
+      } catch (error) {
+        console.error("Error loading friends:", error);
+        contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    }
+    // AJOUT: Fonction pour envoyer une invitation depuis la liste
+    sendInviteDirectly(friendId, friendName) {
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const myName = localStorage.getItem("username");
+      if (!gameSocket || !gameSocket.connected) {
+        alert("Game is disconnected, please refresh");
+        SocketService_default.getInstance().connectGame();
+        return;
+      }
+      console.debug(`Sending game invite to ${friendName} via GameSocket`);
+      gameSocket.emit("sendGameInvite", {
+        targetId: friendId,
+        senderName: myName
+      });
+      alert(`Invitation sent to ${friendName}`);
+    }
+    listenToUpdates() {
+      console.debug("listen to updates");
+      const socketService = SocketService_default.getInstance();
+      const chatSocket = socketService.getChatSocket();
+      const gameSocket = socketService.getGameSocket();
+      if (!chatSocket) return;
+      chatSocket.on("friendStatusUpdate", (data) => {
+        console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
+        this.updateFriendUI(data.username, data.status);
+      });
+      chatSocket.on("userConnected", (data) => {
+        const currentUsername = localStorage.getItem("username");
+        if (data.username !== currentUsername) {
+          this.updateFriendUI(data.username, data.status);
+        }
+      });
+      chatSocket.on("receiveFriendRequestNotif", () => {
+        console.log("New friend request received!");
+        this.checkNotifications();
+      });
+      chatSocket.on("friendRequestAccepted", () => {
+        console.log("Friend request accepted by other user!");
+        this.loadFriends();
+      });
+      if (!gameSocket) {
+        console.error("GameSocket cannot be found");
+        return;
+      }
+      const attachGameListeners = () => {
+        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
+        gameSocket.emit("registerGameSocket");
+        gameSocket.off("receiveGameInvite");
+        gameSocket.on("receiveGameInvite", (data) => {
+          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+          this.showGameInviteNotification(data.senderId, data.senderName);
+        });
+      };
+      if (gameSocket.connected) {
+        attachGameListeners();
+      } else {
+        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
+        gameSocket.once("connect", () => {
+          attachGameListeners();
+        });
+      }
+    }
+    ///// pour la notification de l'invitation
+    showGameInviteNotification(senderId, senderName) {
+      console.log("showGameInvite");
+      const notifIcon = document.getElementById("notification-icon");
+      if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
+      toast.innerHTML = `
+            <div class="font-bold text-gray-800">\u{1F3AE} Game Invite</div> 
+            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="flex gap-2 mt-2">
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+            </div>
+        `;
+      document.body.appendChild(toast);
+      toast.querySelector("#accept-invite")?.addEventListener("click", () => {
+        const gameSocket = SocketService_default.getInstance().getGameSocket();
+        if (!gameSocket || !gameSocket.connected) {
+          alert("Error: connexion to server lost");
+          toast.remove();
+          return;
+        }
+        console.log("Accepting game invite from", senderName);
+        gameSocket.once("matchFound", (data) => {
+          console.log("\u2705 Match found from invitation:", data);
+          sessionStorage.setItem("pendingMatch", JSON.stringify(data));
+          window.history.pushState({ gameMode: "remote" }, "", "/game");
+          const event = new PopStateEvent("popstate");
+          window.dispatchEvent(event);
+        });
+        gameSocket.emit("acceptGameInvite", { senderId });
+        toast.remove();
+      });
+      toast.querySelector("#decline-invite")?.addEventListener("click", () => {
+        const gameSocket = SocketService_default.getInstance().getGameSocket()?.emit("declineGameInvite", { senderId });
+        if (gameSocket && gameSocket.connected) {
+          gameSocket.emit("declineGameInivite", { senderId });
+        }
+        toast.remove();
+      });
+      setTimeout(() => {
+        if (document.body.contains(toast)) toast.remove();
+      }, 1e4);
+    }
+    updateFriendUI(loginOrUsername, newStatus) {
+      const friendItems = document.querySelectorAll(".friend-item");
+      friendItems.forEach((item) => {
+        const el = item;
+        if (el.dataset.login === loginOrUsername || el.dataset.alias === loginOrUsername) {
+          let status = (newStatus || "offline").toLowerCase();
+          el.dataset.status = status;
+          const statusImg = el.querySelector('img[alt="status"]');
+          if (statusImg) {
+            statusImg.src = getStatusDot(status);
+          }
+          console.log(`[FriendList] Updated UI for ${loginOrUsername} to ${status}`);
+        }
+      });
+    }
+    setupBlockListener() {
+      window.addEventListener("friendBlocked", (e) => {
+        const blockedUsername = e.detail?.username;
+        if (!blockedUsername || !this.container) return;
+        const friendToRemove = this.container.querySelector(`.friend-item[data-login="${blockedUsername}"]`);
+        if (friendToRemove) {
+          friendToRemove.style.opacity = "0";
+          setTimeout(() => {
+            friendToRemove.remove();
+            if (this.container && this.container.children.length === 0) {
+              this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+            }
+          }, 300);
+        }
+      });
+    }
+    setupFriendRequests() {
+      const addFriendButton = document.getElementById("add-friend-button");
+      const addFriendDropdown = document.getElementById("add-friend-dropdown");
+      const friendSearchInput = document.getElementById("friend-search-input");
+      const sendFriendRequestButton = document.getElementById("send-friend-request");
+      const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
+      const friendRequestMessage = document.getElementById("friend-request-message");
+      if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
+        addFriendButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          addFriendDropdown.classList.toggle("hidden");
+          document.getElementById("status-dropdown")?.classList.add("hidden");
+          if (!addFriendDropdown.classList.contains("hidden")) {
+            friendSearchInput.focus();
+          }
+        });
+        const sendFriendRequest = async () => {
+          const searchValue = friendSearchInput.value.trim();
+          if (!searchValue) {
+            this.showFriendMessage("Please enter a username or email", "error", friendRequestMessage);
+            return;
+          }
+          const userId = localStorage.getItem("userId");
+          try {
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ alias: searchValue })
+            });
+            const data = await response.json();
+            if (response.ok) {
+              this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
+              const targetId = data.data.friend_id || data.data.friend?.id;
+              if (targetId) {
+                SocketService_default.getInstance().getChatSocket()?.emit("sendFriendRequestNotif", {
+                  targetId
+                });
+              }
+              friendSearchInput.value = "";
+              setTimeout(() => {
+                addFriendDropdown.classList.add("hidden");
+                friendRequestMessage?.classList.add("hidden");
+              }, 1500);
+            } else {
+              this.showFriendMessage(data.error.message || "Error sending request", "error", friendRequestMessage);
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            this.showFriendMessage("Network error", "error", friendRequestMessage);
+          }
+        };
+        sendFriendRequestButton.addEventListener("click", sendFriendRequest);
+        friendSearchInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") sendFriendRequest();
+        });
+        cancelFriendRequestButton.addEventListener("click", () => {
+          addFriendDropdown.classList.add("hidden");
+          friendSearchInput.value = "";
+          friendRequestMessage?.classList.add("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+            addFriendDropdown.classList.add("hidden");
+            friendRequestMessage?.classList.add("hidden");
+          }
+        });
+      }
+    }
+    showFriendMessage(message, type, element) {
+      if (element) {
+        element.textContent = message;
+        element.classList.remove("hidden", "text-green-600", "text-red-600");
+        element.classList.add(type === "success" ? "text-green-600" : "text-red-600");
+      }
+    }
+    setupNotifications() {
+      const notifButton = document.getElementById("notification-button");
+      const notifDropdown = document.getElementById("notification-dropdown");
+      if (notifButton && notifDropdown) {
+        notifButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle("hidden");
+          document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+          if (!notifDropdown.classList.contains("hidden")) {
+            this.checkNotifications();
+          }
+        });
+        document.addEventListener("click", (e) => {
+          if (!notifDropdown.contains(e.target) && !notifButton.contains(e.target))
+            notifDropdown.classList.add("hidden");
+        });
+      }
+    }
+    async checkNotifications() {
+      const userId = localStorage.getItem("userId");
+      const notifList = document.getElementById("notification-list");
+      if (!userId || !notifList) return;
+      try {
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+        if (!response.ok) throw new Error("Failed to fetch pendings");
+        const requests = await response.json();
+        const pendingList = requests.data;
+        const notifIcon = document.getElementById("notification-icon");
+        if (pendingList.length > 0) {
+          if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+        } else {
+          if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
+        }
+        notifList.innerHTML = "";
+        if (pendingList.length === 0) {
+          notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+          return;
+        }
+        pendingList.forEach((req) => {
+          const item = document.createElement("div");
+          item.dataset.friendshipId = req.id.toString();
+          item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+          item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                        <img src="/assets/basic/logo.png" 
+                            class="w-full h-full object-cover rounded"
+                            alt="avatar">
+                    </div>
+                    <div class="flex-1 min-w-0 pr-4">
+                        <p class="text-sm text-gray-800">
+                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                        </p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                            <span class="text-green-600 font-bold text-sm">\u2713</span>
+                        </button>
+                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                            <span class="text-red-600 font-bold text-sm">\u2715</span>
+                        </button>
+                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                            <span class="text-gray-600 text-xs">\u{1F6AB}</span>
+                        </button>
+                    </div>
+                `;
+          const buttonAccept = item.querySelector(".btn-accept");
+          const buttonReject = item.querySelector(".btn-reject");
+          const buttonBlock = item.querySelector(".btn-block");
+          if (req.user && req.user.id) {
+            buttonAccept?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "validated", item);
+            });
+            buttonReject?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "rejected", item);
+            });
+            buttonBlock?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "blocked", item);
+            });
+          }
+          notifList.appendChild(item);
+        });
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    }
+    async handleRequest(requesterId, action, itemDiv) {
+      const userId = localStorage.getItem("userId");
+      if (!itemDiv.dataset.friendshipId) return;
+      try {
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: action })
+        });
+        if (response.ok) {
+          itemDiv.style.opacity = "0";
+          setTimeout(() => {
+            itemDiv.remove();
+            if (action === "validated") {
+              this.loadFriends();
+              const socket = SocketService_default.getInstance().getChatSocket();
+              if (socket) {
+                socket.emit("acceptFriendRequest", {
+                  targetId: requesterId
+                });
+              }
+            }
+            this.checkNotifications();
+          }, 300);
+        } else {
+          console.error("Failed to update request");
+        }
+      } catch (error) {
+        console.error("Network error", error);
+      }
+    }
+  };
+
+  // scripts/components/ChatUtils.ts
+  var escapeHTML = (text) => {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  };
+  var escapeRegex = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  };
+  var parseMessage = (message) => {
+    let formattedMessage = escapeHTML(message);
+    const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
+    sortedKeys.forEach((key) => {
+      const imgUrl = emoticons[key];
+      const escapedKey = escapeRegex(escapeHTML(key));
+      const regex = new RegExp(escapedKey, "g");
+      formattedMessage = formattedMessage.replace(
+        regex,
+        `<img src="${imgUrl}" alt="${key}" class="inline-block w-[20px] h-[20px] align-middle mx-0.5" />`
+      );
+    });
+    formattedMessage = formattedMessage.replace(/\[b\](.*?)\[\/b\]/g, "<strong>$1</strong>").replace(/\[i\](.*?)\[\/i\]/g, "<em>$1</em>").replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>").replace(/\[s\](.*?)\[\/s\]/g, "<s>$1</s>").replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>');
+    return formattedMessage;
+  };
+
+  // scripts/components/UserProfile.ts
+  var UserProfile = class {
+    constructor() {
+      this.selectedImageSrc = "";
+      this.bioText = document.getElementById("user-bio");
+      this.bioWrapper = document.getElementById("bio-wrapper");
+      this.statusFrame = document.getElementById("user-status");
+      this.statusText = document.getElementById("current-status-text");
+      this.userConnected = document.getElementById("user-name");
+      this.userProfileImg = document.getElementById("user-profile");
+      this.statusSelector = document.getElementById("status-selector");
+      this.statusDropdown = document.getElementById("status-dropdown");
+      this.charCountElement = document.querySelector("#bio-wrapper .char-count");
+      this.pictureModal = document.getElementById("picture-modal");
+      this.modalPreviewAvatar = document.getElementById("modal-preview-avatar");
+    }
+    init() {
+      this.loadUserData();
+      this.setupBioEdit();
+      this.setupStatusSelector();
+      this.loadSavedStatus();
+      this.setupAvatarEdit();
+    }
+    // CHARGEMENT DE LA BIO
+    async loadUserData() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        console.warn("No user ID found");
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`/api/user/${userId}`);
+        if (!response.ok) throw new Error("Failed to fetch user profile");
+        const userData = await response.json();
+        if (this.userConnected && userData.alias) {
+          this.userConnected.textContent = userData.alias;
+          localStorage.setItem("username", userData.alias);
+        }
+        if (this.bioText && userData.bio) {
+          this.bioText.dataset.raw = userData.bio;
+          this.bioText.innerHTML = parseMessage(userData.bio);
+        }
+        if (this.userProfileImg) {
+          this.userProfileImg.src = userData.avatar_url || userData.avatar;
+        }
+        if (userData.status) {
+          const normalizedStatus = userData.status.toLowerCase();
+          this.updateStatusDisplay(normalizedStatus);
+          localStorage.setItem("userStatus", normalizedStatus);
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    }
+    // LOGIQUE DE LA BIO et de la PHOTO
+    setupBioEdit() {
+      if (!this.bioText || !this.bioWrapper) return;
+      const updateCharCount = (currentLength) => {
+        if (this.charCountElement) {
+          this.charCountElement.innerText = `${currentLength}/70`;
+          if (currentLength > 70) {
+            this.charCountElement.classList.remove("text-gray-500");
+            this.charCountElement.classList.add("text-red-500");
+          } else {
+            this.charCountElement.classList.remove("text-red-500");
+            this.charCountElement.classList.add("text-gray-500");
+          }
+        }
+      };
+      this.bioText.addEventListener("click", () => {
+        const input = document.createElement("input");
+        const currentText = this.bioText.dataset.raw || "";
+        input.type = "text";
+        input.value = currentText;
+        input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+        this.bioWrapper.replaceChild(input, this.bioText);
+        if (this.charCountElement) {
+          this.charCountElement.classList.remove("hidden");
+          updateCharCount(currentText.length);
+        }
+        input.focus();
+        input.addEventListener("input", () => {
+          const currentLength = input.value.length;
+          updateCharCount(currentLength);
+        });
+        const finalize = async (text) => {
+          if (!this.bioWrapper || !this.bioText) return;
+          if (this.charCountElement) {
+            this.charCountElement.classList.add("hidden");
+          }
+          const newBio = text.trim() || "Share a quick message";
+          const userId = localStorage.getItem("userId");
+          const trimmedBio = newBio.trim();
+          if (trimmedBio.length > 70) {
+            console.error("Error: Cannot exceed 70 characters.");
+            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            this.bioWrapper.replaceChild(this.bioText, input);
+            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || "Share a quick message");
+            return false;
+          }
+          try {
+            const response = await fetchWithAuth(`api/user/${userId}/bio`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ bio: trimmedBio })
+            });
+            if (response.ok) {
+              this.bioText.dataset.raw = trimmedBio;
+              this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+              this.bioWrapper.replaceChild(this.bioText, input);
+              console.log("Message updated");
+              const socket = SocketService_default.getInstance().socket;
+              socket.emit("notifyProfileUpdate", {
+                userId: Number(userId),
+                bio: trimmedBio,
+                username: localStorage.getItem("username")
+              });
+              return true;
+            } else {
+              console.error("Error while updating your message");
+              this.bioWrapper.replaceChild(this.bioText, input);
+              return false;
+            }
+          } catch (error) {
+            console.error("Network error:", error);
+            this.bioWrapper.replaceChild(this.bioText, input);
+            return false;
+          }
+        };
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") finalize(input.value);
+        });
+        input.addEventListener("blur", () => {
+          if (input.value.trim().length <= 70) {
+            finalize(input.value);
+          } else {
+            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            if (this.charCountElement) {
+              this.charCountElement.classList.add("hidden");
+            }
+            this.bioWrapper.replaceChild(this.bioText, input);
+          }
+        });
+      });
+    }
+    // LOGIQUE DES STATUS DYNAMIQUES
+    setupStatusSelector() {
+      if (this.statusSelector && this.statusDropdown) {
+        this.statusSelector.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.statusDropdown.classList.toggle("hidden");
+          document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+          document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+        });
+        const statusOptions = document.querySelectorAll(".status-option");
+        statusOptions.forEach((option) => {
+          option.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const selectedStatus = option.dataset.status;
+            if (selectedStatus) {
+              this.updateStatusDisplay(selectedStatus);
+              localStorage.setItem("userStatus", selectedStatus);
+              const userId = localStorage.getItem("userId");
+              try {
+                await fetchWithAuth(`/api/user/${userId}/status`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ status: selectedStatus })
+                });
+                const socket = SocketService_default.getInstance().socket;
+                const username = localStorage.getItem("username");
+                if (socket && username) {
+                  socket.emit("notifyStatusChange", {
+                    userId: Number(userId),
+                    status: selectedStatus,
+                    username
+                  });
+                }
+                this.updateStatusDisplay(selectedStatus);
+              } catch (error) {
+                console.error("Error updating status:", error);
+              }
+            }
+            this.statusDropdown.classList.add("hidden");
+          });
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (this.statusDropdown && !this.statusDropdown.contains(target) && !this.statusSelector.contains(target)) {
+            this.statusDropdown.classList.add("hidden");
+          }
+        });
+      }
+    }
+    loadSavedStatus() {
+      const rawStatus = localStorage.getItem("userStatus") || "available";
+      const savedStatus = rawStatus.toLowerCase();
+      this.updateStatusDisplay(savedStatus);
+      window.addEventListener("storage", (e) => {
+        if (e.key === "userStatus" && e.newValue) {
+          this.updateStatusDisplay(e.newValue.toLowerCase());
+        }
+      });
+    }
+    updateStatusDisplay(status) {
+      if (this.statusFrame && statusImages[status]) {
+        console.log("Status:", this.statusFrame);
+        this.statusFrame.src = statusImages[status];
+      }
+      if (this.statusText && statusLabels[status]) {
+        this.statusText.textContent = statusLabels[status];
+      }
+      const statusOptions = document.querySelectorAll(".status-option");
+      statusOptions.forEach((option) => {
+        const opt = option;
+        const optionStatus = opt.dataset.status;
+        if (optionStatus === status) opt.classList.add("bg-blue-50");
+        else opt.classList.remove("bg-blue-50");
+      });
+    }
+    setupAvatarEdit() {
+      if (!this.userProfileImg || !this.pictureModal) return;
+      this.userProfileImg.classList.add("cursor-pointer", "hover:opacity-80", "transition");
+      this.userProfileImg.addEventListener("click", () => {
+        this.pictureModal?.classList.remove("hidden");
+        this.pictureModal?.classList.add("flex");
+        this.selectedImageSrc = this.userProfileImg?.src || "";
+        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+      });
+      const closeModal = () => {
+        this.pictureModal?.classList.add("hidden");
+        this.pictureModal?.classList.remove("flex");
+      };
+      document.getElementById("close-modal")?.addEventListener("click", closeModal);
+      document.getElementById("cancel-button")?.addEventListener("click", closeModal);
+      const gridContainer = document.getElementById("modal-grid");
+      if (gridContainer) {
+        const gridImages = gridContainer.querySelectorAll("img");
+        gridImages.forEach((img) => {
+          img.addEventListener("click", () => {
+            this.selectedImageSrc = img.src;
+            if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+            gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
+            img.classList.add("border-[#0078D7]");
+          });
+        });
+      }
+      const fileInput = document.getElementById("file-input");
+      document.getElementById("browse-button")?.addEventListener("click", () => fileInput?.click());
+      fileInput?.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              this.selectedImageSrc = e.target.result;
+              if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      document.getElementById("delete-button")?.addEventListener("click", () => {
+        const defaultAvatar = "/assets/basic/default.png";
+        this.selectedImageSrc = defaultAvatar;
+        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = defaultAvatar;
+      });
+      document.getElementById("validation-button")?.addEventListener("click", async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+        try {
+          const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ avatar: this.selectedImageSrc })
+          });
+          const result = await response.json();
+          if (response.ok) {
+            const cleanAvatarUrl = result.data.avatar;
+            if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
+            const socket = SocketService_default.getInstance().getChatSocket();
+            const username = localStorage.getItem("username");
+            if (socket) {
+              socket.emit("notifyProfileUpdate", {
+                userId: Number(userId),
+                avatar: cleanAvatarUrl,
+                username
+              });
+            }
+            closeModal();
+          } else {
+            alert("Error while saving avatar");
+          }
+        } catch (error) {
+          console.error("Network error:", error);
+        }
+      });
+    }
+  };
+
+  // scripts/components/Chat.ts
+  var Chat = class {
+    constructor() {
+      this.chatSocket = null;
+      this.gameSocket = null;
+      this.currentChannel = "general";
+      this.currentFriendshipId = null;
+      this.currentFriendId = null;
+      this.messagesContainer = document.getElementById("chat-messages");
+      this.messageInput = document.getElementById("chat-input");
+      this.wizzContainer = document.getElementById("wizz-container");
+    }
+    init() {
+      const socketService = SocketService_default.getInstance();
+      socketService.connectChat();
+      socketService.connectGame();
+      this.chatSocket = socketService.getChatSocket();
+      this.gameSocket = socketService.getGameSocket();
+      if (!this.gameSocket) {
+        console.log("Gamesocket does not exist");
+      }
+      if (!this.chatSocket) {
+        console.error("Chat: Impossible to retrieve chat socket (not connected).");
+        return;
+      }
+      this.setupSocketEvents();
+      this.setupInputListeners();
+      this.setupWizz();
+      this.setupTools();
+    }
+    joinChannel(channelKey, friendshipId, friendId) {
+      this.currentChannel = channelKey;
+      this.currentFriendshipId = friendshipId || null;
+      this.currentFriendId = friendId || null;
+      if (this.chatSocket) {
+        this.chatSocket.emit("joinChannel", channelKey);
+      }
+      if (this.messagesContainer) {
+        this.messagesContainer.innerHTML = "";
+      }
+    }
+    // ---------------------------------------------------
+    // ----      MISE EN ÉCOUTE DES SOCKETS           ----
+    // ---------------------------------------------------
+    setupSocketEvents() {
+      this.chatSocket.on("connect", () => {
+        this.addMessage("You can now chat with your friend!", "System");
+      });
+      this.chatSocket.on("chatMessage", (data) => {
+        this.addMessage(data.msg_content, data.sender_alias);
+      });
+      this.chatSocket.on("msg_history", (data) => {
+        if (this.messagesContainer) {
+          this.messagesContainer.innerHTML = "";
+          if (data.msg_history && data.msg_history.length > 0) {
+            data.msg_history.forEach((msg) => {
+              this.addMessage(msg.msg_content, msg.sender_alias);
+            });
+          } else {
+            console.log("No former message in this channel");
+          }
+        }
+      });
+      this.chatSocket.on("systemMessage", (data) => {
+        this.addSystemMessage(data.content);
+      });
+      this.chatSocket.on("receivedWizz", (data) => {
+        if (data.channel_key && data.channel_key !== this.currentChannel) {
+          return;
+        }
+        const currentUser = localStorage.getItem("username");
+        this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
+        if (data.author !== currentUser) {
+          this.shakeElement(this.wizzContainer, 3e3);
+        }
+      });
+      this.chatSocket.on("receivedAnimation", (data) => {
+        const { animationKey, author } = data;
+        const imgUrl = animations[animationKey];
+        if (imgUrl) {
+          const animationHTML = `
+                    <div>
+                        <strong>${author} said:</strong><br>
+                        <img src="${imgUrl}" alt="${animationKey}">
+                    </div>
+                `;
+          this.addCustomContent(animationHTML);
+        } else {
+          this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
+        }
+      });
+      this.chatSocket.on("disconnected", () => {
+        this.addMessage("Disconnected from chat server!", "System");
+      });
+    }
+    // ---------------------------------------------------
+    // ----           GESTION DE L'INPUT              ----
+    // ---------------------------------------------------
+    setupInputListeners() {
+      if (!this.messageInput) {
+        return;
+      }
+      this.messageInput.addEventListener("keyup", (event) => {
+        if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
+          const msg_content = this.messageInput.value;
+          const sender_alias = localStorage.getItem("username");
+          const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+          this.chatSocket.emit("chatMessage", {
+            sender_id,
+            sender_alias,
+            channel_key: this.currentChannel,
+            msg_content
+          });
+          this.messageInput.value = "";
+        }
+      });
+    }
+    // ---------------------------------------------------
+    // ----            LOGIQUE DU WIZZ                ----
+    // ---------------------------------------------------
+    setupWizz() {
+      const wizzButton = document.getElementById("send-wizz");
+      if (wizzButton) {
+        wizzButton.addEventListener("click", () => {
+          const currentUsername = localStorage.getItem("username");
+          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+          this.shakeElement(this.wizzContainer, 500);
+        });
+      }
+    }
+    emitWizzOnly() {
+      if (!this.chatSocket) {
+        return;
+      }
+      const currentUsername = localStorage.getItem("username");
+      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+    }
+    shakeElement(element, duration = 500) {
+      if (!element) {
+        return;
+      }
+      if (this.shakeTimeout) {
+        clearTimeout(this.shakeTimeout);
+      }
+      element.classList.remove("wizz-shake");
+      void element.offsetWidth;
+      element.classList.add("wizz-shake");
+      this.shakeTimeout = window.setTimeout(() => {
+        element.classList.remove("wizz-shake");
+        this.shakeTimeout = void 0;
+      }, duration);
+      try {
+        const wizzSound = new Audio("/assets/chat/wizz_sound.mp3");
+        wizzSound.play().catch((e) => console.log("Could not play wizz sound:", e.message));
+      } catch (e) {
+        console.log("Audio API error:", e.message);
+      }
+    }
+    getWizzContainer() {
+      return this.wizzContainer;
+    }
+    // ---------------------------------------------------
+    // ----         AFFICHAGE DES MESSAGES            ----
+    // ---------------------------------------------------
+    sendSystemNotification(message) {
+      if (this.chatSocket) {
+        this.chatSocket.emit("sendSystemMessage", {
+          channel_key: this.currentChannel,
+          content: message
+        });
+      } else {
+        this.addSystemMessage(message);
+      }
+    }
+    addSystemMessage(message) {
+      this.addMessage(`[b]${message}[/b]`, "System");
+    }
+    //faustine
+    addMessage(message, author) {
+      if (!this.messagesContainer) return;
+      const msgElement = document.createElement("div");
+      msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+      const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
+      const match = message.match(inviteRegex);
+      if (match) {
+        const friendshipId = match[1];
+        const isMe = author === localStorage.getItem("username");
+        msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
+        msgElement.innerHTML = `
+                <div class="flex flex-col gap-2">
+                    <strong>${author}</strong> veut jouer \xE0 Pong ! \u{1F3D3}<br>
+                    <button 
+                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
+                        onclick="
+                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
+                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                            window.dispatchEvent(new PopStateEvent('popstate'));
+                        "
+                    >
+                        ${isMe ? "Join my waitroom" : "Accept the match"}
+                    </button>
+                </div>
+            `;
+      } else {
+        msgElement.classList.add("bg-white");
+        const contentEmoticons = parseMessage(message);
+        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+      }
+      this.messagesContainer.appendChild(msgElement);
+      this.scrollToBottom();
+    }
+    addCustomContent(htmlContent) {
+      if (!this.messagesContainer) return;
+      const msgElement = document.createElement("div");
+      msgElement.className = "mb-1";
+      msgElement.innerHTML = htmlContent;
+      this.messagesContainer.appendChild(msgElement);
+      this.scrollToBottom();
+    }
+    scrollToBottom() {
+      if (this.messagesContainer) {
+        setTimeout(() => {
+          if (this.messagesContainer)
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        }, 50);
+      }
+    }
+    // ---------------------------------------------------
+    // ----      OUTILS (EMOTICONES, FONTS...)        ----
+    // ---------------------------------------------------
+    setupTools() {
+      const emoticonButton = document.getElementById("select-emoticon");
+      const emoticonDropdown = document.getElementById("emoticon-dropdown");
+      const emoticonGrid = document.getElementById("emoticon-grid");
+      if (emoticonButton && emoticonDropdown && emoticonGrid) {
+        emoticonGrid.innerHTML = "";
+        const emoticonsByUrl = /* @__PURE__ */ new Map();
+        const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
+        sortedKeys.forEach((key) => {
+          const imgUrl = emoticons[key];
+          if (!emoticonsByUrl.has(imgUrl)) emoticonsByUrl.set(imgUrl, []);
+          emoticonsByUrl.get(imgUrl).push(key);
+        });
+        emoticonsByUrl.forEach((keys, imgUrl) => {
+          const primaryKey = keys[0];
+          const tooltipTitle = keys.join(" | ");
+          const emoticonItem = document.createElement("div");
+          emoticonItem.className = "cursor-pointer w-7 h-7 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
+          emoticonItem.innerHTML = `<img src="${imgUrl}" alt="${primaryKey}" title="${tooltipTitle}" class="w-[20px] h-[20px]">`;
+          emoticonItem.addEventListener("click", (event) => {
+            event.stopPropagation();
+            this.insertText(primaryKey + " ");
+            emoticonDropdown.classList.add("hidden");
+          });
+          emoticonGrid.appendChild(emoticonItem);
+        });
+        emoticonButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          emoticonDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("emoticon");
+        });
+        document.addEventListener("click", (e) => {
+          if (!emoticonDropdown.contains(e.target) && !emoticonButton.contains(e.target)) {
+            emoticonDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const animationButton = document.getElementById("select-animation");
+      const animationDropdown = document.getElementById("animation-dropdown");
+      const animationGrid = document.getElementById("animation-grid");
+      if (animationButton && animationDropdown && animationGrid) {
+        animationGrid.innerHTML = "";
+        Object.keys(icons).forEach((key) => {
+          const imgUrl = icons[key];
+          const animationItem = document.createElement("div");
+          animationItem.className = "cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
+          animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
+          animationItem.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const currentUsername = localStorage.getItem("username");
+            this.chatSocket.emit("sendAnimation", {
+              animationKey: key,
+              author: currentUsername,
+              channel_key: this.currentChannel
+            });
+            animationDropdown.classList.add("hidden");
+          });
+          animationGrid.appendChild(animationItem);
+        });
+        animationButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          animationDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("animation");
+        });
+        document.addEventListener("click", (e) => {
+          if (!animationDropdown.contains(e.target) && !animationButton.contains(e.target)) {
+            animationDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const fontButton = document.getElementById("change-font");
+      const fontDropdown = document.getElementById("font-dropdown");
+      const fontGrid = document.getElementById("font-grid");
+      if (fontButton && fontDropdown && fontGrid) {
+        fontGrid.innerHTML = "";
+        const colors2 = ["#000000", "#F42F25", "#F934FB", "#F76D2A", "#217F1C", "#3019F7", "#F9CA37", "#42FB37"];
+        colors2.forEach((color2) => {
+          const colorButton = document.createElement("div");
+          colorButton.className = "w-6 h-6 cursor-pointer border border-gray-300 hover:border-blue-500 hover:shadow-sm rounded-[2px]";
+          colorButton.style.backgroundColor = color2;
+          colorButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.wrapSelection(color2, true);
+            fontDropdown.classList.add("hidden");
+          });
+          fontGrid.appendChild(colorButton);
+        });
+        const styles = [
+          { tag: "b", icon: "font_bold.png", title: "Bold" },
+          { tag: "i", icon: "font_italic.png", title: "Italic" },
+          { tag: "u", icon: "font_underline.png", title: "Underline" },
+          { tag: "s", icon: "font_strikethrough.png", title: "Strikethrough" }
+        ];
+        styles.forEach((style) => {
+          const styleButton = document.createElement("div");
+          styleButton.className = "w-6 h-6 flex justify-center items-center cursor-pointer border border-transparent hover:bg-blue-50 hover:border-blue-200 rounded-[2px] transition-all";
+          styleButton.innerHTML = `<img src="/assets/chat/${style.icon}" alt="${style.title}" class="w-[14px] h-[14px]">`;
+          styleButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.wrapSelection(style.tag, false);
+            fontDropdown.classList.add("hidden");
+          });
+          fontGrid.appendChild(styleButton);
+        });
+        fontButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          fontDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("font");
+        });
+        document.addEventListener("click", (e) => {
+          if (!fontDropdown.contains(e.target) && !fontButton.contains(e.target)) {
+            fontDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const bgButton = document.getElementById("select-background");
+      const bgDropdown = document.getElementById("background-dropdown");
+      const chatFrame = document.getElementById("chat-frame");
+      const bgOptions = document.querySelectorAll(".bg-option");
+      if (bgButton && bgDropdown && chatFrame) {
+        bgButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("background");
+        });
+        bgOptions.forEach((option) => {
+          option.addEventListener("click", () => {
+            const bgImage = option.getAttribute("data-bg");
+            if (bgImage === "none") {
+              chatFrame.style.backgroundImage = "";
+              chatFrame.classList.add("bg-[#3DB6EC]");
+            } else if (bgImage) {
+              chatFrame.classList.remove("bg-[#BC787B]");
+              chatFrame.style.backgroundImage = bgImage;
+              chatFrame.style.backgroundSize = "cover";
+              chatFrame.style.backgroundPosition = "center";
+            }
+            bgDropdown.classList.add("hidden");
+          });
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDropdown.contains(e.target) && !bgButton.contains(e.target)) {
+            bgDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const chatOptionsButton = document.getElementById("chat-options-button");
+      const chatOptionsDropdown = document.getElementById("chat-options-dropdown");
+      if (chatOptionsButton && chatOptionsDropdown) {
+        chatOptionsButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          chatOptionsDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("options");
+        });
+        document.addEventListener("click", (e) => {
+          if (!chatOptionsDropdown.contains(e.target) && !chatOptionsButton.contains(e.target)) {
+            chatOptionsDropdown.classList.add("hidden");
+          }
+        });
+        document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (this.currentFriendId && this.currentFriendshipId) {
+            const myName = localStorage.getItem("username");
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+            if (this.chatSocket && this.chatSocket.connected) {
+              console.log("chatSocket connected");
+              const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
+              this.chatSocket.emit("chatMessage", {
+                sender_id,
+                sender_alias: myName,
+                channel_key: this.currentChannel,
+                msg_content: inviteCode
+                // ici au lieu du message on "envois" le code d'invitation
+              });
+            } else {
+              console.log("chatSocket disconnected");
+            }
+          } else {
+            console.error("Game socket not connected", this.gameSocket);
+            this.addSystemMessage("Error: Game server not reachable.");
+          }
+          chatOptionsDropdown.classList.add("hidden");
+        });
+        document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          console.log("friendhsop id:", this.currentFriendshipId);
+          if (!this.currentFriendshipId) {
+            console.error("Cannot block: no friendship id associated to this conv");
+            chatOptionsDropdown.classList.add("hidden");
+            return;
+          }
+          const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+          if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
+            try {
+              const userId = localStorage.getItem("userId");
+              const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: "blocked" })
+              });
+              if (response.ok) {
+                console.log(`User ${currentChatUser} blocked successfully`);
+                const event = new CustomEvent("friendBlocked", {
+                  detail: { username: currentChatUser }
+                });
+                window.dispatchEvent(event);
+                if (this.messagesContainer) {
+                  this.messagesContainer.innerHTML = "";
+                  const infoMsg = document.createElement("div");
+                  infoMsg.className = "text-center text-gray-400 text-sm mt-10";
+                  infoMsg.innerText = "Conversation deleted (User blocked).";
+                  this.messagesContainer.appendChild(infoMsg);
+                }
+                if (this.messageInput) {
+                  this.messageInput.value = "";
+                  this.messageInput.disabled = true;
+                  this.messageInput.placeholder = "You blocked this user.";
+                }
+                this.currentChannel = "";
+                this.currentFriendshipId = null;
+              } else {
+                console.error("Network error while blocking");
+                alert("Error while blocking");
+              }
+            } catch (error) {
+              console.error("Networik error:", error);
+            }
+          }
+          chatOptionsDropdown.classList.add("hidden");
+        });
+      }
+    }
+    closeOtherMenus(current) {
+      if (current !== "emoticon") document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+      if (current !== "animation") document.getElementById("animation-dropdown")?.classList.add("hidden");
+      if (current !== "font") document.getElementById("font-dropdown")?.classList.add("hidden");
+      if (current !== "background") document.getElementById("background-dropdown")?.classList.add("hidden");
+      if (current !== "options") document.getElementById("chat-options-dropdown")?.classList.add("hidden");
+      document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+      document.getElementById("status-dropdown")?.classList.add("hidden");
+    }
+    // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
+    insertText(text) {
+      if (!this.messageInput) return;
+      const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
+      const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
+      const newValue = this.messageInput.value.substring(0, start) + text + this.messageInput.value.substring(end);
+      this.messageInput.value = newValue;
+      const newPos = start + text.length;
+      this.messageInput.setSelectionRange(newPos, newPos);
+      this.messageInput.focus();
+    }
+    // insertion des balises autour du texte selectionne
+    wrapSelection(tagOrColor, isColor) {
+      if (!this.messageInput) return;
+      const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
+      const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
+      const selectedText = this.messageInput.value.substring(start, end);
+      let replacement;
+      let cursorOffset;
+      if (isColor) {
+        const openTag = `[color=${tagOrColor}]`;
+        replacement = `${openTag}${selectedText}[/color]`;
+        cursorOffset = openTag.length;
+      } else {
+        const openTag = `[${tagOrColor}]`;
+        replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
+        cursorOffset = openTag.length;
+      }
+      this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
+      const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
+      this.messageInput.setSelectionRange(newCursorPos, newCursorPos);
+      this.messageInput.focus();
+    }
+    destroy() {
+      if (this.socket) {
+        this.socket.off("connect");
+        this.socket.off("chatMessage");
+        this.socket.off("msg_history");
+        this.socket.off("receivedWizz");
+        this.socket.off("receivedAnimation");
+        this.socket.off("systemMessage");
+        this.socket.off("disconnected");
+      }
+    }
+  };
+
+  // scripts/components/FriendProfileModal.ts
+  var FriendProfileModal = class {
+    constructor() {
+      this.modal = document.getElementById("friend-profile-modal");
+      this.closeButton = document.getElementById("close-friend-modal");
+      this.closeButtonBottom = document.getElementById("close-friend-modal-button");
+      this.avatar = document.getElementById("friend-modal-avatar");
+      this.status = document.getElementById("friend-modal-status");
+      this.username = document.getElementById("friend-modal-username");
+      this.bio = document.getElementById("friend-modal-bio");
+      this.stats = {
+        games: document.getElementById("friend-stat-games"),
+        wins: document.getElementById("friend-stat-wins"),
+        losses: document.getElementById("friend-stat-losses"),
+        streak: document.getElementById("friend-stat-streak"),
+        avgScore: document.getElementById("friend-stat-average-score"),
+        winRate: document.getElementById("friend-stat-win-rate"),
+        opponent: document.getElementById("friend-stat-opponent"),
+        favGame: document.getElementById("friend-stat-fav-game")
+      };
+      this.initListeners();
+    }
+    initListeners() {
+      const close = () => this.modal?.classList.add("hidden");
+      this.closeButton?.addEventListener("click", close);
+      this.closeButtonBottom?.addEventListener("click", close);
+      this.modal?.addEventListener("click", (e) => {
+        if (e.target === this.modal) close();
+      });
+    }
+    // on appelle cette methode dans homepage
+    async open(friendId) {
+      if (!this.modal || !friendId) return;
+      try {
+        if (this.username) this.username.innerText = "Loading...";
+        const [userRes, statsRes] = await Promise.all([
+          fetchWithAuth(`api/user/${friendId}`),
+          fetchWithAuth(`api/game/users/${friendId}/stats`)
+        ]);
+        if (userRes.ok) {
+          const user = await userRes.json();
+          let stats = null;
+          if (statsRes.ok) {
+            const statsJson = await statsRes.json();
+            stats = statsJson.data || statsJson;
+          }
+          this.updateUI(user, stats);
+          this.modal.classList.remove("hidden");
+          this.modal.classList.add("flex");
+        }
+      } catch (error) {
+        console.error("Error modal:", error);
+      }
+    }
+    updateUI(user, stats) {
+      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
+      if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
+      if (this.username) this.username.innerText = user.alias;
+      if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
+      if (stats) {
+        const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
+        const wins = stats.wins || 0;
+        if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
+        if (this.stats.wins) this.stats.wins.innerText = wins.toString();
+        if (this.stats.losses) this.stats.losses.innerText = (stats.losses || 0).toString();
+        if (this.stats.streak) this.stats.streak.innerText = (stats.streak ?? 0).toString();
+        if (this.stats.avgScore) this.stats.avgScore.innerText = (stats.average_score ?? 0).toString();
+        if (this.stats.winRate) {
+          let rate = 0;
+          if (gamesPlayed > 0) {
+            rate = Math.round(wins / gamesPlayed * 100);
+          }
+          this.stats.winRate.innerText = `${rate}%`;
+        }
+        if (this.stats.opponent) this.stats.opponent.innerText = stats.biggest_opponent || "-";
+        if (this.stats.favGame) this.stats.favGame.innerText = stats.favorite_game || "Local";
+      } else {
+        Object.values(this.stats).forEach((el) => {
+          if (el) el.innerText = el === this.stats.opponent || el === this.stats.favGame ? "-" : "0";
+        });
+        if (this.stats.winRate) this.stats.winRate.innerText = "0%";
+      }
+    }
+  };
+
+  // scripts/controllers/HomePage.ts
+  var friendListInstance = null;
+  var chatInstance = null;
+  var friendSelectedHandler = null;
+  function render2() {
+    return HomePage_default;
+  }
+  function afterRender() {
+    const socketService = SocketService_default.getInstance();
+    socketService.connectChat();
+    friendListInstance = new FriendList();
+    friendListInstance.init();
+    const userProfile = new UserProfile();
+    userProfile.init();
+    chatInstance = new Chat();
+    chatInstance.init();
+    let currentChatFriendId = null;
+    const friendProfileModal = new FriendProfileModal();
+    const chatSocket = socketService.getChatSocket();
+    if (chatSocket) {
+      chatSocket.on("friendProfileUpdated", (data) => {
+        if (currentChatFriendId === data.userId) {
+          const headerBio = document.getElementById("chat-header-bio");
+          if (headerBio && data.bio) {
+            headerBio.innerHTML = parseMessage(data.bio);
+          }
+          const headerAvatar = document.getElementById("chat-header-avatar");
+          if (headerAvatar && data.avatar) {
+            headerAvatar.src = data.avatar;
+          }
+          const headerName = document.getElementById("chat-header-username");
+          if (headerName && data.username) {
+            headerName.textContent = data.username;
+          }
+        }
+      });
+      chatSocket.on("friendStatusUpdate", (data) => {
+        const headerName = document.getElementById("chat-header-username");
+        if (headerName && headerName.textContent === data.username) {
+          const headerStatus = document.getElementById("chat-header-status");
+          if (headerStatus && statusImages[data.status]) {
+            headerStatus.src = statusImages[data.status];
+          }
+        }
+      });
+    }
+    friendSelectedHandler = (e) => {
+      const { friend, friendshipId } = e.detail;
+      currentChatFriendId = friend.id;
+      const myId = parseInt(localStorage.getItem("userId") || "0");
+      const ids = [myId, friend.id].sort((a, b) => a - b);
+      const channelKey = `channel_${ids[0]}_${ids[1]}`;
+      const chatPlaceholder = document.getElementById("chat-placeholder");
+      const channelChat = document.getElementById("channel-chat");
+      if (chatPlaceholder) {
+        chatPlaceholder.classList.add("hidden");
+      }
+      if (channelChat) {
+        channelChat.classList.remove("hidden");
+      }
+      const headerName = document.getElementById("chat-header-username");
+      const headerAvatar = document.getElementById("chat-header-avatar");
+      const headerStatus = document.getElementById("chat-header-status");
+      const headerBio = document.getElementById("chat-header-bio");
+      if (headerName) {
+        headerName.textContent = friend.alias;
+      }
+      if (headerBio) {
+        headerBio.innerHTML = parseMessage(friend.bio || "");
+      }
+      if (headerAvatar) {
+        const avatarSrc = friend.avatar || friend.avatar_url || "/assets/profile/default.png";
+        headerAvatar.src = avatarSrc;
+      }
+      if (headerStatus) {
+        headerStatus.src = statusImages[friend.status] || statusImages["invisible"];
+      }
+      if (chatInstance) {
+        chatInstance.joinChannel(channelKey, friendshipId, friend.id);
+      }
+    };
+    window.addEventListener("friendSelected", friendSelectedHandler);
+    const viewProfileButton = document.getElementById("button-view-profile");
+    viewProfileButton?.addEventListener("click", () => {
+      document.getElementById("chat-options-dropdown")?.classList.add("hidden");
+      if (currentChatFriendId) {
+        friendProfileModal.open(currentChatFriendId);
+      }
+    });
+    const localGameButton = document.getElementById("local-game");
+    if (localGameButton) {
+      localGameButton.addEventListener("click", () => {
+        window.history.pushState({ gameMode: "local" }, "", "/game");
+        const navEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(navEvent);
+      });
+    }
+    const remoteGameButton = document.getElementById("remote-game");
+    if (remoteGameButton) {
+      remoteGameButton.addEventListener("click", () => {
+        window.history.pushState({ gameMode: "remote" }, "", "/game");
+        const navEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(navEvent);
+      });
+    }
+    const tournamentGameButton = document.getElementById("tournament-game");
+    if (tournamentGameButton) {
+      tournamentGameButton.addEventListener("click", () => {
+        window.history.pushState({ gameMode: "tournament" }, "", "/game");
+        const navEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(navEvent);
+      });
+    }
+  }
+
+  // scripts/pages/ProfilePage.html
+  var ProfilePage_default = `<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="window" style="width:900px; margin-top:-100px;">
+            <div class="title-bar">
+                <div class="title-bar-text">Profile</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button aria-label="Close"></button>
+                </div>
+            </div>
+    
+            <div class="window-body bg-white">
+                <div class="flex flex-col items-center py-12">
+                    
+                    <div class="flex flex-col gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
+            
+                        <div class="flex flex-row gap-6 w-full">
+                            
+                            <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
+                                <h1 class="theme-label text-lg font-normal mb-4 text-gray-700">My profile</h1>
+
+                                <div class="relative w-[170px] h-[170px] mb-3">
+                                    <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                                    src="/assets/basic/status_frame_offline_large.png">
+                                    
+                                    <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"
+                                    src="/assets/basic/default.png">
+                                </div>
+
+                                <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">
+                                    
+                                    <button id="edit-picture-button" 
+                                            title="Change Avatar"
+                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                                bg-gradient-to-b from-white to-gray-200
+                                                rounded-[3px] shadow-sm
+                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                                active:translate-y-[1px] active:shadow-inner transition-all group">
+                                        <img src="/assets/basic/camera.png" 
+                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                            alt="Avatar">
+                                    </button>
+
+                                    <button id="theme-button" 
+                                            title="Customize Theme"
+                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1
+                                                bg-gradient-to-b from-white to-gray-200 
+                                                rounded-[3px] shadow-sm
+                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
+                                                active:translate-y-[1px] active:shadow-inner transition-all group">
+                                        <img src="/assets/basic/headers.png" 
+                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" 
+                                            alt="Theme">
+                                    </button>
+
+                                </div>
+
+                                <div class="w-full px-4 mb-4 mt-4">
+                                    <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
+                                        <label class="text-xs text-gray-500 pl-1">Status:</label>
+                                        <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
+                                            <option>Available</option>
+                                            <option selected>Busy</option>
+                                            <option>Away</option>
+                                            <option>Appear offline</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="text-sm text-center w-full leading-6 mt-2">
+                                    <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
+                                    <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
+                                </div>
+                            </div>
+                
+                            <div class="flex flex-col justify-between flex-1">
+                                <div class="flex flex-col gap-4">
+
+                                    <label class="theme-label text-sm">Username:</label>
+                                    <div class="flex flex-row gap-2" data-field="alias">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
+                                        <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
+                                        
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                    </div>
+
+                                    <label class="theme-label text-sm">Share a quick message:</label>
+                                    <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
+                                        <input
+                                            type="text"
+                                            value=""
+                                            placeholder="Share a quick message"
+                                            class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"
+                                            style="width:350px; overflow: hidden;" disabled/>
+                                        <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                    </div>
+                                </div>
+                
+                                <div class="mt-8 border-t border-gray-300 pt-4">
+                                    <div class="flex flex-col gap-4">
+                                        <label class="theme-label text-sm">Email:</label>
+                                        <div class="flex flex-row gap-2" data-field="email">
+                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                            <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                            
+                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                        </div>
+
+                                        <label class="theme-label text-sm">Password:</label>
+                                        <div class="flex flex-row gap-2" data-field="password">
+                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                            <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                            
+                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
+                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="flex flex-row justify-center items-center gap-4 w-full border-t border-gray-200 pt-4" style="padding-top: 25px;">
+                            <button id="2fa-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Enable 2FA authentication</button>
+                            <button id="download-data-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Download personal data</button>
+                            <button id="delete-account-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold" style="color: #DC2626;">Delete my account</button>
+                        </div>
+
+                    </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
+                        <h1 class="theme-label text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
+
+                        <div class="grid grid-cols-4 gap-4 mb-8">
+                            <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
+                                <span class="theme-label text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
+                                <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
+                            </div>
+                            
+                            <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
+                                <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
+                                <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
+                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
+                                <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
+                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
+                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
+                            </div>
+
+                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
+                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
+                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">Two-Factor Authentication</div>
+            <div class="title-bar-controls">
+                <button id="close-2fa-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        
+        <div class="window-body p-6">
+            
+            <div id="method-selection" class="flex flex-col gap-4 items-center">
+                <div class="text-center mb-2 border-b border-gray-500 p-4">
+                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
+                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm text-center">Authenticator App</h3>
+                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-sm text-center">Email Verification</h3>
+                            <p class="text-xs text-gray-600">Receive codes via email</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="qr-content" class="hidden flex-col items-center gap-4">
+                
+                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
+                    <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
+                </div>
+
+                <div class="border border-gray-300 p-2 bg-white shadow-inner">
+                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">
+                </div>
+
+                <div class="w-full flex flex-col gap-2 mt-2">
+                    <label class="text-sm">Enter the 6-digit code:</label>
+                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                </div>
+
+                <div class="flex justify-center gap-4 mt-4 w-full">
+                    <button id="confirm-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
+                        VALIDATE
+                    </button>
+                    <button id="cancel-2fa-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+                        CANCEL
+                    </button>
+                </div>
+            </div>
+
+            <div id="email-content" class="hidden flex-col items-center gap-4">
+                
+                <div class="text-center">
+                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
+                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
+                </div>
+                
+                <div class="w-full flex flex-col gap-2">
+                    <label class="text-sm">Code will be sent to:</label>
+                    <input type="email" id="2fa-email-input" 
+                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
+                        disabled 
+                        readonly>
+                </div>
+                
+                <button id="send-code-button" 
+                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
+                    SEND CODE
+                </button>
+                
+                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
+                    <label class="text-sm">Enter code received:</label>
+                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
+                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+                    
+                    <button id="confirm-2fa-email" 
+                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
+                        VALIDATE
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+        <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button id="close-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl mb-1">Select a picture</h2>
+                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                </div>
+                
+                <div class="flex flex-row gap-6">
+                    <div class="flex-1">
+                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
+                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4 w-[200px]">
+                        <div class="relative w-[170px] h-[170px]">
+                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            src="/assets/basic/status_frame_offline_large.png">
+                            
+                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                            src="/assets/basic/default.png">
+                        </div>
+
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
+                            <input type="file" id="file-input" accept="image/*" hidden>
+
+                            <button id="browse-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            BROWSE
+                            </button>
+                            
+                            <button id="delete-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            DELETE
+                            </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
+            
+            <div class="title-bar flex-none">
+                <div class="title-bar-text">Select a Theme</div>
+                <div class="title-bar-controls">
+                    <button id="close-theme-modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="window-body p-4 flex-1 overflow-y-auto">
+                
+                <div id="theme-grid" class="grid grid-cols-2 gap-4">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Change password</div>
+                <div class="title-bar-controls">
+                    <button id="close-password-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col gap-4 items-center">
+                <h2 class="text-lg font-bold mb-2">Change Password</h2>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">Current Password:</label>
+                    <input type="password" id="pwd-current" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">New Password:</label>
+                    <input type="password" id="pwd-new" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-sm text-gray-600">Confirm New Password:</label>
+                    <input type="password" id="pwd-confirm" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
+                </div>
+
+                <p id="pwd-error" class="text-red-500 text-xs hidden"></p>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Save</button>
+                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!------------------------ DELETE CONFIRMATION MODALE -->
+
+    <div id="delete-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Delete my account</div>
+                <div class="title-bar-controls">
+                    <button id="close-delete-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6 flex flex-col gap-4 items-center justify-center">
+                <h2 class="text-lg font-bold mb-2 text-red-600 text-center">Are you sure you want to delete your account?</h2>
+                <p>This action will be irreversible.</p>
+
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="confirm-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Yes, delete my account</button>
+                    <button id="cancel-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    
+</div>`;
+
+  // scripts/components/AvatarManager.ts
+  var AvatarManager = class {
+    constructor(userId) {
+      this.selectedImageSrc = "";
+      this.userId = userId;
+      this.modal = document.getElementById("picture-modal");
+      this.mainAvatar = document.getElementById("current-avatar");
+      this.previewAvatar = document.getElementById("modal-preview-avatar");
+    }
+    init() {
+      if (!this.modal || !this.mainAvatar) {
+        return;
+      }
+      const editButton = document.getElementById("edit-picture-button");
+      const closeButton = document.getElementById("close-modal");
+      const cancelButton = document.getElementById("cancel-button");
+      const okButton = document.getElementById("validation-button");
+      const browseButton = document.getElementById("browse-button");
+      const fileInput = document.getElementById("file-input");
+      const deleteButton = document.getElementById("delete-button");
+      const gridContainer = document.getElementById("modal-grid");
+      editButton?.addEventListener("click", () => this.openModal());
+      closeButton?.addEventListener("click", () => this.closeModal());
+      cancelButton?.addEventListener("click", () => this.closeModal());
+      this.modal.addEventListener("click", (e) => {
+        if (e.target === this.modal) {
+          this.closeModal();
+        }
+      });
+      if (gridContainer) {
+        const gridImages = gridContainer.querySelectorAll("img");
+        gridImages.forEach((img) => {
+          img.addEventListener("click", () => {
+            this.selectedImageSrc = img.src;
+            if (this.previewAvatar) {
+              this.previewAvatar.src = this.selectedImageSrc;
+            }
+            gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
+            img.classList.add("border-[#0078D7]");
+          });
+        });
+      }
+      browseButton?.addEventListener("click", () => fileInput?.click());
+      fileInput?.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              this.selectedImageSrc = e.target.result;
+              if (this.previewAvatar) {
+                this.previewAvatar.src = this.selectedImageSrc;
+              }
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      deleteButton?.addEventListener("click", () => {
+        const defaultAvatar = "/assets/basic/default.png";
+        this.selectedImageSrc = defaultAvatar;
+        if (this.previewAvatar) {
+          this.previewAvatar.src = defaultAvatar;
+        }
+      });
+      okButton?.addEventListener("click", async () => this.saveAvatar());
+    }
+    openModal() {
+      if (!this.modal || !this.previewAvatar || !this.mainAvatar) {
+        return;
+      }
+      this.selectedImageSrc = this.mainAvatar.src;
+      this.previewAvatar.src = this.selectedImageSrc;
+      this.modal.classList.remove("hidden");
+      this.modal.classList.add("flex");
+    }
+    closeModal() {
+      this.modal?.classList.add("hidden");
+      this.modal?.classList.remove("flex");
+    }
+    async saveAvatar() {
+      if (!this.userId) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${this.userId}/avatar`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ avatar: this.selectedImageSrc })
+        });
+        if (response.ok) {
+          const result = await response.json();
+          const cleanAvatarUrl = result.data.avatar;
+          if (this.mainAvatar) {
+            this.mainAvatar.src = cleanAvatarUrl;
+          }
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(this.userId),
+            avatar: cleanAvatarUrl,
+            username: localStorage.getItem("username")
+          });
+          this.closeModal();
+        } else {
+          alert("Error while saving");
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+      }
+    }
+  };
+
+  // scripts/components/TwoFactorManager.ts
+  var TwoFactorManager = class {
+    constructor(userId) {
+      // Elements DOM stockés pour usage interne
+      this.elements = {};
+      this.userId = userId;
+      this.is2faEnabled = localStorage.getItem("is2faEnabled") === "true";
+      this.modal2fa = document.getElementById("2fa-modal");
+      this.cacheElements();
+    }
+    cacheElements() {
+      this.elements = {
+        toggleButton: document.getElementById("2fa-modal-button"),
+        qrImg: document.getElementById("2fa-qr-code"),
+        inputQr: document.getElementById("2fa-input-code"),
+        inputEmailCode: document.getElementById("2fa-input-code-email"),
+        methodSelection: document.getElementById("method-selection"),
+        qrContent: document.getElementById("qr-content"),
+        emailContent: document.getElementById("email-content"),
+        inputEmail: document.getElementById("2fa-email-input"),
+        codeVerifSection: document.getElementById("code-verification"),
+        sendCodeBtn: document.getElementById("send-code-button")
+      };
+    }
+    init() {
+      this.updateToggleButton();
+      this.setupListeners();
+    }
+    // Met à jour l'état initial (appelé depuis ProfilePage si besoin)
+    setStatus(enabled) {
+      this.is2faEnabled = enabled;
+      this.updateToggleButton();
+    }
+    updateToggleButton() {
+      const btn = this.elements.toggleButton;
+      if (!btn) return;
+      if (this.is2faEnabled) {
+        btn.innerText = "Disable 2FA authentication";
+        btn.classList.remove("bg-green-600");
+        btn.classList.add("bg-red-600");
+      } else {
+        btn.innerText = "Enable 2FA authentication";
+        btn.classList.remove("bg-red-600");
+        btn.classList.add("bg-green-600");
+      }
+    }
+    setupListeners() {
+      this.elements.toggleButton?.addEventListener("click", () => {
+        if (this.is2faEnabled) this.disable2fa();
+        else this.openModal();
+      });
+      document.querySelector('[data-method="qr"]')?.addEventListener("click", () => this.initiateSetup("qr"));
+      document.querySelector('[data-method="email"]')?.addEventListener("click", () => this.initiateSetup("email"));
+      document.getElementById("close-2fa-modal")?.addEventListener("click", () => this.closeModal());
+      document.getElementById("confirm-2fa-button")?.addEventListener(
+        "click",
+        () => this.enable2fa(this.elements.inputQr.value.trim(), "qr")
+      );
+      document.getElementById("confirm-2fa-email")?.addEventListener(
+        "click",
+        () => this.enable2fa(this.elements.inputEmailCode.value.trim(), "email")
+      );
+      this.modal2fa?.addEventListener("click", (e) => {
+        if (e.target === this.modal2fa) this.closeModal();
+      });
+    }
+    openModal() {
+      if (!this.modal2fa) return;
+      this.modal2fa.classList.remove("hidden");
+      this.modal2fa.classList.add("flex");
+      this.switchView("selection");
+    }
+    closeModal() {
+      if (!this.modal2fa) return;
+      this.modal2fa.classList.add("hidden");
+      this.modal2fa.classList.remove("flex");
+      if (this.elements.inputQr) this.elements.inputQr.value = "";
+      if (this.elements.inputEmailCode) this.elements.inputEmailCode.value = "";
+    }
+    switchView(view) {
+      const { methodSelection, qrContent, emailContent } = this.elements;
+      [methodSelection, qrContent, emailContent].forEach((el) => {
+        el?.classList.add("hidden");
+        el?.classList.remove("flex");
+      });
+      if (view === "selection") {
+        methodSelection?.classList.remove("hidden");
+        methodSelection?.classList.add("flex");
+      } else if (view === "qr") {
+        qrContent?.classList.remove("hidden");
+        qrContent?.classList.add("flex");
+      } else if (view === "email") {
+        emailContent?.classList.remove("hidden");
+        emailContent?.classList.add("flex");
+        this.prepareEmailView();
+      }
+    }
+    prepareEmailView() {
+      const displayedEmail = document.querySelector('div[data-field="email"] .field-display')?.textContent;
+      if (displayedEmail && this.elements.inputEmail) {
+        this.elements.inputEmail.value = displayedEmail.trim();
+        this.elements.inputEmail.disabled = true;
+      }
+      this.elements.codeVerifSection?.classList.remove("hidden");
+      this.elements.codeVerifSection?.classList.add("flex");
+      this.elements.sendCodeBtn?.classList.add("hidden");
+    }
+    async initiateSetup(method) {
+      if (!this.userId) return;
+      const backendType = method === "qr" ? "APP" : "EMAIL";
+      try {
+        const response = await fetchWithAuth(`api/auth/2fa/secret`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: backendType })
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (method === "qr" && result.data?.qrCodeUrl) {
+            this.elements.qrImg.src = result.data.qrCodeUrl;
+            this.switchView("qr");
+          } else if (method === "email") {
+            this.switchView("email");
+          }
+        } else {
+          alert("Error initializing 2FA setup");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    async enable2fa(code, type) {
+      if (!code || code.length < 6) {
+        alert("Invalid code");
+        return;
+      }
+      const backendType = type === "qr" ? "APP" : "EMAIL";
+      try {
+        const response = await fetchWithAuth(`api/auth/2fa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code, type: backendType })
+        });
+        if (response.ok) {
+          this.is2faEnabled = true;
+          localStorage.setItem("is2faEnabled", "true");
+          this.updateToggleButton();
+          this.closeModal();
+          alert("2FA enabled!");
+        } else {
+          const res = await response.json();
+          alert(res.message || "Invalid code");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    async disable2fa() {
+      if (!confirm("Disable 2FA?")) return;
+      try {
+        const response = await fetchWithAuth(`api/auth/2fa`, { method: "DELETE" });
+        if (response.ok) {
+          this.is2faEnabled = false;
+          localStorage.setItem("is2faEnabled", "false");
+          this.updateToggleButton();
+          alert("2FA disabled");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/controllers/ProfilePage.ts
+  function render3() {
+    return ProfilePage_default;
+  }
+  function applyTheme(themeKey) {
+    const theme = appThemes[themeKey] || appThemes["basic"];
+    localStorage.setItem("userTheme", themeKey);
+    const navbar = document.getElementById("main-navbar");
+    if (navbar) {
+      navbar.style.background = theme.navColor;
+    }
+    const headerIds = ["profile-header", "home-header", "dashboard-header"];
+    headerIds.forEach((id) => {
+      const header = document.getElementById(id);
+      if (header) {
+        header.style.backgroundImage = `url(${theme.headerUrl})`;
+      }
+    });
+    const body = document.getElementById("app-body");
+    if (body) {
+      body.className = "m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen";
+      body.style.background = theme.bgColor;
+      body.style.backgroundRepeat = "no-repeat";
+      body.style.backgroundAttachment = "fixed";
+    }
+    const labels = document.querySelectorAll(".theme-label");
+    labels.forEach((element) => {
+      element.style.color = theme.textColor;
+    });
+  }
+  function afterRender2() {
+    const userId = localStorage.getItem("userId");
+    const avatarManager = new AvatarManager(userId);
+    const twoFactorManager = new TwoFactorManager(userId);
+    avatarManager.init();
+    twoFactorManager.init();
+    const mainAvatar = document.getElementById("current-avatar");
+    const statusFrame = document.getElementById("current-statut");
+    const usernameDisplay = document.getElementById("username-profile");
+    const bioDisplay = document.getElementById("bio-profile");
+    const statusSelect = document.querySelector("select");
+    const fieldContainers = document.querySelectorAll(".flex.flex-row.gap-2[data-field]");
+    let currentUserEmail = "";
+    const statusImages3 = {
+      "available": "/assets/basic/status_frame_online_large.png",
+      "online": "/assets/basic/status_frame_online_large.png",
+      "busy": "/assets/basic/status_frame_busy_large.png",
+      "away": "/assets/basic/status_frame_away_large.png",
+      "invisible": "/assets/basic/status_frame_offline_large.png"
+    };
+    const statusMapping = {
+      "Available": "available",
+      "Busy": "busy",
+      "Away": "away",
+      "Appear offline": "invisible"
+    };
+    const reverseStatusMapping = {
+      "available": "Available",
+      "online": "Available",
+      "busy": "Busy",
+      "away": "Away",
+      "invisible": "Appear offline"
+    };
+    const themeButton = document.getElementById("theme-button");
+    const themeModal = document.getElementById("theme-modal");
+    const closeThemeModal = document.getElementById("close-theme-modal");
+    const themeGrid = document.getElementById("theme-grid");
+    const currentTheme = localStorage.getItem("userTheme") || "basic";
+    applyTheme(currentTheme);
+    let selectedThemeElement = null;
+    themeButton?.addEventListener("click", () => {
+      themeModal?.classList.remove("hidden");
+      themeModal?.classList.add("flex");
+    });
+    const closeThemeFunc = () => {
+      themeModal?.classList.add("hidden");
+      themeModal?.classList.remove("flex");
+    };
+    closeThemeModal?.addEventListener("click", closeThemeFunc);
+    if (themeGrid && themeGrid.children.length === 0) {
+      Object.entries(appThemes).forEach(([key, theme]) => {
+        const div = document.createElement("div");
+        div.className = `theme-item cursor-pointer border-2 rounded overflow-hidden transition-all hover:shadow-lg`;
+        div.dataset.themeKey = key;
+        if (key === currentTheme) {
+          div.classList.add("border-blue-500", "shadow-blue-500/50");
+          selectedThemeElement = div;
+        } else {
+          div.classList.add("border-gray-300", "hover:border-blue-500");
+        }
+        div.innerHTML = `
+				<div class="relative">
+					<div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
+					
+					<div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
+				</div>
+				
+				<div class="p-2 bg-white text-center border-t border-gray-200">
+					<span class="text-sm font-bold text-gray-800">${theme.name}</span>
+				</div>
+			`;
+        div.addEventListener("click", function() {
+          const themeKey = this.dataset.themeKey;
+          if (selectedThemeElement) {
+            selectedThemeElement.classList.remove("border-blue-500", "shadow-lg");
+            selectedThemeElement.classList.add("border-gray-300", "hover:border-blue-500");
+          }
+          this.classList.remove("border-gray-300", "hover:border-blue-500");
+          this.classList.add("border-blue-500", "shadow-lg");
+          selectedThemeElement = this;
+          applyTheme(themeKey);
+          updateTheme(themeKey);
+          closeThemeFunc();
+        });
+        themeGrid.appendChild(div);
+      });
+    }
+    themeModal?.addEventListener("click", (e) => {
+      if (e.target === themeModal) closeThemeFunc();
+    });
+    const downloadButton = document.getElementById("download-data-button");
+    downloadButton?.addEventListener("click", async () => {
+      if (!userId) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/export`);
+        if (response.ok) {
+          const blob = await response.blob();
+          const url2 = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url2;
+          a.download = `user_data_${userId}.json`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url2);
+          a.remove();
+        } else {
+          console.error("Failed to download data");
+        }
+      } catch (error) {
+        console.error("Network error during export:", error);
+      }
+    });
+    const deleteAccountButton = document.getElementById("delete-account-button");
+    const deleteModal = document.getElementById("delete-modal");
+    const closeDeleteModalButton = document.getElementById("close-delete-modal");
+    const confirmDeleteButton = document.getElementById("confirm-delete-account-button");
+    const cancelDeleteButton = document.getElementById("cancel-delete-account-button");
+    const openDeleteModal = () => {
+      deleteModal?.classList.remove("hidden");
+      deleteModal?.classList.add("flex");
+    };
+    const closeDeleteModal = () => {
+      deleteModal?.classList.add("hidden");
+      deleteModal?.classList.remove("flex");
+    };
+    deleteAccountButton?.addEventListener("click", openDeleteModal);
+    closeDeleteModalButton?.addEventListener("click", closeDeleteModal);
+    cancelDeleteButton?.addEventListener("click", closeDeleteModal);
+    deleteModal?.addEventListener("click", (e) => {
+      if (e.target === deleteModal) {
+        closeDeleteModal();
+      }
+    });
+    confirmDeleteButton?.addEventListener("click", async () => {
+      if (!userId) {
+        return;
+      }
+      const confirmation = confirm("This action is irreversible. Are you really sure?");
+      if (!confirmation) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}`, {
+          method: "DELETE"
+        });
+        if (response.ok) {
+          alert("Your account has been deleted. You will be redirected.");
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("userId");
+          localStorage.removeItem("userTheme");
+          localStorage.removeItem("username");
+          window.history.pushState({}, "", "/");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          const result = await response.json();
+          alert(result.error?.message || "Error deleting account");
+          closeDeleteModal();
+        }
+      } catch (error) {
+        console.error("Network error during destruction:", error);
+        alert("Network error. Please try again.");
+      }
+    });
+    const loadUserData = async () => {
+      if (!userId) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}`);
+        if (response.ok) {
+          const user = await response.json();
+          currentUserEmail = user.email || "";
+          const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
+          if (statResponse.ok) {
+            const jsonResponse = await statResponse.json();
+            const stats = jsonResponse.data || jsonResponse;
+            const totalGame = document.getElementById("stats-total-games");
+            const wins = document.getElementById("stats-wins");
+            const losses = document.getElementById("stats-losses");
+            const winRateCalcul = document.getElementById("stats-win-rate");
+            const avgScore = document.getElementById("stats-average-score");
+            const streak = document.getElementById("stats-streak");
+            const opponent = document.getElementById("stats-opponent");
+            const favGame = document.getElementById("stats-fav-game");
+            if (stats) {
+              if (totalGame) totalGame.innerText = stats.total_games.toString();
+              if (wins) wins.innerText = stats.wins.toString();
+              if (losses) losses.innerText = stats.losses.toString();
+              if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
+              if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
+              if (opponent) opponent.innerText = stats.biggest_opponent || "-";
+              if (favGame) favGame.innerText = stats.favorite_game || "Local";
+              if (winRateCalcul) {
+                let rateValue = 0;
+                if (stats.total_games > 0) {
+                  rateValue = Math.round(stats.wins / stats.total_games * 100);
+                }
+                winRateCalcul.innerText = `${rateValue}%`;
+              }
+            }
+          } else {
+            console.warn("Could not fetch user stats");
+          }
+          if (user.theme) {
+            localStorage.setItem("userTheme", user.theme);
+            applyTheme(user.theme);
+          }
+          if (user.avatar_url && mainAvatar) {
+            mainAvatar.src = user.avatar_url;
+          }
+          if (user.is2faEnabled !== void 0) {
+            twoFactorManager.setStatus(user.is2faEnabled);
+          }
+          fieldContainers.forEach((container) => {
+            const fieldName = container.dataset.field;
+            const display = container.querySelector(".field-display");
+            const input = container.querySelector(".field-input");
+            if (fieldName && display && input) {
+              let value2;
+              if (fieldName === "alias") {
+                value2 = user.alias || "";
+                if (usernameDisplay) {
+                  usernameDisplay.innerText = value2;
+                }
+              } else if (fieldName === "bio") {
+                value2 = user.bio || "";
+                if (bioDisplay) {
+                  bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
+                }
+              } else if (fieldName === "email") {
+                value2 = user.email || "";
+              } else if (fieldName === "password") {
+                value2 = "********";
+              }
+              if (value2 !== void 0) {
+                display.innerText = value2 || (fieldName === "email" ? "No email" : "Empty");
+                if (fieldName !== "password") {
+                  input.placeholder = value2 || "Empty";
+                }
+              }
+            }
+          });
+          if (user.status) {
+            const normalizedStatus = user.status.toLowerCase();
+            const statusValue = reverseStatusMapping[normalizedStatus] || "Appear offline";
+            if (statusSelect) statusSelect.value = statusValue;
+            updateStatusFrame(normalizedStatus);
+          }
+          fieldContainers.forEach((container) => {
+            if (container.dataset.field === "password") {
+              return;
+            }
+            const display = container.querySelector(".field-display");
+            const input = container.querySelector(".field-input");
+            const changeButton = container.querySelector(".change-button");
+            const confirmButton = container.querySelector(".confirm-button");
+            if (display && input && changeButton && confirmButton) {
+              const fieldElements = { container, display, input, changeButton, confirmButton };
+              setupField(fieldElements, container.dataset.field);
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Erreur while charging profile:", error);
+      }
+    };
+    const updateStatusFrame = (status) => {
+      if (statusFrame && statusImages3[status]) {
+        statusFrame.src = statusImages3[status];
+      }
+    };
+    loadUserData();
+    const updateUsername = async (newUsername) => {
+      if (!userId || !newUsername.trim()) {
+        return false;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/alias`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ alias: newUsername })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert("Username updated successfully!");
+          if (usernameDisplay) {
+            usernameDisplay.innerText = newUsername;
+          }
+          localStorage.setItem("username", newUsername);
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(userId),
+            username: newUsername
+          });
+          return true;
+        } else {
+          console.error("Error while updating username");
+          if (result.error && result.error.message) {
+            alert(result.error.message);
+          } else {
+            alert("Error while saving username");
+          }
+          return false;
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Error while saving username");
+        return false;
+      }
+    };
+    const updateBio = async (newBio) => {
+      if (!userId) {
+        return false;
+      }
+      const MAX_BIO_LENGTH = 70;
+      const trimmedBio = newBio.trim();
+      if (trimmedBio.length > MAX_BIO_LENGTH) {
+        console.error("	Error: Bio is longer than the 70 characters limits.");
+        alert(`Bio cannot be longer than ${MAX_BIO_LENGTH} characteres.`);
+        return false;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/bio`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bio: trimmedBio })
+        });
+        if (response.ok) {
+          if (bioDisplay) {
+            bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+          }
+          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+            userId: Number(userId),
+            bio: trimmedBio,
+            username: localStorage.getItem("username")
+          });
+          return true;
+        } else {
+          console.error("Error updating bio");
+          alert("Error updating bio");
+          return false;
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Error updating bio");
+        return false;
+      }
+    };
+    const updateEmail = async (newEmail) => {
+      if (!userId || !newEmail.trim()) {
+        return false;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/email`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: newEmail })
+        });
+        const user = await response.json();
+        if (response.ok) {
+          alert("Email updated successfully!");
+          currentUserEmail = newEmail;
+          return true;
+        } else {
+          console.error(user.error.message);
+          alert(user.error.message);
+          return false;
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Error saving email");
+        return false;
+      }
+    };
+    const updateTheme = async (newTheme) => {
+      if (!userId) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/theme`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme: newTheme })
+        });
+        if (response.ok) {
+          localStorage.setItem("userTheme", newTheme);
+        } else {
+          console.error("Failed to save theme to database");
+        }
+      } catch (error) {
+        console.error("Network error saving theme:", error);
+      }
+    };
+    const setupField = (elements2, fieldName) => {
+      const { display, input, changeButton, confirmButton } = elements2;
+      let initialValue = display.innerText;
+      const MAX_BIO_LENGTH = 70;
+      const charCountElement = fieldName === "bio" ? elements2.container.querySelector(".char-count") : null;
+      const updateCharCount = (currentLength) => {
+        if (charCountElement) {
+          charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
+          if (currentLength > MAX_BIO_LENGTH) {
+            charCountElement.classList.add("text-red-500");
+            charCountElement.classList.remove("text-gray-500");
+          } else {
+            charCountElement.classList.remove("text-red-500");
+            charCountElement.classList.add("text-gray-500");
+          }
+        }
+      };
+      const enableEditMode = () => {
+        initialValue = fieldName === "password" ? "" : display.innerText;
+        display.classList.add("hidden");
+        input.classList.remove("hidden");
+        input.disabled = false;
+        if (fieldName !== "password") {
+          input.value = "";
+          input.placeholder = initialValue;
+        } else {
+          input.value = "";
+        }
+        if (fieldName === "bio" && charCountElement) {
+          charCountElement.classList.remove("hidden");
+          const initialLength = initialValue.length;
+          updateCharCount(initialLength);
+        }
+        changeButton.classList.add("hidden");
+        confirmButton.classList.add("hidden");
+        input.focus();
+      };
+      const disableEditMode = (newValue) => {
+        if (fieldName !== "password") {
+          initialValue = newValue;
+        }
+        display.classList.remove("hidden");
+        input.classList.add("hidden");
+        input.disabled = true;
+        if (fieldName === "password") {
+          display.innerText = "********";
+        } else {
+          display.innerText = newValue;
+          input.value = "";
+          input.placeholder = newValue;
+        }
+        if (fieldName === "bio" && charCountElement) {
+          charCountElement.classList.add("hidden");
+        }
+        changeButton.classList.remove("hidden");
+        confirmButton.classList.add("hidden");
+      };
+      changeButton.addEventListener("click", enableEditMode);
+      input.addEventListener("input", () => {
+        const currentValue = input.value;
+        let isChanged = false;
+        let isValid = true;
+        const trimmedValue = currentValue.trim();
+        if (fieldName === "bio") {
+          updateCharCount(currentValue.length);
+          if (currentValue.length > MAX_BIO_LENGTH) {
+            isValid = false;
+          }
+          const initialTrimmedValue = initialValue.trim();
+          isChanged = trimmedValue.length > 0 && trimmedValue !== initialTrimmedValue;
+        } else if (fieldName === "password") {
+          isChanged = currentValue.length > 0;
+        } else {
+          isChanged = trimmedValue !== initialValue.trim() && trimmedValue.length > 0;
+        }
+        if (isChanged && isValid) {
+          confirmButton.classList.remove("hidden");
+        } else {
+          confirmButton.classList.add("hidden");
+        }
+      });
+      confirmButton.addEventListener("click", async () => {
+        const newValue = input.value.trim();
+        let updateSuccessful = false;
+        switch (fieldName) {
+          case "alias":
+            updateSuccessful = await updateUsername(newValue);
+            break;
+          case "bio":
+            updateSuccessful = await updateBio(newValue);
+            break;
+          case "email":
+            updateSuccessful = await updateEmail(newValue);
+            break;
+          default:
+            updateSuccessful = true;
+        }
+        if (updateSuccessful) {
+          disableEditMode(newValue);
+        }
+      });
+      input.addEventListener("blur", (e) => {
+        if (e.relatedTarget !== confirmButton) {
+          const isConfirmedVisible = !confirmButton.classList.contains("hidden");
+          if (isConfirmedVisible) {
+            disableEditMode(fieldName === "password" ? display.innerText : initialValue);
+          } else {
+            disableEditMode(fieldName === "password" ? display.innerText : initialValue);
+          }
+        }
+      });
+      input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          const isConfirmedVisible = !confirmButton.classList.contains("hidden");
+          if (isConfirmedVisible) {
+            confirmButton.click();
+          } else {
+            input.blur();
+          }
+        }
+      });
+    };
+    const updateStatus = async (newStatus) => {
+      if (!userId) {
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (response.ok) {
+          updateStatusFrame(newStatus);
+          localStorage.setItem("userStatus", newStatus);
+          const username = localStorage.getItem("username");
+          SocketService_default.getInstance().socket?.emit("notifyStatusChange", {
+            userId: Number(userId),
+            status: newStatus,
+            username
+          });
+        } else {
+          console.error("Error updating status");
+          alert("Error updating status");
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        alert("Error updating status");
+      }
+    };
+    statusSelect?.addEventListener("change", () => {
+      const selectedValue = statusSelect.value;
+      const statusKey = statusMapping[selectedValue];
+      if (statusKey) {
+        updateStatus(statusKey);
+      }
+    });
+    const pwdModal = document.getElementById("password-modal");
+    const closePwdButton = document.getElementById("close-password-modal");
+    const cancelPwdButton = document.getElementById("cancel-password-button");
+    const savePwdButton = document.getElementById("save-password-button");
+    const currentPwdInput = document.getElementById("pwd-current");
+    const newPwdInput = document.getElementById("pwd-new");
+    const confirmPwdInput = document.getElementById("pwd-confirm");
+    const pwdError = document.getElementById("pwd-error");
+    const passwordContainer = document.querySelector('div[data-field="password"]');
+    const openPwdModalButton = passwordContainer?.querySelector(".change-button");
+    const resetPwdForm = () => {
+      if (currentPwdInput) {
+        currentPwdInput.value = "";
+      }
+      if (newPwdInput) {
+        newPwdInput.value = "";
+      }
+      if (confirmPwdInput) {
+        confirmPwdInput.value = "";
+      }
+      if (pwdError) {
+        pwdError.innerText = "";
+        pwdError.classList.add("hidden");
+      }
+    };
+    const closePwdModal = () => {
+      pwdModal?.classList.add("hidden");
+      pwdModal?.classList.remove("flex");
+      resetPwdForm();
+    };
+    openPwdModalButton?.addEventListener("click", () => {
+      pwdModal?.classList.remove("hidden");
+      pwdModal?.classList.add("flex");
+    });
+    closePwdButton?.addEventListener("click", closePwdModal);
+    cancelPwdButton?.addEventListener("click", closePwdModal);
+    savePwdButton?.addEventListener("click", async () => {
+      const oldPass = currentPwdInput.value;
+      const newPass = newPwdInput.value;
+      const confirmPass = confirmPwdInput.value;
+      if (!oldPass || !newPass || !confirmPass) {
+        if (pwdError) {
+          pwdError.innerText = "All inputs are required.";
+          pwdError.classList.remove("hidden");
+        }
+        return;
+      }
+      if (newPass !== confirmPass) {
+        console.log("newpass: , confirmpass:", newPass, confirmPass);
+        if (pwdError) {
+          pwdError.innerText = "These are not the same. Try again";
+          pwdError.classList.remove("hidden");
+        }
+        return;
+      }
+      if (newPass.length < 8) {
+        if (pwdError) {
+          pwdError.innerText = "Password must be at least 8 characters.";
+          pwdError.classList.remove("hidden");
+        }
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`api/user/${userId}/password`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ oldPass, newPass, confirmPass })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert("Password updated successfully!");
+          closePwdModal();
+        } else {
+          if (pwdError) {
+            console.log("pwdError");
+            pwdError.innerText = result.error?.message || "Error updating password";
+            pwdError.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("Catched error:", error);
+        if (pwdError) {
+          pwdError.innerText = "Network error.";
+          pwdError.classList.remove("hidden");
+        }
+      }
+    });
+    pwdModal?.addEventListener("click", (e) => {
+      if (e.target === pwdModal) closePwdModal();
+    });
+  }
+
+  // scripts/pages/NotFound.ts
+  function NotFoundPage() {
+    return `
+		<div class="p-8 text-center">
+			<h1 class="text-6xl font-bold text-red-500 mb-4">
+				Not found, try again
+			</h1>
+			<p class="text-2xl text-gray-300">
+				404 not found that's it
+			</p>
+			<a href="/" class="mt-4 inline-block text-blue-400 hover:underline">
+				Go back to the main page
+			</a>
+			</div>
+	`;
+  }
+
+  // scripts/pages/LandingPage.html
+  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
+		<!-- Picture div -->
+		<div class="relative w-[170px] h-[170px] mb-4">
+			<!-- le cadre -->
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
+			<!-- l'image -->
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
+		</div>
+		<h1 class="font-sans text-xl font-normal text-blue-950">
+			Welcome to Transcendence
+		</h1>
+		<!-- Login div -->
+		<div class="flex flex-col justify-center items-center gap-6">
+			<!-- Bouton de connexion/Register/Guest -->
+			<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
+	 		<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
+ 			<button id="guest-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Play as guest</button>
+	</div>
+</div>`;
+
+  // scripts/controllers/LandingPage.ts
+  function render4() {
+    return LandingPage_default;
+  }
+  function initLandingPage() {
+    const loginButton = document.getElementById("login-button");
+    const registerButton = document.getElementById("register-button");
+    const guestButton = document.getElementById("guest-button");
+    const guestError = document.getElementById("guest-error");
+    const handleNavigation = (path) => {
+      window.history.pushState({}, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    };
+    loginButton?.addEventListener("click", () => {
+      handleNavigation("/login");
+    });
+    registerButton?.addEventListener("click", () => {
+      handleNavigation("/register");
+    });
+    guestButton?.addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/user/guest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.accessToken) {
+            sessionStorage.setItem("accessToken", data.accessToken);
+          }
+          if (data.userId) {
+            sessionStorage.setItem("userId", data.userId.toString());
+          }
+          sessionStorage.setItem("isGuest", "true");
+          sessionStorage.setItem("userRole", "guest");
+          try {
+            const userResponse = await fetch(`/api/users/${data.userId}`, {
+              method: "GET",
+              headers: {
+                "Authorization": `Bearer ${data.accessToken}`,
+                "Content-Type": "application/json"
+              }
+            });
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData.alias) {
+                sessionStorage.setItem("username", userData.alias);
+              }
+            }
+          } catch (fetchErr) {
+            console.error("Cannot retrieve guest username", fetchErr);
+          }
+          handleNavigation("/guest");
+        } else {
+          console.error("Error: guest creation");
+        }
+      } catch (err) {
+        console.error("Network error while guest login: ", err);
+        if (guestError) {
+          guestError.textContent = "Network error. Please try again";
+          guestError.classList.remove("hidden");
+        }
+      }
+    });
+  }
+
+  // scripts/pages/RegisterPage.html
+  var RegisterPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+		<!-- Main div -->
+	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
+		<!-- Picture div -->
+		<div class="relative w-[170px] h-[170px] mb-4">
+			<!-- le cadre -->
+			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
+			<!-- l'image -->
+			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
+		</div>
+		<h1 class="font-sans text-xl font-normal text-blue-950">
+			Sign up to Transcendence
+		</h1>
+		<!-- Login div -->
+		<div class="flex flex-col justify-center items-center gap-6">
+			<div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">
+				<!-- Username -->
+				<input type="alias" placeholder="faufaudu49" id="alias-input"
+					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+
+				<!-- Email -->
+				<input type="email" placeholder="Example555@hotmail.com" id="email-input"
+					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+		
+				<!-- Mot de passe -->
+				<input type="password" placeholder="Enter your password" id="password-input"
+					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
+				<div class="flex flex-col items-center justify-center">
+					<p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+				</div>
+			</div>
+			<!-- Bouton de register -->
+			<div class="flex flex-col gap-2 w-48">
+				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
+			</div>
+	</div>
+</div>`;
+
+  // scripts/controllers/RegisterPage.ts
+  function render5() {
+    return RegisterPage_default;
+  }
+  function handleRegister() {
+    const button = document.getElementById("register-button");
+    const errorElement = document.getElementById("error-message");
+    if (!button) {
+      console.error("Can't find register button in DOM");
+      return;
+    }
+    button.addEventListener("click", async () => {
+      const email = document.getElementById("email-input").value;
+      const password = document.getElementById("password-input").value;
+      const alias2 = document.getElementById("alias-input").value;
+      if (errorElement) {
+        errorElement.classList.add("hidden");
+        errorElement.textContent = "";
+      }
+      if (!alias2 || !password || !email) {
+        if (errorElement) {
+          errorElement.textContent = "Please fill all inputs";
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      try {
+        const response = await fetch("/api/user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ alias: alias2, email, password })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          sessionStorage.removeItem("isGuest");
+          sessionStorage.removeItem("userRole");
+          const { accessToken, userId } = result;
+          if (accessToken) {
+            localStorage.setItem("accessToken", accessToken);
+          }
+          if (userId) {
+            localStorage.setItem("userId", userId.toString());
+          }
+          if (userId) {
+            try {
+              const userRes = await fetch(`/api/user/${userId}`, {
+                headers: { "Authorization": `Bearer ${accessToken}` }
+              });
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+                if (userData.status) {
+                  const statusSaved = userData.status === "online" ? "available" : userData.status;
+                  localStorage.setItem("userStatus", statusSaved);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
+          }
+          window.history.pushState({}, "", "/home");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          console.error("Login error:", result.error.message);
+          if (errorElement) {
+            errorElement.textContent = result.error.message || "Authentication failed";
+            errorElement.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        if (errorElement) {
+          errorElement.textContent = "Network error, please try again REGISTER PAGE";
+          errorElement.classList.remove("hidden");
+        }
+      }
+    });
+  }
+  function registerEvents() {
+    handleRegister();
+  }
+
+  // scripts/pages/GuestPage.html
+  var GuestPage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+    </div>
+
+    <div class="absolute z-10 top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+        
+        <div class="flex justify-center items-center flex-1 min-h-0">
+
+            <div class="window w-[500px] min-w-[500px] flex flex-col">
+                <div class="title-bar">
+                    <div class="title-bar-text">Guest Mode</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize"></button>
+                        <button aria-label="Maximize"></button>
+                        <button aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm">
+                    
+                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">
+                        <div class="flex flex-col items-center">
+                            <h1 class="text-2xl font-bold text-blue-900 p-4">Welcome on transcendence</h1>
+                            <p class="text-lg text-gray-700 italic text-center border-b border-gray-500 p-4">You are actually playing as a guest. If you want to access any game's feature, you need to register!</p>
+                            <p class="text-sm text-gray-500 mt-4">Select a mode to start playing</p>
+                        </div>
+
+                        <div class="flex flex-col gap-6 px-10">
+                            <button id="local-game" 
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
+                                LOCAL GAME
+                            </button>
+
+                            <button id="remote-game" 
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
+                                REMOTE GAME
+                            </button>
+
+                            <button id="tournament-game" 
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
+                                TOURNAMENT
+                            </button>
+                        </div>
+                    </div>  
+                </div>
+            </div>
+
+
+            <!-- <div class="window flex flex-col flex-1 min-w-0"> <div class="title-bar">
+                    <div class="title-bar-text">Guest Chat</div>
+                </div>
+                <div class="window-body flex flex-col flex-1 bg-white p-2">
+                    <div id="chat-messages" class="flex-1 overflow-y-auto mb-2 border border-gray-300 p-2"></div>
+                    <input type="text" id="chat-input" placeholder="Say hello..." class="w-full border p-1">
+                    </div>
+            </div> -->
+        </div>
+    </div>
+</div>`;
+
+  // scripts/controllers/GuestPage.ts
+  function render6() {
+    return GuestPage_default;
+  }
+  function afterRender3() {
+    const localButton = document.getElementById("local-game");
+    const remoteButton = document.getElementById("remote-game");
+    const tournamentButton = document.getElementById("tournament-game");
+    const handleNavigation = (path, state = {}) => {
+      window.history.pushState(state, "", path);
+      const navEvent = new PopStateEvent("popstate", { state });
+      window.dispatchEvent(navEvent);
+    };
+    if (localButton) {
+      localButton.addEventListener("click", () => {
+        console.log("Local game starting");
+        handleNavigation("/game", { gameMode: "local" });
+      });
+    } else {
+      console.log("Error: Button local-game cannot be found in the DOM");
+    }
+    if (remoteButton) {
+      remoteButton.addEventListener("click", () => {
+        console.log("Remote game starting");
+        handleNavigation("/game", { gameMode: "remote" });
+      });
+    } else {
+      console.log("Error: Button remote-game cannot be found in the DOM");
+    }
+    if (tournamentButton) {
+      tournamentButton.addEventListener("click", () => {
+        console.log("Tournament game starting");
+        handleNavigation("/game", { gameMode: "tournament" });
+      });
+    } else {
+      console.log("Error: Button tournament-game cannot be found in the DOM");
+    }
+    try {
+      const guestChat = new Chat();
+      guestChat.init();
+      guestChat.joinChannel("general_guest");
+      guestChat.addSystemMessage("Welcome to Guest Mode. Select a game mode to start chatting with your opponents.");
+    } catch (e) {
+      console.error("Error charging chat:", e);
+    }
+  }
+
+  // scripts/pages/LocalGame.html
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    \n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
+
+  // scripts/pages/RemoteGame.html
+  var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+    </div>
+
+    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">
+        
+        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">
+
+            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">
+                <div class="title-bar">
+                    <div class="title-bar-text">Games</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize"></button>
+                        <button aria-label="Maximize"></button>
+                        <button aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
+    
+                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
+                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>
+                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
+                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>
+                    </div>
+
+                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
+                    
+                    
+                    
+                    
+                    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                        <div class="window w-[600px] shadow-xl">
+                            <div class="title-bar">
+                                <div class="title-bar-text">Start the game</div>
+                                <div class="title-bar-controls">
+                                    <button aria-label="Close"></button>
+                                </div>
+                            </div>
+
+                            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
+  
+                                <fieldset class="border-2 border-gray-300 p-2 mt-2">
+                                    <div class="flex flex-row items-center gap-2 mb-3 relative">
+                                        <label class="text-sm font-semibold">Choose your ball :</label>
+                                        
+                                        <div class="relative">
+                                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
+                                            </button>
+
+                                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>
+                                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                                                    </div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" id="ball-value" value="/assets/game/smile.png">
+                                    </div>
+
+                                    <div class="flex flex-row gap-2">
+                                        <label class="text-sm font-semibold">Choose your background :</label>
+                                        
+                                        <div class="relative">
+                                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
+                                            </button>
+
+                                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
+                                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                                                </div>
+                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
+                                                    Reset color
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" id="bg-value" value="#E8F4F8">
+                                    </div>
+                                </fieldset>
+
+                                <div class="flex justify-center mt-4">
+                                    <button id="start-game-btn"
+                                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        PLAY (QUEUE)
+                                    </button>
+                                </div>
+                                <div class="text-center text-xs text-gray-500" id="queue-status"></div>
+
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+					<div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                            <div class="title-bar bg-yellow-500">
+                                <div class="title-bar-text text-black">Ready, steady, go!</div>
+                            </div>
+                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
+                            </div>
+                        </div>
+                    </div>
+
+
+					<div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                            <div class="title-bar bg-yellow-500">
+                                <div class="title-bar-text text-black">End of the game</div>
+                            </div>
+                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">???</div>                                
+                                <button id="quit-remote-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                    Return to Menu
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+
+                </div>
+            </div>
+
+            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">
+				<div class="title-bar">
+					<div class="title-bar-text">Game chat</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+						<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+								
+							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+								<p>Chat room</p>
+								<div class="relative self-start mt-2">
+									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
+										<img src="/assets/chat/meatball.png"
+											 alt="options"
+											 class="w-6 h-6 object-contain"
+											 style="width: 15px; height: 15px; vertical-align: -25px;">
+									</button>
+	
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
+		
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+													<img src="/assets/basic/view_profile.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
+												View profile
+											</button>
+										</div>
+	
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/game_notification.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
+												Invite to play
+											</button>
+										</div>
+	
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/block.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
+												Block user
+											</button>
+										</div>
+	
+									</div>
+	
+								</div>
+							</div>
+	
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+	
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="Type in your message" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+	
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+	
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+	
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+	
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+	
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+	
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+	
+										</div>
+									</button>
+	
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+	
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+															
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+	
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+	
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+	
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
+						</div>
+					</div>
+				</div>
+			</div> 
+        </div>
+    </div>
+</div>`;
+
+  // scripts/pages/TournamentPage.html
+  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Arena</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                        <div class="window w-[600px] bg-white shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament setup</div>\n                            </div>\n                            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>\n                                \n                                <div class="flex flex-col gap-1">\n                                    <label class="font-bold text-sm">Tournament name:</label>\n                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urN\xD4\xEE\xEF d33s b0ggggg0\xF4\xF4ssss">\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>\n                                    <div class="grid grid-cols-2 gap-4">\n                                        <div>\n                                            <label class="text-xs font-bold">Player 1 (You):</label>\n                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 2:</label>\n                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 3:</label>\n                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 4:</label>\n                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>\n                                    <div class="flex flex-row items-center gap-8 justify-center">\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Ball :</label>\n                                            <div class="relative">\n                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                </div>\n                                            </div>\n                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                        </div>\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Background :</label>\n                                            <div class="relative">\n                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                            </div>\n                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    START TOURNAMENT\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament</div>\n                            </div>\n\n                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                    TOURNAMENT IS ABOUT TO START\n                                </h2>\n\n                                <div class="flex flex-col gap-6 w-full items-center">\n\n                                    <!-- SEMI FINALS -->\n                                    <div class="flex flex-row justify-between w-full px-8">\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 1\n                                            </span>\n                                            <span id="bracket-sf1" class="match-display"></span>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 2\n                                            </span>\n                                            <span id="bracket-sf2" class="match-display"></span>\n                                        </div>\n                                    </div>\n\n                                    <!-- FINAL -->\n                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                            Final\n                                        </span>\n                                        <span id="bracket-final" class="match-display final-match"></span>\n                                    </div>\n\n                                </div>\n\n                                <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                <p id="bracket-status-msg" class="text-gray-600 italic">\n                                    Ready for the next match...\n                                </p>\n\n                                <button\n                                    id="bracket-continue-btn"\n                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    CONTINUE TO MATCH\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n\n                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                            <div class="title-bar bg-blue-800">\n                                <div class="title-bar-text text-white">Next match</div>\n                            </div>\n                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">SEMI-FINAL 1</h2>\n                                \n                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">VS</div>\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                </div>\n\n                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">The game will start as soon as you click Play.</p>\n\n                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    PLAY !\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the tournament</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					    </div>\n				    </div>\n			    </div> \n            </div>\n        </div>\n    </div>\n</div>';
+
+  // scripts/game/Paddle.ts
+  var Paddle = class {
+    constructor(x, y, imageSrc = "/assets/basic/block.png") {
+      this.image = null;
+      this.x = x;
+      this.y = y;
+      this.width = 10;
+      this.height = 100;
+      this.speed = 5;
+      this.color = "white";
+      if (imageSrc) {
+        this.image = new Image();
+        this.image.src = imageSrc;
+      }
+    }
+    move(up) {
+      if (up) {
+        this.y -= this.speed;
+      } else {
+        this.y += this.speed;
+      }
+    }
+    draw(ctx) {
+      if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      } else {
+        ctx.fillStyle = "white";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+      }
+    }
+    reset(canvasHeight) {
+      this.y = canvasHeight / 2 - this.height / 2;
+    }
+  };
+  var Paddle_default = Paddle;
+
+  // scripts/game/Ball.ts
+  var Ball = class {
+    constructor(x, y, imageSrc) {
+      this.image = null;
+      this.x = x;
+      this.y = y;
+      this.radius = 10;
+      this.speed = 5;
+      this.velocityX = 5;
+      this.velocityY = 5;
+      if (imageSrc && imageSrc !== "classic") {
+        this.image = new Image();
+        this.image.src = imageSrc;
+      }
+    }
+    update(canvas) {
+      this.x += this.velocityX;
+      this.y += this.velocityY;
+      if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+        this.velocityY = -this.velocityY;
+      }
+    }
+    draw(ctx) {
+      if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
+        ctx.drawImage(
+          this.image,
+          this.x - this.radius * 1.5,
+          this.y - this.radius * 1.5,
+          this.radius * 3,
+          this.radius * 3
+        );
+      } else {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.closePath();
+      }
+    }
+    reset(canvas, direction = 1) {
+      this.x = canvas.width / 2;
+      this.y = canvas.height / 2;
+      this.velocityX = 5 * direction;
+      this.velocityY = 5;
+    }
+  };
+  var Ball_default = Ball;
+
+  // scripts/game/Game.ts
+  var Game = class {
+    // --------------------
+    constructor(canvas, ctx, input, ballImageSrc) {
+      // --- REMOTE PROPS ---
+      this.isRemote = false;
+      this.roomId = null;
+      this.playerRole = null;
+      this.socket = null;
+      this.canvas = canvas;
+      this.ctx = ctx;
+      this.input = input;
+      this.score = { player1: 0, player2: 0 };
+      const paddleImg = "/assets/basic/paddle.png";
+      this.paddle1 = new Paddle_default(30, canvas.height / 2 - 50, paddleImg);
+      this.paddle2 = new Paddle_default(canvas.width - 40, canvas.height / 2 - 50, paddleImg);
+      this.ball = new Ball_default(canvas.width / 2, canvas.height / 2, ballImageSrc);
+      this.isRunning = false;
+    }
+    stop() {
+      this.isRunning = false;
+      if (this.socket) {
+        this.socket.off("gameState");
+        this.socket.off("gameEnded");
+      }
+    }
+    pause() {
+      this.isRunning = false;
+    }
+    resume() {
+      if (!this.isRunning) {
+        this.isRunning = true;
+        console.log("gameloop");
+        this.gameLoop();
+      }
+    }
+    resetScore() {
+      this.score = { player1: 0, player2: 0 };
+      this.notifyScoreUpdate();
+    }
+    // Fonction pour démarrer le jeu en remote
+    startRemote(roomId, role) {
+      console.log("startRemote Initial score:", this.score);
+      this.isRemote = true;
+      this.roomId = roomId;
+      this.playerRole = role;
+      this.score = { player1: 0, player2: 0 };
+      const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      this.socket = socketService.getGameSocket();
+      if (!this.socket) {
+        console.error("Cannot start remote game: No socket connection");
+        return;
+      }
+      this.socket.off("gameState");
+      this.socket.off("gameEnded");
+      console.log(`Starting Remote Game in room ${roomId} as ${role}`);
+      this.notifyScoreUpdate();
+      this.socket.on("gameState", (data) => {
+        this.updateFromRemote(data);
+      });
+      this.socket.on("gameEnded", (data) => {
+        this.isRunning = false;
+        if (this.onGameEnd) {
+          this.onGameEnd(data);
+        } else {
+          alert(`Game Over! Final Score: ${data.finalScore.player1} - ${data.finalScore.player2}`);
+        }
+        this.socket.off("gameState");
+        this.socket.off("gameEnded");
+      });
+      this.isRunning = true;
+      this.gameLoop();
+    }
+    start() {
+      this.isRunning = true;
+      this.notifyScoreUpdate();
+      this.gameLoop();
+    }
+    gameLoop() {
+      if (this.isRunning) {
+        this.update(this.canvas);
+        this.render();
+        requestAnimationFrame(() => this.gameLoop());
+      }
+    }
+    update(canvas) {
+      const inputState = this.input.getInput();
+      if (this.isRemote && this.socket && this.roomId) {
+        const up = (this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up) || inputState.player1.up;
+        const down = (this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
+        this.socket.emit("gameInput", {
+          roomId: this.roomId,
+          up,
+          down
+        });
+        return;
+      }
+      if (inputState.player1.up) {
+        this.paddle1.move(true);
+      }
+      if (inputState.player1.down) {
+        this.paddle1.move(false);
+      }
+      if (inputState.player2.up) {
+        this.paddle2.move(true);
+      }
+      if (inputState.player2.down) {
+        this.paddle2.move(false);
+      }
+      if (this.paddle1.y < 0) this.paddle1.y = 0;
+      if (this.paddle1.y + this.paddle1.height > canvas.height) this.paddle1.y = canvas.height - this.paddle1.height;
+      if (this.paddle2.y < 0) this.paddle2.y = 0;
+      if (this.paddle2.y + this.paddle2.height > canvas.height) this.paddle2.y = canvas.height - this.paddle2.height;
+      this.ball.update(canvas);
+      this.checkCollisions();
+    }
+    // Nouvelle fonction pour mettre à jour l'état visuel depuis le serveur
+    updateFromRemote(data) {
+      if (this.roomId && data.roomId && data.roomId !== this.roomId) {
+        console.warn("\u{1F47B} Paquet fant\xF4me ignor\xE9 venant de :", data.roomId);
+        return;
+      }
+      const SERVER_WIDTH = 800;
+      const SERVER_HEIGHT = 600;
+      const scaleX = this.canvas.width / SERVER_WIDTH;
+      const scaleY = this.canvas.height / SERVER_HEIGHT;
+      this.ball.x = data.ball.x * scaleX;
+      this.ball.y = data.ball.y * scaleY;
+      this.paddle1.y = data.paddle1.y * scaleY;
+      this.paddle1.x = data.paddle1.x * scaleX;
+      this.paddle2.y = data.paddle2.y * scaleY;
+      this.paddle2.x = data.paddle2.x * scaleX;
+      if (this.score.player1 !== data.score.player1 || this.score.player2 !== data.score.player2) {
+        console.log("\u{1F4C8} Score update re\xE7u du serveur:", data.score);
+        this.score = data.score;
+        this.notifyScoreUpdate();
+      }
+    }
+    render() {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.strokeStyle = "white";
+      this.ctx.lineWidth = 4;
+      this.ctx.setLineDash([10, 10]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.canvas.width / 2, 0);
+      this.ctx.lineTo(this.canvas.width / 2, this.canvas.height);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+      this.paddle1.draw(this.ctx);
+      this.paddle2.draw(this.ctx);
+      this.ball.draw(this.ctx);
+    }
+    // ...
+    checkCollisions() {
+      if (this.ball.velocityX < 0) {
+        if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x) {
+          if (this.ball.y + this.ball.radius >= this.paddle1.y && this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
+            let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
+            let angle = hitPos * (Math.PI / 4);
+            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed *= 1.05;
+            this.ball.velocityX = speed * Math.cos(angle);
+            this.ball.velocityY = speed * Math.sin(angle);
+            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+          }
+        }
+      }
+      if (this.ball.velocityX > 0) {
+        if (this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
+          if (this.ball.y + this.ball.radius >= this.paddle2.y && this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
+            let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
+            let angle = hitPos * (Math.PI / 4);
+            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed *= 1.05;
+            this.ball.velocityX = -speed * Math.cos(angle);
+            this.ball.velocityY = speed * Math.sin(angle);
+            this.ball.x = this.paddle2.x - this.ball.radius;
+          }
+        }
+      }
+      if (this.ball.x < 0) {
+        this.score.player2++;
+        this.notifyScoreUpdate();
+        this.reset(1);
+      } else if (this.ball.x > this.canvas.width) {
+        this.score.player1++;
+        this.notifyScoreUpdate();
+        this.reset(-1);
+      }
+    }
+    reset(direction = 1) {
+      this.ball.reset(this.canvas, direction);
+      this.paddle1.reset(this.canvas.height);
+      this.paddle2.reset(this.canvas.height);
+    }
+    notifyScoreUpdate() {
+      if (this.onScoreChange) {
+        this.onScoreChange(this.score);
+      }
+    }
+    // reset() {
+    //     this.ball.reset(this.canvas);
+    //     this.paddle1.reset(this.canvas.height);
+    //     this.paddle2.reset(this.canvas.height);
+    // }
+  };
+  var Game_default = Game;
+
+  // scripts/game/Input.ts
+  var Input = class {
+    constructor() {
+      this.keys = {};
+      this.addEventListeners();
+    }
+    addEventListeners() {
+      window.addEventListener("keydown", (event) => {
+        this.keys[event.key] = true;
+      });
+      window.addEventListener("keyup", (event) => {
+        this.keys[event.key] = false;
+      });
+    }
+    getInput() {
+      return {
+        player1: {
+          up: this.keys["w"],
+          down: this.keys["s"]
+        },
+        player2: {
+          up: this.keys["ArrowUp"],
+          down: this.keys["ArrowDown"]
+        }
+      };
+    }
+  };
+  var Input_default = Input;
+
+  // scripts/components/game/GameUI.ts
+  function getSqlDate() {
+    const now = /* @__PURE__ */ new Date();
+    return now.toISOString().slice(0, 19).replace("T", " ");
+  }
+  function launchConfetti(duration = 3e3) {
+    const colors2 = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
+    const confettiCount = 150;
+    const container = document.body;
+    const confettiContainer = document.createElement("div");
+    confettiContainer.id = "confetti-container";
+    confettiContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden;
+    `;
+    container.appendChild(confettiContainer);
+    for (let i = 0; i < confettiCount; i++) {
+      createConfetti(confettiContainer, colors2);
+    }
+    setTimeout(() => {
+      confettiContainer.remove();
+    }, duration);
+  }
+  function createConfetti(container, colors2) {
+    const confetti = document.createElement("div");
+    const color2 = colors2[Math.floor(Math.random() * colors2.length)];
+    const size = Math.random() * 10 + 5;
+    const startX = Math.random() * window.innerWidth;
+    const endX = startX + (Math.random() - 0.5) * 200;
+    const rotation = Math.random() * 360;
+    const duration = Math.random() * 2 + 2;
+    const delay = Math.random() * 0.5;
+    confetti.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        background-color: ${color2};
+        top: -20px;
+        left: ${startX}px;
+        opacity: 1;
+        transform: rotate(${rotation}deg);
+        border-radius: ${Math.random() > 0.5 ? "50%" : "0"}; /* Rond ou carr\xE9 */
+        animation: fall ${duration}s ease-in ${delay}s forwards;
+    `;
+    container.appendChild(confetti);
+    const style = document.createElement("style");
+    if (!document.getElementById("confetti-animation-style")) {
+      style.id = "confetti-animation-style";
+      style.textContent = `
+            @keyframes fall {
+                0% {
+                    transform: translateY(0) rotate(0deg);
+                    opacity: 1;
+                }
+                100% {
+                    transform: translateY(${window.innerHeight + 50}px) translateX(${endX - startX}px) rotate(${rotation + 720}deg);
+                    opacity: 0;
+                }
+            }
+        `;
+      document.head.appendChild(style);
+    }
+  }
+  function showVictoryModal(winnerName, gameChat2) {
+    const modal = document.getElementById("local-summary-modal");
+    const winnerText = document.getElementById("winner-name");
+    const quitLocalBtn = document.getElementById("quit-local-btn");
+    const quitRemoteBtn = document.getElementById("quit-remote-btn");
+    if (modal && winnerText) {
+      winnerText.innerText = winnerName;
+      modal.classList.remove("hidden");
+      if (gameChat2) {
+        gameChat2.addSystemMessage(`${winnerName} wins the match!`);
+      }
+      launchConfetti(4e3);
+    }
+    const backAction = () => {
+      window.history.back();
+    };
+    quitLocalBtn?.addEventListener("click", backAction);
+    quitRemoteBtn?.addEventListener("click", backAction);
+  }
+  function showRemoteEndModal(winnerName, message) {
+    if (document.getElementById("remote-end-modal")) {
+      return;
+    }
+    const modalHtml = `
+        <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-controls"></div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
+
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">
+                            ${winnerName}
+                        </p>
+                        <p class="text-sm text-gray-600 font-semibold italic text-center">
+                            ${message}
+                        </p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        <button id="remote-quit-btn"
+                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm
+                                    px-6 py-4 text-base font-semibold shadow-sm
+                                    hover:from-gray-200 hover:to-gray-400
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                    transition-all duration-200 hover:shadow-md"
+                                style="width: 200px; padding: 4px;">
+                            RETURN TO MENU
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+    const div = document.createElement("div");
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+    document.getElementById("remote-quit-btn")?.addEventListener("click", () => {
+      document.getElementById("remote-end-modal")?.remove();
+      window.history.back();
+    });
+  }
+  function launchCountdown(onComplete) {
+    const modal = document.getElementById("countdown-modal");
+    const text = document.getElementById("countdown-text");
+    if (!modal || !text) {
+      onComplete();
+      return;
+    }
+    modal.classList.remove("hidden");
+    let count = 3;
+    text.innerText = count.toString();
+    text.className = "text-[150px] font-black text-white animate-bounce";
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        text.innerText = count.toString();
+      } else if (count === 0) {
+        text.innerText = "GO!";
+        text.classList.remove("animate-bounce");
+        text.classList.add("animate-ping");
+      } else {
+        clearInterval(interval);
+        modal.classList.add("hidden");
+        onComplete();
+      }
+    }, 1e3);
+  }
+
+  // scripts/components/game/LocalGameManager.ts
+  var LocalGameManager = class {
+    constructor(context) {
+      this.context = context;
+    }
+    init() {
+      const modal = document.getElementById("game-setup-modal");
+      const startButton = document.getElementById("start-game-btn");
+      const nameInput = document.getElementById("opponent-name");
+      const errorMsg = document.getElementById("error-message");
+      const ballButton = document.getElementById("ball-selector-button");
+      const ballDropdown = document.getElementById("ball-selector-dropdown");
+      const ballGrid = document.getElementById("ball-grid");
+      const selectedBallImg = document.getElementById("selected-ball-img");
+      const ballValueInput = document.getElementById("ball-value");
+      const bgButton = document.getElementById("bg-selector-button");
+      const bgDropdown = document.getElementById("bg-selector-dropdown");
+      const bgGrid = document.getElementById("bg-grid");
+      const selectedBgPreview = document.getElementById("selected-bg-preview");
+      const bgValueInput = document.getElementById("bg-value");
+      const gameField = document.getElementById("left");
+      const bgResetButton = document.getElementById("bg-reset-button");
+      const player2Display = document.getElementById("player-2-name");
+      if (modal) modal.classList.remove("hidden");
+      if (ballButton && ballDropdown && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded border border-transparent hover:border-blue-300 flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" alt="${key}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              selectedBallImg.src = imgUrl;
+              ballValueInput.value = imgUrl;
+              ballDropdown.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
+          }
+        });
+        ballButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (!ballDropdown.contains(target) && !ballButton.contains(target)) {
+            ballDropdown.classList.add("hidden");
+          }
+        });
+      }
+      if (bgButton && bgDropdown && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color2 = gameBackgrounds[key];
+          const div = document.createElement("div");
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full";
+          div.style.padding = "4px";
+          div.style.display = "flex";
+          div.style.justifyContent = "center";
+          div.style.alignItems = "center";
+          div.style.width = "36px";
+          div.style.height = "36px";
+          const colorCircle = document.createElement("div");
+          colorCircle.className = "w-full h-full rounded-full border-2 border-gray-300";
+          colorCircle.style.backgroundColor = color2;
+          div.appendChild(colorCircle);
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            selectedBgPreview.style.backgroundColor = color2;
+            bgValueInput.value = color2;
+            if (gameField) {
+              gameField.style.backgroundColor = color2;
+            }
+            bgDropdown.classList.toggle("hidden");
+          });
+          bgGrid.appendChild(div);
+        });
+        if (bgResetButton) {
+          bgResetButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const resetColor = "#E8F4F8";
+            if (selectedBgPreview) selectedBgPreview.style.backgroundColor = resetColor;
+            if (bgValueInput) bgValueInput.value = resetColor;
+            if (gameField) gameField.style.backgroundColor = resetColor;
+            bgDropdown.classList.toggle("hidden");
+          });
+        }
+        bgButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (!bgDropdown.contains(target) && !bgButton.contains(target)) {
+            bgDropdown.classList.add("hidden");
+          }
+        });
+      }
+      if (startButton) {
+        let p1Alias = localStorage.getItem("username");
+        const newStartBtn = startButton.cloneNode(true);
+        startButton.parentNode?.replaceChild(newStartBtn, startButton);
+        newStartBtn.addEventListener("click", () => {
+          const opponentName = nameInput.value.trim();
+          if (opponentName === "") {
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            nameInput.classList.add("border-red-500");
+            return;
+          }
+          if (this.context.chat) {
+            this.context.chat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
+          }
+          const selectedBall = ballValueInput ? ballValueInput.value : "classic";
+          const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
+          if (player2Display) {
+            player2Display.innerText = opponentName;
+          }
+          if (gameField) {
+            gameField.style.backgroundColor = selectedBg;
+          }
+          if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }
+          launchCountdown(() => {
+            const canvasContainer = document.getElementById("game-canvas-container");
+            if (!canvasContainer) {
+              console.error("Conteneur canvas introuvable, creation auto...");
+              const container = document.createElement("div");
+              container.id = "game-canvas-container";
+              container.className = "w-full flex-1";
+              gameField.appendChild(container);
+            } else {
+              canvasContainer.innerHTML = "";
+            }
+            const scoreBoard = document.getElementById("score-board");
+            console.log("localGameManager line 184");
+            const canvas = document.createElement("canvas");
+            canvas.id = "pong-canvas";
+            canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
+            canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+            console.log("heigh:", canvasContainer?.clientHeight);
+            console.log("width:", canvasContainer?.clientWidth);
+            canvas.style.width = "100%";
+            canvas.style.height = "100%";
+            canvas.style.backgroundColor = selectedBg;
+            const targetContainer = document.getElementById("game-canvas-container") || gameField;
+            targetContainer.appendChild(canvas);
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              const input = new Input_default();
+              if (this.context.getGame()) {
+                this.context.getGame().isRunning = false;
+              }
+              const newGame = new Game_default(canvas, ctx, input, selectedBall);
+              this.context.setGame(newGame);
+              newGame.onScoreChange = (score) => {
+                if (scoreBoard) {
+                  scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+                }
+              };
+              newGame.start();
+              const startDate = getSqlDate();
+              const localLoop = setInterval(async () => {
+                const activeGame2 = this.context.getGame();
+                if (!activeGame2 || !activeGame2.isRunning) {
+                  clearInterval(localLoop);
+                  return;
+                }
+                if (activeGame2.score.player1 >= 11 || activeGame2.score.player2 >= 11) {
+                  activeGame2.isRunning = false;
+                  clearInterval(localLoop);
+                  const p1Score = activeGame2.score.player1;
+                  const p2Score = activeGame2.score.player2;
+                  const p1Alias2 = localStorage.getItem("username") || "Player 1";
+                  const p2Alias = opponentName;
+                  const p1Wins = p1Score > p2Score;
+                  const winnerAlias = p1Wins ? p1Alias2 : p2Alias;
+                  const userIdStr = localStorage.getItem("userId");
+                  if (userIdStr) {
+                    const userId = Number(userIdStr);
+                    await this.saveLocalGameToApi(p1Alias2, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId);
+                  }
+                  showVictoryModal(winnerAlias, this.context.chat);
+                }
+              }, 500);
+            }
+          });
+        });
+      }
+      if (nameInput) {
+        nameInput.addEventListener("input", () => {
+          if (errorMsg) errorMsg.classList.add("hidden");
+          nameInput.classList.remove("border-red-500");
+        });
+      }
+    }
+    //================================================
+    //================= SAVING DATAS =================
+    //================================================
+    async saveLocalGameToApi(p1Alias, p2Alias, p1Score, p2Score, winnerAlias, startDate, userId) {
+      try {
+        const endDate = getSqlDate();
+        const response = await fetchWithAuth("api/game", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "local",
+            winner: winnerAlias,
+            status: "finished",
+            round: "1v1",
+            startDate,
+            endDate,
+            p1: {
+              alias: p1Alias,
+              score: p1Score,
+              userId
+            },
+            p2: {
+              alias: p2Alias,
+              score: p2Score,
+              userId: null
+            }
+          })
+        });
+        if (!response.ok) {
+          console.error("Error while saving local game");
+        } else {
+          console.log("Local game successfully saved");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/components/game/RemoteGameManager.ts
+  var RemoteGameManager = class {
+    constructor(context) {
+      this.currentP1Alias = "Player 1";
+      this.currentP2Alias = "Player 2";
+      this.context = context;
+    }
+    init() {
+      const socketService = SocketService_default.getInstance();
+      socketService.connectGame();
+      const gameSocket = socketService.getGameSocket();
+      if (!gameSocket) {
+        console.error("Cannot connect to server");
+        return;
+      }
+      const btn = document.getElementById("start-game-btn");
+      const status = document.getElementById("queue-status");
+      const modal = document.getElementById("game-setup-modal");
+      const container = document.getElementById("game-canvas-container");
+      const ballBtn = document.getElementById("ball-selector-button");
+      const ballDrop = document.getElementById("ball-selector-dropdown");
+      const ballGrid = document.getElementById("ball-grid");
+      const ballImg = document.getElementById("selected-ball-img");
+      const ballInput = document.getElementById("ball-value");
+      const bgBtn = document.getElementById("bg-selector-button");
+      const bgDrop = document.getElementById("bg-selector-dropdown");
+      const bgGrid = document.getElementById("bg-grid");
+      const bgPrev = document.getElementById("selected-bg-preview");
+      const bgInput = document.getElementById("bg-value");
+      const bgResetBtn = document.getElementById("bg-reset-button");
+      const gameContainer = document.getElementById("left");
+      if (ballBtn && ballDrop && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (ballImg) ballImg.src = imgUrl;
+              if (ballInput) ballInput.value = imgUrl;
+              ballDrop.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
+          }
+        });
+        ballBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
+        });
+      }
+      if (bgBtn && bgDrop && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color2 = gameBackgrounds[key];
+          const div = document.createElement("div");
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+          div.style.width = "35px";
+          div.style.height = "35px";
+          div.style.padding = "2px";
+          const circle = document.createElement("div");
+          circle.className = "w-full h-full rounded-full border border-gray-300";
+          circle.style.backgroundColor = color2;
+          div.appendChild(circle);
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (bgPrev) bgPrev.style.backgroundColor = color2;
+            if (bgInput) bgInput.value = color2;
+            if (gameContainer) gameContainer.style.backgroundColor = color2;
+            bgDrop.classList.add("hidden");
+          });
+          bgGrid.appendChild(div);
+        });
+        if (bgResetBtn) {
+          bgResetBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const resetColor = "#E8F4F8";
+            if (bgPrev) bgPrev.style.backgroundColor = resetColor;
+            if (bgInput) bgInput.value = resetColor;
+            if (gameContainer) gameContainer.style.backgroundColor = resetColor;
+            bgDrop.classList.add("hidden");
+          });
+        }
+        bgBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
+        });
+      }
+      const startGameFromData = async (data, p1Alias, p2Alias) => {
+        console.log("startGameFromData");
+        const gameSocket2 = SocketService_default.getInstance().getGameSocket();
+        if (gameSocket2) {
+          console.log("Nettoyage pr\xE9ventif des \xE9couteurs sockets");
+          gameSocket2.off("gameState");
+          gameSocket2.off("gameEnded");
+          gameSocket2.off("opponentLeft");
+        }
+        if (this.context.getGame()) {
+          console.log("\u{1F6D1} Arr\xEAt de l'ancien jeu");
+          this.context.getGame().stop();
+          this.context.getGame().onScoreChange = void 0;
+          this.context.setGame(null);
+        }
+        const scoreBoard = document.getElementById("score-board");
+        if (scoreBoard) {
+          scoreBoard.innerText = "0 - 0";
+        }
+        const myAlias = await getPlayerAlias();
+        const myId = Number(localStorage.getItem("userId"));
+        let opponentId = data.opponent ? Number(data.opponent) : null;
+        const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+        const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
+        let p1Id = data.role === "player1" ? myId : opponentId;
+        let p2Id = data.role === "player2" ? myId : opponentId;
+        let opponentAlias = "Opponent";
+        if (data.role === "player1") {
+          this.currentP1Alias = myAlias;
+          if (remoteP2Alias) {
+            opponentAlias = remoteP2Alias;
+          }
+          this.currentP2Alias = opponentAlias;
+        } else {
+          if (remoteP1Alias) {
+            opponentAlias = remoteP1Alias;
+          }
+          this.currentP1Alias = opponentAlias;
+          this.currentP2Alias = myAlias;
+        }
+        const p1Display = document.getElementById("player-1-name");
+        const p2Display = document.getElementById("player-2-name");
+        if (p1Display && p2Display) {
+          p1Display.innerText = data.role === "player1" ? `${this.currentP1Alias} (Me)` : this.currentP1Alias;
+          p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} (Me)` : this.currentP2Alias;
+        }
+        let gameStartDate = getSqlDate();
+        if (data.opponent) {
+          fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            if (userData && userData.alias) {
+              const realOpponentName = userData.alias;
+              if (data.role === "player1") {
+                this.currentP2Alias = realOpponentName;
+                if (p2Display) {
+                  p2Display.innerText = realOpponentName;
+                }
+              } else {
+                this.currentP1Alias = realOpponentName;
+                if (p1Display) {
+                  p1Display.innerText = realOpponentName;
+                }
+              }
+            }
+          }).catch((e) => console.error("Error retrieving opponent alias:", e));
+        }
+        if (this.context.chat) {
+          this.context.chat.joinChannel(data.roomId);
+          this.context.chat.addSystemMessage(`Match started!`);
+        }
+        if (status) {
+          status.innerText = "We found an opponent ! Starting the game...";
+        }
+        if (modal) {
+          modal.style.display = "none";
+        }
+        if (container) {
+          container.innerHTML = "";
+          const canvas = document.createElement("canvas");
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+          canvas.style.width = "100%";
+          canvas.style.height = "100%";
+          container.appendChild(canvas);
+          if (canvas.width === 0) {
+            canvas.width = 800;
+          }
+          if (canvas.height === 0) {
+            canvas.height = 600;
+          }
+          const ctx = canvas.getContext("2d");
+          const input = new Input_default();
+          const selectedBallSkin = ballInput ? ballInput.value : "classic";
+          if (ctx) {
+            if (this.context.getGame()) {
+              this.context.getGame().stop();
+              this.context.setGame(null);
+            }
+            const newGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+            newGame.resetScore();
+            this.context.setGame(newGame);
+            gameSocket2.off("opponentLeft");
+            gameSocket2.on("opponentLeft", async (eventData) => {
+              const activeGame2 = this.context.getGame();
+              if (activeGame2) {
+                activeGame2.isRunning = false;
+                activeGame2.stop();
+                gameSocket2.off("gameState");
+                gameSocket2.off("gameEnded");
+                const s1 = activeGame2.score.player1;
+                const s2 = activeGame2.score.player2;
+                let winnerAlias = "";
+                if (data.role === "player1") {
+                  winnerAlias = this.currentP1Alias;
+                } else {
+                  winnerAlias = this.currentP2Alias;
+                }
+                await this.saveRemoteGameToApi(
+                  this.currentP1Alias,
+                  s1,
+                  p1Id,
+                  this.currentP2Alias,
+                  s2,
+                  p2Id,
+                  winnerAlias,
+                  gameStartDate
+                );
+                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                this.context.setGame(null);
+              }
+            });
+            newGame.onGameEnd = async (endData) => {
+              let winnerAlias = "Winner";
+              if (endData.winner === "player1") {
+                winnerAlias = this.currentP1Alias;
+              } else if (endData.winner === "player2") {
+                winnerAlias = this.currentP2Alias;
+              }
+              const activeGame2 = this.context.getGame();
+              if (activeGame2) {
+                const s1 = activeGame2.score.player1;
+                const s2 = activeGame2.score.player2;
+                if (data.role === "player1") {
+                  await this.saveRemoteGameToApi(
+                    this.currentP1Alias,
+                    s1,
+                    p1Id,
+                    this.currentP2Alias,
+                    s2,
+                    p2Id,
+                    winnerAlias,
+                    gameStartDate
+                  );
+                }
+              }
+              showVictoryModal(winnerAlias, this.context.chat);
+              this.context.setGame(null);
+            };
+            newGame.onScoreChange = (score) => {
+              const sb = document.getElementById("score-board");
+              if (sb) {
+                sb.innerText = `${score.player1} - ${score.player2}`;
+              }
+            };
+            launchCountdown(() => {
+              const activeGame2 = this.context.getGame();
+              if (activeGame2) {
+                gameStartDate = getSqlDate();
+                activeGame2.startRemote(data.roomId, data.role);
+              }
+            });
+          }
+        }
+      };
+      const pendingMatch = sessionStorage.getItem("pendingMatch");
+      if (pendingMatch) {
+        const data = JSON.parse(pendingMatch);
+        sessionStorage.removeItem("pendingMatch");
+        startGameFromData(data);
+      }
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (btn) {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", async () => {
+          if (!gameSocket) {
+            alert("Error: lost connexion to game server");
+            return;
+          }
+          newBtn.disabled = true;
+          if (privateRoomId) {
+            if (status) {
+              status.innerText = "Waiting for your friend in private room...";
+            }
+            newBtn.innerText = "WAITING FOR FRIEND...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              sessionStorage.removeItem("privateGameId");
+              startGameFromData(data);
+            });
+            const selectedBall = ballInput ? ballInput.value : "classic";
+            gameSocket.emit("joinPrivateGame", {
+              roomId: privateRoomId,
+              skin: selectedBall
+            });
+          } else {
+            if (status) {
+              status.innerText = "Looking for a rival...";
+            }
+            newBtn.innerText = "WAITING...";
+            gameSocket.off("matchFound");
+            gameSocket.on("matchFound", (data) => {
+              startGameFromData(data);
+            });
+            gameSocket.emit("joinQueue");
+          }
+        });
+      }
+    }
+    async saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
+      try {
+        const endDate = getSqlDate();
+        const response = await fetchWithAuth("api/game", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "remote",
+            winner: winnerAlias,
+            status: "finished",
+            round: "1v1",
+            startDate,
+            endDate,
+            p1: { alias: p1Alias, score: p1Score, userId: p1Id },
+            p2: { alias: p2Alias, score: p2Score, userId: p2Id }
+          })
+        });
+        if (!response.ok) {
+          console.error("Error while saving remote game");
+        } else {
+          console.log("remote game successfully saved");
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/components/game/TournamentManager.ts
+  var TournamentManager = class {
+    constructor(context) {
+      this.tournamentState = null;
+      this.context = context;
+    }
+    init() {
+      const setupModal = document.getElementById("tournament-setup-modal");
+      if (setupModal) {
+        setupModal.classList.remove("hidden");
+      }
+      const nameInput = document.getElementById("tournament-name-input");
+      const player1Input = document.getElementById("player1-input");
+      const player2Input = document.getElementById("player2-input");
+      const player3Input = document.getElementById("player3-input");
+      const player4Input = document.getElementById("player4-input");
+      const startButton = document.getElementById("start-tournament-btn");
+      const errorDiv = document.getElementById("setup-error");
+      this.initTournamentSelectors();
+      const username = localStorage.getItem("username");
+      const isGuest = sessionStorage.getItem("userRole") === "guest";
+      getPlayerAlias().then((alias2) => {
+        player1Input.value = alias2;
+        if (!isGuest) {
+          player1Input.readOnly = true;
+          player1Input.classList.add("bg-gray-200", "cursor-not-allowed");
+        } else {
+          player1Input.readOnly = false;
+          player1Input.classList.remove("bg-gray-200", "cursor-not-allowed");
+        }
+      });
+      startButton?.addEventListener("click", () => {
+        const tName = nameInput.value.trim();
+        const players = [
+          player1Input.value.trim(),
+          player2Input.value.trim(),
+          player3Input.value.trim(),
+          player4Input.value.trim()
+        ];
+        if (!tName || players.some((p) => !p)) {
+          if (errorDiv) {
+            errorDiv.innerText = "Please fill all fields.";
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        const uniqueCheck = new Set(players);
+        if (uniqueCheck.size !== 4) {
+          if (errorDiv) {
+            errorDiv.innerText = "All player aliases must be unique.";
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        const ballVal = document.getElementById("tour-ball-value")?.value || "classic";
+        const bgVal = document.getElementById("tour-bg-value")?.value || "#E8F4F8";
+        this.startTournamentLogic(tName, players, ballVal, bgVal);
+      });
+    }
+    initTournamentSelectors() {
+      const ballBtn = document.getElementById("tour-ball-selector-button");
+      const ballDrop = document.getElementById("tour-ball-selector-dropdown");
+      const ballGrid = document.getElementById("tour-ball-grid");
+      const ballImg = document.getElementById("tour-selected-ball-img");
+      const ballInput = document.getElementById("tour-ball-value");
+      const bgBtn = document.getElementById("tour-bg-selector-button");
+      const bgDrop = document.getElementById("tour-bg-selector-dropdown");
+      const bgGrid = document.getElementById("tour-bg-grid");
+      const bgPrev = document.getElementById("tour-selected-bg-preview");
+      const bgInput = document.getElementById("tour-bg-value");
+      const bgResetBtn = document.getElementById("bg-reset-button");
+      const gameContainer = document.getElementById("left");
+      if (ballBtn && ballDrop && ballGrid) {
+        const uniqueUrls = /* @__PURE__ */ new Set();
+        ballGrid.innerHTML = "";
+        Object.keys(ballEmoticons).forEach((key) => {
+          const imgUrl = ballEmoticons[key];
+          if (!uniqueUrls.has(imgUrl)) {
+            uniqueUrls.add(imgUrl);
+            const div = document.createElement("div");
+            div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+            div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+            div.addEventListener("click", (e) => {
+              e.stopPropagation();
+              if (ballImg) {
+                ballImg.src = imgUrl;
+              }
+              if (ballInput) {
+                ballInput.value = imgUrl;
+              }
+              ballDrop.classList.add("hidden");
+            });
+            ballGrid.appendChild(div);
+          }
+        });
+        ballBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          ballDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!ballDrop.contains(e.target) && !ballBtn.contains(e.target)) ballDrop.classList.add("hidden");
+        });
+      }
+      if (bgBtn && bgDrop && bgGrid) {
+        bgGrid.innerHTML = "";
+        Object.keys(gameBackgrounds).forEach((key) => {
+          const color2 = gameBackgrounds[key];
+          const div = document.createElement("div");
+          div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+          div.style.width = "35px";
+          div.style.height = "35px";
+          div.style.padding = "2px";
+          const circle = document.createElement("div");
+          circle.className = "w-full h-full rounded-full border border-gray-300";
+          circle.style.backgroundColor = color2;
+          div.appendChild(circle);
+          div.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (bgPrev) {
+              bgPrev.style.backgroundColor = color2;
+            }
+            if (bgInput) {
+              bgInput.value = color2;
+            }
+            if (gameContainer) {
+              gameContainer.style.backgroundColor = color2;
+            }
+            bgDrop.classList.add("hidden");
+          });
+          bgGrid.appendChild(div);
+        });
+        if (bgResetBtn) {
+          bgResetBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const resetColor = "#E8F4F8";
+            if (bgPrev) {
+              bgPrev.style.backgroundColor = resetColor;
+            }
+            if (bgInput) {
+              bgInput.value = resetColor;
+            }
+            if (gameContainer) {
+              gameContainer.style.backgroundColor = resetColor;
+            }
+            bgDrop.classList.add("hidden");
+          });
+        }
+        bgBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDrop.classList.toggle("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDrop.contains(e.target) && !bgBtn.contains(e.target)) bgDrop.classList.add("hidden");
+        });
+      }
+    }
+    startTournamentLogic(name, playersAliases, ballSkin, bgSkin) {
+      document.getElementById("tournament-setup-modal")?.classList.add("hidden");
+      const userIdStr = localStorage.getItem("userId");
+      const userIdNb = userIdStr ? Number(userIdStr) : null;
+      const playersObjects = playersAliases.map((alias2, index2) => ({
+        alias: alias2,
+        userId: index2 === 0 ? userIdNb : null,
+        score: 0
+      }));
+      const startDate = getSqlDate();
+      this.tournamentState = {
+        name,
+        startedAt: startDate,
+        allPlayers: playersObjects,
+        matches: [
+          { round: "semi_final_1", winner: null, p1: playersObjects[0], p2: playersObjects[1], startDate, endDate: startDate },
+          // 1er duo
+          { round: "semi_final_2", winner: null, p1: playersObjects[2], p2: playersObjects[3], startDate, endDate: startDate },
+          // 2eme duo
+          { round: "final", winner: null, p1: null, p2: null, startDate, endDate: startDate }
+          // finale
+        ],
+        currentMatchIdx: 0,
+        currentStep: "semi_final_1",
+        settings: { ballSkin, bgSkin }
+      };
+      if (this.context.chat) {
+        this.context.chat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
+      }
+      this.showBracketModal();
+    }
+    showBracketModal() {
+      const bracketModal = document.getElementById("tournament-bracket-modal");
+      if (!bracketModal || !this.tournamentState) {
+        return;
+      }
+      const sf1 = document.getElementById("bracket-sf1");
+      const sf2 = document.getElementById("bracket-sf2");
+      const fin = document.getElementById("bracket-final");
+      const msg = document.getElementById("bracket-status-msg");
+      const m1 = this.tournamentState.matches[0];
+      const w1 = m1.winner ? `\u2705 ${m1.winner}` : null;
+      if (sf1) {
+        sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
+      }
+      const m2 = this.tournamentState.matches[1];
+      const w2 = m2.winner ? `\u2705 ${m2.winner}` : null;
+      if (sf2) {
+        sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
+      }
+      const mf = this.tournamentState.matches[2];
+      const p1Final = mf.p1 ? mf.p1.alias : "?";
+      const p2Final = mf.p2 ? mf.p2.alias : "?";
+      if (fin) {
+        fin.innerText = mf.winner ? `\u{1F451} ${mf.winner}` : `${p1Final} vs ${p2Final}`;
+      }
+      const idx = this.tournamentState.currentMatchIdx;
+      if (msg) {
+        if (idx === 0) msg.innerText = "Next: Semi-Final 1";
+        else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
+        else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+      }
+      bracketModal.classList.remove("hidden");
+      const btn = document.getElementById("bracket-continue-btn");
+      const newBtn = btn?.cloneNode(true);
+      btn?.parentNode?.replaceChild(newBtn, btn);
+      newBtn.addEventListener("click", () => {
+        bracketModal.classList.add("hidden");
+        this.showNextMatchModal();
+      });
+    }
+    showNextMatchModal() {
+      const nextMatchModal = document.getElementById("tournament-next-match-modal");
+      const title = document.getElementById("match-title");
+      const player1Text = document.getElementById("next-p1");
+      const player2Text = document.getElementById("next-p2");
+      const playButton = document.getElementById("launch-match-btn");
+      if (!nextMatchModal || !this.tournamentState) return;
+      const matchIdx = this.tournamentState.currentMatchIdx;
+      const match = this.tournamentState.matches[matchIdx];
+      const p1Alias = match.p1 ? match.p1.alias : "???";
+      const p2Alias = match.p2 ? match.p2.alias : "???";
+      if (matchIdx === 0) {
+        if (title) title.innerText = "SEMI-FINAL 1";
+        if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+      } else if (matchIdx === 1) {
+        if (title) title.innerText = "SEMI-FINAL 2";
+        if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+      } else {
+        if (title) title.innerText = "FINALE";
+        if (this.context.chat) this.context.chat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
+      }
+      if (player1Text) player1Text.innerText = p1Alias;
+      if (player2Text) player2Text.innerText = p2Alias;
+      nextMatchModal.classList.remove("hidden");
+      const newButton = playButton.cloneNode(true);
+      playButton.parentNode.replaceChild(newButton, playButton);
+      newButton.addEventListener("click", () => {
+        nextMatchModal.classList.add("hidden");
+        if (match.p1 && match.p2) {
+          this.launchMatch(match.p1, match.p2);
+        }
+      });
+    }
+    launchMatch(p1, p2) {
+      const p1Name = document.getElementById("player-1-name");
+      const p2Name = document.getElementById("player-2-name");
+      const gameStartDate = getSqlDate();
+      if (p1Name) p1Name.innerText = p1.alias;
+      if (p2Name) p2Name.innerText = p2.alias;
+      const scoreBoard = document.getElementById("score-board");
+      if (scoreBoard) {
+        console.log("TournamentManager.ts, line 349");
+        scoreBoard.innerText = "0 - 0";
+      }
+      const container = document.getElementById("left");
+      if (container && this.tournamentState) {
+        container.style.backgroundColor = this.tournamentState.settings.bgSkin;
+      }
+      let canvasContainer = document.getElementById("game-canvas-container");
+      if (canvasContainer) {
+        canvasContainer.innerHTML = "";
+        const canvas = document.createElement("canvas");
+        canvas.id = "pong-canvas-tournament";
+        canvas.width = canvasContainer.clientWidth;
+        canvas.height = canvasContainer.clientHeight;
+        console.log("heigh:", canvasContainer.clientHeight);
+        console.log("width:", canvasContainer.clientWidth);
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvasContainer.appendChild(canvas);
+        const ctx = canvas.getContext("2d");
+        if (ctx && this.tournamentState) {
+          const input = new Input_default();
+          if (this.context.getGame()) {
+            this.context.getGame().isRunning = false;
+          }
+          const newGame = new Game_default(canvas, ctx, input, this.tournamentState.settings.ballSkin);
+          this.context.setGame(newGame);
+          newGame.onScoreChange = (score) => {
+            const scoreBoard2 = document.getElementById("score-board");
+            if (scoreBoard2) {
+              scoreBoard2.innerText = `${score.player1} - ${score.player2}`;
+            }
+          };
+          newGame.start();
+          const checkInterval = setInterval(() => {
+            const activeGame2 = this.context.getGame();
+            if (!activeGame2 || !activeGame2.isRunning) {
+              clearInterval(checkInterval);
+              return;
+            }
+            if (activeGame2.score.player1 >= 5 || activeGame2.score.player2 >= 5) {
+              activeGame2.isRunning = false;
+              clearInterval(checkInterval);
+              const winnerAlias = activeGame2.score.player1 > activeGame2.score.player2 ? p1.alias : p2.alias;
+              this.endMatch(winnerAlias, activeGame2.score.player1, activeGame2.score.player2, gameStartDate);
+            }
+          }, 500);
+        }
+      }
+    }
+    endMatch(winner, scoreP1, scoreP2, gameStartDate) {
+      if (!this.tournamentState) {
+        return;
+      }
+      const idx = this.tournamentState.currentMatchIdx;
+      const match = this.tournamentState.matches[idx];
+      match.startDate = gameStartDate;
+      match.endDate = getSqlDate();
+      match.winner = winner;
+      if (match.p1) {
+        match.p1.score = scoreP1;
+      }
+      if (match.p2) {
+        match.p2.score = scoreP2;
+      }
+      if (match.p1 && match.p1.userId) {
+        const isWinner = match.p1.alias === winner;
+      }
+      if (match.p2 && match.p2.userId) {
+        const isWinner = match.p2.alias === winner;
+      }
+      if (this.context.chat) {
+        this.context.chat.addSystemMessage(`${winner} wins the match!`);
+      }
+      if (idx === 0) {
+        const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
+        this.tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
+        this.tournamentState.currentMatchIdx++;
+        this.tournamentState.currentStep = "semi_final_2";
+        this.showBracketModal();
+      } else if (idx === 1) {
+        const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
+        this.tournamentState.matches[2].p2 = winnerObj ? { ...winnerObj } : null;
+        this.tournamentState.currentMatchIdx++;
+        this.tournamentState.currentStep = "final";
+        this.showBracketModal();
+      } else {
+        this.tournamentState.currentStep = "finished";
+        this.showSummary(winner);
+      }
+    }
+    showSummary(champion) {
+      launchConfetti(4e3);
+      const container = document.getElementById("left");
+      if (container) {
+        container.style.backgroundColor = "white";
+      }
+      const summaryModal = document.getElementById("tournament-summary-modal");
+      if (summaryModal) {
+        summaryModal.classList.remove("hidden");
+        const winnerDisplay = document.getElementById("winner-name");
+        const tourNameDisplay = document.getElementById("tour-name-display");
+        if (winnerDisplay) {
+          winnerDisplay.innerText = champion;
+        }
+        if (tourNameDisplay && this.tournamentState) {
+          tourNameDisplay.innerText = this.tournamentState.name;
+        }
+        if (this.context.chat) {
+          this.context.chat.addSystemMessage(`${champion} wins the match!`);
+        }
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          this.saveTournamentToApi(champion);
+        }
+        document.getElementById("quit-tournament-btn")?.addEventListener("click", () => {
+          window.history.back();
+        });
+        document.getElementById("quit-remote-btn")?.addEventListener("click", () => {
+          window.history.back();
+        });
+      }
+    }
+    async saveTournamentToApi(winner) {
+      if (!this.tournamentState) {
+        return;
+      } else {
+        console.log("DEBUG FRONTEND - Matches \xE0 envoyer :", this.tournamentState.matches);
+        console.log("DEBUG FRONTEND - Nombre de matches :", this.tournamentState.matches.length);
+      }
+      try {
+        await fetchWithAuth("api/game/tournaments", {
+          method: "POST",
+          body: JSON.stringify({
+            name: this.tournamentState.name,
+            winner,
+            participants: this.tournamentState.allPlayers,
+            tournamentName: this.tournamentState.name,
+            matchList: this.tournamentState.matches,
+            startedAt: this.tournamentState.startedAt
+          })
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // scripts/controllers/GamePage.ts
+  var gameChat = null;
+  var activeGame = null;
+  var spaceKeyListener = null;
+  var isNavigationBlocked = false;
+  function isGameRunning() {
+    return activeGame !== null && activeGame.isRunning;
+  }
+  async function getPlayerAlias() {
+    const isGuest = sessionStorage.getItem("userRole") === "guest";
+    if (isGuest) {
+      const cachedAlias = sessionStorage.getItem("cachedAlias");
+      if (cachedAlias) {
+        return cachedAlias;
+      }
+    }
+    const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
+    if (!userId) {
+      return "Player";
+    }
+    try {
+      const response = await fetchWithAuth(`api/user/${userId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        const alias2 = userData.alias || (isGuest ? "Guest" : "Player");
+        if (isGuest) {
+          sessionStorage.setItem("cachedAlias", alias2);
+        }
+        return alias2;
+      }
+    } catch (err) {
+      console.error("Cannot fetch player alias:", err);
+    }
+    const result = sessionStorage.getItem("username") || (isGuest ? "Guest" : "Player");
+    return result;
+  }
+  function handleBeforeUnload(e) {
+    if (isGameRunning()) {
+      e.preventDefault();
+      e.returnValue = "A game is in progress. Are you sure you want to leave?";
+      return e.returnValue;
+    }
+  }
+  function handlePopState(e) {
+    if (isGameRunning() && !isNavigationBlocked) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.history.pushState({ gameMode: window.history.state?.gameMode || "local" }, "", "/game");
+      showExitConfirmationModal();
+    }
+  }
+  function showExitConfirmationModal() {
+    if (document.getElementById("exit-confirm-modal")) {
+      return;
+    }
+    if (activeGame) {
+      activeGame.pause();
+    }
+    const modalHtml = `
+        <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+            
+            <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+                
+                <div class="title-bar">
+                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Close" id="modal-close-x"></button>
+                    </div>
+                </div>
+
+                <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
+                    
+                    <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
+                        WAIT A MINUTE !
+                    </h2>
+                    
+                    <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
+                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
+                    </div>
+
+                    <div class="flex gap-6 w-full justify-center">
+                        
+                        <button id="cancel-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                                px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                                transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            GO BACK TO GAME
+                        </button>
+                        
+                        <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                            LEAVE
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    `;
+    const div = document.createElement("div");
+    div.innerHTML = modalHtml;
+    document.body.appendChild(div);
+    document.getElementById("confirm-exit-btn")?.addEventListener("click", () => {
+      confirmExit();
+    });
+    const closeFunc = () => {
+      document.getElementById("exit-confirm-modal")?.remove();
+      if (activeGame) {
+        activeGame.resume();
+      }
+    };
+    document.getElementById("cancel-exit-btn")?.addEventListener("click", closeFunc);
+    document.getElementById("modal-close-x")?.addEventListener("click", closeFunc);
+  }
+  function confirmExit() {
+    isNavigationBlocked = true;
+    if (activeGame) {
+      const wasRemote = activeGame.isRemote;
+      const roomId = activeGame.roomId;
+      const playerRole = activeGame.playerRole;
+      activeGame.isRunning = false;
+      activeGame.stop();
+      if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
+        SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
+        const userIdStr = localStorage.getItem("userId");
+        if (userIdStr && playerRole) {
+        }
+      }
+      activeGame = null;
+    }
+    cleanup();
+    document.getElementById("exit-confirm-modal")?.remove();
+    setTimeout(() => {
+      isNavigationBlocked = false;
+      window.history.back();
+    }, 100);
+  }
+  function cleanup() {
+    if (gameChat) {
+      gameChat.destroy();
+      gameChat = null;
+    }
+    if (activeGame) {
+      activeGame.isRunning = false;
+      activeGame.stop();
+      activeGame = null;
+    }
+    if (spaceKeyListener) {
+      document.removeEventListener("keydown", spaceKeyListener);
+      spaceKeyListener = null;
+    }
+    document.getElementById("countdown-modal")?.remove();
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.removeEventListener("popstate", handlePopState);
+    isNavigationBlocked = false;
+  }
+  function render7() {
+    const state = window.history.state;
+    if (state && state.gameMode === "remote") {
+      return RemoteGame_default;
+    } else if (state && state.gameMode === "tournament") {
+      return TournamentPage_default;
+    }
+    return LocalGame_default;
+  }
+  function initGamePage(mode) {
+    const currentTheme = localStorage.getItem("userTheme") || "basic";
+    applyTheme(currentTheme);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState);
+    const player1Display = document.getElementById("player-1-name");
+    if (player1Display) {
+      getPlayerAlias().then((alias2) => {
+        player1Display.innerText = alias2;
+      });
+    }
+    if (gameChat) {
+      gameChat.destroy();
+    }
+    gameChat = new Chat();
+    gameChat.init();
+    const gameContext = {
+      setGame: (game) => {
+        activeGame = game;
+      },
+      getGame: () => activeGame,
+      chat: gameChat
+    };
+    if (mode == "remote") {
+      const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (privateRoomId) {
+        gameChat.joinChannel(`private_wait_${privateRoomId}`);
+      } else {
+        gameChat.joinChannel("remote_game_room");
+      }
+      const remoteManager = new RemoteGameManager(gameContext);
+      remoteManager.init();
+    } else if (mode == "tournament") {
+      gameChat.joinChannel("tournament_room");
+      const tournamentManager = new TournamentManager(gameContext);
+      tournamentManager.init();
+    } else {
+      gameChat.joinChannel("local_game_room");
+      const localManager = new LocalGameManager(gameContext);
+      localManager.init();
+    }
+    if (spaceKeyListener) {
+      document.removeEventListener("keydown", spaceKeyListener);
+    }
+    spaceKeyListener = (e) => {
+      if (e.code === "Space" || e.key === " ") {
+        const target = e.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+          return;
+        }
+        if (!activeGame || !activeGame.isRunning) {
+          return;
+        }
+        e.preventDefault();
+        if (gameChat) {
+          if (activeGame.isRemote) {
+            gameChat.emitWizzOnly();
+          } else {
+            const wizzContainer = document.getElementById("wizz-container");
+            gameChat.shakeElement(wizzContainer);
+          }
+        }
+      }
+    };
+    document.addEventListener("keydown", spaceKeyListener);
+  }
+
+  // scripts/pages/DashboardPage.html
+  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" style="gap: 1rem;">\n                        <label class="theme-label text-xs font-semibold text-gray-600 pr-2" style="margin-right: 8px;">Filter:</label>\n                        <input type="text" id="filter-opponent" placeholder="Rival name" class="text-xs p-1.5 border border-gray-300 rounded-sm w-[120px] text-center" style="margin-right: 8px;">\n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm bg-white p-1" style="margin-right: 8px;">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n                        \n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-bold hover:from-gray-200" style="margin-right: 12px;">Apply</button>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1" style="margin-left: 12px; margin-right: 12px;"></div>\n                        \n                        <label class="theme-label text-xs font-semibold text-gray-600 pl-1" style="margin-right: 8px;">Sort:</label>\n                        <select id="sort-order" class="text-xs border border-gray-300 rounded-sm bg-white p-1 focus:outline-none focus:border-blue-400 cursor-pointer">\n                            <option value="date-descending">Date \u2193 (Newest)</option>\n                            <option value="date-ascending">Date \u2191 (Oldest)</option>\n                            <option value="name-ascending">Rival (A-Z)</option>\n                            <option value="name-descending">Rival (Z-A)</option>\n                        </select>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0 overflow-hidden">\n                        <div class="overflow-y-auto h-full">\n                            <style>\n                                #match-history-list td {\n                                    padding-top: 12px !important;\n                                    padding-bottom: 12px !important;\n                                }\n                                #match-history-list tr {\n                                    height: 48px;\n                                }\n                            </style>\n                            <table class="w-full text-xs text-center border-collapse table-fixed">\n                                <thead class="text-gray-600 font-bold bg-gray-100 sticky top-0 shadow-sm z-10">\n                                    <tr>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Date</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-3/12">Rival</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Score</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Type</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-1/12">Round</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Result</th>\n                                    </tr>\n                                </thead>\n                                <tbody id="match-history-list" class="divide-y divide-gray-100">\n                                    <tr class="hover:bg-blue-50 transition-colors">\n                                        <td class="py-2 text-gray-500">Loading...</td>\n                                    </tr>\n                                </tbody>\n                            </table>\n                        </div>\n                    </div>\n\n\n                    <div id="pagination-controls" class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">\n                        <button id="prev-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            &lt; Previous\n                        </button>\n                        <span id="page-info" class="text-xs text-gray-600 font-semibold">Page 1</span>\n                        <button id="next-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            Next &gt;\n                        </button>\n                    </div>\n\n\n\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+
+  // node_modules/@kurkle/color/dist/color.esm.js
+  function round(v) {
+    return v + 0.5 | 0;
+  }
+  var lim = (v, l, h) => Math.max(Math.min(v, h), l);
+  function p2b(v) {
+    return lim(round(v * 2.55), 0, 255);
+  }
+  function n2b(v) {
+    return lim(round(v * 255), 0, 255);
+  }
+  function b2n(v) {
+    return lim(round(v / 2.55) / 100, 0, 1);
+  }
+  function n2p(v) {
+    return lim(round(v * 100), 0, 100);
+  }
+  var map$1 = { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, A: 10, B: 11, C: 12, D: 13, E: 14, F: 15, a: 10, b: 11, c: 12, d: 13, e: 14, f: 15 };
+  var hex = [..."0123456789ABCDEF"];
+  var h1 = (b) => hex[b & 15];
+  var h2 = (b) => hex[(b & 240) >> 4] + hex[b & 15];
+  var eq = (b) => (b & 240) >> 4 === (b & 15);
+  var isShort = (v) => eq(v.r) && eq(v.g) && eq(v.b) && eq(v.a);
+  function hexParse(str) {
+    var len = str.length;
+    var ret;
+    if (str[0] === "#") {
+      if (len === 4 || len === 5) {
+        ret = {
+          r: 255 & map$1[str[1]] * 17,
+          g: 255 & map$1[str[2]] * 17,
+          b: 255 & map$1[str[3]] * 17,
+          a: len === 5 ? map$1[str[4]] * 17 : 255
+        };
+      } else if (len === 7 || len === 9) {
+        ret = {
+          r: map$1[str[1]] << 4 | map$1[str[2]],
+          g: map$1[str[3]] << 4 | map$1[str[4]],
+          b: map$1[str[5]] << 4 | map$1[str[6]],
+          a: len === 9 ? map$1[str[7]] << 4 | map$1[str[8]] : 255
+        };
+      }
+    }
+    return ret;
+  }
+  var alpha = (a, f) => a < 255 ? f(a) : "";
+  function hexString(v) {
+    var f = isShort(v) ? h1 : h2;
+    return v ? "#" + f(v.r) + f(v.g) + f(v.b) + alpha(v.a, f) : void 0;
+  }
+  var HUE_RE = /^(hsla?|hwb|hsv)\(\s*([-+.e\d]+)(?:deg)?[\s,]+([-+.e\d]+)%[\s,]+([-+.e\d]+)%(?:[\s,]+([-+.e\d]+)(%)?)?\s*\)$/;
+  function hsl2rgbn(h, s, l) {
+    const a = s * Math.min(l, 1 - l);
+    const f = (n, k = (n + h / 30) % 12) => l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return [f(0), f(8), f(4)];
+  }
+  function hsv2rgbn(h, s, v) {
+    const f = (n, k = (n + h / 60) % 6) => v - v * s * Math.max(Math.min(k, 4 - k, 1), 0);
+    return [f(5), f(3), f(1)];
+  }
+  function hwb2rgbn(h, w, b) {
+    const rgb = hsl2rgbn(h, 1, 0.5);
+    let i;
+    if (w + b > 1) {
+      i = 1 / (w + b);
+      w *= i;
+      b *= i;
+    }
+    for (i = 0; i < 3; i++) {
+      rgb[i] *= 1 - w - b;
+      rgb[i] += w;
+    }
+    return rgb;
+  }
+  function hueValue(r, g, b, d, max) {
+    if (r === max) {
+      return (g - b) / d + (g < b ? 6 : 0);
+    }
+    if (g === max) {
+      return (b - r) / d + 2;
+    }
+    return (r - g) / d + 4;
+  }
+  function rgb2hsl(v) {
+    const range = 255;
+    const r = v.r / range;
+    const g = v.g / range;
+    const b = v.b / range;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    let h, s, d;
+    if (max !== min) {
+      d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      h = hueValue(r, g, b, d, max);
+      h = h * 60 + 0.5;
+    }
+    return [h | 0, s || 0, l];
+  }
+  function calln(f, a, b, c) {
+    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c)).map(n2b);
+  }
+  function hsl2rgb(h, s, l) {
+    return calln(hsl2rgbn, h, s, l);
+  }
+  function hwb2rgb(h, w, b) {
+    return calln(hwb2rgbn, h, w, b);
+  }
+  function hsv2rgb(h, s, v) {
+    return calln(hsv2rgbn, h, s, v);
+  }
+  function hue(h) {
+    return (h % 360 + 360) % 360;
+  }
+  function hueParse(str) {
+    const m = HUE_RE.exec(str);
+    let a = 255;
+    let v;
+    if (!m) {
+      return;
+    }
+    if (m[5] !== v) {
+      a = m[6] ? p2b(+m[5]) : n2b(+m[5]);
+    }
+    const h = hue(+m[2]);
+    const p1 = +m[3] / 100;
+    const p2 = +m[4] / 100;
+    if (m[1] === "hwb") {
+      v = hwb2rgb(h, p1, p2);
+    } else if (m[1] === "hsv") {
+      v = hsv2rgb(h, p1, p2);
+    } else {
+      v = hsl2rgb(h, p1, p2);
+    }
+    return {
+      r: v[0],
+      g: v[1],
+      b: v[2],
+      a
+    };
+  }
+  function rotate(v, deg) {
+    var h = rgb2hsl(v);
+    h[0] = hue(h[0] + deg);
+    h = hsl2rgb(h);
+    v.r = h[0];
+    v.g = h[1];
+    v.b = h[2];
+  }
+  function hslString(v) {
+    if (!v) {
+      return;
+    }
+    const a = rgb2hsl(v);
+    const h = a[0];
+    const s = n2p(a[1]);
+    const l = n2p(a[2]);
+    return v.a < 255 ? `hsla(${h}, ${s}%, ${l}%, ${b2n(v.a)})` : `hsl(${h}, ${s}%, ${l}%)`;
+  }
+  var map = {
+    x: "dark",
+    Z: "light",
+    Y: "re",
+    X: "blu",
+    W: "gr",
+    V: "medium",
+    U: "slate",
+    A: "ee",
+    T: "ol",
+    S: "or",
+    B: "ra",
+    C: "lateg",
+    D: "ights",
+    R: "in",
+    Q: "turquois",
+    E: "hi",
+    P: "ro",
+    O: "al",
+    N: "le",
+    M: "de",
+    L: "yello",
+    F: "en",
+    K: "ch",
+    G: "arks",
+    H: "ea",
+    I: "ightg",
+    J: "wh"
+  };
+  var names$1 = {
+    OiceXe: "f0f8ff",
+    antiquewEte: "faebd7",
+    aqua: "ffff",
+    aquamarRe: "7fffd4",
+    azuY: "f0ffff",
+    beige: "f5f5dc",
+    bisque: "ffe4c4",
+    black: "0",
+    blanKedOmond: "ffebcd",
+    Xe: "ff",
+    XeviTet: "8a2be2",
+    bPwn: "a52a2a",
+    burlywood: "deb887",
+    caMtXe: "5f9ea0",
+    KartYuse: "7fff00",
+    KocTate: "d2691e",
+    cSO: "ff7f50",
+    cSnflowerXe: "6495ed",
+    cSnsilk: "fff8dc",
+    crimson: "dc143c",
+    cyan: "ffff",
+    xXe: "8b",
+    xcyan: "8b8b",
+    xgTMnPd: "b8860b",
+    xWay: "a9a9a9",
+    xgYF: "6400",
+    xgYy: "a9a9a9",
+    xkhaki: "bdb76b",
+    xmagFta: "8b008b",
+    xTivegYF: "556b2f",
+    xSange: "ff8c00",
+    xScEd: "9932cc",
+    xYd: "8b0000",
+    xsOmon: "e9967a",
+    xsHgYF: "8fbc8f",
+    xUXe: "483d8b",
+    xUWay: "2f4f4f",
+    xUgYy: "2f4f4f",
+    xQe: "ced1",
+    xviTet: "9400d3",
+    dAppRk: "ff1493",
+    dApskyXe: "bfff",
+    dimWay: "696969",
+    dimgYy: "696969",
+    dodgerXe: "1e90ff",
+    fiYbrick: "b22222",
+    flSOwEte: "fffaf0",
+    foYstWAn: "228b22",
+    fuKsia: "ff00ff",
+    gaRsbSo: "dcdcdc",
+    ghostwEte: "f8f8ff",
+    gTd: "ffd700",
+    gTMnPd: "daa520",
+    Way: "808080",
+    gYF: "8000",
+    gYFLw: "adff2f",
+    gYy: "808080",
+    honeyMw: "f0fff0",
+    hotpRk: "ff69b4",
+    RdianYd: "cd5c5c",
+    Rdigo: "4b0082",
+    ivSy: "fffff0",
+    khaki: "f0e68c",
+    lavFMr: "e6e6fa",
+    lavFMrXsh: "fff0f5",
+    lawngYF: "7cfc00",
+    NmoncEffon: "fffacd",
+    ZXe: "add8e6",
+    ZcSO: "f08080",
+    Zcyan: "e0ffff",
+    ZgTMnPdLw: "fafad2",
+    ZWay: "d3d3d3",
+    ZgYF: "90ee90",
+    ZgYy: "d3d3d3",
+    ZpRk: "ffb6c1",
+    ZsOmon: "ffa07a",
+    ZsHgYF: "20b2aa",
+    ZskyXe: "87cefa",
+    ZUWay: "778899",
+    ZUgYy: "778899",
+    ZstAlXe: "b0c4de",
+    ZLw: "ffffe0",
+    lime: "ff00",
+    limegYF: "32cd32",
+    lRF: "faf0e6",
+    magFta: "ff00ff",
+    maPon: "800000",
+    VaquamarRe: "66cdaa",
+    VXe: "cd",
+    VScEd: "ba55d3",
+    VpurpN: "9370db",
+    VsHgYF: "3cb371",
+    VUXe: "7b68ee",
+    VsprRggYF: "fa9a",
+    VQe: "48d1cc",
+    VviTetYd: "c71585",
+    midnightXe: "191970",
+    mRtcYam: "f5fffa",
+    mistyPse: "ffe4e1",
+    moccasR: "ffe4b5",
+    navajowEte: "ffdead",
+    navy: "80",
+    Tdlace: "fdf5e6",
+    Tive: "808000",
+    TivedBb: "6b8e23",
+    Sange: "ffa500",
+    SangeYd: "ff4500",
+    ScEd: "da70d6",
+    pOegTMnPd: "eee8aa",
+    pOegYF: "98fb98",
+    pOeQe: "afeeee",
+    pOeviTetYd: "db7093",
+    papayawEp: "ffefd5",
+    pHKpuff: "ffdab9",
+    peru: "cd853f",
+    pRk: "ffc0cb",
+    plum: "dda0dd",
+    powMrXe: "b0e0e6",
+    purpN: "800080",
+    YbeccapurpN: "663399",
+    Yd: "ff0000",
+    Psybrown: "bc8f8f",
+    PyOXe: "4169e1",
+    saddNbPwn: "8b4513",
+    sOmon: "fa8072",
+    sandybPwn: "f4a460",
+    sHgYF: "2e8b57",
+    sHshell: "fff5ee",
+    siFna: "a0522d",
+    silver: "c0c0c0",
+    skyXe: "87ceeb",
+    UXe: "6a5acd",
+    UWay: "708090",
+    UgYy: "708090",
+    snow: "fffafa",
+    sprRggYF: "ff7f",
+    stAlXe: "4682b4",
+    tan: "d2b48c",
+    teO: "8080",
+    tEstN: "d8bfd8",
+    tomato: "ff6347",
+    Qe: "40e0d0",
+    viTet: "ee82ee",
+    JHt: "f5deb3",
+    wEte: "ffffff",
+    wEtesmoke: "f5f5f5",
+    Lw: "ffff00",
+    LwgYF: "9acd32"
+  };
+  function unpack() {
+    const unpacked = {};
+    const keys = Object.keys(names$1);
+    const tkeys = Object.keys(map);
+    let i, j, k, ok, nk;
+    for (i = 0; i < keys.length; i++) {
+      ok = nk = keys[i];
+      for (j = 0; j < tkeys.length; j++) {
+        k = tkeys[j];
+        nk = nk.replace(k, map[k]);
+      }
+      k = parseInt(names$1[ok], 16);
+      unpacked[nk] = [k >> 16 & 255, k >> 8 & 255, k & 255];
+    }
+    return unpacked;
+  }
+  var names;
+  function nameParse(str) {
+    if (!names) {
+      names = unpack();
+      names.transparent = [0, 0, 0, 0];
+    }
+    const a = names[str.toLowerCase()];
+    return a && {
+      r: a[0],
+      g: a[1],
+      b: a[2],
+      a: a.length === 4 ? a[3] : 255
+    };
+  }
+  var RGB_RE = /^rgba?\(\s*([-+.\d]+)(%)?[\s,]+([-+.e\d]+)(%)?[\s,]+([-+.e\d]+)(%)?(?:[\s,/]+([-+.e\d]+)(%)?)?\s*\)$/;
+  function rgbParse(str) {
+    const m = RGB_RE.exec(str);
+    let a = 255;
+    let r, g, b;
+    if (!m) {
+      return;
+    }
+    if (m[7] !== r) {
+      const v = +m[7];
+      a = m[8] ? p2b(v) : lim(v * 255, 0, 255);
+    }
+    r = +m[1];
+    g = +m[3];
+    b = +m[5];
+    r = 255 & (m[2] ? p2b(r) : lim(r, 0, 255));
+    g = 255 & (m[4] ? p2b(g) : lim(g, 0, 255));
+    b = 255 & (m[6] ? p2b(b) : lim(b, 0, 255));
+    return {
+      r,
+      g,
+      b,
+      a
+    };
+  }
+  function rgbString(v) {
+    return v && (v.a < 255 ? `rgba(${v.r}, ${v.g}, ${v.b}, ${b2n(v.a)})` : `rgb(${v.r}, ${v.g}, ${v.b})`);
+  }
+  var to = (v) => v <= 31308e-7 ? v * 12.92 : Math.pow(v, 1 / 2.4) * 1.055 - 0.055;
+  var from = (v) => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  function interpolate(rgb1, rgb2, t) {
+    const r = from(b2n(rgb1.r));
+    const g = from(b2n(rgb1.g));
+    const b = from(b2n(rgb1.b));
+    return {
+      r: n2b(to(r + t * (from(b2n(rgb2.r)) - r))),
+      g: n2b(to(g + t * (from(b2n(rgb2.g)) - g))),
+      b: n2b(to(b + t * (from(b2n(rgb2.b)) - b))),
+      a: rgb1.a + t * (rgb2.a - rgb1.a)
+    };
+  }
+  function modHSL(v, i, ratio) {
+    if (v) {
+      let tmp = rgb2hsl(v);
+      tmp[i] = Math.max(0, Math.min(tmp[i] + tmp[i] * ratio, i === 0 ? 360 : 1));
+      tmp = hsl2rgb(tmp);
+      v.r = tmp[0];
+      v.g = tmp[1];
+      v.b = tmp[2];
+    }
+  }
+  function clone(v, proto) {
+    return v ? Object.assign(proto || {}, v) : v;
+  }
+  function fromObject(input) {
+    var v = { r: 0, g: 0, b: 0, a: 255 };
+    if (Array.isArray(input)) {
+      if (input.length >= 3) {
+        v = { r: input[0], g: input[1], b: input[2], a: 255 };
+        if (input.length > 3) {
+          v.a = n2b(input[3]);
+        }
+      }
+    } else {
+      v = clone(input, { r: 0, g: 0, b: 0, a: 1 });
+      v.a = n2b(v.a);
+    }
+    return v;
+  }
+  function functionParse(str) {
+    if (str.charAt(0) === "r") {
+      return rgbParse(str);
+    }
+    return hueParse(str);
+  }
+  var Color = class _Color {
+    constructor(input) {
+      if (input instanceof _Color) {
+        return input;
+      }
+      const type = typeof input;
+      let v;
+      if (type === "object") {
+        v = fromObject(input);
+      } else if (type === "string") {
+        v = hexParse(input) || nameParse(input) || functionParse(input);
+      }
+      this._rgb = v;
+      this._valid = !!v;
+    }
+    get valid() {
+      return this._valid;
+    }
+    get rgb() {
+      var v = clone(this._rgb);
+      if (v) {
+        v.a = b2n(v.a);
+      }
+      return v;
+    }
+    set rgb(obj) {
+      this._rgb = fromObject(obj);
+    }
+    rgbString() {
+      return this._valid ? rgbString(this._rgb) : void 0;
+    }
+    hexString() {
+      return this._valid ? hexString(this._rgb) : void 0;
+    }
+    hslString() {
+      return this._valid ? hslString(this._rgb) : void 0;
+    }
+    mix(color2, weight) {
+      if (color2) {
+        const c1 = this.rgb;
+        const c2 = color2.rgb;
+        let w2;
+        const p = weight === w2 ? 0.5 : weight;
+        const w = 2 * p - 1;
+        const a = c1.a - c2.a;
+        const w1 = ((w * a === -1 ? w : (w + a) / (1 + w * a)) + 1) / 2;
+        w2 = 1 - w1;
+        c1.r = 255 & w1 * c1.r + w2 * c2.r + 0.5;
+        c1.g = 255 & w1 * c1.g + w2 * c2.g + 0.5;
+        c1.b = 255 & w1 * c1.b + w2 * c2.b + 0.5;
+        c1.a = p * c1.a + (1 - p) * c2.a;
+        this.rgb = c1;
+      }
+      return this;
+    }
+    interpolate(color2, t) {
+      if (color2) {
+        this._rgb = interpolate(this._rgb, color2._rgb, t);
+      }
+      return this;
+    }
+    clone() {
+      return new _Color(this.rgb);
+    }
+    alpha(a) {
+      this._rgb.a = n2b(a);
+      return this;
+    }
+    clearer(ratio) {
+      const rgb = this._rgb;
+      rgb.a *= 1 - ratio;
+      return this;
+    }
+    greyscale() {
+      const rgb = this._rgb;
+      const val = round(rgb.r * 0.3 + rgb.g * 0.59 + rgb.b * 0.11);
+      rgb.r = rgb.g = rgb.b = val;
+      return this;
+    }
+    opaquer(ratio) {
+      const rgb = this._rgb;
+      rgb.a *= 1 + ratio;
+      return this;
+    }
+    negate() {
+      const v = this._rgb;
+      v.r = 255 - v.r;
+      v.g = 255 - v.g;
+      v.b = 255 - v.b;
+      return this;
+    }
+    lighten(ratio) {
+      modHSL(this._rgb, 2, ratio);
+      return this;
+    }
+    darken(ratio) {
+      modHSL(this._rgb, 2, -ratio);
+      return this;
+    }
+    saturate(ratio) {
+      modHSL(this._rgb, 1, ratio);
+      return this;
+    }
+    desaturate(ratio) {
+      modHSL(this._rgb, 1, -ratio);
+      return this;
+    }
+    rotate(deg) {
+      rotate(this._rgb, deg);
+      return this;
+    }
+  };
+
+  // node_modules/chart.js/dist/chunks/helpers.dataset.js
+  function noop() {
+  }
+  var uid = /* @__PURE__ */ (() => {
+    let id = 0;
+    return () => id++;
+  })();
+  function isNullOrUndef(value2) {
+    return value2 === null || value2 === void 0;
+  }
+  function isArray(value2) {
+    if (Array.isArray && Array.isArray(value2)) {
+      return true;
+    }
+    const type = Object.prototype.toString.call(value2);
+    if (type.slice(0, 7) === "[object" && type.slice(-6) === "Array]") {
+      return true;
+    }
+    return false;
+  }
+  function isObject2(value2) {
+    return value2 !== null && Object.prototype.toString.call(value2) === "[object Object]";
+  }
+  function isNumberFinite(value2) {
+    return (typeof value2 === "number" || value2 instanceof Number) && isFinite(+value2);
+  }
+  function finiteOrDefault(value2, defaultValue) {
+    return isNumberFinite(value2) ? value2 : defaultValue;
+  }
+  function valueOrDefault(value2, defaultValue) {
+    return typeof value2 === "undefined" ? defaultValue : value2;
+  }
+  var toPercentage = (value2, dimension) => typeof value2 === "string" && value2.endsWith("%") ? parseFloat(value2) / 100 : +value2 / dimension;
+  var toDimension = (value2, dimension) => typeof value2 === "string" && value2.endsWith("%") ? parseFloat(value2) / 100 * dimension : +value2;
+  function callback(fn, args, thisArg) {
+    if (fn && typeof fn.call === "function") {
+      return fn.apply(thisArg, args);
+    }
+  }
+  function each(loopable, fn, thisArg, reverse) {
+    let i, len, keys;
+    if (isArray(loopable)) {
+      len = loopable.length;
+      if (reverse) {
+        for (i = len - 1; i >= 0; i--) {
+          fn.call(thisArg, loopable[i], i);
+        }
+      } else {
+        for (i = 0; i < len; i++) {
+          fn.call(thisArg, loopable[i], i);
+        }
+      }
+    } else if (isObject2(loopable)) {
+      keys = Object.keys(loopable);
+      len = keys.length;
+      for (i = 0; i < len; i++) {
+        fn.call(thisArg, loopable[keys[i]], keys[i]);
+      }
+    }
+  }
+  function _elementsEqual(a0, a1) {
+    let i, ilen, v0, v1;
+    if (!a0 || !a1 || a0.length !== a1.length) {
+      return false;
+    }
+    for (i = 0, ilen = a0.length; i < ilen; ++i) {
+      v0 = a0[i];
+      v1 = a1[i];
+      if (v0.datasetIndex !== v1.datasetIndex || v0.index !== v1.index) {
+        return false;
+      }
+    }
+    return true;
+  }
+  function clone2(source) {
+    if (isArray(source)) {
+      return source.map(clone2);
+    }
+    if (isObject2(source)) {
+      const target = /* @__PURE__ */ Object.create(null);
+      const keys = Object.keys(source);
+      const klen = keys.length;
+      let k = 0;
+      for (; k < klen; ++k) {
+        target[keys[k]] = clone2(source[keys[k]]);
+      }
+      return target;
+    }
+    return source;
+  }
+  function isValidKey(key) {
+    return [
+      "__proto__",
+      "prototype",
+      "constructor"
+    ].indexOf(key) === -1;
+  }
+  function _merger(key, target, source, options) {
+    if (!isValidKey(key)) {
+      return;
+    }
+    const tval = target[key];
+    const sval = source[key];
+    if (isObject2(tval) && isObject2(sval)) {
+      merge(tval, sval, options);
+    } else {
+      target[key] = clone2(sval);
+    }
+  }
+  function merge(target, source, options) {
+    const sources = isArray(source) ? source : [
+      source
+    ];
+    const ilen = sources.length;
+    if (!isObject2(target)) {
+      return target;
+    }
+    options = options || {};
+    const merger = options.merger || _merger;
+    let current;
+    for (let i = 0; i < ilen; ++i) {
+      current = sources[i];
+      if (!isObject2(current)) {
+        continue;
+      }
+      const keys = Object.keys(current);
+      for (let k = 0, klen = keys.length; k < klen; ++k) {
+        merger(keys[k], target, current, options);
+      }
+    }
+    return target;
+  }
+  function mergeIf(target, source) {
+    return merge(target, source, {
+      merger: _mergerIf
+    });
+  }
+  function _mergerIf(key, target, source) {
+    if (!isValidKey(key)) {
+      return;
+    }
+    const tval = target[key];
+    const sval = source[key];
+    if (isObject2(tval) && isObject2(sval)) {
+      mergeIf(tval, sval);
+    } else if (!Object.prototype.hasOwnProperty.call(target, key)) {
+      target[key] = clone2(sval);
+    }
+  }
+  var keyResolvers = {
+    // Chart.helpers.core resolveObjectKey should resolve empty key to root object
+    "": (v) => v,
+    // default resolvers
+    x: (o) => o.x,
+    y: (o) => o.y
+  };
+  function _splitKey(key) {
+    const parts2 = key.split(".");
+    const keys = [];
+    let tmp = "";
+    for (const part of parts2) {
+      tmp += part;
+      if (tmp.endsWith("\\")) {
+        tmp = tmp.slice(0, -1) + ".";
+      } else {
+        keys.push(tmp);
+        tmp = "";
+      }
+    }
+    return keys;
+  }
+  function _getKeyResolver(key) {
+    const keys = _splitKey(key);
+    return (obj) => {
+      for (const k of keys) {
+        if (k === "") {
+          break;
+        }
+        obj = obj && obj[k];
+      }
+      return obj;
+    };
+  }
+  function resolveObjectKey(obj, key) {
+    const resolver = keyResolvers[key] || (keyResolvers[key] = _getKeyResolver(key));
+    return resolver(obj);
+  }
+  function _capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+  var defined = (value2) => typeof value2 !== "undefined";
+  var isFunction = (value2) => typeof value2 === "function";
+  var setsEqual = (a, b) => {
+    if (a.size !== b.size) {
+      return false;
+    }
+    for (const item of a) {
+      if (!b.has(item)) {
+        return false;
+      }
+    }
+    return true;
+  };
+  function _isClickEvent(e) {
+    return e.type === "mouseup" || e.type === "click" || e.type === "contextmenu";
+  }
+  var PI = Math.PI;
+  var TAU = 2 * PI;
+  var PITAU = TAU + PI;
+  var INFINITY = Number.POSITIVE_INFINITY;
+  var RAD_PER_DEG = PI / 180;
+  var HALF_PI = PI / 2;
+  var QUARTER_PI = PI / 4;
+  var TWO_THIRDS_PI = PI * 2 / 3;
+  var log10 = Math.log10;
+  var sign = Math.sign;
+  function almostEquals(x, y, epsilon) {
+    return Math.abs(x - y) < epsilon;
+  }
+  function niceNum(range) {
+    const roundedRange = Math.round(range);
+    range = almostEquals(range, roundedRange, range / 1e3) ? roundedRange : range;
+    const niceRange = Math.pow(10, Math.floor(log10(range)));
+    const fraction = range / niceRange;
+    const niceFraction = fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10;
+    return niceFraction * niceRange;
+  }
+  function _factorize(value2) {
+    const result = [];
+    const sqrt = Math.sqrt(value2);
+    let i;
+    for (i = 1; i < sqrt; i++) {
+      if (value2 % i === 0) {
+        result.push(i);
+        result.push(value2 / i);
+      }
+    }
+    if (sqrt === (sqrt | 0)) {
+      result.push(sqrt);
+    }
+    result.sort((a, b) => a - b).pop();
+    return result;
+  }
+  function isNonPrimitive(n) {
+    return typeof n === "symbol" || typeof n === "object" && n !== null && !(Symbol.toPrimitive in n || "toString" in n || "valueOf" in n);
+  }
+  function isNumber(n) {
+    return !isNonPrimitive(n) && !isNaN(parseFloat(n)) && isFinite(n);
+  }
+  function almostWhole(x, epsilon) {
+    const rounded = Math.round(x);
+    return rounded - epsilon <= x && rounded + epsilon >= x;
+  }
+  function _setMinAndMaxByKey(array, target, property) {
+    let i, ilen, value2;
+    for (i = 0, ilen = array.length; i < ilen; i++) {
+      value2 = array[i][property];
+      if (!isNaN(value2)) {
+        target.min = Math.min(target.min, value2);
+        target.max = Math.max(target.max, value2);
+      }
+    }
+  }
+  function toRadians(degrees) {
+    return degrees * (PI / 180);
+  }
+  function toDegrees(radians) {
+    return radians * (180 / PI);
+  }
+  function _decimalPlaces(x) {
+    if (!isNumberFinite(x)) {
+      return;
+    }
+    let e = 1;
+    let p = 0;
+    while (Math.round(x * e) / e !== x) {
+      e *= 10;
+      p++;
+    }
+    return p;
+  }
+  function getAngleFromPoint(centrePoint, anglePoint) {
+    const distanceFromXCenter = anglePoint.x - centrePoint.x;
+    const distanceFromYCenter = anglePoint.y - centrePoint.y;
+    const radialDistanceFromCenter = Math.sqrt(distanceFromXCenter * distanceFromXCenter + distanceFromYCenter * distanceFromYCenter);
+    let angle = Math.atan2(distanceFromYCenter, distanceFromXCenter);
+    if (angle < -0.5 * PI) {
+      angle += TAU;
+    }
+    return {
+      angle,
+      distance: radialDistanceFromCenter
+    };
+  }
+  function distanceBetweenPoints(pt1, pt2) {
+    return Math.sqrt(Math.pow(pt2.x - pt1.x, 2) + Math.pow(pt2.y - pt1.y, 2));
+  }
+  function _angleDiff(a, b) {
+    return (a - b + PITAU) % TAU - PI;
+  }
+  function _normalizeAngle(a) {
+    return (a % TAU + TAU) % TAU;
+  }
+  function _angleBetween(angle, start, end, sameAngleIsFullCircle) {
+    const a = _normalizeAngle(angle);
+    const s = _normalizeAngle(start);
+    const e = _normalizeAngle(end);
+    const angleToStart = _normalizeAngle(s - a);
+    const angleToEnd = _normalizeAngle(e - a);
+    const startToAngle = _normalizeAngle(a - s);
+    const endToAngle = _normalizeAngle(a - e);
+    return a === s || a === e || sameAngleIsFullCircle && s === e || angleToStart > angleToEnd && startToAngle < endToAngle;
+  }
+  function _limitValue(value2, min, max) {
+    return Math.max(min, Math.min(max, value2));
+  }
+  function _int16Range(value2) {
+    return _limitValue(value2, -32768, 32767);
+  }
+  function _isBetween(value2, start, end, epsilon = 1e-6) {
+    return value2 >= Math.min(start, end) - epsilon && value2 <= Math.max(start, end) + epsilon;
+  }
+  function _lookup(table, value2, cmp) {
+    cmp = cmp || ((index2) => table[index2] < value2);
+    let hi = table.length - 1;
+    let lo = 0;
+    let mid;
+    while (hi - lo > 1) {
+      mid = lo + hi >> 1;
+      if (cmp(mid)) {
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return {
+      lo,
+      hi
+    };
+  }
+  var _lookupByKey = (table, key, value2, last) => _lookup(table, value2, last ? (index2) => {
+    const ti = table[index2][key];
+    return ti < value2 || ti === value2 && table[index2 + 1][key] === value2;
+  } : (index2) => table[index2][key] < value2);
+  var _rlookupByKey = (table, key, value2) => _lookup(table, value2, (index2) => table[index2][key] >= value2);
+  function _filterBetween(values, min, max) {
+    let start = 0;
+    let end = values.length;
+    while (start < end && values[start] < min) {
+      start++;
+    }
+    while (end > start && values[end - 1] > max) {
+      end--;
+    }
+    return start > 0 || end < values.length ? values.slice(start, end) : values;
+  }
+  var arrayEvents = [
+    "push",
+    "pop",
+    "shift",
+    "splice",
+    "unshift"
+  ];
+  function listenArrayEvents(array, listener) {
+    if (array._chartjs) {
+      array._chartjs.listeners.push(listener);
+      return;
+    }
+    Object.defineProperty(array, "_chartjs", {
+      configurable: true,
+      enumerable: false,
+      value: {
+        listeners: [
+          listener
+        ]
+      }
+    });
+    arrayEvents.forEach((key) => {
+      const method = "_onData" + _capitalize(key);
+      const base = array[key];
+      Object.defineProperty(array, key, {
+        configurable: true,
+        enumerable: false,
+        value(...args) {
+          const res = base.apply(this, args);
+          array._chartjs.listeners.forEach((object) => {
+            if (typeof object[method] === "function") {
+              object[method](...args);
+            }
+          });
+          return res;
+        }
+      });
+    });
+  }
+  function unlistenArrayEvents(array, listener) {
+    const stub = array._chartjs;
+    if (!stub) {
+      return;
+    }
+    const listeners = stub.listeners;
+    const index2 = listeners.indexOf(listener);
+    if (index2 !== -1) {
+      listeners.splice(index2, 1);
+    }
+    if (listeners.length > 0) {
+      return;
+    }
+    arrayEvents.forEach((key) => {
+      delete array[key];
+    });
+    delete array._chartjs;
+  }
+  function _arrayUnique(items) {
+    const set2 = new Set(items);
+    if (set2.size === items.length) {
+      return items;
+    }
+    return Array.from(set2);
+  }
+  var requestAnimFrame = (function() {
+    if (typeof window === "undefined") {
+      return function(callback2) {
+        return callback2();
+      };
+    }
+    return window.requestAnimationFrame;
+  })();
+  function throttled(fn, thisArg) {
+    let argsToUse = [];
+    let ticking = false;
+    return function(...args) {
+      argsToUse = args;
+      if (!ticking) {
+        ticking = true;
+        requestAnimFrame.call(window, () => {
+          ticking = false;
+          fn.apply(thisArg, argsToUse);
+        });
+      }
+    };
+  }
+  function debounce(fn, delay) {
+    let timeout;
+    return function(...args) {
+      if (delay) {
+        clearTimeout(timeout);
+        timeout = setTimeout(fn, delay, args);
+      } else {
+        fn.apply(this, args);
+      }
+      return delay;
+    };
+  }
+  var _toLeftRightCenter = (align) => align === "start" ? "left" : align === "end" ? "right" : "center";
+  var _alignStartEnd = (align, start, end) => align === "start" ? start : align === "end" ? end : (start + end) / 2;
+  var _textX = (align, left, right, rtl) => {
+    const check = rtl ? "left" : "right";
+    return align === check ? right : align === "center" ? (left + right) / 2 : left;
+  };
+  function _getStartAndCountOfVisiblePoints(meta, points, animationsDisabled) {
+    const pointCount = points.length;
+    let start = 0;
+    let count = pointCount;
+    if (meta._sorted) {
+      const { iScale, vScale, _parsed } = meta;
+      const spanGaps = meta.dataset ? meta.dataset.options ? meta.dataset.options.spanGaps : null : null;
+      const axis = iScale.axis;
+      const { min, max, minDefined, maxDefined } = iScale.getUserBounds();
+      if (minDefined) {
+        start = Math.min(
+          // @ts-expect-error Need to type _parsed
+          _lookupByKey(_parsed, axis, min).lo,
+          // @ts-expect-error Need to fix types on _lookupByKey
+          animationsDisabled ? pointCount : _lookupByKey(points, axis, iScale.getPixelForValue(min)).lo
+        );
+        if (spanGaps) {
+          const distanceToDefinedLo = _parsed.slice(0, start + 1).reverse().findIndex((point) => !isNullOrUndef(point[vScale.axis]));
+          start -= Math.max(0, distanceToDefinedLo);
+        }
+        start = _limitValue(start, 0, pointCount - 1);
+      }
+      if (maxDefined) {
+        let end = Math.max(
+          // @ts-expect-error Need to type _parsed
+          _lookupByKey(_parsed, iScale.axis, max, true).hi + 1,
+          // @ts-expect-error Need to fix types on _lookupByKey
+          animationsDisabled ? 0 : _lookupByKey(points, axis, iScale.getPixelForValue(max), true).hi + 1
+        );
+        if (spanGaps) {
+          const distanceToDefinedHi = _parsed.slice(end - 1).findIndex((point) => !isNullOrUndef(point[vScale.axis]));
+          end += Math.max(0, distanceToDefinedHi);
+        }
+        count = _limitValue(end, start, pointCount) - start;
+      } else {
+        count = pointCount - start;
+      }
+    }
+    return {
+      start,
+      count
+    };
+  }
+  function _scaleRangesChanged(meta) {
+    const { xScale, yScale, _scaleRanges } = meta;
+    const newRanges = {
+      xmin: xScale.min,
+      xmax: xScale.max,
+      ymin: yScale.min,
+      ymax: yScale.max
+    };
+    if (!_scaleRanges) {
+      meta._scaleRanges = newRanges;
+      return true;
+    }
+    const changed = _scaleRanges.xmin !== xScale.min || _scaleRanges.xmax !== xScale.max || _scaleRanges.ymin !== yScale.min || _scaleRanges.ymax !== yScale.max;
+    Object.assign(_scaleRanges, newRanges);
+    return changed;
+  }
+  var atEdge = (t) => t === 0 || t === 1;
+  var elasticIn = (t, s, p) => -(Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * TAU / p));
+  var elasticOut = (t, s, p) => Math.pow(2, -10 * t) * Math.sin((t - s) * TAU / p) + 1;
+  var effects = {
+    linear: (t) => t,
+    easeInQuad: (t) => t * t,
+    easeOutQuad: (t) => -t * (t - 2),
+    easeInOutQuad: (t) => (t /= 0.5) < 1 ? 0.5 * t * t : -0.5 * (--t * (t - 2) - 1),
+    easeInCubic: (t) => t * t * t,
+    easeOutCubic: (t) => (t -= 1) * t * t + 1,
+    easeInOutCubic: (t) => (t /= 0.5) < 1 ? 0.5 * t * t * t : 0.5 * ((t -= 2) * t * t + 2),
+    easeInQuart: (t) => t * t * t * t,
+    easeOutQuart: (t) => -((t -= 1) * t * t * t - 1),
+    easeInOutQuart: (t) => (t /= 0.5) < 1 ? 0.5 * t * t * t * t : -0.5 * ((t -= 2) * t * t * t - 2),
+    easeInQuint: (t) => t * t * t * t * t,
+    easeOutQuint: (t) => (t -= 1) * t * t * t * t + 1,
+    easeInOutQuint: (t) => (t /= 0.5) < 1 ? 0.5 * t * t * t * t * t : 0.5 * ((t -= 2) * t * t * t * t + 2),
+    easeInSine: (t) => -Math.cos(t * HALF_PI) + 1,
+    easeOutSine: (t) => Math.sin(t * HALF_PI),
+    easeInOutSine: (t) => -0.5 * (Math.cos(PI * t) - 1),
+    easeInExpo: (t) => t === 0 ? 0 : Math.pow(2, 10 * (t - 1)),
+    easeOutExpo: (t) => t === 1 ? 1 : -Math.pow(2, -10 * t) + 1,
+    easeInOutExpo: (t) => atEdge(t) ? t : t < 0.5 ? 0.5 * Math.pow(2, 10 * (t * 2 - 1)) : 0.5 * (-Math.pow(2, -10 * (t * 2 - 1)) + 2),
+    easeInCirc: (t) => t >= 1 ? t : -(Math.sqrt(1 - t * t) - 1),
+    easeOutCirc: (t) => Math.sqrt(1 - (t -= 1) * t),
+    easeInOutCirc: (t) => (t /= 0.5) < 1 ? -0.5 * (Math.sqrt(1 - t * t) - 1) : 0.5 * (Math.sqrt(1 - (t -= 2) * t) + 1),
+    easeInElastic: (t) => atEdge(t) ? t : elasticIn(t, 0.075, 0.3),
+    easeOutElastic: (t) => atEdge(t) ? t : elasticOut(t, 0.075, 0.3),
+    easeInOutElastic(t) {
+      const s = 0.1125;
+      const p = 0.45;
+      return atEdge(t) ? t : t < 0.5 ? 0.5 * elasticIn(t * 2, s, p) : 0.5 + 0.5 * elasticOut(t * 2 - 1, s, p);
+    },
+    easeInBack(t) {
+      const s = 1.70158;
+      return t * t * ((s + 1) * t - s);
+    },
+    easeOutBack(t) {
+      const s = 1.70158;
+      return (t -= 1) * t * ((s + 1) * t + s) + 1;
+    },
+    easeInOutBack(t) {
+      let s = 1.70158;
+      if ((t /= 0.5) < 1) {
+        return 0.5 * (t * t * (((s *= 1.525) + 1) * t - s));
+      }
+      return 0.5 * ((t -= 2) * t * (((s *= 1.525) + 1) * t + s) + 2);
+    },
+    easeInBounce: (t) => 1 - effects.easeOutBounce(1 - t),
+    easeOutBounce(t) {
+      const m = 7.5625;
+      const d = 2.75;
+      if (t < 1 / d) {
+        return m * t * t;
+      }
+      if (t < 2 / d) {
+        return m * (t -= 1.5 / d) * t + 0.75;
+      }
+      if (t < 2.5 / d) {
+        return m * (t -= 2.25 / d) * t + 0.9375;
+      }
+      return m * (t -= 2.625 / d) * t + 0.984375;
+    },
+    easeInOutBounce: (t) => t < 0.5 ? effects.easeInBounce(t * 2) * 0.5 : effects.easeOutBounce(t * 2 - 1) * 0.5 + 0.5
+  };
+  function isPatternOrGradient(value2) {
+    if (value2 && typeof value2 === "object") {
+      const type = value2.toString();
+      return type === "[object CanvasPattern]" || type === "[object CanvasGradient]";
+    }
+    return false;
+  }
+  function color(value2) {
+    return isPatternOrGradient(value2) ? value2 : new Color(value2);
+  }
+  function getHoverColor(value2) {
+    return isPatternOrGradient(value2) ? value2 : new Color(value2).saturate(0.5).darken(0.1).hexString();
+  }
+  var numbers = [
+    "x",
+    "y",
+    "borderWidth",
+    "radius",
+    "tension"
+  ];
+  var colors = [
+    "color",
+    "borderColor",
+    "backgroundColor"
+  ];
+  function applyAnimationsDefaults(defaults2) {
+    defaults2.set("animation", {
+      delay: void 0,
+      duration: 1e3,
+      easing: "easeOutQuart",
+      fn: void 0,
+      from: void 0,
+      loop: void 0,
+      to: void 0,
+      type: void 0
+    });
+    defaults2.describe("animation", {
+      _fallback: false,
+      _indexable: false,
+      _scriptable: (name) => name !== "onProgress" && name !== "onComplete" && name !== "fn"
+    });
+    defaults2.set("animations", {
+      colors: {
+        type: "color",
+        properties: colors
+      },
+      numbers: {
+        type: "number",
+        properties: numbers
+      }
+    });
+    defaults2.describe("animations", {
+      _fallback: "animation"
+    });
+    defaults2.set("transitions", {
+      active: {
+        animation: {
+          duration: 400
+        }
+      },
+      resize: {
+        animation: {
+          duration: 0
+        }
+      },
+      show: {
+        animations: {
+          colors: {
+            from: "transparent"
+          },
+          visible: {
+            type: "boolean",
+            duration: 0
+          }
+        }
+      },
+      hide: {
+        animations: {
+          colors: {
+            to: "transparent"
+          },
+          visible: {
+            type: "boolean",
+            easing: "linear",
+            fn: (v) => v | 0
+          }
+        }
+      }
+    });
+  }
+  function applyLayoutsDefaults(defaults2) {
+    defaults2.set("layout", {
+      autoPadding: true,
+      padding: {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
+      }
+    });
+  }
+  var intlCache = /* @__PURE__ */ new Map();
+  function getNumberFormat(locale, options) {
+    options = options || {};
+    const cacheKey = locale + JSON.stringify(options);
+    let formatter = intlCache.get(cacheKey);
+    if (!formatter) {
+      formatter = new Intl.NumberFormat(locale, options);
+      intlCache.set(cacheKey, formatter);
+    }
+    return formatter;
+  }
+  function formatNumber(num, locale, options) {
+    return getNumberFormat(locale, options).format(num);
+  }
+  var formatters = {
+    values(value2) {
+      return isArray(value2) ? value2 : "" + value2;
+    },
+    numeric(tickValue, index2, ticks) {
+      if (tickValue === 0) {
+        return "0";
+      }
+      const locale = this.chart.options.locale;
+      let notation;
+      let delta = tickValue;
+      if (ticks.length > 1) {
+        const maxTick = Math.max(Math.abs(ticks[0].value), Math.abs(ticks[ticks.length - 1].value));
+        if (maxTick < 1e-4 || maxTick > 1e15) {
+          notation = "scientific";
+        }
+        delta = calculateDelta(tickValue, ticks);
+      }
+      const logDelta = log10(Math.abs(delta));
+      const numDecimal = isNaN(logDelta) ? 1 : Math.max(Math.min(-1 * Math.floor(logDelta), 20), 0);
+      const options = {
+        notation,
+        minimumFractionDigits: numDecimal,
+        maximumFractionDigits: numDecimal
+      };
+      Object.assign(options, this.options.ticks.format);
+      return formatNumber(tickValue, locale, options);
+    },
+    logarithmic(tickValue, index2, ticks) {
+      if (tickValue === 0) {
+        return "0";
+      }
+      const remain = ticks[index2].significand || tickValue / Math.pow(10, Math.floor(log10(tickValue)));
+      if ([
+        1,
+        2,
+        3,
+        5,
+        10,
+        15
+      ].includes(remain) || index2 > 0.8 * ticks.length) {
+        return formatters.numeric.call(this, tickValue, index2, ticks);
+      }
+      return "";
+    }
+  };
+  function calculateDelta(tickValue, ticks) {
+    let delta = ticks.length > 3 ? ticks[2].value - ticks[1].value : ticks[1].value - ticks[0].value;
+    if (Math.abs(delta) >= 1 && tickValue !== Math.floor(tickValue)) {
+      delta = tickValue - Math.floor(tickValue);
+    }
+    return delta;
+  }
+  var Ticks = {
+    formatters
+  };
+  function applyScaleDefaults(defaults2) {
+    defaults2.set("scale", {
+      display: true,
+      offset: false,
+      reverse: false,
+      beginAtZero: false,
+      bounds: "ticks",
+      clip: true,
+      grace: 0,
+      grid: {
+        display: true,
+        lineWidth: 1,
+        drawOnChartArea: true,
+        drawTicks: true,
+        tickLength: 8,
+        tickWidth: (_ctx, options) => options.lineWidth,
+        tickColor: (_ctx, options) => options.color,
+        offset: false
+      },
+      border: {
+        display: true,
+        dash: [],
+        dashOffset: 0,
+        width: 1
+      },
+      title: {
+        display: false,
+        text: "",
+        padding: {
+          top: 4,
+          bottom: 4
+        }
+      },
+      ticks: {
+        minRotation: 0,
+        maxRotation: 50,
+        mirror: false,
+        textStrokeWidth: 0,
+        textStrokeColor: "",
+        padding: 3,
+        display: true,
+        autoSkip: true,
+        autoSkipPadding: 3,
+        labelOffset: 0,
+        callback: Ticks.formatters.values,
+        minor: {},
+        major: {},
+        align: "center",
+        crossAlign: "near",
+        showLabelBackdrop: false,
+        backdropColor: "rgba(255, 255, 255, 0.75)",
+        backdropPadding: 2
+      }
+    });
+    defaults2.route("scale.ticks", "color", "", "color");
+    defaults2.route("scale.grid", "color", "", "borderColor");
+    defaults2.route("scale.border", "color", "", "borderColor");
+    defaults2.route("scale.title", "color", "", "color");
+    defaults2.describe("scale", {
+      _fallback: false,
+      _scriptable: (name) => !name.startsWith("before") && !name.startsWith("after") && name !== "callback" && name !== "parser",
+      _indexable: (name) => name !== "borderDash" && name !== "tickBorderDash" && name !== "dash"
+    });
+    defaults2.describe("scales", {
+      _fallback: "scale"
+    });
+    defaults2.describe("scale.ticks", {
+      _scriptable: (name) => name !== "backdropPadding" && name !== "callback",
+      _indexable: (name) => name !== "backdropPadding"
+    });
+  }
+  var overrides = /* @__PURE__ */ Object.create(null);
+  var descriptors = /* @__PURE__ */ Object.create(null);
+  function getScope$1(node, key) {
+    if (!key) {
+      return node;
+    }
+    const keys = key.split(".");
+    for (let i = 0, n = keys.length; i < n; ++i) {
+      const k = keys[i];
+      node = node[k] || (node[k] = /* @__PURE__ */ Object.create(null));
+    }
+    return node;
+  }
+  function set(root, scope, values) {
+    if (typeof scope === "string") {
+      return merge(getScope$1(root, scope), values);
+    }
+    return merge(getScope$1(root, ""), scope);
+  }
+  var Defaults = class {
+    constructor(_descriptors2, _appliers) {
+      this.animation = void 0;
+      this.backgroundColor = "rgba(0,0,0,0.1)";
+      this.borderColor = "rgba(0,0,0,0.1)";
+      this.color = "#666";
+      this.datasets = {};
+      this.devicePixelRatio = (context) => context.chart.platform.getDevicePixelRatio();
+      this.elements = {};
+      this.events = [
+        "mousemove",
+        "mouseout",
+        "click",
+        "touchstart",
+        "touchmove"
+      ];
+      this.font = {
+        family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+        size: 12,
+        style: "normal",
+        lineHeight: 1.2,
+        weight: null
+      };
+      this.hover = {};
+      this.hoverBackgroundColor = (ctx, options) => getHoverColor(options.backgroundColor);
+      this.hoverBorderColor = (ctx, options) => getHoverColor(options.borderColor);
+      this.hoverColor = (ctx, options) => getHoverColor(options.color);
+      this.indexAxis = "x";
+      this.interaction = {
+        mode: "nearest",
+        intersect: true,
+        includeInvisible: false
+      };
+      this.maintainAspectRatio = true;
+      this.onHover = null;
+      this.onClick = null;
+      this.parsing = true;
+      this.plugins = {};
+      this.responsive = true;
+      this.scale = void 0;
+      this.scales = {};
+      this.showLine = true;
+      this.drawActiveElementsOnTop = true;
+      this.describe(_descriptors2);
+      this.apply(_appliers);
+    }
+    set(scope, values) {
+      return set(this, scope, values);
+    }
+    get(scope) {
+      return getScope$1(this, scope);
+    }
+    describe(scope, values) {
+      return set(descriptors, scope, values);
+    }
+    override(scope, values) {
+      return set(overrides, scope, values);
+    }
+    route(scope, name, targetScope, targetName) {
+      const scopeObject = getScope$1(this, scope);
+      const targetScopeObject = getScope$1(this, targetScope);
+      const privateName = "_" + name;
+      Object.defineProperties(scopeObject, {
+        [privateName]: {
+          value: scopeObject[name],
+          writable: true
+        },
+        [name]: {
+          enumerable: true,
+          get() {
+            const local = this[privateName];
+            const target = targetScopeObject[targetName];
+            if (isObject2(local)) {
+              return Object.assign({}, target, local);
+            }
+            return valueOrDefault(local, target);
+          },
+          set(value2) {
+            this[privateName] = value2;
+          }
+        }
+      });
+    }
+    apply(appliers) {
+      appliers.forEach((apply) => apply(this));
+    }
+  };
+  var defaults = /* @__PURE__ */ new Defaults({
+    _scriptable: (name) => !name.startsWith("on"),
+    _indexable: (name) => name !== "events",
+    hover: {
+      _fallback: "interaction"
+    },
+    interaction: {
+      _scriptable: false,
+      _indexable: false
+    }
+  }, [
+    applyAnimationsDefaults,
+    applyLayoutsDefaults,
+    applyScaleDefaults
+  ]);
+  function toFontString(font) {
+    if (!font || isNullOrUndef(font.size) || isNullOrUndef(font.family)) {
+      return null;
+    }
+    return (font.style ? font.style + " " : "") + (font.weight ? font.weight + " " : "") + font.size + "px " + font.family;
+  }
+  function _measureText(ctx, data, gc, longest, string) {
+    let textWidth = data[string];
+    if (!textWidth) {
+      textWidth = data[string] = ctx.measureText(string).width;
+      gc.push(string);
+    }
+    if (textWidth > longest) {
+      longest = textWidth;
+    }
+    return longest;
+  }
+  function _longestText(ctx, font, arrayOfThings, cache2) {
+    cache2 = cache2 || {};
+    let data = cache2.data = cache2.data || {};
+    let gc = cache2.garbageCollect = cache2.garbageCollect || [];
+    if (cache2.font !== font) {
+      data = cache2.data = {};
+      gc = cache2.garbageCollect = [];
+      cache2.font = font;
+    }
+    ctx.save();
+    ctx.font = font;
+    let longest = 0;
+    const ilen = arrayOfThings.length;
+    let i, j, jlen, thing, nestedThing;
+    for (i = 0; i < ilen; i++) {
+      thing = arrayOfThings[i];
+      if (thing !== void 0 && thing !== null && !isArray(thing)) {
+        longest = _measureText(ctx, data, gc, longest, thing);
+      } else if (isArray(thing)) {
+        for (j = 0, jlen = thing.length; j < jlen; j++) {
+          nestedThing = thing[j];
+          if (nestedThing !== void 0 && nestedThing !== null && !isArray(nestedThing)) {
+            longest = _measureText(ctx, data, gc, longest, nestedThing);
+          }
+        }
+      }
+    }
+    ctx.restore();
+    const gcLen = gc.length / 2;
+    if (gcLen > arrayOfThings.length) {
+      for (i = 0; i < gcLen; i++) {
+        delete data[gc[i]];
+      }
+      gc.splice(0, gcLen);
+    }
+    return longest;
+  }
+  function _alignPixel(chart, pixel, width) {
+    const devicePixelRatio = chart.currentDevicePixelRatio;
+    const halfWidth = width !== 0 ? Math.max(width / 2, 0.5) : 0;
+    return Math.round((pixel - halfWidth) * devicePixelRatio) / devicePixelRatio + halfWidth;
+  }
+  function clearCanvas(canvas, ctx) {
+    if (!ctx && !canvas) {
+      return;
+    }
+    ctx = ctx || canvas.getContext("2d");
+    ctx.save();
+    ctx.resetTransform();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
+  function drawPoint(ctx, options, x, y) {
+    drawPointLegend(ctx, options, x, y, null);
+  }
+  function drawPointLegend(ctx, options, x, y, w) {
+    let type, xOffset, yOffset, size, cornerRadius, width, xOffsetW, yOffsetW;
+    const style = options.pointStyle;
+    const rotation = options.rotation;
+    const radius = options.radius;
+    let rad = (rotation || 0) * RAD_PER_DEG;
+    if (style && typeof style === "object") {
+      type = style.toString();
+      if (type === "[object HTMLImageElement]" || type === "[object HTMLCanvasElement]") {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rad);
+        ctx.drawImage(style, -style.width / 2, -style.height / 2, style.width, style.height);
+        ctx.restore();
+        return;
+      }
+    }
+    if (isNaN(radius) || radius <= 0) {
+      return;
+    }
+    ctx.beginPath();
+    switch (style) {
+      // Default includes circle
+      default:
+        if (w) {
+          ctx.ellipse(x, y, w / 2, radius, 0, 0, TAU);
+        } else {
+          ctx.arc(x, y, radius, 0, TAU);
+        }
+        ctx.closePath();
+        break;
+      case "triangle":
+        width = w ? w / 2 : radius;
+        ctx.moveTo(x + Math.sin(rad) * width, y - Math.cos(rad) * radius);
+        rad += TWO_THIRDS_PI;
+        ctx.lineTo(x + Math.sin(rad) * width, y - Math.cos(rad) * radius);
+        rad += TWO_THIRDS_PI;
+        ctx.lineTo(x + Math.sin(rad) * width, y - Math.cos(rad) * radius);
+        ctx.closePath();
+        break;
+      case "rectRounded":
+        cornerRadius = radius * 0.516;
+        size = radius - cornerRadius;
+        xOffset = Math.cos(rad + QUARTER_PI) * size;
+        xOffsetW = Math.cos(rad + QUARTER_PI) * (w ? w / 2 - cornerRadius : size);
+        yOffset = Math.sin(rad + QUARTER_PI) * size;
+        yOffsetW = Math.sin(rad + QUARTER_PI) * (w ? w / 2 - cornerRadius : size);
+        ctx.arc(x - xOffsetW, y - yOffset, cornerRadius, rad - PI, rad - HALF_PI);
+        ctx.arc(x + yOffsetW, y - xOffset, cornerRadius, rad - HALF_PI, rad);
+        ctx.arc(x + xOffsetW, y + yOffset, cornerRadius, rad, rad + HALF_PI);
+        ctx.arc(x - yOffsetW, y + xOffset, cornerRadius, rad + HALF_PI, rad + PI);
+        ctx.closePath();
+        break;
+      case "rect":
+        if (!rotation) {
+          size = Math.SQRT1_2 * radius;
+          width = w ? w / 2 : size;
+          ctx.rect(x - width, y - size, 2 * width, 2 * size);
+          break;
+        }
+        rad += QUARTER_PI;
+      /* falls through */
+      case "rectRot":
+        xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+        xOffset = Math.cos(rad) * radius;
+        yOffset = Math.sin(rad) * radius;
+        yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
+        ctx.moveTo(x - xOffsetW, y - yOffset);
+        ctx.lineTo(x + yOffsetW, y - xOffset);
+        ctx.lineTo(x + xOffsetW, y + yOffset);
+        ctx.lineTo(x - yOffsetW, y + xOffset);
+        ctx.closePath();
+        break;
+      case "crossRot":
+        rad += QUARTER_PI;
+      /* falls through */
+      case "cross":
+        xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+        xOffset = Math.cos(rad) * radius;
+        yOffset = Math.sin(rad) * radius;
+        yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
+        ctx.moveTo(x - xOffsetW, y - yOffset);
+        ctx.lineTo(x + xOffsetW, y + yOffset);
+        ctx.moveTo(x + yOffsetW, y - xOffset);
+        ctx.lineTo(x - yOffsetW, y + xOffset);
+        break;
+      case "star":
+        xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+        xOffset = Math.cos(rad) * radius;
+        yOffset = Math.sin(rad) * radius;
+        yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
+        ctx.moveTo(x - xOffsetW, y - yOffset);
+        ctx.lineTo(x + xOffsetW, y + yOffset);
+        ctx.moveTo(x + yOffsetW, y - xOffset);
+        ctx.lineTo(x - yOffsetW, y + xOffset);
+        rad += QUARTER_PI;
+        xOffsetW = Math.cos(rad) * (w ? w / 2 : radius);
+        xOffset = Math.cos(rad) * radius;
+        yOffset = Math.sin(rad) * radius;
+        yOffsetW = Math.sin(rad) * (w ? w / 2 : radius);
+        ctx.moveTo(x - xOffsetW, y - yOffset);
+        ctx.lineTo(x + xOffsetW, y + yOffset);
+        ctx.moveTo(x + yOffsetW, y - xOffset);
+        ctx.lineTo(x - yOffsetW, y + xOffset);
+        break;
+      case "line":
+        xOffset = w ? w / 2 : Math.cos(rad) * radius;
+        yOffset = Math.sin(rad) * radius;
+        ctx.moveTo(x - xOffset, y - yOffset);
+        ctx.lineTo(x + xOffset, y + yOffset);
+        break;
+      case "dash":
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + Math.cos(rad) * (w ? w / 2 : radius), y + Math.sin(rad) * radius);
+        break;
+      case false:
+        ctx.closePath();
+        break;
+    }
+    ctx.fill();
+    if (options.borderWidth > 0) {
+      ctx.stroke();
+    }
+  }
+  function _isPointInArea(point, area, margin) {
+    margin = margin || 0.5;
+    return !area || point && point.x > area.left - margin && point.x < area.right + margin && point.y > area.top - margin && point.y < area.bottom + margin;
+  }
+  function clipArea(ctx, area) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+    ctx.clip();
+  }
+  function unclipArea(ctx) {
+    ctx.restore();
+  }
+  function _steppedLineTo(ctx, previous, target, flip, mode) {
+    if (!previous) {
+      return ctx.lineTo(target.x, target.y);
+    }
+    if (mode === "middle") {
+      const midpoint = (previous.x + target.x) / 2;
+      ctx.lineTo(midpoint, previous.y);
+      ctx.lineTo(midpoint, target.y);
+    } else if (mode === "after" !== !!flip) {
+      ctx.lineTo(previous.x, target.y);
+    } else {
+      ctx.lineTo(target.x, previous.y);
+    }
+    ctx.lineTo(target.x, target.y);
+  }
+  function _bezierCurveTo(ctx, previous, target, flip) {
+    if (!previous) {
+      return ctx.lineTo(target.x, target.y);
+    }
+    ctx.bezierCurveTo(flip ? previous.cp1x : previous.cp2x, flip ? previous.cp1y : previous.cp2y, flip ? target.cp2x : target.cp1x, flip ? target.cp2y : target.cp1y, target.x, target.y);
+  }
+  function setRenderOpts(ctx, opts) {
+    if (opts.translation) {
+      ctx.translate(opts.translation[0], opts.translation[1]);
+    }
+    if (!isNullOrUndef(opts.rotation)) {
+      ctx.rotate(opts.rotation);
+    }
+    if (opts.color) {
+      ctx.fillStyle = opts.color;
+    }
+    if (opts.textAlign) {
+      ctx.textAlign = opts.textAlign;
+    }
+    if (opts.textBaseline) {
+      ctx.textBaseline = opts.textBaseline;
+    }
+  }
+  function decorateText(ctx, x, y, line, opts) {
+    if (opts.strikethrough || opts.underline) {
+      const metrics = ctx.measureText(line);
+      const left = x - metrics.actualBoundingBoxLeft;
+      const right = x + metrics.actualBoundingBoxRight;
+      const top = y - metrics.actualBoundingBoxAscent;
+      const bottom = y + metrics.actualBoundingBoxDescent;
+      const yDecoration = opts.strikethrough ? (top + bottom) / 2 : bottom;
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.beginPath();
+      ctx.lineWidth = opts.decorationWidth || 2;
+      ctx.moveTo(left, yDecoration);
+      ctx.lineTo(right, yDecoration);
+      ctx.stroke();
+    }
+  }
+  function drawBackdrop(ctx, opts) {
+    const oldColor = ctx.fillStyle;
+    ctx.fillStyle = opts.color;
+    ctx.fillRect(opts.left, opts.top, opts.width, opts.height);
+    ctx.fillStyle = oldColor;
+  }
+  function renderText(ctx, text, x, y, font, opts = {}) {
+    const lines = isArray(text) ? text : [
+      text
+    ];
+    const stroke = opts.strokeWidth > 0 && opts.strokeColor !== "";
+    let i, line;
+    ctx.save();
+    ctx.font = font.string;
+    setRenderOpts(ctx, opts);
+    for (i = 0; i < lines.length; ++i) {
+      line = lines[i];
+      if (opts.backdrop) {
+        drawBackdrop(ctx, opts.backdrop);
+      }
+      if (stroke) {
+        if (opts.strokeColor) {
+          ctx.strokeStyle = opts.strokeColor;
+        }
+        if (!isNullOrUndef(opts.strokeWidth)) {
+          ctx.lineWidth = opts.strokeWidth;
+        }
+        ctx.strokeText(line, x, y, opts.maxWidth);
+      }
+      ctx.fillText(line, x, y, opts.maxWidth);
+      decorateText(ctx, x, y, line, opts);
+      y += Number(font.lineHeight);
+    }
+    ctx.restore();
+  }
+  function addRoundedRectPath(ctx, rect) {
+    const { x, y, w, h, radius } = rect;
+    ctx.arc(x + radius.topLeft, y + radius.topLeft, radius.topLeft, 1.5 * PI, PI, true);
+    ctx.lineTo(x, y + h - radius.bottomLeft);
+    ctx.arc(x + radius.bottomLeft, y + h - radius.bottomLeft, radius.bottomLeft, PI, HALF_PI, true);
+    ctx.lineTo(x + w - radius.bottomRight, y + h);
+    ctx.arc(x + w - radius.bottomRight, y + h - radius.bottomRight, radius.bottomRight, HALF_PI, 0, true);
+    ctx.lineTo(x + w, y + radius.topRight);
+    ctx.arc(x + w - radius.topRight, y + radius.topRight, radius.topRight, 0, -HALF_PI, true);
+    ctx.lineTo(x + radius.topLeft, y);
+  }
+  var LINE_HEIGHT = /^(normal|(\d+(?:\.\d+)?)(px|em|%)?)$/;
+  var FONT_STYLE = /^(normal|italic|initial|inherit|unset|(oblique( -?[0-9]?[0-9]deg)?))$/;
+  function toLineHeight(value2, size) {
+    const matches = ("" + value2).match(LINE_HEIGHT);
+    if (!matches || matches[1] === "normal") {
+      return size * 1.2;
+    }
+    value2 = +matches[2];
+    switch (matches[3]) {
+      case "px":
+        return value2;
+      case "%":
+        value2 /= 100;
+        break;
+    }
+    return size * value2;
+  }
+  var numberOrZero = (v) => +v || 0;
+  function _readValueToProps(value2, props) {
+    const ret = {};
+    const objProps = isObject2(props);
+    const keys = objProps ? Object.keys(props) : props;
+    const read = isObject2(value2) ? objProps ? (prop) => valueOrDefault(value2[prop], value2[props[prop]]) : (prop) => value2[prop] : () => value2;
+    for (const prop of keys) {
+      ret[prop] = numberOrZero(read(prop));
+    }
+    return ret;
+  }
+  function toTRBL(value2) {
+    return _readValueToProps(value2, {
+      top: "y",
+      right: "x",
+      bottom: "y",
+      left: "x"
+    });
+  }
+  function toTRBLCorners(value2) {
+    return _readValueToProps(value2, [
+      "topLeft",
+      "topRight",
+      "bottomLeft",
+      "bottomRight"
+    ]);
+  }
+  function toPadding(value2) {
+    const obj = toTRBL(value2);
+    obj.width = obj.left + obj.right;
+    obj.height = obj.top + obj.bottom;
+    return obj;
+  }
+  function toFont(options, fallback) {
+    options = options || {};
+    fallback = fallback || defaults.font;
+    let size = valueOrDefault(options.size, fallback.size);
+    if (typeof size === "string") {
+      size = parseInt(size, 10);
+    }
+    let style = valueOrDefault(options.style, fallback.style);
+    if (style && !("" + style).match(FONT_STYLE)) {
+      console.warn('Invalid font style specified: "' + style + '"');
+      style = void 0;
+    }
+    const font = {
+      family: valueOrDefault(options.family, fallback.family),
+      lineHeight: toLineHeight(valueOrDefault(options.lineHeight, fallback.lineHeight), size),
+      size,
+      style,
+      weight: valueOrDefault(options.weight, fallback.weight),
+      string: ""
+    };
+    font.string = toFontString(font);
+    return font;
+  }
+  function resolve(inputs, context, index2, info) {
+    let cacheable = true;
+    let i, ilen, value2;
+    for (i = 0, ilen = inputs.length; i < ilen; ++i) {
+      value2 = inputs[i];
+      if (value2 === void 0) {
+        continue;
+      }
+      if (context !== void 0 && typeof value2 === "function") {
+        value2 = value2(context);
+        cacheable = false;
+      }
+      if (index2 !== void 0 && isArray(value2)) {
+        value2 = value2[index2 % value2.length];
+        cacheable = false;
+      }
+      if (value2 !== void 0) {
+        if (info && !cacheable) {
+          info.cacheable = false;
+        }
+        return value2;
+      }
+    }
+  }
+  function _addGrace(minmax, grace, beginAtZero) {
+    const { min, max } = minmax;
+    const change = toDimension(grace, (max - min) / 2);
+    const keepZero = (value2, add) => beginAtZero && value2 === 0 ? 0 : value2 + add;
+    return {
+      min: keepZero(min, -Math.abs(change)),
+      max: keepZero(max, change)
+    };
+  }
+  function createContext(parentContext, context) {
+    return Object.assign(Object.create(parentContext), context);
+  }
+  function _createResolver(scopes, prefixes = [
+    ""
+  ], rootScopes, fallback, getTarget = () => scopes[0]) {
+    const finalRootScopes = rootScopes || scopes;
+    if (typeof fallback === "undefined") {
+      fallback = _resolve("_fallback", scopes);
+    }
+    const cache2 = {
+      [Symbol.toStringTag]: "Object",
+      _cacheable: true,
+      _scopes: scopes,
+      _rootScopes: finalRootScopes,
+      _fallback: fallback,
+      _getTarget: getTarget,
+      override: (scope) => _createResolver([
+        scope,
+        ...scopes
+      ], prefixes, finalRootScopes, fallback)
+    };
+    return new Proxy(cache2, {
+      /**
+      * A trap for the delete operator.
+      */
+      deleteProperty(target, prop) {
+        delete target[prop];
+        delete target._keys;
+        delete scopes[0][prop];
+        return true;
+      },
+      /**
+      * A trap for getting property values.
+      */
+      get(target, prop) {
+        return _cached(target, prop, () => _resolveWithPrefixes(prop, prefixes, scopes, target));
+      },
+      /**
+      * A trap for Object.getOwnPropertyDescriptor.
+      * Also used by Object.hasOwnProperty.
+      */
+      getOwnPropertyDescriptor(target, prop) {
+        return Reflect.getOwnPropertyDescriptor(target._scopes[0], prop);
+      },
+      /**
+      * A trap for Object.getPrototypeOf.
+      */
+      getPrototypeOf() {
+        return Reflect.getPrototypeOf(scopes[0]);
+      },
+      /**
+      * A trap for the in operator.
+      */
+      has(target, prop) {
+        return getKeysFromAllScopes(target).includes(prop);
+      },
+      /**
+      * A trap for Object.getOwnPropertyNames and Object.getOwnPropertySymbols.
+      */
+      ownKeys(target) {
+        return getKeysFromAllScopes(target);
+      },
+      /**
+      * A trap for setting property values.
+      */
+      set(target, prop, value2) {
+        const storage = target._storage || (target._storage = getTarget());
+        target[prop] = storage[prop] = value2;
+        delete target._keys;
+        return true;
+      }
+    });
+  }
+  function _attachContext(proxy, context, subProxy, descriptorDefaults) {
+    const cache2 = {
+      _cacheable: false,
+      _proxy: proxy,
+      _context: context,
+      _subProxy: subProxy,
+      _stack: /* @__PURE__ */ new Set(),
+      _descriptors: _descriptors(proxy, descriptorDefaults),
+      setContext: (ctx) => _attachContext(proxy, ctx, subProxy, descriptorDefaults),
+      override: (scope) => _attachContext(proxy.override(scope), context, subProxy, descriptorDefaults)
+    };
+    return new Proxy(cache2, {
+      /**
+      * A trap for the delete operator.
+      */
+      deleteProperty(target, prop) {
+        delete target[prop];
+        delete proxy[prop];
+        return true;
+      },
+      /**
+      * A trap for getting property values.
+      */
+      get(target, prop, receiver) {
+        return _cached(target, prop, () => _resolveWithContext(target, prop, receiver));
+      },
+      /**
+      * A trap for Object.getOwnPropertyDescriptor.
+      * Also used by Object.hasOwnProperty.
+      */
+      getOwnPropertyDescriptor(target, prop) {
+        return target._descriptors.allKeys ? Reflect.has(proxy, prop) ? {
+          enumerable: true,
+          configurable: true
+        } : void 0 : Reflect.getOwnPropertyDescriptor(proxy, prop);
+      },
+      /**
+      * A trap for Object.getPrototypeOf.
+      */
+      getPrototypeOf() {
+        return Reflect.getPrototypeOf(proxy);
+      },
+      /**
+      * A trap for the in operator.
+      */
+      has(target, prop) {
+        return Reflect.has(proxy, prop);
+      },
+      /**
+      * A trap for Object.getOwnPropertyNames and Object.getOwnPropertySymbols.
+      */
+      ownKeys() {
+        return Reflect.ownKeys(proxy);
+      },
+      /**
+      * A trap for setting property values.
+      */
+      set(target, prop, value2) {
+        proxy[prop] = value2;
+        delete target[prop];
+        return true;
+      }
+    });
+  }
+  function _descriptors(proxy, defaults2 = {
+    scriptable: true,
+    indexable: true
+  }) {
+    const { _scriptable = defaults2.scriptable, _indexable = defaults2.indexable, _allKeys = defaults2.allKeys } = proxy;
+    return {
+      allKeys: _allKeys,
+      scriptable: _scriptable,
+      indexable: _indexable,
+      isScriptable: isFunction(_scriptable) ? _scriptable : () => _scriptable,
+      isIndexable: isFunction(_indexable) ? _indexable : () => _indexable
+    };
+  }
+  var readKey = (prefix, name) => prefix ? prefix + _capitalize(name) : name;
+  var needsSubResolver = (prop, value2) => isObject2(value2) && prop !== "adapters" && (Object.getPrototypeOf(value2) === null || value2.constructor === Object);
+  function _cached(target, prop, resolve2) {
+    if (Object.prototype.hasOwnProperty.call(target, prop) || prop === "constructor") {
+      return target[prop];
+    }
+    const value2 = resolve2();
+    target[prop] = value2;
+    return value2;
+  }
+  function _resolveWithContext(target, prop, receiver) {
+    const { _proxy, _context, _subProxy, _descriptors: descriptors2 } = target;
+    let value2 = _proxy[prop];
+    if (isFunction(value2) && descriptors2.isScriptable(prop)) {
+      value2 = _resolveScriptable(prop, value2, target, receiver);
+    }
+    if (isArray(value2) && value2.length) {
+      value2 = _resolveArray(prop, value2, target, descriptors2.isIndexable);
+    }
+    if (needsSubResolver(prop, value2)) {
+      value2 = _attachContext(value2, _context, _subProxy && _subProxy[prop], descriptors2);
+    }
+    return value2;
+  }
+  function _resolveScriptable(prop, getValue, target, receiver) {
+    const { _proxy, _context, _subProxy, _stack } = target;
+    if (_stack.has(prop)) {
+      throw new Error("Recursion detected: " + Array.from(_stack).join("->") + "->" + prop);
+    }
+    _stack.add(prop);
+    let value2 = getValue(_context, _subProxy || receiver);
+    _stack.delete(prop);
+    if (needsSubResolver(prop, value2)) {
+      value2 = createSubResolver(_proxy._scopes, _proxy, prop, value2);
+    }
+    return value2;
+  }
+  function _resolveArray(prop, value2, target, isIndexable) {
+    const { _proxy, _context, _subProxy, _descriptors: descriptors2 } = target;
+    if (typeof _context.index !== "undefined" && isIndexable(prop)) {
+      return value2[_context.index % value2.length];
+    } else if (isObject2(value2[0])) {
+      const arr = value2;
+      const scopes = _proxy._scopes.filter((s) => s !== arr);
+      value2 = [];
+      for (const item of arr) {
+        const resolver = createSubResolver(scopes, _proxy, prop, item);
+        value2.push(_attachContext(resolver, _context, _subProxy && _subProxy[prop], descriptors2));
+      }
+    }
+    return value2;
+  }
+  function resolveFallback(fallback, prop, value2) {
+    return isFunction(fallback) ? fallback(prop, value2) : fallback;
+  }
+  var getScope = (key, parent) => key === true ? parent : typeof key === "string" ? resolveObjectKey(parent, key) : void 0;
+  function addScopes(set2, parentScopes, key, parentFallback, value2) {
+    for (const parent of parentScopes) {
+      const scope = getScope(key, parent);
+      if (scope) {
+        set2.add(scope);
+        const fallback = resolveFallback(scope._fallback, key, value2);
+        if (typeof fallback !== "undefined" && fallback !== key && fallback !== parentFallback) {
+          return fallback;
+        }
+      } else if (scope === false && typeof parentFallback !== "undefined" && key !== parentFallback) {
+        return null;
+      }
+    }
+    return false;
+  }
+  function createSubResolver(parentScopes, resolver, prop, value2) {
+    const rootScopes = resolver._rootScopes;
+    const fallback = resolveFallback(resolver._fallback, prop, value2);
+    const allScopes = [
+      ...parentScopes,
+      ...rootScopes
+    ];
+    const set2 = /* @__PURE__ */ new Set();
+    set2.add(value2);
+    let key = addScopesFromKey(set2, allScopes, prop, fallback || prop, value2);
+    if (key === null) {
+      return false;
+    }
+    if (typeof fallback !== "undefined" && fallback !== prop) {
+      key = addScopesFromKey(set2, allScopes, fallback, key, value2);
+      if (key === null) {
+        return false;
+      }
+    }
+    return _createResolver(Array.from(set2), [
+      ""
+    ], rootScopes, fallback, () => subGetTarget(resolver, prop, value2));
+  }
+  function addScopesFromKey(set2, allScopes, key, fallback, item) {
+    while (key) {
+      key = addScopes(set2, allScopes, key, fallback, item);
+    }
+    return key;
+  }
+  function subGetTarget(resolver, prop, value2) {
+    const parent = resolver._getTarget();
+    if (!(prop in parent)) {
+      parent[prop] = {};
+    }
+    const target = parent[prop];
+    if (isArray(target) && isObject2(value2)) {
+      return value2;
+    }
+    return target || {};
+  }
+  function _resolveWithPrefixes(prop, prefixes, scopes, proxy) {
+    let value2;
+    for (const prefix of prefixes) {
+      value2 = _resolve(readKey(prefix, prop), scopes);
+      if (typeof value2 !== "undefined") {
+        return needsSubResolver(prop, value2) ? createSubResolver(scopes, proxy, prop, value2) : value2;
+      }
+    }
+  }
+  function _resolve(key, scopes) {
+    for (const scope of scopes) {
+      if (!scope) {
+        continue;
+      }
+      const value2 = scope[key];
+      if (typeof value2 !== "undefined") {
+        return value2;
+      }
+    }
+  }
+  function getKeysFromAllScopes(target) {
+    let keys = target._keys;
+    if (!keys) {
+      keys = target._keys = resolveKeysFromAllScopes(target._scopes);
+    }
+    return keys;
+  }
+  function resolveKeysFromAllScopes(scopes) {
+    const set2 = /* @__PURE__ */ new Set();
+    for (const scope of scopes) {
+      for (const key of Object.keys(scope).filter((k) => !k.startsWith("_"))) {
+        set2.add(key);
+      }
+    }
+    return Array.from(set2);
+  }
+  function _parseObjectDataRadialScale(meta, data, start, count) {
+    const { iScale } = meta;
+    const { key = "r" } = this._parsing;
+    const parsed = new Array(count);
+    let i, ilen, index2, item;
+    for (i = 0, ilen = count; i < ilen; ++i) {
+      index2 = i + start;
+      item = data[index2];
+      parsed[i] = {
+        r: iScale.parse(resolveObjectKey(item, key), index2)
+      };
+    }
+    return parsed;
+  }
+  var EPSILON = Number.EPSILON || 1e-14;
+  var getPoint = (points, i) => i < points.length && !points[i].skip && points[i];
+  var getValueAxis = (indexAxis) => indexAxis === "x" ? "y" : "x";
+  function splineCurve(firstPoint, middlePoint, afterPoint, t) {
+    const previous = firstPoint.skip ? middlePoint : firstPoint;
+    const current = middlePoint;
+    const next = afterPoint.skip ? middlePoint : afterPoint;
+    const d01 = distanceBetweenPoints(current, previous);
+    const d12 = distanceBetweenPoints(next, current);
+    let s01 = d01 / (d01 + d12);
+    let s12 = d12 / (d01 + d12);
+    s01 = isNaN(s01) ? 0 : s01;
+    s12 = isNaN(s12) ? 0 : s12;
+    const fa = t * s01;
+    const fb = t * s12;
+    return {
+      previous: {
+        x: current.x - fa * (next.x - previous.x),
+        y: current.y - fa * (next.y - previous.y)
+      },
+      next: {
+        x: current.x + fb * (next.x - previous.x),
+        y: current.y + fb * (next.y - previous.y)
+      }
+    };
+  }
+  function monotoneAdjust(points, deltaK, mK) {
+    const pointsLen = points.length;
+    let alphaK, betaK, tauK, squaredMagnitude, pointCurrent;
+    let pointAfter = getPoint(points, 0);
+    for (let i = 0; i < pointsLen - 1; ++i) {
+      pointCurrent = pointAfter;
+      pointAfter = getPoint(points, i + 1);
+      if (!pointCurrent || !pointAfter) {
+        continue;
+      }
+      if (almostEquals(deltaK[i], 0, EPSILON)) {
+        mK[i] = mK[i + 1] = 0;
+        continue;
+      }
+      alphaK = mK[i] / deltaK[i];
+      betaK = mK[i + 1] / deltaK[i];
+      squaredMagnitude = Math.pow(alphaK, 2) + Math.pow(betaK, 2);
+      if (squaredMagnitude <= 9) {
+        continue;
+      }
+      tauK = 3 / Math.sqrt(squaredMagnitude);
+      mK[i] = alphaK * tauK * deltaK[i];
+      mK[i + 1] = betaK * tauK * deltaK[i];
+    }
+  }
+  function monotoneCompute(points, mK, indexAxis = "x") {
+    const valueAxis = getValueAxis(indexAxis);
+    const pointsLen = points.length;
+    let delta, pointBefore, pointCurrent;
+    let pointAfter = getPoint(points, 0);
+    for (let i = 0; i < pointsLen; ++i) {
+      pointBefore = pointCurrent;
+      pointCurrent = pointAfter;
+      pointAfter = getPoint(points, i + 1);
+      if (!pointCurrent) {
+        continue;
+      }
+      const iPixel = pointCurrent[indexAxis];
+      const vPixel = pointCurrent[valueAxis];
+      if (pointBefore) {
+        delta = (iPixel - pointBefore[indexAxis]) / 3;
+        pointCurrent[`cp1${indexAxis}`] = iPixel - delta;
+        pointCurrent[`cp1${valueAxis}`] = vPixel - delta * mK[i];
+      }
+      if (pointAfter) {
+        delta = (pointAfter[indexAxis] - iPixel) / 3;
+        pointCurrent[`cp2${indexAxis}`] = iPixel + delta;
+        pointCurrent[`cp2${valueAxis}`] = vPixel + delta * mK[i];
+      }
+    }
+  }
+  function splineCurveMonotone(points, indexAxis = "x") {
+    const valueAxis = getValueAxis(indexAxis);
+    const pointsLen = points.length;
+    const deltaK = Array(pointsLen).fill(0);
+    const mK = Array(pointsLen);
+    let i, pointBefore, pointCurrent;
+    let pointAfter = getPoint(points, 0);
+    for (i = 0; i < pointsLen; ++i) {
+      pointBefore = pointCurrent;
+      pointCurrent = pointAfter;
+      pointAfter = getPoint(points, i + 1);
+      if (!pointCurrent) {
+        continue;
+      }
+      if (pointAfter) {
+        const slopeDelta = pointAfter[indexAxis] - pointCurrent[indexAxis];
+        deltaK[i] = slopeDelta !== 0 ? (pointAfter[valueAxis] - pointCurrent[valueAxis]) / slopeDelta : 0;
+      }
+      mK[i] = !pointBefore ? deltaK[i] : !pointAfter ? deltaK[i - 1] : sign(deltaK[i - 1]) !== sign(deltaK[i]) ? 0 : (deltaK[i - 1] + deltaK[i]) / 2;
+    }
+    monotoneAdjust(points, deltaK, mK);
+    monotoneCompute(points, mK, indexAxis);
+  }
+  function capControlPoint(pt, min, max) {
+    return Math.max(Math.min(pt, max), min);
+  }
+  function capBezierPoints(points, area) {
+    let i, ilen, point, inArea, inAreaPrev;
+    let inAreaNext = _isPointInArea(points[0], area);
+    for (i = 0, ilen = points.length; i < ilen; ++i) {
+      inAreaPrev = inArea;
+      inArea = inAreaNext;
+      inAreaNext = i < ilen - 1 && _isPointInArea(points[i + 1], area);
+      if (!inArea) {
+        continue;
+      }
+      point = points[i];
+      if (inAreaPrev) {
+        point.cp1x = capControlPoint(point.cp1x, area.left, area.right);
+        point.cp1y = capControlPoint(point.cp1y, area.top, area.bottom);
+      }
+      if (inAreaNext) {
+        point.cp2x = capControlPoint(point.cp2x, area.left, area.right);
+        point.cp2y = capControlPoint(point.cp2y, area.top, area.bottom);
+      }
+    }
+  }
+  function _updateBezierControlPoints(points, options, area, loop, indexAxis) {
+    let i, ilen, point, controlPoints;
+    if (options.spanGaps) {
+      points = points.filter((pt) => !pt.skip);
+    }
+    if (options.cubicInterpolationMode === "monotone") {
+      splineCurveMonotone(points, indexAxis);
+    } else {
+      let prev = loop ? points[points.length - 1] : points[0];
+      for (i = 0, ilen = points.length; i < ilen; ++i) {
+        point = points[i];
+        controlPoints = splineCurve(prev, point, points[Math.min(i + 1, ilen - (loop ? 0 : 1)) % ilen], options.tension);
+        point.cp1x = controlPoints.previous.x;
+        point.cp1y = controlPoints.previous.y;
+        point.cp2x = controlPoints.next.x;
+        point.cp2y = controlPoints.next.y;
+        prev = point;
+      }
+    }
+    if (options.capBezierPoints) {
+      capBezierPoints(points, area);
+    }
+  }
+  function _isDomSupported() {
+    return typeof window !== "undefined" && typeof document !== "undefined";
+  }
+  function _getParentNode(domNode) {
+    let parent = domNode.parentNode;
+    if (parent && parent.toString() === "[object ShadowRoot]") {
+      parent = parent.host;
+    }
+    return parent;
+  }
+  function parseMaxStyle(styleValue, node, parentProperty) {
+    let valueInPixels;
+    if (typeof styleValue === "string") {
+      valueInPixels = parseInt(styleValue, 10);
+      if (styleValue.indexOf("%") !== -1) {
+        valueInPixels = valueInPixels / 100 * node.parentNode[parentProperty];
+      }
+    } else {
+      valueInPixels = styleValue;
+    }
+    return valueInPixels;
+  }
+  var getComputedStyle = (element) => element.ownerDocument.defaultView.getComputedStyle(element, null);
+  function getStyle(el, property) {
+    return getComputedStyle(el).getPropertyValue(property);
+  }
+  var positions = [
+    "top",
+    "right",
+    "bottom",
+    "left"
+  ];
+  function getPositionedStyle(styles, style, suffix) {
+    const result = {};
+    suffix = suffix ? "-" + suffix : "";
+    for (let i = 0; i < 4; i++) {
+      const pos = positions[i];
+      result[pos] = parseFloat(styles[style + "-" + pos + suffix]) || 0;
+    }
+    result.width = result.left + result.right;
+    result.height = result.top + result.bottom;
+    return result;
+  }
+  var useOffsetPos = (x, y, target) => (x > 0 || y > 0) && (!target || !target.shadowRoot);
+  function getCanvasPosition(e, canvas) {
+    const touches = e.touches;
+    const source = touches && touches.length ? touches[0] : e;
+    const { offsetX, offsetY } = source;
+    let box = false;
+    let x, y;
+    if (useOffsetPos(offsetX, offsetY, e.target)) {
+      x = offsetX;
+      y = offsetY;
+    } else {
+      const rect = canvas.getBoundingClientRect();
+      x = source.clientX - rect.left;
+      y = source.clientY - rect.top;
+      box = true;
+    }
+    return {
+      x,
+      y,
+      box
+    };
+  }
+  function getRelativePosition(event, chart) {
+    if ("native" in event) {
+      return event;
+    }
+    const { canvas, currentDevicePixelRatio } = chart;
+    const style = getComputedStyle(canvas);
+    const borderBox = style.boxSizing === "border-box";
+    const paddings = getPositionedStyle(style, "padding");
+    const borders = getPositionedStyle(style, "border", "width");
+    const { x, y, box } = getCanvasPosition(event, canvas);
+    const xOffset = paddings.left + (box && borders.left);
+    const yOffset = paddings.top + (box && borders.top);
+    let { width, height } = chart;
+    if (borderBox) {
+      width -= paddings.width + borders.width;
+      height -= paddings.height + borders.height;
+    }
+    return {
+      x: Math.round((x - xOffset) / width * canvas.width / currentDevicePixelRatio),
+      y: Math.round((y - yOffset) / height * canvas.height / currentDevicePixelRatio)
+    };
+  }
+  function getContainerSize(canvas, width, height) {
+    let maxWidth, maxHeight;
+    if (width === void 0 || height === void 0) {
+      const container = canvas && _getParentNode(canvas);
+      if (!container) {
+        width = canvas.clientWidth;
+        height = canvas.clientHeight;
+      } else {
+        const rect = container.getBoundingClientRect();
+        const containerStyle = getComputedStyle(container);
+        const containerBorder = getPositionedStyle(containerStyle, "border", "width");
+        const containerPadding = getPositionedStyle(containerStyle, "padding");
+        width = rect.width - containerPadding.width - containerBorder.width;
+        height = rect.height - containerPadding.height - containerBorder.height;
+        maxWidth = parseMaxStyle(containerStyle.maxWidth, container, "clientWidth");
+        maxHeight = parseMaxStyle(containerStyle.maxHeight, container, "clientHeight");
+      }
+    }
+    return {
+      width,
+      height,
+      maxWidth: maxWidth || INFINITY,
+      maxHeight: maxHeight || INFINITY
+    };
+  }
+  var round1 = (v) => Math.round(v * 10) / 10;
+  function getMaximumSize(canvas, bbWidth, bbHeight, aspectRatio) {
+    const style = getComputedStyle(canvas);
+    const margins = getPositionedStyle(style, "margin");
+    const maxWidth = parseMaxStyle(style.maxWidth, canvas, "clientWidth") || INFINITY;
+    const maxHeight = parseMaxStyle(style.maxHeight, canvas, "clientHeight") || INFINITY;
+    const containerSize = getContainerSize(canvas, bbWidth, bbHeight);
+    let { width, height } = containerSize;
+    if (style.boxSizing === "content-box") {
+      const borders = getPositionedStyle(style, "border", "width");
+      const paddings = getPositionedStyle(style, "padding");
+      width -= paddings.width + borders.width;
+      height -= paddings.height + borders.height;
+    }
+    width = Math.max(0, width - margins.width);
+    height = Math.max(0, aspectRatio ? width / aspectRatio : height - margins.height);
+    width = round1(Math.min(width, maxWidth, containerSize.maxWidth));
+    height = round1(Math.min(height, maxHeight, containerSize.maxHeight));
+    if (width && !height) {
+      height = round1(width / 2);
+    }
+    const maintainHeight = bbWidth !== void 0 || bbHeight !== void 0;
+    if (maintainHeight && aspectRatio && containerSize.height && height > containerSize.height) {
+      height = containerSize.height;
+      width = round1(Math.floor(height * aspectRatio));
+    }
+    return {
+      width,
+      height
+    };
+  }
+  function retinaScale(chart, forceRatio, forceStyle) {
+    const pixelRatio = forceRatio || 1;
+    const deviceHeight = round1(chart.height * pixelRatio);
+    const deviceWidth = round1(chart.width * pixelRatio);
+    chart.height = round1(chart.height);
+    chart.width = round1(chart.width);
+    const canvas = chart.canvas;
+    if (canvas.style && (forceStyle || !canvas.style.height && !canvas.style.width)) {
+      canvas.style.height = `${chart.height}px`;
+      canvas.style.width = `${chart.width}px`;
+    }
+    if (chart.currentDevicePixelRatio !== pixelRatio || canvas.height !== deviceHeight || canvas.width !== deviceWidth) {
+      chart.currentDevicePixelRatio = pixelRatio;
+      canvas.height = deviceHeight;
+      canvas.width = deviceWidth;
+      chart.ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      return true;
+    }
+    return false;
+  }
+  var supportsEventListenerOptions = (function() {
+    let passiveSupported = false;
+    try {
+      const options = {
+        get passive() {
+          passiveSupported = true;
+          return false;
+        }
+      };
+      if (_isDomSupported()) {
+        window.addEventListener("test", null, options);
+        window.removeEventListener("test", null, options);
+      }
+    } catch (e) {
+    }
+    return passiveSupported;
+  })();
+  function readUsedSize(element, property) {
+    const value2 = getStyle(element, property);
+    const matches = value2 && value2.match(/^(\d+)(\.\d+)?px$/);
+    return matches ? +matches[1] : void 0;
+  }
+  function _pointInLine(p1, p2, t, mode) {
+    return {
+      x: p1.x + t * (p2.x - p1.x),
+      y: p1.y + t * (p2.y - p1.y)
+    };
+  }
+  function _steppedInterpolation(p1, p2, t, mode) {
+    return {
+      x: p1.x + t * (p2.x - p1.x),
+      y: mode === "middle" ? t < 0.5 ? p1.y : p2.y : mode === "after" ? t < 1 ? p1.y : p2.y : t > 0 ? p2.y : p1.y
+    };
+  }
+  function _bezierInterpolation(p1, p2, t, mode) {
+    const cp1 = {
+      x: p1.cp2x,
+      y: p1.cp2y
+    };
+    const cp2 = {
+      x: p2.cp1x,
+      y: p2.cp1y
+    };
+    const a = _pointInLine(p1, cp1, t);
+    const b = _pointInLine(cp1, cp2, t);
+    const c = _pointInLine(cp2, p2, t);
+    const d = _pointInLine(a, b, t);
+    const e = _pointInLine(b, c, t);
+    return _pointInLine(d, e, t);
+  }
+  var getRightToLeftAdapter = function(rectX, width) {
+    return {
+      x(x) {
+        return rectX + rectX + width - x;
+      },
+      setWidth(w) {
+        width = w;
+      },
+      textAlign(align) {
+        if (align === "center") {
+          return align;
+        }
+        return align === "right" ? "left" : "right";
+      },
+      xPlus(x, value2) {
+        return x - value2;
+      },
+      leftForLtr(x, itemWidth) {
+        return x - itemWidth;
+      }
+    };
+  };
+  var getLeftToRightAdapter = function() {
+    return {
+      x(x) {
+        return x;
+      },
+      setWidth(w) {
+      },
+      textAlign(align) {
+        return align;
+      },
+      xPlus(x, value2) {
+        return x + value2;
+      },
+      leftForLtr(x, _itemWidth) {
+        return x;
+      }
+    };
+  };
+  function getRtlAdapter(rtl, rectX, width) {
+    return rtl ? getRightToLeftAdapter(rectX, width) : getLeftToRightAdapter();
+  }
+  function overrideTextDirection(ctx, direction) {
+    let style, original;
+    if (direction === "ltr" || direction === "rtl") {
+      style = ctx.canvas.style;
+      original = [
+        style.getPropertyValue("direction"),
+        style.getPropertyPriority("direction")
+      ];
+      style.setProperty("direction", direction, "important");
+      ctx.prevTextDirection = original;
+    }
+  }
+  function restoreTextDirection(ctx, original) {
+    if (original !== void 0) {
+      delete ctx.prevTextDirection;
+      ctx.canvas.style.setProperty("direction", original[0], original[1]);
+    }
+  }
+  function propertyFn(property) {
+    if (property === "angle") {
+      return {
+        between: _angleBetween,
+        compare: _angleDiff,
+        normalize: _normalizeAngle
+      };
+    }
+    return {
+      between: _isBetween,
+      compare: (a, b) => a - b,
+      normalize: (x) => x
+    };
+  }
+  function normalizeSegment({ start, end, count, loop, style }) {
+    return {
+      start: start % count,
+      end: end % count,
+      loop: loop && (end - start + 1) % count === 0,
+      style
+    };
+  }
+  function getSegment(segment, points, bounds) {
+    const { property, start: startBound, end: endBound } = bounds;
+    const { between, normalize } = propertyFn(property);
+    const count = points.length;
+    let { start, end, loop } = segment;
+    let i, ilen;
+    if (loop) {
+      start += count;
+      end += count;
+      for (i = 0, ilen = count; i < ilen; ++i) {
+        if (!between(normalize(points[start % count][property]), startBound, endBound)) {
+          break;
+        }
+        start--;
+        end--;
+      }
+      start %= count;
+      end %= count;
+    }
+    if (end < start) {
+      end += count;
+    }
+    return {
+      start,
+      end,
+      loop,
+      style: segment.style
+    };
+  }
+  function _boundSegment(segment, points, bounds) {
+    if (!bounds) {
+      return [
+        segment
+      ];
+    }
+    const { property, start: startBound, end: endBound } = bounds;
+    const count = points.length;
+    const { compare, between, normalize } = propertyFn(property);
+    const { start, end, loop, style } = getSegment(segment, points, bounds);
+    const result = [];
+    let inside = false;
+    let subStart = null;
+    let value2, point, prevValue;
+    const startIsBefore = () => between(startBound, prevValue, value2) && compare(startBound, prevValue) !== 0;
+    const endIsBefore = () => compare(endBound, value2) === 0 || between(endBound, prevValue, value2);
+    const shouldStart = () => inside || startIsBefore();
+    const shouldStop = () => !inside || endIsBefore();
+    for (let i = start, prev = start; i <= end; ++i) {
+      point = points[i % count];
+      if (point.skip) {
+        continue;
+      }
+      value2 = normalize(point[property]);
+      if (value2 === prevValue) {
+        continue;
+      }
+      inside = between(value2, startBound, endBound);
+      if (subStart === null && shouldStart()) {
+        subStart = compare(value2, startBound) === 0 ? i : prev;
+      }
+      if (subStart !== null && shouldStop()) {
+        result.push(normalizeSegment({
+          start: subStart,
+          end: i,
+          loop,
+          count,
+          style
+        }));
+        subStart = null;
+      }
+      prev = i;
+      prevValue = value2;
+    }
+    if (subStart !== null) {
+      result.push(normalizeSegment({
+        start: subStart,
+        end,
+        loop,
+        count,
+        style
+      }));
+    }
+    return result;
+  }
+  function _boundSegments(line, bounds) {
+    const result = [];
+    const segments = line.segments;
+    for (let i = 0; i < segments.length; i++) {
+      const sub = _boundSegment(segments[i], line.points, bounds);
+      if (sub.length) {
+        result.push(...sub);
+      }
+    }
+    return result;
+  }
+  function findStartAndEnd(points, count, loop, spanGaps) {
+    let start = 0;
+    let end = count - 1;
+    if (loop && !spanGaps) {
+      while (start < count && !points[start].skip) {
+        start++;
+      }
+    }
+    while (start < count && points[start].skip) {
+      start++;
+    }
+    start %= count;
+    if (loop) {
+      end += start;
+    }
+    while (end > start && points[end % count].skip) {
+      end--;
+    }
+    end %= count;
+    return {
+      start,
+      end
+    };
+  }
+  function solidSegments(points, start, max, loop) {
+    const count = points.length;
+    const result = [];
+    let last = start;
+    let prev = points[start];
+    let end;
+    for (end = start + 1; end <= max; ++end) {
+      const cur = points[end % count];
+      if (cur.skip || cur.stop) {
+        if (!prev.skip) {
+          loop = false;
+          result.push({
+            start: start % count,
+            end: (end - 1) % count,
+            loop
+          });
+          start = last = cur.stop ? end : null;
+        }
+      } else {
+        last = end;
+        if (prev.skip) {
+          start = end;
+        }
+      }
+      prev = cur;
+    }
+    if (last !== null) {
+      result.push({
+        start: start % count,
+        end: last % count,
+        loop
+      });
+    }
+    return result;
+  }
+  function _computeSegments(line, segmentOptions) {
+    const points = line.points;
+    const spanGaps = line.options.spanGaps;
+    const count = points.length;
+    if (!count) {
+      return [];
+    }
+    const loop = !!line._loop;
+    const { start, end } = findStartAndEnd(points, count, loop, spanGaps);
+    if (spanGaps === true) {
+      return splitByStyles(line, [
+        {
+          start,
+          end,
+          loop
+        }
+      ], points, segmentOptions);
+    }
+    const max = end < start ? end + count : end;
+    const completeLoop = !!line._fullLoop && start === 0 && end === count - 1;
+    return splitByStyles(line, solidSegments(points, start, max, completeLoop), points, segmentOptions);
+  }
+  function splitByStyles(line, segments, points, segmentOptions) {
+    if (!segmentOptions || !segmentOptions.setContext || !points) {
+      return segments;
+    }
+    return doSplitByStyles(line, segments, points, segmentOptions);
+  }
+  function doSplitByStyles(line, segments, points, segmentOptions) {
+    const chartContext = line._chart.getContext();
+    const baseStyle = readStyle(line.options);
+    const { _datasetIndex: datasetIndex, options: { spanGaps } } = line;
+    const count = points.length;
+    const result = [];
+    let prevStyle = baseStyle;
+    let start = segments[0].start;
+    let i = start;
+    function addStyle(s, e, l, st) {
+      const dir = spanGaps ? -1 : 1;
+      if (s === e) {
+        return;
+      }
+      s += count;
+      while (points[s % count].skip) {
+        s -= dir;
+      }
+      while (points[e % count].skip) {
+        e += dir;
+      }
+      if (s % count !== e % count) {
+        result.push({
+          start: s % count,
+          end: e % count,
+          loop: l,
+          style: st
+        });
+        prevStyle = st;
+        start = e % count;
+      }
+    }
+    for (const segment of segments) {
+      start = spanGaps ? start : segment.start;
+      let prev = points[start % count];
+      let style;
+      for (i = start + 1; i <= segment.end; i++) {
+        const pt = points[i % count];
+        style = readStyle(segmentOptions.setContext(createContext(chartContext, {
+          type: "segment",
+          p0: prev,
+          p1: pt,
+          p0DataIndex: (i - 1) % count,
+          p1DataIndex: i % count,
+          datasetIndex
+        })));
+        if (styleChanged(style, prevStyle)) {
+          addStyle(start, i - 1, segment.loop, prevStyle);
+        }
+        prev = pt;
+        prevStyle = style;
+      }
+      if (start < i - 1) {
+        addStyle(start, i - 1, segment.loop, prevStyle);
+      }
+    }
+    return result;
+  }
+  function readStyle(options) {
+    return {
+      backgroundColor: options.backgroundColor,
+      borderCapStyle: options.borderCapStyle,
+      borderDash: options.borderDash,
+      borderDashOffset: options.borderDashOffset,
+      borderJoinStyle: options.borderJoinStyle,
+      borderWidth: options.borderWidth,
+      borderColor: options.borderColor
+    };
+  }
+  function styleChanged(style, prevStyle) {
+    if (!prevStyle) {
+      return false;
+    }
+    const cache2 = [];
+    const replacer = function(key, value2) {
+      if (!isPatternOrGradient(value2)) {
+        return value2;
+      }
+      if (!cache2.includes(value2)) {
+        cache2.push(value2);
+      }
+      return cache2.indexOf(value2);
+    };
+    return JSON.stringify(style, replacer) !== JSON.stringify(prevStyle, replacer);
+  }
+  function getSizeForArea(scale, chartArea, field) {
+    return scale.options.clip ? scale[field] : chartArea[field];
+  }
+  function getDatasetArea(meta, chartArea) {
+    const { xScale, yScale } = meta;
+    if (xScale && yScale) {
+      return {
+        left: getSizeForArea(xScale, chartArea, "left"),
+        right: getSizeForArea(xScale, chartArea, "right"),
+        top: getSizeForArea(yScale, chartArea, "top"),
+        bottom: getSizeForArea(yScale, chartArea, "bottom")
+      };
+    }
+    return chartArea;
+  }
+  function getDatasetClipArea(chart, meta) {
+    const clip = meta._clip;
+    if (clip.disabled) {
+      return false;
+    }
+    const area = getDatasetArea(meta, chart.chartArea);
+    return {
+      left: clip.left === false ? 0 : area.left - (clip.left === true ? 0 : clip.left),
+      right: clip.right === false ? chart.width : area.right + (clip.right === true ? 0 : clip.right),
+      top: clip.top === false ? 0 : area.top - (clip.top === true ? 0 : clip.top),
+      bottom: clip.bottom === false ? chart.height : area.bottom + (clip.bottom === true ? 0 : clip.bottom)
+    };
+  }
+
+  // node_modules/chart.js/dist/chart.js
+  var Animator = class {
+    constructor() {
+      this._request = null;
+      this._charts = /* @__PURE__ */ new Map();
+      this._running = false;
+      this._lastDate = void 0;
+    }
+    _notify(chart, anims, date, type) {
+      const callbacks = anims.listeners[type];
+      const numSteps = anims.duration;
+      callbacks.forEach((fn) => fn({
+        chart,
+        initial: anims.initial,
+        numSteps,
+        currentStep: Math.min(date - anims.start, numSteps)
+      }));
+    }
+    _refresh() {
+      if (this._request) {
+        return;
+      }
+      this._running = true;
+      this._request = requestAnimFrame.call(window, () => {
+        this._update();
+        this._request = null;
+        if (this._running) {
+          this._refresh();
+        }
+      });
+    }
+    _update(date = Date.now()) {
+      let remaining = 0;
+      this._charts.forEach((anims, chart) => {
+        if (!anims.running || !anims.items.length) {
+          return;
+        }
+        const items = anims.items;
+        let i = items.length - 1;
+        let draw2 = false;
+        let item;
+        for (; i >= 0; --i) {
+          item = items[i];
+          if (item._active) {
+            if (item._total > anims.duration) {
+              anims.duration = item._total;
+            }
+            item.tick(date);
+            draw2 = true;
+          } else {
+            items[i] = items[items.length - 1];
+            items.pop();
+          }
+        }
+        if (draw2) {
+          chart.draw();
+          this._notify(chart, anims, date, "progress");
+        }
+        if (!items.length) {
+          anims.running = false;
+          this._notify(chart, anims, date, "complete");
+          anims.initial = false;
+        }
+        remaining += items.length;
+      });
+      this._lastDate = date;
+      if (remaining === 0) {
+        this._running = false;
+      }
+    }
+    _getAnims(chart) {
+      const charts = this._charts;
+      let anims = charts.get(chart);
+      if (!anims) {
+        anims = {
+          running: false,
+          initial: true,
+          items: [],
+          listeners: {
+            complete: [],
+            progress: []
+          }
+        };
+        charts.set(chart, anims);
+      }
+      return anims;
+    }
+    listen(chart, event, cb) {
+      this._getAnims(chart).listeners[event].push(cb);
+    }
+    add(chart, items) {
+      if (!items || !items.length) {
+        return;
+      }
+      this._getAnims(chart).items.push(...items);
+    }
+    has(chart) {
+      return this._getAnims(chart).items.length > 0;
+    }
+    start(chart) {
+      const anims = this._charts.get(chart);
+      if (!anims) {
+        return;
+      }
+      anims.running = true;
+      anims.start = Date.now();
+      anims.duration = anims.items.reduce((acc, cur) => Math.max(acc, cur._duration), 0);
+      this._refresh();
+    }
+    running(chart) {
+      if (!this._running) {
+        return false;
+      }
+      const anims = this._charts.get(chart);
+      if (!anims || !anims.running || !anims.items.length) {
+        return false;
+      }
+      return true;
+    }
+    stop(chart) {
+      const anims = this._charts.get(chart);
+      if (!anims || !anims.items.length) {
+        return;
+      }
+      const items = anims.items;
+      let i = items.length - 1;
+      for (; i >= 0; --i) {
+        items[i].cancel();
+      }
+      anims.items = [];
+      this._notify(chart, anims, Date.now(), "complete");
+    }
+    remove(chart) {
+      return this._charts.delete(chart);
+    }
+  };
+  var animator = /* @__PURE__ */ new Animator();
+  var transparent = "transparent";
+  var interpolators = {
+    boolean(from2, to2, factor) {
+      return factor > 0.5 ? to2 : from2;
+    },
+    color(from2, to2, factor) {
+      const c0 = color(from2 || transparent);
+      const c1 = c0.valid && color(to2 || transparent);
+      return c1 && c1.valid ? c1.mix(c0, factor).hexString() : to2;
+    },
+    number(from2, to2, factor) {
+      return from2 + (to2 - from2) * factor;
+    }
+  };
+  var Animation = class {
+    constructor(cfg, target, prop, to2) {
+      const currentValue = target[prop];
+      to2 = resolve([
+        cfg.to,
+        to2,
+        currentValue,
+        cfg.from
+      ]);
+      const from2 = resolve([
+        cfg.from,
+        currentValue,
+        to2
+      ]);
+      this._active = true;
+      this._fn = cfg.fn || interpolators[cfg.type || typeof from2];
+      this._easing = effects[cfg.easing] || effects.linear;
+      this._start = Math.floor(Date.now() + (cfg.delay || 0));
+      this._duration = this._total = Math.floor(cfg.duration);
+      this._loop = !!cfg.loop;
+      this._target = target;
+      this._prop = prop;
+      this._from = from2;
+      this._to = to2;
+      this._promises = void 0;
+    }
+    active() {
+      return this._active;
+    }
+    update(cfg, to2, date) {
+      if (this._active) {
+        this._notify(false);
+        const currentValue = this._target[this._prop];
+        const elapsed = date - this._start;
+        const remain = this._duration - elapsed;
+        this._start = date;
+        this._duration = Math.floor(Math.max(remain, cfg.duration));
+        this._total += elapsed;
+        this._loop = !!cfg.loop;
+        this._to = resolve([
+          cfg.to,
+          to2,
+          currentValue,
+          cfg.from
+        ]);
+        this._from = resolve([
+          cfg.from,
+          currentValue,
+          to2
+        ]);
+      }
+    }
+    cancel() {
+      if (this._active) {
+        this.tick(Date.now());
+        this._active = false;
+        this._notify(false);
+      }
+    }
+    tick(date) {
+      const elapsed = date - this._start;
+      const duration = this._duration;
+      const prop = this._prop;
+      const from2 = this._from;
+      const loop = this._loop;
+      const to2 = this._to;
+      let factor;
+      this._active = from2 !== to2 && (loop || elapsed < duration);
+      if (!this._active) {
+        this._target[prop] = to2;
+        this._notify(true);
+        return;
+      }
+      if (elapsed < 0) {
+        this._target[prop] = from2;
+        return;
+      }
+      factor = elapsed / duration % 2;
+      factor = loop && factor > 1 ? 2 - factor : factor;
+      factor = this._easing(Math.min(1, Math.max(0, factor)));
+      this._target[prop] = this._fn(from2, to2, factor);
+    }
+    wait() {
+      const promises = this._promises || (this._promises = []);
+      return new Promise((res, rej) => {
+        promises.push({
+          res,
+          rej
+        });
+      });
+    }
+    _notify(resolved) {
+      const method = resolved ? "res" : "rej";
+      const promises = this._promises || [];
+      for (let i = 0; i < promises.length; i++) {
+        promises[i][method]();
+      }
+    }
+  };
+  var Animations = class {
+    constructor(chart, config) {
+      this._chart = chart;
+      this._properties = /* @__PURE__ */ new Map();
+      this.configure(config);
+    }
+    configure(config) {
+      if (!isObject2(config)) {
+        return;
+      }
+      const animationOptions = Object.keys(defaults.animation);
+      const animatedProps = this._properties;
+      Object.getOwnPropertyNames(config).forEach((key) => {
+        const cfg = config[key];
+        if (!isObject2(cfg)) {
+          return;
+        }
+        const resolved = {};
+        for (const option of animationOptions) {
+          resolved[option] = cfg[option];
+        }
+        (isArray(cfg.properties) && cfg.properties || [
+          key
+        ]).forEach((prop) => {
+          if (prop === key || !animatedProps.has(prop)) {
+            animatedProps.set(prop, resolved);
+          }
+        });
+      });
+    }
+    _animateOptions(target, values) {
+      const newOptions = values.options;
+      const options = resolveTargetOptions(target, newOptions);
+      if (!options) {
+        return [];
+      }
+      const animations2 = this._createAnimations(options, newOptions);
+      if (newOptions.$shared) {
+        awaitAll(target.options.$animations, newOptions).then(() => {
+          target.options = newOptions;
+        }, () => {
+        });
+      }
+      return animations2;
+    }
+    _createAnimations(target, values) {
+      const animatedProps = this._properties;
+      const animations2 = [];
+      const running = target.$animations || (target.$animations = {});
+      const props = Object.keys(values);
+      const date = Date.now();
+      let i;
+      for (i = props.length - 1; i >= 0; --i) {
+        const prop = props[i];
+        if (prop.charAt(0) === "$") {
+          continue;
+        }
+        if (prop === "options") {
+          animations2.push(...this._animateOptions(target, values));
+          continue;
+        }
+        const value2 = values[prop];
+        let animation = running[prop];
+        const cfg = animatedProps.get(prop);
+        if (animation) {
+          if (cfg && animation.active()) {
+            animation.update(cfg, value2, date);
+            continue;
+          } else {
+            animation.cancel();
+          }
+        }
+        if (!cfg || !cfg.duration) {
+          target[prop] = value2;
+          continue;
+        }
+        running[prop] = animation = new Animation(cfg, target, prop, value2);
+        animations2.push(animation);
+      }
+      return animations2;
+    }
+    update(target, values) {
+      if (this._properties.size === 0) {
+        Object.assign(target, values);
+        return;
+      }
+      const animations2 = this._createAnimations(target, values);
+      if (animations2.length) {
+        animator.add(this._chart, animations2);
+        return true;
+      }
+    }
+  };
+  function awaitAll(animations2, properties) {
+    const running = [];
+    const keys = Object.keys(properties);
+    for (let i = 0; i < keys.length; i++) {
+      const anim = animations2[keys[i]];
+      if (anim && anim.active()) {
+        running.push(anim.wait());
+      }
+    }
+    return Promise.all(running);
+  }
+  function resolveTargetOptions(target, newOptions) {
+    if (!newOptions) {
+      return;
+    }
+    let options = target.options;
+    if (!options) {
+      target.options = newOptions;
+      return;
+    }
+    if (options.$shared) {
+      target.options = options = Object.assign({}, options, {
+        $shared: false,
+        $animations: {}
+      });
+    }
+    return options;
+  }
+  function scaleClip(scale, allowedOverflow) {
+    const opts = scale && scale.options || {};
+    const reverse = opts.reverse;
+    const min = opts.min === void 0 ? allowedOverflow : 0;
+    const max = opts.max === void 0 ? allowedOverflow : 0;
+    return {
+      start: reverse ? max : min,
+      end: reverse ? min : max
+    };
+  }
+  function defaultClip(xScale, yScale, allowedOverflow) {
+    if (allowedOverflow === false) {
+      return false;
+    }
+    const x = scaleClip(xScale, allowedOverflow);
+    const y = scaleClip(yScale, allowedOverflow);
+    return {
+      top: y.end,
+      right: x.end,
+      bottom: y.start,
+      left: x.start
+    };
+  }
+  function toClip(value2) {
+    let t, r, b, l;
+    if (isObject2(value2)) {
+      t = value2.top;
+      r = value2.right;
+      b = value2.bottom;
+      l = value2.left;
+    } else {
+      t = r = b = l = value2;
+    }
+    return {
+      top: t,
+      right: r,
+      bottom: b,
+      left: l,
+      disabled: value2 === false
+    };
+  }
+  function getSortedDatasetIndices(chart, filterVisible) {
+    const keys = [];
+    const metasets = chart._getSortedDatasetMetas(filterVisible);
+    let i, ilen;
+    for (i = 0, ilen = metasets.length; i < ilen; ++i) {
+      keys.push(metasets[i].index);
+    }
+    return keys;
+  }
+  function applyStack(stack, value2, dsIndex, options = {}) {
+    const keys = stack.keys;
+    const singleMode = options.mode === "single";
+    let i, ilen, datasetIndex, otherValue;
+    if (value2 === null) {
+      return;
+    }
+    let found = false;
+    for (i = 0, ilen = keys.length; i < ilen; ++i) {
+      datasetIndex = +keys[i];
+      if (datasetIndex === dsIndex) {
+        found = true;
+        if (options.all) {
+          continue;
+        }
+        break;
+      }
+      otherValue = stack.values[datasetIndex];
+      if (isNumberFinite(otherValue) && (singleMode || value2 === 0 || sign(value2) === sign(otherValue))) {
+        value2 += otherValue;
+      }
+    }
+    if (!found && !options.all) {
+      return 0;
+    }
+    return value2;
+  }
+  function convertObjectDataToArray(data, meta) {
+    const { iScale, vScale } = meta;
+    const iAxisKey = iScale.axis === "x" ? "x" : "y";
+    const vAxisKey = vScale.axis === "x" ? "x" : "y";
+    const keys = Object.keys(data);
+    const adata = new Array(keys.length);
+    let i, ilen, key;
+    for (i = 0, ilen = keys.length; i < ilen; ++i) {
+      key = keys[i];
+      adata[i] = {
+        [iAxisKey]: key,
+        [vAxisKey]: data[key]
+      };
+    }
+    return adata;
+  }
+  function isStacked(scale, meta) {
+    const stacked = scale && scale.options.stacked;
+    return stacked || stacked === void 0 && meta.stack !== void 0;
+  }
+  function getStackKey(indexScale, valueScale, meta) {
+    return `${indexScale.id}.${valueScale.id}.${meta.stack || meta.type}`;
+  }
+  function getUserBounds(scale) {
+    const { min, max, minDefined, maxDefined } = scale.getUserBounds();
+    return {
+      min: minDefined ? min : Number.NEGATIVE_INFINITY,
+      max: maxDefined ? max : Number.POSITIVE_INFINITY
+    };
+  }
+  function getOrCreateStack(stacks, stackKey, indexValue) {
+    const subStack = stacks[stackKey] || (stacks[stackKey] = {});
+    return subStack[indexValue] || (subStack[indexValue] = {});
+  }
+  function getLastIndexInStack(stack, vScale, positive, type) {
+    for (const meta of vScale.getMatchingVisibleMetas(type).reverse()) {
+      const value2 = stack[meta.index];
+      if (positive && value2 > 0 || !positive && value2 < 0) {
+        return meta.index;
+      }
+    }
+    return null;
+  }
+  function updateStacks(controller, parsed) {
+    const { chart, _cachedMeta: meta } = controller;
+    const stacks = chart._stacks || (chart._stacks = {});
+    const { iScale, vScale, index: datasetIndex } = meta;
+    const iAxis = iScale.axis;
+    const vAxis = vScale.axis;
+    const key = getStackKey(iScale, vScale, meta);
+    const ilen = parsed.length;
+    let stack;
+    for (let i = 0; i < ilen; ++i) {
+      const item = parsed[i];
+      const { [iAxis]: index2, [vAxis]: value2 } = item;
+      const itemStacks = item._stacks || (item._stacks = {});
+      stack = itemStacks[vAxis] = getOrCreateStack(stacks, key, index2);
+      stack[datasetIndex] = value2;
+      stack._top = getLastIndexInStack(stack, vScale, true, meta.type);
+      stack._bottom = getLastIndexInStack(stack, vScale, false, meta.type);
+      const visualValues = stack._visualValues || (stack._visualValues = {});
+      visualValues[datasetIndex] = value2;
+    }
+  }
+  function getFirstScaleId(chart, axis) {
+    const scales2 = chart.scales;
+    return Object.keys(scales2).filter((key) => scales2[key].axis === axis).shift();
+  }
+  function createDatasetContext(parent, index2) {
+    return createContext(parent, {
+      active: false,
+      dataset: void 0,
+      datasetIndex: index2,
+      index: index2,
+      mode: "default",
+      type: "dataset"
+    });
+  }
+  function createDataContext(parent, index2, element) {
+    return createContext(parent, {
+      active: false,
+      dataIndex: index2,
+      parsed: void 0,
+      raw: void 0,
+      element,
+      index: index2,
+      mode: "default",
+      type: "data"
+    });
+  }
+  function clearStacks(meta, items) {
+    const datasetIndex = meta.controller.index;
+    const axis = meta.vScale && meta.vScale.axis;
+    if (!axis) {
+      return;
+    }
+    items = items || meta._parsed;
+    for (const parsed of items) {
+      const stacks = parsed._stacks;
+      if (!stacks || stacks[axis] === void 0 || stacks[axis][datasetIndex] === void 0) {
+        return;
+      }
+      delete stacks[axis][datasetIndex];
+      if (stacks[axis]._visualValues !== void 0 && stacks[axis]._visualValues[datasetIndex] !== void 0) {
+        delete stacks[axis]._visualValues[datasetIndex];
+      }
+    }
+  }
+  var isDirectUpdateMode = (mode) => mode === "reset" || mode === "none";
+  var cloneIfNotShared = (cached, shared) => shared ? cached : Object.assign({}, cached);
+  var createStack = (canStack, meta, chart) => canStack && !meta.hidden && meta._stacked && {
+    keys: getSortedDatasetIndices(chart, true),
+    values: null
+  };
+  var DatasetController = class {
+    static defaults = {};
+    static datasetElementType = null;
+    static dataElementType = null;
+    constructor(chart, datasetIndex) {
+      this.chart = chart;
+      this._ctx = chart.ctx;
+      this.index = datasetIndex;
+      this._cachedDataOpts = {};
+      this._cachedMeta = this.getMeta();
+      this._type = this._cachedMeta.type;
+      this.options = void 0;
+      this._parsing = false;
+      this._data = void 0;
+      this._objectData = void 0;
+      this._sharedOptions = void 0;
+      this._drawStart = void 0;
+      this._drawCount = void 0;
+      this.enableOptionSharing = false;
+      this.supportsDecimation = false;
+      this.$context = void 0;
+      this._syncList = [];
+      this.datasetElementType = new.target.datasetElementType;
+      this.dataElementType = new.target.dataElementType;
+      this.initialize();
+    }
+    initialize() {
+      const meta = this._cachedMeta;
+      this.configure();
+      this.linkScales();
+      meta._stacked = isStacked(meta.vScale, meta);
+      this.addElements();
+      if (this.options.fill && !this.chart.isPluginEnabled("filler")) {
+        console.warn("Tried to use the 'fill' option without the 'Filler' plugin enabled. Please import and register the 'Filler' plugin and make sure it is not disabled in the options");
+      }
+    }
+    updateIndex(datasetIndex) {
+      if (this.index !== datasetIndex) {
+        clearStacks(this._cachedMeta);
+      }
+      this.index = datasetIndex;
+    }
+    linkScales() {
+      const chart = this.chart;
+      const meta = this._cachedMeta;
+      const dataset = this.getDataset();
+      const chooseId = (axis, x, y, r) => axis === "x" ? x : axis === "r" ? r : y;
+      const xid = meta.xAxisID = valueOrDefault(dataset.xAxisID, getFirstScaleId(chart, "x"));
+      const yid = meta.yAxisID = valueOrDefault(dataset.yAxisID, getFirstScaleId(chart, "y"));
+      const rid = meta.rAxisID = valueOrDefault(dataset.rAxisID, getFirstScaleId(chart, "r"));
+      const indexAxis = meta.indexAxis;
+      const iid = meta.iAxisID = chooseId(indexAxis, xid, yid, rid);
+      const vid = meta.vAxisID = chooseId(indexAxis, yid, xid, rid);
+      meta.xScale = this.getScaleForId(xid);
+      meta.yScale = this.getScaleForId(yid);
+      meta.rScale = this.getScaleForId(rid);
+      meta.iScale = this.getScaleForId(iid);
+      meta.vScale = this.getScaleForId(vid);
+    }
+    getDataset() {
+      return this.chart.data.datasets[this.index];
+    }
+    getMeta() {
+      return this.chart.getDatasetMeta(this.index);
+    }
+    getScaleForId(scaleID) {
+      return this.chart.scales[scaleID];
+    }
+    _getOtherScale(scale) {
+      const meta = this._cachedMeta;
+      return scale === meta.iScale ? meta.vScale : meta.iScale;
+    }
+    reset() {
+      this._update("reset");
+    }
+    _destroy() {
+      const meta = this._cachedMeta;
+      if (this._data) {
+        unlistenArrayEvents(this._data, this);
+      }
+      if (meta._stacked) {
+        clearStacks(meta);
+      }
+    }
+    _dataCheck() {
+      const dataset = this.getDataset();
+      const data = dataset.data || (dataset.data = []);
+      const _data = this._data;
+      if (isObject2(data)) {
+        const meta = this._cachedMeta;
+        this._data = convertObjectDataToArray(data, meta);
+      } else if (_data !== data) {
+        if (_data) {
+          unlistenArrayEvents(_data, this);
+          const meta = this._cachedMeta;
+          clearStacks(meta);
+          meta._parsed = [];
+        }
+        if (data && Object.isExtensible(data)) {
+          listenArrayEvents(data, this);
+        }
+        this._syncList = [];
+        this._data = data;
+      }
+    }
+    addElements() {
+      const meta = this._cachedMeta;
+      this._dataCheck();
+      if (this.datasetElementType) {
+        meta.dataset = new this.datasetElementType();
+      }
+    }
+    buildOrUpdateElements(resetNewElements) {
+      const meta = this._cachedMeta;
+      const dataset = this.getDataset();
+      let stackChanged = false;
+      this._dataCheck();
+      const oldStacked = meta._stacked;
+      meta._stacked = isStacked(meta.vScale, meta);
+      if (meta.stack !== dataset.stack) {
+        stackChanged = true;
+        clearStacks(meta);
+        meta.stack = dataset.stack;
+      }
+      this._resyncElements(resetNewElements);
+      if (stackChanged || oldStacked !== meta._stacked) {
+        updateStacks(this, meta._parsed);
+        meta._stacked = isStacked(meta.vScale, meta);
+      }
+    }
+    configure() {
+      const config = this.chart.config;
+      const scopeKeys = config.datasetScopeKeys(this._type);
+      const scopes = config.getOptionScopes(this.getDataset(), scopeKeys, true);
+      this.options = config.createResolver(scopes, this.getContext());
+      this._parsing = this.options.parsing;
+      this._cachedDataOpts = {};
+    }
+    parse(start, count) {
+      const { _cachedMeta: meta, _data: data } = this;
+      const { iScale, _stacked } = meta;
+      const iAxis = iScale.axis;
+      let sorted = start === 0 && count === data.length ? true : meta._sorted;
+      let prev = start > 0 && meta._parsed[start - 1];
+      let i, cur, parsed;
+      if (this._parsing === false) {
+        meta._parsed = data;
+        meta._sorted = true;
+        parsed = data;
+      } else {
+        if (isArray(data[start])) {
+          parsed = this.parseArrayData(meta, data, start, count);
+        } else if (isObject2(data[start])) {
+          parsed = this.parseObjectData(meta, data, start, count);
+        } else {
+          parsed = this.parsePrimitiveData(meta, data, start, count);
+        }
+        const isNotInOrderComparedToPrev = () => cur[iAxis] === null || prev && cur[iAxis] < prev[iAxis];
+        for (i = 0; i < count; ++i) {
+          meta._parsed[i + start] = cur = parsed[i];
+          if (sorted) {
+            if (isNotInOrderComparedToPrev()) {
+              sorted = false;
+            }
+            prev = cur;
+          }
+        }
+        meta._sorted = sorted;
+      }
+      if (_stacked) {
+        updateStacks(this, parsed);
+      }
+    }
+    parsePrimitiveData(meta, data, start, count) {
+      const { iScale, vScale } = meta;
+      const iAxis = iScale.axis;
+      const vAxis = vScale.axis;
+      const labels = iScale.getLabels();
+      const singleScale = iScale === vScale;
+      const parsed = new Array(count);
+      let i, ilen, index2;
+      for (i = 0, ilen = count; i < ilen; ++i) {
+        index2 = i + start;
+        parsed[i] = {
+          [iAxis]: singleScale || iScale.parse(labels[index2], index2),
+          [vAxis]: vScale.parse(data[index2], index2)
+        };
+      }
+      return parsed;
+    }
+    parseArrayData(meta, data, start, count) {
+      const { xScale, yScale } = meta;
+      const parsed = new Array(count);
+      let i, ilen, index2, item;
+      for (i = 0, ilen = count; i < ilen; ++i) {
+        index2 = i + start;
+        item = data[index2];
+        parsed[i] = {
+          x: xScale.parse(item[0], index2),
+          y: yScale.parse(item[1], index2)
+        };
+      }
+      return parsed;
+    }
+    parseObjectData(meta, data, start, count) {
+      const { xScale, yScale } = meta;
+      const { xAxisKey = "x", yAxisKey = "y" } = this._parsing;
+      const parsed = new Array(count);
+      let i, ilen, index2, item;
+      for (i = 0, ilen = count; i < ilen; ++i) {
+        index2 = i + start;
+        item = data[index2];
+        parsed[i] = {
+          x: xScale.parse(resolveObjectKey(item, xAxisKey), index2),
+          y: yScale.parse(resolveObjectKey(item, yAxisKey), index2)
+        };
+      }
+      return parsed;
+    }
+    getParsed(index2) {
+      return this._cachedMeta._parsed[index2];
+    }
+    getDataElement(index2) {
+      return this._cachedMeta.data[index2];
+    }
+    applyStack(scale, parsed, mode) {
+      const chart = this.chart;
+      const meta = this._cachedMeta;
+      const value2 = parsed[scale.axis];
+      const stack = {
+        keys: getSortedDatasetIndices(chart, true),
+        values: parsed._stacks[scale.axis]._visualValues
+      };
+      return applyStack(stack, value2, meta.index, {
+        mode
+      });
+    }
+    updateRangeFromParsed(range, scale, parsed, stack) {
+      const parsedValue = parsed[scale.axis];
+      let value2 = parsedValue === null ? NaN : parsedValue;
+      const values = stack && parsed._stacks[scale.axis];
+      if (stack && values) {
+        stack.values = values;
+        value2 = applyStack(stack, parsedValue, this._cachedMeta.index);
+      }
+      range.min = Math.min(range.min, value2);
+      range.max = Math.max(range.max, value2);
+    }
+    getMinMax(scale, canStack) {
+      const meta = this._cachedMeta;
+      const _parsed = meta._parsed;
+      const sorted = meta._sorted && scale === meta.iScale;
+      const ilen = _parsed.length;
+      const otherScale = this._getOtherScale(scale);
+      const stack = createStack(canStack, meta, this.chart);
+      const range = {
+        min: Number.POSITIVE_INFINITY,
+        max: Number.NEGATIVE_INFINITY
+      };
+      const { min: otherMin, max: otherMax } = getUserBounds(otherScale);
+      let i, parsed;
+      function _skip() {
+        parsed = _parsed[i];
+        const otherValue = parsed[otherScale.axis];
+        return !isNumberFinite(parsed[scale.axis]) || otherMin > otherValue || otherMax < otherValue;
+      }
+      for (i = 0; i < ilen; ++i) {
+        if (_skip()) {
+          continue;
+        }
+        this.updateRangeFromParsed(range, scale, parsed, stack);
+        if (sorted) {
+          break;
+        }
+      }
+      if (sorted) {
+        for (i = ilen - 1; i >= 0; --i) {
+          if (_skip()) {
+            continue;
+          }
+          this.updateRangeFromParsed(range, scale, parsed, stack);
+          break;
+        }
+      }
+      return range;
+    }
+    getAllParsedValues(scale) {
+      const parsed = this._cachedMeta._parsed;
+      const values = [];
+      let i, ilen, value2;
+      for (i = 0, ilen = parsed.length; i < ilen; ++i) {
+        value2 = parsed[i][scale.axis];
+        if (isNumberFinite(value2)) {
+          values.push(value2);
+        }
+      }
+      return values;
+    }
+    getMaxOverflow() {
+      return false;
+    }
+    getLabelAndValue(index2) {
+      const meta = this._cachedMeta;
+      const iScale = meta.iScale;
+      const vScale = meta.vScale;
+      const parsed = this.getParsed(index2);
+      return {
+        label: iScale ? "" + iScale.getLabelForValue(parsed[iScale.axis]) : "",
+        value: vScale ? "" + vScale.getLabelForValue(parsed[vScale.axis]) : ""
+      };
+    }
+    _update(mode) {
+      const meta = this._cachedMeta;
+      this.update(mode || "default");
+      meta._clip = toClip(valueOrDefault(this.options.clip, defaultClip(meta.xScale, meta.yScale, this.getMaxOverflow())));
+    }
+    update(mode) {
+    }
+    draw() {
+      const ctx = this._ctx;
+      const chart = this.chart;
+      const meta = this._cachedMeta;
+      const elements2 = meta.data || [];
+      const area = chart.chartArea;
+      const active = [];
+      const start = this._drawStart || 0;
+      const count = this._drawCount || elements2.length - start;
+      const drawActiveElementsOnTop = this.options.drawActiveElementsOnTop;
+      let i;
+      if (meta.dataset) {
+        meta.dataset.draw(ctx, area, start, count);
+      }
+      for (i = start; i < start + count; ++i) {
+        const element = elements2[i];
+        if (element.hidden) {
+          continue;
+        }
+        if (element.active && drawActiveElementsOnTop) {
+          active.push(element);
+        } else {
+          element.draw(ctx, area);
+        }
+      }
+      for (i = 0; i < active.length; ++i) {
+        active[i].draw(ctx, area);
+      }
+    }
+    getStyle(index2, active) {
+      const mode = active ? "active" : "default";
+      return index2 === void 0 && this._cachedMeta.dataset ? this.resolveDatasetElementOptions(mode) : this.resolveDataElementOptions(index2 || 0, mode);
+    }
+    getContext(index2, active, mode) {
+      const dataset = this.getDataset();
+      let context;
+      if (index2 >= 0 && index2 < this._cachedMeta.data.length) {
+        const element = this._cachedMeta.data[index2];
+        context = element.$context || (element.$context = createDataContext(this.getContext(), index2, element));
+        context.parsed = this.getParsed(index2);
+        context.raw = dataset.data[index2];
+        context.index = context.dataIndex = index2;
+      } else {
+        context = this.$context || (this.$context = createDatasetContext(this.chart.getContext(), this.index));
+        context.dataset = dataset;
+        context.index = context.datasetIndex = this.index;
+      }
+      context.active = !!active;
+      context.mode = mode;
+      return context;
+    }
+    resolveDatasetElementOptions(mode) {
+      return this._resolveElementOptions(this.datasetElementType.id, mode);
+    }
+    resolveDataElementOptions(index2, mode) {
+      return this._resolveElementOptions(this.dataElementType.id, mode, index2);
+    }
+    _resolveElementOptions(elementType, mode = "default", index2) {
+      const active = mode === "active";
+      const cache2 = this._cachedDataOpts;
+      const cacheKey = elementType + "-" + mode;
+      const cached = cache2[cacheKey];
+      const sharing = this.enableOptionSharing && defined(index2);
+      if (cached) {
+        return cloneIfNotShared(cached, sharing);
+      }
+      const config = this.chart.config;
+      const scopeKeys = config.datasetElementScopeKeys(this._type, elementType);
+      const prefixes = active ? [
+        `${elementType}Hover`,
+        "hover",
+        elementType,
+        ""
+      ] : [
+        elementType,
+        ""
+      ];
+      const scopes = config.getOptionScopes(this.getDataset(), scopeKeys);
+      const names2 = Object.keys(defaults.elements[elementType]);
+      const context = () => this.getContext(index2, active, mode);
+      const values = config.resolveNamedOptions(scopes, names2, context, prefixes);
+      if (values.$shared) {
+        values.$shared = sharing;
+        cache2[cacheKey] = Object.freeze(cloneIfNotShared(values, sharing));
+      }
+      return values;
+    }
+    _resolveAnimations(index2, transition, active) {
+      const chart = this.chart;
+      const cache2 = this._cachedDataOpts;
+      const cacheKey = `animation-${transition}`;
+      const cached = cache2[cacheKey];
+      if (cached) {
+        return cached;
+      }
+      let options;
+      if (chart.options.animation !== false) {
+        const config = this.chart.config;
+        const scopeKeys = config.datasetAnimationScopeKeys(this._type, transition);
+        const scopes = config.getOptionScopes(this.getDataset(), scopeKeys);
+        options = config.createResolver(scopes, this.getContext(index2, active, transition));
+      }
+      const animations2 = new Animations(chart, options && options.animations);
+      if (options && options._cacheable) {
+        cache2[cacheKey] = Object.freeze(animations2);
+      }
+      return animations2;
+    }
+    getSharedOptions(options) {
+      if (!options.$shared) {
+        return;
+      }
+      return this._sharedOptions || (this._sharedOptions = Object.assign({}, options));
+    }
+    includeOptions(mode, sharedOptions) {
+      return !sharedOptions || isDirectUpdateMode(mode) || this.chart._animationsDisabled;
+    }
+    _getSharedOptions(start, mode) {
+      const firstOpts = this.resolveDataElementOptions(start, mode);
+      const previouslySharedOptions = this._sharedOptions;
+      const sharedOptions = this.getSharedOptions(firstOpts);
+      const includeOptions = this.includeOptions(mode, sharedOptions) || sharedOptions !== previouslySharedOptions;
+      this.updateSharedOptions(sharedOptions, mode, firstOpts);
+      return {
+        sharedOptions,
+        includeOptions
+      };
+    }
+    updateElement(element, index2, properties, mode) {
+      if (isDirectUpdateMode(mode)) {
+        Object.assign(element, properties);
+      } else {
+        this._resolveAnimations(index2, mode).update(element, properties);
+      }
+    }
+    updateSharedOptions(sharedOptions, mode, newOptions) {
+      if (sharedOptions && !isDirectUpdateMode(mode)) {
+        this._resolveAnimations(void 0, mode).update(sharedOptions, newOptions);
+      }
+    }
+    _setStyle(element, index2, mode, active) {
+      element.active = active;
+      const options = this.getStyle(index2, active);
+      this._resolveAnimations(index2, mode, active).update(element, {
+        options: !active && this.getSharedOptions(options) || options
+      });
+    }
+    removeHoverStyle(element, datasetIndex, index2) {
+      this._setStyle(element, index2, "active", false);
+    }
+    setHoverStyle(element, datasetIndex, index2) {
+      this._setStyle(element, index2, "active", true);
+    }
+    _removeDatasetHoverStyle() {
+      const element = this._cachedMeta.dataset;
+      if (element) {
+        this._setStyle(element, void 0, "active", false);
+      }
+    }
+    _setDatasetHoverStyle() {
+      const element = this._cachedMeta.dataset;
+      if (element) {
+        this._setStyle(element, void 0, "active", true);
+      }
+    }
+    _resyncElements(resetNewElements) {
+      const data = this._data;
+      const elements2 = this._cachedMeta.data;
+      for (const [method, arg1, arg2] of this._syncList) {
+        this[method](arg1, arg2);
+      }
+      this._syncList = [];
+      const numMeta = elements2.length;
+      const numData = data.length;
+      const count = Math.min(numData, numMeta);
+      if (count) {
+        this.parse(0, count);
+      }
+      if (numData > numMeta) {
+        this._insertElements(numMeta, numData - numMeta, resetNewElements);
+      } else if (numData < numMeta) {
+        this._removeElements(numData, numMeta - numData);
+      }
+    }
+    _insertElements(start, count, resetNewElements = true) {
+      const meta = this._cachedMeta;
+      const data = meta.data;
+      const end = start + count;
+      let i;
+      const move = (arr) => {
+        arr.length += count;
+        for (i = arr.length - 1; i >= end; i--) {
+          arr[i] = arr[i - count];
+        }
+      };
+      move(data);
+      for (i = start; i < end; ++i) {
+        data[i] = new this.dataElementType();
+      }
+      if (this._parsing) {
+        move(meta._parsed);
+      }
+      this.parse(start, count);
+      if (resetNewElements) {
+        this.updateElements(data, start, count, "reset");
+      }
+    }
+    updateElements(element, start, count, mode) {
+    }
+    _removeElements(start, count) {
+      const meta = this._cachedMeta;
+      if (this._parsing) {
+        const removed = meta._parsed.splice(start, count);
+        if (meta._stacked) {
+          clearStacks(meta, removed);
+        }
+      }
+      meta.data.splice(start, count);
+    }
+    _sync(args) {
+      if (this._parsing) {
+        this._syncList.push(args);
+      } else {
+        const [method, arg1, arg2] = args;
+        this[method](arg1, arg2);
+      }
+      this.chart._dataChanges.push([
+        this.index,
+        ...args
+      ]);
+    }
+    _onDataPush() {
+      const count = arguments.length;
+      this._sync([
+        "_insertElements",
+        this.getDataset().data.length - count,
+        count
+      ]);
+    }
+    _onDataPop() {
+      this._sync([
+        "_removeElements",
+        this._cachedMeta.data.length - 1,
+        1
+      ]);
+    }
+    _onDataShift() {
+      this._sync([
+        "_removeElements",
+        0,
+        1
+      ]);
+    }
+    _onDataSplice(start, count) {
+      if (count) {
+        this._sync([
+          "_removeElements",
+          start,
+          count
+        ]);
+      }
+      const newCount = arguments.length - 2;
+      if (newCount) {
+        this._sync([
+          "_insertElements",
+          start,
+          newCount
+        ]);
+      }
+    }
+    _onDataUnshift() {
+      this._sync([
+        "_insertElements",
+        0,
+        arguments.length
+      ]);
+    }
+  };
+  function getAllScaleValues(scale, type) {
+    if (!scale._cache.$bar) {
+      const visibleMetas = scale.getMatchingVisibleMetas(type);
+      let values = [];
+      for (let i = 0, ilen = visibleMetas.length; i < ilen; i++) {
+        values = values.concat(visibleMetas[i].controller.getAllParsedValues(scale));
+      }
+      scale._cache.$bar = _arrayUnique(values.sort((a, b) => a - b));
+    }
+    return scale._cache.$bar;
+  }
+  function computeMinSampleSize(meta) {
+    const scale = meta.iScale;
+    const values = getAllScaleValues(scale, meta.type);
+    let min = scale._length;
+    let i, ilen, curr, prev;
+    const updateMinAndPrev = () => {
+      if (curr === 32767 || curr === -32768) {
+        return;
+      }
+      if (defined(prev)) {
+        min = Math.min(min, Math.abs(curr - prev) || min);
+      }
+      prev = curr;
+    };
+    for (i = 0, ilen = values.length; i < ilen; ++i) {
+      curr = scale.getPixelForValue(values[i]);
+      updateMinAndPrev();
+    }
+    prev = void 0;
+    for (i = 0, ilen = scale.ticks.length; i < ilen; ++i) {
+      curr = scale.getPixelForTick(i);
+      updateMinAndPrev();
+    }
+    return min;
+  }
+  function computeFitCategoryTraits(index2, ruler, options, stackCount) {
+    const thickness = options.barThickness;
+    let size, ratio;
+    if (isNullOrUndef(thickness)) {
+      size = ruler.min * options.categoryPercentage;
+      ratio = options.barPercentage;
+    } else {
+      size = thickness * stackCount;
+      ratio = 1;
+    }
+    return {
+      chunk: size / stackCount,
+      ratio,
+      start: ruler.pixels[index2] - size / 2
+    };
+  }
+  function computeFlexCategoryTraits(index2, ruler, options, stackCount) {
+    const pixels = ruler.pixels;
+    const curr = pixels[index2];
+    let prev = index2 > 0 ? pixels[index2 - 1] : null;
+    let next = index2 < pixels.length - 1 ? pixels[index2 + 1] : null;
+    const percent = options.categoryPercentage;
+    if (prev === null) {
+      prev = curr - (next === null ? ruler.end - ruler.start : next - curr);
+    }
+    if (next === null) {
+      next = curr + curr - prev;
+    }
+    const start = curr - (curr - Math.min(prev, next)) / 2 * percent;
+    const size = Math.abs(next - prev) / 2 * percent;
+    return {
+      chunk: size / stackCount,
+      ratio: options.barPercentage,
+      start
+    };
+  }
+  function parseFloatBar(entry, item, vScale, i) {
+    const startValue = vScale.parse(entry[0], i);
+    const endValue = vScale.parse(entry[1], i);
+    const min = Math.min(startValue, endValue);
+    const max = Math.max(startValue, endValue);
+    let barStart = min;
+    let barEnd = max;
+    if (Math.abs(min) > Math.abs(max)) {
+      barStart = max;
+      barEnd = min;
+    }
+    item[vScale.axis] = barEnd;
+    item._custom = {
+      barStart,
+      barEnd,
+      start: startValue,
+      end: endValue,
+      min,
+      max
+    };
+  }
+  function parseValue(entry, item, vScale, i) {
+    if (isArray(entry)) {
+      parseFloatBar(entry, item, vScale, i);
+    } else {
+      item[vScale.axis] = vScale.parse(entry, i);
+    }
+    return item;
+  }
+  function parseArrayOrPrimitive(meta, data, start, count) {
+    const iScale = meta.iScale;
+    const vScale = meta.vScale;
+    const labels = iScale.getLabels();
+    const singleScale = iScale === vScale;
+    const parsed = [];
+    let i, ilen, item, entry;
+    for (i = start, ilen = start + count; i < ilen; ++i) {
+      entry = data[i];
+      item = {};
+      item[iScale.axis] = singleScale || iScale.parse(labels[i], i);
+      parsed.push(parseValue(entry, item, vScale, i));
+    }
+    return parsed;
+  }
+  function isFloatBar(custom) {
+    return custom && custom.barStart !== void 0 && custom.barEnd !== void 0;
+  }
+  function barSign(size, vScale, actualBase) {
+    if (size !== 0) {
+      return sign(size);
+    }
+    return (vScale.isHorizontal() ? 1 : -1) * (vScale.min >= actualBase ? 1 : -1);
+  }
+  function borderProps(properties) {
+    let reverse, start, end, top, bottom;
+    if (properties.horizontal) {
+      reverse = properties.base > properties.x;
+      start = "left";
+      end = "right";
+    } else {
+      reverse = properties.base < properties.y;
+      start = "bottom";
+      end = "top";
+    }
+    if (reverse) {
+      top = "end";
+      bottom = "start";
+    } else {
+      top = "start";
+      bottom = "end";
+    }
+    return {
+      start,
+      end,
+      reverse,
+      top,
+      bottom
+    };
+  }
+  function setBorderSkipped(properties, options, stack, index2) {
+    let edge = options.borderSkipped;
+    const res = {};
+    if (!edge) {
+      properties.borderSkipped = res;
+      return;
+    }
+    if (edge === true) {
+      properties.borderSkipped = {
+        top: true,
+        right: true,
+        bottom: true,
+        left: true
+      };
+      return;
+    }
+    const { start, end, reverse, top, bottom } = borderProps(properties);
+    if (edge === "middle" && stack) {
+      properties.enableBorderRadius = true;
+      if ((stack._top || 0) === index2) {
+        edge = top;
+      } else if ((stack._bottom || 0) === index2) {
+        edge = bottom;
+      } else {
+        res[parseEdge(bottom, start, end, reverse)] = true;
+        edge = top;
+      }
+    }
+    res[parseEdge(edge, start, end, reverse)] = true;
+    properties.borderSkipped = res;
+  }
+  function parseEdge(edge, a, b, reverse) {
+    if (reverse) {
+      edge = swap(edge, a, b);
+      edge = startEnd(edge, b, a);
+    } else {
+      edge = startEnd(edge, a, b);
+    }
+    return edge;
+  }
+  function swap(orig, v1, v2) {
+    return orig === v1 ? v2 : orig === v2 ? v1 : orig;
+  }
+  function startEnd(v, start, end) {
+    return v === "start" ? start : v === "end" ? end : v;
+  }
+  function setInflateAmount(properties, { inflateAmount }, ratio) {
+    properties.inflateAmount = inflateAmount === "auto" ? ratio === 1 ? 0.33 : 0 : inflateAmount;
+  }
+  var BarController = class extends DatasetController {
+    static id = "bar";
+    static defaults = {
+      datasetElementType: false,
+      dataElementType: "bar",
+      categoryPercentage: 0.8,
+      barPercentage: 0.9,
+      grouped: true,
+      animations: {
+        numbers: {
+          type: "number",
+          properties: [
+            "x",
+            "y",
+            "base",
+            "width",
+            "height"
+          ]
+        }
+      }
+    };
+    static overrides = {
+      scales: {
+        _index_: {
+          type: "category",
+          offset: true,
+          grid: {
+            offset: true
+          }
+        },
+        _value_: {
+          type: "linear",
+          beginAtZero: true
+        }
+      }
+    };
+    parsePrimitiveData(meta, data, start, count) {
+      return parseArrayOrPrimitive(meta, data, start, count);
+    }
+    parseArrayData(meta, data, start, count) {
+      return parseArrayOrPrimitive(meta, data, start, count);
+    }
+    parseObjectData(meta, data, start, count) {
+      const { iScale, vScale } = meta;
+      const { xAxisKey = "x", yAxisKey = "y" } = this._parsing;
+      const iAxisKey = iScale.axis === "x" ? xAxisKey : yAxisKey;
+      const vAxisKey = vScale.axis === "x" ? xAxisKey : yAxisKey;
+      const parsed = [];
+      let i, ilen, item, obj;
+      for (i = start, ilen = start + count; i < ilen; ++i) {
+        obj = data[i];
+        item = {};
+        item[iScale.axis] = iScale.parse(resolveObjectKey(obj, iAxisKey), i);
+        parsed.push(parseValue(resolveObjectKey(obj, vAxisKey), item, vScale, i));
+      }
+      return parsed;
+    }
+    updateRangeFromParsed(range, scale, parsed, stack) {
+      super.updateRangeFromParsed(range, scale, parsed, stack);
+      const custom = parsed._custom;
+      if (custom && scale === this._cachedMeta.vScale) {
+        range.min = Math.min(range.min, custom.min);
+        range.max = Math.max(range.max, custom.max);
+      }
+    }
+    getMaxOverflow() {
+      return 0;
+    }
+    getLabelAndValue(index2) {
+      const meta = this._cachedMeta;
+      const { iScale, vScale } = meta;
+      const parsed = this.getParsed(index2);
+      const custom = parsed._custom;
+      const value2 = isFloatBar(custom) ? "[" + custom.start + ", " + custom.end + "]" : "" + vScale.getLabelForValue(parsed[vScale.axis]);
+      return {
+        label: "" + iScale.getLabelForValue(parsed[iScale.axis]),
+        value: value2
+      };
+    }
+    initialize() {
+      this.enableOptionSharing = true;
+      super.initialize();
+      const meta = this._cachedMeta;
+      meta.stack = this.getDataset().stack;
+    }
+    update(mode) {
+      const meta = this._cachedMeta;
+      this.updateElements(meta.data, 0, meta.data.length, mode);
+    }
+    updateElements(bars, start, count, mode) {
+      const reset = mode === "reset";
+      const { index: index2, _cachedMeta: { vScale } } = this;
+      const base = vScale.getBasePixel();
+      const horizontal = vScale.isHorizontal();
+      const ruler = this._getRuler();
+      const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
+      for (let i = start; i < start + count; i++) {
+        const parsed = this.getParsed(i);
+        const vpixels = reset || isNullOrUndef(parsed[vScale.axis]) ? {
+          base,
+          head: base
+        } : this._calculateBarValuePixels(i);
+        const ipixels = this._calculateBarIndexPixels(i, ruler);
+        const stack = (parsed._stacks || {})[vScale.axis];
+        const properties = {
+          horizontal,
+          base: vpixels.base,
+          enableBorderRadius: !stack || isFloatBar(parsed._custom) || index2 === stack._top || index2 === stack._bottom,
+          x: horizontal ? vpixels.head : ipixels.center,
+          y: horizontal ? ipixels.center : vpixels.head,
+          height: horizontal ? ipixels.size : Math.abs(vpixels.size),
+          width: horizontal ? Math.abs(vpixels.size) : ipixels.size
+        };
+        if (includeOptions) {
+          properties.options = sharedOptions || this.resolveDataElementOptions(i, bars[i].active ? "active" : mode);
+        }
+        const options = properties.options || bars[i].options;
+        setBorderSkipped(properties, options, stack, index2);
+        setInflateAmount(properties, options, ruler.ratio);
+        this.updateElement(bars[i], i, properties, mode);
+      }
+    }
+    _getStacks(last, dataIndex) {
+      const { iScale } = this._cachedMeta;
+      const metasets = iScale.getMatchingVisibleMetas(this._type).filter((meta) => meta.controller.options.grouped);
+      const stacked = iScale.options.stacked;
+      const stacks = [];
+      const currentParsed = this._cachedMeta.controller.getParsed(dataIndex);
+      const iScaleValue = currentParsed && currentParsed[iScale.axis];
+      const skipNull = (meta) => {
+        const parsed = meta._parsed.find((item) => item[iScale.axis] === iScaleValue);
+        const val = parsed && parsed[meta.vScale.axis];
+        if (isNullOrUndef(val) || isNaN(val)) {
+          return true;
+        }
+      };
+      for (const meta of metasets) {
+        if (dataIndex !== void 0 && skipNull(meta)) {
+          continue;
+        }
+        if (stacked === false || stacks.indexOf(meta.stack) === -1 || stacked === void 0 && meta.stack === void 0) {
+          stacks.push(meta.stack);
+        }
+        if (meta.index === last) {
+          break;
+        }
+      }
+      if (!stacks.length) {
+        stacks.push(void 0);
+      }
+      return stacks;
+    }
+    _getStackCount(index2) {
+      return this._getStacks(void 0, index2).length;
+    }
+    _getAxisCount() {
+      return this._getAxis().length;
+    }
+    getFirstScaleIdForIndexAxis() {
+      const scales2 = this.chart.scales;
+      const indexScaleId = this.chart.options.indexAxis;
+      return Object.keys(scales2).filter((key) => scales2[key].axis === indexScaleId).shift();
+    }
+    _getAxis() {
+      const axis = {};
+      const firstScaleAxisId = this.getFirstScaleIdForIndexAxis();
+      for (const dataset of this.chart.data.datasets) {
+        axis[valueOrDefault(this.chart.options.indexAxis === "x" ? dataset.xAxisID : dataset.yAxisID, firstScaleAxisId)] = true;
+      }
+      return Object.keys(axis);
+    }
+    _getStackIndex(datasetIndex, name, dataIndex) {
+      const stacks = this._getStacks(datasetIndex, dataIndex);
+      const index2 = name !== void 0 ? stacks.indexOf(name) : -1;
+      return index2 === -1 ? stacks.length - 1 : index2;
+    }
+    _getRuler() {
+      const opts = this.options;
+      const meta = this._cachedMeta;
+      const iScale = meta.iScale;
+      const pixels = [];
+      let i, ilen;
+      for (i = 0, ilen = meta.data.length; i < ilen; ++i) {
+        pixels.push(iScale.getPixelForValue(this.getParsed(i)[iScale.axis], i));
+      }
+      const barThickness = opts.barThickness;
+      const min = barThickness || computeMinSampleSize(meta);
+      return {
+        min,
+        pixels,
+        start: iScale._startPixel,
+        end: iScale._endPixel,
+        stackCount: this._getStackCount(),
+        scale: iScale,
+        grouped: opts.grouped,
+        ratio: barThickness ? 1 : opts.categoryPercentage * opts.barPercentage
+      };
+    }
+    _calculateBarValuePixels(index2) {
+      const { _cachedMeta: { vScale, _stacked, index: datasetIndex }, options: { base: baseValue, minBarLength } } = this;
+      const actualBase = baseValue || 0;
+      const parsed = this.getParsed(index2);
+      const custom = parsed._custom;
+      const floating = isFloatBar(custom);
+      let value2 = parsed[vScale.axis];
+      let start = 0;
+      let length = _stacked ? this.applyStack(vScale, parsed, _stacked) : value2;
+      let head, size;
+      if (length !== value2) {
+        start = length - value2;
+        length = value2;
+      }
+      if (floating) {
+        value2 = custom.barStart;
+        length = custom.barEnd - custom.barStart;
+        if (value2 !== 0 && sign(value2) !== sign(custom.barEnd)) {
+          start = 0;
+        }
+        start += value2;
+      }
+      const startValue = !isNullOrUndef(baseValue) && !floating ? baseValue : start;
+      let base = vScale.getPixelForValue(startValue);
+      if (this.chart.getDataVisibility(index2)) {
+        head = vScale.getPixelForValue(start + length);
+      } else {
+        head = base;
+      }
+      size = head - base;
+      if (Math.abs(size) < minBarLength) {
+        size = barSign(size, vScale, actualBase) * minBarLength;
+        if (value2 === actualBase) {
+          base -= size / 2;
+        }
+        const startPixel = vScale.getPixelForDecimal(0);
+        const endPixel = vScale.getPixelForDecimal(1);
+        const min = Math.min(startPixel, endPixel);
+        const max = Math.max(startPixel, endPixel);
+        base = Math.max(Math.min(base, max), min);
+        head = base + size;
+        if (_stacked && !floating) {
+          parsed._stacks[vScale.axis]._visualValues[datasetIndex] = vScale.getValueForPixel(head) - vScale.getValueForPixel(base);
+        }
+      }
+      if (base === vScale.getPixelForValue(actualBase)) {
+        const halfGrid = sign(size) * vScale.getLineWidthForValue(actualBase) / 2;
+        base += halfGrid;
+        size -= halfGrid;
+      }
+      return {
+        size,
+        base,
+        head,
+        center: head + size / 2
+      };
+    }
+    _calculateBarIndexPixels(index2, ruler) {
+      const scale = ruler.scale;
+      const options = this.options;
+      const skipNull = options.skipNull;
+      const maxBarThickness = valueOrDefault(options.maxBarThickness, Infinity);
+      let center, size;
+      const axisCount = this._getAxisCount();
+      if (ruler.grouped) {
+        const stackCount = skipNull ? this._getStackCount(index2) : ruler.stackCount;
+        const range = options.barThickness === "flex" ? computeFlexCategoryTraits(index2, ruler, options, stackCount * axisCount) : computeFitCategoryTraits(index2, ruler, options, stackCount * axisCount);
+        const axisID = this.chart.options.indexAxis === "x" ? this.getDataset().xAxisID : this.getDataset().yAxisID;
+        const axisNumber = this._getAxis().indexOf(valueOrDefault(axisID, this.getFirstScaleIdForIndexAxis()));
+        const stackIndex = this._getStackIndex(this.index, this._cachedMeta.stack, skipNull ? index2 : void 0) + axisNumber;
+        center = range.start + range.chunk * stackIndex + range.chunk / 2;
+        size = Math.min(maxBarThickness, range.chunk * range.ratio);
+      } else {
+        center = scale.getPixelForValue(this.getParsed(index2)[scale.axis], index2);
+        size = Math.min(maxBarThickness, ruler.min * ruler.ratio);
+      }
+      return {
+        base: center - size / 2,
+        head: center + size / 2,
+        center,
+        size
+      };
+    }
+    draw() {
+      const meta = this._cachedMeta;
+      const vScale = meta.vScale;
+      const rects = meta.data;
+      const ilen = rects.length;
+      let i = 0;
+      for (; i < ilen; ++i) {
+        if (this.getParsed(i)[vScale.axis] !== null && !rects[i].hidden) {
+          rects[i].draw(this._ctx);
+        }
+      }
+    }
+  };
+  var BubbleController = class extends DatasetController {
+    static id = "bubble";
+    static defaults = {
+      datasetElementType: false,
+      dataElementType: "point",
+      animations: {
+        numbers: {
+          type: "number",
+          properties: [
+            "x",
+            "y",
+            "borderWidth",
+            "radius"
+          ]
+        }
+      }
+    };
+    static overrides = {
+      scales: {
+        x: {
+          type: "linear"
+        },
+        y: {
+          type: "linear"
+        }
+      }
+    };
+    initialize() {
+      this.enableOptionSharing = true;
+      super.initialize();
+    }
+    parsePrimitiveData(meta, data, start, count) {
+      const parsed = super.parsePrimitiveData(meta, data, start, count);
+      for (let i = 0; i < parsed.length; i++) {
+        parsed[i]._custom = this.resolveDataElementOptions(i + start).radius;
+      }
+      return parsed;
+    }
+    parseArrayData(meta, data, start, count) {
+      const parsed = super.parseArrayData(meta, data, start, count);
+      for (let i = 0; i < parsed.length; i++) {
+        const item = data[start + i];
+        parsed[i]._custom = valueOrDefault(item[2], this.resolveDataElementOptions(i + start).radius);
+      }
+      return parsed;
+    }
+    parseObjectData(meta, data, start, count) {
+      const parsed = super.parseObjectData(meta, data, start, count);
+      for (let i = 0; i < parsed.length; i++) {
+        const item = data[start + i];
+        parsed[i]._custom = valueOrDefault(item && item.r && +item.r, this.resolveDataElementOptions(i + start).radius);
+      }
+      return parsed;
+    }
+    getMaxOverflow() {
+      const data = this._cachedMeta.data;
+      let max = 0;
+      for (let i = data.length - 1; i >= 0; --i) {
+        max = Math.max(max, data[i].size(this.resolveDataElementOptions(i)) / 2);
+      }
+      return max > 0 && max;
+    }
+    getLabelAndValue(index2) {
+      const meta = this._cachedMeta;
+      const labels = this.chart.data.labels || [];
+      const { xScale, yScale } = meta;
+      const parsed = this.getParsed(index2);
+      const x = xScale.getLabelForValue(parsed.x);
+      const y = yScale.getLabelForValue(parsed.y);
+      const r = parsed._custom;
+      return {
+        label: labels[index2] || "",
+        value: "(" + x + ", " + y + (r ? ", " + r : "") + ")"
+      };
+    }
+    update(mode) {
+      const points = this._cachedMeta.data;
+      this.updateElements(points, 0, points.length, mode);
+    }
+    updateElements(points, start, count, mode) {
+      const reset = mode === "reset";
+      const { iScale, vScale } = this._cachedMeta;
+      const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
+      const iAxis = iScale.axis;
+      const vAxis = vScale.axis;
+      for (let i = start; i < start + count; i++) {
+        const point = points[i];
+        const parsed = !reset && this.getParsed(i);
+        const properties = {};
+        const iPixel = properties[iAxis] = reset ? iScale.getPixelForDecimal(0.5) : iScale.getPixelForValue(parsed[iAxis]);
+        const vPixel = properties[vAxis] = reset ? vScale.getBasePixel() : vScale.getPixelForValue(parsed[vAxis]);
+        properties.skip = isNaN(iPixel) || isNaN(vPixel);
+        if (includeOptions) {
+          properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? "active" : mode);
+          if (reset) {
+            properties.options.radius = 0;
+          }
+        }
+        this.updateElement(point, i, properties, mode);
+      }
+    }
+    resolveDataElementOptions(index2, mode) {
+      const parsed = this.getParsed(index2);
+      let values = super.resolveDataElementOptions(index2, mode);
+      if (values.$shared) {
+        values = Object.assign({}, values, {
+          $shared: false
+        });
+      }
+      const radius = values.radius;
+      if (mode !== "active") {
+        values.radius = 0;
+      }
+      values.radius += valueOrDefault(parsed && parsed._custom, radius);
+      return values;
+    }
+  };
+  function getRatioAndOffset(rotation, circumference, cutout) {
+    let ratioX = 1;
+    let ratioY = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    if (circumference < TAU) {
+      const startAngle = rotation;
+      const endAngle = startAngle + circumference;
+      const startX = Math.cos(startAngle);
+      const startY = Math.sin(startAngle);
+      const endX = Math.cos(endAngle);
+      const endY = Math.sin(endAngle);
+      const calcMax = (angle, a, b) => _angleBetween(angle, startAngle, endAngle, true) ? 1 : Math.max(a, a * cutout, b, b * cutout);
+      const calcMin = (angle, a, b) => _angleBetween(angle, startAngle, endAngle, true) ? -1 : Math.min(a, a * cutout, b, b * cutout);
+      const maxX = calcMax(0, startX, endX);
+      const maxY = calcMax(HALF_PI, startY, endY);
+      const minX = calcMin(PI, startX, endX);
+      const minY = calcMin(PI + HALF_PI, startY, endY);
+      ratioX = (maxX - minX) / 2;
+      ratioY = (maxY - minY) / 2;
+      offsetX = -(maxX + minX) / 2;
+      offsetY = -(maxY + minY) / 2;
+    }
+    return {
+      ratioX,
+      ratioY,
+      offsetX,
+      offsetY
+    };
+  }
+  var DoughnutController = class extends DatasetController {
+    static id = "doughnut";
+    static defaults = {
+      datasetElementType: false,
+      dataElementType: "arc",
+      animation: {
+        animateRotate: true,
+        animateScale: false
+      },
+      animations: {
+        numbers: {
+          type: "number",
+          properties: [
+            "circumference",
+            "endAngle",
+            "innerRadius",
+            "outerRadius",
+            "startAngle",
+            "x",
+            "y",
+            "offset",
+            "borderWidth",
+            "spacing"
+          ]
+        }
+      },
+      cutout: "50%",
+      rotation: 0,
+      circumference: 360,
+      radius: "100%",
+      spacing: 0,
+      indexAxis: "r"
+    };
+    static descriptors = {
+      _scriptable: (name) => name !== "spacing",
+      _indexable: (name) => name !== "spacing" && !name.startsWith("borderDash") && !name.startsWith("hoverBorderDash")
+    };
+    static overrides = {
+      aspectRatio: 1,
+      plugins: {
+        legend: {
+          labels: {
+            generateLabels(chart) {
+              const data = chart.data;
+              const { labels: { pointStyle, textAlign, color: color2, useBorderRadius, borderRadius } } = chart.legend.options;
+              if (data.labels.length && data.datasets.length) {
+                return data.labels.map((label, i) => {
+                  const meta = chart.getDatasetMeta(0);
+                  const style = meta.controller.getStyle(i);
+                  return {
+                    text: label,
+                    fillStyle: style.backgroundColor,
+                    fontColor: color2,
+                    hidden: !chart.getDataVisibility(i),
+                    lineDash: style.borderDash,
+                    lineDashOffset: style.borderDashOffset,
+                    lineJoin: style.borderJoinStyle,
+                    lineWidth: style.borderWidth,
+                    strokeStyle: style.borderColor,
+                    textAlign,
+                    pointStyle,
+                    borderRadius: useBorderRadius && (borderRadius || style.borderRadius),
+                    index: i
+                  };
+                });
+              }
+              return [];
+            }
+          },
+          onClick(e, legendItem, legend) {
+            legend.chart.toggleDataVisibility(legendItem.index);
+            legend.chart.update();
+          }
+        }
+      }
+    };
+    constructor(chart, datasetIndex) {
+      super(chart, datasetIndex);
+      this.enableOptionSharing = true;
+      this.innerRadius = void 0;
+      this.outerRadius = void 0;
+      this.offsetX = void 0;
+      this.offsetY = void 0;
+    }
+    linkScales() {
+    }
+    parse(start, count) {
+      const data = this.getDataset().data;
+      const meta = this._cachedMeta;
+      if (this._parsing === false) {
+        meta._parsed = data;
+      } else {
+        let getter = (i2) => +data[i2];
+        if (isObject2(data[start])) {
+          const { key = "value" } = this._parsing;
+          getter = (i2) => +resolveObjectKey(data[i2], key);
+        }
+        let i, ilen;
+        for (i = start, ilen = start + count; i < ilen; ++i) {
+          meta._parsed[i] = getter(i);
+        }
+      }
+    }
+    _getRotation() {
+      return toRadians(this.options.rotation - 90);
+    }
+    _getCircumference() {
+      return toRadians(this.options.circumference);
+    }
+    _getRotationExtents() {
+      let min = TAU;
+      let max = -TAU;
+      for (let i = 0; i < this.chart.data.datasets.length; ++i) {
+        if (this.chart.isDatasetVisible(i) && this.chart.getDatasetMeta(i).type === this._type) {
+          const controller = this.chart.getDatasetMeta(i).controller;
+          const rotation = controller._getRotation();
+          const circumference = controller._getCircumference();
+          min = Math.min(min, rotation);
+          max = Math.max(max, rotation + circumference);
+        }
+      }
+      return {
+        rotation: min,
+        circumference: max - min
+      };
+    }
+    update(mode) {
+      const chart = this.chart;
+      const { chartArea } = chart;
+      const meta = this._cachedMeta;
+      const arcs = meta.data;
+      const spacing = this.getMaxBorderWidth() + this.getMaxOffset(arcs) + this.options.spacing;
+      const maxSize = Math.max((Math.min(chartArea.width, chartArea.height) - spacing) / 2, 0);
+      const cutout = Math.min(toPercentage(this.options.cutout, maxSize), 1);
+      const chartWeight = this._getRingWeight(this.index);
+      const { circumference, rotation } = this._getRotationExtents();
+      const { ratioX, ratioY, offsetX, offsetY } = getRatioAndOffset(rotation, circumference, cutout);
+      const maxWidth = (chartArea.width - spacing) / ratioX;
+      const maxHeight = (chartArea.height - spacing) / ratioY;
+      const maxRadius = Math.max(Math.min(maxWidth, maxHeight) / 2, 0);
+      const outerRadius = toDimension(this.options.radius, maxRadius);
+      const innerRadius = Math.max(outerRadius * cutout, 0);
+      const radiusLength = (outerRadius - innerRadius) / this._getVisibleDatasetWeightTotal();
+      this.offsetX = offsetX * outerRadius;
+      this.offsetY = offsetY * outerRadius;
+      meta.total = this.calculateTotal();
+      this.outerRadius = outerRadius - radiusLength * this._getRingWeightOffset(this.index);
+      this.innerRadius = Math.max(this.outerRadius - radiusLength * chartWeight, 0);
+      this.updateElements(arcs, 0, arcs.length, mode);
+    }
+    _circumference(i, reset) {
+      const opts = this.options;
+      const meta = this._cachedMeta;
+      const circumference = this._getCircumference();
+      if (reset && opts.animation.animateRotate || !this.chart.getDataVisibility(i) || meta._parsed[i] === null || meta.data[i].hidden) {
+        return 0;
+      }
+      return this.calculateCircumference(meta._parsed[i] * circumference / TAU);
+    }
+    updateElements(arcs, start, count, mode) {
+      const reset = mode === "reset";
+      const chart = this.chart;
+      const chartArea = chart.chartArea;
+      const opts = chart.options;
+      const animationOpts = opts.animation;
+      const centerX = (chartArea.left + chartArea.right) / 2;
+      const centerY = (chartArea.top + chartArea.bottom) / 2;
+      const animateScale = reset && animationOpts.animateScale;
+      const innerRadius = animateScale ? 0 : this.innerRadius;
+      const outerRadius = animateScale ? 0 : this.outerRadius;
+      const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
+      let startAngle = this._getRotation();
+      let i;
+      for (i = 0; i < start; ++i) {
+        startAngle += this._circumference(i, reset);
+      }
+      for (i = start; i < start + count; ++i) {
+        const circumference = this._circumference(i, reset);
+        const arc = arcs[i];
+        const properties = {
+          x: centerX + this.offsetX,
+          y: centerY + this.offsetY,
+          startAngle,
+          endAngle: startAngle + circumference,
+          circumference,
+          outerRadius,
+          innerRadius
+        };
+        if (includeOptions) {
+          properties.options = sharedOptions || this.resolveDataElementOptions(i, arc.active ? "active" : mode);
+        }
+        startAngle += circumference;
+        this.updateElement(arc, i, properties, mode);
+      }
+    }
+    calculateTotal() {
+      const meta = this._cachedMeta;
+      const metaData = meta.data;
+      let total = 0;
+      let i;
+      for (i = 0; i < metaData.length; i++) {
+        const value2 = meta._parsed[i];
+        if (value2 !== null && !isNaN(value2) && this.chart.getDataVisibility(i) && !metaData[i].hidden) {
+          total += Math.abs(value2);
+        }
+      }
+      return total;
+    }
+    calculateCircumference(value2) {
+      const total = this._cachedMeta.total;
+      if (total > 0 && !isNaN(value2)) {
+        return TAU * (Math.abs(value2) / total);
+      }
+      return 0;
+    }
+    getLabelAndValue(index2) {
+      const meta = this._cachedMeta;
+      const chart = this.chart;
+      const labels = chart.data.labels || [];
+      const value2 = formatNumber(meta._parsed[index2], chart.options.locale);
+      return {
+        label: labels[index2] || "",
+        value: value2
+      };
+    }
+    getMaxBorderWidth(arcs) {
+      let max = 0;
+      const chart = this.chart;
+      let i, ilen, meta, controller, options;
+      if (!arcs) {
+        for (i = 0, ilen = chart.data.datasets.length; i < ilen; ++i) {
+          if (chart.isDatasetVisible(i)) {
+            meta = chart.getDatasetMeta(i);
+            arcs = meta.data;
+            controller = meta.controller;
+            break;
+          }
+        }
+      }
+      if (!arcs) {
+        return 0;
+      }
+      for (i = 0, ilen = arcs.length; i < ilen; ++i) {
+        options = controller.resolveDataElementOptions(i);
+        if (options.borderAlign !== "inner") {
+          max = Math.max(max, options.borderWidth || 0, options.hoverBorderWidth || 0);
+        }
+      }
+      return max;
+    }
+    getMaxOffset(arcs) {
+      let max = 0;
+      for (let i = 0, ilen = arcs.length; i < ilen; ++i) {
+        const options = this.resolveDataElementOptions(i);
+        max = Math.max(max, options.offset || 0, options.hoverOffset || 0);
+      }
+      return max;
+    }
+    _getRingWeightOffset(datasetIndex) {
+      let ringWeightOffset = 0;
+      for (let i = 0; i < datasetIndex; ++i) {
+        if (this.chart.isDatasetVisible(i)) {
+          ringWeightOffset += this._getRingWeight(i);
+        }
+      }
+      return ringWeightOffset;
+    }
+    _getRingWeight(datasetIndex) {
+      return Math.max(valueOrDefault(this.chart.data.datasets[datasetIndex].weight, 1), 0);
+    }
+    _getVisibleDatasetWeightTotal() {
+      return this._getRingWeightOffset(this.chart.data.datasets.length) || 1;
+    }
+  };
+  var LineController = class extends DatasetController {
+    static id = "line";
+    static defaults = {
+      datasetElementType: "line",
+      dataElementType: "point",
+      showLine: true,
+      spanGaps: false
+    };
+    static overrides = {
+      scales: {
+        _index_: {
+          type: "category"
+        },
+        _value_: {
+          type: "linear"
+        }
+      }
+    };
+    initialize() {
+      this.enableOptionSharing = true;
+      this.supportsDecimation = true;
+      super.initialize();
+    }
+    update(mode) {
+      const meta = this._cachedMeta;
+      const { dataset: line, data: points = [], _dataset } = meta;
+      const animationsDisabled = this.chart._animationsDisabled;
+      let { start, count } = _getStartAndCountOfVisiblePoints(meta, points, animationsDisabled);
+      this._drawStart = start;
+      this._drawCount = count;
+      if (_scaleRangesChanged(meta)) {
+        start = 0;
+        count = points.length;
+      }
+      line._chart = this.chart;
+      line._datasetIndex = this.index;
+      line._decimated = !!_dataset._decimated;
+      line.points = points;
+      const options = this.resolveDatasetElementOptions(mode);
+      if (!this.options.showLine) {
+        options.borderWidth = 0;
+      }
+      options.segment = this.options.segment;
+      this.updateElement(line, void 0, {
+        animated: !animationsDisabled,
+        options
+      }, mode);
+      this.updateElements(points, start, count, mode);
+    }
+    updateElements(points, start, count, mode) {
+      const reset = mode === "reset";
+      const { iScale, vScale, _stacked, _dataset } = this._cachedMeta;
+      const { sharedOptions, includeOptions } = this._getSharedOptions(start, mode);
+      const iAxis = iScale.axis;
+      const vAxis = vScale.axis;
+      const { spanGaps, segment } = this.options;
+      const maxGapLength = isNumber(spanGaps) ? spanGaps : Number.POSITIVE_INFINITY;
+      const directUpdate = this.chart._animationsDisabled || reset || mode === "none";
+      const end = start + count;
+      const pointsCount = points.length;
+      let prevParsed = start > 0 && this.getParsed(start - 1);
+      for (let i = 0; i < pointsCount; ++i) {
+        const point = points[i];
+        const properties = directUpdate ? point : {};
+        if (i < start || i >= end) {
+          properties.skip = true;
+          continue;
+        }
+        const parsed = this.getParsed(i);
+        const nullData = isNullOrUndef(parsed[vAxis]);
+        const iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i);
+        const vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
+        properties.skip = isNaN(iPixel) || isNaN(vPixel) || nullData;
+        properties.stop = i > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
+        if (segment) {
+          properties.parsed = parsed;
+          properties.raw = _dataset.data[i];
+        }
+        if (includeOptions) {
+          properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? "active" : mode);
+        }
+        if (!directUpdate) {
+          this.updateElement(point, i, properties, mode);
+        }
+        prevParsed = parsed;
+      }
+    }
+    getMaxOverflow() {
+      const meta = this._cachedMeta;
+      const dataset = meta.dataset;
+      const border = dataset.options && dataset.options.borderWidth || 0;
+      const data = meta.data || [];
+      if (!data.length) {
+        return border;
+      }
+      const firstPoint = data[0].size(this.resolveDataElementOptions(0));
+      const lastPoint = data[data.length - 1].size(this.resolveDataElementOptions(data.length - 1));
+      return Math.max(border, firstPoint, lastPoint) / 2;
+    }
+    draw() {
+      const meta = this._cachedMeta;
+      meta.dataset.updateControlPoints(this.chart.chartArea, meta.iScale.axis);
+      super.draw();
+    }
+  };
+  var PolarAreaController = class extends DatasetController {
+    static id = "polarArea";
+    static defaults = {
+      dataElementType: "arc",
+      animation: {
+        animateRotate: true,
+        animateScale: true
+      },
+      animations: {
+        numbers: {
+          type: "number",
+          properties: [
+            "x",
+            "y",
+            "startAngle",
+            "endAngle",
+            "innerRadius",
+            "outerRadius"
+          ]
+        }
+      },
+      indexAxis: "r",
+      startAngle: 0
+    };
+    static overrides = {
+      aspectRatio: 1,
+      plugins: {
+        legend: {
+          labels: {
+            generateLabels(chart) {
+              const data = chart.data;
+              if (data.labels.length && data.datasets.length) {
+                const { labels: { pointStyle, color: color2 } } = chart.legend.options;
+                return data.labels.map((label, i) => {
+                  const meta = chart.getDatasetMeta(0);
+                  const style = meta.controller.getStyle(i);
+                  return {
+                    text: label,
+                    fillStyle: style.backgroundColor,
+                    strokeStyle: style.borderColor,
+                    fontColor: color2,
+                    lineWidth: style.borderWidth,
+                    pointStyle,
+                    hidden: !chart.getDataVisibility(i),
+                    index: i
+                  };
+                });
+              }
+              return [];
+            }
+          },
+          onClick(e, legendItem, legend) {
+            legend.chart.toggleDataVisibility(legendItem.index);
+            legend.chart.update();
+          }
+        }
+      },
+      scales: {
+        r: {
+          type: "radialLinear",
+          angleLines: {
+            display: false
+          },
+          beginAtZero: true,
+          grid: {
+            circular: true
+          },
+          pointLabels: {
+            display: false
+          },
+          startAngle: 0
+        }
+      }
+    };
+    constructor(chart, datasetIndex) {
+      super(chart, datasetIndex);
+      this.innerRadius = void 0;
+      this.outerRadius = void 0;
+    }
+    getLabelAndValue(index2) {
+      const meta = this._cachedMeta;
+      const chart = this.chart;
+      const labels = chart.data.labels || [];
+      const value2 = formatNumber(meta._parsed[index2].r, chart.options.locale);
+      return {
+        label: labels[index2] || "",
+        value: value2
+      };
+    }
+    parseObjectData(meta, data, start, count) {
+      return _parseObjectDataRadialScale.bind(this)(meta, data, start, count);
+    }
+    update(mode) {
+      const arcs = this._cachedMeta.data;
+      this._updateRadius();
+      this.updateElements(arcs, 0, arcs.length, mode);
+    }
+    getMinMax() {
+      const meta = this._cachedMeta;
+      const range = {
+        min: Number.POSITIVE_INFINITY,
+        max: Number.NEGATIVE_INFINITY
+      };
+      meta.data.forEach((element, index2) => {
+        const parsed = this.getParsed(index2).r;
+        if (!isNaN(parsed) && this.chart.getDataVisibility(index2)) {
+          if (parsed < range.min) {
+            range.min = parsed;
+          }
+          if (parsed > range.max) {
+            range.max = parsed;
+          }
+        }
+      });
+      return range;
+    }
+    _updateRadius() {
+      const chart = this.chart;
+      const chartArea = chart.chartArea;
+      const opts = chart.options;
+      const minSize = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top);
+      const outerRadius = Math.max(minSize / 2, 0);
+      const innerRadius = Math.max(opts.cutoutPercentage ? outerRadius / 100 * opts.cutoutPercentage : 1, 0);
+      const radiusLength = (outerRadius - innerRadius) / chart.getVisibleDatasetCount();
+      this.outerRadius = outerRadius - radiusLength * this.index;
+      this.innerRadius = this.outerRadius - radiusLength;
+    }
+    updateElements(arcs, start, count, mode) {
+      const reset = mode === "reset";
+      const chart = this.chart;
+      const opts = chart.options;
+      const animationOpts = opts.animation;
+      const scale = this._cachedMeta.rScale;
+      const centerX = scale.xCenter;
+      const centerY = scale.yCenter;
+      const datasetStartAngle = scale.getIndexAngle(0) - 0.5 * PI;
+      let angle = datasetStartAngle;
+      let i;
+      const defaultAngle = 360 / this.countVisibleElements();
+      for (i = 0; i < start; ++i) {
+        angle += this._computeAngle(i, mode, defaultAngle);
+      }
+      for (i = start; i < start + count; i++) {
+        const arc = arcs[i];
+        let startAngle = angle;
+        let endAngle = angle + this._computeAngle(i, mode, defaultAngle);
+        let outerRadius = chart.getDataVisibility(i) ? scale.getDistanceFromCenterForValue(this.getParsed(i).r) : 0;
+        angle = endAngle;
+        if (reset) {
+          if (animationOpts.animateScale) {
+            outerRadius = 0;
+          }
+          if (animationOpts.animateRotate) {
+            startAngle = endAngle = datasetStartAngle;
+          }
+        }
+        const properties = {
+          x: centerX,
+          y: centerY,
+          innerRadius: 0,
+          outerRadius,
+          startAngle,
+          endAngle,
+          options: this.resolveDataElementOptions(i, arc.active ? "active" : mode)
+        };
+        this.updateElement(arc, i, properties, mode);
+      }
+    }
+    countVisibleElements() {
+      const meta = this._cachedMeta;
+      let count = 0;
+      meta.data.forEach((element, index2) => {
+        if (!isNaN(this.getParsed(index2).r) && this.chart.getDataVisibility(index2)) {
+          count++;
+        }
+      });
+      return count;
+    }
+    _computeAngle(index2, mode, defaultAngle) {
+      return this.chart.getDataVisibility(index2) ? toRadians(this.resolveDataElementOptions(index2, mode).angle || defaultAngle) : 0;
+    }
+  };
+  var PieController = class extends DoughnutController {
+    static id = "pie";
+    static defaults = {
+      cutout: 0,
+      rotation: 0,
+      circumference: 360,
+      radius: "100%"
+    };
+  };
+  var RadarController = class extends DatasetController {
+    static id = "radar";
+    static defaults = {
+      datasetElementType: "line",
+      dataElementType: "point",
+      indexAxis: "r",
+      showLine: true,
+      elements: {
+        line: {
+          fill: "start"
+        }
+      }
+    };
+    static overrides = {
+      aspectRatio: 1,
+      scales: {
+        r: {
+          type: "radialLinear"
+        }
+      }
+    };
+    getLabelAndValue(index2) {
+      const vScale = this._cachedMeta.vScale;
+      const parsed = this.getParsed(index2);
+      return {
+        label: vScale.getLabels()[index2],
+        value: "" + vScale.getLabelForValue(parsed[vScale.axis])
+      };
+    }
+    parseObjectData(meta, data, start, count) {
+      return _parseObjectDataRadialScale.bind(this)(meta, data, start, count);
+    }
+    update(mode) {
+      const meta = this._cachedMeta;
+      const line = meta.dataset;
+      const points = meta.data || [];
+      const labels = meta.iScale.getLabels();
+      line.points = points;
+      if (mode !== "resize") {
+        const options = this.resolveDatasetElementOptions(mode);
+        if (!this.options.showLine) {
+          options.borderWidth = 0;
+        }
+        const properties = {
+          _loop: true,
+          _fullLoop: labels.length === points.length,
+          options
+        };
+        this.updateElement(line, void 0, properties, mode);
+      }
+      this.updateElements(points, 0, points.length, mode);
+    }
+    updateElements(points, start, count, mode) {
+      const scale = this._cachedMeta.rScale;
+      const reset = mode === "reset";
+      for (let i = start; i < start + count; i++) {
+        const point = points[i];
+        const options = this.resolveDataElementOptions(i, point.active ? "active" : mode);
+        const pointPosition = scale.getPointPositionForValue(i, this.getParsed(i).r);
+        const x = reset ? scale.xCenter : pointPosition.x;
+        const y = reset ? scale.yCenter : pointPosition.y;
+        const properties = {
+          x,
+          y,
+          angle: pointPosition.angle,
+          skip: isNaN(x) || isNaN(y),
+          options
+        };
+        this.updateElement(point, i, properties, mode);
+      }
+    }
+  };
+  var ScatterController = class extends DatasetController {
+    static id = "scatter";
+    static defaults = {
+      datasetElementType: false,
+      dataElementType: "point",
+      showLine: false,
+      fill: false
+    };
+    static overrides = {
+      interaction: {
+        mode: "point"
+      },
+      scales: {
+        x: {
+          type: "linear"
+        },
+        y: {
+          type: "linear"
+        }
+      }
+    };
+    getLabelAndValue(index2) {
+      const meta = this._cachedMeta;
+      const labels = this.chart.data.labels || [];
+      const { xScale, yScale } = meta;
+      const parsed = this.getParsed(index2);
+      const x = xScale.getLabelForValue(parsed.x);
+      const y = yScale.getLabelForValue(parsed.y);
+      return {
+        label: labels[index2] || "",
+        value: "(" + x + ", " + y + ")"
+      };
+    }
+    update(mode) {
+      const meta = this._cachedMeta;
+      const { data: points = [] } = meta;
+      const animationsDisabled = this.chart._animationsDisabled;
+      let { start, count } = _getStartAndCountOfVisiblePoints(meta, points, animationsDisabled);
+      this._drawStart = start;
+      this._drawCount = count;
+      if (_scaleRangesChanged(meta)) {
+        start = 0;
+        count = points.length;
+      }
+      if (this.options.showLine) {
+        if (!this.datasetElementType) {
+          this.addElements();
+        }
+        const { dataset: line, _dataset } = meta;
+        line._chart = this.chart;
+        line._datasetIndex = this.index;
+        line._decimated = !!_dataset._decimated;
+        line.points = points;
+        const options = this.resolveDatasetElementOptions(mode);
+        options.segment = this.options.segment;
+        this.updateElement(line, void 0, {
+          animated: !animationsDisabled,
+          options
+        }, mode);
+      } else if (this.datasetElementType) {
+        delete meta.dataset;
+        this.datasetElementType = false;
+      }
+      this.updateElements(points, start, count, mode);
+    }
+    addElements() {
+      const { showLine } = this.options;
+      if (!this.datasetElementType && showLine) {
+        this.datasetElementType = this.chart.registry.getElement("line");
+      }
+      super.addElements();
+    }
+    updateElements(points, start, count, mode) {
+      const reset = mode === "reset";
+      const { iScale, vScale, _stacked, _dataset } = this._cachedMeta;
+      const firstOpts = this.resolveDataElementOptions(start, mode);
+      const sharedOptions = this.getSharedOptions(firstOpts);
+      const includeOptions = this.includeOptions(mode, sharedOptions);
+      const iAxis = iScale.axis;
+      const vAxis = vScale.axis;
+      const { spanGaps, segment } = this.options;
+      const maxGapLength = isNumber(spanGaps) ? spanGaps : Number.POSITIVE_INFINITY;
+      const directUpdate = this.chart._animationsDisabled || reset || mode === "none";
+      let prevParsed = start > 0 && this.getParsed(start - 1);
+      for (let i = start; i < start + count; ++i) {
+        const point = points[i];
+        const parsed = this.getParsed(i);
+        const properties = directUpdate ? point : {};
+        const nullData = isNullOrUndef(parsed[vAxis]);
+        const iPixel = properties[iAxis] = iScale.getPixelForValue(parsed[iAxis], i);
+        const vPixel = properties[vAxis] = reset || nullData ? vScale.getBasePixel() : vScale.getPixelForValue(_stacked ? this.applyStack(vScale, parsed, _stacked) : parsed[vAxis], i);
+        properties.skip = isNaN(iPixel) || isNaN(vPixel) || nullData;
+        properties.stop = i > 0 && Math.abs(parsed[iAxis] - prevParsed[iAxis]) > maxGapLength;
+        if (segment) {
+          properties.parsed = parsed;
+          properties.raw = _dataset.data[i];
+        }
+        if (includeOptions) {
+          properties.options = sharedOptions || this.resolveDataElementOptions(i, point.active ? "active" : mode);
+        }
+        if (!directUpdate) {
+          this.updateElement(point, i, properties, mode);
+        }
+        prevParsed = parsed;
+      }
+      this.updateSharedOptions(sharedOptions, mode, firstOpts);
+    }
+    getMaxOverflow() {
+      const meta = this._cachedMeta;
+      const data = meta.data || [];
+      if (!this.options.showLine) {
+        let max = 0;
+        for (let i = data.length - 1; i >= 0; --i) {
+          max = Math.max(max, data[i].size(this.resolveDataElementOptions(i)) / 2);
+        }
+        return max > 0 && max;
+      }
+      const dataset = meta.dataset;
+      const border = dataset.options && dataset.options.borderWidth || 0;
+      if (!data.length) {
+        return border;
+      }
+      const firstPoint = data[0].size(this.resolveDataElementOptions(0));
+      const lastPoint = data[data.length - 1].size(this.resolveDataElementOptions(data.length - 1));
+      return Math.max(border, firstPoint, lastPoint) / 2;
+    }
+  };
+  var controllers = /* @__PURE__ */ Object.freeze({
+    __proto__: null,
+    BarController,
+    BubbleController,
+    DoughnutController,
+    LineController,
+    PieController,
+    PolarAreaController,
+    RadarController,
+    ScatterController
+  });
+  function abstract() {
+    throw new Error("This method is not implemented: Check that a complete date adapter is provided.");
+  }
+  var DateAdapterBase = class _DateAdapterBase {
+    /**
+    * Override default date adapter methods.
+    * Accepts type parameter to define options type.
+    * @example
+    * Chart._adapters._date.override<{myAdapterOption: string}>({
+    *   init() {
+    *     console.log(this.options.myAdapterOption);
+    *   }
+    * })
+    */
+    static override(members) {
+      Object.assign(_DateAdapterBase.prototype, members);
+    }
+    options;
+    constructor(options) {
+      this.options = options || {};
+    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    init() {
+    }
+    formats() {
+      return abstract();
+    }
+    parse() {
+      return abstract();
+    }
+    format() {
+      return abstract();
+    }
+    add() {
+      return abstract();
+    }
+    diff() {
+      return abstract();
+    }
+    startOf() {
+      return abstract();
+    }
+    endOf() {
+      return abstract();
+    }
+  };
+  var adapters = {
+    _date: DateAdapterBase
+  };
+  function binarySearch(metaset, axis, value2, intersect) {
+    const { controller, data, _sorted } = metaset;
+    const iScale = controller._cachedMeta.iScale;
+    const spanGaps = metaset.dataset ? metaset.dataset.options ? metaset.dataset.options.spanGaps : null : null;
+    if (iScale && axis === iScale.axis && axis !== "r" && _sorted && data.length) {
+      const lookupMethod = iScale._reversePixels ? _rlookupByKey : _lookupByKey;
+      if (!intersect) {
+        const result = lookupMethod(data, axis, value2);
+        if (spanGaps) {
+          const { vScale } = controller._cachedMeta;
+          const { _parsed } = metaset;
+          const distanceToDefinedLo = _parsed.slice(0, result.lo + 1).reverse().findIndex((point) => !isNullOrUndef(point[vScale.axis]));
+          result.lo -= Math.max(0, distanceToDefinedLo);
+          const distanceToDefinedHi = _parsed.slice(result.hi).findIndex((point) => !isNullOrUndef(point[vScale.axis]));
+          result.hi += Math.max(0, distanceToDefinedHi);
+        }
+        return result;
+      } else if (controller._sharedOptions) {
+        const el = data[0];
+        const range = typeof el.getRange === "function" && el.getRange(axis);
+        if (range) {
+          const start = lookupMethod(data, axis, value2 - range);
+          const end = lookupMethod(data, axis, value2 + range);
+          return {
+            lo: start.lo,
+            hi: end.hi
+          };
+        }
+      }
+    }
+    return {
+      lo: 0,
+      hi: data.length - 1
+    };
+  }
+  function evaluateInteractionItems(chart, axis, position, handler, intersect) {
+    const metasets = chart.getSortedVisibleDatasetMetas();
+    const value2 = position[axis];
+    for (let i = 0, ilen = metasets.length; i < ilen; ++i) {
+      const { index: index2, data } = metasets[i];
+      const { lo, hi } = binarySearch(metasets[i], axis, value2, intersect);
+      for (let j = lo; j <= hi; ++j) {
+        const element = data[j];
+        if (!element.skip) {
+          handler(element, index2, j);
+        }
+      }
+    }
+  }
+  function getDistanceMetricForAxis(axis) {
+    const useX = axis.indexOf("x") !== -1;
+    const useY = axis.indexOf("y") !== -1;
+    return function(pt1, pt2) {
+      const deltaX = useX ? Math.abs(pt1.x - pt2.x) : 0;
+      const deltaY = useY ? Math.abs(pt1.y - pt2.y) : 0;
+      return Math.sqrt(Math.pow(deltaX, 2) + Math.pow(deltaY, 2));
+    };
+  }
+  function getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) {
+    const items = [];
+    if (!includeInvisible && !chart.isPointInArea(position)) {
+      return items;
+    }
+    const evaluationFunc = function(element, datasetIndex, index2) {
+      if (!includeInvisible && !_isPointInArea(element, chart.chartArea, 0)) {
+        return;
+      }
+      if (element.inRange(position.x, position.y, useFinalPosition)) {
+        items.push({
+          element,
+          datasetIndex,
+          index: index2
+        });
+      }
+    };
+    evaluateInteractionItems(chart, axis, position, evaluationFunc, true);
+    return items;
+  }
+  function getNearestRadialItems(chart, position, axis, useFinalPosition) {
+    let items = [];
+    function evaluationFunc(element, datasetIndex, index2) {
+      const { startAngle, endAngle } = element.getProps([
+        "startAngle",
+        "endAngle"
+      ], useFinalPosition);
+      const { angle } = getAngleFromPoint(element, {
+        x: position.x,
+        y: position.y
+      });
+      if (_angleBetween(angle, startAngle, endAngle)) {
+        items.push({
+          element,
+          datasetIndex,
+          index: index2
+        });
+      }
+    }
+    evaluateInteractionItems(chart, axis, position, evaluationFunc);
+    return items;
+  }
+  function getNearestCartesianItems(chart, position, axis, intersect, useFinalPosition, includeInvisible) {
+    let items = [];
+    const distanceMetric = getDistanceMetricForAxis(axis);
+    let minDistance = Number.POSITIVE_INFINITY;
+    function evaluationFunc(element, datasetIndex, index2) {
+      const inRange2 = element.inRange(position.x, position.y, useFinalPosition);
+      if (intersect && !inRange2) {
+        return;
+      }
+      const center = element.getCenterPoint(useFinalPosition);
+      const pointInArea = !!includeInvisible || chart.isPointInArea(center);
+      if (!pointInArea && !inRange2) {
+        return;
+      }
+      const distance = distanceMetric(position, center);
+      if (distance < minDistance) {
+        items = [
+          {
+            element,
+            datasetIndex,
+            index: index2
+          }
+        ];
+        minDistance = distance;
+      } else if (distance === minDistance) {
+        items.push({
+          element,
+          datasetIndex,
+          index: index2
+        });
+      }
+    }
+    evaluateInteractionItems(chart, axis, position, evaluationFunc);
+    return items;
+  }
+  function getNearestItems(chart, position, axis, intersect, useFinalPosition, includeInvisible) {
+    if (!includeInvisible && !chart.isPointInArea(position)) {
+      return [];
+    }
+    return axis === "r" && !intersect ? getNearestRadialItems(chart, position, axis, useFinalPosition) : getNearestCartesianItems(chart, position, axis, intersect, useFinalPosition, includeInvisible);
+  }
+  function getAxisItems(chart, position, axis, intersect, useFinalPosition) {
+    const items = [];
+    const rangeMethod = axis === "x" ? "inXRange" : "inYRange";
+    let intersectsItem = false;
+    evaluateInteractionItems(chart, axis, position, (element, datasetIndex, index2) => {
+      if (element[rangeMethod] && element[rangeMethod](position[axis], useFinalPosition)) {
+        items.push({
+          element,
+          datasetIndex,
+          index: index2
+        });
+        intersectsItem = intersectsItem || element.inRange(position.x, position.y, useFinalPosition);
+      }
+    });
+    if (intersect && !intersectsItem) {
+      return [];
+    }
+    return items;
+  }
+  var Interaction = {
+    evaluateInteractionItems,
+    modes: {
+      index(chart, e, options, useFinalPosition) {
+        const position = getRelativePosition(e, chart);
+        const axis = options.axis || "x";
+        const includeInvisible = options.includeInvisible || false;
+        const items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
+        const elements2 = [];
+        if (!items.length) {
+          return [];
+        }
+        chart.getSortedVisibleDatasetMetas().forEach((meta) => {
+          const index2 = items[0].index;
+          const element = meta.data[index2];
+          if (element && !element.skip) {
+            elements2.push({
+              element,
+              datasetIndex: meta.index,
+              index: index2
+            });
+          }
+        });
+        return elements2;
+      },
+      dataset(chart, e, options, useFinalPosition) {
+        const position = getRelativePosition(e, chart);
+        const axis = options.axis || "xy";
+        const includeInvisible = options.includeInvisible || false;
+        let items = options.intersect ? getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible) : getNearestItems(chart, position, axis, false, useFinalPosition, includeInvisible);
+        if (items.length > 0) {
+          const datasetIndex = items[0].datasetIndex;
+          const data = chart.getDatasetMeta(datasetIndex).data;
+          items = [];
+          for (let i = 0; i < data.length; ++i) {
+            items.push({
+              element: data[i],
+              datasetIndex,
+              index: i
+            });
+          }
+        }
+        return items;
+      },
+      point(chart, e, options, useFinalPosition) {
+        const position = getRelativePosition(e, chart);
+        const axis = options.axis || "xy";
+        const includeInvisible = options.includeInvisible || false;
+        return getIntersectItems(chart, position, axis, useFinalPosition, includeInvisible);
+      },
+      nearest(chart, e, options, useFinalPosition) {
+        const position = getRelativePosition(e, chart);
+        const axis = options.axis || "xy";
+        const includeInvisible = options.includeInvisible || false;
+        return getNearestItems(chart, position, axis, options.intersect, useFinalPosition, includeInvisible);
+      },
+      x(chart, e, options, useFinalPosition) {
+        const position = getRelativePosition(e, chart);
+        return getAxisItems(chart, position, "x", options.intersect, useFinalPosition);
+      },
+      y(chart, e, options, useFinalPosition) {
+        const position = getRelativePosition(e, chart);
+        return getAxisItems(chart, position, "y", options.intersect, useFinalPosition);
+      }
+    }
+  };
+  var STATIC_POSITIONS = [
+    "left",
+    "top",
+    "right",
+    "bottom"
+  ];
+  function filterByPosition(array, position) {
+    return array.filter((v) => v.pos === position);
+  }
+  function filterDynamicPositionByAxis(array, axis) {
+    return array.filter((v) => STATIC_POSITIONS.indexOf(v.pos) === -1 && v.box.axis === axis);
+  }
+  function sortByWeight(array, reverse) {
+    return array.sort((a, b) => {
+      const v0 = reverse ? b : a;
+      const v1 = reverse ? a : b;
+      return v0.weight === v1.weight ? v0.index - v1.index : v0.weight - v1.weight;
+    });
+  }
+  function wrapBoxes(boxes) {
+    const layoutBoxes = [];
+    let i, ilen, box, pos, stack, stackWeight;
+    for (i = 0, ilen = (boxes || []).length; i < ilen; ++i) {
+      box = boxes[i];
+      ({ position: pos, options: { stack, stackWeight = 1 } } = box);
+      layoutBoxes.push({
+        index: i,
+        box,
+        pos,
+        horizontal: box.isHorizontal(),
+        weight: box.weight,
+        stack: stack && pos + stack,
+        stackWeight
+      });
+    }
+    return layoutBoxes;
+  }
+  function buildStacks(layouts2) {
+    const stacks = {};
+    for (const wrap of layouts2) {
+      const { stack, pos, stackWeight } = wrap;
+      if (!stack || !STATIC_POSITIONS.includes(pos)) {
+        continue;
+      }
+      const _stack = stacks[stack] || (stacks[stack] = {
+        count: 0,
+        placed: 0,
+        weight: 0,
+        size: 0
+      });
+      _stack.count++;
+      _stack.weight += stackWeight;
+    }
+    return stacks;
+  }
+  function setLayoutDims(layouts2, params) {
+    const stacks = buildStacks(layouts2);
+    const { vBoxMaxWidth, hBoxMaxHeight } = params;
+    let i, ilen, layout;
+    for (i = 0, ilen = layouts2.length; i < ilen; ++i) {
+      layout = layouts2[i];
+      const { fullSize } = layout.box;
+      const stack = stacks[layout.stack];
+      const factor = stack && layout.stackWeight / stack.weight;
+      if (layout.horizontal) {
+        layout.width = factor ? factor * vBoxMaxWidth : fullSize && params.availableWidth;
+        layout.height = hBoxMaxHeight;
+      } else {
+        layout.width = vBoxMaxWidth;
+        layout.height = factor ? factor * hBoxMaxHeight : fullSize && params.availableHeight;
+      }
+    }
+    return stacks;
+  }
+  function buildLayoutBoxes(boxes) {
+    const layoutBoxes = wrapBoxes(boxes);
+    const fullSize = sortByWeight(layoutBoxes.filter((wrap) => wrap.box.fullSize), true);
+    const left = sortByWeight(filterByPosition(layoutBoxes, "left"), true);
+    const right = sortByWeight(filterByPosition(layoutBoxes, "right"));
+    const top = sortByWeight(filterByPosition(layoutBoxes, "top"), true);
+    const bottom = sortByWeight(filterByPosition(layoutBoxes, "bottom"));
+    const centerHorizontal = filterDynamicPositionByAxis(layoutBoxes, "x");
+    const centerVertical = filterDynamicPositionByAxis(layoutBoxes, "y");
+    return {
+      fullSize,
+      leftAndTop: left.concat(top),
+      rightAndBottom: right.concat(centerVertical).concat(bottom).concat(centerHorizontal),
+      chartArea: filterByPosition(layoutBoxes, "chartArea"),
+      vertical: left.concat(right).concat(centerVertical),
+      horizontal: top.concat(bottom).concat(centerHorizontal)
+    };
+  }
+  function getCombinedMax(maxPadding, chartArea, a, b) {
+    return Math.max(maxPadding[a], chartArea[a]) + Math.max(maxPadding[b], chartArea[b]);
+  }
+  function updateMaxPadding(maxPadding, boxPadding) {
+    maxPadding.top = Math.max(maxPadding.top, boxPadding.top);
+    maxPadding.left = Math.max(maxPadding.left, boxPadding.left);
+    maxPadding.bottom = Math.max(maxPadding.bottom, boxPadding.bottom);
+    maxPadding.right = Math.max(maxPadding.right, boxPadding.right);
+  }
+  function updateDims(chartArea, params, layout, stacks) {
+    const { pos, box } = layout;
+    const maxPadding = chartArea.maxPadding;
+    if (!isObject2(pos)) {
+      if (layout.size) {
+        chartArea[pos] -= layout.size;
+      }
+      const stack = stacks[layout.stack] || {
+        size: 0,
+        count: 1
+      };
+      stack.size = Math.max(stack.size, layout.horizontal ? box.height : box.width);
+      layout.size = stack.size / stack.count;
+      chartArea[pos] += layout.size;
+    }
+    if (box.getPadding) {
+      updateMaxPadding(maxPadding, box.getPadding());
+    }
+    const newWidth = Math.max(0, params.outerWidth - getCombinedMax(maxPadding, chartArea, "left", "right"));
+    const newHeight = Math.max(0, params.outerHeight - getCombinedMax(maxPadding, chartArea, "top", "bottom"));
+    const widthChanged = newWidth !== chartArea.w;
+    const heightChanged = newHeight !== chartArea.h;
+    chartArea.w = newWidth;
+    chartArea.h = newHeight;
+    return layout.horizontal ? {
+      same: widthChanged,
+      other: heightChanged
+    } : {
+      same: heightChanged,
+      other: widthChanged
+    };
+  }
+  function handleMaxPadding(chartArea) {
+    const maxPadding = chartArea.maxPadding;
+    function updatePos(pos) {
+      const change = Math.max(maxPadding[pos] - chartArea[pos], 0);
+      chartArea[pos] += change;
+      return change;
+    }
+    chartArea.y += updatePos("top");
+    chartArea.x += updatePos("left");
+    updatePos("right");
+    updatePos("bottom");
+  }
+  function getMargins(horizontal, chartArea) {
+    const maxPadding = chartArea.maxPadding;
+    function marginForPositions(positions2) {
+      const margin = {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0
+      };
+      positions2.forEach((pos) => {
+        margin[pos] = Math.max(chartArea[pos], maxPadding[pos]);
+      });
+      return margin;
+    }
+    return horizontal ? marginForPositions([
+      "left",
+      "right"
+    ]) : marginForPositions([
+      "top",
+      "bottom"
+    ]);
+  }
+  function fitBoxes(boxes, chartArea, params, stacks) {
+    const refitBoxes = [];
+    let i, ilen, layout, box, refit, changed;
+    for (i = 0, ilen = boxes.length, refit = 0; i < ilen; ++i) {
+      layout = boxes[i];
+      box = layout.box;
+      box.update(layout.width || chartArea.w, layout.height || chartArea.h, getMargins(layout.horizontal, chartArea));
+      const { same, other } = updateDims(chartArea, params, layout, stacks);
+      refit |= same && refitBoxes.length;
+      changed = changed || other;
+      if (!box.fullSize) {
+        refitBoxes.push(layout);
+      }
+    }
+    return refit && fitBoxes(refitBoxes, chartArea, params, stacks) || changed;
+  }
+  function setBoxDims(box, left, top, width, height) {
+    box.top = top;
+    box.left = left;
+    box.right = left + width;
+    box.bottom = top + height;
+    box.width = width;
+    box.height = height;
+  }
+  function placeBoxes(boxes, chartArea, params, stacks) {
+    const userPadding = params.padding;
+    let { x, y } = chartArea;
+    for (const layout of boxes) {
+      const box = layout.box;
+      const stack = stacks[layout.stack] || {
+        count: 1,
+        placed: 0,
+        weight: 1
+      };
+      const weight = layout.stackWeight / stack.weight || 1;
+      if (layout.horizontal) {
+        const width = chartArea.w * weight;
+        const height = stack.size || box.height;
+        if (defined(stack.start)) {
+          y = stack.start;
+        }
+        if (box.fullSize) {
+          setBoxDims(box, userPadding.left, y, params.outerWidth - userPadding.right - userPadding.left, height);
+        } else {
+          setBoxDims(box, chartArea.left + stack.placed, y, width, height);
+        }
+        stack.start = y;
+        stack.placed += width;
+        y = box.bottom;
+      } else {
+        const height = chartArea.h * weight;
+        const width = stack.size || box.width;
+        if (defined(stack.start)) {
+          x = stack.start;
+        }
+        if (box.fullSize) {
+          setBoxDims(box, x, userPadding.top, width, params.outerHeight - userPadding.bottom - userPadding.top);
+        } else {
+          setBoxDims(box, x, chartArea.top + stack.placed, width, height);
+        }
+        stack.start = x;
+        stack.placed += height;
+        x = box.right;
+      }
+    }
+    chartArea.x = x;
+    chartArea.y = y;
+  }
+  var layouts = {
+    addBox(chart, item) {
+      if (!chart.boxes) {
+        chart.boxes = [];
+      }
+      item.fullSize = item.fullSize || false;
+      item.position = item.position || "top";
+      item.weight = item.weight || 0;
+      item._layers = item._layers || function() {
+        return [
+          {
+            z: 0,
+            draw(chartArea) {
+              item.draw(chartArea);
+            }
+          }
+        ];
+      };
+      chart.boxes.push(item);
+    },
+    removeBox(chart, layoutItem) {
+      const index2 = chart.boxes ? chart.boxes.indexOf(layoutItem) : -1;
+      if (index2 !== -1) {
+        chart.boxes.splice(index2, 1);
+      }
+    },
+    configure(chart, item, options) {
+      item.fullSize = options.fullSize;
+      item.position = options.position;
+      item.weight = options.weight;
+    },
+    update(chart, width, height, minPadding) {
+      if (!chart) {
+        return;
+      }
+      const padding = toPadding(chart.options.layout.padding);
+      const availableWidth = Math.max(width - padding.width, 0);
+      const availableHeight = Math.max(height - padding.height, 0);
+      const boxes = buildLayoutBoxes(chart.boxes);
+      const verticalBoxes = boxes.vertical;
+      const horizontalBoxes = boxes.horizontal;
+      each(chart.boxes, (box) => {
+        if (typeof box.beforeLayout === "function") {
+          box.beforeLayout();
+        }
+      });
+      const visibleVerticalBoxCount = verticalBoxes.reduce((total, wrap) => wrap.box.options && wrap.box.options.display === false ? total : total + 1, 0) || 1;
+      const params = Object.freeze({
+        outerWidth: width,
+        outerHeight: height,
+        padding,
+        availableWidth,
+        availableHeight,
+        vBoxMaxWidth: availableWidth / 2 / visibleVerticalBoxCount,
+        hBoxMaxHeight: availableHeight / 2
+      });
+      const maxPadding = Object.assign({}, padding);
+      updateMaxPadding(maxPadding, toPadding(minPadding));
+      const chartArea = Object.assign({
+        maxPadding,
+        w: availableWidth,
+        h: availableHeight,
+        x: padding.left,
+        y: padding.top
+      }, padding);
+      const stacks = setLayoutDims(verticalBoxes.concat(horizontalBoxes), params);
+      fitBoxes(boxes.fullSize, chartArea, params, stacks);
+      fitBoxes(verticalBoxes, chartArea, params, stacks);
+      if (fitBoxes(horizontalBoxes, chartArea, params, stacks)) {
+        fitBoxes(verticalBoxes, chartArea, params, stacks);
+      }
+      handleMaxPadding(chartArea);
+      placeBoxes(boxes.leftAndTop, chartArea, params, stacks);
+      chartArea.x += chartArea.w;
+      chartArea.y += chartArea.h;
+      placeBoxes(boxes.rightAndBottom, chartArea, params, stacks);
+      chart.chartArea = {
+        left: chartArea.left,
+        top: chartArea.top,
+        right: chartArea.left + chartArea.w,
+        bottom: chartArea.top + chartArea.h,
+        height: chartArea.h,
+        width: chartArea.w
+      };
+      each(boxes.chartArea, (layout) => {
+        const box = layout.box;
+        Object.assign(box, chart.chartArea);
+        box.update(chartArea.w, chartArea.h, {
+          left: 0,
+          top: 0,
+          right: 0,
+          bottom: 0
+        });
+      });
+    }
+  };
+  var BasePlatform = class {
+    acquireContext(canvas, aspectRatio) {
+    }
+    releaseContext(context) {
+      return false;
+    }
+    addEventListener(chart, type, listener) {
+    }
+    removeEventListener(chart, type, listener) {
+    }
+    getDevicePixelRatio() {
+      return 1;
+    }
+    getMaximumSize(element, width, height, aspectRatio) {
+      width = Math.max(0, width || element.width);
+      height = height || element.height;
+      return {
+        width,
+        height: Math.max(0, aspectRatio ? Math.floor(width / aspectRatio) : height)
+      };
+    }
+    isAttached(canvas) {
+      return true;
+    }
+    updateConfig(config) {
+    }
+  };
+  var BasicPlatform = class extends BasePlatform {
+    acquireContext(item) {
+      return item && item.getContext && item.getContext("2d") || null;
+    }
+    updateConfig(config) {
+      config.options.animation = false;
+    }
+  };
+  var EXPANDO_KEY = "$chartjs";
+  var EVENT_TYPES = {
+    touchstart: "mousedown",
+    touchmove: "mousemove",
+    touchend: "mouseup",
+    pointerenter: "mouseenter",
+    pointerdown: "mousedown",
+    pointermove: "mousemove",
+    pointerup: "mouseup",
+    pointerleave: "mouseout",
+    pointerout: "mouseout"
+  };
+  var isNullOrEmpty = (value2) => value2 === null || value2 === "";
+  function initCanvas(canvas, aspectRatio) {
+    const style = canvas.style;
+    const renderHeight = canvas.getAttribute("height");
+    const renderWidth = canvas.getAttribute("width");
+    canvas[EXPANDO_KEY] = {
+      initial: {
+        height: renderHeight,
+        width: renderWidth,
+        style: {
+          display: style.display,
+          height: style.height,
+          width: style.width
+        }
+      }
+    };
+    style.display = style.display || "block";
+    style.boxSizing = style.boxSizing || "border-box";
+    if (isNullOrEmpty(renderWidth)) {
+      const displayWidth = readUsedSize(canvas, "width");
+      if (displayWidth !== void 0) {
+        canvas.width = displayWidth;
+      }
+    }
+    if (isNullOrEmpty(renderHeight)) {
+      if (canvas.style.height === "") {
+        canvas.height = canvas.width / (aspectRatio || 2);
+      } else {
+        const displayHeight = readUsedSize(canvas, "height");
+        if (displayHeight !== void 0) {
+          canvas.height = displayHeight;
+        }
+      }
+    }
+    return canvas;
+  }
+  var eventListenerOptions = supportsEventListenerOptions ? {
+    passive: true
+  } : false;
+  function addListener(node, type, listener) {
+    if (node) {
+      node.addEventListener(type, listener, eventListenerOptions);
+    }
+  }
+  function removeListener(chart, type, listener) {
+    if (chart && chart.canvas) {
+      chart.canvas.removeEventListener(type, listener, eventListenerOptions);
+    }
+  }
+  function fromNativeEvent(event, chart) {
+    const type = EVENT_TYPES[event.type] || event.type;
+    const { x, y } = getRelativePosition(event, chart);
+    return {
+      type,
+      chart,
+      native: event,
+      x: x !== void 0 ? x : null,
+      y: y !== void 0 ? y : null
+    };
+  }
+  function nodeListContains(nodeList, canvas) {
+    for (const node of nodeList) {
+      if (node === canvas || node.contains(canvas)) {
+        return true;
+      }
+    }
+  }
+  function createAttachObserver(chart, type, listener) {
+    const canvas = chart.canvas;
+    const observer = new MutationObserver((entries) => {
+      let trigger = false;
+      for (const entry of entries) {
+        trigger = trigger || nodeListContains(entry.addedNodes, canvas);
+        trigger = trigger && !nodeListContains(entry.removedNodes, canvas);
+      }
+      if (trigger) {
+        listener();
+      }
+    });
+    observer.observe(document, {
+      childList: true,
+      subtree: true
+    });
+    return observer;
+  }
+  function createDetachObserver(chart, type, listener) {
+    const canvas = chart.canvas;
+    const observer = new MutationObserver((entries) => {
+      let trigger = false;
+      for (const entry of entries) {
+        trigger = trigger || nodeListContains(entry.removedNodes, canvas);
+        trigger = trigger && !nodeListContains(entry.addedNodes, canvas);
+      }
+      if (trigger) {
+        listener();
+      }
+    });
+    observer.observe(document, {
+      childList: true,
+      subtree: true
+    });
+    return observer;
+  }
+  var drpListeningCharts = /* @__PURE__ */ new Map();
+  var oldDevicePixelRatio = 0;
+  function onWindowResize() {
+    const dpr = window.devicePixelRatio;
+    if (dpr === oldDevicePixelRatio) {
+      return;
+    }
+    oldDevicePixelRatio = dpr;
+    drpListeningCharts.forEach((resize, chart) => {
+      if (chart.currentDevicePixelRatio !== dpr) {
+        resize();
+      }
+    });
+  }
+  function listenDevicePixelRatioChanges(chart, resize) {
+    if (!drpListeningCharts.size) {
+      window.addEventListener("resize", onWindowResize);
+    }
+    drpListeningCharts.set(chart, resize);
+  }
+  function unlistenDevicePixelRatioChanges(chart) {
+    drpListeningCharts.delete(chart);
+    if (!drpListeningCharts.size) {
+      window.removeEventListener("resize", onWindowResize);
+    }
+  }
+  function createResizeObserver(chart, type, listener) {
+    const canvas = chart.canvas;
+    const container = canvas && _getParentNode(canvas);
+    if (!container) {
+      return;
+    }
+    const resize = throttled((width, height) => {
+      const w = container.clientWidth;
+      listener(width, height);
+      if (w < container.clientWidth) {
+        listener();
+      }
+    }, window);
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      const width = entry.contentRect.width;
+      const height = entry.contentRect.height;
+      if (width === 0 && height === 0) {
+        return;
+      }
+      resize(width, height);
+    });
+    observer.observe(container);
+    listenDevicePixelRatioChanges(chart, resize);
+    return observer;
+  }
+  function releaseObserver(chart, type, observer) {
+    if (observer) {
+      observer.disconnect();
+    }
+    if (type === "resize") {
+      unlistenDevicePixelRatioChanges(chart);
+    }
+  }
+  function createProxyAndListen(chart, type, listener) {
+    const canvas = chart.canvas;
+    const proxy = throttled((event) => {
+      if (chart.ctx !== null) {
+        listener(fromNativeEvent(event, chart));
+      }
+    }, chart);
+    addListener(canvas, type, proxy);
+    return proxy;
+  }
+  var DomPlatform = class extends BasePlatform {
+    acquireContext(canvas, aspectRatio) {
+      const context = canvas && canvas.getContext && canvas.getContext("2d");
+      if (context && context.canvas === canvas) {
+        initCanvas(canvas, aspectRatio);
+        return context;
+      }
+      return null;
+    }
+    releaseContext(context) {
+      const canvas = context.canvas;
+      if (!canvas[EXPANDO_KEY]) {
+        return false;
+      }
+      const initial = canvas[EXPANDO_KEY].initial;
+      [
+        "height",
+        "width"
+      ].forEach((prop) => {
+        const value2 = initial[prop];
+        if (isNullOrUndef(value2)) {
+          canvas.removeAttribute(prop);
+        } else {
+          canvas.setAttribute(prop, value2);
+        }
+      });
+      const style = initial.style || {};
+      Object.keys(style).forEach((key) => {
+        canvas.style[key] = style[key];
+      });
+      canvas.width = canvas.width;
+      delete canvas[EXPANDO_KEY];
+      return true;
+    }
+    addEventListener(chart, type, listener) {
+      this.removeEventListener(chart, type);
+      const proxies = chart.$proxies || (chart.$proxies = {});
+      const handlers = {
+        attach: createAttachObserver,
+        detach: createDetachObserver,
+        resize: createResizeObserver
+      };
+      const handler = handlers[type] || createProxyAndListen;
+      proxies[type] = handler(chart, type, listener);
+    }
+    removeEventListener(chart, type) {
+      const proxies = chart.$proxies || (chart.$proxies = {});
+      const proxy = proxies[type];
+      if (!proxy) {
+        return;
+      }
+      const handlers = {
+        attach: releaseObserver,
+        detach: releaseObserver,
+        resize: releaseObserver
+      };
+      const handler = handlers[type] || removeListener;
+      handler(chart, type, proxy);
+      proxies[type] = void 0;
+    }
+    getDevicePixelRatio() {
+      return window.devicePixelRatio;
+    }
+    getMaximumSize(canvas, width, height, aspectRatio) {
+      return getMaximumSize(canvas, width, height, aspectRatio);
+    }
+    isAttached(canvas) {
+      const container = canvas && _getParentNode(canvas);
+      return !!(container && container.isConnected);
+    }
+  };
+  function _detectPlatform(canvas) {
+    if (!_isDomSupported() || typeof OffscreenCanvas !== "undefined" && canvas instanceof OffscreenCanvas) {
+      return BasicPlatform;
+    }
+    return DomPlatform;
+  }
+  var Element = class {
+    static defaults = {};
+    static defaultRoutes = void 0;
+    x;
+    y;
+    active = false;
+    options;
+    $animations;
+    tooltipPosition(useFinalPosition) {
+      const { x, y } = this.getProps([
+        "x",
+        "y"
+      ], useFinalPosition);
+      return {
+        x,
+        y
+      };
+    }
+    hasValue() {
+      return isNumber(this.x) && isNumber(this.y);
+    }
+    getProps(props, final) {
+      const anims = this.$animations;
+      if (!final || !anims) {
+        return this;
+      }
+      const ret = {};
+      props.forEach((prop) => {
+        ret[prop] = anims[prop] && anims[prop].active() ? anims[prop]._to : this[prop];
+      });
+      return ret;
+    }
+  };
+  function autoSkip(scale, ticks) {
+    const tickOpts = scale.options.ticks;
+    const determinedMaxTicks = determineMaxTicks(scale);
+    const ticksLimit = Math.min(tickOpts.maxTicksLimit || determinedMaxTicks, determinedMaxTicks);
+    const majorIndices = tickOpts.major.enabled ? getMajorIndices(ticks) : [];
+    const numMajorIndices = majorIndices.length;
+    const first = majorIndices[0];
+    const last = majorIndices[numMajorIndices - 1];
+    const newTicks = [];
+    if (numMajorIndices > ticksLimit) {
+      skipMajors(ticks, newTicks, majorIndices, numMajorIndices / ticksLimit);
+      return newTicks;
+    }
+    const spacing = calculateSpacing(majorIndices, ticks, ticksLimit);
+    if (numMajorIndices > 0) {
+      let i, ilen;
+      const avgMajorSpacing = numMajorIndices > 1 ? Math.round((last - first) / (numMajorIndices - 1)) : null;
+      skip(ticks, newTicks, spacing, isNullOrUndef(avgMajorSpacing) ? 0 : first - avgMajorSpacing, first);
+      for (i = 0, ilen = numMajorIndices - 1; i < ilen; i++) {
+        skip(ticks, newTicks, spacing, majorIndices[i], majorIndices[i + 1]);
+      }
+      skip(ticks, newTicks, spacing, last, isNullOrUndef(avgMajorSpacing) ? ticks.length : last + avgMajorSpacing);
+      return newTicks;
+    }
+    skip(ticks, newTicks, spacing);
+    return newTicks;
+  }
+  function determineMaxTicks(scale) {
+    const offset = scale.options.offset;
+    const tickLength = scale._tickSize();
+    const maxScale = scale._length / tickLength + (offset ? 0 : 1);
+    const maxChart = scale._maxLength / tickLength;
+    return Math.floor(Math.min(maxScale, maxChart));
+  }
+  function calculateSpacing(majorIndices, ticks, ticksLimit) {
+    const evenMajorSpacing = getEvenSpacing(majorIndices);
+    const spacing = ticks.length / ticksLimit;
+    if (!evenMajorSpacing) {
+      return Math.max(spacing, 1);
+    }
+    const factors = _factorize(evenMajorSpacing);
+    for (let i = 0, ilen = factors.length - 1; i < ilen; i++) {
+      const factor = factors[i];
+      if (factor > spacing) {
+        return factor;
+      }
+    }
+    return Math.max(spacing, 1);
+  }
+  function getMajorIndices(ticks) {
+    const result = [];
+    let i, ilen;
+    for (i = 0, ilen = ticks.length; i < ilen; i++) {
+      if (ticks[i].major) {
+        result.push(i);
+      }
+    }
+    return result;
+  }
+  function skipMajors(ticks, newTicks, majorIndices, spacing) {
+    let count = 0;
+    let next = majorIndices[0];
+    let i;
+    spacing = Math.ceil(spacing);
+    for (i = 0; i < ticks.length; i++) {
+      if (i === next) {
+        newTicks.push(ticks[i]);
+        count++;
+        next = majorIndices[count * spacing];
+      }
+    }
+  }
+  function skip(ticks, newTicks, spacing, majorStart, majorEnd) {
+    const start = valueOrDefault(majorStart, 0);
+    const end = Math.min(valueOrDefault(majorEnd, ticks.length), ticks.length);
+    let count = 0;
+    let length, i, next;
+    spacing = Math.ceil(spacing);
+    if (majorEnd) {
+      length = majorEnd - majorStart;
+      spacing = length / Math.floor(length / spacing);
+    }
+    next = start;
+    while (next < 0) {
+      count++;
+      next = Math.round(start + count * spacing);
+    }
+    for (i = Math.max(start, 0); i < end; i++) {
+      if (i === next) {
+        newTicks.push(ticks[i]);
+        count++;
+        next = Math.round(start + count * spacing);
+      }
+    }
+  }
+  function getEvenSpacing(arr) {
+    const len = arr.length;
+    let i, diff;
+    if (len < 2) {
+      return false;
+    }
+    for (diff = arr[0], i = 1; i < len; ++i) {
+      if (arr[i] - arr[i - 1] !== diff) {
+        return false;
+      }
+    }
+    return diff;
+  }
+  var reverseAlign = (align) => align === "left" ? "right" : align === "right" ? "left" : align;
+  var offsetFromEdge = (scale, edge, offset) => edge === "top" || edge === "left" ? scale[edge] + offset : scale[edge] - offset;
+  var getTicksLimit = (ticksLength, maxTicksLimit) => Math.min(maxTicksLimit || ticksLength, ticksLength);
+  function sample(arr, numItems) {
+    const result = [];
+    const increment = arr.length / numItems;
+    const len = arr.length;
+    let i = 0;
+    for (; i < len; i += increment) {
+      result.push(arr[Math.floor(i)]);
+    }
+    return result;
+  }
+  function getPixelForGridLine(scale, index2, offsetGridLines) {
+    const length = scale.ticks.length;
+    const validIndex2 = Math.min(index2, length - 1);
+    const start = scale._startPixel;
+    const end = scale._endPixel;
+    const epsilon = 1e-6;
+    let lineValue = scale.getPixelForTick(validIndex2);
+    let offset;
+    if (offsetGridLines) {
+      if (length === 1) {
+        offset = Math.max(lineValue - start, end - lineValue);
+      } else if (index2 === 0) {
+        offset = (scale.getPixelForTick(1) - lineValue) / 2;
+      } else {
+        offset = (lineValue - scale.getPixelForTick(validIndex2 - 1)) / 2;
+      }
+      lineValue += validIndex2 < index2 ? offset : -offset;
+      if (lineValue < start - epsilon || lineValue > end + epsilon) {
+        return;
+      }
+    }
+    return lineValue;
+  }
+  function garbageCollect(caches, length) {
+    each(caches, (cache2) => {
+      const gc = cache2.gc;
+      const gcLen = gc.length / 2;
+      let i;
+      if (gcLen > length) {
+        for (i = 0; i < gcLen; ++i) {
+          delete cache2.data[gc[i]];
+        }
+        gc.splice(0, gcLen);
+      }
+    });
+  }
+  function getTickMarkLength(options) {
+    return options.drawTicks ? options.tickLength : 0;
+  }
+  function getTitleHeight(options, fallback) {
+    if (!options.display) {
+      return 0;
+    }
+    const font = toFont(options.font, fallback);
+    const padding = toPadding(options.padding);
+    const lines = isArray(options.text) ? options.text.length : 1;
+    return lines * font.lineHeight + padding.height;
+  }
+  function createScaleContext(parent, scale) {
+    return createContext(parent, {
+      scale,
+      type: "scale"
+    });
+  }
+  function createTickContext(parent, index2, tick) {
+    return createContext(parent, {
+      tick,
+      index: index2,
+      type: "tick"
+    });
+  }
+  function titleAlign(align, position, reverse) {
+    let ret = _toLeftRightCenter(align);
+    if (reverse && position !== "right" || !reverse && position === "right") {
+      ret = reverseAlign(ret);
+    }
+    return ret;
+  }
+  function titleArgs(scale, offset, position, align) {
+    const { top, left, bottom, right, chart } = scale;
+    const { chartArea, scales: scales2 } = chart;
+    let rotation = 0;
+    let maxWidth, titleX, titleY;
+    const height = bottom - top;
+    const width = right - left;
+    if (scale.isHorizontal()) {
+      titleX = _alignStartEnd(align, left, right);
+      if (isObject2(position)) {
+        const positionAxisID = Object.keys(position)[0];
+        const value2 = position[positionAxisID];
+        titleY = scales2[positionAxisID].getPixelForValue(value2) + height - offset;
+      } else if (position === "center") {
+        titleY = (chartArea.bottom + chartArea.top) / 2 + height - offset;
+      } else {
+        titleY = offsetFromEdge(scale, position, offset);
+      }
+      maxWidth = right - left;
+    } else {
+      if (isObject2(position)) {
+        const positionAxisID = Object.keys(position)[0];
+        const value2 = position[positionAxisID];
+        titleX = scales2[positionAxisID].getPixelForValue(value2) - width + offset;
+      } else if (position === "center") {
+        titleX = (chartArea.left + chartArea.right) / 2 - width + offset;
+      } else {
+        titleX = offsetFromEdge(scale, position, offset);
+      }
+      titleY = _alignStartEnd(align, bottom, top);
+      rotation = position === "left" ? -HALF_PI : HALF_PI;
+    }
+    return {
+      titleX,
+      titleY,
+      maxWidth,
+      rotation
+    };
+  }
+  var Scale = class _Scale extends Element {
+    constructor(cfg) {
+      super();
+      this.id = cfg.id;
+      this.type = cfg.type;
+      this.options = void 0;
+      this.ctx = cfg.ctx;
+      this.chart = cfg.chart;
+      this.top = void 0;
+      this.bottom = void 0;
+      this.left = void 0;
+      this.right = void 0;
+      this.width = void 0;
+      this.height = void 0;
+      this._margins = {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0
+      };
+      this.maxWidth = void 0;
+      this.maxHeight = void 0;
+      this.paddingTop = void 0;
+      this.paddingBottom = void 0;
+      this.paddingLeft = void 0;
+      this.paddingRight = void 0;
+      this.axis = void 0;
+      this.labelRotation = void 0;
+      this.min = void 0;
+      this.max = void 0;
+      this._range = void 0;
+      this.ticks = [];
+      this._gridLineItems = null;
+      this._labelItems = null;
+      this._labelSizes = null;
+      this._length = 0;
+      this._maxLength = 0;
+      this._longestTextCache = {};
+      this._startPixel = void 0;
+      this._endPixel = void 0;
+      this._reversePixels = false;
+      this._userMax = void 0;
+      this._userMin = void 0;
+      this._suggestedMax = void 0;
+      this._suggestedMin = void 0;
+      this._ticksLength = 0;
+      this._borderValue = 0;
+      this._cache = {};
+      this._dataLimitsCached = false;
+      this.$context = void 0;
+    }
+    init(options) {
+      this.options = options.setContext(this.getContext());
+      this.axis = options.axis;
+      this._userMin = this.parse(options.min);
+      this._userMax = this.parse(options.max);
+      this._suggestedMin = this.parse(options.suggestedMin);
+      this._suggestedMax = this.parse(options.suggestedMax);
+    }
+    parse(raw, index2) {
+      return raw;
+    }
+    getUserBounds() {
+      let { _userMin, _userMax, _suggestedMin, _suggestedMax } = this;
+      _userMin = finiteOrDefault(_userMin, Number.POSITIVE_INFINITY);
+      _userMax = finiteOrDefault(_userMax, Number.NEGATIVE_INFINITY);
+      _suggestedMin = finiteOrDefault(_suggestedMin, Number.POSITIVE_INFINITY);
+      _suggestedMax = finiteOrDefault(_suggestedMax, Number.NEGATIVE_INFINITY);
+      return {
+        min: finiteOrDefault(_userMin, _suggestedMin),
+        max: finiteOrDefault(_userMax, _suggestedMax),
+        minDefined: isNumberFinite(_userMin),
+        maxDefined: isNumberFinite(_userMax)
+      };
+    }
+    getMinMax(canStack) {
+      let { min, max, minDefined, maxDefined } = this.getUserBounds();
+      let range;
+      if (minDefined && maxDefined) {
+        return {
+          min,
+          max
+        };
+      }
+      const metas = this.getMatchingVisibleMetas();
+      for (let i = 0, ilen = metas.length; i < ilen; ++i) {
+        range = metas[i].controller.getMinMax(this, canStack);
+        if (!minDefined) {
+          min = Math.min(min, range.min);
+        }
+        if (!maxDefined) {
+          max = Math.max(max, range.max);
+        }
+      }
+      min = maxDefined && min > max ? max : min;
+      max = minDefined && min > max ? min : max;
+      return {
+        min: finiteOrDefault(min, finiteOrDefault(max, min)),
+        max: finiteOrDefault(max, finiteOrDefault(min, max))
+      };
+    }
+    getPadding() {
+      return {
+        left: this.paddingLeft || 0,
+        top: this.paddingTop || 0,
+        right: this.paddingRight || 0,
+        bottom: this.paddingBottom || 0
+      };
+    }
+    getTicks() {
+      return this.ticks;
+    }
+    getLabels() {
+      const data = this.chart.data;
+      return this.options.labels || (this.isHorizontal() ? data.xLabels : data.yLabels) || data.labels || [];
+    }
+    getLabelItems(chartArea = this.chart.chartArea) {
+      const items = this._labelItems || (this._labelItems = this._computeLabelItems(chartArea));
+      return items;
+    }
+    beforeLayout() {
+      this._cache = {};
+      this._dataLimitsCached = false;
+    }
+    beforeUpdate() {
+      callback(this.options.beforeUpdate, [
+        this
+      ]);
+    }
+    update(maxWidth, maxHeight, margins) {
+      const { beginAtZero, grace, ticks: tickOpts } = this.options;
+      const sampleSize = tickOpts.sampleSize;
+      this.beforeUpdate();
+      this.maxWidth = maxWidth;
+      this.maxHeight = maxHeight;
+      this._margins = margins = Object.assign({
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0
+      }, margins);
+      this.ticks = null;
+      this._labelSizes = null;
+      this._gridLineItems = null;
+      this._labelItems = null;
+      this.beforeSetDimensions();
+      this.setDimensions();
+      this.afterSetDimensions();
+      this._maxLength = this.isHorizontal() ? this.width + margins.left + margins.right : this.height + margins.top + margins.bottom;
+      if (!this._dataLimitsCached) {
+        this.beforeDataLimits();
+        this.determineDataLimits();
+        this.afterDataLimits();
+        this._range = _addGrace(this, grace, beginAtZero);
+        this._dataLimitsCached = true;
+      }
+      this.beforeBuildTicks();
+      this.ticks = this.buildTicks() || [];
+      this.afterBuildTicks();
+      const samplingEnabled = sampleSize < this.ticks.length;
+      this._convertTicksToLabels(samplingEnabled ? sample(this.ticks, sampleSize) : this.ticks);
+      this.configure();
+      this.beforeCalculateLabelRotation();
+      this.calculateLabelRotation();
+      this.afterCalculateLabelRotation();
+      if (tickOpts.display && (tickOpts.autoSkip || tickOpts.source === "auto")) {
+        this.ticks = autoSkip(this, this.ticks);
+        this._labelSizes = null;
+        this.afterAutoSkip();
+      }
+      if (samplingEnabled) {
+        this._convertTicksToLabels(this.ticks);
+      }
+      this.beforeFit();
+      this.fit();
+      this.afterFit();
+      this.afterUpdate();
+    }
+    configure() {
+      let reversePixels = this.options.reverse;
+      let startPixel, endPixel;
+      if (this.isHorizontal()) {
+        startPixel = this.left;
+        endPixel = this.right;
+      } else {
+        startPixel = this.top;
+        endPixel = this.bottom;
+        reversePixels = !reversePixels;
+      }
+      this._startPixel = startPixel;
+      this._endPixel = endPixel;
+      this._reversePixels = reversePixels;
+      this._length = endPixel - startPixel;
+      this._alignToPixels = this.options.alignToPixels;
+    }
+    afterUpdate() {
+      callback(this.options.afterUpdate, [
+        this
+      ]);
+    }
+    beforeSetDimensions() {
+      callback(this.options.beforeSetDimensions, [
+        this
+      ]);
+    }
+    setDimensions() {
+      if (this.isHorizontal()) {
+        this.width = this.maxWidth;
+        this.left = 0;
+        this.right = this.width;
+      } else {
+        this.height = this.maxHeight;
+        this.top = 0;
+        this.bottom = this.height;
+      }
+      this.paddingLeft = 0;
+      this.paddingTop = 0;
+      this.paddingRight = 0;
+      this.paddingBottom = 0;
+    }
+    afterSetDimensions() {
+      callback(this.options.afterSetDimensions, [
+        this
+      ]);
+    }
+    _callHooks(name) {
+      this.chart.notifyPlugins(name, this.getContext());
+      callback(this.options[name], [
+        this
+      ]);
+    }
+    beforeDataLimits() {
+      this._callHooks("beforeDataLimits");
+    }
+    determineDataLimits() {
+    }
+    afterDataLimits() {
+      this._callHooks("afterDataLimits");
+    }
+    beforeBuildTicks() {
+      this._callHooks("beforeBuildTicks");
+    }
+    buildTicks() {
+      return [];
+    }
+    afterBuildTicks() {
+      this._callHooks("afterBuildTicks");
+    }
+    beforeTickToLabelConversion() {
+      callback(this.options.beforeTickToLabelConversion, [
+        this
+      ]);
+    }
+    generateTickLabels(ticks) {
+      const tickOpts = this.options.ticks;
+      let i, ilen, tick;
+      for (i = 0, ilen = ticks.length; i < ilen; i++) {
+        tick = ticks[i];
+        tick.label = callback(tickOpts.callback, [
+          tick.value,
+          i,
+          ticks
+        ], this);
+      }
+    }
+    afterTickToLabelConversion() {
+      callback(this.options.afterTickToLabelConversion, [
+        this
+      ]);
+    }
+    beforeCalculateLabelRotation() {
+      callback(this.options.beforeCalculateLabelRotation, [
+        this
+      ]);
+    }
+    calculateLabelRotation() {
+      const options = this.options;
+      const tickOpts = options.ticks;
+      const numTicks = getTicksLimit(this.ticks.length, options.ticks.maxTicksLimit);
+      const minRotation = tickOpts.minRotation || 0;
+      const maxRotation = tickOpts.maxRotation;
+      let labelRotation = minRotation;
+      let tickWidth, maxHeight, maxLabelDiagonal;
+      if (!this._isVisible() || !tickOpts.display || minRotation >= maxRotation || numTicks <= 1 || !this.isHorizontal()) {
+        this.labelRotation = minRotation;
+        return;
+      }
+      const labelSizes = this._getLabelSizes();
+      const maxLabelWidth = labelSizes.widest.width;
+      const maxLabelHeight = labelSizes.highest.height;
+      const maxWidth = _limitValue(this.chart.width - maxLabelWidth, 0, this.maxWidth);
+      tickWidth = options.offset ? this.maxWidth / numTicks : maxWidth / (numTicks - 1);
+      if (maxLabelWidth + 6 > tickWidth) {
+        tickWidth = maxWidth / (numTicks - (options.offset ? 0.5 : 1));
+        maxHeight = this.maxHeight - getTickMarkLength(options.grid) - tickOpts.padding - getTitleHeight(options.title, this.chart.options.font);
+        maxLabelDiagonal = Math.sqrt(maxLabelWidth * maxLabelWidth + maxLabelHeight * maxLabelHeight);
+        labelRotation = toDegrees(Math.min(Math.asin(_limitValue((labelSizes.highest.height + 6) / tickWidth, -1, 1)), Math.asin(_limitValue(maxHeight / maxLabelDiagonal, -1, 1)) - Math.asin(_limitValue(maxLabelHeight / maxLabelDiagonal, -1, 1))));
+        labelRotation = Math.max(minRotation, Math.min(maxRotation, labelRotation));
+      }
+      this.labelRotation = labelRotation;
+    }
+    afterCalculateLabelRotation() {
+      callback(this.options.afterCalculateLabelRotation, [
+        this
+      ]);
+    }
+    afterAutoSkip() {
+    }
+    beforeFit() {
+      callback(this.options.beforeFit, [
+        this
+      ]);
+    }
+    fit() {
+      const minSize = {
+        width: 0,
+        height: 0
+      };
+      const { chart, options: { ticks: tickOpts, title: titleOpts, grid: gridOpts } } = this;
+      const display = this._isVisible();
+      const isHorizontal = this.isHorizontal();
+      if (display) {
+        const titleHeight = getTitleHeight(titleOpts, chart.options.font);
+        if (isHorizontal) {
+          minSize.width = this.maxWidth;
+          minSize.height = getTickMarkLength(gridOpts) + titleHeight;
+        } else {
+          minSize.height = this.maxHeight;
+          minSize.width = getTickMarkLength(gridOpts) + titleHeight;
+        }
+        if (tickOpts.display && this.ticks.length) {
+          const { first, last, widest, highest } = this._getLabelSizes();
+          const tickPadding = tickOpts.padding * 2;
+          const angleRadians = toRadians(this.labelRotation);
+          const cos = Math.cos(angleRadians);
+          const sin = Math.sin(angleRadians);
+          if (isHorizontal) {
+            const labelHeight = tickOpts.mirror ? 0 : sin * widest.width + cos * highest.height;
+            minSize.height = Math.min(this.maxHeight, minSize.height + labelHeight + tickPadding);
+          } else {
+            const labelWidth = tickOpts.mirror ? 0 : cos * widest.width + sin * highest.height;
+            minSize.width = Math.min(this.maxWidth, minSize.width + labelWidth + tickPadding);
+          }
+          this._calculatePadding(first, last, sin, cos);
+        }
+      }
+      this._handleMargins();
+      if (isHorizontal) {
+        this.width = this._length = chart.width - this._margins.left - this._margins.right;
+        this.height = minSize.height;
+      } else {
+        this.width = minSize.width;
+        this.height = this._length = chart.height - this._margins.top - this._margins.bottom;
+      }
+    }
+    _calculatePadding(first, last, sin, cos) {
+      const { ticks: { align, padding }, position } = this.options;
+      const isRotated = this.labelRotation !== 0;
+      const labelsBelowTicks = position !== "top" && this.axis === "x";
+      if (this.isHorizontal()) {
+        const offsetLeft = this.getPixelForTick(0) - this.left;
+        const offsetRight = this.right - this.getPixelForTick(this.ticks.length - 1);
+        let paddingLeft = 0;
+        let paddingRight = 0;
+        if (isRotated) {
+          if (labelsBelowTicks) {
+            paddingLeft = cos * first.width;
+            paddingRight = sin * last.height;
+          } else {
+            paddingLeft = sin * first.height;
+            paddingRight = cos * last.width;
+          }
+        } else if (align === "start") {
+          paddingRight = last.width;
+        } else if (align === "end") {
+          paddingLeft = first.width;
+        } else if (align !== "inner") {
+          paddingLeft = first.width / 2;
+          paddingRight = last.width / 2;
+        }
+        this.paddingLeft = Math.max((paddingLeft - offsetLeft + padding) * this.width / (this.width - offsetLeft), 0);
+        this.paddingRight = Math.max((paddingRight - offsetRight + padding) * this.width / (this.width - offsetRight), 0);
+      } else {
+        let paddingTop = last.height / 2;
+        let paddingBottom = first.height / 2;
+        if (align === "start") {
+          paddingTop = 0;
+          paddingBottom = first.height;
+        } else if (align === "end") {
+          paddingTop = last.height;
+          paddingBottom = 0;
+        }
+        this.paddingTop = paddingTop + padding;
+        this.paddingBottom = paddingBottom + padding;
+      }
+    }
+    _handleMargins() {
+      if (this._margins) {
+        this._margins.left = Math.max(this.paddingLeft, this._margins.left);
+        this._margins.top = Math.max(this.paddingTop, this._margins.top);
+        this._margins.right = Math.max(this.paddingRight, this._margins.right);
+        this._margins.bottom = Math.max(this.paddingBottom, this._margins.bottom);
+      }
+    }
+    afterFit() {
+      callback(this.options.afterFit, [
+        this
+      ]);
+    }
+    isHorizontal() {
+      const { axis, position } = this.options;
+      return position === "top" || position === "bottom" || axis === "x";
+    }
+    isFullSize() {
+      return this.options.fullSize;
+    }
+    _convertTicksToLabels(ticks) {
+      this.beforeTickToLabelConversion();
+      this.generateTickLabels(ticks);
+      let i, ilen;
+      for (i = 0, ilen = ticks.length; i < ilen; i++) {
+        if (isNullOrUndef(ticks[i].label)) {
+          ticks.splice(i, 1);
+          ilen--;
+          i--;
+        }
+      }
+      this.afterTickToLabelConversion();
+    }
+    _getLabelSizes() {
+      let labelSizes = this._labelSizes;
+      if (!labelSizes) {
+        const sampleSize = this.options.ticks.sampleSize;
+        let ticks = this.ticks;
+        if (sampleSize < ticks.length) {
+          ticks = sample(ticks, sampleSize);
+        }
+        this._labelSizes = labelSizes = this._computeLabelSizes(ticks, ticks.length, this.options.ticks.maxTicksLimit);
+      }
+      return labelSizes;
+    }
+    _computeLabelSizes(ticks, length, maxTicksLimit) {
+      const { ctx, _longestTextCache: caches } = this;
+      const widths = [];
+      const heights = [];
+      const increment = Math.floor(length / getTicksLimit(length, maxTicksLimit));
+      let widestLabelSize = 0;
+      let highestLabelSize = 0;
+      let i, j, jlen, label, tickFont, fontString, cache2, lineHeight, width, height, nestedLabel;
+      for (i = 0; i < length; i += increment) {
+        label = ticks[i].label;
+        tickFont = this._resolveTickFontOptions(i);
+        ctx.font = fontString = tickFont.string;
+        cache2 = caches[fontString] = caches[fontString] || {
+          data: {},
+          gc: []
+        };
+        lineHeight = tickFont.lineHeight;
+        width = height = 0;
+        if (!isNullOrUndef(label) && !isArray(label)) {
+          width = _measureText(ctx, cache2.data, cache2.gc, width, label);
+          height = lineHeight;
+        } else if (isArray(label)) {
+          for (j = 0, jlen = label.length; j < jlen; ++j) {
+            nestedLabel = label[j];
+            if (!isNullOrUndef(nestedLabel) && !isArray(nestedLabel)) {
+              width = _measureText(ctx, cache2.data, cache2.gc, width, nestedLabel);
+              height += lineHeight;
+            }
+          }
+        }
+        widths.push(width);
+        heights.push(height);
+        widestLabelSize = Math.max(width, widestLabelSize);
+        highestLabelSize = Math.max(height, highestLabelSize);
+      }
+      garbageCollect(caches, length);
+      const widest = widths.indexOf(widestLabelSize);
+      const highest = heights.indexOf(highestLabelSize);
+      const valueAt = (idx) => ({
+        width: widths[idx] || 0,
+        height: heights[idx] || 0
+      });
+      return {
+        first: valueAt(0),
+        last: valueAt(length - 1),
+        widest: valueAt(widest),
+        highest: valueAt(highest),
+        widths,
+        heights
+      };
+    }
+    getLabelForValue(value2) {
+      return value2;
+    }
+    getPixelForValue(value2, index2) {
+      return NaN;
+    }
+    getValueForPixel(pixel) {
+    }
+    getPixelForTick(index2) {
+      const ticks = this.ticks;
+      if (index2 < 0 || index2 > ticks.length - 1) {
+        return null;
+      }
+      return this.getPixelForValue(ticks[index2].value);
+    }
+    getPixelForDecimal(decimal) {
+      if (this._reversePixels) {
+        decimal = 1 - decimal;
+      }
+      const pixel = this._startPixel + decimal * this._length;
+      return _int16Range(this._alignToPixels ? _alignPixel(this.chart, pixel, 0) : pixel);
+    }
+    getDecimalForPixel(pixel) {
+      const decimal = (pixel - this._startPixel) / this._length;
+      return this._reversePixels ? 1 - decimal : decimal;
+    }
+    getBasePixel() {
+      return this.getPixelForValue(this.getBaseValue());
+    }
+    getBaseValue() {
+      const { min, max } = this;
+      return min < 0 && max < 0 ? max : min > 0 && max > 0 ? min : 0;
+    }
+    getContext(index2) {
+      const ticks = this.ticks || [];
+      if (index2 >= 0 && index2 < ticks.length) {
+        const tick = ticks[index2];
+        return tick.$context || (tick.$context = createTickContext(this.getContext(), index2, tick));
+      }
+      return this.$context || (this.$context = createScaleContext(this.chart.getContext(), this));
+    }
+    _tickSize() {
+      const optionTicks = this.options.ticks;
+      const rot = toRadians(this.labelRotation);
+      const cos = Math.abs(Math.cos(rot));
+      const sin = Math.abs(Math.sin(rot));
+      const labelSizes = this._getLabelSizes();
+      const padding = optionTicks.autoSkipPadding || 0;
+      const w = labelSizes ? labelSizes.widest.width + padding : 0;
+      const h = labelSizes ? labelSizes.highest.height + padding : 0;
+      return this.isHorizontal() ? h * cos > w * sin ? w / cos : h / sin : h * sin < w * cos ? h / cos : w / sin;
+    }
+    _isVisible() {
+      const display = this.options.display;
+      if (display !== "auto") {
+        return !!display;
+      }
+      return this.getMatchingVisibleMetas().length > 0;
+    }
+    _computeGridLineItems(chartArea) {
+      const axis = this.axis;
+      const chart = this.chart;
+      const options = this.options;
+      const { grid, position, border } = options;
+      const offset = grid.offset;
+      const isHorizontal = this.isHorizontal();
+      const ticks = this.ticks;
+      const ticksLength = ticks.length + (offset ? 1 : 0);
+      const tl = getTickMarkLength(grid);
+      const items = [];
+      const borderOpts = border.setContext(this.getContext());
+      const axisWidth = borderOpts.display ? borderOpts.width : 0;
+      const axisHalfWidth = axisWidth / 2;
+      const alignBorderValue = function(pixel) {
+        return _alignPixel(chart, pixel, axisWidth);
+      };
+      let borderValue, i, lineValue, alignedLineValue;
+      let tx1, ty1, tx2, ty2, x1, y1, x2, y2;
+      if (position === "top") {
+        borderValue = alignBorderValue(this.bottom);
+        ty1 = this.bottom - tl;
+        ty2 = borderValue - axisHalfWidth;
+        y1 = alignBorderValue(chartArea.top) + axisHalfWidth;
+        y2 = chartArea.bottom;
+      } else if (position === "bottom") {
+        borderValue = alignBorderValue(this.top);
+        y1 = chartArea.top;
+        y2 = alignBorderValue(chartArea.bottom) - axisHalfWidth;
+        ty1 = borderValue + axisHalfWidth;
+        ty2 = this.top + tl;
+      } else if (position === "left") {
+        borderValue = alignBorderValue(this.right);
+        tx1 = this.right - tl;
+        tx2 = borderValue - axisHalfWidth;
+        x1 = alignBorderValue(chartArea.left) + axisHalfWidth;
+        x2 = chartArea.right;
+      } else if (position === "right") {
+        borderValue = alignBorderValue(this.left);
+        x1 = chartArea.left;
+        x2 = alignBorderValue(chartArea.right) - axisHalfWidth;
+        tx1 = borderValue + axisHalfWidth;
+        tx2 = this.left + tl;
+      } else if (axis === "x") {
+        if (position === "center") {
+          borderValue = alignBorderValue((chartArea.top + chartArea.bottom) / 2 + 0.5);
+        } else if (isObject2(position)) {
+          const positionAxisID = Object.keys(position)[0];
+          const value2 = position[positionAxisID];
+          borderValue = alignBorderValue(this.chart.scales[positionAxisID].getPixelForValue(value2));
+        }
+        y1 = chartArea.top;
+        y2 = chartArea.bottom;
+        ty1 = borderValue + axisHalfWidth;
+        ty2 = ty1 + tl;
+      } else if (axis === "y") {
+        if (position === "center") {
+          borderValue = alignBorderValue((chartArea.left + chartArea.right) / 2);
+        } else if (isObject2(position)) {
+          const positionAxisID = Object.keys(position)[0];
+          const value2 = position[positionAxisID];
+          borderValue = alignBorderValue(this.chart.scales[positionAxisID].getPixelForValue(value2));
+        }
+        tx1 = borderValue - axisHalfWidth;
+        tx2 = tx1 - tl;
+        x1 = chartArea.left;
+        x2 = chartArea.right;
+      }
+      const limit = valueOrDefault(options.ticks.maxTicksLimit, ticksLength);
+      const step = Math.max(1, Math.ceil(ticksLength / limit));
+      for (i = 0; i < ticksLength; i += step) {
+        const context = this.getContext(i);
+        const optsAtIndex = grid.setContext(context);
+        const optsAtIndexBorder = border.setContext(context);
+        const lineWidth = optsAtIndex.lineWidth;
+        const lineColor = optsAtIndex.color;
+        const borderDash = optsAtIndexBorder.dash || [];
+        const borderDashOffset = optsAtIndexBorder.dashOffset;
+        const tickWidth = optsAtIndex.tickWidth;
+        const tickColor = optsAtIndex.tickColor;
+        const tickBorderDash = optsAtIndex.tickBorderDash || [];
+        const tickBorderDashOffset = optsAtIndex.tickBorderDashOffset;
+        lineValue = getPixelForGridLine(this, i, offset);
+        if (lineValue === void 0) {
+          continue;
+        }
+        alignedLineValue = _alignPixel(chart, lineValue, lineWidth);
+        if (isHorizontal) {
+          tx1 = tx2 = x1 = x2 = alignedLineValue;
+        } else {
+          ty1 = ty2 = y1 = y2 = alignedLineValue;
+        }
+        items.push({
+          tx1,
+          ty1,
+          tx2,
+          ty2,
+          x1,
+          y1,
+          x2,
+          y2,
+          width: lineWidth,
+          color: lineColor,
+          borderDash,
+          borderDashOffset,
+          tickWidth,
+          tickColor,
+          tickBorderDash,
+          tickBorderDashOffset
+        });
+      }
+      this._ticksLength = ticksLength;
+      this._borderValue = borderValue;
+      return items;
+    }
+    _computeLabelItems(chartArea) {
+      const axis = this.axis;
+      const options = this.options;
+      const { position, ticks: optionTicks } = options;
+      const isHorizontal = this.isHorizontal();
+      const ticks = this.ticks;
+      const { align, crossAlign, padding, mirror } = optionTicks;
+      const tl = getTickMarkLength(options.grid);
+      const tickAndPadding = tl + padding;
+      const hTickAndPadding = mirror ? -padding : tickAndPadding;
+      const rotation = -toRadians(this.labelRotation);
+      const items = [];
+      let i, ilen, tick, label, x, y, textAlign, pixel, font, lineHeight, lineCount, textOffset;
+      let textBaseline = "middle";
+      if (position === "top") {
+        y = this.bottom - hTickAndPadding;
+        textAlign = this._getXAxisLabelAlignment();
+      } else if (position === "bottom") {
+        y = this.top + hTickAndPadding;
+        textAlign = this._getXAxisLabelAlignment();
+      } else if (position === "left") {
+        const ret = this._getYAxisLabelAlignment(tl);
+        textAlign = ret.textAlign;
+        x = ret.x;
+      } else if (position === "right") {
+        const ret = this._getYAxisLabelAlignment(tl);
+        textAlign = ret.textAlign;
+        x = ret.x;
+      } else if (axis === "x") {
+        if (position === "center") {
+          y = (chartArea.top + chartArea.bottom) / 2 + tickAndPadding;
+        } else if (isObject2(position)) {
+          const positionAxisID = Object.keys(position)[0];
+          const value2 = position[positionAxisID];
+          y = this.chart.scales[positionAxisID].getPixelForValue(value2) + tickAndPadding;
+        }
+        textAlign = this._getXAxisLabelAlignment();
+      } else if (axis === "y") {
+        if (position === "center") {
+          x = (chartArea.left + chartArea.right) / 2 - tickAndPadding;
+        } else if (isObject2(position)) {
+          const positionAxisID = Object.keys(position)[0];
+          const value2 = position[positionAxisID];
+          x = this.chart.scales[positionAxisID].getPixelForValue(value2);
+        }
+        textAlign = this._getYAxisLabelAlignment(tl).textAlign;
+      }
+      if (axis === "y") {
+        if (align === "start") {
+          textBaseline = "top";
+        } else if (align === "end") {
+          textBaseline = "bottom";
+        }
+      }
+      const labelSizes = this._getLabelSizes();
+      for (i = 0, ilen = ticks.length; i < ilen; ++i) {
+        tick = ticks[i];
+        label = tick.label;
+        const optsAtIndex = optionTicks.setContext(this.getContext(i));
+        pixel = this.getPixelForTick(i) + optionTicks.labelOffset;
+        font = this._resolveTickFontOptions(i);
+        lineHeight = font.lineHeight;
+        lineCount = isArray(label) ? label.length : 1;
+        const halfCount = lineCount / 2;
+        const color2 = optsAtIndex.color;
+        const strokeColor = optsAtIndex.textStrokeColor;
+        const strokeWidth = optsAtIndex.textStrokeWidth;
+        let tickTextAlign = textAlign;
+        if (isHorizontal) {
+          x = pixel;
+          if (textAlign === "inner") {
+            if (i === ilen - 1) {
+              tickTextAlign = !this.options.reverse ? "right" : "left";
+            } else if (i === 0) {
+              tickTextAlign = !this.options.reverse ? "left" : "right";
+            } else {
+              tickTextAlign = "center";
+            }
+          }
+          if (position === "top") {
+            if (crossAlign === "near" || rotation !== 0) {
+              textOffset = -lineCount * lineHeight + lineHeight / 2;
+            } else if (crossAlign === "center") {
+              textOffset = -labelSizes.highest.height / 2 - halfCount * lineHeight + lineHeight;
+            } else {
+              textOffset = -labelSizes.highest.height + lineHeight / 2;
+            }
+          } else {
+            if (crossAlign === "near" || rotation !== 0) {
+              textOffset = lineHeight / 2;
+            } else if (crossAlign === "center") {
+              textOffset = labelSizes.highest.height / 2 - halfCount * lineHeight;
+            } else {
+              textOffset = labelSizes.highest.height - lineCount * lineHeight;
+            }
+          }
+          if (mirror) {
+            textOffset *= -1;
+          }
+          if (rotation !== 0 && !optsAtIndex.showLabelBackdrop) {
+            x += lineHeight / 2 * Math.sin(rotation);
+          }
+        } else {
+          y = pixel;
+          textOffset = (1 - lineCount) * lineHeight / 2;
+        }
+        let backdrop;
+        if (optsAtIndex.showLabelBackdrop) {
+          const labelPadding = toPadding(optsAtIndex.backdropPadding);
+          const height = labelSizes.heights[i];
+          const width = labelSizes.widths[i];
+          let top = textOffset - labelPadding.top;
+          let left = 0 - labelPadding.left;
+          switch (textBaseline) {
+            case "middle":
+              top -= height / 2;
+              break;
+            case "bottom":
+              top -= height;
+              break;
+          }
+          switch (textAlign) {
+            case "center":
+              left -= width / 2;
+              break;
+            case "right":
+              left -= width;
+              break;
+            case "inner":
+              if (i === ilen - 1) {
+                left -= width;
+              } else if (i > 0) {
+                left -= width / 2;
+              }
+              break;
+          }
+          backdrop = {
+            left,
+            top,
+            width: width + labelPadding.width,
+            height: height + labelPadding.height,
+            color: optsAtIndex.backdropColor
+          };
+        }
+        items.push({
+          label,
+          font,
+          textOffset,
+          options: {
+            rotation,
+            color: color2,
+            strokeColor,
+            strokeWidth,
+            textAlign: tickTextAlign,
+            textBaseline,
+            translation: [
+              x,
+              y
+            ],
+            backdrop
+          }
+        });
+      }
+      return items;
+    }
+    _getXAxisLabelAlignment() {
+      const { position, ticks } = this.options;
+      const rotation = -toRadians(this.labelRotation);
+      if (rotation) {
+        return position === "top" ? "left" : "right";
+      }
+      let align = "center";
+      if (ticks.align === "start") {
+        align = "left";
+      } else if (ticks.align === "end") {
+        align = "right";
+      } else if (ticks.align === "inner") {
+        align = "inner";
+      }
+      return align;
+    }
+    _getYAxisLabelAlignment(tl) {
+      const { position, ticks: { crossAlign, mirror, padding } } = this.options;
+      const labelSizes = this._getLabelSizes();
+      const tickAndPadding = tl + padding;
+      const widest = labelSizes.widest.width;
+      let textAlign;
+      let x;
+      if (position === "left") {
+        if (mirror) {
+          x = this.right + padding;
+          if (crossAlign === "near") {
+            textAlign = "left";
+          } else if (crossAlign === "center") {
+            textAlign = "center";
+            x += widest / 2;
+          } else {
+            textAlign = "right";
+            x += widest;
+          }
+        } else {
+          x = this.right - tickAndPadding;
+          if (crossAlign === "near") {
+            textAlign = "right";
+          } else if (crossAlign === "center") {
+            textAlign = "center";
+            x -= widest / 2;
+          } else {
+            textAlign = "left";
+            x = this.left;
+          }
+        }
+      } else if (position === "right") {
+        if (mirror) {
+          x = this.left + padding;
+          if (crossAlign === "near") {
+            textAlign = "right";
+          } else if (crossAlign === "center") {
+            textAlign = "center";
+            x -= widest / 2;
+          } else {
+            textAlign = "left";
+            x -= widest;
+          }
+        } else {
+          x = this.left + tickAndPadding;
+          if (crossAlign === "near") {
+            textAlign = "left";
+          } else if (crossAlign === "center") {
+            textAlign = "center";
+            x += widest / 2;
+          } else {
+            textAlign = "right";
+            x = this.right;
+          }
+        }
+      } else {
+        textAlign = "right";
+      }
+      return {
+        textAlign,
+        x
+      };
+    }
+    _computeLabelArea() {
+      if (this.options.ticks.mirror) {
+        return;
+      }
+      const chart = this.chart;
+      const position = this.options.position;
+      if (position === "left" || position === "right") {
+        return {
+          top: 0,
+          left: this.left,
+          bottom: chart.height,
+          right: this.right
+        };
+      }
+      if (position === "top" || position === "bottom") {
+        return {
+          top: this.top,
+          left: 0,
+          bottom: this.bottom,
+          right: chart.width
+        };
+      }
+    }
+    drawBackground() {
+      const { ctx, options: { backgroundColor }, left, top, width, height } = this;
+      if (backgroundColor) {
+        ctx.save();
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(left, top, width, height);
+        ctx.restore();
+      }
+    }
+    getLineWidthForValue(value2) {
+      const grid = this.options.grid;
+      if (!this._isVisible() || !grid.display) {
+        return 0;
+      }
+      const ticks = this.ticks;
+      const index2 = ticks.findIndex((t) => t.value === value2);
+      if (index2 >= 0) {
+        const opts = grid.setContext(this.getContext(index2));
+        return opts.lineWidth;
+      }
+      return 0;
+    }
+    drawGrid(chartArea) {
+      const grid = this.options.grid;
+      const ctx = this.ctx;
+      const items = this._gridLineItems || (this._gridLineItems = this._computeGridLineItems(chartArea));
+      let i, ilen;
+      const drawLine = (p1, p2, style) => {
+        if (!style.width || !style.color) {
+          return;
+        }
+        ctx.save();
+        ctx.lineWidth = style.width;
+        ctx.strokeStyle = style.color;
+        ctx.setLineDash(style.borderDash || []);
+        ctx.lineDashOffset = style.borderDashOffset;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+        ctx.restore();
+      };
+      if (grid.display) {
+        for (i = 0, ilen = items.length; i < ilen; ++i) {
+          const item = items[i];
+          if (grid.drawOnChartArea) {
+            drawLine({
+              x: item.x1,
+              y: item.y1
+            }, {
+              x: item.x2,
+              y: item.y2
+            }, item);
+          }
+          if (grid.drawTicks) {
+            drawLine({
+              x: item.tx1,
+              y: item.ty1
+            }, {
+              x: item.tx2,
+              y: item.ty2
+            }, {
+              color: item.tickColor,
+              width: item.tickWidth,
+              borderDash: item.tickBorderDash,
+              borderDashOffset: item.tickBorderDashOffset
+            });
+          }
+        }
+      }
+    }
+    drawBorder() {
+      const { chart, ctx, options: { border, grid } } = this;
+      const borderOpts = border.setContext(this.getContext());
+      const axisWidth = border.display ? borderOpts.width : 0;
+      if (!axisWidth) {
+        return;
+      }
+      const lastLineWidth = grid.setContext(this.getContext(0)).lineWidth;
+      const borderValue = this._borderValue;
+      let x1, x2, y1, y2;
+      if (this.isHorizontal()) {
+        x1 = _alignPixel(chart, this.left, axisWidth) - axisWidth / 2;
+        x2 = _alignPixel(chart, this.right, lastLineWidth) + lastLineWidth / 2;
+        y1 = y2 = borderValue;
+      } else {
+        y1 = _alignPixel(chart, this.top, axisWidth) - axisWidth / 2;
+        y2 = _alignPixel(chart, this.bottom, lastLineWidth) + lastLineWidth / 2;
+        x1 = x2 = borderValue;
+      }
+      ctx.save();
+      ctx.lineWidth = borderOpts.width;
+      ctx.strokeStyle = borderOpts.color;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    drawLabels(chartArea) {
+      const optionTicks = this.options.ticks;
+      if (!optionTicks.display) {
+        return;
+      }
+      const ctx = this.ctx;
+      const area = this._computeLabelArea();
+      if (area) {
+        clipArea(ctx, area);
+      }
+      const items = this.getLabelItems(chartArea);
+      for (const item of items) {
+        const renderTextOptions = item.options;
+        const tickFont = item.font;
+        const label = item.label;
+        const y = item.textOffset;
+        renderText(ctx, label, 0, y, tickFont, renderTextOptions);
+      }
+      if (area) {
+        unclipArea(ctx);
+      }
+    }
+    drawTitle() {
+      const { ctx, options: { position, title, reverse } } = this;
+      if (!title.display) {
+        return;
+      }
+      const font = toFont(title.font);
+      const padding = toPadding(title.padding);
+      const align = title.align;
+      let offset = font.lineHeight / 2;
+      if (position === "bottom" || position === "center" || isObject2(position)) {
+        offset += padding.bottom;
+        if (isArray(title.text)) {
+          offset += font.lineHeight * (title.text.length - 1);
+        }
+      } else {
+        offset += padding.top;
+      }
+      const { titleX, titleY, maxWidth, rotation } = titleArgs(this, offset, position, align);
+      renderText(ctx, title.text, 0, 0, font, {
+        color: title.color,
+        maxWidth,
+        rotation,
+        textAlign: titleAlign(align, position, reverse),
+        textBaseline: "middle",
+        translation: [
+          titleX,
+          titleY
+        ]
+      });
+    }
+    draw(chartArea) {
+      if (!this._isVisible()) {
+        return;
+      }
+      this.drawBackground();
+      this.drawGrid(chartArea);
+      this.drawBorder();
+      this.drawTitle();
+      this.drawLabels(chartArea);
+    }
+    _layers() {
+      const opts = this.options;
+      const tz = opts.ticks && opts.ticks.z || 0;
+      const gz = valueOrDefault(opts.grid && opts.grid.z, -1);
+      const bz = valueOrDefault(opts.border && opts.border.z, 0);
+      if (!this._isVisible() || this.draw !== _Scale.prototype.draw) {
+        return [
+          {
+            z: tz,
+            draw: (chartArea) => {
+              this.draw(chartArea);
+            }
+          }
+        ];
+      }
+      return [
+        {
+          z: gz,
+          draw: (chartArea) => {
+            this.drawBackground();
+            this.drawGrid(chartArea);
+            this.drawTitle();
+          }
+        },
+        {
+          z: bz,
+          draw: () => {
+            this.drawBorder();
+          }
+        },
+        {
+          z: tz,
+          draw: (chartArea) => {
+            this.drawLabels(chartArea);
+          }
+        }
+      ];
+    }
+    getMatchingVisibleMetas(type) {
+      const metas = this.chart.getSortedVisibleDatasetMetas();
+      const axisID = this.axis + "AxisID";
+      const result = [];
+      let i, ilen;
+      for (i = 0, ilen = metas.length; i < ilen; ++i) {
+        const meta = metas[i];
+        if (meta[axisID] === this.id && (!type || meta.type === type)) {
+          result.push(meta);
+        }
+      }
+      return result;
+    }
+    _resolveTickFontOptions(index2) {
+      const opts = this.options.ticks.setContext(this.getContext(index2));
+      return toFont(opts.font);
+    }
+    _maxDigits() {
+      const fontSize = this._resolveTickFontOptions(0).lineHeight;
+      return (this.isHorizontal() ? this.width : this.height) / fontSize;
+    }
+  };
+  var TypedRegistry = class {
+    constructor(type, scope, override) {
+      this.type = type;
+      this.scope = scope;
+      this.override = override;
+      this.items = /* @__PURE__ */ Object.create(null);
+    }
+    isForType(type) {
+      return Object.prototype.isPrototypeOf.call(this.type.prototype, type.prototype);
+    }
+    register(item) {
+      const proto = Object.getPrototypeOf(item);
+      let parentScope;
+      if (isIChartComponent(proto)) {
+        parentScope = this.register(proto);
+      }
+      const items = this.items;
+      const id = item.id;
+      const scope = this.scope + "." + id;
+      if (!id) {
+        throw new Error("class does not have id: " + item);
+      }
+      if (id in items) {
+        return scope;
+      }
+      items[id] = item;
+      registerDefaults(item, scope, parentScope);
+      if (this.override) {
+        defaults.override(item.id, item.overrides);
+      }
+      return scope;
+    }
+    get(id) {
+      return this.items[id];
+    }
+    unregister(item) {
+      const items = this.items;
+      const id = item.id;
+      const scope = this.scope;
+      if (id in items) {
+        delete items[id];
+      }
+      if (scope && id in defaults[scope]) {
+        delete defaults[scope][id];
+        if (this.override) {
+          delete overrides[id];
+        }
+      }
+    }
+  };
+  function registerDefaults(item, scope, parentScope) {
+    const itemDefaults = merge(/* @__PURE__ */ Object.create(null), [
+      parentScope ? defaults.get(parentScope) : {},
+      defaults.get(scope),
+      item.defaults
+    ]);
+    defaults.set(scope, itemDefaults);
+    if (item.defaultRoutes) {
+      routeDefaults(scope, item.defaultRoutes);
+    }
+    if (item.descriptors) {
+      defaults.describe(scope, item.descriptors);
+    }
+  }
+  function routeDefaults(scope, routes2) {
+    Object.keys(routes2).forEach((property) => {
+      const propertyParts = property.split(".");
+      const sourceName = propertyParts.pop();
+      const sourceScope = [
+        scope
+      ].concat(propertyParts).join(".");
+      const parts2 = routes2[property].split(".");
+      const targetName = parts2.pop();
+      const targetScope = parts2.join(".");
+      defaults.route(sourceScope, sourceName, targetScope, targetName);
+    });
+  }
+  function isIChartComponent(proto) {
+    return "id" in proto && "defaults" in proto;
+  }
+  var Registry = class {
+    constructor() {
+      this.controllers = new TypedRegistry(DatasetController, "datasets", true);
+      this.elements = new TypedRegistry(Element, "elements");
+      this.plugins = new TypedRegistry(Object, "plugins");
+      this.scales = new TypedRegistry(Scale, "scales");
+      this._typedRegistries = [
+        this.controllers,
+        this.scales,
+        this.elements
+      ];
+    }
+    add(...args) {
+      this._each("register", args);
+    }
+    remove(...args) {
+      this._each("unregister", args);
+    }
+    addControllers(...args) {
+      this._each("register", args, this.controllers);
+    }
+    addElements(...args) {
+      this._each("register", args, this.elements);
+    }
+    addPlugins(...args) {
+      this._each("register", args, this.plugins);
+    }
+    addScales(...args) {
+      this._each("register", args, this.scales);
+    }
+    getController(id) {
+      return this._get(id, this.controllers, "controller");
+    }
+    getElement(id) {
+      return this._get(id, this.elements, "element");
+    }
+    getPlugin(id) {
+      return this._get(id, this.plugins, "plugin");
+    }
+    getScale(id) {
+      return this._get(id, this.scales, "scale");
+    }
+    removeControllers(...args) {
+      this._each("unregister", args, this.controllers);
+    }
+    removeElements(...args) {
+      this._each("unregister", args, this.elements);
+    }
+    removePlugins(...args) {
+      this._each("unregister", args, this.plugins);
+    }
+    removeScales(...args) {
+      this._each("unregister", args, this.scales);
+    }
+    _each(method, args, typedRegistry) {
+      [
+        ...args
+      ].forEach((arg) => {
+        const reg = typedRegistry || this._getRegistryForType(arg);
+        if (typedRegistry || reg.isForType(arg) || reg === this.plugins && arg.id) {
+          this._exec(method, reg, arg);
+        } else {
+          each(arg, (item) => {
+            const itemReg = typedRegistry || this._getRegistryForType(item);
+            this._exec(method, itemReg, item);
+          });
+        }
+      });
+    }
+    _exec(method, registry2, component) {
+      const camelMethod = _capitalize(method);
+      callback(component["before" + camelMethod], [], component);
+      registry2[method](component);
+      callback(component["after" + camelMethod], [], component);
+    }
+    _getRegistryForType(type) {
+      for (let i = 0; i < this._typedRegistries.length; i++) {
+        const reg = this._typedRegistries[i];
+        if (reg.isForType(type)) {
+          return reg;
+        }
+      }
+      return this.plugins;
+    }
+    _get(id, typedRegistry, type) {
+      const item = typedRegistry.get(id);
+      if (item === void 0) {
+        throw new Error('"' + id + '" is not a registered ' + type + ".");
+      }
+      return item;
+    }
+  };
+  var registry = /* @__PURE__ */ new Registry();
+  var PluginService = class {
+    constructor() {
+      this._init = void 0;
+    }
+    notify(chart, hook, args, filter) {
+      if (hook === "beforeInit") {
+        this._init = this._createDescriptors(chart, true);
+        this._notify(this._init, chart, "install");
+      }
+      if (this._init === void 0) {
+        return;
+      }
+      const descriptors2 = filter ? this._descriptors(chart).filter(filter) : this._descriptors(chart);
+      const result = this._notify(descriptors2, chart, hook, args);
+      if (hook === "afterDestroy") {
+        this._notify(descriptors2, chart, "stop");
+        this._notify(this._init, chart, "uninstall");
+        this._init = void 0;
+      }
+      return result;
+    }
+    _notify(descriptors2, chart, hook, args) {
+      args = args || {};
+      for (const descriptor of descriptors2) {
+        const plugin = descriptor.plugin;
+        const method = plugin[hook];
+        const params = [
+          chart,
+          args,
+          descriptor.options
+        ];
+        if (callback(method, params, plugin) === false && args.cancelable) {
+          return false;
+        }
+      }
+      return true;
+    }
+    invalidate() {
+      if (!isNullOrUndef(this._cache)) {
+        this._oldCache = this._cache;
+        this._cache = void 0;
+      }
+    }
+    _descriptors(chart) {
+      if (this._cache) {
+        return this._cache;
+      }
+      const descriptors2 = this._cache = this._createDescriptors(chart);
+      this._notifyStateChanges(chart);
+      return descriptors2;
+    }
+    _createDescriptors(chart, all) {
+      const config = chart && chart.config;
+      const options = valueOrDefault(config.options && config.options.plugins, {});
+      const plugins2 = allPlugins(config);
+      return options === false && !all ? [] : createDescriptors(chart, plugins2, options, all);
+    }
+    _notifyStateChanges(chart) {
+      const previousDescriptors = this._oldCache || [];
+      const descriptors2 = this._cache;
+      const diff = (a, b) => a.filter((x) => !b.some((y) => x.plugin.id === y.plugin.id));
+      this._notify(diff(previousDescriptors, descriptors2), chart, "stop");
+      this._notify(diff(descriptors2, previousDescriptors), chart, "start");
+    }
+  };
+  function allPlugins(config) {
+    const localIds = {};
+    const plugins2 = [];
+    const keys = Object.keys(registry.plugins.items);
+    for (let i = 0; i < keys.length; i++) {
+      plugins2.push(registry.getPlugin(keys[i]));
+    }
+    const local = config.plugins || [];
+    for (let i = 0; i < local.length; i++) {
+      const plugin = local[i];
+      if (plugins2.indexOf(plugin) === -1) {
+        plugins2.push(plugin);
+        localIds[plugin.id] = true;
+      }
+    }
+    return {
+      plugins: plugins2,
+      localIds
+    };
+  }
+  function getOpts(options, all) {
+    if (!all && options === false) {
+      return null;
+    }
+    if (options === true) {
+      return {};
+    }
+    return options;
+  }
+  function createDescriptors(chart, { plugins: plugins2, localIds }, options, all) {
+    const result = [];
+    const context = chart.getContext();
+    for (const plugin of plugins2) {
+      const id = plugin.id;
+      const opts = getOpts(options[id], all);
+      if (opts === null) {
+        continue;
+      }
+      result.push({
+        plugin,
+        options: pluginOpts(chart.config, {
+          plugin,
+          local: localIds[id]
+        }, opts, context)
+      });
+    }
+    return result;
+  }
+  function pluginOpts(config, { plugin, local }, opts, context) {
+    const keys = config.pluginScopeKeys(plugin);
+    const scopes = config.getOptionScopes(opts, keys);
+    if (local && plugin.defaults) {
+      scopes.push(plugin.defaults);
+    }
+    return config.createResolver(scopes, context, [
+      ""
+    ], {
+      scriptable: false,
+      indexable: false,
+      allKeys: true
+    });
+  }
+  function getIndexAxis(type, options) {
+    const datasetDefaults = defaults.datasets[type] || {};
+    const datasetOptions = (options.datasets || {})[type] || {};
+    return datasetOptions.indexAxis || options.indexAxis || datasetDefaults.indexAxis || "x";
+  }
+  function getAxisFromDefaultScaleID(id, indexAxis) {
+    let axis = id;
+    if (id === "_index_") {
+      axis = indexAxis;
+    } else if (id === "_value_") {
+      axis = indexAxis === "x" ? "y" : "x";
+    }
+    return axis;
+  }
+  function getDefaultScaleIDFromAxis(axis, indexAxis) {
+    return axis === indexAxis ? "_index_" : "_value_";
+  }
+  function idMatchesAxis(id) {
+    if (id === "x" || id === "y" || id === "r") {
+      return id;
+    }
+  }
+  function axisFromPosition(position) {
+    if (position === "top" || position === "bottom") {
+      return "x";
+    }
+    if (position === "left" || position === "right") {
+      return "y";
+    }
+  }
+  function determineAxis(id, ...scaleOptions) {
+    if (idMatchesAxis(id)) {
+      return id;
+    }
+    for (const opts of scaleOptions) {
+      const axis = opts.axis || axisFromPosition(opts.position) || id.length > 1 && idMatchesAxis(id[0].toLowerCase());
+      if (axis) {
+        return axis;
+      }
+    }
+    throw new Error(`Cannot determine type of '${id}' axis. Please provide 'axis' or 'position' option.`);
+  }
+  function getAxisFromDataset(id, axis, dataset) {
+    if (dataset[axis + "AxisID"] === id) {
+      return {
+        axis
+      };
+    }
+  }
+  function retrieveAxisFromDatasets(id, config) {
+    if (config.data && config.data.datasets) {
+      const boundDs = config.data.datasets.filter((d) => d.xAxisID === id || d.yAxisID === id);
+      if (boundDs.length) {
+        return getAxisFromDataset(id, "x", boundDs[0]) || getAxisFromDataset(id, "y", boundDs[0]);
+      }
+    }
+    return {};
+  }
+  function mergeScaleConfig(config, options) {
+    const chartDefaults = overrides[config.type] || {
+      scales: {}
+    };
+    const configScales = options.scales || {};
+    const chartIndexAxis = getIndexAxis(config.type, options);
+    const scales2 = /* @__PURE__ */ Object.create(null);
+    Object.keys(configScales).forEach((id) => {
+      const scaleConf = configScales[id];
+      if (!isObject2(scaleConf)) {
+        return console.error(`Invalid scale configuration for scale: ${id}`);
+      }
+      if (scaleConf._proxy) {
+        return console.warn(`Ignoring resolver passed as options for scale: ${id}`);
+      }
+      const axis = determineAxis(id, scaleConf, retrieveAxisFromDatasets(id, config), defaults.scales[scaleConf.type]);
+      const defaultId = getDefaultScaleIDFromAxis(axis, chartIndexAxis);
+      const defaultScaleOptions = chartDefaults.scales || {};
+      scales2[id] = mergeIf(/* @__PURE__ */ Object.create(null), [
+        {
+          axis
+        },
+        scaleConf,
+        defaultScaleOptions[axis],
+        defaultScaleOptions[defaultId]
+      ]);
+    });
+    config.data.datasets.forEach((dataset) => {
+      const type = dataset.type || config.type;
+      const indexAxis = dataset.indexAxis || getIndexAxis(type, options);
+      const datasetDefaults = overrides[type] || {};
+      const defaultScaleOptions = datasetDefaults.scales || {};
+      Object.keys(defaultScaleOptions).forEach((defaultID) => {
+        const axis = getAxisFromDefaultScaleID(defaultID, indexAxis);
+        const id = dataset[axis + "AxisID"] || axis;
+        scales2[id] = scales2[id] || /* @__PURE__ */ Object.create(null);
+        mergeIf(scales2[id], [
+          {
+            axis
+          },
+          configScales[id],
+          defaultScaleOptions[defaultID]
+        ]);
+      });
+    });
+    Object.keys(scales2).forEach((key) => {
+      const scale = scales2[key];
+      mergeIf(scale, [
+        defaults.scales[scale.type],
+        defaults.scale
+      ]);
+    });
+    return scales2;
+  }
+  function initOptions(config) {
+    const options = config.options || (config.options = {});
+    options.plugins = valueOrDefault(options.plugins, {});
+    options.scales = mergeScaleConfig(config, options);
+  }
+  function initData(data) {
+    data = data || {};
+    data.datasets = data.datasets || [];
+    data.labels = data.labels || [];
+    return data;
+  }
+  function initConfig(config) {
+    config = config || {};
+    config.data = initData(config.data);
+    initOptions(config);
+    return config;
+  }
+  var keyCache = /* @__PURE__ */ new Map();
+  var keysCached = /* @__PURE__ */ new Set();
+  function cachedKeys(cacheKey, generate) {
+    let keys = keyCache.get(cacheKey);
+    if (!keys) {
+      keys = generate();
+      keyCache.set(cacheKey, keys);
+      keysCached.add(keys);
+    }
+    return keys;
+  }
+  var addIfFound = (set2, obj, key) => {
+    const opts = resolveObjectKey(obj, key);
+    if (opts !== void 0) {
+      set2.add(opts);
+    }
+  };
+  var Config = class {
+    constructor(config) {
+      this._config = initConfig(config);
+      this._scopeCache = /* @__PURE__ */ new Map();
+      this._resolverCache = /* @__PURE__ */ new Map();
+    }
+    get platform() {
+      return this._config.platform;
+    }
+    get type() {
+      return this._config.type;
+    }
+    set type(type) {
+      this._config.type = type;
+    }
+    get data() {
+      return this._config.data;
+    }
+    set data(data) {
+      this._config.data = initData(data);
+    }
+    get options() {
+      return this._config.options;
+    }
+    set options(options) {
+      this._config.options = options;
+    }
+    get plugins() {
+      return this._config.plugins;
+    }
+    update() {
+      const config = this._config;
+      this.clearCache();
+      initOptions(config);
+    }
+    clearCache() {
+      this._scopeCache.clear();
+      this._resolverCache.clear();
+    }
+    datasetScopeKeys(datasetType) {
+      return cachedKeys(datasetType, () => [
+        [
+          `datasets.${datasetType}`,
+          ""
+        ]
+      ]);
+    }
+    datasetAnimationScopeKeys(datasetType, transition) {
+      return cachedKeys(`${datasetType}.transition.${transition}`, () => [
+        [
+          `datasets.${datasetType}.transitions.${transition}`,
+          `transitions.${transition}`
+        ],
+        [
+          `datasets.${datasetType}`,
+          ""
+        ]
+      ]);
+    }
+    datasetElementScopeKeys(datasetType, elementType) {
+      return cachedKeys(`${datasetType}-${elementType}`, () => [
+        [
+          `datasets.${datasetType}.elements.${elementType}`,
+          `datasets.${datasetType}`,
+          `elements.${elementType}`,
+          ""
+        ]
+      ]);
+    }
+    pluginScopeKeys(plugin) {
+      const id = plugin.id;
+      const type = this.type;
+      return cachedKeys(`${type}-plugin-${id}`, () => [
+        [
+          `plugins.${id}`,
+          ...plugin.additionalOptionScopes || []
+        ]
+      ]);
+    }
+    _cachedScopes(mainScope, resetCache) {
+      const _scopeCache = this._scopeCache;
+      let cache2 = _scopeCache.get(mainScope);
+      if (!cache2 || resetCache) {
+        cache2 = /* @__PURE__ */ new Map();
+        _scopeCache.set(mainScope, cache2);
+      }
+      return cache2;
+    }
+    getOptionScopes(mainScope, keyLists, resetCache) {
+      const { options, type } = this;
+      const cache2 = this._cachedScopes(mainScope, resetCache);
+      const cached = cache2.get(keyLists);
+      if (cached) {
+        return cached;
+      }
+      const scopes = /* @__PURE__ */ new Set();
+      keyLists.forEach((keys) => {
+        if (mainScope) {
+          scopes.add(mainScope);
+          keys.forEach((key) => addIfFound(scopes, mainScope, key));
+        }
+        keys.forEach((key) => addIfFound(scopes, options, key));
+        keys.forEach((key) => addIfFound(scopes, overrides[type] || {}, key));
+        keys.forEach((key) => addIfFound(scopes, defaults, key));
+        keys.forEach((key) => addIfFound(scopes, descriptors, key));
+      });
+      const array = Array.from(scopes);
+      if (array.length === 0) {
+        array.push(/* @__PURE__ */ Object.create(null));
+      }
+      if (keysCached.has(keyLists)) {
+        cache2.set(keyLists, array);
+      }
+      return array;
+    }
+    chartOptionScopes() {
+      const { options, type } = this;
+      return [
+        options,
+        overrides[type] || {},
+        defaults.datasets[type] || {},
+        {
+          type
+        },
+        defaults,
+        descriptors
+      ];
+    }
+    resolveNamedOptions(scopes, names2, context, prefixes = [
+      ""
+    ]) {
+      const result = {
+        $shared: true
+      };
+      const { resolver, subPrefixes } = getResolver(this._resolverCache, scopes, prefixes);
+      let options = resolver;
+      if (needContext(resolver, names2)) {
+        result.$shared = false;
+        context = isFunction(context) ? context() : context;
+        const subResolver = this.createResolver(scopes, context, subPrefixes);
+        options = _attachContext(resolver, context, subResolver);
+      }
+      for (const prop of names2) {
+        result[prop] = options[prop];
+      }
+      return result;
+    }
+    createResolver(scopes, context, prefixes = [
+      ""
+    ], descriptorDefaults) {
+      const { resolver } = getResolver(this._resolverCache, scopes, prefixes);
+      return isObject2(context) ? _attachContext(resolver, context, void 0, descriptorDefaults) : resolver;
+    }
+  };
+  function getResolver(resolverCache, scopes, prefixes) {
+    let cache2 = resolverCache.get(scopes);
+    if (!cache2) {
+      cache2 = /* @__PURE__ */ new Map();
+      resolverCache.set(scopes, cache2);
+    }
+    const cacheKey = prefixes.join();
+    let cached = cache2.get(cacheKey);
+    if (!cached) {
+      const resolver = _createResolver(scopes, prefixes);
+      cached = {
+        resolver,
+        subPrefixes: prefixes.filter((p) => !p.toLowerCase().includes("hover"))
+      };
+      cache2.set(cacheKey, cached);
+    }
+    return cached;
+  }
+  var hasFunction = (value2) => isObject2(value2) && Object.getOwnPropertyNames(value2).some((key) => isFunction(value2[key]));
+  function needContext(proxy, names2) {
+    const { isScriptable, isIndexable } = _descriptors(proxy);
+    for (const prop of names2) {
+      const scriptable = isScriptable(prop);
+      const indexable = isIndexable(prop);
+      const value2 = (indexable || scriptable) && proxy[prop];
+      if (scriptable && (isFunction(value2) || hasFunction(value2)) || indexable && isArray(value2)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  var version = "4.5.1";
+  var KNOWN_POSITIONS = [
+    "top",
+    "bottom",
+    "left",
+    "right",
+    "chartArea"
+  ];
+  function positionIsHorizontal(position, axis) {
+    return position === "top" || position === "bottom" || KNOWN_POSITIONS.indexOf(position) === -1 && axis === "x";
+  }
+  function compare2Level(l1, l2) {
+    return function(a, b) {
+      return a[l1] === b[l1] ? a[l2] - b[l2] : a[l1] - b[l1];
+    };
+  }
+  function onAnimationsComplete(context) {
+    const chart = context.chart;
+    const animationOptions = chart.options.animation;
+    chart.notifyPlugins("afterRender");
+    callback(animationOptions && animationOptions.onComplete, [
+      context
+    ], chart);
+  }
+  function onAnimationProgress(context) {
+    const chart = context.chart;
+    const animationOptions = chart.options.animation;
+    callback(animationOptions && animationOptions.onProgress, [
+      context
+    ], chart);
+  }
+  function getCanvas(item) {
+    if (_isDomSupported() && typeof item === "string") {
+      item = document.getElementById(item);
+    } else if (item && item.length) {
+      item = item[0];
+    }
+    if (item && item.canvas) {
+      item = item.canvas;
+    }
+    return item;
+  }
+  var instances = {};
+  var getChart = (key) => {
+    const canvas = getCanvas(key);
+    return Object.values(instances).filter((c) => c.canvas === canvas).pop();
+  };
+  function moveNumericKeys(obj, start, move) {
+    const keys = Object.keys(obj);
+    for (const key of keys) {
+      const intKey = +key;
+      if (intKey >= start) {
+        const value2 = obj[key];
+        delete obj[key];
+        if (move > 0 || intKey > start) {
+          obj[intKey + move] = value2;
+        }
+      }
+    }
+  }
+  function determineLastEvent(e, lastEvent, inChartArea, isClick) {
+    if (!inChartArea || e.type === "mouseout") {
+      return null;
+    }
+    if (isClick) {
+      return lastEvent;
+    }
+    return e;
+  }
+  var Chart = class {
+    static defaults = defaults;
+    static instances = instances;
+    static overrides = overrides;
+    static registry = registry;
+    static version = version;
+    static getChart = getChart;
+    static register(...items) {
+      registry.add(...items);
+      invalidatePlugins();
+    }
+    static unregister(...items) {
+      registry.remove(...items);
+      invalidatePlugins();
+    }
+    constructor(item, userConfig) {
+      const config = this.config = new Config(userConfig);
+      const initialCanvas = getCanvas(item);
+      const existingChart = getChart(initialCanvas);
+      if (existingChart) {
+        throw new Error("Canvas is already in use. Chart with ID '" + existingChart.id + "' must be destroyed before the canvas with ID '" + existingChart.canvas.id + "' can be reused.");
+      }
+      const options = config.createResolver(config.chartOptionScopes(), this.getContext());
+      this.platform = new (config.platform || _detectPlatform(initialCanvas))();
+      this.platform.updateConfig(config);
+      const context = this.platform.acquireContext(initialCanvas, options.aspectRatio);
+      const canvas = context && context.canvas;
+      const height = canvas && canvas.height;
+      const width = canvas && canvas.width;
+      this.id = uid();
+      this.ctx = context;
+      this.canvas = canvas;
+      this.width = width;
+      this.height = height;
+      this._options = options;
+      this._aspectRatio = this.aspectRatio;
+      this._layers = [];
+      this._metasets = [];
+      this._stacks = void 0;
+      this.boxes = [];
+      this.currentDevicePixelRatio = void 0;
+      this.chartArea = void 0;
+      this._active = [];
+      this._lastEvent = void 0;
+      this._listeners = {};
+      this._responsiveListeners = void 0;
+      this._sortedMetasets = [];
+      this.scales = {};
+      this._plugins = new PluginService();
+      this.$proxies = {};
+      this._hiddenIndices = {};
+      this.attached = false;
+      this._animationsDisabled = void 0;
+      this.$context = void 0;
+      this._doResize = debounce((mode) => this.update(mode), options.resizeDelay || 0);
+      this._dataChanges = [];
+      instances[this.id] = this;
+      if (!context || !canvas) {
+        console.error("Failed to create chart: can't acquire context from the given item");
+        return;
+      }
+      animator.listen(this, "complete", onAnimationsComplete);
+      animator.listen(this, "progress", onAnimationProgress);
+      this._initialize();
+      if (this.attached) {
+        this.update();
+      }
+    }
+    get aspectRatio() {
+      const { options: { aspectRatio, maintainAspectRatio }, width, height, _aspectRatio } = this;
+      if (!isNullOrUndef(aspectRatio)) {
+        return aspectRatio;
+      }
+      if (maintainAspectRatio && _aspectRatio) {
+        return _aspectRatio;
+      }
+      return height ? width / height : null;
+    }
+    get data() {
+      return this.config.data;
+    }
+    set data(data) {
+      this.config.data = data;
+    }
+    get options() {
+      return this._options;
+    }
+    set options(options) {
+      this.config.options = options;
+    }
+    get registry() {
+      return registry;
+    }
+    _initialize() {
+      this.notifyPlugins("beforeInit");
+      if (this.options.responsive) {
+        this.resize();
+      } else {
+        retinaScale(this, this.options.devicePixelRatio);
+      }
+      this.bindEvents();
+      this.notifyPlugins("afterInit");
+      return this;
+    }
+    clear() {
+      clearCanvas(this.canvas, this.ctx);
+      return this;
+    }
+    stop() {
+      animator.stop(this);
+      return this;
+    }
+    resize(width, height) {
+      if (!animator.running(this)) {
+        this._resize(width, height);
+      } else {
+        this._resizeBeforeDraw = {
+          width,
+          height
+        };
+      }
+    }
+    _resize(width, height) {
+      const options = this.options;
+      const canvas = this.canvas;
+      const aspectRatio = options.maintainAspectRatio && this.aspectRatio;
+      const newSize = this.platform.getMaximumSize(canvas, width, height, aspectRatio);
+      const newRatio = options.devicePixelRatio || this.platform.getDevicePixelRatio();
+      const mode = this.width ? "resize" : "attach";
+      this.width = newSize.width;
+      this.height = newSize.height;
+      this._aspectRatio = this.aspectRatio;
+      if (!retinaScale(this, newRatio, true)) {
+        return;
+      }
+      this.notifyPlugins("resize", {
+        size: newSize
+      });
+      callback(options.onResize, [
+        this,
+        newSize
+      ], this);
+      if (this.attached) {
+        if (this._doResize(mode)) {
+          this.render();
+        }
+      }
+    }
+    ensureScalesHaveIDs() {
+      const options = this.options;
+      const scalesOptions = options.scales || {};
+      each(scalesOptions, (axisOptions, axisID) => {
+        axisOptions.id = axisID;
+      });
+    }
+    buildOrUpdateScales() {
+      const options = this.options;
+      const scaleOpts = options.scales;
+      const scales2 = this.scales;
+      const updated = Object.keys(scales2).reduce((obj, id) => {
+        obj[id] = false;
+        return obj;
+      }, {});
+      let items = [];
+      if (scaleOpts) {
+        items = items.concat(Object.keys(scaleOpts).map((id) => {
+          const scaleOptions = scaleOpts[id];
+          const axis = determineAxis(id, scaleOptions);
+          const isRadial = axis === "r";
+          const isHorizontal = axis === "x";
+          return {
+            options: scaleOptions,
+            dposition: isRadial ? "chartArea" : isHorizontal ? "bottom" : "left",
+            dtype: isRadial ? "radialLinear" : isHorizontal ? "category" : "linear"
+          };
+        }));
+      }
+      each(items, (item) => {
+        const scaleOptions = item.options;
+        const id = scaleOptions.id;
+        const axis = determineAxis(id, scaleOptions);
+        const scaleType = valueOrDefault(scaleOptions.type, item.dtype);
+        if (scaleOptions.position === void 0 || positionIsHorizontal(scaleOptions.position, axis) !== positionIsHorizontal(item.dposition)) {
+          scaleOptions.position = item.dposition;
+        }
+        updated[id] = true;
+        let scale = null;
+        if (id in scales2 && scales2[id].type === scaleType) {
+          scale = scales2[id];
+        } else {
+          const scaleClass = registry.getScale(scaleType);
+          scale = new scaleClass({
+            id,
+            type: scaleType,
+            ctx: this.ctx,
+            chart: this
+          });
+          scales2[scale.id] = scale;
+        }
+        scale.init(scaleOptions, options);
+      });
+      each(updated, (hasUpdated, id) => {
+        if (!hasUpdated) {
+          delete scales2[id];
+        }
+      });
+      each(scales2, (scale) => {
+        layouts.configure(this, scale, scale.options);
+        layouts.addBox(this, scale);
+      });
+    }
+    _updateMetasets() {
+      const metasets = this._metasets;
+      const numData = this.data.datasets.length;
+      const numMeta = metasets.length;
+      metasets.sort((a, b) => a.index - b.index);
+      if (numMeta > numData) {
+        for (let i = numData; i < numMeta; ++i) {
+          this._destroyDatasetMeta(i);
+        }
+        metasets.splice(numData, numMeta - numData);
+      }
+      this._sortedMetasets = metasets.slice(0).sort(compare2Level("order", "index"));
+    }
+    _removeUnreferencedMetasets() {
+      const { _metasets: metasets, data: { datasets } } = this;
+      if (metasets.length > datasets.length) {
+        delete this._stacks;
+      }
+      metasets.forEach((meta, index2) => {
+        if (datasets.filter((x) => x === meta._dataset).length === 0) {
+          this._destroyDatasetMeta(index2);
+        }
+      });
+    }
+    buildOrUpdateControllers() {
+      const newControllers = [];
+      const datasets = this.data.datasets;
+      let i, ilen;
+      this._removeUnreferencedMetasets();
+      for (i = 0, ilen = datasets.length; i < ilen; i++) {
+        const dataset = datasets[i];
+        let meta = this.getDatasetMeta(i);
+        const type = dataset.type || this.config.type;
+        if (meta.type && meta.type !== type) {
+          this._destroyDatasetMeta(i);
+          meta = this.getDatasetMeta(i);
+        }
+        meta.type = type;
+        meta.indexAxis = dataset.indexAxis || getIndexAxis(type, this.options);
+        meta.order = dataset.order || 0;
+        meta.index = i;
+        meta.label = "" + dataset.label;
+        meta.visible = this.isDatasetVisible(i);
+        if (meta.controller) {
+          meta.controller.updateIndex(i);
+          meta.controller.linkScales();
+        } else {
+          const ControllerClass = registry.getController(type);
+          const { datasetElementType, dataElementType } = defaults.datasets[type];
+          Object.assign(ControllerClass, {
+            dataElementType: registry.getElement(dataElementType),
+            datasetElementType: datasetElementType && registry.getElement(datasetElementType)
+          });
+          meta.controller = new ControllerClass(this, i);
+          newControllers.push(meta.controller);
+        }
+      }
+      this._updateMetasets();
+      return newControllers;
+    }
+    _resetElements() {
+      each(this.data.datasets, (dataset, datasetIndex) => {
+        this.getDatasetMeta(datasetIndex).controller.reset();
+      }, this);
+    }
+    reset() {
+      this._resetElements();
+      this.notifyPlugins("reset");
+    }
+    update(mode) {
+      const config = this.config;
+      config.update();
+      const options = this._options = config.createResolver(config.chartOptionScopes(), this.getContext());
+      const animsDisabled = this._animationsDisabled = !options.animation;
+      this._updateScales();
+      this._checkEventBindings();
+      this._updateHiddenIndices();
+      this._plugins.invalidate();
+      if (this.notifyPlugins("beforeUpdate", {
+        mode,
+        cancelable: true
+      }) === false) {
+        return;
+      }
+      const newControllers = this.buildOrUpdateControllers();
+      this.notifyPlugins("beforeElementsUpdate");
+      let minPadding = 0;
+      for (let i = 0, ilen = this.data.datasets.length; i < ilen; i++) {
+        const { controller } = this.getDatasetMeta(i);
+        const reset = !animsDisabled && newControllers.indexOf(controller) === -1;
+        controller.buildOrUpdateElements(reset);
+        minPadding = Math.max(+controller.getMaxOverflow(), minPadding);
+      }
+      minPadding = this._minPadding = options.layout.autoPadding ? minPadding : 0;
+      this._updateLayout(minPadding);
+      if (!animsDisabled) {
+        each(newControllers, (controller) => {
+          controller.reset();
+        });
+      }
+      this._updateDatasets(mode);
+      this.notifyPlugins("afterUpdate", {
+        mode
+      });
+      this._layers.sort(compare2Level("z", "_idx"));
+      const { _active, _lastEvent } = this;
+      if (_lastEvent) {
+        this._eventHandler(_lastEvent, true);
+      } else if (_active.length) {
+        this._updateHoverStyles(_active, _active, true);
+      }
+      this.render();
+    }
+    _updateScales() {
+      each(this.scales, (scale) => {
+        layouts.removeBox(this, scale);
+      });
+      this.ensureScalesHaveIDs();
+      this.buildOrUpdateScales();
+    }
+    _checkEventBindings() {
+      const options = this.options;
+      const existingEvents = new Set(Object.keys(this._listeners));
+      const newEvents = new Set(options.events);
+      if (!setsEqual(existingEvents, newEvents) || !!this._responsiveListeners !== options.responsive) {
+        this.unbindEvents();
+        this.bindEvents();
+      }
+    }
+    _updateHiddenIndices() {
+      const { _hiddenIndices } = this;
+      const changes = this._getUniformDataChanges() || [];
+      for (const { method, start, count } of changes) {
+        const move = method === "_removeElements" ? -count : count;
+        moveNumericKeys(_hiddenIndices, start, move);
+      }
+    }
+    _getUniformDataChanges() {
+      const _dataChanges = this._dataChanges;
+      if (!_dataChanges || !_dataChanges.length) {
+        return;
+      }
+      this._dataChanges = [];
+      const datasetCount = this.data.datasets.length;
+      const makeSet = (idx) => new Set(_dataChanges.filter((c) => c[0] === idx).map((c, i) => i + "," + c.splice(1).join(",")));
+      const changeSet = makeSet(0);
+      for (let i = 1; i < datasetCount; i++) {
+        if (!setsEqual(changeSet, makeSet(i))) {
+          return;
+        }
+      }
+      return Array.from(changeSet).map((c) => c.split(",")).map((a) => ({
+        method: a[1],
+        start: +a[2],
+        count: +a[3]
+      }));
+    }
+    _updateLayout(minPadding) {
+      if (this.notifyPlugins("beforeLayout", {
+        cancelable: true
+      }) === false) {
+        return;
+      }
+      layouts.update(this, this.width, this.height, minPadding);
+      const area = this.chartArea;
+      const noArea = area.width <= 0 || area.height <= 0;
+      this._layers = [];
+      each(this.boxes, (box) => {
+        if (noArea && box.position === "chartArea") {
+          return;
+        }
+        if (box.configure) {
+          box.configure();
+        }
+        this._layers.push(...box._layers());
+      }, this);
+      this._layers.forEach((item, index2) => {
+        item._idx = index2;
+      });
+      this.notifyPlugins("afterLayout");
+    }
+    _updateDatasets(mode) {
+      if (this.notifyPlugins("beforeDatasetsUpdate", {
+        mode,
+        cancelable: true
+      }) === false) {
+        return;
+      }
+      for (let i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
+        this.getDatasetMeta(i).controller.configure();
+      }
+      for (let i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
+        this._updateDataset(i, isFunction(mode) ? mode({
+          datasetIndex: i
+        }) : mode);
+      }
+      this.notifyPlugins("afterDatasetsUpdate", {
+        mode
+      });
+    }
+    _updateDataset(index2, mode) {
+      const meta = this.getDatasetMeta(index2);
+      const args = {
+        meta,
+        index: index2,
+        mode,
+        cancelable: true
+      };
+      if (this.notifyPlugins("beforeDatasetUpdate", args) === false) {
+        return;
+      }
+      meta.controller._update(mode);
+      args.cancelable = false;
+      this.notifyPlugins("afterDatasetUpdate", args);
+    }
+    render() {
+      if (this.notifyPlugins("beforeRender", {
+        cancelable: true
+      }) === false) {
+        return;
+      }
+      if (animator.has(this)) {
+        if (this.attached && !animator.running(this)) {
+          animator.start(this);
+        }
+      } else {
+        this.draw();
+        onAnimationsComplete({
+          chart: this
+        });
+      }
+    }
+    draw() {
+      let i;
+      if (this._resizeBeforeDraw) {
+        const { width, height } = this._resizeBeforeDraw;
+        this._resizeBeforeDraw = null;
+        this._resize(width, height);
+      }
+      this.clear();
+      if (this.width <= 0 || this.height <= 0) {
+        return;
+      }
+      if (this.notifyPlugins("beforeDraw", {
+        cancelable: true
+      }) === false) {
+        return;
+      }
+      const layers = this._layers;
+      for (i = 0; i < layers.length && layers[i].z <= 0; ++i) {
+        layers[i].draw(this.chartArea);
+      }
+      this._drawDatasets();
+      for (; i < layers.length; ++i) {
+        layers[i].draw(this.chartArea);
+      }
+      this.notifyPlugins("afterDraw");
+    }
+    _getSortedDatasetMetas(filterVisible) {
+      const metasets = this._sortedMetasets;
+      const result = [];
+      let i, ilen;
+      for (i = 0, ilen = metasets.length; i < ilen; ++i) {
+        const meta = metasets[i];
+        if (!filterVisible || meta.visible) {
+          result.push(meta);
+        }
+      }
+      return result;
+    }
+    getSortedVisibleDatasetMetas() {
+      return this._getSortedDatasetMetas(true);
+    }
+    _drawDatasets() {
+      if (this.notifyPlugins("beforeDatasetsDraw", {
+        cancelable: true
+      }) === false) {
+        return;
+      }
+      const metasets = this.getSortedVisibleDatasetMetas();
+      for (let i = metasets.length - 1; i >= 0; --i) {
+        this._drawDataset(metasets[i]);
+      }
+      this.notifyPlugins("afterDatasetsDraw");
+    }
+    _drawDataset(meta) {
+      const ctx = this.ctx;
+      const args = {
+        meta,
+        index: meta.index,
+        cancelable: true
+      };
+      const clip = getDatasetClipArea(this, meta);
+      if (this.notifyPlugins("beforeDatasetDraw", args) === false) {
+        return;
+      }
+      if (clip) {
+        clipArea(ctx, clip);
+      }
+      meta.controller.draw();
+      if (clip) {
+        unclipArea(ctx);
+      }
+      args.cancelable = false;
+      this.notifyPlugins("afterDatasetDraw", args);
+    }
+    isPointInArea(point) {
+      return _isPointInArea(point, this.chartArea, this._minPadding);
+    }
+    getElementsAtEventForMode(e, mode, options, useFinalPosition) {
+      const method = Interaction.modes[mode];
+      if (typeof method === "function") {
+        return method(this, e, options, useFinalPosition);
+      }
+      return [];
+    }
+    getDatasetMeta(datasetIndex) {
+      const dataset = this.data.datasets[datasetIndex];
+      const metasets = this._metasets;
+      let meta = metasets.filter((x) => x && x._dataset === dataset).pop();
+      if (!meta) {
+        meta = {
+          type: null,
+          data: [],
+          dataset: null,
+          controller: null,
+          hidden: null,
+          xAxisID: null,
+          yAxisID: null,
+          order: dataset && dataset.order || 0,
+          index: datasetIndex,
+          _dataset: dataset,
+          _parsed: [],
+          _sorted: false
+        };
+        metasets.push(meta);
+      }
+      return meta;
+    }
+    getContext() {
+      return this.$context || (this.$context = createContext(null, {
+        chart: this,
+        type: "chart"
+      }));
+    }
+    getVisibleDatasetCount() {
+      return this.getSortedVisibleDatasetMetas().length;
+    }
+    isDatasetVisible(datasetIndex) {
+      const dataset = this.data.datasets[datasetIndex];
+      if (!dataset) {
+        return false;
+      }
+      const meta = this.getDatasetMeta(datasetIndex);
+      return typeof meta.hidden === "boolean" ? !meta.hidden : !dataset.hidden;
+    }
+    setDatasetVisibility(datasetIndex, visible) {
+      const meta = this.getDatasetMeta(datasetIndex);
+      meta.hidden = !visible;
+    }
+    toggleDataVisibility(index2) {
+      this._hiddenIndices[index2] = !this._hiddenIndices[index2];
+    }
+    getDataVisibility(index2) {
+      return !this._hiddenIndices[index2];
+    }
+    _updateVisibility(datasetIndex, dataIndex, visible) {
+      const mode = visible ? "show" : "hide";
+      const meta = this.getDatasetMeta(datasetIndex);
+      const anims = meta.controller._resolveAnimations(void 0, mode);
+      if (defined(dataIndex)) {
+        meta.data[dataIndex].hidden = !visible;
+        this.update();
+      } else {
+        this.setDatasetVisibility(datasetIndex, visible);
+        anims.update(meta, {
+          visible
+        });
+        this.update((ctx) => ctx.datasetIndex === datasetIndex ? mode : void 0);
+      }
+    }
+    hide(datasetIndex, dataIndex) {
+      this._updateVisibility(datasetIndex, dataIndex, false);
+    }
+    show(datasetIndex, dataIndex) {
+      this._updateVisibility(datasetIndex, dataIndex, true);
+    }
+    _destroyDatasetMeta(datasetIndex) {
+      const meta = this._metasets[datasetIndex];
+      if (meta && meta.controller) {
+        meta.controller._destroy();
+      }
+      delete this._metasets[datasetIndex];
+    }
+    _stop() {
+      let i, ilen;
+      this.stop();
+      animator.remove(this);
+      for (i = 0, ilen = this.data.datasets.length; i < ilen; ++i) {
+        this._destroyDatasetMeta(i);
+      }
+    }
+    destroy() {
+      this.notifyPlugins("beforeDestroy");
+      const { canvas, ctx } = this;
+      this._stop();
+      this.config.clearCache();
+      if (canvas) {
+        this.unbindEvents();
+        clearCanvas(canvas, ctx);
+        this.platform.releaseContext(ctx);
+        this.canvas = null;
+        this.ctx = null;
+      }
+      delete instances[this.id];
+      this.notifyPlugins("afterDestroy");
+    }
+    toBase64Image(...args) {
+      return this.canvas.toDataURL(...args);
+    }
+    bindEvents() {
+      this.bindUserEvents();
+      if (this.options.responsive) {
+        this.bindResponsiveEvents();
+      } else {
+        this.attached = true;
+      }
+    }
+    bindUserEvents() {
+      const listeners = this._listeners;
+      const platform = this.platform;
+      const _add = (type, listener2) => {
+        platform.addEventListener(this, type, listener2);
+        listeners[type] = listener2;
+      };
+      const listener = (e, x, y) => {
+        e.offsetX = x;
+        e.offsetY = y;
+        this._eventHandler(e);
+      };
+      each(this.options.events, (type) => _add(type, listener));
+    }
+    bindResponsiveEvents() {
+      if (!this._responsiveListeners) {
+        this._responsiveListeners = {};
+      }
+      const listeners = this._responsiveListeners;
+      const platform = this.platform;
+      const _add = (type, listener2) => {
+        platform.addEventListener(this, type, listener2);
+        listeners[type] = listener2;
+      };
+      const _remove = (type, listener2) => {
+        if (listeners[type]) {
+          platform.removeEventListener(this, type, listener2);
+          delete listeners[type];
+        }
+      };
+      const listener = (width, height) => {
+        if (this.canvas) {
+          this.resize(width, height);
+        }
+      };
+      let detached;
+      const attached = () => {
+        _remove("attach", attached);
+        this.attached = true;
+        this.resize();
+        _add("resize", listener);
+        _add("detach", detached);
+      };
+      detached = () => {
+        this.attached = false;
+        _remove("resize", listener);
+        this._stop();
+        this._resize(0, 0);
+        _add("attach", attached);
+      };
+      if (platform.isAttached(this.canvas)) {
+        attached();
+      } else {
+        detached();
+      }
+    }
+    unbindEvents() {
+      each(this._listeners, (listener, type) => {
+        this.platform.removeEventListener(this, type, listener);
+      });
+      this._listeners = {};
+      each(this._responsiveListeners, (listener, type) => {
+        this.platform.removeEventListener(this, type, listener);
+      });
+      this._responsiveListeners = void 0;
+    }
+    updateHoverStyle(items, mode, enabled) {
+      const prefix = enabled ? "set" : "remove";
+      let meta, item, i, ilen;
+      if (mode === "dataset") {
+        meta = this.getDatasetMeta(items[0].datasetIndex);
+        meta.controller["_" + prefix + "DatasetHoverStyle"]();
+      }
+      for (i = 0, ilen = items.length; i < ilen; ++i) {
+        item = items[i];
+        const controller = item && this.getDatasetMeta(item.datasetIndex).controller;
+        if (controller) {
+          controller[prefix + "HoverStyle"](item.element, item.datasetIndex, item.index);
+        }
+      }
+    }
+    getActiveElements() {
+      return this._active || [];
+    }
+    setActiveElements(activeElements) {
+      const lastActive = this._active || [];
+      const active = activeElements.map(({ datasetIndex, index: index2 }) => {
+        const meta = this.getDatasetMeta(datasetIndex);
+        if (!meta) {
+          throw new Error("No dataset found at index " + datasetIndex);
+        }
+        return {
+          datasetIndex,
+          element: meta.data[index2],
+          index: index2
+        };
+      });
+      const changed = !_elementsEqual(active, lastActive);
+      if (changed) {
+        this._active = active;
+        this._lastEvent = null;
+        this._updateHoverStyles(active, lastActive);
+      }
+    }
+    notifyPlugins(hook, args, filter) {
+      return this._plugins.notify(this, hook, args, filter);
+    }
+    isPluginEnabled(pluginId) {
+      return this._plugins._cache.filter((p) => p.plugin.id === pluginId).length === 1;
+    }
+    _updateHoverStyles(active, lastActive, replay) {
+      const hoverOptions = this.options.hover;
+      const diff = (a, b) => a.filter((x) => !b.some((y) => x.datasetIndex === y.datasetIndex && x.index === y.index));
+      const deactivated = diff(lastActive, active);
+      const activated = replay ? active : diff(active, lastActive);
+      if (deactivated.length) {
+        this.updateHoverStyle(deactivated, hoverOptions.mode, false);
+      }
+      if (activated.length && hoverOptions.mode) {
+        this.updateHoverStyle(activated, hoverOptions.mode, true);
+      }
+    }
+    _eventHandler(e, replay) {
+      const args = {
+        event: e,
+        replay,
+        cancelable: true,
+        inChartArea: this.isPointInArea(e)
+      };
+      const eventFilter = (plugin) => (plugin.options.events || this.options.events).includes(e.native.type);
+      if (this.notifyPlugins("beforeEvent", args, eventFilter) === false) {
+        return;
+      }
+      const changed = this._handleEvent(e, replay, args.inChartArea);
+      args.cancelable = false;
+      this.notifyPlugins("afterEvent", args, eventFilter);
+      if (changed || args.changed) {
+        this.render();
+      }
+      return this;
+    }
+    _handleEvent(e, replay, inChartArea) {
+      const { _active: lastActive = [], options } = this;
+      const useFinalPosition = replay;
+      const active = this._getActiveElements(e, lastActive, inChartArea, useFinalPosition);
+      const isClick = _isClickEvent(e);
+      const lastEvent = determineLastEvent(e, this._lastEvent, inChartArea, isClick);
+      if (inChartArea) {
+        this._lastEvent = null;
+        callback(options.onHover, [
+          e,
+          active,
+          this
+        ], this);
+        if (isClick) {
+          callback(options.onClick, [
+            e,
+            active,
+            this
+          ], this);
+        }
+      }
+      const changed = !_elementsEqual(active, lastActive);
+      if (changed || replay) {
+        this._active = active;
+        this._updateHoverStyles(active, lastActive, replay);
+      }
+      this._lastEvent = lastEvent;
+      return changed;
+    }
+    _getActiveElements(e, lastActive, inChartArea, useFinalPosition) {
+      if (e.type === "mouseout") {
+        return [];
+      }
+      if (!inChartArea) {
+        return lastActive;
+      }
+      const hoverOptions = this.options.hover;
+      return this.getElementsAtEventForMode(e, hoverOptions.mode, hoverOptions, useFinalPosition);
+    }
+  };
+  function invalidatePlugins() {
+    return each(Chart.instances, (chart) => chart._plugins.invalidate());
+  }
+  function clipSelf(ctx, element, endAngle) {
+    const { startAngle, x, y, outerRadius, innerRadius, options } = element;
+    const { borderWidth, borderJoinStyle } = options;
+    const outerAngleClip = Math.min(borderWidth / outerRadius, _normalizeAngle(startAngle - endAngle));
+    ctx.beginPath();
+    ctx.arc(x, y, outerRadius - borderWidth / 2, startAngle + outerAngleClip / 2, endAngle - outerAngleClip / 2);
+    if (innerRadius > 0) {
+      const innerAngleClip = Math.min(borderWidth / innerRadius, _normalizeAngle(startAngle - endAngle));
+      ctx.arc(x, y, innerRadius + borderWidth / 2, endAngle - innerAngleClip / 2, startAngle + innerAngleClip / 2, true);
+    } else {
+      const clipWidth = Math.min(borderWidth / 2, outerRadius * _normalizeAngle(startAngle - endAngle));
+      if (borderJoinStyle === "round") {
+        ctx.arc(x, y, clipWidth, endAngle - PI / 2, startAngle + PI / 2, true);
+      } else if (borderJoinStyle === "bevel") {
+        const r = 2 * clipWidth * clipWidth;
+        const endX = -r * Math.cos(endAngle + PI / 2) + x;
+        const endY = -r * Math.sin(endAngle + PI / 2) + y;
+        const startX = r * Math.cos(startAngle + PI / 2) + x;
+        const startY = r * Math.sin(startAngle + PI / 2) + y;
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(startX, startY);
+      }
+    }
+    ctx.closePath();
+    ctx.moveTo(0, 0);
+    ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.clip("evenodd");
+  }
+  function clipArc(ctx, element, endAngle) {
+    const { startAngle, pixelMargin, x, y, outerRadius, innerRadius } = element;
+    let angleMargin = pixelMargin / outerRadius;
+    ctx.beginPath();
+    ctx.arc(x, y, outerRadius, startAngle - angleMargin, endAngle + angleMargin);
+    if (innerRadius > pixelMargin) {
+      angleMargin = pixelMargin / innerRadius;
+      ctx.arc(x, y, innerRadius, endAngle + angleMargin, startAngle - angleMargin, true);
+    } else {
+      ctx.arc(x, y, pixelMargin, endAngle + HALF_PI, startAngle - HALF_PI);
+    }
+    ctx.closePath();
+    ctx.clip();
+  }
+  function toRadiusCorners(value2) {
+    return _readValueToProps(value2, [
+      "outerStart",
+      "outerEnd",
+      "innerStart",
+      "innerEnd"
+    ]);
+  }
+  function parseBorderRadius$1(arc, innerRadius, outerRadius, angleDelta) {
+    const o = toRadiusCorners(arc.options.borderRadius);
+    const halfThickness = (outerRadius - innerRadius) / 2;
+    const innerLimit = Math.min(halfThickness, angleDelta * innerRadius / 2);
+    const computeOuterLimit = (val) => {
+      const outerArcLimit = (outerRadius - Math.min(halfThickness, val)) * angleDelta / 2;
+      return _limitValue(val, 0, Math.min(halfThickness, outerArcLimit));
+    };
+    return {
+      outerStart: computeOuterLimit(o.outerStart),
+      outerEnd: computeOuterLimit(o.outerEnd),
+      innerStart: _limitValue(o.innerStart, 0, innerLimit),
+      innerEnd: _limitValue(o.innerEnd, 0, innerLimit)
+    };
+  }
+  function rThetaToXY(r, theta, x, y) {
+    return {
+      x: x + r * Math.cos(theta),
+      y: y + r * Math.sin(theta)
+    };
+  }
+  function pathArc(ctx, element, offset, spacing, end, circular) {
+    const { x, y, startAngle: start, pixelMargin, innerRadius: innerR } = element;
+    const outerRadius = Math.max(element.outerRadius + spacing + offset - pixelMargin, 0);
+    const innerRadius = innerR > 0 ? innerR + spacing + offset + pixelMargin : 0;
+    let spacingOffset = 0;
+    const alpha2 = end - start;
+    if (spacing) {
+      const noSpacingInnerRadius = innerR > 0 ? innerR - spacing : 0;
+      const noSpacingOuterRadius = outerRadius > 0 ? outerRadius - spacing : 0;
+      const avNogSpacingRadius = (noSpacingInnerRadius + noSpacingOuterRadius) / 2;
+      const adjustedAngle = avNogSpacingRadius !== 0 ? alpha2 * avNogSpacingRadius / (avNogSpacingRadius + spacing) : alpha2;
+      spacingOffset = (alpha2 - adjustedAngle) / 2;
+    }
+    const beta = Math.max(1e-3, alpha2 * outerRadius - offset / PI) / outerRadius;
+    const angleOffset = (alpha2 - beta) / 2;
+    const startAngle = start + angleOffset + spacingOffset;
+    const endAngle = end - angleOffset - spacingOffset;
+    const { outerStart, outerEnd, innerStart, innerEnd } = parseBorderRadius$1(element, innerRadius, outerRadius, endAngle - startAngle);
+    const outerStartAdjustedRadius = outerRadius - outerStart;
+    const outerEndAdjustedRadius = outerRadius - outerEnd;
+    const outerStartAdjustedAngle = startAngle + outerStart / outerStartAdjustedRadius;
+    const outerEndAdjustedAngle = endAngle - outerEnd / outerEndAdjustedRadius;
+    const innerStartAdjustedRadius = innerRadius + innerStart;
+    const innerEndAdjustedRadius = innerRadius + innerEnd;
+    const innerStartAdjustedAngle = startAngle + innerStart / innerStartAdjustedRadius;
+    const innerEndAdjustedAngle = endAngle - innerEnd / innerEndAdjustedRadius;
+    ctx.beginPath();
+    if (circular) {
+      const outerMidAdjustedAngle = (outerStartAdjustedAngle + outerEndAdjustedAngle) / 2;
+      ctx.arc(x, y, outerRadius, outerStartAdjustedAngle, outerMidAdjustedAngle);
+      ctx.arc(x, y, outerRadius, outerMidAdjustedAngle, outerEndAdjustedAngle);
+      if (outerEnd > 0) {
+        const pCenter = rThetaToXY(outerEndAdjustedRadius, outerEndAdjustedAngle, x, y);
+        ctx.arc(pCenter.x, pCenter.y, outerEnd, outerEndAdjustedAngle, endAngle + HALF_PI);
+      }
+      const p4 = rThetaToXY(innerEndAdjustedRadius, endAngle, x, y);
+      ctx.lineTo(p4.x, p4.y);
+      if (innerEnd > 0) {
+        const pCenter = rThetaToXY(innerEndAdjustedRadius, innerEndAdjustedAngle, x, y);
+        ctx.arc(pCenter.x, pCenter.y, innerEnd, endAngle + HALF_PI, innerEndAdjustedAngle + Math.PI);
+      }
+      const innerMidAdjustedAngle = (endAngle - innerEnd / innerRadius + (startAngle + innerStart / innerRadius)) / 2;
+      ctx.arc(x, y, innerRadius, endAngle - innerEnd / innerRadius, innerMidAdjustedAngle, true);
+      ctx.arc(x, y, innerRadius, innerMidAdjustedAngle, startAngle + innerStart / innerRadius, true);
+      if (innerStart > 0) {
+        const pCenter = rThetaToXY(innerStartAdjustedRadius, innerStartAdjustedAngle, x, y);
+        ctx.arc(pCenter.x, pCenter.y, innerStart, innerStartAdjustedAngle + Math.PI, startAngle - HALF_PI);
+      }
+      const p8 = rThetaToXY(outerStartAdjustedRadius, startAngle, x, y);
+      ctx.lineTo(p8.x, p8.y);
+      if (outerStart > 0) {
+        const pCenter = rThetaToXY(outerStartAdjustedRadius, outerStartAdjustedAngle, x, y);
+        ctx.arc(pCenter.x, pCenter.y, outerStart, startAngle - HALF_PI, outerStartAdjustedAngle);
+      }
+    } else {
+      ctx.moveTo(x, y);
+      const outerStartX = Math.cos(outerStartAdjustedAngle) * outerRadius + x;
+      const outerStartY = Math.sin(outerStartAdjustedAngle) * outerRadius + y;
+      ctx.lineTo(outerStartX, outerStartY);
+      const outerEndX = Math.cos(outerEndAdjustedAngle) * outerRadius + x;
+      const outerEndY = Math.sin(outerEndAdjustedAngle) * outerRadius + y;
+      ctx.lineTo(outerEndX, outerEndY);
+    }
+    ctx.closePath();
+  }
+  function drawArc(ctx, element, offset, spacing, circular) {
+    const { fullCircles, startAngle, circumference } = element;
+    let endAngle = element.endAngle;
+    if (fullCircles) {
+      pathArc(ctx, element, offset, spacing, endAngle, circular);
+      for (let i = 0; i < fullCircles; ++i) {
+        ctx.fill();
+      }
+      if (!isNaN(circumference)) {
+        endAngle = startAngle + (circumference % TAU || TAU);
+      }
+    }
+    pathArc(ctx, element, offset, spacing, endAngle, circular);
+    ctx.fill();
+    return endAngle;
+  }
+  function drawBorder(ctx, element, offset, spacing, circular) {
+    const { fullCircles, startAngle, circumference, options } = element;
+    const { borderWidth, borderJoinStyle, borderDash, borderDashOffset, borderRadius } = options;
+    const inner = options.borderAlign === "inner";
+    if (!borderWidth) {
+      return;
+    }
+    ctx.setLineDash(borderDash || []);
+    ctx.lineDashOffset = borderDashOffset;
+    if (inner) {
+      ctx.lineWidth = borderWidth * 2;
+      ctx.lineJoin = borderJoinStyle || "round";
+    } else {
+      ctx.lineWidth = borderWidth;
+      ctx.lineJoin = borderJoinStyle || "bevel";
+    }
+    let endAngle = element.endAngle;
+    if (fullCircles) {
+      pathArc(ctx, element, offset, spacing, endAngle, circular);
+      for (let i = 0; i < fullCircles; ++i) {
+        ctx.stroke();
+      }
+      if (!isNaN(circumference)) {
+        endAngle = startAngle + (circumference % TAU || TAU);
+      }
+    }
+    if (inner) {
+      clipArc(ctx, element, endAngle);
+    }
+    if (options.selfJoin && endAngle - startAngle >= PI && borderRadius === 0 && borderJoinStyle !== "miter") {
+      clipSelf(ctx, element, endAngle);
+    }
+    if (!fullCircles) {
+      pathArc(ctx, element, offset, spacing, endAngle, circular);
+      ctx.stroke();
+    }
+  }
+  var ArcElement = class extends Element {
+    static id = "arc";
+    static defaults = {
+      borderAlign: "center",
+      borderColor: "#fff",
+      borderDash: [],
+      borderDashOffset: 0,
+      borderJoinStyle: void 0,
+      borderRadius: 0,
+      borderWidth: 2,
+      offset: 0,
+      spacing: 0,
+      angle: void 0,
+      circular: true,
+      selfJoin: false
+    };
+    static defaultRoutes = {
+      backgroundColor: "backgroundColor"
+    };
+    static descriptors = {
+      _scriptable: true,
+      _indexable: (name) => name !== "borderDash"
+    };
+    circumference;
+    endAngle;
+    fullCircles;
+    innerRadius;
+    outerRadius;
+    pixelMargin;
+    startAngle;
+    constructor(cfg) {
+      super();
+      this.options = void 0;
+      this.circumference = void 0;
+      this.startAngle = void 0;
+      this.endAngle = void 0;
+      this.innerRadius = void 0;
+      this.outerRadius = void 0;
+      this.pixelMargin = 0;
+      this.fullCircles = 0;
+      if (cfg) {
+        Object.assign(this, cfg);
+      }
+    }
+    inRange(chartX, chartY, useFinalPosition) {
+      const point = this.getProps([
+        "x",
+        "y"
+      ], useFinalPosition);
+      const { angle, distance } = getAngleFromPoint(point, {
+        x: chartX,
+        y: chartY
+      });
+      const { startAngle, endAngle, innerRadius, outerRadius, circumference } = this.getProps([
+        "startAngle",
+        "endAngle",
+        "innerRadius",
+        "outerRadius",
+        "circumference"
+      ], useFinalPosition);
+      const rAdjust = (this.options.spacing + this.options.borderWidth) / 2;
+      const _circumference = valueOrDefault(circumference, endAngle - startAngle);
+      const nonZeroBetween = _angleBetween(angle, startAngle, endAngle) && startAngle !== endAngle;
+      const betweenAngles = _circumference >= TAU || nonZeroBetween;
+      const withinRadius = _isBetween(distance, innerRadius + rAdjust, outerRadius + rAdjust);
+      return betweenAngles && withinRadius;
+    }
+    getCenterPoint(useFinalPosition) {
+      const { x, y, startAngle, endAngle, innerRadius, outerRadius } = this.getProps([
+        "x",
+        "y",
+        "startAngle",
+        "endAngle",
+        "innerRadius",
+        "outerRadius"
+      ], useFinalPosition);
+      const { offset, spacing } = this.options;
+      const halfAngle = (startAngle + endAngle) / 2;
+      const halfRadius = (innerRadius + outerRadius + spacing + offset) / 2;
+      return {
+        x: x + Math.cos(halfAngle) * halfRadius,
+        y: y + Math.sin(halfAngle) * halfRadius
+      };
+    }
+    tooltipPosition(useFinalPosition) {
+      return this.getCenterPoint(useFinalPosition);
+    }
+    draw(ctx) {
+      const { options, circumference } = this;
+      const offset = (options.offset || 0) / 4;
+      const spacing = (options.spacing || 0) / 2;
+      const circular = options.circular;
+      this.pixelMargin = options.borderAlign === "inner" ? 0.33 : 0;
+      this.fullCircles = circumference > TAU ? Math.floor(circumference / TAU) : 0;
+      if (circumference === 0 || this.innerRadius < 0 || this.outerRadius < 0) {
+        return;
+      }
+      ctx.save();
+      const halfAngle = (this.startAngle + this.endAngle) / 2;
+      ctx.translate(Math.cos(halfAngle) * offset, Math.sin(halfAngle) * offset);
+      const fix = 1 - Math.sin(Math.min(PI, circumference || 0));
+      const radiusOffset = offset * fix;
+      ctx.fillStyle = options.backgroundColor;
+      ctx.strokeStyle = options.borderColor;
+      drawArc(ctx, this, radiusOffset, spacing, circular);
+      drawBorder(ctx, this, radiusOffset, spacing, circular);
+      ctx.restore();
+    }
+  };
+  function setStyle(ctx, options, style = options) {
+    ctx.lineCap = valueOrDefault(style.borderCapStyle, options.borderCapStyle);
+    ctx.setLineDash(valueOrDefault(style.borderDash, options.borderDash));
+    ctx.lineDashOffset = valueOrDefault(style.borderDashOffset, options.borderDashOffset);
+    ctx.lineJoin = valueOrDefault(style.borderJoinStyle, options.borderJoinStyle);
+    ctx.lineWidth = valueOrDefault(style.borderWidth, options.borderWidth);
+    ctx.strokeStyle = valueOrDefault(style.borderColor, options.borderColor);
+  }
+  function lineTo(ctx, previous, target) {
+    ctx.lineTo(target.x, target.y);
+  }
+  function getLineMethod(options) {
+    if (options.stepped) {
+      return _steppedLineTo;
+    }
+    if (options.tension || options.cubicInterpolationMode === "monotone") {
+      return _bezierCurveTo;
+    }
+    return lineTo;
+  }
+  function pathVars(points, segment, params = {}) {
+    const count = points.length;
+    const { start: paramsStart = 0, end: paramsEnd = count - 1 } = params;
+    const { start: segmentStart, end: segmentEnd } = segment;
+    const start = Math.max(paramsStart, segmentStart);
+    const end = Math.min(paramsEnd, segmentEnd);
+    const outside = paramsStart < segmentStart && paramsEnd < segmentStart || paramsStart > segmentEnd && paramsEnd > segmentEnd;
+    return {
+      count,
+      start,
+      loop: segment.loop,
+      ilen: end < start && !outside ? count + end - start : end - start
+    };
+  }
+  function pathSegment(ctx, line, segment, params) {
+    const { points, options } = line;
+    const { count, start, loop, ilen } = pathVars(points, segment, params);
+    const lineMethod = getLineMethod(options);
+    let { move = true, reverse } = params || {};
+    let i, point, prev;
+    for (i = 0; i <= ilen; ++i) {
+      point = points[(start + (reverse ? ilen - i : i)) % count];
+      if (point.skip) {
+        continue;
+      } else if (move) {
+        ctx.moveTo(point.x, point.y);
+        move = false;
+      } else {
+        lineMethod(ctx, prev, point, reverse, options.stepped);
+      }
+      prev = point;
+    }
+    if (loop) {
+      point = points[(start + (reverse ? ilen : 0)) % count];
+      lineMethod(ctx, prev, point, reverse, options.stepped);
+    }
+    return !!loop;
+  }
+  function fastPathSegment(ctx, line, segment, params) {
+    const points = line.points;
+    const { count, start, ilen } = pathVars(points, segment, params);
+    const { move = true, reverse } = params || {};
+    let avgX = 0;
+    let countX = 0;
+    let i, point, prevX, minY, maxY, lastY;
+    const pointIndex = (index2) => (start + (reverse ? ilen - index2 : index2)) % count;
+    const drawX = () => {
+      if (minY !== maxY) {
+        ctx.lineTo(avgX, maxY);
+        ctx.lineTo(avgX, minY);
+        ctx.lineTo(avgX, lastY);
+      }
+    };
+    if (move) {
+      point = points[pointIndex(0)];
+      ctx.moveTo(point.x, point.y);
+    }
+    for (i = 0; i <= ilen; ++i) {
+      point = points[pointIndex(i)];
+      if (point.skip) {
+        continue;
+      }
+      const x = point.x;
+      const y = point.y;
+      const truncX = x | 0;
+      if (truncX === prevX) {
+        if (y < minY) {
+          minY = y;
+        } else if (y > maxY) {
+          maxY = y;
+        }
+        avgX = (countX * avgX + x) / ++countX;
+      } else {
+        drawX();
+        ctx.lineTo(x, y);
+        prevX = truncX;
+        countX = 0;
+        minY = maxY = y;
+      }
+      lastY = y;
+    }
+    drawX();
+  }
+  function _getSegmentMethod(line) {
+    const opts = line.options;
+    const borderDash = opts.borderDash && opts.borderDash.length;
+    const useFastPath = !line._decimated && !line._loop && !opts.tension && opts.cubicInterpolationMode !== "monotone" && !opts.stepped && !borderDash;
+    return useFastPath ? fastPathSegment : pathSegment;
+  }
+  function _getInterpolationMethod(options) {
+    if (options.stepped) {
+      return _steppedInterpolation;
+    }
+    if (options.tension || options.cubicInterpolationMode === "monotone") {
+      return _bezierInterpolation;
+    }
+    return _pointInLine;
+  }
+  function strokePathWithCache(ctx, line, start, count) {
+    let path = line._path;
+    if (!path) {
+      path = line._path = new Path2D();
+      if (line.path(path, start, count)) {
+        path.closePath();
+      }
+    }
+    setStyle(ctx, line.options);
+    ctx.stroke(path);
+  }
+  function strokePathDirect(ctx, line, start, count) {
+    const { segments, options } = line;
+    const segmentMethod = _getSegmentMethod(line);
+    for (const segment of segments) {
+      setStyle(ctx, options, segment.style);
+      ctx.beginPath();
+      if (segmentMethod(ctx, line, segment, {
+        start,
+        end: start + count - 1
+      })) {
+        ctx.closePath();
+      }
+      ctx.stroke();
+    }
+  }
+  var usePath2D = typeof Path2D === "function";
+  function draw(ctx, line, start, count) {
+    if (usePath2D && !line.options.segment) {
+      strokePathWithCache(ctx, line, start, count);
+    } else {
+      strokePathDirect(ctx, line, start, count);
+    }
+  }
+  var LineElement = class extends Element {
+    static id = "line";
+    static defaults = {
+      borderCapStyle: "butt",
+      borderDash: [],
+      borderDashOffset: 0,
+      borderJoinStyle: "miter",
+      borderWidth: 3,
+      capBezierPoints: true,
+      cubicInterpolationMode: "default",
+      fill: false,
+      spanGaps: false,
+      stepped: false,
+      tension: 0
+    };
+    static defaultRoutes = {
+      backgroundColor: "backgroundColor",
+      borderColor: "borderColor"
+    };
+    static descriptors = {
+      _scriptable: true,
+      _indexable: (name) => name !== "borderDash" && name !== "fill"
+    };
+    constructor(cfg) {
+      super();
+      this.animated = true;
+      this.options = void 0;
+      this._chart = void 0;
+      this._loop = void 0;
+      this._fullLoop = void 0;
+      this._path = void 0;
+      this._points = void 0;
+      this._segments = void 0;
+      this._decimated = false;
+      this._pointsUpdated = false;
+      this._datasetIndex = void 0;
+      if (cfg) {
+        Object.assign(this, cfg);
+      }
+    }
+    updateControlPoints(chartArea, indexAxis) {
+      const options = this.options;
+      if ((options.tension || options.cubicInterpolationMode === "monotone") && !options.stepped && !this._pointsUpdated) {
+        const loop = options.spanGaps ? this._loop : this._fullLoop;
+        _updateBezierControlPoints(this._points, options, chartArea, loop, indexAxis);
+        this._pointsUpdated = true;
+      }
+    }
+    set points(points) {
+      this._points = points;
+      delete this._segments;
+      delete this._path;
+      this._pointsUpdated = false;
+    }
+    get points() {
+      return this._points;
+    }
+    get segments() {
+      return this._segments || (this._segments = _computeSegments(this, this.options.segment));
+    }
+    first() {
+      const segments = this.segments;
+      const points = this.points;
+      return segments.length && points[segments[0].start];
+    }
+    last() {
+      const segments = this.segments;
+      const points = this.points;
+      const count = segments.length;
+      return count && points[segments[count - 1].end];
+    }
+    interpolate(point, property) {
+      const options = this.options;
+      const value2 = point[property];
+      const points = this.points;
+      const segments = _boundSegments(this, {
+        property,
+        start: value2,
+        end: value2
+      });
+      if (!segments.length) {
+        return;
+      }
+      const result = [];
+      const _interpolate = _getInterpolationMethod(options);
+      let i, ilen;
+      for (i = 0, ilen = segments.length; i < ilen; ++i) {
+        const { start, end } = segments[i];
+        const p1 = points[start];
+        const p2 = points[end];
+        if (p1 === p2) {
+          result.push(p1);
+          continue;
+        }
+        const t = Math.abs((value2 - p1[property]) / (p2[property] - p1[property]));
+        const interpolated = _interpolate(p1, p2, t, options.stepped);
+        interpolated[property] = point[property];
+        result.push(interpolated);
+      }
+      return result.length === 1 ? result[0] : result;
+    }
+    pathSegment(ctx, segment, params) {
+      const segmentMethod = _getSegmentMethod(this);
+      return segmentMethod(ctx, this, segment, params);
+    }
+    path(ctx, start, count) {
+      const segments = this.segments;
+      const segmentMethod = _getSegmentMethod(this);
+      let loop = this._loop;
+      start = start || 0;
+      count = count || this.points.length - start;
+      for (const segment of segments) {
+        loop &= segmentMethod(ctx, this, segment, {
+          start,
+          end: start + count - 1
+        });
+      }
+      return !!loop;
+    }
+    draw(ctx, chartArea, start, count) {
+      const options = this.options || {};
+      const points = this.points || [];
+      if (points.length && options.borderWidth) {
+        ctx.save();
+        draw(ctx, this, start, count);
+        ctx.restore();
+      }
+      if (this.animated) {
+        this._pointsUpdated = false;
+        this._path = void 0;
+      }
+    }
+  };
+  function inRange$1(el, pos, axis, useFinalPosition) {
+    const options = el.options;
+    const { [axis]: value2 } = el.getProps([
+      axis
+    ], useFinalPosition);
+    return Math.abs(pos - value2) < options.radius + options.hitRadius;
+  }
+  var PointElement = class extends Element {
+    static id = "point";
+    parsed;
+    skip;
+    stop;
+    /**
+    * @type {any}
+    */
+    static defaults = {
+      borderWidth: 1,
+      hitRadius: 1,
+      hoverBorderWidth: 1,
+      hoverRadius: 4,
+      pointStyle: "circle",
+      radius: 3,
+      rotation: 0
+    };
+    /**
+    * @type {any}
+    */
+    static defaultRoutes = {
+      backgroundColor: "backgroundColor",
+      borderColor: "borderColor"
+    };
+    constructor(cfg) {
+      super();
+      this.options = void 0;
+      this.parsed = void 0;
+      this.skip = void 0;
+      this.stop = void 0;
+      if (cfg) {
+        Object.assign(this, cfg);
+      }
+    }
+    inRange(mouseX, mouseY, useFinalPosition) {
+      const options = this.options;
+      const { x, y } = this.getProps([
+        "x",
+        "y"
+      ], useFinalPosition);
+      return Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2) < Math.pow(options.hitRadius + options.radius, 2);
+    }
+    inXRange(mouseX, useFinalPosition) {
+      return inRange$1(this, mouseX, "x", useFinalPosition);
+    }
+    inYRange(mouseY, useFinalPosition) {
+      return inRange$1(this, mouseY, "y", useFinalPosition);
+    }
+    getCenterPoint(useFinalPosition) {
+      const { x, y } = this.getProps([
+        "x",
+        "y"
+      ], useFinalPosition);
+      return {
+        x,
+        y
+      };
+    }
+    size(options) {
+      options = options || this.options || {};
+      let radius = options.radius || 0;
+      radius = Math.max(radius, radius && options.hoverRadius || 0);
+      const borderWidth = radius && options.borderWidth || 0;
+      return (radius + borderWidth) * 2;
+    }
+    draw(ctx, area) {
+      const options = this.options;
+      if (this.skip || options.radius < 0.1 || !_isPointInArea(this, area, this.size(options) / 2)) {
+        return;
+      }
+      ctx.strokeStyle = options.borderColor;
+      ctx.lineWidth = options.borderWidth;
+      ctx.fillStyle = options.backgroundColor;
+      drawPoint(ctx, options, this.x, this.y);
+    }
+    getRange() {
+      const options = this.options || {};
+      return options.radius + options.hitRadius;
+    }
+  };
+  function getBarBounds(bar, useFinalPosition) {
+    const { x, y, base, width, height } = bar.getProps([
+      "x",
+      "y",
+      "base",
+      "width",
+      "height"
+    ], useFinalPosition);
+    let left, right, top, bottom, half;
+    if (bar.horizontal) {
+      half = height / 2;
+      left = Math.min(x, base);
+      right = Math.max(x, base);
+      top = y - half;
+      bottom = y + half;
+    } else {
+      half = width / 2;
+      left = x - half;
+      right = x + half;
+      top = Math.min(y, base);
+      bottom = Math.max(y, base);
+    }
+    return {
+      left,
+      top,
+      right,
+      bottom
+    };
+  }
+  function skipOrLimit(skip2, value2, min, max) {
+    return skip2 ? 0 : _limitValue(value2, min, max);
+  }
+  function parseBorderWidth(bar, maxW, maxH) {
+    const value2 = bar.options.borderWidth;
+    const skip2 = bar.borderSkipped;
+    const o = toTRBL(value2);
+    return {
+      t: skipOrLimit(skip2.top, o.top, 0, maxH),
+      r: skipOrLimit(skip2.right, o.right, 0, maxW),
+      b: skipOrLimit(skip2.bottom, o.bottom, 0, maxH),
+      l: skipOrLimit(skip2.left, o.left, 0, maxW)
+    };
+  }
+  function parseBorderRadius(bar, maxW, maxH) {
+    const { enableBorderRadius } = bar.getProps([
+      "enableBorderRadius"
+    ]);
+    const value2 = bar.options.borderRadius;
+    const o = toTRBLCorners(value2);
+    const maxR = Math.min(maxW, maxH);
+    const skip2 = bar.borderSkipped;
+    const enableBorder = enableBorderRadius || isObject2(value2);
+    return {
+      topLeft: skipOrLimit(!enableBorder || skip2.top || skip2.left, o.topLeft, 0, maxR),
+      topRight: skipOrLimit(!enableBorder || skip2.top || skip2.right, o.topRight, 0, maxR),
+      bottomLeft: skipOrLimit(!enableBorder || skip2.bottom || skip2.left, o.bottomLeft, 0, maxR),
+      bottomRight: skipOrLimit(!enableBorder || skip2.bottom || skip2.right, o.bottomRight, 0, maxR)
+    };
+  }
+  function boundingRects(bar) {
+    const bounds = getBarBounds(bar);
+    const width = bounds.right - bounds.left;
+    const height = bounds.bottom - bounds.top;
+    const border = parseBorderWidth(bar, width / 2, height / 2);
+    const radius = parseBorderRadius(bar, width / 2, height / 2);
+    return {
+      outer: {
+        x: bounds.left,
+        y: bounds.top,
+        w: width,
+        h: height,
+        radius
+      },
+      inner: {
+        x: bounds.left + border.l,
+        y: bounds.top + border.t,
+        w: width - border.l - border.r,
+        h: height - border.t - border.b,
+        radius: {
+          topLeft: Math.max(0, radius.topLeft - Math.max(border.t, border.l)),
+          topRight: Math.max(0, radius.topRight - Math.max(border.t, border.r)),
+          bottomLeft: Math.max(0, radius.bottomLeft - Math.max(border.b, border.l)),
+          bottomRight: Math.max(0, radius.bottomRight - Math.max(border.b, border.r))
+        }
+      }
+    };
+  }
+  function inRange(bar, x, y, useFinalPosition) {
+    const skipX = x === null;
+    const skipY = y === null;
+    const skipBoth = skipX && skipY;
+    const bounds = bar && !skipBoth && getBarBounds(bar, useFinalPosition);
+    return bounds && (skipX || _isBetween(x, bounds.left, bounds.right)) && (skipY || _isBetween(y, bounds.top, bounds.bottom));
+  }
+  function hasRadius(radius) {
+    return radius.topLeft || radius.topRight || radius.bottomLeft || radius.bottomRight;
+  }
+  function addNormalRectPath(ctx, rect) {
+    ctx.rect(rect.x, rect.y, rect.w, rect.h);
+  }
+  function inflateRect(rect, amount, refRect = {}) {
+    const x = rect.x !== refRect.x ? -amount : 0;
+    const y = rect.y !== refRect.y ? -amount : 0;
+    const w = (rect.x + rect.w !== refRect.x + refRect.w ? amount : 0) - x;
+    const h = (rect.y + rect.h !== refRect.y + refRect.h ? amount : 0) - y;
+    return {
+      x: rect.x + x,
+      y: rect.y + y,
+      w: rect.w + w,
+      h: rect.h + h,
+      radius: rect.radius
+    };
+  }
+  var BarElement = class extends Element {
+    static id = "bar";
+    static defaults = {
+      borderSkipped: "start",
+      borderWidth: 0,
+      borderRadius: 0,
+      inflateAmount: "auto",
+      pointStyle: void 0
+    };
+    static defaultRoutes = {
+      backgroundColor: "backgroundColor",
+      borderColor: "borderColor"
+    };
+    constructor(cfg) {
+      super();
+      this.options = void 0;
+      this.horizontal = void 0;
+      this.base = void 0;
+      this.width = void 0;
+      this.height = void 0;
+      this.inflateAmount = void 0;
+      if (cfg) {
+        Object.assign(this, cfg);
+      }
+    }
+    draw(ctx) {
+      const { inflateAmount, options: { borderColor, backgroundColor } } = this;
+      const { inner, outer } = boundingRects(this);
+      const addRectPath = hasRadius(outer.radius) ? addRoundedRectPath : addNormalRectPath;
+      ctx.save();
+      if (outer.w !== inner.w || outer.h !== inner.h) {
+        ctx.beginPath();
+        addRectPath(ctx, inflateRect(outer, inflateAmount, inner));
+        ctx.clip();
+        addRectPath(ctx, inflateRect(inner, -inflateAmount, outer));
+        ctx.fillStyle = borderColor;
+        ctx.fill("evenodd");
+      }
+      ctx.beginPath();
+      addRectPath(ctx, inflateRect(inner, inflateAmount));
+      ctx.fillStyle = backgroundColor;
+      ctx.fill();
+      ctx.restore();
+    }
+    inRange(mouseX, mouseY, useFinalPosition) {
+      return inRange(this, mouseX, mouseY, useFinalPosition);
+    }
+    inXRange(mouseX, useFinalPosition) {
+      return inRange(this, mouseX, null, useFinalPosition);
+    }
+    inYRange(mouseY, useFinalPosition) {
+      return inRange(this, null, mouseY, useFinalPosition);
+    }
+    getCenterPoint(useFinalPosition) {
+      const { x, y, base, horizontal } = this.getProps([
+        "x",
+        "y",
+        "base",
+        "horizontal"
+      ], useFinalPosition);
+      return {
+        x: horizontal ? (x + base) / 2 : x,
+        y: horizontal ? y : (y + base) / 2
+      };
+    }
+    getRange(axis) {
+      return axis === "x" ? this.width / 2 : this.height / 2;
+    }
+  };
+  var elements = /* @__PURE__ */ Object.freeze({
+    __proto__: null,
+    ArcElement,
+    BarElement,
+    LineElement,
+    PointElement
+  });
+  var BORDER_COLORS = [
+    "rgb(54, 162, 235)",
+    "rgb(255, 99, 132)",
+    "rgb(255, 159, 64)",
+    "rgb(255, 205, 86)",
+    "rgb(75, 192, 192)",
+    "rgb(153, 102, 255)",
+    "rgb(201, 203, 207)"
+    // grey
+  ];
+  var BACKGROUND_COLORS = /* @__PURE__ */ BORDER_COLORS.map((color2) => color2.replace("rgb(", "rgba(").replace(")", ", 0.5)"));
+  function getBorderColor(i) {
+    return BORDER_COLORS[i % BORDER_COLORS.length];
+  }
+  function getBackgroundColor(i) {
+    return BACKGROUND_COLORS[i % BACKGROUND_COLORS.length];
+  }
+  function colorizeDefaultDataset(dataset, i) {
+    dataset.borderColor = getBorderColor(i);
+    dataset.backgroundColor = getBackgroundColor(i);
+    return ++i;
+  }
+  function colorizeDoughnutDataset(dataset, i) {
+    dataset.backgroundColor = dataset.data.map(() => getBorderColor(i++));
+    return i;
+  }
+  function colorizePolarAreaDataset(dataset, i) {
+    dataset.backgroundColor = dataset.data.map(() => getBackgroundColor(i++));
+    return i;
+  }
+  function getColorizer(chart) {
+    let i = 0;
+    return (dataset, datasetIndex) => {
+      const controller = chart.getDatasetMeta(datasetIndex).controller;
+      if (controller instanceof DoughnutController) {
+        i = colorizeDoughnutDataset(dataset, i);
+      } else if (controller instanceof PolarAreaController) {
+        i = colorizePolarAreaDataset(dataset, i);
+      } else if (controller) {
+        i = colorizeDefaultDataset(dataset, i);
+      }
+    };
+  }
+  function containsColorsDefinitions(descriptors2) {
+    let k;
+    for (k in descriptors2) {
+      if (descriptors2[k].borderColor || descriptors2[k].backgroundColor) {
+        return true;
+      }
+    }
+    return false;
+  }
+  function containsColorsDefinition(descriptor) {
+    return descriptor && (descriptor.borderColor || descriptor.backgroundColor);
+  }
+  function containsDefaultColorsDefenitions() {
+    return defaults.borderColor !== "rgba(0,0,0,0.1)" || defaults.backgroundColor !== "rgba(0,0,0,0.1)";
+  }
+  var plugin_colors = {
+    id: "colors",
+    defaults: {
+      enabled: true,
+      forceOverride: false
+    },
+    beforeLayout(chart, _args, options) {
+      if (!options.enabled) {
+        return;
+      }
+      const { data: { datasets }, options: chartOptions } = chart.config;
+      const { elements: elements2 } = chartOptions;
+      const containsColorDefenition = containsColorsDefinitions(datasets) || containsColorsDefinition(chartOptions) || elements2 && containsColorsDefinitions(elements2) || containsDefaultColorsDefenitions();
+      if (!options.forceOverride && containsColorDefenition) {
+        return;
+      }
+      const colorizer = getColorizer(chart);
+      datasets.forEach(colorizer);
+    }
+  };
+  function lttbDecimation(data, start, count, availableWidth, options) {
+    const samples = options.samples || availableWidth;
+    if (samples >= count) {
+      return data.slice(start, start + count);
+    }
+    const decimated = [];
+    const bucketWidth = (count - 2) / (samples - 2);
+    let sampledIndex = 0;
+    const endIndex = start + count - 1;
+    let a = start;
+    let i, maxAreaPoint, maxArea, area, nextA;
+    decimated[sampledIndex++] = data[a];
+    for (i = 0; i < samples - 2; i++) {
+      let avgX = 0;
+      let avgY = 0;
+      let j;
+      const avgRangeStart = Math.floor((i + 1) * bucketWidth) + 1 + start;
+      const avgRangeEnd = Math.min(Math.floor((i + 2) * bucketWidth) + 1, count) + start;
+      const avgRangeLength = avgRangeEnd - avgRangeStart;
+      for (j = avgRangeStart; j < avgRangeEnd; j++) {
+        avgX += data[j].x;
+        avgY += data[j].y;
+      }
+      avgX /= avgRangeLength;
+      avgY /= avgRangeLength;
+      const rangeOffs = Math.floor(i * bucketWidth) + 1 + start;
+      const rangeTo = Math.min(Math.floor((i + 1) * bucketWidth) + 1, count) + start;
+      const { x: pointAx, y: pointAy } = data[a];
+      maxArea = area = -1;
+      for (j = rangeOffs; j < rangeTo; j++) {
+        area = 0.5 * Math.abs((pointAx - avgX) * (data[j].y - pointAy) - (pointAx - data[j].x) * (avgY - pointAy));
+        if (area > maxArea) {
+          maxArea = area;
+          maxAreaPoint = data[j];
+          nextA = j;
+        }
+      }
+      decimated[sampledIndex++] = maxAreaPoint;
+      a = nextA;
+    }
+    decimated[sampledIndex++] = data[endIndex];
+    return decimated;
+  }
+  function minMaxDecimation(data, start, count, availableWidth) {
+    let avgX = 0;
+    let countX = 0;
+    let i, point, x, y, prevX, minIndex, maxIndex, startIndex, minY, maxY;
+    const decimated = [];
+    const endIndex = start + count - 1;
+    const xMin = data[start].x;
+    const xMax = data[endIndex].x;
+    const dx = xMax - xMin;
+    for (i = start; i < start + count; ++i) {
+      point = data[i];
+      x = (point.x - xMin) / dx * availableWidth;
+      y = point.y;
+      const truncX = x | 0;
+      if (truncX === prevX) {
+        if (y < minY) {
+          minY = y;
+          minIndex = i;
+        } else if (y > maxY) {
+          maxY = y;
+          maxIndex = i;
+        }
+        avgX = (countX * avgX + point.x) / ++countX;
+      } else {
+        const lastIndex = i - 1;
+        if (!isNullOrUndef(minIndex) && !isNullOrUndef(maxIndex)) {
+          const intermediateIndex1 = Math.min(minIndex, maxIndex);
+          const intermediateIndex2 = Math.max(minIndex, maxIndex);
+          if (intermediateIndex1 !== startIndex && intermediateIndex1 !== lastIndex) {
+            decimated.push({
+              ...data[intermediateIndex1],
+              x: avgX
+            });
+          }
+          if (intermediateIndex2 !== startIndex && intermediateIndex2 !== lastIndex) {
+            decimated.push({
+              ...data[intermediateIndex2],
+              x: avgX
+            });
+          }
+        }
+        if (i > 0 && lastIndex !== startIndex) {
+          decimated.push(data[lastIndex]);
+        }
+        decimated.push(point);
+        prevX = truncX;
+        countX = 0;
+        minY = maxY = y;
+        minIndex = maxIndex = startIndex = i;
+      }
+    }
+    return decimated;
+  }
+  function cleanDecimatedDataset(dataset) {
+    if (dataset._decimated) {
+      const data = dataset._data;
+      delete dataset._decimated;
+      delete dataset._data;
+      Object.defineProperty(dataset, "data", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: data
+      });
+    }
+  }
+  function cleanDecimatedData(chart) {
+    chart.data.datasets.forEach((dataset) => {
+      cleanDecimatedDataset(dataset);
+    });
+  }
+  function getStartAndCountOfVisiblePointsSimplified(meta, points) {
+    const pointCount = points.length;
+    let start = 0;
+    let count;
+    const { iScale } = meta;
+    const { min, max, minDefined, maxDefined } = iScale.getUserBounds();
+    if (minDefined) {
+      start = _limitValue(_lookupByKey(points, iScale.axis, min).lo, 0, pointCount - 1);
+    }
+    if (maxDefined) {
+      count = _limitValue(_lookupByKey(points, iScale.axis, max).hi + 1, start, pointCount) - start;
+    } else {
+      count = pointCount - start;
+    }
+    return {
+      start,
+      count
+    };
+  }
+  var plugin_decimation = {
+    id: "decimation",
+    defaults: {
+      algorithm: "min-max",
+      enabled: false
+    },
+    beforeElementsUpdate: (chart, args, options) => {
+      if (!options.enabled) {
+        cleanDecimatedData(chart);
+        return;
+      }
+      const availableWidth = chart.width;
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        const { _data, indexAxis } = dataset;
+        const meta = chart.getDatasetMeta(datasetIndex);
+        const data = _data || dataset.data;
+        if (resolve([
+          indexAxis,
+          chart.options.indexAxis
+        ]) === "y") {
+          return;
+        }
+        if (!meta.controller.supportsDecimation) {
+          return;
+        }
+        const xAxis = chart.scales[meta.xAxisID];
+        if (xAxis.type !== "linear" && xAxis.type !== "time") {
+          return;
+        }
+        if (chart.options.parsing) {
+          return;
+        }
+        let { start, count } = getStartAndCountOfVisiblePointsSimplified(meta, data);
+        const threshold = options.threshold || 4 * availableWidth;
+        if (count <= threshold) {
+          cleanDecimatedDataset(dataset);
+          return;
+        }
+        if (isNullOrUndef(_data)) {
+          dataset._data = data;
+          delete dataset.data;
+          Object.defineProperty(dataset, "data", {
+            configurable: true,
+            enumerable: true,
+            get: function() {
+              return this._decimated;
+            },
+            set: function(d) {
+              this._data = d;
+            }
+          });
+        }
+        let decimated;
+        switch (options.algorithm) {
+          case "lttb":
+            decimated = lttbDecimation(data, start, count, availableWidth, options);
+            break;
+          case "min-max":
+            decimated = minMaxDecimation(data, start, count, availableWidth);
+            break;
+          default:
+            throw new Error(`Unsupported decimation algorithm '${options.algorithm}'`);
+        }
+        dataset._decimated = decimated;
+      });
+    },
+    destroy(chart) {
+      cleanDecimatedData(chart);
+    }
+  };
+  function _segments(line, target, property) {
+    const segments = line.segments;
+    const points = line.points;
+    const tpoints = target.points;
+    const parts2 = [];
+    for (const segment of segments) {
+      let { start, end } = segment;
+      end = _findSegmentEnd(start, end, points);
+      const bounds = _getBounds(property, points[start], points[end], segment.loop);
+      if (!target.segments) {
+        parts2.push({
+          source: segment,
+          target: bounds,
+          start: points[start],
+          end: points[end]
+        });
+        continue;
+      }
+      const targetSegments = _boundSegments(target, bounds);
+      for (const tgt of targetSegments) {
+        const subBounds = _getBounds(property, tpoints[tgt.start], tpoints[tgt.end], tgt.loop);
+        const fillSources = _boundSegment(segment, points, subBounds);
+        for (const fillSource of fillSources) {
+          parts2.push({
+            source: fillSource,
+            target: tgt,
+            start: {
+              [property]: _getEdge(bounds, subBounds, "start", Math.max)
+            },
+            end: {
+              [property]: _getEdge(bounds, subBounds, "end", Math.min)
+            }
+          });
+        }
+      }
+    }
+    return parts2;
+  }
+  function _getBounds(property, first, last, loop) {
+    if (loop) {
+      return;
+    }
+    let start = first[property];
+    let end = last[property];
+    if (property === "angle") {
+      start = _normalizeAngle(start);
+      end = _normalizeAngle(end);
+    }
+    return {
+      property,
+      start,
+      end
+    };
+  }
+  function _pointsFromSegments(boundary, line) {
+    const { x = null, y = null } = boundary || {};
+    const linePoints = line.points;
+    const points = [];
+    line.segments.forEach(({ start, end }) => {
+      end = _findSegmentEnd(start, end, linePoints);
+      const first = linePoints[start];
+      const last = linePoints[end];
+      if (y !== null) {
+        points.push({
+          x: first.x,
+          y
+        });
+        points.push({
+          x: last.x,
+          y
+        });
+      } else if (x !== null) {
+        points.push({
+          x,
+          y: first.y
+        });
+        points.push({
+          x,
+          y: last.y
+        });
+      }
+    });
+    return points;
+  }
+  function _findSegmentEnd(start, end, points) {
+    for (; end > start; end--) {
+      const point = points[end];
+      if (!isNaN(point.x) && !isNaN(point.y)) {
+        break;
+      }
+    }
+    return end;
+  }
+  function _getEdge(a, b, prop, fn) {
+    if (a && b) {
+      return fn(a[prop], b[prop]);
+    }
+    return a ? a[prop] : b ? b[prop] : 0;
+  }
+  function _createBoundaryLine(boundary, line) {
+    let points = [];
+    let _loop = false;
+    if (isArray(boundary)) {
+      _loop = true;
+      points = boundary;
+    } else {
+      points = _pointsFromSegments(boundary, line);
+    }
+    return points.length ? new LineElement({
+      points,
+      options: {
+        tension: 0
+      },
+      _loop,
+      _fullLoop: _loop
+    }) : null;
+  }
+  function _shouldApplyFill(source) {
+    return source && source.fill !== false;
+  }
+  function _resolveTarget(sources, index2, propagate) {
+    const source = sources[index2];
+    let fill2 = source.fill;
+    const visited = [
+      index2
+    ];
+    let target;
+    if (!propagate) {
+      return fill2;
+    }
+    while (fill2 !== false && visited.indexOf(fill2) === -1) {
+      if (!isNumberFinite(fill2)) {
+        return fill2;
+      }
+      target = sources[fill2];
+      if (!target) {
+        return false;
+      }
+      if (target.visible) {
+        return fill2;
+      }
+      visited.push(fill2);
+      fill2 = target.fill;
+    }
+    return false;
+  }
+  function _decodeFill(line, index2, count) {
+    const fill2 = parseFillOption(line);
+    if (isObject2(fill2)) {
+      return isNaN(fill2.value) ? false : fill2;
+    }
+    let target = parseFloat(fill2);
+    if (isNumberFinite(target) && Math.floor(target) === target) {
+      return decodeTargetIndex(fill2[0], index2, target, count);
+    }
+    return [
+      "origin",
+      "start",
+      "end",
+      "stack",
+      "shape"
+    ].indexOf(fill2) >= 0 && fill2;
+  }
+  function decodeTargetIndex(firstCh, index2, target, count) {
+    if (firstCh === "-" || firstCh === "+") {
+      target = index2 + target;
+    }
+    if (target === index2 || target < 0 || target >= count) {
+      return false;
+    }
+    return target;
+  }
+  function _getTargetPixel(fill2, scale) {
+    let pixel = null;
+    if (fill2 === "start") {
+      pixel = scale.bottom;
+    } else if (fill2 === "end") {
+      pixel = scale.top;
+    } else if (isObject2(fill2)) {
+      pixel = scale.getPixelForValue(fill2.value);
+    } else if (scale.getBasePixel) {
+      pixel = scale.getBasePixel();
+    }
+    return pixel;
+  }
+  function _getTargetValue(fill2, scale, startValue) {
+    let value2;
+    if (fill2 === "start") {
+      value2 = startValue;
+    } else if (fill2 === "end") {
+      value2 = scale.options.reverse ? scale.min : scale.max;
+    } else if (isObject2(fill2)) {
+      value2 = fill2.value;
+    } else {
+      value2 = scale.getBaseValue();
+    }
+    return value2;
+  }
+  function parseFillOption(line) {
+    const options = line.options;
+    const fillOption = options.fill;
+    let fill2 = valueOrDefault(fillOption && fillOption.target, fillOption);
+    if (fill2 === void 0) {
+      fill2 = !!options.backgroundColor;
+    }
+    if (fill2 === false || fill2 === null) {
+      return false;
+    }
+    if (fill2 === true) {
+      return "origin";
+    }
+    return fill2;
+  }
+  function _buildStackLine(source) {
+    const { scale, index: index2, line } = source;
+    const points = [];
+    const segments = line.segments;
+    const sourcePoints = line.points;
+    const linesBelow = getLinesBelow(scale, index2);
+    linesBelow.push(_createBoundaryLine({
+      x: null,
+      y: scale.bottom
+    }, line));
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      for (let j = segment.start; j <= segment.end; j++) {
+        addPointsBelow(points, sourcePoints[j], linesBelow);
+      }
+    }
+    return new LineElement({
+      points,
+      options: {}
+    });
+  }
+  function getLinesBelow(scale, index2) {
+    const below = [];
+    const metas = scale.getMatchingVisibleMetas("line");
+    for (let i = 0; i < metas.length; i++) {
+      const meta = metas[i];
+      if (meta.index === index2) {
+        break;
+      }
+      if (!meta.hidden) {
+        below.unshift(meta.dataset);
+      }
+    }
+    return below;
+  }
+  function addPointsBelow(points, sourcePoint, linesBelow) {
+    const postponed = [];
+    for (let j = 0; j < linesBelow.length; j++) {
+      const line = linesBelow[j];
+      const { first, last, point } = findPoint(line, sourcePoint, "x");
+      if (!point || first && last) {
+        continue;
+      }
+      if (first) {
+        postponed.unshift(point);
+      } else {
+        points.push(point);
+        if (!last) {
+          break;
+        }
+      }
+    }
+    points.push(...postponed);
+  }
+  function findPoint(line, sourcePoint, property) {
+    const point = line.interpolate(sourcePoint, property);
+    if (!point) {
+      return {};
+    }
+    const pointValue = point[property];
+    const segments = line.segments;
+    const linePoints = line.points;
+    let first = false;
+    let last = false;
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      const firstValue = linePoints[segment.start][property];
+      const lastValue = linePoints[segment.end][property];
+      if (_isBetween(pointValue, firstValue, lastValue)) {
+        first = pointValue === firstValue;
+        last = pointValue === lastValue;
+        break;
+      }
+    }
+    return {
+      first,
+      last,
+      point
+    };
+  }
+  var simpleArc = class {
+    constructor(opts) {
+      this.x = opts.x;
+      this.y = opts.y;
+      this.radius = opts.radius;
+    }
+    pathSegment(ctx, bounds, opts) {
+      const { x, y, radius } = this;
+      bounds = bounds || {
+        start: 0,
+        end: TAU
+      };
+      ctx.arc(x, y, radius, bounds.end, bounds.start, true);
+      return !opts.bounds;
+    }
+    interpolate(point) {
+      const { x, y, radius } = this;
+      const angle = point.angle;
+      return {
+        x: x + Math.cos(angle) * radius,
+        y: y + Math.sin(angle) * radius,
+        angle
+      };
+    }
+  };
+  function _getTarget(source) {
+    const { chart, fill: fill2, line } = source;
+    if (isNumberFinite(fill2)) {
+      return getLineByIndex(chart, fill2);
+    }
+    if (fill2 === "stack") {
+      return _buildStackLine(source);
+    }
+    if (fill2 === "shape") {
+      return true;
+    }
+    const boundary = computeBoundary(source);
+    if (boundary instanceof simpleArc) {
+      return boundary;
+    }
+    return _createBoundaryLine(boundary, line);
+  }
+  function getLineByIndex(chart, index2) {
+    const meta = chart.getDatasetMeta(index2);
+    const visible = meta && chart.isDatasetVisible(index2);
+    return visible ? meta.dataset : null;
+  }
+  function computeBoundary(source) {
+    const scale = source.scale || {};
+    if (scale.getPointPositionForValue) {
+      return computeCircularBoundary(source);
+    }
+    return computeLinearBoundary(source);
+  }
+  function computeLinearBoundary(source) {
+    const { scale = {}, fill: fill2 } = source;
+    const pixel = _getTargetPixel(fill2, scale);
+    if (isNumberFinite(pixel)) {
+      const horizontal = scale.isHorizontal();
+      return {
+        x: horizontal ? pixel : null,
+        y: horizontal ? null : pixel
+      };
+    }
+    return null;
+  }
+  function computeCircularBoundary(source) {
+    const { scale, fill: fill2 } = source;
+    const options = scale.options;
+    const length = scale.getLabels().length;
+    const start = options.reverse ? scale.max : scale.min;
+    const value2 = _getTargetValue(fill2, scale, start);
+    const target = [];
+    if (options.grid.circular) {
+      const center = scale.getPointPositionForValue(0, start);
+      return new simpleArc({
+        x: center.x,
+        y: center.y,
+        radius: scale.getDistanceFromCenterForValue(value2)
+      });
+    }
+    for (let i = 0; i < length; ++i) {
+      target.push(scale.getPointPositionForValue(i, value2));
+    }
+    return target;
+  }
+  function _drawfill(ctx, source, area) {
+    const target = _getTarget(source);
+    const { chart, index: index2, line, scale, axis } = source;
+    const lineOpts = line.options;
+    const fillOption = lineOpts.fill;
+    const color2 = lineOpts.backgroundColor;
+    const { above = color2, below = color2 } = fillOption || {};
+    const meta = chart.getDatasetMeta(index2);
+    const clip = getDatasetClipArea(chart, meta);
+    if (target && line.points.length) {
+      clipArea(ctx, area);
+      doFill(ctx, {
+        line,
+        target,
+        above,
+        below,
+        area,
+        scale,
+        axis,
+        clip
+      });
+      unclipArea(ctx);
+    }
+  }
+  function doFill(ctx, cfg) {
+    const { line, target, above, below, area, scale, clip } = cfg;
+    const property = line._loop ? "angle" : cfg.axis;
+    ctx.save();
+    let fillColor = below;
+    if (below !== above) {
+      if (property === "x") {
+        clipVertical(ctx, target, area.top);
+        fill(ctx, {
+          line,
+          target,
+          color: above,
+          scale,
+          property,
+          clip
+        });
+        ctx.restore();
+        ctx.save();
+        clipVertical(ctx, target, area.bottom);
+      } else if (property === "y") {
+        clipHorizontal(ctx, target, area.left);
+        fill(ctx, {
+          line,
+          target,
+          color: below,
+          scale,
+          property,
+          clip
+        });
+        ctx.restore();
+        ctx.save();
+        clipHorizontal(ctx, target, area.right);
+        fillColor = above;
+      }
+    }
+    fill(ctx, {
+      line,
+      target,
+      color: fillColor,
+      scale,
+      property,
+      clip
+    });
+    ctx.restore();
+  }
+  function clipVertical(ctx, target, clipY) {
+    const { segments, points } = target;
+    let first = true;
+    let lineLoop = false;
+    ctx.beginPath();
+    for (const segment of segments) {
+      const { start, end } = segment;
+      const firstPoint = points[start];
+      const lastPoint = points[_findSegmentEnd(start, end, points)];
+      if (first) {
+        ctx.moveTo(firstPoint.x, firstPoint.y);
+        first = false;
+      } else {
+        ctx.lineTo(firstPoint.x, clipY);
+        ctx.lineTo(firstPoint.x, firstPoint.y);
+      }
+      lineLoop = !!target.pathSegment(ctx, segment, {
+        move: lineLoop
+      });
+      if (lineLoop) {
+        ctx.closePath();
+      } else {
+        ctx.lineTo(lastPoint.x, clipY);
+      }
+    }
+    ctx.lineTo(target.first().x, clipY);
+    ctx.closePath();
+    ctx.clip();
+  }
+  function clipHorizontal(ctx, target, clipX) {
+    const { segments, points } = target;
+    let first = true;
+    let lineLoop = false;
+    ctx.beginPath();
+    for (const segment of segments) {
+      const { start, end } = segment;
+      const firstPoint = points[start];
+      const lastPoint = points[_findSegmentEnd(start, end, points)];
+      if (first) {
+        ctx.moveTo(firstPoint.x, firstPoint.y);
+        first = false;
+      } else {
+        ctx.lineTo(clipX, firstPoint.y);
+        ctx.lineTo(firstPoint.x, firstPoint.y);
+      }
+      lineLoop = !!target.pathSegment(ctx, segment, {
+        move: lineLoop
+      });
+      if (lineLoop) {
+        ctx.closePath();
+      } else {
+        ctx.lineTo(clipX, lastPoint.y);
+      }
+    }
+    ctx.lineTo(clipX, target.first().y);
+    ctx.closePath();
+    ctx.clip();
+  }
+  function fill(ctx, cfg) {
+    const { line, target, property, color: color2, scale, clip } = cfg;
+    const segments = _segments(line, target, property);
+    for (const { source: src, target: tgt, start, end } of segments) {
+      const { style: { backgroundColor = color2 } = {} } = src;
+      const notShape = target !== true;
+      ctx.save();
+      ctx.fillStyle = backgroundColor;
+      clipBounds(ctx, scale, clip, notShape && _getBounds(property, start, end));
+      ctx.beginPath();
+      const lineLoop = !!line.pathSegment(ctx, src);
+      let loop;
+      if (notShape) {
+        if (lineLoop) {
+          ctx.closePath();
+        } else {
+          interpolatedLineTo(ctx, target, end, property);
+        }
+        const targetLoop = !!target.pathSegment(ctx, tgt, {
+          move: lineLoop,
+          reverse: true
+        });
+        loop = lineLoop && targetLoop;
+        if (!loop) {
+          interpolatedLineTo(ctx, target, start, property);
+        }
+      }
+      ctx.closePath();
+      ctx.fill(loop ? "evenodd" : "nonzero");
+      ctx.restore();
+    }
+  }
+  function clipBounds(ctx, scale, clip, bounds) {
+    const chartArea = scale.chart.chartArea;
+    const { property, start, end } = bounds || {};
+    if (property === "x" || property === "y") {
+      let left, top, right, bottom;
+      if (property === "x") {
+        left = start;
+        top = chartArea.top;
+        right = end;
+        bottom = chartArea.bottom;
+      } else {
+        left = chartArea.left;
+        top = start;
+        right = chartArea.right;
+        bottom = end;
+      }
+      ctx.beginPath();
+      if (clip) {
+        left = Math.max(left, clip.left);
+        right = Math.min(right, clip.right);
+        top = Math.max(top, clip.top);
+        bottom = Math.min(bottom, clip.bottom);
+      }
+      ctx.rect(left, top, right - left, bottom - top);
+      ctx.clip();
+    }
+  }
+  function interpolatedLineTo(ctx, target, point, property) {
+    const interpolatedPoint = target.interpolate(point, property);
+    if (interpolatedPoint) {
+      ctx.lineTo(interpolatedPoint.x, interpolatedPoint.y);
+    }
+  }
+  var index = {
+    id: "filler",
+    afterDatasetsUpdate(chart, _args, options) {
+      const count = (chart.data.datasets || []).length;
+      const sources = [];
+      let meta, i, line, source;
+      for (i = 0; i < count; ++i) {
+        meta = chart.getDatasetMeta(i);
+        line = meta.dataset;
+        source = null;
+        if (line && line.options && line instanceof LineElement) {
+          source = {
+            visible: chart.isDatasetVisible(i),
+            index: i,
+            fill: _decodeFill(line, i, count),
+            chart,
+            axis: meta.controller.options.indexAxis,
+            scale: meta.vScale,
+            line
+          };
+        }
+        meta.$filler = source;
+        sources.push(source);
+      }
+      for (i = 0; i < count; ++i) {
+        source = sources[i];
+        if (!source || source.fill === false) {
+          continue;
+        }
+        source.fill = _resolveTarget(sources, i, options.propagate);
+      }
+    },
+    beforeDraw(chart, _args, options) {
+      const draw2 = options.drawTime === "beforeDraw";
+      const metasets = chart.getSortedVisibleDatasetMetas();
+      const area = chart.chartArea;
+      for (let i = metasets.length - 1; i >= 0; --i) {
+        const source = metasets[i].$filler;
+        if (!source) {
+          continue;
+        }
+        source.line.updateControlPoints(area, source.axis);
+        if (draw2 && source.fill) {
+          _drawfill(chart.ctx, source, area);
+        }
+      }
+    },
+    beforeDatasetsDraw(chart, _args, options) {
+      if (options.drawTime !== "beforeDatasetsDraw") {
+        return;
+      }
+      const metasets = chart.getSortedVisibleDatasetMetas();
+      for (let i = metasets.length - 1; i >= 0; --i) {
+        const source = metasets[i].$filler;
+        if (_shouldApplyFill(source)) {
+          _drawfill(chart.ctx, source, chart.chartArea);
+        }
+      }
+    },
+    beforeDatasetDraw(chart, args, options) {
+      const source = args.meta.$filler;
+      if (!_shouldApplyFill(source) || options.drawTime !== "beforeDatasetDraw") {
+        return;
+      }
+      _drawfill(chart.ctx, source, chart.chartArea);
+    },
+    defaults: {
+      propagate: true,
+      drawTime: "beforeDatasetDraw"
+    }
+  };
+  var getBoxSize = (labelOpts, fontSize) => {
+    let { boxHeight = fontSize, boxWidth = fontSize } = labelOpts;
+    if (labelOpts.usePointStyle) {
+      boxHeight = Math.min(boxHeight, fontSize);
+      boxWidth = labelOpts.pointStyleWidth || Math.min(boxWidth, fontSize);
+    }
+    return {
+      boxWidth,
+      boxHeight,
+      itemHeight: Math.max(fontSize, boxHeight)
+    };
+  };
+  var itemsEqual = (a, b) => a !== null && b !== null && a.datasetIndex === b.datasetIndex && a.index === b.index;
+  var Legend = class extends Element {
+    constructor(config) {
+      super();
+      this._added = false;
+      this.legendHitBoxes = [];
+      this._hoveredItem = null;
+      this.doughnutMode = false;
+      this.chart = config.chart;
+      this.options = config.options;
+      this.ctx = config.ctx;
+      this.legendItems = void 0;
+      this.columnSizes = void 0;
+      this.lineWidths = void 0;
+      this.maxHeight = void 0;
+      this.maxWidth = void 0;
+      this.top = void 0;
+      this.bottom = void 0;
+      this.left = void 0;
+      this.right = void 0;
+      this.height = void 0;
+      this.width = void 0;
+      this._margins = void 0;
+      this.position = void 0;
+      this.weight = void 0;
+      this.fullSize = void 0;
+    }
+    update(maxWidth, maxHeight, margins) {
+      this.maxWidth = maxWidth;
+      this.maxHeight = maxHeight;
+      this._margins = margins;
+      this.setDimensions();
+      this.buildLabels();
+      this.fit();
+    }
+    setDimensions() {
+      if (this.isHorizontal()) {
+        this.width = this.maxWidth;
+        this.left = this._margins.left;
+        this.right = this.width;
+      } else {
+        this.height = this.maxHeight;
+        this.top = this._margins.top;
+        this.bottom = this.height;
+      }
+    }
+    buildLabels() {
+      const labelOpts = this.options.labels || {};
+      let legendItems = callback(labelOpts.generateLabels, [
+        this.chart
+      ], this) || [];
+      if (labelOpts.filter) {
+        legendItems = legendItems.filter((item) => labelOpts.filter(item, this.chart.data));
+      }
+      if (labelOpts.sort) {
+        legendItems = legendItems.sort((a, b) => labelOpts.sort(a, b, this.chart.data));
+      }
+      if (this.options.reverse) {
+        legendItems.reverse();
+      }
+      this.legendItems = legendItems;
+    }
+    fit() {
+      const { options, ctx } = this;
+      if (!options.display) {
+        this.width = this.height = 0;
+        return;
+      }
+      const labelOpts = options.labels;
+      const labelFont = toFont(labelOpts.font);
+      const fontSize = labelFont.size;
+      const titleHeight = this._computeTitleHeight();
+      const { boxWidth, itemHeight } = getBoxSize(labelOpts, fontSize);
+      let width, height;
+      ctx.font = labelFont.string;
+      if (this.isHorizontal()) {
+        width = this.maxWidth;
+        height = this._fitRows(titleHeight, fontSize, boxWidth, itemHeight) + 10;
+      } else {
+        height = this.maxHeight;
+        width = this._fitCols(titleHeight, labelFont, boxWidth, itemHeight) + 10;
+      }
+      this.width = Math.min(width, options.maxWidth || this.maxWidth);
+      this.height = Math.min(height, options.maxHeight || this.maxHeight);
+    }
+    _fitRows(titleHeight, fontSize, boxWidth, itemHeight) {
+      const { ctx, maxWidth, options: { labels: { padding } } } = this;
+      const hitboxes = this.legendHitBoxes = [];
+      const lineWidths = this.lineWidths = [
+        0
+      ];
+      const lineHeight = itemHeight + padding;
+      let totalHeight = titleHeight;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      let row = -1;
+      let top = -lineHeight;
+      this.legendItems.forEach((legendItem, i) => {
+        const itemWidth = boxWidth + fontSize / 2 + ctx.measureText(legendItem.text).width;
+        if (i === 0 || lineWidths[lineWidths.length - 1] + itemWidth + 2 * padding > maxWidth) {
+          totalHeight += lineHeight;
+          lineWidths[lineWidths.length - (i > 0 ? 0 : 1)] = 0;
+          top += lineHeight;
+          row++;
+        }
+        hitboxes[i] = {
+          left: 0,
+          top,
+          row,
+          width: itemWidth,
+          height: itemHeight
+        };
+        lineWidths[lineWidths.length - 1] += itemWidth + padding;
+      });
+      return totalHeight;
+    }
+    _fitCols(titleHeight, labelFont, boxWidth, _itemHeight) {
+      const { ctx, maxHeight, options: { labels: { padding } } } = this;
+      const hitboxes = this.legendHitBoxes = [];
+      const columnSizes = this.columnSizes = [];
+      const heightLimit = maxHeight - titleHeight;
+      let totalWidth = padding;
+      let currentColWidth = 0;
+      let currentColHeight = 0;
+      let left = 0;
+      let col = 0;
+      this.legendItems.forEach((legendItem, i) => {
+        const { itemWidth, itemHeight } = calculateItemSize(boxWidth, labelFont, ctx, legendItem, _itemHeight);
+        if (i > 0 && currentColHeight + itemHeight + 2 * padding > heightLimit) {
+          totalWidth += currentColWidth + padding;
+          columnSizes.push({
+            width: currentColWidth,
+            height: currentColHeight
+          });
+          left += currentColWidth + padding;
+          col++;
+          currentColWidth = currentColHeight = 0;
+        }
+        hitboxes[i] = {
+          left,
+          top: currentColHeight,
+          col,
+          width: itemWidth,
+          height: itemHeight
+        };
+        currentColWidth = Math.max(currentColWidth, itemWidth);
+        currentColHeight += itemHeight + padding;
+      });
+      totalWidth += currentColWidth;
+      columnSizes.push({
+        width: currentColWidth,
+        height: currentColHeight
+      });
+      return totalWidth;
+    }
+    adjustHitBoxes() {
+      if (!this.options.display) {
+        return;
+      }
+      const titleHeight = this._computeTitleHeight();
+      const { legendHitBoxes: hitboxes, options: { align, labels: { padding }, rtl } } = this;
+      const rtlHelper = getRtlAdapter(rtl, this.left, this.width);
+      if (this.isHorizontal()) {
+        let row = 0;
+        let left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
+        for (const hitbox of hitboxes) {
+          if (row !== hitbox.row) {
+            row = hitbox.row;
+            left = _alignStartEnd(align, this.left + padding, this.right - this.lineWidths[row]);
+          }
+          hitbox.top += this.top + titleHeight + padding;
+          hitbox.left = rtlHelper.leftForLtr(rtlHelper.x(left), hitbox.width);
+          left += hitbox.width + padding;
+        }
+      } else {
+        let col = 0;
+        let top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
+        for (const hitbox of hitboxes) {
+          if (hitbox.col !== col) {
+            col = hitbox.col;
+            top = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - this.columnSizes[col].height);
+          }
+          hitbox.top = top;
+          hitbox.left += this.left + padding;
+          hitbox.left = rtlHelper.leftForLtr(rtlHelper.x(hitbox.left), hitbox.width);
+          top += hitbox.height + padding;
+        }
+      }
+    }
+    isHorizontal() {
+      return this.options.position === "top" || this.options.position === "bottom";
+    }
+    draw() {
+      if (this.options.display) {
+        const ctx = this.ctx;
+        clipArea(ctx, this);
+        this._draw();
+        unclipArea(ctx);
+      }
+    }
+    _draw() {
+      const { options: opts, columnSizes, lineWidths, ctx } = this;
+      const { align, labels: labelOpts } = opts;
+      const defaultColor = defaults.color;
+      const rtlHelper = getRtlAdapter(opts.rtl, this.left, this.width);
+      const labelFont = toFont(labelOpts.font);
+      const { padding } = labelOpts;
+      const fontSize = labelFont.size;
+      const halfFontSize = fontSize / 2;
+      let cursor;
+      this.drawTitle();
+      ctx.textAlign = rtlHelper.textAlign("left");
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = 0.5;
+      ctx.font = labelFont.string;
+      const { boxWidth, boxHeight, itemHeight } = getBoxSize(labelOpts, fontSize);
+      const drawLegendBox = function(x, y, legendItem) {
+        if (isNaN(boxWidth) || boxWidth <= 0 || isNaN(boxHeight) || boxHeight < 0) {
+          return;
+        }
+        ctx.save();
+        const lineWidth = valueOrDefault(legendItem.lineWidth, 1);
+        ctx.fillStyle = valueOrDefault(legendItem.fillStyle, defaultColor);
+        ctx.lineCap = valueOrDefault(legendItem.lineCap, "butt");
+        ctx.lineDashOffset = valueOrDefault(legendItem.lineDashOffset, 0);
+        ctx.lineJoin = valueOrDefault(legendItem.lineJoin, "miter");
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = valueOrDefault(legendItem.strokeStyle, defaultColor);
+        ctx.setLineDash(valueOrDefault(legendItem.lineDash, []));
+        if (labelOpts.usePointStyle) {
+          const drawOptions = {
+            radius: boxHeight * Math.SQRT2 / 2,
+            pointStyle: legendItem.pointStyle,
+            rotation: legendItem.rotation,
+            borderWidth: lineWidth
+          };
+          const centerX = rtlHelper.xPlus(x, boxWidth / 2);
+          const centerY = y + halfFontSize;
+          drawPointLegend(ctx, drawOptions, centerX, centerY, labelOpts.pointStyleWidth && boxWidth);
+        } else {
+          const yBoxTop = y + Math.max((fontSize - boxHeight) / 2, 0);
+          const xBoxLeft = rtlHelper.leftForLtr(x, boxWidth);
+          const borderRadius = toTRBLCorners(legendItem.borderRadius);
+          ctx.beginPath();
+          if (Object.values(borderRadius).some((v) => v !== 0)) {
+            addRoundedRectPath(ctx, {
+              x: xBoxLeft,
+              y: yBoxTop,
+              w: boxWidth,
+              h: boxHeight,
+              radius: borderRadius
+            });
+          } else {
+            ctx.rect(xBoxLeft, yBoxTop, boxWidth, boxHeight);
+          }
+          ctx.fill();
+          if (lineWidth !== 0) {
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      };
+      const fillText = function(x, y, legendItem) {
+        renderText(ctx, legendItem.text, x, y + itemHeight / 2, labelFont, {
+          strikethrough: legendItem.hidden,
+          textAlign: rtlHelper.textAlign(legendItem.textAlign)
+        });
+      };
+      const isHorizontal = this.isHorizontal();
+      const titleHeight = this._computeTitleHeight();
+      if (isHorizontal) {
+        cursor = {
+          x: _alignStartEnd(align, this.left + padding, this.right - lineWidths[0]),
+          y: this.top + padding + titleHeight,
+          line: 0
+        };
+      } else {
+        cursor = {
+          x: this.left + padding,
+          y: _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - columnSizes[0].height),
+          line: 0
+        };
+      }
+      overrideTextDirection(this.ctx, opts.textDirection);
+      const lineHeight = itemHeight + padding;
+      this.legendItems.forEach((legendItem, i) => {
+        ctx.strokeStyle = legendItem.fontColor;
+        ctx.fillStyle = legendItem.fontColor;
+        const textWidth = ctx.measureText(legendItem.text).width;
+        const textAlign = rtlHelper.textAlign(legendItem.textAlign || (legendItem.textAlign = labelOpts.textAlign));
+        const width = boxWidth + halfFontSize + textWidth;
+        let x = cursor.x;
+        let y = cursor.y;
+        rtlHelper.setWidth(this.width);
+        if (isHorizontal) {
+          if (i > 0 && x + width + padding > this.right) {
+            y = cursor.y += lineHeight;
+            cursor.line++;
+            x = cursor.x = _alignStartEnd(align, this.left + padding, this.right - lineWidths[cursor.line]);
+          }
+        } else if (i > 0 && y + lineHeight > this.bottom) {
+          x = cursor.x = x + columnSizes[cursor.line].width + padding;
+          cursor.line++;
+          y = cursor.y = _alignStartEnd(align, this.top + titleHeight + padding, this.bottom - columnSizes[cursor.line].height);
+        }
+        const realX = rtlHelper.x(x);
+        drawLegendBox(realX, y, legendItem);
+        x = _textX(textAlign, x + boxWidth + halfFontSize, isHorizontal ? x + width : this.right, opts.rtl);
+        fillText(rtlHelper.x(x), y, legendItem);
+        if (isHorizontal) {
+          cursor.x += width + padding;
+        } else if (typeof legendItem.text !== "string") {
+          const fontLineHeight = labelFont.lineHeight;
+          cursor.y += calculateLegendItemHeight(legendItem, fontLineHeight) + padding;
+        } else {
+          cursor.y += lineHeight;
+        }
+      });
+      restoreTextDirection(this.ctx, opts.textDirection);
+    }
+    drawTitle() {
+      const opts = this.options;
+      const titleOpts = opts.title;
+      const titleFont = toFont(titleOpts.font);
+      const titlePadding = toPadding(titleOpts.padding);
+      if (!titleOpts.display) {
+        return;
+      }
+      const rtlHelper = getRtlAdapter(opts.rtl, this.left, this.width);
+      const ctx = this.ctx;
+      const position = titleOpts.position;
+      const halfFontSize = titleFont.size / 2;
+      const topPaddingPlusHalfFontSize = titlePadding.top + halfFontSize;
+      let y;
+      let left = this.left;
+      let maxWidth = this.width;
+      if (this.isHorizontal()) {
+        maxWidth = Math.max(...this.lineWidths);
+        y = this.top + topPaddingPlusHalfFontSize;
+        left = _alignStartEnd(opts.align, left, this.right - maxWidth);
+      } else {
+        const maxHeight = this.columnSizes.reduce((acc, size) => Math.max(acc, size.height), 0);
+        y = topPaddingPlusHalfFontSize + _alignStartEnd(opts.align, this.top, this.bottom - maxHeight - opts.labels.padding - this._computeTitleHeight());
+      }
+      const x = _alignStartEnd(position, left, left + maxWidth);
+      ctx.textAlign = rtlHelper.textAlign(_toLeftRightCenter(position));
+      ctx.textBaseline = "middle";
+      ctx.strokeStyle = titleOpts.color;
+      ctx.fillStyle = titleOpts.color;
+      ctx.font = titleFont.string;
+      renderText(ctx, titleOpts.text, x, y, titleFont);
+    }
+    _computeTitleHeight() {
+      const titleOpts = this.options.title;
+      const titleFont = toFont(titleOpts.font);
+      const titlePadding = toPadding(titleOpts.padding);
+      return titleOpts.display ? titleFont.lineHeight + titlePadding.height : 0;
+    }
+    _getLegendItemAt(x, y) {
+      let i, hitBox, lh;
+      if (_isBetween(x, this.left, this.right) && _isBetween(y, this.top, this.bottom)) {
+        lh = this.legendHitBoxes;
+        for (i = 0; i < lh.length; ++i) {
+          hitBox = lh[i];
+          if (_isBetween(x, hitBox.left, hitBox.left + hitBox.width) && _isBetween(y, hitBox.top, hitBox.top + hitBox.height)) {
+            return this.legendItems[i];
+          }
+        }
+      }
+      return null;
+    }
+    handleEvent(e) {
+      const opts = this.options;
+      if (!isListened(e.type, opts)) {
+        return;
+      }
+      const hoveredItem = this._getLegendItemAt(e.x, e.y);
+      if (e.type === "mousemove" || e.type === "mouseout") {
+        const previous = this._hoveredItem;
+        const sameItem = itemsEqual(previous, hoveredItem);
+        if (previous && !sameItem) {
+          callback(opts.onLeave, [
+            e,
+            previous,
+            this
+          ], this);
+        }
+        this._hoveredItem = hoveredItem;
+        if (hoveredItem && !sameItem) {
+          callback(opts.onHover, [
+            e,
+            hoveredItem,
+            this
+          ], this);
+        }
+      } else if (hoveredItem) {
+        callback(opts.onClick, [
+          e,
+          hoveredItem,
+          this
+        ], this);
+      }
+    }
+  };
+  function calculateItemSize(boxWidth, labelFont, ctx, legendItem, _itemHeight) {
+    const itemWidth = calculateItemWidth(legendItem, boxWidth, labelFont, ctx);
+    const itemHeight = calculateItemHeight(_itemHeight, legendItem, labelFont.lineHeight);
+    return {
+      itemWidth,
+      itemHeight
+    };
+  }
+  function calculateItemWidth(legendItem, boxWidth, labelFont, ctx) {
+    let legendItemText = legendItem.text;
+    if (legendItemText && typeof legendItemText !== "string") {
+      legendItemText = legendItemText.reduce((a, b) => a.length > b.length ? a : b);
+    }
+    return boxWidth + labelFont.size / 2 + ctx.measureText(legendItemText).width;
+  }
+  function calculateItemHeight(_itemHeight, legendItem, fontLineHeight) {
+    let itemHeight = _itemHeight;
+    if (typeof legendItem.text !== "string") {
+      itemHeight = calculateLegendItemHeight(legendItem, fontLineHeight);
+    }
+    return itemHeight;
+  }
+  function calculateLegendItemHeight(legendItem, fontLineHeight) {
+    const labelHeight = legendItem.text ? legendItem.text.length : 0;
+    return fontLineHeight * labelHeight;
+  }
+  function isListened(type, opts) {
+    if ((type === "mousemove" || type === "mouseout") && (opts.onHover || opts.onLeave)) {
+      return true;
+    }
+    if (opts.onClick && (type === "click" || type === "mouseup")) {
+      return true;
+    }
+    return false;
+  }
+  var plugin_legend = {
+    id: "legend",
+    _element: Legend,
+    start(chart, _args, options) {
+      const legend = chart.legend = new Legend({
+        ctx: chart.ctx,
+        options,
+        chart
+      });
+      layouts.configure(chart, legend, options);
+      layouts.addBox(chart, legend);
+    },
+    stop(chart) {
+      layouts.removeBox(chart, chart.legend);
+      delete chart.legend;
+    },
+    beforeUpdate(chart, _args, options) {
+      const legend = chart.legend;
+      layouts.configure(chart, legend, options);
+      legend.options = options;
+    },
+    afterUpdate(chart) {
+      const legend = chart.legend;
+      legend.buildLabels();
+      legend.adjustHitBoxes();
+    },
+    afterEvent(chart, args) {
+      if (!args.replay) {
+        chart.legend.handleEvent(args.event);
+      }
+    },
+    defaults: {
+      display: true,
+      position: "top",
+      align: "center",
+      fullSize: true,
+      reverse: false,
+      weight: 1e3,
+      onClick(e, legendItem, legend) {
+        const index2 = legendItem.datasetIndex;
+        const ci = legend.chart;
+        if (ci.isDatasetVisible(index2)) {
+          ci.hide(index2);
+          legendItem.hidden = true;
+        } else {
+          ci.show(index2);
+          legendItem.hidden = false;
+        }
+      },
+      onHover: null,
+      onLeave: null,
+      labels: {
+        color: (ctx) => ctx.chart.options.color,
+        boxWidth: 40,
+        padding: 10,
+        generateLabels(chart) {
+          const datasets = chart.data.datasets;
+          const { labels: { usePointStyle, pointStyle, textAlign, color: color2, useBorderRadius, borderRadius } } = chart.legend.options;
+          return chart._getSortedDatasetMetas().map((meta) => {
+            const style = meta.controller.getStyle(usePointStyle ? 0 : void 0);
+            const borderWidth = toPadding(style.borderWidth);
+            return {
+              text: datasets[meta.index].label,
+              fillStyle: style.backgroundColor,
+              fontColor: color2,
+              hidden: !meta.visible,
+              lineCap: style.borderCapStyle,
+              lineDash: style.borderDash,
+              lineDashOffset: style.borderDashOffset,
+              lineJoin: style.borderJoinStyle,
+              lineWidth: (borderWidth.width + borderWidth.height) / 4,
+              strokeStyle: style.borderColor,
+              pointStyle: pointStyle || style.pointStyle,
+              rotation: style.rotation,
+              textAlign: textAlign || style.textAlign,
+              borderRadius: useBorderRadius && (borderRadius || style.borderRadius),
+              datasetIndex: meta.index
+            };
+          }, this);
+        }
+      },
+      title: {
+        color: (ctx) => ctx.chart.options.color,
+        display: false,
+        position: "center",
+        text: ""
+      }
+    },
+    descriptors: {
+      _scriptable: (name) => !name.startsWith("on"),
+      labels: {
+        _scriptable: (name) => ![
+          "generateLabels",
+          "filter",
+          "sort"
+        ].includes(name)
+      }
+    }
+  };
+  var Title = class extends Element {
+    constructor(config) {
+      super();
+      this.chart = config.chart;
+      this.options = config.options;
+      this.ctx = config.ctx;
+      this._padding = void 0;
+      this.top = void 0;
+      this.bottom = void 0;
+      this.left = void 0;
+      this.right = void 0;
+      this.width = void 0;
+      this.height = void 0;
+      this.position = void 0;
+      this.weight = void 0;
+      this.fullSize = void 0;
+    }
+    update(maxWidth, maxHeight) {
+      const opts = this.options;
+      this.left = 0;
+      this.top = 0;
+      if (!opts.display) {
+        this.width = this.height = this.right = this.bottom = 0;
+        return;
+      }
+      this.width = this.right = maxWidth;
+      this.height = this.bottom = maxHeight;
+      const lineCount = isArray(opts.text) ? opts.text.length : 1;
+      this._padding = toPadding(opts.padding);
+      const textSize = lineCount * toFont(opts.font).lineHeight + this._padding.height;
+      if (this.isHorizontal()) {
+        this.height = textSize;
+      } else {
+        this.width = textSize;
+      }
+    }
+    isHorizontal() {
+      const pos = this.options.position;
+      return pos === "top" || pos === "bottom";
+    }
+    _drawArgs(offset) {
+      const { top, left, bottom, right, options } = this;
+      const align = options.align;
+      let rotation = 0;
+      let maxWidth, titleX, titleY;
+      if (this.isHorizontal()) {
+        titleX = _alignStartEnd(align, left, right);
+        titleY = top + offset;
+        maxWidth = right - left;
+      } else {
+        if (options.position === "left") {
+          titleX = left + offset;
+          titleY = _alignStartEnd(align, bottom, top);
+          rotation = PI * -0.5;
+        } else {
+          titleX = right - offset;
+          titleY = _alignStartEnd(align, top, bottom);
+          rotation = PI * 0.5;
+        }
+        maxWidth = bottom - top;
+      }
+      return {
+        titleX,
+        titleY,
+        maxWidth,
+        rotation
+      };
+    }
+    draw() {
+      const ctx = this.ctx;
+      const opts = this.options;
+      if (!opts.display) {
+        return;
+      }
+      const fontOpts = toFont(opts.font);
+      const lineHeight = fontOpts.lineHeight;
+      const offset = lineHeight / 2 + this._padding.top;
+      const { titleX, titleY, maxWidth, rotation } = this._drawArgs(offset);
+      renderText(ctx, opts.text, 0, 0, fontOpts, {
+        color: opts.color,
+        maxWidth,
+        rotation,
+        textAlign: _toLeftRightCenter(opts.align),
+        textBaseline: "middle",
+        translation: [
+          titleX,
+          titleY
+        ]
+      });
+    }
+  };
+  function createTitle(chart, titleOpts) {
+    const title = new Title({
+      ctx: chart.ctx,
+      options: titleOpts,
+      chart
+    });
+    layouts.configure(chart, title, titleOpts);
+    layouts.addBox(chart, title);
+    chart.titleBlock = title;
+  }
+  var plugin_title = {
+    id: "title",
+    _element: Title,
+    start(chart, _args, options) {
+      createTitle(chart, options);
+    },
+    stop(chart) {
+      const titleBlock = chart.titleBlock;
+      layouts.removeBox(chart, titleBlock);
+      delete chart.titleBlock;
+    },
+    beforeUpdate(chart, _args, options) {
+      const title = chart.titleBlock;
+      layouts.configure(chart, title, options);
+      title.options = options;
+    },
+    defaults: {
+      align: "center",
+      display: false,
+      font: {
+        weight: "bold"
+      },
+      fullSize: true,
+      padding: 10,
+      position: "top",
+      text: "",
+      weight: 2e3
+    },
+    defaultRoutes: {
+      color: "color"
+    },
+    descriptors: {
+      _scriptable: true,
+      _indexable: false
+    }
+  };
+  var map2 = /* @__PURE__ */ new WeakMap();
+  var plugin_subtitle = {
+    id: "subtitle",
+    start(chart, _args, options) {
+      const title = new Title({
+        ctx: chart.ctx,
+        options,
+        chart
+      });
+      layouts.configure(chart, title, options);
+      layouts.addBox(chart, title);
+      map2.set(chart, title);
+    },
+    stop(chart) {
+      layouts.removeBox(chart, map2.get(chart));
+      map2.delete(chart);
+    },
+    beforeUpdate(chart, _args, options) {
+      const title = map2.get(chart);
+      layouts.configure(chart, title, options);
+      title.options = options;
+    },
+    defaults: {
+      align: "center",
+      display: false,
+      font: {
+        weight: "normal"
+      },
+      fullSize: true,
+      padding: 0,
+      position: "top",
+      text: "",
+      weight: 1500
+    },
+    defaultRoutes: {
+      color: "color"
+    },
+    descriptors: {
+      _scriptable: true,
+      _indexable: false
+    }
+  };
+  var positioners = {
+    average(items) {
+      if (!items.length) {
+        return false;
+      }
+      let i, len;
+      let xSet = /* @__PURE__ */ new Set();
+      let y = 0;
+      let count = 0;
+      for (i = 0, len = items.length; i < len; ++i) {
+        const el = items[i].element;
+        if (el && el.hasValue()) {
+          const pos = el.tooltipPosition();
+          xSet.add(pos.x);
+          y += pos.y;
+          ++count;
+        }
+      }
+      if (count === 0 || xSet.size === 0) {
+        return false;
+      }
+      const xAverage = [
+        ...xSet
+      ].reduce((a, b) => a + b) / xSet.size;
+      return {
+        x: xAverage,
+        y: y / count
+      };
+    },
+    nearest(items, eventPosition) {
+      if (!items.length) {
+        return false;
+      }
+      let x = eventPosition.x;
+      let y = eventPosition.y;
+      let minDistance = Number.POSITIVE_INFINITY;
+      let i, len, nearestElement;
+      for (i = 0, len = items.length; i < len; ++i) {
+        const el = items[i].element;
+        if (el && el.hasValue()) {
+          const center = el.getCenterPoint();
+          const d = distanceBetweenPoints(eventPosition, center);
+          if (d < minDistance) {
+            minDistance = d;
+            nearestElement = el;
+          }
+        }
+      }
+      if (nearestElement) {
+        const tp = nearestElement.tooltipPosition();
+        x = tp.x;
+        y = tp.y;
+      }
+      return {
+        x,
+        y
+      };
+    }
+  };
+  function pushOrConcat(base, toPush) {
+    if (toPush) {
+      if (isArray(toPush)) {
+        Array.prototype.push.apply(base, toPush);
+      } else {
+        base.push(toPush);
+      }
+    }
+    return base;
+  }
+  function splitNewlines(str) {
+    if ((typeof str === "string" || str instanceof String) && str.indexOf("\n") > -1) {
+      return str.split("\n");
+    }
+    return str;
+  }
+  function createTooltipItem(chart, item) {
+    const { element, datasetIndex, index: index2 } = item;
+    const controller = chart.getDatasetMeta(datasetIndex).controller;
+    const { label, value: value2 } = controller.getLabelAndValue(index2);
+    return {
+      chart,
+      label,
+      parsed: controller.getParsed(index2),
+      raw: chart.data.datasets[datasetIndex].data[index2],
+      formattedValue: value2,
+      dataset: controller.getDataset(),
+      dataIndex: index2,
+      datasetIndex,
+      element
+    };
+  }
+  function getTooltipSize(tooltip, options) {
+    const ctx = tooltip.chart.ctx;
+    const { body, footer, title } = tooltip;
+    const { boxWidth, boxHeight } = options;
+    const bodyFont = toFont(options.bodyFont);
+    const titleFont = toFont(options.titleFont);
+    const footerFont = toFont(options.footerFont);
+    const titleLineCount = title.length;
+    const footerLineCount = footer.length;
+    const bodyLineItemCount = body.length;
+    const padding = toPadding(options.padding);
+    let height = padding.height;
+    let width = 0;
+    let combinedBodyLength = body.reduce((count, bodyItem) => count + bodyItem.before.length + bodyItem.lines.length + bodyItem.after.length, 0);
+    combinedBodyLength += tooltip.beforeBody.length + tooltip.afterBody.length;
+    if (titleLineCount) {
+      height += titleLineCount * titleFont.lineHeight + (titleLineCount - 1) * options.titleSpacing + options.titleMarginBottom;
+    }
+    if (combinedBodyLength) {
+      const bodyLineHeight = options.displayColors ? Math.max(boxHeight, bodyFont.lineHeight) : bodyFont.lineHeight;
+      height += bodyLineItemCount * bodyLineHeight + (combinedBodyLength - bodyLineItemCount) * bodyFont.lineHeight + (combinedBodyLength - 1) * options.bodySpacing;
+    }
+    if (footerLineCount) {
+      height += options.footerMarginTop + footerLineCount * footerFont.lineHeight + (footerLineCount - 1) * options.footerSpacing;
+    }
+    let widthPadding = 0;
+    const maxLineWidth = function(line) {
+      width = Math.max(width, ctx.measureText(line).width + widthPadding);
+    };
+    ctx.save();
+    ctx.font = titleFont.string;
+    each(tooltip.title, maxLineWidth);
+    ctx.font = bodyFont.string;
+    each(tooltip.beforeBody.concat(tooltip.afterBody), maxLineWidth);
+    widthPadding = options.displayColors ? boxWidth + 2 + options.boxPadding : 0;
+    each(body, (bodyItem) => {
+      each(bodyItem.before, maxLineWidth);
+      each(bodyItem.lines, maxLineWidth);
+      each(bodyItem.after, maxLineWidth);
+    });
+    widthPadding = 0;
+    ctx.font = footerFont.string;
+    each(tooltip.footer, maxLineWidth);
+    ctx.restore();
+    width += padding.width;
+    return {
+      width,
+      height
+    };
+  }
+  function determineYAlign(chart, size) {
+    const { y, height } = size;
+    if (y < height / 2) {
+      return "top";
+    } else if (y > chart.height - height / 2) {
+      return "bottom";
+    }
+    return "center";
+  }
+  function doesNotFitWithAlign(xAlign, chart, options, size) {
+    const { x, width } = size;
+    const caret = options.caretSize + options.caretPadding;
+    if (xAlign === "left" && x + width + caret > chart.width) {
+      return true;
+    }
+    if (xAlign === "right" && x - width - caret < 0) {
+      return true;
+    }
+  }
+  function determineXAlign(chart, options, size, yAlign) {
+    const { x, width } = size;
+    const { width: chartWidth, chartArea: { left, right } } = chart;
+    let xAlign = "center";
+    if (yAlign === "center") {
+      xAlign = x <= (left + right) / 2 ? "left" : "right";
+    } else if (x <= width / 2) {
+      xAlign = "left";
+    } else if (x >= chartWidth - width / 2) {
+      xAlign = "right";
+    }
+    if (doesNotFitWithAlign(xAlign, chart, options, size)) {
+      xAlign = "center";
+    }
+    return xAlign;
+  }
+  function determineAlignment(chart, options, size) {
+    const yAlign = size.yAlign || options.yAlign || determineYAlign(chart, size);
+    return {
+      xAlign: size.xAlign || options.xAlign || determineXAlign(chart, options, size, yAlign),
+      yAlign
+    };
+  }
+  function alignX(size, xAlign) {
+    let { x, width } = size;
+    if (xAlign === "right") {
+      x -= width;
+    } else if (xAlign === "center") {
+      x -= width / 2;
+    }
+    return x;
+  }
+  function alignY(size, yAlign, paddingAndSize) {
+    let { y, height } = size;
+    if (yAlign === "top") {
+      y += paddingAndSize;
+    } else if (yAlign === "bottom") {
+      y -= height + paddingAndSize;
+    } else {
+      y -= height / 2;
+    }
+    return y;
+  }
+  function getBackgroundPoint(options, size, alignment, chart) {
+    const { caretSize, caretPadding, cornerRadius } = options;
+    const { xAlign, yAlign } = alignment;
+    const paddingAndSize = caretSize + caretPadding;
+    const { topLeft, topRight, bottomLeft, bottomRight } = toTRBLCorners(cornerRadius);
+    let x = alignX(size, xAlign);
+    const y = alignY(size, yAlign, paddingAndSize);
+    if (yAlign === "center") {
+      if (xAlign === "left") {
+        x += paddingAndSize;
+      } else if (xAlign === "right") {
+        x -= paddingAndSize;
+      }
+    } else if (xAlign === "left") {
+      x -= Math.max(topLeft, bottomLeft) + caretSize;
+    } else if (xAlign === "right") {
+      x += Math.max(topRight, bottomRight) + caretSize;
+    }
+    return {
+      x: _limitValue(x, 0, chart.width - size.width),
+      y: _limitValue(y, 0, chart.height - size.height)
+    };
+  }
+  function getAlignedX(tooltip, align, options) {
+    const padding = toPadding(options.padding);
+    return align === "center" ? tooltip.x + tooltip.width / 2 : align === "right" ? tooltip.x + tooltip.width - padding.right : tooltip.x + padding.left;
+  }
+  function getBeforeAfterBodyLines(callback2) {
+    return pushOrConcat([], splitNewlines(callback2));
+  }
+  function createTooltipContext(parent, tooltip, tooltipItems) {
+    return createContext(parent, {
+      tooltip,
+      tooltipItems,
+      type: "tooltip"
+    });
+  }
+  function overrideCallbacks(callbacks, context) {
+    const override = context && context.dataset && context.dataset.tooltip && context.dataset.tooltip.callbacks;
+    return override ? callbacks.override(override) : callbacks;
+  }
+  var defaultCallbacks = {
+    beforeTitle: noop,
+    title(tooltipItems) {
+      if (tooltipItems.length > 0) {
+        const item = tooltipItems[0];
+        const labels = item.chart.data.labels;
+        const labelCount = labels ? labels.length : 0;
+        if (this && this.options && this.options.mode === "dataset") {
+          return item.dataset.label || "";
+        } else if (item.label) {
+          return item.label;
+        } else if (labelCount > 0 && item.dataIndex < labelCount) {
+          return labels[item.dataIndex];
+        }
+      }
+      return "";
+    },
+    afterTitle: noop,
+    beforeBody: noop,
+    beforeLabel: noop,
+    label(tooltipItem) {
+      if (this && this.options && this.options.mode === "dataset") {
+        return tooltipItem.label + ": " + tooltipItem.formattedValue || tooltipItem.formattedValue;
+      }
+      let label = tooltipItem.dataset.label || "";
+      if (label) {
+        label += ": ";
+      }
+      const value2 = tooltipItem.formattedValue;
+      if (!isNullOrUndef(value2)) {
+        label += value2;
+      }
+      return label;
+    },
+    labelColor(tooltipItem) {
+      const meta = tooltipItem.chart.getDatasetMeta(tooltipItem.datasetIndex);
+      const options = meta.controller.getStyle(tooltipItem.dataIndex);
+      return {
+        borderColor: options.borderColor,
+        backgroundColor: options.backgroundColor,
+        borderWidth: options.borderWidth,
+        borderDash: options.borderDash,
+        borderDashOffset: options.borderDashOffset,
+        borderRadius: 0
+      };
+    },
+    labelTextColor() {
+      return this.options.bodyColor;
+    },
+    labelPointStyle(tooltipItem) {
+      const meta = tooltipItem.chart.getDatasetMeta(tooltipItem.datasetIndex);
+      const options = meta.controller.getStyle(tooltipItem.dataIndex);
+      return {
+        pointStyle: options.pointStyle,
+        rotation: options.rotation
+      };
+    },
+    afterLabel: noop,
+    afterBody: noop,
+    beforeFooter: noop,
+    footer: noop,
+    afterFooter: noop
+  };
+  function invokeCallbackWithFallback(callbacks, name, ctx, arg) {
+    const result = callbacks[name].call(ctx, arg);
+    if (typeof result === "undefined") {
+      return defaultCallbacks[name].call(ctx, arg);
+    }
+    return result;
+  }
+  var Tooltip = class extends Element {
+    static positioners = positioners;
+    constructor(config) {
+      super();
+      this.opacity = 0;
+      this._active = [];
+      this._eventPosition = void 0;
+      this._size = void 0;
+      this._cachedAnimations = void 0;
+      this._tooltipItems = [];
+      this.$animations = void 0;
+      this.$context = void 0;
+      this.chart = config.chart;
+      this.options = config.options;
+      this.dataPoints = void 0;
+      this.title = void 0;
+      this.beforeBody = void 0;
+      this.body = void 0;
+      this.afterBody = void 0;
+      this.footer = void 0;
+      this.xAlign = void 0;
+      this.yAlign = void 0;
+      this.x = void 0;
+      this.y = void 0;
+      this.height = void 0;
+      this.width = void 0;
+      this.caretX = void 0;
+      this.caretY = void 0;
+      this.labelColors = void 0;
+      this.labelPointStyles = void 0;
+      this.labelTextColors = void 0;
+    }
+    initialize(options) {
+      this.options = options;
+      this._cachedAnimations = void 0;
+      this.$context = void 0;
+    }
+    _resolveAnimations() {
+      const cached = this._cachedAnimations;
+      if (cached) {
+        return cached;
+      }
+      const chart = this.chart;
+      const options = this.options.setContext(this.getContext());
+      const opts = options.enabled && chart.options.animation && options.animations;
+      const animations2 = new Animations(this.chart, opts);
+      if (opts._cacheable) {
+        this._cachedAnimations = Object.freeze(animations2);
+      }
+      return animations2;
+    }
+    getContext() {
+      return this.$context || (this.$context = createTooltipContext(this.chart.getContext(), this, this._tooltipItems));
+    }
+    getTitle(context, options) {
+      const { callbacks } = options;
+      const beforeTitle = invokeCallbackWithFallback(callbacks, "beforeTitle", this, context);
+      const title = invokeCallbackWithFallback(callbacks, "title", this, context);
+      const afterTitle = invokeCallbackWithFallback(callbacks, "afterTitle", this, context);
+      let lines = [];
+      lines = pushOrConcat(lines, splitNewlines(beforeTitle));
+      lines = pushOrConcat(lines, splitNewlines(title));
+      lines = pushOrConcat(lines, splitNewlines(afterTitle));
+      return lines;
+    }
+    getBeforeBody(tooltipItems, options) {
+      return getBeforeAfterBodyLines(invokeCallbackWithFallback(options.callbacks, "beforeBody", this, tooltipItems));
+    }
+    getBody(tooltipItems, options) {
+      const { callbacks } = options;
+      const bodyItems = [];
+      each(tooltipItems, (context) => {
+        const bodyItem = {
+          before: [],
+          lines: [],
+          after: []
+        };
+        const scoped = overrideCallbacks(callbacks, context);
+        pushOrConcat(bodyItem.before, splitNewlines(invokeCallbackWithFallback(scoped, "beforeLabel", this, context)));
+        pushOrConcat(bodyItem.lines, invokeCallbackWithFallback(scoped, "label", this, context));
+        pushOrConcat(bodyItem.after, splitNewlines(invokeCallbackWithFallback(scoped, "afterLabel", this, context)));
+        bodyItems.push(bodyItem);
+      });
+      return bodyItems;
+    }
+    getAfterBody(tooltipItems, options) {
+      return getBeforeAfterBodyLines(invokeCallbackWithFallback(options.callbacks, "afterBody", this, tooltipItems));
+    }
+    getFooter(tooltipItems, options) {
+      const { callbacks } = options;
+      const beforeFooter = invokeCallbackWithFallback(callbacks, "beforeFooter", this, tooltipItems);
+      const footer = invokeCallbackWithFallback(callbacks, "footer", this, tooltipItems);
+      const afterFooter = invokeCallbackWithFallback(callbacks, "afterFooter", this, tooltipItems);
+      let lines = [];
+      lines = pushOrConcat(lines, splitNewlines(beforeFooter));
+      lines = pushOrConcat(lines, splitNewlines(footer));
+      lines = pushOrConcat(lines, splitNewlines(afterFooter));
+      return lines;
+    }
+    _createItems(options) {
+      const active = this._active;
+      const data = this.chart.data;
+      const labelColors = [];
+      const labelPointStyles = [];
+      const labelTextColors = [];
+      let tooltipItems = [];
+      let i, len;
+      for (i = 0, len = active.length; i < len; ++i) {
+        tooltipItems.push(createTooltipItem(this.chart, active[i]));
+      }
+      if (options.filter) {
+        tooltipItems = tooltipItems.filter((element, index2, array) => options.filter(element, index2, array, data));
+      }
+      if (options.itemSort) {
+        tooltipItems = tooltipItems.sort((a, b) => options.itemSort(a, b, data));
+      }
+      each(tooltipItems, (context) => {
+        const scoped = overrideCallbacks(options.callbacks, context);
+        labelColors.push(invokeCallbackWithFallback(scoped, "labelColor", this, context));
+        labelPointStyles.push(invokeCallbackWithFallback(scoped, "labelPointStyle", this, context));
+        labelTextColors.push(invokeCallbackWithFallback(scoped, "labelTextColor", this, context));
+      });
+      this.labelColors = labelColors;
+      this.labelPointStyles = labelPointStyles;
+      this.labelTextColors = labelTextColors;
+      this.dataPoints = tooltipItems;
+      return tooltipItems;
+    }
+    update(changed, replay) {
+      const options = this.options.setContext(this.getContext());
+      const active = this._active;
+      let properties;
+      let tooltipItems = [];
+      if (!active.length) {
+        if (this.opacity !== 0) {
+          properties = {
+            opacity: 0
+          };
+        }
+      } else {
+        const position = positioners[options.position].call(this, active, this._eventPosition);
+        tooltipItems = this._createItems(options);
+        this.title = this.getTitle(tooltipItems, options);
+        this.beforeBody = this.getBeforeBody(tooltipItems, options);
+        this.body = this.getBody(tooltipItems, options);
+        this.afterBody = this.getAfterBody(tooltipItems, options);
+        this.footer = this.getFooter(tooltipItems, options);
+        const size = this._size = getTooltipSize(this, options);
+        const positionAndSize = Object.assign({}, position, size);
+        const alignment = determineAlignment(this.chart, options, positionAndSize);
+        const backgroundPoint = getBackgroundPoint(options, positionAndSize, alignment, this.chart);
+        this.xAlign = alignment.xAlign;
+        this.yAlign = alignment.yAlign;
+        properties = {
+          opacity: 1,
+          x: backgroundPoint.x,
+          y: backgroundPoint.y,
+          width: size.width,
+          height: size.height,
+          caretX: position.x,
+          caretY: position.y
+        };
+      }
+      this._tooltipItems = tooltipItems;
+      this.$context = void 0;
+      if (properties) {
+        this._resolveAnimations().update(this, properties);
+      }
+      if (changed && options.external) {
+        options.external.call(this, {
+          chart: this.chart,
+          tooltip: this,
+          replay
+        });
+      }
+    }
+    drawCaret(tooltipPoint, ctx, size, options) {
+      const caretPosition = this.getCaretPosition(tooltipPoint, size, options);
+      ctx.lineTo(caretPosition.x1, caretPosition.y1);
+      ctx.lineTo(caretPosition.x2, caretPosition.y2);
+      ctx.lineTo(caretPosition.x3, caretPosition.y3);
+    }
+    getCaretPosition(tooltipPoint, size, options) {
+      const { xAlign, yAlign } = this;
+      const { caretSize, cornerRadius } = options;
+      const { topLeft, topRight, bottomLeft, bottomRight } = toTRBLCorners(cornerRadius);
+      const { x: ptX, y: ptY } = tooltipPoint;
+      const { width, height } = size;
+      let x1, x2, x3, y1, y2, y3;
+      if (yAlign === "center") {
+        y2 = ptY + height / 2;
+        if (xAlign === "left") {
+          x1 = ptX;
+          x2 = x1 - caretSize;
+          y1 = y2 + caretSize;
+          y3 = y2 - caretSize;
+        } else {
+          x1 = ptX + width;
+          x2 = x1 + caretSize;
+          y1 = y2 - caretSize;
+          y3 = y2 + caretSize;
+        }
+        x3 = x1;
+      } else {
+        if (xAlign === "left") {
+          x2 = ptX + Math.max(topLeft, bottomLeft) + caretSize;
+        } else if (xAlign === "right") {
+          x2 = ptX + width - Math.max(topRight, bottomRight) - caretSize;
+        } else {
+          x2 = this.caretX;
+        }
+        if (yAlign === "top") {
+          y1 = ptY;
+          y2 = y1 - caretSize;
+          x1 = x2 - caretSize;
+          x3 = x2 + caretSize;
+        } else {
+          y1 = ptY + height;
+          y2 = y1 + caretSize;
+          x1 = x2 + caretSize;
+          x3 = x2 - caretSize;
+        }
+        y3 = y1;
+      }
+      return {
+        x1,
+        x2,
+        x3,
+        y1,
+        y2,
+        y3
+      };
+    }
+    drawTitle(pt, ctx, options) {
+      const title = this.title;
+      const length = title.length;
+      let titleFont, titleSpacing, i;
+      if (length) {
+        const rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
+        pt.x = getAlignedX(this, options.titleAlign, options);
+        ctx.textAlign = rtlHelper.textAlign(options.titleAlign);
+        ctx.textBaseline = "middle";
+        titleFont = toFont(options.titleFont);
+        titleSpacing = options.titleSpacing;
+        ctx.fillStyle = options.titleColor;
+        ctx.font = titleFont.string;
+        for (i = 0; i < length; ++i) {
+          ctx.fillText(title[i], rtlHelper.x(pt.x), pt.y + titleFont.lineHeight / 2);
+          pt.y += titleFont.lineHeight + titleSpacing;
+          if (i + 1 === length) {
+            pt.y += options.titleMarginBottom - titleSpacing;
+          }
+        }
+      }
+    }
+    _drawColorBox(ctx, pt, i, rtlHelper, options) {
+      const labelColor = this.labelColors[i];
+      const labelPointStyle = this.labelPointStyles[i];
+      const { boxHeight, boxWidth } = options;
+      const bodyFont = toFont(options.bodyFont);
+      const colorX = getAlignedX(this, "left", options);
+      const rtlColorX = rtlHelper.x(colorX);
+      const yOffSet = boxHeight < bodyFont.lineHeight ? (bodyFont.lineHeight - boxHeight) / 2 : 0;
+      const colorY = pt.y + yOffSet;
+      if (options.usePointStyle) {
+        const drawOptions = {
+          radius: Math.min(boxWidth, boxHeight) / 2,
+          pointStyle: labelPointStyle.pointStyle,
+          rotation: labelPointStyle.rotation,
+          borderWidth: 1
+        };
+        const centerX = rtlHelper.leftForLtr(rtlColorX, boxWidth) + boxWidth / 2;
+        const centerY = colorY + boxHeight / 2;
+        ctx.strokeStyle = options.multiKeyBackground;
+        ctx.fillStyle = options.multiKeyBackground;
+        drawPoint(ctx, drawOptions, centerX, centerY);
+        ctx.strokeStyle = labelColor.borderColor;
+        ctx.fillStyle = labelColor.backgroundColor;
+        drawPoint(ctx, drawOptions, centerX, centerY);
+      } else {
+        ctx.lineWidth = isObject2(labelColor.borderWidth) ? Math.max(...Object.values(labelColor.borderWidth)) : labelColor.borderWidth || 1;
+        ctx.strokeStyle = labelColor.borderColor;
+        ctx.setLineDash(labelColor.borderDash || []);
+        ctx.lineDashOffset = labelColor.borderDashOffset || 0;
+        const outerX = rtlHelper.leftForLtr(rtlColorX, boxWidth);
+        const innerX = rtlHelper.leftForLtr(rtlHelper.xPlus(rtlColorX, 1), boxWidth - 2);
+        const borderRadius = toTRBLCorners(labelColor.borderRadius);
+        if (Object.values(borderRadius).some((v) => v !== 0)) {
+          ctx.beginPath();
+          ctx.fillStyle = options.multiKeyBackground;
+          addRoundedRectPath(ctx, {
+            x: outerX,
+            y: colorY,
+            w: boxWidth,
+            h: boxHeight,
+            radius: borderRadius
+          });
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = labelColor.backgroundColor;
+          ctx.beginPath();
+          addRoundedRectPath(ctx, {
+            x: innerX,
+            y: colorY + 1,
+            w: boxWidth - 2,
+            h: boxHeight - 2,
+            radius: borderRadius
+          });
+          ctx.fill();
+        } else {
+          ctx.fillStyle = options.multiKeyBackground;
+          ctx.fillRect(outerX, colorY, boxWidth, boxHeight);
+          ctx.strokeRect(outerX, colorY, boxWidth, boxHeight);
+          ctx.fillStyle = labelColor.backgroundColor;
+          ctx.fillRect(innerX, colorY + 1, boxWidth - 2, boxHeight - 2);
+        }
+      }
+      ctx.fillStyle = this.labelTextColors[i];
+    }
+    drawBody(pt, ctx, options) {
+      const { body } = this;
+      const { bodySpacing, bodyAlign, displayColors, boxHeight, boxWidth, boxPadding } = options;
+      const bodyFont = toFont(options.bodyFont);
+      let bodyLineHeight = bodyFont.lineHeight;
+      let xLinePadding = 0;
+      const rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
+      const fillLineOfText = function(line) {
+        ctx.fillText(line, rtlHelper.x(pt.x + xLinePadding), pt.y + bodyLineHeight / 2);
+        pt.y += bodyLineHeight + bodySpacing;
+      };
+      const bodyAlignForCalculation = rtlHelper.textAlign(bodyAlign);
+      let bodyItem, textColor, lines, i, j, ilen, jlen;
+      ctx.textAlign = bodyAlign;
+      ctx.textBaseline = "middle";
+      ctx.font = bodyFont.string;
+      pt.x = getAlignedX(this, bodyAlignForCalculation, options);
+      ctx.fillStyle = options.bodyColor;
+      each(this.beforeBody, fillLineOfText);
+      xLinePadding = displayColors && bodyAlignForCalculation !== "right" ? bodyAlign === "center" ? boxWidth / 2 + boxPadding : boxWidth + 2 + boxPadding : 0;
+      for (i = 0, ilen = body.length; i < ilen; ++i) {
+        bodyItem = body[i];
+        textColor = this.labelTextColors[i];
+        ctx.fillStyle = textColor;
+        each(bodyItem.before, fillLineOfText);
+        lines = bodyItem.lines;
+        if (displayColors && lines.length) {
+          this._drawColorBox(ctx, pt, i, rtlHelper, options);
+          bodyLineHeight = Math.max(bodyFont.lineHeight, boxHeight);
+        }
+        for (j = 0, jlen = lines.length; j < jlen; ++j) {
+          fillLineOfText(lines[j]);
+          bodyLineHeight = bodyFont.lineHeight;
+        }
+        each(bodyItem.after, fillLineOfText);
+      }
+      xLinePadding = 0;
+      bodyLineHeight = bodyFont.lineHeight;
+      each(this.afterBody, fillLineOfText);
+      pt.y -= bodySpacing;
+    }
+    drawFooter(pt, ctx, options) {
+      const footer = this.footer;
+      const length = footer.length;
+      let footerFont, i;
+      if (length) {
+        const rtlHelper = getRtlAdapter(options.rtl, this.x, this.width);
+        pt.x = getAlignedX(this, options.footerAlign, options);
+        pt.y += options.footerMarginTop;
+        ctx.textAlign = rtlHelper.textAlign(options.footerAlign);
+        ctx.textBaseline = "middle";
+        footerFont = toFont(options.footerFont);
+        ctx.fillStyle = options.footerColor;
+        ctx.font = footerFont.string;
+        for (i = 0; i < length; ++i) {
+          ctx.fillText(footer[i], rtlHelper.x(pt.x), pt.y + footerFont.lineHeight / 2);
+          pt.y += footerFont.lineHeight + options.footerSpacing;
+        }
+      }
+    }
+    drawBackground(pt, ctx, tooltipSize, options) {
+      const { xAlign, yAlign } = this;
+      const { x, y } = pt;
+      const { width, height } = tooltipSize;
+      const { topLeft, topRight, bottomLeft, bottomRight } = toTRBLCorners(options.cornerRadius);
+      ctx.fillStyle = options.backgroundColor;
+      ctx.strokeStyle = options.borderColor;
+      ctx.lineWidth = options.borderWidth;
+      ctx.beginPath();
+      ctx.moveTo(x + topLeft, y);
+      if (yAlign === "top") {
+        this.drawCaret(pt, ctx, tooltipSize, options);
+      }
+      ctx.lineTo(x + width - topRight, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + topRight);
+      if (yAlign === "center" && xAlign === "right") {
+        this.drawCaret(pt, ctx, tooltipSize, options);
+      }
+      ctx.lineTo(x + width, y + height - bottomRight);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - bottomRight, y + height);
+      if (yAlign === "bottom") {
+        this.drawCaret(pt, ctx, tooltipSize, options);
+      }
+      ctx.lineTo(x + bottomLeft, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - bottomLeft);
+      if (yAlign === "center" && xAlign === "left") {
+        this.drawCaret(pt, ctx, tooltipSize, options);
+      }
+      ctx.lineTo(x, y + topLeft);
+      ctx.quadraticCurveTo(x, y, x + topLeft, y);
+      ctx.closePath();
+      ctx.fill();
+      if (options.borderWidth > 0) {
+        ctx.stroke();
+      }
+    }
+    _updateAnimationTarget(options) {
+      const chart = this.chart;
+      const anims = this.$animations;
+      const animX = anims && anims.x;
+      const animY = anims && anims.y;
+      if (animX || animY) {
+        const position = positioners[options.position].call(this, this._active, this._eventPosition);
+        if (!position) {
+          return;
+        }
+        const size = this._size = getTooltipSize(this, options);
+        const positionAndSize = Object.assign({}, position, this._size);
+        const alignment = determineAlignment(chart, options, positionAndSize);
+        const point = getBackgroundPoint(options, positionAndSize, alignment, chart);
+        if (animX._to !== point.x || animY._to !== point.y) {
+          this.xAlign = alignment.xAlign;
+          this.yAlign = alignment.yAlign;
+          this.width = size.width;
+          this.height = size.height;
+          this.caretX = position.x;
+          this.caretY = position.y;
+          this._resolveAnimations().update(this, point);
+        }
+      }
+    }
+    _willRender() {
+      return !!this.opacity;
+    }
+    draw(ctx) {
+      const options = this.options.setContext(this.getContext());
+      let opacity = this.opacity;
+      if (!opacity) {
+        return;
+      }
+      this._updateAnimationTarget(options);
+      const tooltipSize = {
+        width: this.width,
+        height: this.height
+      };
+      const pt = {
+        x: this.x,
+        y: this.y
+      };
+      opacity = Math.abs(opacity) < 1e-3 ? 0 : opacity;
+      const padding = toPadding(options.padding);
+      const hasTooltipContent = this.title.length || this.beforeBody.length || this.body.length || this.afterBody.length || this.footer.length;
+      if (options.enabled && hasTooltipContent) {
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        this.drawBackground(pt, ctx, tooltipSize, options);
+        overrideTextDirection(ctx, options.textDirection);
+        pt.y += padding.top;
+        this.drawTitle(pt, ctx, options);
+        this.drawBody(pt, ctx, options);
+        this.drawFooter(pt, ctx, options);
+        restoreTextDirection(ctx, options.textDirection);
+        ctx.restore();
+      }
+    }
+    getActiveElements() {
+      return this._active || [];
+    }
+    setActiveElements(activeElements, eventPosition) {
+      const lastActive = this._active;
+      const active = activeElements.map(({ datasetIndex, index: index2 }) => {
+        const meta = this.chart.getDatasetMeta(datasetIndex);
+        if (!meta) {
+          throw new Error("Cannot find a dataset at index " + datasetIndex);
+        }
+        return {
+          datasetIndex,
+          element: meta.data[index2],
+          index: index2
+        };
+      });
+      const changed = !_elementsEqual(lastActive, active);
+      const positionChanged = this._positionChanged(active, eventPosition);
+      if (changed || positionChanged) {
+        this._active = active;
+        this._eventPosition = eventPosition;
+        this._ignoreReplayEvents = true;
+        this.update(true);
+      }
+    }
+    handleEvent(e, replay, inChartArea = true) {
+      if (replay && this._ignoreReplayEvents) {
+        return false;
+      }
+      this._ignoreReplayEvents = false;
+      const options = this.options;
+      const lastActive = this._active || [];
+      const active = this._getActiveElements(e, lastActive, replay, inChartArea);
+      const positionChanged = this._positionChanged(active, e);
+      const changed = replay || !_elementsEqual(active, lastActive) || positionChanged;
+      if (changed) {
+        this._active = active;
+        if (options.enabled || options.external) {
+          this._eventPosition = {
+            x: e.x,
+            y: e.y
+          };
+          this.update(true, replay);
+        }
+      }
+      return changed;
+    }
+    _getActiveElements(e, lastActive, replay, inChartArea) {
+      const options = this.options;
+      if (e.type === "mouseout") {
+        return [];
+      }
+      if (!inChartArea) {
+        return lastActive.filter((i) => this.chart.data.datasets[i.datasetIndex] && this.chart.getDatasetMeta(i.datasetIndex).controller.getParsed(i.index) !== void 0);
+      }
+      const active = this.chart.getElementsAtEventForMode(e, options.mode, options, replay);
+      if (options.reverse) {
+        active.reverse();
+      }
+      return active;
+    }
+    _positionChanged(active, e) {
+      const { caretX, caretY, options } = this;
+      const position = positioners[options.position].call(this, active, e);
+      return position !== false && (caretX !== position.x || caretY !== position.y);
+    }
+  };
+  var plugin_tooltip = {
+    id: "tooltip",
+    _element: Tooltip,
+    positioners,
+    afterInit(chart, _args, options) {
+      if (options) {
+        chart.tooltip = new Tooltip({
+          chart,
+          options
+        });
+      }
+    },
+    beforeUpdate(chart, _args, options) {
+      if (chart.tooltip) {
+        chart.tooltip.initialize(options);
+      }
+    },
+    reset(chart, _args, options) {
+      if (chart.tooltip) {
+        chart.tooltip.initialize(options);
+      }
+    },
+    afterDraw(chart) {
+      const tooltip = chart.tooltip;
+      if (tooltip && tooltip._willRender()) {
+        const args = {
+          tooltip
+        };
+        if (chart.notifyPlugins("beforeTooltipDraw", {
+          ...args,
+          cancelable: true
+        }) === false) {
+          return;
+        }
+        tooltip.draw(chart.ctx);
+        chart.notifyPlugins("afterTooltipDraw", args);
+      }
+    },
+    afterEvent(chart, args) {
+      if (chart.tooltip) {
+        const useFinalPosition = args.replay;
+        if (chart.tooltip.handleEvent(args.event, useFinalPosition, args.inChartArea)) {
+          args.changed = true;
+        }
+      }
+    },
+    defaults: {
+      enabled: true,
+      external: null,
+      position: "average",
+      backgroundColor: "rgba(0,0,0,0.8)",
+      titleColor: "#fff",
+      titleFont: {
+        weight: "bold"
+      },
+      titleSpacing: 2,
+      titleMarginBottom: 6,
+      titleAlign: "left",
+      bodyColor: "#fff",
+      bodySpacing: 2,
+      bodyFont: {},
+      bodyAlign: "left",
+      footerColor: "#fff",
+      footerSpacing: 2,
+      footerMarginTop: 6,
+      footerFont: {
+        weight: "bold"
+      },
+      footerAlign: "left",
+      padding: 6,
+      caretPadding: 2,
+      caretSize: 5,
+      cornerRadius: 6,
+      boxHeight: (ctx, opts) => opts.bodyFont.size,
+      boxWidth: (ctx, opts) => opts.bodyFont.size,
+      multiKeyBackground: "#fff",
+      displayColors: true,
+      boxPadding: 0,
+      borderColor: "rgba(0,0,0,0)",
+      borderWidth: 0,
+      animation: {
+        duration: 400,
+        easing: "easeOutQuart"
+      },
+      animations: {
+        numbers: {
+          type: "number",
+          properties: [
+            "x",
+            "y",
+            "width",
+            "height",
+            "caretX",
+            "caretY"
+          ]
+        },
+        opacity: {
+          easing: "linear",
+          duration: 200
+        }
+      },
+      callbacks: defaultCallbacks
+    },
+    defaultRoutes: {
+      bodyFont: "font",
+      footerFont: "font",
+      titleFont: "font"
+    },
+    descriptors: {
+      _scriptable: (name) => name !== "filter" && name !== "itemSort" && name !== "external",
+      _indexable: false,
+      callbacks: {
+        _scriptable: false,
+        _indexable: false
+      },
+      animation: {
+        _fallback: false
+      },
+      animations: {
+        _fallback: "animation"
+      }
+    },
+    additionalOptionScopes: [
+      "interaction"
+    ]
+  };
+  var plugins = /* @__PURE__ */ Object.freeze({
+    __proto__: null,
+    Colors: plugin_colors,
+    Decimation: plugin_decimation,
+    Filler: index,
+    Legend: plugin_legend,
+    SubTitle: plugin_subtitle,
+    Title: plugin_title,
+    Tooltip: plugin_tooltip
+  });
+  var addIfString = (labels, raw, index2, addedLabels) => {
+    if (typeof raw === "string") {
+      index2 = labels.push(raw) - 1;
+      addedLabels.unshift({
+        index: index2,
+        label: raw
+      });
+    } else if (isNaN(raw)) {
+      index2 = null;
+    }
+    return index2;
+  };
+  function findOrAddLabel(labels, raw, index2, addedLabels) {
+    const first = labels.indexOf(raw);
+    if (first === -1) {
+      return addIfString(labels, raw, index2, addedLabels);
+    }
+    const last = labels.lastIndexOf(raw);
+    return first !== last ? index2 : first;
+  }
+  var validIndex = (index2, max) => index2 === null ? null : _limitValue(Math.round(index2), 0, max);
+  function _getLabelForValue(value2) {
+    const labels = this.getLabels();
+    if (value2 >= 0 && value2 < labels.length) {
+      return labels[value2];
+    }
+    return value2;
+  }
+  var CategoryScale = class extends Scale {
+    static id = "category";
+    static defaults = {
+      ticks: {
+        callback: _getLabelForValue
+      }
+    };
+    constructor(cfg) {
+      super(cfg);
+      this._startValue = void 0;
+      this._valueRange = 0;
+      this._addedLabels = [];
+    }
+    init(scaleOptions) {
+      const added = this._addedLabels;
+      if (added.length) {
+        const labels = this.getLabels();
+        for (const { index: index2, label } of added) {
+          if (labels[index2] === label) {
+            labels.splice(index2, 1);
+          }
+        }
+        this._addedLabels = [];
+      }
+      super.init(scaleOptions);
+    }
+    parse(raw, index2) {
+      if (isNullOrUndef(raw)) {
+        return null;
+      }
+      const labels = this.getLabels();
+      index2 = isFinite(index2) && labels[index2] === raw ? index2 : findOrAddLabel(labels, raw, valueOrDefault(index2, raw), this._addedLabels);
+      return validIndex(index2, labels.length - 1);
+    }
+    determineDataLimits() {
+      const { minDefined, maxDefined } = this.getUserBounds();
+      let { min, max } = this.getMinMax(true);
+      if (this.options.bounds === "ticks") {
+        if (!minDefined) {
+          min = 0;
+        }
+        if (!maxDefined) {
+          max = this.getLabels().length - 1;
+        }
+      }
+      this.min = min;
+      this.max = max;
+    }
+    buildTicks() {
+      const min = this.min;
+      const max = this.max;
+      const offset = this.options.offset;
+      const ticks = [];
+      let labels = this.getLabels();
+      labels = min === 0 && max === labels.length - 1 ? labels : labels.slice(min, max + 1);
+      this._valueRange = Math.max(labels.length - (offset ? 0 : 1), 1);
+      this._startValue = this.min - (offset ? 0.5 : 0);
+      for (let value2 = min; value2 <= max; value2++) {
+        ticks.push({
+          value: value2
+        });
+      }
+      return ticks;
+    }
+    getLabelForValue(value2) {
+      return _getLabelForValue.call(this, value2);
+    }
+    configure() {
+      super.configure();
+      if (!this.isHorizontal()) {
+        this._reversePixels = !this._reversePixels;
+      }
+    }
+    getPixelForValue(value2) {
+      if (typeof value2 !== "number") {
+        value2 = this.parse(value2);
+      }
+      return value2 === null ? NaN : this.getPixelForDecimal((value2 - this._startValue) / this._valueRange);
+    }
+    getPixelForTick(index2) {
+      const ticks = this.ticks;
+      if (index2 < 0 || index2 > ticks.length - 1) {
+        return null;
+      }
+      return this.getPixelForValue(ticks[index2].value);
+    }
+    getValueForPixel(pixel) {
+      return Math.round(this._startValue + this.getDecimalForPixel(pixel) * this._valueRange);
+    }
+    getBasePixel() {
+      return this.bottom;
+    }
+  };
+  function generateTicks$1(generationOptions, dataRange) {
+    const ticks = [];
+    const MIN_SPACING = 1e-14;
+    const { bounds, step, min, max, precision, count, maxTicks, maxDigits, includeBounds } = generationOptions;
+    const unit = step || 1;
+    const maxSpaces = maxTicks - 1;
+    const { min: rmin, max: rmax } = dataRange;
+    const minDefined = !isNullOrUndef(min);
+    const maxDefined = !isNullOrUndef(max);
+    const countDefined = !isNullOrUndef(count);
+    const minSpacing = (rmax - rmin) / (maxDigits + 1);
+    let spacing = niceNum((rmax - rmin) / maxSpaces / unit) * unit;
+    let factor, niceMin, niceMax, numSpaces;
+    if (spacing < MIN_SPACING && !minDefined && !maxDefined) {
+      return [
+        {
+          value: rmin
+        },
+        {
+          value: rmax
+        }
+      ];
+    }
+    numSpaces = Math.ceil(rmax / spacing) - Math.floor(rmin / spacing);
+    if (numSpaces > maxSpaces) {
+      spacing = niceNum(numSpaces * spacing / maxSpaces / unit) * unit;
+    }
+    if (!isNullOrUndef(precision)) {
+      factor = Math.pow(10, precision);
+      spacing = Math.ceil(spacing * factor) / factor;
+    }
+    if (bounds === "ticks") {
+      niceMin = Math.floor(rmin / spacing) * spacing;
+      niceMax = Math.ceil(rmax / spacing) * spacing;
+    } else {
+      niceMin = rmin;
+      niceMax = rmax;
+    }
+    if (minDefined && maxDefined && step && almostWhole((max - min) / step, spacing / 1e3)) {
+      numSpaces = Math.round(Math.min((max - min) / spacing, maxTicks));
+      spacing = (max - min) / numSpaces;
+      niceMin = min;
+      niceMax = max;
+    } else if (countDefined) {
+      niceMin = minDefined ? min : niceMin;
+      niceMax = maxDefined ? max : niceMax;
+      numSpaces = count - 1;
+      spacing = (niceMax - niceMin) / numSpaces;
+    } else {
+      numSpaces = (niceMax - niceMin) / spacing;
+      if (almostEquals(numSpaces, Math.round(numSpaces), spacing / 1e3)) {
+        numSpaces = Math.round(numSpaces);
+      } else {
+        numSpaces = Math.ceil(numSpaces);
+      }
+    }
+    const decimalPlaces = Math.max(_decimalPlaces(spacing), _decimalPlaces(niceMin));
+    factor = Math.pow(10, isNullOrUndef(precision) ? decimalPlaces : precision);
+    niceMin = Math.round(niceMin * factor) / factor;
+    niceMax = Math.round(niceMax * factor) / factor;
+    let j = 0;
+    if (minDefined) {
+      if (includeBounds && niceMin !== min) {
+        ticks.push({
+          value: min
+        });
+        if (niceMin < min) {
+          j++;
+        }
+        if (almostEquals(Math.round((niceMin + j * spacing) * factor) / factor, min, relativeLabelSize(min, minSpacing, generationOptions))) {
+          j++;
+        }
+      } else if (niceMin < min) {
+        j++;
+      }
+    }
+    for (; j < numSpaces; ++j) {
+      const tickValue = Math.round((niceMin + j * spacing) * factor) / factor;
+      if (maxDefined && tickValue > max) {
+        break;
+      }
+      ticks.push({
+        value: tickValue
+      });
+    }
+    if (maxDefined && includeBounds && niceMax !== max) {
+      if (ticks.length && almostEquals(ticks[ticks.length - 1].value, max, relativeLabelSize(max, minSpacing, generationOptions))) {
+        ticks[ticks.length - 1].value = max;
+      } else {
+        ticks.push({
+          value: max
+        });
+      }
+    } else if (!maxDefined || niceMax === max) {
+      ticks.push({
+        value: niceMax
+      });
+    }
+    return ticks;
+  }
+  function relativeLabelSize(value2, minSpacing, { horizontal, minRotation }) {
+    const rad = toRadians(minRotation);
+    const ratio = (horizontal ? Math.sin(rad) : Math.cos(rad)) || 1e-3;
+    const length = 0.75 * minSpacing * ("" + value2).length;
+    return Math.min(minSpacing / ratio, length);
+  }
+  var LinearScaleBase = class extends Scale {
+    constructor(cfg) {
+      super(cfg);
+      this.start = void 0;
+      this.end = void 0;
+      this._startValue = void 0;
+      this._endValue = void 0;
+      this._valueRange = 0;
+    }
+    parse(raw, index2) {
+      if (isNullOrUndef(raw)) {
+        return null;
+      }
+      if ((typeof raw === "number" || raw instanceof Number) && !isFinite(+raw)) {
+        return null;
+      }
+      return +raw;
+    }
+    handleTickRangeOptions() {
+      const { beginAtZero } = this.options;
+      const { minDefined, maxDefined } = this.getUserBounds();
+      let { min, max } = this;
+      const setMin = (v) => min = minDefined ? min : v;
+      const setMax = (v) => max = maxDefined ? max : v;
+      if (beginAtZero) {
+        const minSign = sign(min);
+        const maxSign = sign(max);
+        if (minSign < 0 && maxSign < 0) {
+          setMax(0);
+        } else if (minSign > 0 && maxSign > 0) {
+          setMin(0);
+        }
+      }
+      if (min === max) {
+        let offset = max === 0 ? 1 : Math.abs(max * 0.05);
+        setMax(max + offset);
+        if (!beginAtZero) {
+          setMin(min - offset);
+        }
+      }
+      this.min = min;
+      this.max = max;
+    }
+    getTickLimit() {
+      const tickOpts = this.options.ticks;
+      let { maxTicksLimit, stepSize } = tickOpts;
+      let maxTicks;
+      if (stepSize) {
+        maxTicks = Math.ceil(this.max / stepSize) - Math.floor(this.min / stepSize) + 1;
+        if (maxTicks > 1e3) {
+          console.warn(`scales.${this.id}.ticks.stepSize: ${stepSize} would result generating up to ${maxTicks} ticks. Limiting to 1000.`);
+          maxTicks = 1e3;
+        }
+      } else {
+        maxTicks = this.computeTickLimit();
+        maxTicksLimit = maxTicksLimit || 11;
+      }
+      if (maxTicksLimit) {
+        maxTicks = Math.min(maxTicksLimit, maxTicks);
+      }
+      return maxTicks;
+    }
+    computeTickLimit() {
+      return Number.POSITIVE_INFINITY;
+    }
+    buildTicks() {
+      const opts = this.options;
+      const tickOpts = opts.ticks;
+      let maxTicks = this.getTickLimit();
+      maxTicks = Math.max(2, maxTicks);
+      const numericGeneratorOptions = {
+        maxTicks,
+        bounds: opts.bounds,
+        min: opts.min,
+        max: opts.max,
+        precision: tickOpts.precision,
+        step: tickOpts.stepSize,
+        count: tickOpts.count,
+        maxDigits: this._maxDigits(),
+        horizontal: this.isHorizontal(),
+        minRotation: tickOpts.minRotation || 0,
+        includeBounds: tickOpts.includeBounds !== false
+      };
+      const dataRange = this._range || this;
+      const ticks = generateTicks$1(numericGeneratorOptions, dataRange);
+      if (opts.bounds === "ticks") {
+        _setMinAndMaxByKey(ticks, this, "value");
+      }
+      if (opts.reverse) {
+        ticks.reverse();
+        this.start = this.max;
+        this.end = this.min;
+      } else {
+        this.start = this.min;
+        this.end = this.max;
+      }
+      return ticks;
+    }
+    configure() {
+      const ticks = this.ticks;
+      let start = this.min;
+      let end = this.max;
+      super.configure();
+      if (this.options.offset && ticks.length) {
+        const offset = (end - start) / Math.max(ticks.length - 1, 1) / 2;
+        start -= offset;
+        end += offset;
+      }
+      this._startValue = start;
+      this._endValue = end;
+      this._valueRange = end - start;
+    }
+    getLabelForValue(value2) {
+      return formatNumber(value2, this.chart.options.locale, this.options.ticks.format);
+    }
+  };
+  var LinearScale = class extends LinearScaleBase {
+    static id = "linear";
+    static defaults = {
+      ticks: {
+        callback: Ticks.formatters.numeric
+      }
+    };
+    determineDataLimits() {
+      const { min, max } = this.getMinMax(true);
+      this.min = isNumberFinite(min) ? min : 0;
+      this.max = isNumberFinite(max) ? max : 1;
+      this.handleTickRangeOptions();
+    }
+    computeTickLimit() {
+      const horizontal = this.isHorizontal();
+      const length = horizontal ? this.width : this.height;
+      const minRotation = toRadians(this.options.ticks.minRotation);
+      const ratio = (horizontal ? Math.sin(minRotation) : Math.cos(minRotation)) || 1e-3;
+      const tickFont = this._resolveTickFontOptions(0);
+      return Math.ceil(length / Math.min(40, tickFont.lineHeight / ratio));
+    }
+    getPixelForValue(value2) {
+      return value2 === null ? NaN : this.getPixelForDecimal((value2 - this._startValue) / this._valueRange);
+    }
+    getValueForPixel(pixel) {
+      return this._startValue + this.getDecimalForPixel(pixel) * this._valueRange;
+    }
+  };
+  var log10Floor = (v) => Math.floor(log10(v));
+  var changeExponent = (v, m) => Math.pow(10, log10Floor(v) + m);
+  function isMajor(tickVal) {
+    const remain = tickVal / Math.pow(10, log10Floor(tickVal));
+    return remain === 1;
+  }
+  function steps(min, max, rangeExp) {
+    const rangeStep = Math.pow(10, rangeExp);
+    const start = Math.floor(min / rangeStep);
+    const end = Math.ceil(max / rangeStep);
+    return end - start;
+  }
+  function startExp(min, max) {
+    const range = max - min;
+    let rangeExp = log10Floor(range);
+    while (steps(min, max, rangeExp) > 10) {
+      rangeExp++;
+    }
+    while (steps(min, max, rangeExp) < 10) {
+      rangeExp--;
+    }
+    return Math.min(rangeExp, log10Floor(min));
+  }
+  function generateTicks(generationOptions, { min, max }) {
+    min = finiteOrDefault(generationOptions.min, min);
+    const ticks = [];
+    const minExp = log10Floor(min);
+    let exp = startExp(min, max);
+    let precision = exp < 0 ? Math.pow(10, Math.abs(exp)) : 1;
+    const stepSize = Math.pow(10, exp);
+    const base = minExp > exp ? Math.pow(10, minExp) : 0;
+    const start = Math.round((min - base) * precision) / precision;
+    const offset = Math.floor((min - base) / stepSize / 10) * stepSize * 10;
+    let significand = Math.floor((start - offset) / Math.pow(10, exp));
+    let value2 = finiteOrDefault(generationOptions.min, Math.round((base + offset + significand * Math.pow(10, exp)) * precision) / precision);
+    while (value2 < max) {
+      ticks.push({
+        value: value2,
+        major: isMajor(value2),
+        significand
+      });
+      if (significand >= 10) {
+        significand = significand < 15 ? 15 : 20;
+      } else {
+        significand++;
+      }
+      if (significand >= 20) {
+        exp++;
+        significand = 2;
+        precision = exp >= 0 ? 1 : precision;
+      }
+      value2 = Math.round((base + offset + significand * Math.pow(10, exp)) * precision) / precision;
+    }
+    const lastTick = finiteOrDefault(generationOptions.max, value2);
+    ticks.push({
+      value: lastTick,
+      major: isMajor(lastTick),
+      significand
+    });
+    return ticks;
+  }
+  var LogarithmicScale = class extends Scale {
+    static id = "logarithmic";
+    static defaults = {
+      ticks: {
+        callback: Ticks.formatters.logarithmic,
+        major: {
+          enabled: true
+        }
+      }
+    };
+    constructor(cfg) {
+      super(cfg);
+      this.start = void 0;
+      this.end = void 0;
+      this._startValue = void 0;
+      this._valueRange = 0;
+    }
+    parse(raw, index2) {
+      const value2 = LinearScaleBase.prototype.parse.apply(this, [
+        raw,
+        index2
+      ]);
+      if (value2 === 0) {
+        this._zero = true;
+        return void 0;
+      }
+      return isNumberFinite(value2) && value2 > 0 ? value2 : null;
+    }
+    determineDataLimits() {
+      const { min, max } = this.getMinMax(true);
+      this.min = isNumberFinite(min) ? Math.max(0, min) : null;
+      this.max = isNumberFinite(max) ? Math.max(0, max) : null;
+      if (this.options.beginAtZero) {
+        this._zero = true;
+      }
+      if (this._zero && this.min !== this._suggestedMin && !isNumberFinite(this._userMin)) {
+        this.min = min === changeExponent(this.min, 0) ? changeExponent(this.min, -1) : changeExponent(this.min, 0);
+      }
+      this.handleTickRangeOptions();
+    }
+    handleTickRangeOptions() {
+      const { minDefined, maxDefined } = this.getUserBounds();
+      let min = this.min;
+      let max = this.max;
+      const setMin = (v) => min = minDefined ? min : v;
+      const setMax = (v) => max = maxDefined ? max : v;
+      if (min === max) {
+        if (min <= 0) {
+          setMin(1);
+          setMax(10);
+        } else {
+          setMin(changeExponent(min, -1));
+          setMax(changeExponent(max, 1));
+        }
+      }
+      if (min <= 0) {
+        setMin(changeExponent(max, -1));
+      }
+      if (max <= 0) {
+        setMax(changeExponent(min, 1));
+      }
+      this.min = min;
+      this.max = max;
+    }
+    buildTicks() {
+      const opts = this.options;
+      const generationOptions = {
+        min: this._userMin,
+        max: this._userMax
+      };
+      const ticks = generateTicks(generationOptions, this);
+      if (opts.bounds === "ticks") {
+        _setMinAndMaxByKey(ticks, this, "value");
+      }
+      if (opts.reverse) {
+        ticks.reverse();
+        this.start = this.max;
+        this.end = this.min;
+      } else {
+        this.start = this.min;
+        this.end = this.max;
+      }
+      return ticks;
+    }
+    getLabelForValue(value2) {
+      return value2 === void 0 ? "0" : formatNumber(value2, this.chart.options.locale, this.options.ticks.format);
+    }
+    configure() {
+      const start = this.min;
+      super.configure();
+      this._startValue = log10(start);
+      this._valueRange = log10(this.max) - log10(start);
+    }
+    getPixelForValue(value2) {
+      if (value2 === void 0 || value2 === 0) {
+        value2 = this.min;
+      }
+      if (value2 === null || isNaN(value2)) {
+        return NaN;
+      }
+      return this.getPixelForDecimal(value2 === this.min ? 0 : (log10(value2) - this._startValue) / this._valueRange);
+    }
+    getValueForPixel(pixel) {
+      const decimal = this.getDecimalForPixel(pixel);
+      return Math.pow(10, this._startValue + decimal * this._valueRange);
+    }
+  };
+  function getTickBackdropHeight(opts) {
+    const tickOpts = opts.ticks;
+    if (tickOpts.display && opts.display) {
+      const padding = toPadding(tickOpts.backdropPadding);
+      return valueOrDefault(tickOpts.font && tickOpts.font.size, defaults.font.size) + padding.height;
+    }
+    return 0;
+  }
+  function measureLabelSize(ctx, font, label) {
+    label = isArray(label) ? label : [
+      label
+    ];
+    return {
+      w: _longestText(ctx, font.string, label),
+      h: label.length * font.lineHeight
+    };
+  }
+  function determineLimits(angle, pos, size, min, max) {
+    if (angle === min || angle === max) {
+      return {
+        start: pos - size / 2,
+        end: pos + size / 2
+      };
+    } else if (angle < min || angle > max) {
+      return {
+        start: pos - size,
+        end: pos
+      };
+    }
+    return {
+      start: pos,
+      end: pos + size
+    };
+  }
+  function fitWithPointLabels(scale) {
+    const orig = {
+      l: scale.left + scale._padding.left,
+      r: scale.right - scale._padding.right,
+      t: scale.top + scale._padding.top,
+      b: scale.bottom - scale._padding.bottom
+    };
+    const limits = Object.assign({}, orig);
+    const labelSizes = [];
+    const padding = [];
+    const valueCount = scale._pointLabels.length;
+    const pointLabelOpts = scale.options.pointLabels;
+    const additionalAngle = pointLabelOpts.centerPointLabels ? PI / valueCount : 0;
+    for (let i = 0; i < valueCount; i++) {
+      const opts = pointLabelOpts.setContext(scale.getPointLabelContext(i));
+      padding[i] = opts.padding;
+      const pointPosition = scale.getPointPosition(i, scale.drawingArea + padding[i], additionalAngle);
+      const plFont = toFont(opts.font);
+      const textSize = measureLabelSize(scale.ctx, plFont, scale._pointLabels[i]);
+      labelSizes[i] = textSize;
+      const angleRadians = _normalizeAngle(scale.getIndexAngle(i) + additionalAngle);
+      const angle = Math.round(toDegrees(angleRadians));
+      const hLimits = determineLimits(angle, pointPosition.x, textSize.w, 0, 180);
+      const vLimits = determineLimits(angle, pointPosition.y, textSize.h, 90, 270);
+      updateLimits(limits, orig, angleRadians, hLimits, vLimits);
+    }
+    scale.setCenterPoint(orig.l - limits.l, limits.r - orig.r, orig.t - limits.t, limits.b - orig.b);
+    scale._pointLabelItems = buildPointLabelItems(scale, labelSizes, padding);
+  }
+  function updateLimits(limits, orig, angle, hLimits, vLimits) {
+    const sin = Math.abs(Math.sin(angle));
+    const cos = Math.abs(Math.cos(angle));
+    let x = 0;
+    let y = 0;
+    if (hLimits.start < orig.l) {
+      x = (orig.l - hLimits.start) / sin;
+      limits.l = Math.min(limits.l, orig.l - x);
+    } else if (hLimits.end > orig.r) {
+      x = (hLimits.end - orig.r) / sin;
+      limits.r = Math.max(limits.r, orig.r + x);
+    }
+    if (vLimits.start < orig.t) {
+      y = (orig.t - vLimits.start) / cos;
+      limits.t = Math.min(limits.t, orig.t - y);
+    } else if (vLimits.end > orig.b) {
+      y = (vLimits.end - orig.b) / cos;
+      limits.b = Math.max(limits.b, orig.b + y);
+    }
+  }
+  function createPointLabelItem(scale, index2, itemOpts) {
+    const outerDistance = scale.drawingArea;
+    const { extra, additionalAngle, padding, size } = itemOpts;
+    const pointLabelPosition = scale.getPointPosition(index2, outerDistance + extra + padding, additionalAngle);
+    const angle = Math.round(toDegrees(_normalizeAngle(pointLabelPosition.angle + HALF_PI)));
+    const y = yForAngle(pointLabelPosition.y, size.h, angle);
+    const textAlign = getTextAlignForAngle(angle);
+    const left = leftForTextAlign(pointLabelPosition.x, size.w, textAlign);
+    return {
+      visible: true,
+      x: pointLabelPosition.x,
+      y,
+      textAlign,
+      left,
+      top: y,
+      right: left + size.w,
+      bottom: y + size.h
+    };
+  }
+  function isNotOverlapped(item, area) {
+    if (!area) {
+      return true;
+    }
+    const { left, top, right, bottom } = item;
+    const apexesInArea = _isPointInArea({
+      x: left,
+      y: top
+    }, area) || _isPointInArea({
+      x: left,
+      y: bottom
+    }, area) || _isPointInArea({
+      x: right,
+      y: top
+    }, area) || _isPointInArea({
+      x: right,
+      y: bottom
+    }, area);
+    return !apexesInArea;
+  }
+  function buildPointLabelItems(scale, labelSizes, padding) {
+    const items = [];
+    const valueCount = scale._pointLabels.length;
+    const opts = scale.options;
+    const { centerPointLabels, display } = opts.pointLabels;
+    const itemOpts = {
+      extra: getTickBackdropHeight(opts) / 2,
+      additionalAngle: centerPointLabels ? PI / valueCount : 0
+    };
+    let area;
+    for (let i = 0; i < valueCount; i++) {
+      itemOpts.padding = padding[i];
+      itemOpts.size = labelSizes[i];
+      const item = createPointLabelItem(scale, i, itemOpts);
+      items.push(item);
+      if (display === "auto") {
+        item.visible = isNotOverlapped(item, area);
+        if (item.visible) {
+          area = item;
+        }
+      }
+    }
+    return items;
+  }
+  function getTextAlignForAngle(angle) {
+    if (angle === 0 || angle === 180) {
+      return "center";
+    } else if (angle < 180) {
+      return "left";
+    }
+    return "right";
+  }
+  function leftForTextAlign(x, w, align) {
+    if (align === "right") {
+      x -= w;
+    } else if (align === "center") {
+      x -= w / 2;
+    }
+    return x;
+  }
+  function yForAngle(y, h, angle) {
+    if (angle === 90 || angle === 270) {
+      y -= h / 2;
+    } else if (angle > 270 || angle < 90) {
+      y -= h;
+    }
+    return y;
+  }
+  function drawPointLabelBox(ctx, opts, item) {
+    const { left, top, right, bottom } = item;
+    const { backdropColor } = opts;
+    if (!isNullOrUndef(backdropColor)) {
+      const borderRadius = toTRBLCorners(opts.borderRadius);
+      const padding = toPadding(opts.backdropPadding);
+      ctx.fillStyle = backdropColor;
+      const backdropLeft = left - padding.left;
+      const backdropTop = top - padding.top;
+      const backdropWidth = right - left + padding.width;
+      const backdropHeight = bottom - top + padding.height;
+      if (Object.values(borderRadius).some((v) => v !== 0)) {
+        ctx.beginPath();
+        addRoundedRectPath(ctx, {
+          x: backdropLeft,
+          y: backdropTop,
+          w: backdropWidth,
+          h: backdropHeight,
+          radius: borderRadius
+        });
+        ctx.fill();
+      } else {
+        ctx.fillRect(backdropLeft, backdropTop, backdropWidth, backdropHeight);
+      }
+    }
+  }
+  function drawPointLabels(scale, labelCount) {
+    const { ctx, options: { pointLabels } } = scale;
+    for (let i = labelCount - 1; i >= 0; i--) {
+      const item = scale._pointLabelItems[i];
+      if (!item.visible) {
+        continue;
+      }
+      const optsAtIndex = pointLabels.setContext(scale.getPointLabelContext(i));
+      drawPointLabelBox(ctx, optsAtIndex, item);
+      const plFont = toFont(optsAtIndex.font);
+      const { x, y, textAlign } = item;
+      renderText(ctx, scale._pointLabels[i], x, y + plFont.lineHeight / 2, plFont, {
+        color: optsAtIndex.color,
+        textAlign,
+        textBaseline: "middle"
+      });
+    }
+  }
+  function pathRadiusLine(scale, radius, circular, labelCount) {
+    const { ctx } = scale;
+    if (circular) {
+      ctx.arc(scale.xCenter, scale.yCenter, radius, 0, TAU);
+    } else {
+      let pointPosition = scale.getPointPosition(0, radius);
+      ctx.moveTo(pointPosition.x, pointPosition.y);
+      for (let i = 1; i < labelCount; i++) {
+        pointPosition = scale.getPointPosition(i, radius);
+        ctx.lineTo(pointPosition.x, pointPosition.y);
+      }
+    }
+  }
+  function drawRadiusLine(scale, gridLineOpts, radius, labelCount, borderOpts) {
+    const ctx = scale.ctx;
+    const circular = gridLineOpts.circular;
+    const { color: color2, lineWidth } = gridLineOpts;
+    if (!circular && !labelCount || !color2 || !lineWidth || radius < 0) {
+      return;
+    }
+    ctx.save();
+    ctx.strokeStyle = color2;
+    ctx.lineWidth = lineWidth;
+    ctx.setLineDash(borderOpts.dash || []);
+    ctx.lineDashOffset = borderOpts.dashOffset;
+    ctx.beginPath();
+    pathRadiusLine(scale, radius, circular, labelCount);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+  function createPointLabelContext(parent, index2, label) {
+    return createContext(parent, {
+      label,
+      index: index2,
+      type: "pointLabel"
+    });
+  }
+  var RadialLinearScale = class extends LinearScaleBase {
+    static id = "radialLinear";
+    static defaults = {
+      display: true,
+      animate: true,
+      position: "chartArea",
+      angleLines: {
+        display: true,
+        lineWidth: 1,
+        borderDash: [],
+        borderDashOffset: 0
+      },
+      grid: {
+        circular: false
+      },
+      startAngle: 0,
+      ticks: {
+        showLabelBackdrop: true,
+        callback: Ticks.formatters.numeric
+      },
+      pointLabels: {
+        backdropColor: void 0,
+        backdropPadding: 2,
+        display: true,
+        font: {
+          size: 10
+        },
+        callback(label) {
+          return label;
+        },
+        padding: 5,
+        centerPointLabels: false
+      }
+    };
+    static defaultRoutes = {
+      "angleLines.color": "borderColor",
+      "pointLabels.color": "color",
+      "ticks.color": "color"
+    };
+    static descriptors = {
+      angleLines: {
+        _fallback: "grid"
+      }
+    };
+    constructor(cfg) {
+      super(cfg);
+      this.xCenter = void 0;
+      this.yCenter = void 0;
+      this.drawingArea = void 0;
+      this._pointLabels = [];
+      this._pointLabelItems = [];
+    }
+    setDimensions() {
+      const padding = this._padding = toPadding(getTickBackdropHeight(this.options) / 2);
+      const w = this.width = this.maxWidth - padding.width;
+      const h = this.height = this.maxHeight - padding.height;
+      this.xCenter = Math.floor(this.left + w / 2 + padding.left);
+      this.yCenter = Math.floor(this.top + h / 2 + padding.top);
+      this.drawingArea = Math.floor(Math.min(w, h) / 2);
+    }
+    determineDataLimits() {
+      const { min, max } = this.getMinMax(false);
+      this.min = isNumberFinite(min) && !isNaN(min) ? min : 0;
+      this.max = isNumberFinite(max) && !isNaN(max) ? max : 0;
+      this.handleTickRangeOptions();
+    }
+    computeTickLimit() {
+      return Math.ceil(this.drawingArea / getTickBackdropHeight(this.options));
+    }
+    generateTickLabels(ticks) {
+      LinearScaleBase.prototype.generateTickLabels.call(this, ticks);
+      this._pointLabels = this.getLabels().map((value2, index2) => {
+        const label = callback(this.options.pointLabels.callback, [
+          value2,
+          index2
+        ], this);
+        return label || label === 0 ? label : "";
+      }).filter((v, i) => this.chart.getDataVisibility(i));
+    }
+    fit() {
+      const opts = this.options;
+      if (opts.display && opts.pointLabels.display) {
+        fitWithPointLabels(this);
+      } else {
+        this.setCenterPoint(0, 0, 0, 0);
+      }
+    }
+    setCenterPoint(leftMovement, rightMovement, topMovement, bottomMovement) {
+      this.xCenter += Math.floor((leftMovement - rightMovement) / 2);
+      this.yCenter += Math.floor((topMovement - bottomMovement) / 2);
+      this.drawingArea -= Math.min(this.drawingArea / 2, Math.max(leftMovement, rightMovement, topMovement, bottomMovement));
+    }
+    getIndexAngle(index2) {
+      const angleMultiplier = TAU / (this._pointLabels.length || 1);
+      const startAngle = this.options.startAngle || 0;
+      return _normalizeAngle(index2 * angleMultiplier + toRadians(startAngle));
+    }
+    getDistanceFromCenterForValue(value2) {
+      if (isNullOrUndef(value2)) {
+        return NaN;
+      }
+      const scalingFactor = this.drawingArea / (this.max - this.min);
+      if (this.options.reverse) {
+        return (this.max - value2) * scalingFactor;
+      }
+      return (value2 - this.min) * scalingFactor;
+    }
+    getValueForDistanceFromCenter(distance) {
+      if (isNullOrUndef(distance)) {
+        return NaN;
+      }
+      const scaledDistance = distance / (this.drawingArea / (this.max - this.min));
+      return this.options.reverse ? this.max - scaledDistance : this.min + scaledDistance;
+    }
+    getPointLabelContext(index2) {
+      const pointLabels = this._pointLabels || [];
+      if (index2 >= 0 && index2 < pointLabels.length) {
+        const pointLabel = pointLabels[index2];
+        return createPointLabelContext(this.getContext(), index2, pointLabel);
+      }
+    }
+    getPointPosition(index2, distanceFromCenter, additionalAngle = 0) {
+      const angle = this.getIndexAngle(index2) - HALF_PI + additionalAngle;
+      return {
+        x: Math.cos(angle) * distanceFromCenter + this.xCenter,
+        y: Math.sin(angle) * distanceFromCenter + this.yCenter,
+        angle
+      };
+    }
+    getPointPositionForValue(index2, value2) {
+      return this.getPointPosition(index2, this.getDistanceFromCenterForValue(value2));
+    }
+    getBasePosition(index2) {
+      return this.getPointPositionForValue(index2 || 0, this.getBaseValue());
+    }
+    getPointLabelPosition(index2) {
+      const { left, top, right, bottom } = this._pointLabelItems[index2];
+      return {
+        left,
+        top,
+        right,
+        bottom
+      };
+    }
+    drawBackground() {
+      const { backgroundColor, grid: { circular } } = this.options;
+      if (backgroundColor) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.beginPath();
+        pathRadiusLine(this, this.getDistanceFromCenterForValue(this._endValue), circular, this._pointLabels.length);
+        ctx.closePath();
+        ctx.fillStyle = backgroundColor;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    drawGrid() {
+      const ctx = this.ctx;
+      const opts = this.options;
+      const { angleLines, grid, border } = opts;
+      const labelCount = this._pointLabels.length;
+      let i, offset, position;
+      if (opts.pointLabels.display) {
+        drawPointLabels(this, labelCount);
+      }
+      if (grid.display) {
+        this.ticks.forEach((tick, index2) => {
+          if (index2 !== 0 || index2 === 0 && this.min < 0) {
+            offset = this.getDistanceFromCenterForValue(tick.value);
+            const context = this.getContext(index2);
+            const optsAtIndex = grid.setContext(context);
+            const optsAtIndexBorder = border.setContext(context);
+            drawRadiusLine(this, optsAtIndex, offset, labelCount, optsAtIndexBorder);
+          }
+        });
+      }
+      if (angleLines.display) {
+        ctx.save();
+        for (i = labelCount - 1; i >= 0; i--) {
+          const optsAtIndex = angleLines.setContext(this.getPointLabelContext(i));
+          const { color: color2, lineWidth } = optsAtIndex;
+          if (!lineWidth || !color2) {
+            continue;
+          }
+          ctx.lineWidth = lineWidth;
+          ctx.strokeStyle = color2;
+          ctx.setLineDash(optsAtIndex.borderDash);
+          ctx.lineDashOffset = optsAtIndex.borderDashOffset;
+          offset = this.getDistanceFromCenterForValue(opts.reverse ? this.min : this.max);
+          position = this.getPointPosition(i, offset);
+          ctx.beginPath();
+          ctx.moveTo(this.xCenter, this.yCenter);
+          ctx.lineTo(position.x, position.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+    drawBorder() {
+    }
+    drawLabels() {
+      const ctx = this.ctx;
+      const opts = this.options;
+      const tickOpts = opts.ticks;
+      if (!tickOpts.display) {
+        return;
+      }
+      const startAngle = this.getIndexAngle(0);
+      let offset, width;
+      ctx.save();
+      ctx.translate(this.xCenter, this.yCenter);
+      ctx.rotate(startAngle);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      this.ticks.forEach((tick, index2) => {
+        if (index2 === 0 && this.min >= 0 && !opts.reverse) {
+          return;
+        }
+        const optsAtIndex = tickOpts.setContext(this.getContext(index2));
+        const tickFont = toFont(optsAtIndex.font);
+        offset = this.getDistanceFromCenterForValue(this.ticks[index2].value);
+        if (optsAtIndex.showLabelBackdrop) {
+          ctx.font = tickFont.string;
+          width = ctx.measureText(tick.label).width;
+          ctx.fillStyle = optsAtIndex.backdropColor;
+          const padding = toPadding(optsAtIndex.backdropPadding);
+          ctx.fillRect(-width / 2 - padding.left, -offset - tickFont.size / 2 - padding.top, width + padding.width, tickFont.size + padding.height);
+        }
+        renderText(ctx, tick.label, 0, -offset, tickFont, {
+          color: optsAtIndex.color,
+          strokeColor: optsAtIndex.textStrokeColor,
+          strokeWidth: optsAtIndex.textStrokeWidth
+        });
+      });
+      ctx.restore();
+    }
+    drawTitle() {
+    }
+  };
+  var INTERVALS = {
+    millisecond: {
+      common: true,
+      size: 1,
+      steps: 1e3
+    },
+    second: {
+      common: true,
+      size: 1e3,
+      steps: 60
+    },
+    minute: {
+      common: true,
+      size: 6e4,
+      steps: 60
+    },
+    hour: {
+      common: true,
+      size: 36e5,
+      steps: 24
+    },
+    day: {
+      common: true,
+      size: 864e5,
+      steps: 30
+    },
+    week: {
+      common: false,
+      size: 6048e5,
+      steps: 4
+    },
+    month: {
+      common: true,
+      size: 2628e6,
+      steps: 12
+    },
+    quarter: {
+      common: false,
+      size: 7884e6,
+      steps: 4
+    },
+    year: {
+      common: true,
+      size: 3154e7
+    }
+  };
+  var UNITS = /* @__PURE__ */ Object.keys(INTERVALS);
+  function sorter(a, b) {
+    return a - b;
+  }
+  function parse2(scale, input) {
+    if (isNullOrUndef(input)) {
+      return null;
+    }
+    const adapter = scale._adapter;
+    const { parser, round: round2, isoWeekday } = scale._parseOpts;
+    let value2 = input;
+    if (typeof parser === "function") {
+      value2 = parser(value2);
+    }
+    if (!isNumberFinite(value2)) {
+      value2 = typeof parser === "string" ? adapter.parse(value2, parser) : adapter.parse(value2);
+    }
+    if (value2 === null) {
+      return null;
+    }
+    if (round2) {
+      value2 = round2 === "week" && (isNumber(isoWeekday) || isoWeekday === true) ? adapter.startOf(value2, "isoWeek", isoWeekday) : adapter.startOf(value2, round2);
+    }
+    return +value2;
+  }
+  function determineUnitForAutoTicks(minUnit, min, max, capacity) {
+    const ilen = UNITS.length;
+    for (let i = UNITS.indexOf(minUnit); i < ilen - 1; ++i) {
+      const interval = INTERVALS[UNITS[i]];
+      const factor = interval.steps ? interval.steps : Number.MAX_SAFE_INTEGER;
+      if (interval.common && Math.ceil((max - min) / (factor * interval.size)) <= capacity) {
+        return UNITS[i];
+      }
+    }
+    return UNITS[ilen - 1];
+  }
+  function determineUnitForFormatting(scale, numTicks, minUnit, min, max) {
+    for (let i = UNITS.length - 1; i >= UNITS.indexOf(minUnit); i--) {
+      const unit = UNITS[i];
+      if (INTERVALS[unit].common && scale._adapter.diff(max, min, unit) >= numTicks - 1) {
+        return unit;
+      }
+    }
+    return UNITS[minUnit ? UNITS.indexOf(minUnit) : 0];
+  }
+  function determineMajorUnit(unit) {
+    for (let i = UNITS.indexOf(unit) + 1, ilen = UNITS.length; i < ilen; ++i) {
+      if (INTERVALS[UNITS[i]].common) {
+        return UNITS[i];
+      }
+    }
+  }
+  function addTick(ticks, time, timestamps) {
+    if (!timestamps) {
+      ticks[time] = true;
+    } else if (timestamps.length) {
+      const { lo, hi } = _lookup(timestamps, time);
+      const timestamp = timestamps[lo] >= time ? timestamps[lo] : timestamps[hi];
+      ticks[timestamp] = true;
+    }
+  }
+  function setMajorTicks(scale, ticks, map3, majorUnit) {
+    const adapter = scale._adapter;
+    const first = +adapter.startOf(ticks[0].value, majorUnit);
+    const last = ticks[ticks.length - 1].value;
+    let major, index2;
+    for (major = first; major <= last; major = +adapter.add(major, 1, majorUnit)) {
+      index2 = map3[major];
+      if (index2 >= 0) {
+        ticks[index2].major = true;
+      }
+    }
+    return ticks;
+  }
+  function ticksFromTimestamps(scale, values, majorUnit) {
+    const ticks = [];
+    const map3 = {};
+    const ilen = values.length;
+    let i, value2;
+    for (i = 0; i < ilen; ++i) {
+      value2 = values[i];
+      map3[value2] = i;
+      ticks.push({
+        value: value2,
+        major: false
+      });
+    }
+    return ilen === 0 || !majorUnit ? ticks : setMajorTicks(scale, ticks, map3, majorUnit);
+  }
+  var TimeScale = class extends Scale {
+    static id = "time";
+    static defaults = {
+      bounds: "data",
+      adapters: {},
+      time: {
+        parser: false,
+        unit: false,
+        round: false,
+        isoWeekday: false,
+        minUnit: "millisecond",
+        displayFormats: {}
+      },
+      ticks: {
+        source: "auto",
+        callback: false,
+        major: {
+          enabled: false
+        }
+      }
+    };
+    constructor(props) {
+      super(props);
+      this._cache = {
+        data: [],
+        labels: [],
+        all: []
+      };
+      this._unit = "day";
+      this._majorUnit = void 0;
+      this._offsets = {};
+      this._normalized = false;
+      this._parseOpts = void 0;
+    }
+    init(scaleOpts, opts = {}) {
+      const time = scaleOpts.time || (scaleOpts.time = {});
+      const adapter = this._adapter = new adapters._date(scaleOpts.adapters.date);
+      adapter.init(opts);
+      mergeIf(time.displayFormats, adapter.formats());
+      this._parseOpts = {
+        parser: time.parser,
+        round: time.round,
+        isoWeekday: time.isoWeekday
+      };
+      super.init(scaleOpts);
+      this._normalized = opts.normalized;
+    }
+    parse(raw, index2) {
+      if (raw === void 0) {
+        return null;
+      }
+      return parse2(this, raw);
+    }
+    beforeLayout() {
+      super.beforeLayout();
+      this._cache = {
+        data: [],
+        labels: [],
+        all: []
+      };
+    }
+    determineDataLimits() {
+      const options = this.options;
+      const adapter = this._adapter;
+      const unit = options.time.unit || "day";
+      let { min, max, minDefined, maxDefined } = this.getUserBounds();
+      function _applyBounds(bounds) {
+        if (!minDefined && !isNaN(bounds.min)) {
+          min = Math.min(min, bounds.min);
+        }
+        if (!maxDefined && !isNaN(bounds.max)) {
+          max = Math.max(max, bounds.max);
+        }
+      }
+      if (!minDefined || !maxDefined) {
+        _applyBounds(this._getLabelBounds());
+        if (options.bounds !== "ticks" || options.ticks.source !== "labels") {
+          _applyBounds(this.getMinMax(false));
+        }
+      }
+      min = isNumberFinite(min) && !isNaN(min) ? min : +adapter.startOf(Date.now(), unit);
+      max = isNumberFinite(max) && !isNaN(max) ? max : +adapter.endOf(Date.now(), unit) + 1;
+      this.min = Math.min(min, max - 1);
+      this.max = Math.max(min + 1, max);
+    }
+    _getLabelBounds() {
+      const arr = this.getLabelTimestamps();
+      let min = Number.POSITIVE_INFINITY;
+      let max = Number.NEGATIVE_INFINITY;
+      if (arr.length) {
+        min = arr[0];
+        max = arr[arr.length - 1];
+      }
+      return {
+        min,
+        max
+      };
+    }
+    buildTicks() {
+      const options = this.options;
+      const timeOpts = options.time;
+      const tickOpts = options.ticks;
+      const timestamps = tickOpts.source === "labels" ? this.getLabelTimestamps() : this._generate();
+      if (options.bounds === "ticks" && timestamps.length) {
+        this.min = this._userMin || timestamps[0];
+        this.max = this._userMax || timestamps[timestamps.length - 1];
+      }
+      const min = this.min;
+      const max = this.max;
+      const ticks = _filterBetween(timestamps, min, max);
+      this._unit = timeOpts.unit || (tickOpts.autoSkip ? determineUnitForAutoTicks(timeOpts.minUnit, this.min, this.max, this._getLabelCapacity(min)) : determineUnitForFormatting(this, ticks.length, timeOpts.minUnit, this.min, this.max));
+      this._majorUnit = !tickOpts.major.enabled || this._unit === "year" ? void 0 : determineMajorUnit(this._unit);
+      this.initOffsets(timestamps);
+      if (options.reverse) {
+        ticks.reverse();
+      }
+      return ticksFromTimestamps(this, ticks, this._majorUnit);
+    }
+    afterAutoSkip() {
+      if (this.options.offsetAfterAutoskip) {
+        this.initOffsets(this.ticks.map((tick) => +tick.value));
+      }
+    }
+    initOffsets(timestamps = []) {
+      let start = 0;
+      let end = 0;
+      let first, last;
+      if (this.options.offset && timestamps.length) {
+        first = this.getDecimalForValue(timestamps[0]);
+        if (timestamps.length === 1) {
+          start = 1 - first;
+        } else {
+          start = (this.getDecimalForValue(timestamps[1]) - first) / 2;
+        }
+        last = this.getDecimalForValue(timestamps[timestamps.length - 1]);
+        if (timestamps.length === 1) {
+          end = last;
+        } else {
+          end = (last - this.getDecimalForValue(timestamps[timestamps.length - 2])) / 2;
+        }
+      }
+      const limit = timestamps.length < 3 ? 0.5 : 0.25;
+      start = _limitValue(start, 0, limit);
+      end = _limitValue(end, 0, limit);
+      this._offsets = {
+        start,
+        end,
+        factor: 1 / (start + 1 + end)
+      };
+    }
+    _generate() {
+      const adapter = this._adapter;
+      const min = this.min;
+      const max = this.max;
+      const options = this.options;
+      const timeOpts = options.time;
+      const minor = timeOpts.unit || determineUnitForAutoTicks(timeOpts.minUnit, min, max, this._getLabelCapacity(min));
+      const stepSize = valueOrDefault(options.ticks.stepSize, 1);
+      const weekday = minor === "week" ? timeOpts.isoWeekday : false;
+      const hasWeekday = isNumber(weekday) || weekday === true;
+      const ticks = {};
+      let first = min;
+      let time, count;
+      if (hasWeekday) {
+        first = +adapter.startOf(first, "isoWeek", weekday);
+      }
+      first = +adapter.startOf(first, hasWeekday ? "day" : minor);
+      if (adapter.diff(max, min, minor) > 1e5 * stepSize) {
+        throw new Error(min + " and " + max + " are too far apart with stepSize of " + stepSize + " " + minor);
+      }
+      const timestamps = options.ticks.source === "data" && this.getDataTimestamps();
+      for (time = first, count = 0; time < max; time = +adapter.add(time, stepSize, minor), count++) {
+        addTick(ticks, time, timestamps);
+      }
+      if (time === max || options.bounds === "ticks" || count === 1) {
+        addTick(ticks, time, timestamps);
+      }
+      return Object.keys(ticks).sort(sorter).map((x) => +x);
+    }
+    getLabelForValue(value2) {
+      const adapter = this._adapter;
+      const timeOpts = this.options.time;
+      if (timeOpts.tooltipFormat) {
+        return adapter.format(value2, timeOpts.tooltipFormat);
+      }
+      return adapter.format(value2, timeOpts.displayFormats.datetime);
+    }
+    format(value2, format) {
+      const options = this.options;
+      const formats = options.time.displayFormats;
+      const unit = this._unit;
+      const fmt = format || formats[unit];
+      return this._adapter.format(value2, fmt);
+    }
+    _tickFormatFunction(time, index2, ticks, format) {
+      const options = this.options;
+      const formatter = options.ticks.callback;
+      if (formatter) {
+        return callback(formatter, [
+          time,
+          index2,
+          ticks
+        ], this);
+      }
+      const formats = options.time.displayFormats;
+      const unit = this._unit;
+      const majorUnit = this._majorUnit;
+      const minorFormat = unit && formats[unit];
+      const majorFormat = majorUnit && formats[majorUnit];
+      const tick = ticks[index2];
+      const major = majorUnit && majorFormat && tick && tick.major;
+      return this._adapter.format(time, format || (major ? majorFormat : minorFormat));
+    }
+    generateTickLabels(ticks) {
+      let i, ilen, tick;
+      for (i = 0, ilen = ticks.length; i < ilen; ++i) {
+        tick = ticks[i];
+        tick.label = this._tickFormatFunction(tick.value, i, ticks);
+      }
+    }
+    getDecimalForValue(value2) {
+      return value2 === null ? NaN : (value2 - this.min) / (this.max - this.min);
+    }
+    getPixelForValue(value2) {
+      const offsets = this._offsets;
+      const pos = this.getDecimalForValue(value2);
+      return this.getPixelForDecimal((offsets.start + pos) * offsets.factor);
+    }
+    getValueForPixel(pixel) {
+      const offsets = this._offsets;
+      const pos = this.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
+      return this.min + pos * (this.max - this.min);
+    }
+    _getLabelSize(label) {
+      const ticksOpts = this.options.ticks;
+      const tickLabelWidth = this.ctx.measureText(label).width;
+      const angle = toRadians(this.isHorizontal() ? ticksOpts.maxRotation : ticksOpts.minRotation);
+      const cosRotation = Math.cos(angle);
+      const sinRotation = Math.sin(angle);
+      const tickFontSize = this._resolveTickFontOptions(0).size;
+      return {
+        w: tickLabelWidth * cosRotation + tickFontSize * sinRotation,
+        h: tickLabelWidth * sinRotation + tickFontSize * cosRotation
+      };
+    }
+    _getLabelCapacity(exampleTime) {
+      const timeOpts = this.options.time;
+      const displayFormats = timeOpts.displayFormats;
+      const format = displayFormats[timeOpts.unit] || displayFormats.millisecond;
+      const exampleLabel = this._tickFormatFunction(exampleTime, 0, ticksFromTimestamps(this, [
+        exampleTime
+      ], this._majorUnit), format);
+      const size = this._getLabelSize(exampleLabel);
+      const capacity = Math.floor(this.isHorizontal() ? this.width / size.w : this.height / size.h) - 1;
+      return capacity > 0 ? capacity : 1;
+    }
+    getDataTimestamps() {
+      let timestamps = this._cache.data || [];
+      let i, ilen;
+      if (timestamps.length) {
+        return timestamps;
+      }
+      const metas = this.getMatchingVisibleMetas();
+      if (this._normalized && metas.length) {
+        return this._cache.data = metas[0].controller.getAllParsedValues(this);
+      }
+      for (i = 0, ilen = metas.length; i < ilen; ++i) {
+        timestamps = timestamps.concat(metas[i].controller.getAllParsedValues(this));
+      }
+      return this._cache.data = this.normalize(timestamps);
+    }
+    getLabelTimestamps() {
+      const timestamps = this._cache.labels || [];
+      let i, ilen;
+      if (timestamps.length) {
+        return timestamps;
+      }
+      const labels = this.getLabels();
+      for (i = 0, ilen = labels.length; i < ilen; ++i) {
+        timestamps.push(parse2(this, labels[i]));
+      }
+      return this._cache.labels = this._normalized ? timestamps : this.normalize(timestamps);
+    }
+    normalize(values) {
+      return _arrayUnique(values.sort(sorter));
+    }
+  };
+  function interpolate2(table, val, reverse) {
+    let lo = 0;
+    let hi = table.length - 1;
+    let prevSource, nextSource, prevTarget, nextTarget;
+    if (reverse) {
+      if (val >= table[lo].pos && val <= table[hi].pos) {
+        ({ lo, hi } = _lookupByKey(table, "pos", val));
+      }
+      ({ pos: prevSource, time: prevTarget } = table[lo]);
+      ({ pos: nextSource, time: nextTarget } = table[hi]);
+    } else {
+      if (val >= table[lo].time && val <= table[hi].time) {
+        ({ lo, hi } = _lookupByKey(table, "time", val));
+      }
+      ({ time: prevSource, pos: prevTarget } = table[lo]);
+      ({ time: nextSource, pos: nextTarget } = table[hi]);
+    }
+    const span = nextSource - prevSource;
+    return span ? prevTarget + (nextTarget - prevTarget) * (val - prevSource) / span : prevTarget;
+  }
+  var TimeSeriesScale = class extends TimeScale {
+    static id = "timeseries";
+    static defaults = TimeScale.defaults;
+    constructor(props) {
+      super(props);
+      this._table = [];
+      this._minPos = void 0;
+      this._tableRange = void 0;
+    }
+    initOffsets() {
+      const timestamps = this._getTimestampsForTable();
+      const table = this._table = this.buildLookupTable(timestamps);
+      this._minPos = interpolate2(table, this.min);
+      this._tableRange = interpolate2(table, this.max) - this._minPos;
+      super.initOffsets(timestamps);
+    }
+    buildLookupTable(timestamps) {
+      const { min, max } = this;
+      const items = [];
+      const table = [];
+      let i, ilen, prev, curr, next;
+      for (i = 0, ilen = timestamps.length; i < ilen; ++i) {
+        curr = timestamps[i];
+        if (curr >= min && curr <= max) {
+          items.push(curr);
+        }
+      }
+      if (items.length < 2) {
+        return [
+          {
+            time: min,
+            pos: 0
+          },
+          {
+            time: max,
+            pos: 1
+          }
+        ];
+      }
+      for (i = 0, ilen = items.length; i < ilen; ++i) {
+        next = items[i + 1];
+        prev = items[i - 1];
+        curr = items[i];
+        if (Math.round((next + prev) / 2) !== curr) {
+          table.push({
+            time: curr,
+            pos: i / (ilen - 1)
+          });
+        }
+      }
+      return table;
+    }
+    _generate() {
+      const min = this.min;
+      const max = this.max;
+      let timestamps = super.getDataTimestamps();
+      if (!timestamps.includes(min) || !timestamps.length) {
+        timestamps.splice(0, 0, min);
+      }
+      if (!timestamps.includes(max) || timestamps.length === 1) {
+        timestamps.push(max);
+      }
+      return timestamps.sort((a, b) => a - b);
+    }
+    _getTimestampsForTable() {
+      let timestamps = this._cache.all || [];
+      if (timestamps.length) {
+        return timestamps;
+      }
+      const data = this.getDataTimestamps();
+      const label = this.getLabelTimestamps();
+      if (data.length && label.length) {
+        timestamps = this.normalize(data.concat(label));
+      } else {
+        timestamps = data.length ? data : label;
+      }
+      timestamps = this._cache.all = timestamps;
+      return timestamps;
+    }
+    getDecimalForValue(value2) {
+      return (interpolate2(this._table, value2) - this._minPos) / this._tableRange;
+    }
+    getValueForPixel(pixel) {
+      const offsets = this._offsets;
+      const decimal = this.getDecimalForPixel(pixel) / offsets.factor - offsets.end;
+      return interpolate2(this._table, decimal * this._tableRange + this._minPos, true);
+    }
+  };
+  var scales = /* @__PURE__ */ Object.freeze({
+    __proto__: null,
+    CategoryScale,
+    LinearScale,
+    LogarithmicScale,
+    RadialLinearScale,
+    TimeScale,
+    TimeSeriesScale
+  });
+  var registerables = [
+    controllers,
+    elements,
+    plugins,
+    scales
+  ];
+
+  // node_modules/chart.js/auto/auto.js
+  Chart.register(...registerables);
+
+  // scripts/controllers/DashboardPage.ts
+  var evolutionChart = null;
+  var gameTypeChart = null;
+  var rivalChart = null;
+  var globalMatchHistory = [];
+  var currentPage = 1;
+  var itemsPerPage = 10;
+  function render8() {
+    return DashboardPage_default;
+  }
+  function afterRender4() {
+    const totalGame = document.getElementById("dashboard-total-games");
+    const avgScore = document.getElementById("dashboard-avg-score");
+    const playTime = document.getElementById("dashboard-play-time");
+    const wins = document.getElementById("dashboard-wins");
+    const losses = document.getElementById("dashboard-losses");
+    const winRateCalcul = document.getElementById("dashboard-win-rate");
+    const evolutionCanvas = document.getElementById("dashboard-evolution-graph");
+    const gameTypeCanvas = document.getElementById("dashboard-game-chart");
+    const rivalCanvas = document.getElementById("dashboard-rival-podium");
+    const filterOpponent = document.getElementById("filter-opponent");
+    const filterMode = document.getElementById("filter-mode");
+    const sortOrder = document.getElementById("sort-order");
+    const applyFilterButton = document.getElementById("apply-filters");
+    const currentTheme = localStorage.getItem("userTheme") || "basic";
+    applyTheme(currentTheme);
+    const loadUserData = async () => {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        return;
+      }
+      try {
+        const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
+        if (statResponse.ok) {
+          const jsonResponse = await statResponse.json();
+          const statsData = jsonResponse.data || jsonResponse;
+          if (statsData) {
+            if (totalGame) totalGame.innerText = statsData.total_games.toString();
+            if (wins) wins.innerText = statsData.wins.toString();
+            if (losses) losses.innerText = statsData.losses.toString();
+            if (avgScore) avgScore.innerText = statsData.averageScore?.toString() || "0";
+            if (winRateCalcul && statsData.total_games > 0) {
+              winRateCalcul.innerText = `${Math.round(statsData.wins / statsData.total_games * 100)}%`;
+            }
+            if (playTime) {
+              const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
+              playTime.innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min`;
+            }
+          }
+        }
+        const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`);
+        if (historyResponse.ok) {
+          const historyJson = await historyResponse.json();
+          const historyData = historyJson.data || [];
+          globalMatchHistory = historyData;
+          renderGameTypeChart(gameTypeCanvas, calculateGameDistribution(historyData));
+          renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
+          renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
+          setupFilters();
+        }
+      } catch (error) {
+        console.error("Error on dashboard:", error);
+      }
+    };
+    loadUserData();
+    function setupFilters() {
+      const prevButton = document.getElementById("prev-page");
+      const nextButton = document.getElementById("next-page");
+      const pageInfo = document.getElementById("page-info");
+      let totalPages = 1;
+      if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
+        return;
+      }
+      const applyFiltersAndSort = () => {
+        const opponentValue = filterOpponent.value.toLowerCase().trim();
+        const modeValue = filterMode.value;
+        const sortValue = sortOrder.value;
+        let resultData = globalMatchHistory.filter((match) => {
+          const matchOpponent = (match.opponent_alias || "").toLowerCase();
+          const matchType = (match.game_type || "").toLowerCase();
+          const matchName = opponentValue === "" || matchOpponent.includes(opponentValue);
+          const matchMode = modeValue === "all" || matchType.includes(modeValue);
+          return matchName && matchMode;
+        });
+        resultData.sort((a, b) => {
+          const dateA = new Date(a.finished_at).getTime();
+          const dateB = new Date(b.finished_at).getTime();
+          const nameA = (a.opponent_alias || "").toLowerCase();
+          const nameB = (b.opponent_alias || "").toLowerCase();
+          switch (sortValue) {
+            case "date-ascending":
+              return dateA - dateB;
+            case "date-descending":
+              return dateB - dateA;
+            case "name-ascending":
+              return nameA.localeCompare(nameB);
+            case "name-descending":
+              return nameB.localeCompare(nameA);
+              ;
+            default:
+              return dateB - dateA;
+          }
+        });
+        totalPages = Math.ceil(resultData.length / itemsPerPage) || 1;
+        if (currentPage > totalPages) {
+          currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+          currentPage = 1;
+        }
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginatedData = resultData.slice(start, end);
+        renderMatchHistoryList(paginatedData);
+        if (pageInfo) {
+          pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+        }
+        if (prevButton) {
+          prevButton.disabled = currentPage === 1;
+          prevButton.classList.toggle("opacity-50", currentPage === 1);
+          prevButton.classList.toggle("cursor-not-allowed", currentPage === 1);
+        }
+        if (nextButton) {
+          nextButton.disabled = currentPage === totalPages;
+          nextButton.classList.toggle("opacity-50", currentPage === totalPages);
+          nextButton.classList.toggle("cursor-not-allowed", currentPage === totalPages);
+        }
+      };
+      const resetPageAndApply = () => {
+        currentPage = 1;
+        applyFiltersAndSort();
+      };
+      applyFilterButton.addEventListener("click", resetPageAndApply);
+      filterOpponent.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+          resetPageAndApply();
+        }
+      });
+      filterMode.addEventListener("change", resetPageAndApply);
+      sortOrder.addEventListener("change", resetPageAndApply);
+      prevButton.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPage--;
+          applyFiltersAndSort();
+        }
+      });
+      nextButton.addEventListener("click", () => {
+        if (currentPage < totalPages) {
+          currentPage++;
+          applyFiltersAndSort();
+        }
+      });
+      applyFiltersAndSort();
+    }
+    function renderMatchHistoryList(history) {
+      const listContainer = document.getElementById("match-history-list");
+      if (!listContainer) {
+        return;
+      }
+      listContainer.innerHTML = "";
+      if (history.length === 0) {
+        listContainer.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 italic">No matches yet.</td></tr>`;
+        return;
+      }
+      history.forEach((match) => {
+        const date = new Date(match.finished_at);
+        const dateString = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
+        const isWin = match.is_winner === 1;
+        const resultText = isWin ? "VICTORY" : "DEFEAT";
+        const resultColor = isWin ? "text-green-600" : "text-red-500";
+        const scoreString = `${match.my_score} - ${match.opponent_score !== void 0 ? match.opponent_score : 0}`;
+        const roundString = match.round ? match.round : match.game_type === "tournament" ? "Final" : "1v1";
+        const row = document.createElement("tr");
+        row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
+        row.innerHTML = `
+				<td class="py-2 text-gray-500">${dateString}</td>
+				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${match.opponent_alias}">${match.opponent_alias || "Unknown"}</td>
+				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+				<td class="py-2 font-mono text-gray-500 capitalize">${match.game_type || "Local"}</td>
+				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
+			`;
+        listContainer.appendChild(row);
+      });
+    }
+    function calculateGameDistribution(history) {
+      const graph = { local: 0, remote: 0, tournament: 0 };
+      history.forEach((match) => {
+        const type = (match.game_type || "").toLowerCase();
+        if (type.includes("tournament")) {
+          graph.tournament++;
+        } else if (type.includes("remote")) {
+          graph.remote++;
+        } else {
+          graph.local++;
+        }
+      });
+      return graph;
+    }
+    function calculateEvolutionData(history) {
+      if (!history || history.length === 0) {
+        return { labels: ["Start"], data: [0] };
+      }
+      const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime());
+      const labels = [];
+      const netScoreData = [];
+      let currentNetScore = 0;
+      sorted.forEach((match) => {
+        const date = new Date(match.finished_at);
+        const dateLabel = `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+        if (match.is_winner === 1) {
+          currentNetScore++;
+        } else {
+          currentNetScore--;
+        }
+        labels.push(dateLabel);
+        netScoreData.push(currentNetScore);
+      });
+      return { labels, data: netScoreData };
+    }
+    function calculateRivalsPodium(history) {
+      const rivalsMap = {};
+      history.forEach((match) => {
+        if (match.opponent_alias && match.opponent_alias !== "Unknown") {
+          rivalsMap[match.opponent_alias] = (rivalsMap[match.opponent_alias] || 0) + 1;
+        }
+      });
+      const sortedRivals = Object.entries(rivalsMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      if (sortedRivals.length === 0) {
+        return { labels: [], data: [], colors: [], realCounts: [] };
+      }
+      const podiumLabels = [];
+      const podiumHeights = [];
+      const podiumRealCounts = [];
+      const podiumColors = [];
+      if (sortedRivals.length >= 2) {
+        podiumLabels.push(sortedRivals[1][0]);
+        podiumHeights.push(2);
+        podiumRealCounts.push(sortedRivals[1][1]);
+        podiumColors.push("rgba(192, 192, 192, 0.8)");
+      }
+      if (sortedRivals.length >= 1) {
+        podiumLabels.push(sortedRivals[0][0]);
+        podiumHeights.push(3);
+        podiumRealCounts.push(sortedRivals[0][1]);
+        podiumColors.push("rgba(255, 215, 0, 0.8)");
+      }
+      if (sortedRivals.length >= 3) {
+        podiumLabels.push(sortedRivals[2][0]);
+        podiumHeights.push(1);
+        podiumRealCounts.push(sortedRivals[2][1]);
+        podiumColors.push("rgba(205, 127, 50, 0.8)");
+      }
+      return { labels: podiumLabels, data: podiumHeights, realCounts: podiumRealCounts, colors: podiumColors };
+    }
+    function renderEvolutionChart(canvas, chartData) {
+      if (!canvas) {
+        return;
+      }
+      if (evolutionChart) {
+        evolutionChart.destroy();
+      }
+      const mainColor = "rgba(59, 130, 246, 1)";
+      const bgColor = "rgba(59, 130, 246, 0.1)";
+      evolutionChart = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: "Net Score",
+            data: chartData.data,
+            borderColor: mainColor,
+            backgroundColor: bgColor,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 2,
+            pointHoverRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? "#666" : "#eee", lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
+        }
+      });
+    }
+    function renderGameTypeChart(canvas, graph) {
+      if (!canvas) {
+        return;
+      }
+      if (gameTypeChart) {
+        gameTypeChart.destroy();
+      }
+      const total = graph.local + graph.remote + graph.tournament;
+      const isEmpty = total === 0;
+      gameTypeChart = new Chart(canvas, {
+        type: "pie",
+        data: {
+          labels: isEmpty ? ["No Data"] : ["Local", "Remote", "Tournament"],
+          datasets: [{ data: isEmpty ? [1] : [graph.local, graph.remote, graph.tournament], backgroundColor: isEmpty ? ["#ddd"] : ["#3b82f6", "#a855f7", "#f97316"], borderWidth: 0 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right", labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+    }
+    function renderRivalChart(canvas, data) {
+      if (!canvas) {
+        return;
+      }
+      if (rivalChart) {
+        rivalChart.destroy();
+      }
+      rivalChart = new Chart(canvas, {
+        type: "bar",
+        data: {
+          labels: data.labels,
+          datasets: [{ label: "Games Played", data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1, categoryPercentage: 1 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Games played: ${data.realCounts[context.dataIndex]}` } } },
+          scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: "bold" }, callback: function(val, index2) {
+            const name = data.labels[index2];
+            const count = data.realCounts[index2];
+            const displayName = name.length > 10 ? name.substr(0, 8) + ".." : name;
+            return [`${displayName}`, `(${count} games)`];
+          } } } }
+        }
+      });
+    }
+  }
+
   // scripts/main.ts
-  console.log("TypeScript est pr\xEAt et fonctionnel.");
   var appElement = document.getElementById("app");
-  if (appElement)
-    appElement.innerHTML += '<h2 class="text-green-500 p-4">Test TypeScript: Inject\xE9 avec succ\xE8s! </h2>';
+  var publicRoutes = ["/", "/login", "/register", "/404", "/guest"];
+  var routes = {
+    "/": {
+      render: render4,
+      afterRender: initLandingPage
+    },
+    "/home": {
+      render: render2,
+      afterRender
+    },
+    "/profile": {
+      render: render3,
+      afterRender: afterRender2
+    },
+    "/dashboard": {
+      render: render8,
+      afterRender: afterRender4
+    },
+    "/register": {
+      render: render5,
+      afterRender: registerEvents
+    },
+    "/login": {
+      render,
+      afterRender: loginEvents
+    },
+    "/guest": {
+      render: render6,
+      afterRender: afterRender3
+    },
+    "/game": {
+      render: render7,
+      // La fonction HTML
+      afterRender: () => {
+        const state = window.history.state;
+        const mode = state && state.gameMode ? state.gameMode : "local";
+        initGamePage(mode);
+      }
+    },
+    "/404": {
+      render: NotFoundPage
+    }
+  };
+  var handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        // force l'envoi du cookie HttpOnly au serveur
+        credentials: "include",
+        body: JSON.stringify({})
+        // force le format JSON
+      });
+      console.log("Deconnection from the backend server succeed");
+    } catch (error) {
+      console.error("Error during the deconnection from the server: ", error);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      sessionStorage.clear();
+      window.history.pushState({}, "", "/");
+      const popStateEvent = new PopStateEvent("popstate");
+      window.dispatchEvent(popStateEvent);
+    }
+  };
+  var clearGuestSession = () => {
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("userId");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("userRole");
+    sessionStorage.removeItem("isGuest");
+  };
+  var handleLocationChange = () => {
+    if (!appElement) return;
+    let path = window.location.pathname;
+    if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
+      clearGuestSession();
+    }
+    const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const isGuest = sessionStorage.getItem("isGuest") === "true";
+    if (isGameRunning() && path !== "/game") cleanup();
+    if (path === "/logout") {
+      handleLogout();
+      return;
+    }
+    const navbar = document.getElementById("main-navbar");
+    const userMenuHtml = `
+        <a href="/home" class="text-white hover:underline">Home</a>
+        <a href="/profile" class="text-white hover:underline">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
+    const guestMenuHtml = `
+        <a href="/guest" class="text-white hover:underline">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
+    if (navbar) {
+      if (isGuest) {
+        navbar.style.display = "flex";
+        if (!navbar.innerHTML.includes("Guest Area")) {
+          navbar.innerHTML = guestMenuHtml;
+        }
+      } else if (accessToken) {
+        navbar.style.display = "flex";
+        navbar.classList.add("justify-between");
+        if (!navbar.innerHTML.includes("Dashboard")) {
+          navbar.innerHTML = userMenuHtml;
+        }
+      } else {
+        navbar.style.display = "none";
+      }
+    }
+    const page = routes[path] || routes["/404"];
+    appElement.innerHTML = page.render();
+    if (page.afterRender) {
+      page.afterRender();
+    }
+    if (publicRoutes.includes(path) || isGuest)
+      applyTheme("basic");
+    else {
+      const savedTheme = localStorage.getItem("userTheme") || "basic";
+      applyTheme(savedTheme);
+    }
+    if (path === "/guest" && !isGuest) {
+      window.history.replaceState({}, "", "/");
+      handleLocationChange();
+    }
+  };
+  window.addEventListener("click", (event) => {
+    const target = event.target;
+    const anchor = target.closest("a");
+    if (anchor && anchor.href.startsWith(window.location.origin)) {
+      event.preventDefault();
+      if (isGameRunning()) {
+        event.stopImmediatePropagation();
+        showExitConfirmationModal();
+        return;
+      }
+      const href = anchor.href;
+      if (href === window.location.href) return;
+      window.history.pushState({}, "", href);
+      handleLocationChange();
+    }
+  });
+  window.addEventListener("popstate", () => {
+    if (isGameRunning()) {
+      window.history.pushState(null, "", "/game");
+      showExitConfirmationModal();
+      return;
+    }
+    handleLocationChange();
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    handleLocationChange();
+  });
 })();
+/*! Bundled license information:
+
+@kurkle/color/dist/color.esm.js:
+  (*!
+   * @kurkle/color v0.3.4
+   * https://github.com/kurkle/color#readme
+   * (c) 2024 Jukka Kurkela
+   * Released under the MIT License
+   *)
+
+chart.js/dist/chunks/helpers.dataset.js:
+chart.js/dist/chart.js:
+  (*!
+   * Chart.js v4.5.1
+   * https://www.chartjs.org
+   * (c) 2025 Chart.js Contributors
+   * Released under the MIT License
+   *)
+*/

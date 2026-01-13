@@ -4,6 +4,11 @@
         
 FROM node:20-alpine AS build
 
+# Build tools required for sqlite3 (node-gyp) ///////////// j'ai modifie ici
+RUN apk add --no-cache python3 make g++ \
+    && ln -sf /usr/bin/python3 /usr/bin/python
+
+
 #-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/user
 
@@ -25,6 +30,13 @@ RUN npm run build
 
 FROM node:20-alpine
 
+RUN apk add --no-cache \
+    sqlite \
+    su-exec 
+
+# COPY entrypoint.sh /app/entrypoint.sh
+# RUN chmod +x /app/entrypoint.sh
+
 WORKDIR /app/user
 
 #-----------------------COPY NECESSARY FILES FROM PREVIOUS STEP
@@ -33,16 +45,13 @@ COPY --from=build /app/user/node_modules ./node_modules
 COPY --from=build /app/user/dist ./dist
 
 #-----------------------CREATE A DIRECTORY TO UPLAOD AVATARS
-RUN mkdir -p /app/user/avatars
-
-#-----------------------CREATE A DIRECTORY FOR DATABASE
+# RUN mkdir -p /app/user/avatars
 RUN mkdir -p /app/data
 
-#-----------------------ENV POINTING TO SHARED DB
-ENV DATABASE_URL="file:/app/data/database.sqlite"
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 3004
 
 #-----------------------START PRODUCTION MODE
+# ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["node", "dist/index.js"]
