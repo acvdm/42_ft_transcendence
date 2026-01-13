@@ -50,7 +50,7 @@ export function render(): string {
     html = html.replace(/\{\{chat\.cancel\}\}/g, i18next.t('chat.cancel'));
     html = html.replace(/\{\{chat\.contact\}\}/g, i18next.t('chat.contact'));
     html = html.replace(/\{\{chat\.placeholder\}\}/g, i18next.t('chat.placeholder'));
-    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18next.t('chat.inputplace_holder'));
+    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18next.t('chat.input_placeholder'));
     html = html.replace(/\{\{chat\.view_profile\}\}/g, i18next.t('chat.view_profile'));
     html = html.replace(/\{\{chat\.invite_game\}\}/g, i18next.t('chat.invite_game'));
     html = html.replace(/\{\{chat\.block_user\}\}/g, i18next.t('chat.block_user'));

@@ -39,6 +39,5 @@ export async function initDatabase(): Promise<Database> {
     console.log('TOKENS table created');
 
     return db; // On renvoie la connexion
-
 }
 

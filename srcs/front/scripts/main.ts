@@ -13,6 +13,7 @@ import SocketService from "./services/SocketService";
 /* translations */
 import { initI18n, changeLanguage } from "./i18n";
 import i18next from "./i18n";
+import { access } from "fs";
 
 const appElement = document.getElementById('app');
 
@@ -159,6 +160,40 @@ const handleLocationChange = () => {
         return; 
     }
 
+
+    /* AJOUT POUR CHARGER LA LANGUE SAUVEGARDEE EN DB DANS USER
+//     fastify.get('/users/:id/language', async (request, reply) => 
+// {
+// 	try
+// 	{
+// 		const { id } = request.params as { id: string };
+// 		const userId = Number(id);
+// 		if (!userId) {
+// 			return reply.status(400).send({ error: "Invalid User ID" });
+// 		}
+
+// 		const prefferedLanguage = await getPreferredLanguage(db, userId);
+
+// 		return reply.status(200).send({
+// 			success: true,
+// 			language: prefferedLanguage,
+// 			error: null
+// 		});
+// 	}
+// 	catch (err: any) 
+// 	{
+// 		console.error("Export Auth Error:", err);
+// 		const statusCode = err.statusCode || 500;
+
+// 		return reply.status(statusCode).send({
+// 			success: false,
+// 			// language: prefferedLanguage,
+// 			error: { message: err.message || "Failed to export language"}
+// 		});
+// 	}
+// });
+     */
+
 	//================================================
 	//============= NAVIGATION BAR LOGIC =============
 	//================================================
@@ -192,36 +227,69 @@ const handleLocationChange = () => {
 
             document.addEventListener('click', closeMenu);
         }
-
-        // Choose langage
-        document.querySelectorAll('.lang-select').forEach(btn => {
-            const newBtn = btn.cloneNode(true); 
-            btn.parentNode?.replaceChild(newBtn, btn);
-            
-            newBtn.addEventListener('click', async (e) => {
-                e.stopPropagation(); //pourquoi?
-                const target = e.target as HTMLElement;
-                const lang = target.getAttribute('data-lang');
-                
-                if (lang) {
-                    console.log("Langue changée vers :", lang);
-                    await changeLanguage(lang);
-                    
-                    const display = document.getElementById('current-lang-display');
-                    if (display) display.textContent = lang.toUpperCase();
-
-                    //fermer le menu
-                    const menuContent = document.getElementById('lang-menu-content');
-                    if (menuContent)
-                        menuContent.classList.add('hidden');
-
-                    handleLocationChange();
-                }
-            });
-        });
+        
         const currentLangDisplay = document.getElementById('current-lang-display');
         if (currentLangDisplay)
             currentLangDisplay.textContent = i18next.language.toUpperCase();
+        
+        // Choose langage
+        const langButtons = document.querySelectorAll('.lang-select');
+
+        langButtons.forEach(btn => {
+            const newBtn = btn.cloneNode(true) as HTMLElement;
+            btn.parentNode?.replaceChild(newBtn, btn);
+
+            newBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation(); //pourquoi?
+
+                const lang = (e.currentTarget as HTMLElement).getAttribute('data-lang');
+                const currentLang = i18next.language;
+
+                /* PB ICI ??*/
+                if (lang && lang !== currentLang) 
+                {
+                    console.log("Langue changée vers :", lang);
+                    await changeLanguage(lang);
+
+                    const userId = localStorage.getItem('userId');
+                    const accessToken = localStorage.getItem('accessToken');
+                    
+                    if (userId && accessToken)
+                    {
+                        try {
+		                    const response = await fetch(`/api/user/${userId}/language`, {
+		                    	method: 'PATCH',
+		                    	headers: {
+		                    		'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+		                    	},
+		                    	credentials: 'include',
+		                    	body: JSON.stringify({ language: lang })
+		                    });
+                            if (!response.ok)
+                                console.error("Error during the modification of the language");
+                        } catch (error) {
+                            console.error("Error during update of preffered language");
+                        }
+                    }
+
+                    handleLocationChange();
+
+                    // const display = document.getElementById('current-lang-display');
+                    // if (display) display.textContent = lang.toUpperCase();
+                    // //fermer le menu
+                    // const menuContent = document.getElementById('lang-menu-content');
+                    // if (menuContent)
+                    //     menuContent.classList.add('hidden');
+                }
+                    
+                    
+	        });    
+                   
+            
+        });
+        // handleLocationChange();
     };
     
     // Dropdown HTML
@@ -258,24 +326,6 @@ const handleLocationChange = () => {
         <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
         ${langDropdownHtml}
     `;
-
-    // const guestMenuHtml = `
-    //     <a href="/guest" class="text-white hover:underline">Guest Area</a>
-    //     <a href="/logout" class="text-white hover:underline">Log out</a>
-    // `;
-
-	// const userMenuHtml = `
-    //     <a href="/home" class="text-white hover:underline">${i18next.t('nav.home')}</a>
-    //     <a href="/profile" class="text-white hover:underline">${i18next.t('nav.profile')}</a>
-    //     <a href="/dashboard" class="text-white hover:underline">${i18next.t('nav.dashboard')}</a>
-    //     <a href="/logout" class="text-white hover:underline">${i18next.t('nav.logout')}</a>
-
-	// 	<div id="language-switcher" class="flex gap-2 items-center ml-4">
-	// 	<button data-lang="en" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">EN</button>
-	// 	<button data-lang="fr" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">FR</button>
-	// 	<button data-lang="es" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">ES</button>
-	// 	</div>
-    // `;
 	
     const guestMenuHtml = `
         <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
@@ -345,6 +395,49 @@ const handleLocationChange = () => {
 // 	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
 // };
 
+
+/* RECUPERATION DE LA LANGUE EN DB */
+
+const loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem('userId');
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (userId)
+    {
+        try {
+            const response = await fetch(`/api/user/${userId}/language`, {
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            if (response.ok)
+            {
+                const data = await response.json();
+                if (data.success && data.language)
+                {
+                    const dbLang = data.language;
+                    const currentLang = i18next.language;
+
+                    if (dbLang && dbLang !== currentLang)
+                    {
+                        console.log(`Langue en BDD trouvee (${dbLang})`);
+                        await changeLanguage(dbLang);
+                    }
+                }
+            }
+
+
+        } 
+        catch (error) {
+            console.error("Impossible de charger la langue utilisateur");
+        }
+    }
+}
+
+
+
 	//================================================
 	//============ ROUTEUR INITIALISATION ============
 	//================================================
@@ -384,7 +477,12 @@ window.addEventListener('popstate', () => {
 
 // initialiser i18next avant le premier rendu
 document.addEventListener('DOMContentLoaded', async () => {
+    // init de base
     await initI18n();
+    // recuperation de la langue en DB
+    await loadUserLanguageFromDB();
+
     console.log("i18n initialise, langue:", i18next.language);
+
 	handleLocationChange();
 });

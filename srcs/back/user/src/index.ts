@@ -2,7 +2,7 @@ import Fastify from 'fastify'; // rôle de serveur HTTP
 import sqlite3 from 'sqlite3';
 import { initDatabase } from './database.js';
 import { Database } from 'sqlite';
-import { createUserInDB, createGuestInDB } from './repositories/users.js';
+import { createUserInDB, createGuestInDB, getPreferredLanguage, updatePreferredLanguage } from './repositories/users.js';
 import fastifyCookie from '@fastify/cookie'; // NOUVEAU import du plugin
 import * as friendRepo from './repositories/friendships.js';
 import fs from 'fs';
@@ -931,7 +931,78 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 })
 
 
+//---------------------------------------
+//------------- LANGUAGE ----------------
+//---------------------------------------
 
+fastify.get('/users/:id/language', async (request, reply) => 
+{
+	try
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		if (!userId) {
+			return reply.status(400).send({ error: "Invalid User ID" });
+		}
+
+		const prefferedLanguage = await getPreferredLanguage(db, userId);
+
+		return reply.status(200).send({
+			success: true,
+			language: prefferedLanguage,
+			error: null
+		});
+	}
+	catch (err: any) 
+	{
+		console.error("Export Auth Error:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			// language: prefferedLanguage,
+			error: { message: err.message || "Failed to export language"}
+		});
+	}
+});
+
+fastify.patch('/users/:id/language', async (request, reply) => 
+{
+	try
+	{
+		const { id } = request.params as { id: string };
+		const userId = Number(id);
+		if (!userId) {
+			return reply.status(400).send({ error: "Invalid User ID" });
+		}
+
+		const { language } = request.body as { language: string };
+
+		await updatePreferredLanguage(db, userId, language);
+
+		return reply.status(200).send({
+			success: true,
+			error: null
+		});
+	}
+	catch (err: any) 
+	{
+		console.error("Export Auth Error:", err);
+		const statusCode = err.statusCode || 500;
+
+		return reply.status(statusCode).send({
+			success: false,
+			error: { message: err.message || "Failed to export language"}
+		});
+	}
+});
+
+
+/* LANGUAGE - GET UPDATE  */
+/* routes 
+GET /users/:id/language
+PATCH /users/:id/language 
+*/
 
 
 //---------------------------------------

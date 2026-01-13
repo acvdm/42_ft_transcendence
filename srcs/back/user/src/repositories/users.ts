@@ -308,3 +308,34 @@ export async function anonymizeUser(
     [anonymousAlias, userId]
     );
 }
+
+
+/* REPRENDRE */
+export async function getPreferredLanguage(
+    db: Database,
+    userId: number
+) : Promise<string>
+{
+    const row = await db.get(`
+        SELECT preferred_language 
+        FROM USERS 
+        WHERE id = ?`,
+        [userId]
+    );
+    return row?.preferred_language || null;
+}
+
+
+export async function updatePreferredLanguage(
+    db: Database,
+    userId: number,
+    preferredLanguage: string
+) : Promise<void>
+{
+    await db.run(`
+        UPDATE USERS
+        SET preferred_language = ? 
+        WHERE id = ?`,
+        [preferredLanguage, userId]
+    );
+}

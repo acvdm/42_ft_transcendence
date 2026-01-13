@@ -8549,7 +8549,7 @@
     html = html.replace(/\{\{chat\.cancel\}\}/g, i18n_default.t("chat.cancel"));
     html = html.replace(/\{\{chat\.contact\}\}/g, i18n_default.t("chat.contact"));
     html = html.replace(/\{\{chat\.placeholder\}\}/g, i18n_default.t("chat.placeholder"));
-    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18n_default.t("chat.inputplace_holder"));
+    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18n_default.t("chat.input_placeholder"));
     html = html.replace(/\{\{chat\.view_profile\}\}/g, i18n_default.t("chat.view_profile"));
     html = html.replace(/\{\{chat\.invite_game\}\}/g, i18n_default.t("chat.invite_game"));
     html = html.replace(/\{\{chat\.block_user\}\}/g, i18n_default.t("chat.block_user"));
@@ -27428,28 +27428,44 @@
         };
         document.addEventListener("click", closeMenu);
       }
-      document.querySelectorAll(".lang-select").forEach((btn) => {
+      const currentLangDisplay = document.getElementById("current-lang-display");
+      if (currentLangDisplay)
+        currentLangDisplay.textContent = i18n_default.language.toUpperCase();
+      const langButtons = document.querySelectorAll(".lang-select");
+      langButtons.forEach((btn) => {
         const newBtn = btn.cloneNode(true);
         btn.parentNode?.replaceChild(newBtn, btn);
         newBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
           e.stopPropagation();
-          const target = e.target;
-          const lang = target.getAttribute("data-lang");
-          if (lang) {
+          const lang = e.currentTarget.getAttribute("data-lang");
+          const currentLang = i18n_default.language;
+          if (lang && lang !== currentLang) {
             console.log("Langue chang\xE9e vers :", lang);
             await changeLanguage2(lang);
-            const display = document.getElementById("current-lang-display");
-            if (display) display.textContent = lang.toUpperCase();
-            const menuContent2 = document.getElementById("lang-menu-content");
-            if (menuContent2)
-              menuContent2.classList.add("hidden");
+            const userId = localStorage.getItem("userId");
+            const accessToken2 = localStorage.getItem("accessToken");
+            if (userId && accessToken2) {
+              try {
+                const response = await fetch(`/api/user/${userId}/language`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${accessToken2}`
+                  },
+                  credentials: "include",
+                  body: JSON.stringify({ language: lang })
+                });
+                if (!response.ok)
+                  console.error("Error during the modification of the language");
+              } catch (error) {
+                console.error("Error during update of preffered language");
+              }
+            }
             handleLocationChange();
           }
         });
       });
-      const currentLangDisplay = document.getElementById("current-lang-display");
-      if (currentLangDisplay)
-        currentLangDisplay.textContent = i18n_default.language.toUpperCase();
     };
     const langDropdownHtml = `
         <div class="relative" id="lang-dropdown">
@@ -27516,6 +27532,34 @@
       handleLocationChange();
     }
   };
+  var loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+    if (userId) {
+      try {
+        const response = await fetch(`/api/user/${userId}/language`, {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.language) {
+            const dbLang = data.language;
+            const currentLang = i18n_default.language;
+            if (dbLang && dbLang !== currentLang) {
+              console.log(`Langue en BDD trouvee (${dbLang})`);
+              await changeLanguage2(dbLang);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Impossible de charger la langue utilisateur");
+      }
+    }
+  };
   window.addEventListener("click", (event) => {
     const target = event.target;
     const anchor = target.closest("a");
@@ -27542,6 +27586,7 @@
   });
   document.addEventListener("DOMContentLoaded", async () => {
     await initI18n();
+    await loadUserLanguageFromDB();
     console.log("i18n initialise, langue:", i18n_default.language);
     handleLocationChange();
   });
