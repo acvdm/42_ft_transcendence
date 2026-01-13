@@ -1,6 +1,12 @@
 import { fetchWithAuth } from "../services/api";
 import SocketService from "../services/SocketService";
 
+export class Data {
+    // Cette variable statique permet de garder l'état de la notif
+    // même quand tu navigues entre les pages de la SPA.
+    public static hasUnreadMessage: boolean = false;
+}
+
 let globalPath = "/assets/emoticons/";
 let animationPath = "/assets/animated/";
 let gamePath = "/assets/game/";

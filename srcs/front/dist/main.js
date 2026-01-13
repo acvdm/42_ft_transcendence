@@ -3596,8 +3596,6 @@
       }
       return _SocketService.instance;
     }
-    // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
-    // Méthode privée pour ne pas dupliquer le code de config
     createSocketConnection(path) {
       const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
       if (!token) {
@@ -3645,6 +3643,16 @@
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
       this.gameSocket = this.createSocketConnection("/socket-game/");
+      if (this.chatSocket) {
+        this.chatSocket.on("receive_message", (payload) => {
+          console.log("SocketService: Message re\xE7u (Global):", payload);
+          const isChatOpen = window.location.hash === "#chat";
+          if (!isChatOpen) {
+            Data.hasUnreadMessage = true;
+            this.showNotificationIcon();
+          }
+        });
+      }
     }
     disconnectGame() {
       if (this.gameSocket) {
@@ -3657,6 +3665,12 @@
       return this.gameSocket;
     }
     // ---------------------
+    showNotificationIcon() {
+      const notifElement = document.getElementById("message-notification");
+      if (notifElement) {
+        notifElement.style.display = "block";
+      }
+    }
     // -- UTILITAIRE GLOBAL --
     disconnectAll() {
       this.disconnectChat();
@@ -3666,6 +3680,13 @@
   var SocketService_default = SocketService;
 
   // scripts/components/Data.ts
+  var Data = class {
+    static {
+      // Cette variable statique permet de garder l'état de la notif
+      // même quand tu navigues entre les pages de la SPA.
+      this.hasUnreadMessage = false;
+    }
+  };
   var globalPath = "/assets/emoticons/";
   var animationPath = "/assets/animated/";
   var gamePath = "/assets/game/";

@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
+import { Data } from '../components/Data'
 
-class SocketService {
+export class SocketService {
     private static instance: SocketService;
 
     public chatSocket: Socket | null = null;
@@ -15,8 +16,7 @@ class SocketService {
         return SocketService.instance;
     }
 
-    // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
-    // Méthode privée pour ne pas dupliquer le code de config
+
     private createSocketConnection(path: string): Socket | null {
         const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
@@ -78,6 +78,25 @@ class SocketService {
         if (this.gameSocket) return;
         console.log("SocketService: Connecting to Game...");
         this.gameSocket = this.createSocketConnection("/socket-game/");
+        if (this.chatSocket) {
+            // On écoute globalement les messages entrants
+            this.chatSocket.on('receive_message', (payload: any) => {
+                console.log("SocketService: Message reçu (Global):", payload);
+
+                // 1. On vérifie si on est PAS DÉJÀ en train de lire ce chat
+                // (Optionnel : tu peux affiner cette condition si tu veux que la notif
+                // apparaisse même si tu es dans le chat)
+                const isChatOpen = window.location.hash === '#chat'; 
+                
+                if (!isChatOpen) {
+                    // 2. On met à jour la variable globale pour la persistance
+                    Data.hasUnreadMessage = true; 
+
+                    // 3. On met à jour l'interface visuelle tout de suite
+                    this.showNotificationIcon();
+                }
+            });
+        }
     }
 
     public disconnectGame() {
@@ -93,12 +112,22 @@ class SocketService {
     }
     // ---------------------
 
+    private showNotificationIcon() {
+        // Remplace 'message-notification' par l'ID réel de ton élément HTML de notif
+        const notifElement = document.getElementById('message-notification'); 
+        if (notifElement) {
+            notifElement.style.display = 'block'; // Ou remove la classe 'hidden'
+        }
+    }
 
     // -- UTILITAIRE GLOBAL --
     public disconnectAll() {
         this.disconnectChat();
         this.disconnectGame();
     }
+
+
+    
 }
 
 export default SocketService;
