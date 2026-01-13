@@ -5762,7 +5762,7 @@
       const wizzButton = document.getElementById("send-wizz");
       if (wizzButton) {
         wizzButton.addEventListener("click", () => {
-          const currentUsername = localStorage.getItem("username");
+          const currentUsername = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
           this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
           this.shakeElement(this.wizzContainer, 500);
         });
@@ -5772,7 +5772,7 @@
       if (!this.chatSocket) {
         return;
       }
-      const currentUsername = localStorage.getItem("username");
+      const currentUsername = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
       this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
     shakeElement(element, duration = 500) {
@@ -5923,7 +5923,7 @@
           animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
           animationItem.addEventListener("click", (event) => {
             event.stopPropagation();
-            const currentUsername = localStorage.getItem("username");
+            const currentUsername = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
             this.chatSocket.emit("sendAnimation", {
               animationKey: key,
               author: currentUsername,
@@ -9068,7 +9068,7 @@
         });
       }
       if (startButton) {
-        let p1Alias = localStorage.getItem("username");
+        let p1Alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
@@ -9143,7 +9143,7 @@
                   clearInterval(localLoop);
                   const p1Score = activeGame2.score.player1;
                   const p2Score = activeGame2.score.player2;
-                  const p1Alias2 = localStorage.getItem("username") || "Player 1";
+                  const p1Alias2 = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
                   const p2Alias = opponentName;
                   const p1Wins = p1Score > p2Score;
                   const winnerAlias = p1Wins ? p1Alias2 : p2Alias;
@@ -9592,7 +9592,7 @@
       const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
       this.initTournamentSelectors();
-      const username = localStorage.getItem("username");
+      const username = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
       const isGuest = sessionStorage.getItem("userRole") === "guest";
       getPlayerAlias().then((alias2) => {
         player1Input.value = alias2;

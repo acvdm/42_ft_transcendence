@@ -69,7 +69,7 @@ export class TournamentManager {
 
         this.initTournamentSelectors();
 
-        const username = localStorage.getItem('username');
+        const username = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || "Guest";
         const isGuest = sessionStorage.getItem('userRole') === 'guest';
 
         getPlayerAlias().then(alias => {

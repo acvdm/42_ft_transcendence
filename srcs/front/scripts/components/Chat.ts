@@ -209,7 +209,7 @@ export class Chat {
 		const wizzButton = document.getElementById('send-wizz');
 		if (wizzButton) {
 			wizzButton.addEventListener('click', () => {
-				const currentUsername = localStorage.getItem('username');
+				const currentUsername = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
 				this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
 				this.shakeElement(this.wizzContainer, 500);
 			});
@@ -220,7 +220,7 @@ export class Chat {
 		if (!this.chatSocket) {
 			return;
 		}
-		const currentUsername = localStorage.getItem('username');
+		const currentUsername = localStorage.getItem('username')  || sessionStorage.getItem('cachedAlias');
 		this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
 	}
 
@@ -414,7 +414,7 @@ export class Chat {
 				// clic sur l'anumation
 				animationItem.addEventListener('click', (event) => {
 					event.stopPropagation();
-					const currentUsername = localStorage.getItem('username');
+					const currentUsername = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
 					// envoi de l'animation via la sockettt
 
 					this.chatSocket.emit("sendAnimation", {
