@@ -41,7 +41,12 @@
                             </div>
 
                             <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
-  
+                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
+                                    <p class="font-semibold mb-2">Game instructions</p>
+                                    <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>
+                                    <p>Player on the right uses the ⬆️⬇️ keys.</p>
+                                    <p>The space bar can be used to distract your opponent.</p>
+                                </div>
                                 <fieldset class="border-2 border-gray-300 p-2 mt-2">
                                     <div class="flex flex-row items-center gap-2 mb-3 relative">
                                         <label class="text-sm font-semibold">Choose your ball :</label>
@@ -151,52 +156,6 @@
 								
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<p>Chat room</p>
-								<div class="relative self-start mt-2">
-									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
-									</button>
-	
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-		
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-													<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												View profile
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												Invite to play
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												Block user
-											</button>
-										</div>
-	
-									</div>
-	
-								</div>
 							</div>
 	
 							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>

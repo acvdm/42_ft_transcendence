@@ -5,11 +5,48 @@ export function render(): string {
 	return htmlContent;
 };
 
+
+	//================================================
+	//============= LANGUAGE MANAGEMENT ==============
+	//================================================
+
+function setupPageLangDropdown() {
+    const toggleBtn = document.getElementById('page-lang-toggle-btn');
+    const menuContent = document.getElementById('page-lang-menu-content');
+    
+    if (toggleBtn && menuContent) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', () => {
+            if (!menuContent.classList.contains('hidden')) {
+                menuContent.classList.add('hidden');
+            }
+        });
+    }
+
+    document.querySelectorAll('.page-lang-select').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const target = e.currentTarget as HTMLElement;
+            const lang = target.getAttribute('data-lang');
+            if (lang) {
+                const display = document.getElementById('page-current-lang-display');
+                if (display) display.textContent = lang.toUpperCase();
+            }
+        });
+    });
+}
+
 	//================================================
 	//============= LANDING PAGE BUTTONS =============
 	//================================================
 
 export function initLandingPage() {
+	
+		setupPageLangDropdown();
+
 	const loginButton = document.getElementById('login-button');
 	const registerButton = document.getElementById('register-button');
 	const guestButton = document.getElementById('guest-button');
