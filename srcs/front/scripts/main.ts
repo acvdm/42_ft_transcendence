@@ -147,6 +147,12 @@ const handleLocationChange = () => {
     const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
+    if (!publicRoutes.includes(path) && !accessToken && !isGuest) {
+        window.history.replaceState(null, '', '/');
+        handleLocationChange();
+        return ;
+    }
+
     if (isGameRunning() && path !== '/game') {
 		cleanup();
 	}

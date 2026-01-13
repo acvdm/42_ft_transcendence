@@ -155,6 +155,18 @@
       };
     };
     let response = await fetch(url2, getConfigWithAuth(token, options));
+    const userId = localStorage.getItem("userId");
+    if (response.status === 404 && userId && url2.includes(userId)) {
+      console.warn("Cannot find user. Launching immediat deconnection");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      sessionStorage.clear();
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      return response;
+    }
     if (response.status === 401) {
       console.warn(`401 detected for ${url2}`);
       if (!isRefreshing) {
@@ -25108,6 +25120,11 @@
     }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
+    if (!publicRoutes.includes(path) && !accessToken && !isGuest) {
+      window.history.replaceState(null, "", "/");
+      handleLocationChange();
+      return;
+    }
     if (isGameRunning() && path !== "/game") {
       cleanup();
     }
