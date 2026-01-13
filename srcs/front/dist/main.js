@@ -7624,7 +7624,7 @@
   // scripts/pages/LandingPage.html
   var LandingPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
     <div class="relative">
-        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(37, 44, 83)">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg">
             <span class="text-lg">\u{1F310}</span>
             <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
             <span class="text-[10px] opacity-70">\u25BC</span>
@@ -24926,6 +24926,13 @@
     let path = window.location.pathname;
     if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
       clearGuestSession();
+    }
+    if (path === "/") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      localStorage.removeItem("userTheme");
     }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";

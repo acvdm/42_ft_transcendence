@@ -134,7 +134,15 @@ const handleLocationChange = () => {
     // Cleaning guest session
     if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
         clearGuestSession();
-    } 
+    }
+
+    if (path === '/') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userStatus');
+        localStorage.removeItem('userTheme');
+    }
     
     const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const isGuest = sessionStorage.getItem('isGuest') === 'true';
