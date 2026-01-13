@@ -8166,33 +8166,41 @@
 							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
 								<p>{{games.choose_mode}}</p>
 							</div>
-							<div class="flex flex-col gap-4 flex-1 justify-center items-center">
-								<button id="local-game" 
-									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
-									{{games.local}}
-								</button>
-								<p>Play against another player on this computer</p>
+							<div class="flex flex-col gap-8 flex-1 justify-center items-center">
+								<div class="flex flex-col items-center gap-2" style="padding-bottom: 35px;">
+									<button id="local-game" 
+										class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+											px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+											active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+											transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+										{{games.local}}
+									</button>
+									<p class="text-sm text-gray-400 border-b border-gray-200" style="padding-bottom: 35px; color:grey;">Play against another player on this computer</p>
+								</div>
 
-								<button id="remote-game" 
-									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									{{games.remote}}
-								</button>
-								<p>Connect and play with friends and more online</p>
+								<div class="flex flex-col items-center gap-2">
+									<button id="remote-game" 
+										class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+											px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+											active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+											transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+										{{games.remote}}
+									</button>
+									<p class="text-sm text-gray-400 border-b border-gray-200" style="padding-bottom: 35px; color:grey;">Connect and play with friends and more online</p>
 
-								<button id="tournament-game" 
-									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									{{games.tournament}}
-								</button>
-								<p>Compete in a 4-multiplayer tournament on this computer</p>
+								</div>
+
+								<div class="flex flex-col items-center gap-2" style="padding-bottom: 35px;">
+									<button id="tournament-game" 
+										class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+											px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+											active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+											transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+										{{games.tournament}}
+									</button>
+									<p class="text-sm text-gray-400" style="padding-bottom: 35px; color:grey;">Compete in a 4-multiplayer tournament on this computer</p>
+
+								</div>
 							</div>
 						</div>
 					</div>
@@ -8573,8 +8581,7 @@
                 </div>
             </div>
         </div>
-    </div>
-`;
+    </div>`;
 
   // scripts/components/FriendList.ts
   var FriendList = class {
