@@ -28674,6 +28674,11 @@
               }
             }
             handleLocationChange();
+            const display = document.getElementById("current-lang-display");
+            if (display) display.textContent = lang.toUpperCase();
+            const menuContent2 = document.getElementById("lang-menu-content");
+            if (menuContent2)
+              menuContent2.classList.add("hidden");
           }
         });
       });
