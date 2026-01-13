@@ -3,6 +3,8 @@ import { statusImages, statusLabels } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import SocketService from "../services/SocketService";
 
+import i18next from "../i18n";
+
 export class UserProfile {
     private bioText: HTMLElement | null;
     private bioWrapper: HTMLElement | null;
@@ -261,6 +263,7 @@ export class UserProfile {
     private loadSavedStatus() {
         const rawStatus = localStorage.getItem('userStatus') || 'available';
         const savedStatus = rawStatus.toLowerCase();
+        const statusText = `(${i18next.t(`profile.status.${savedStatus}`)})`;
         this.updateStatusDisplay(savedStatus);
         
         window.addEventListener('storage', (e) => {

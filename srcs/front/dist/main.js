@@ -3968,2159 +3968,6 @@
     }
   }
 
-  // scripts/controllers/LoginPage.ts
-  function render() {
-    return LoginPage_default;
-  }
-  async function init2faLogin(accessToken, userId, selectedStatus) {
-    if (accessToken) {
-      localStorage.setItem("accessToken", accessToken);
-    }
-    if (userId) {
-      localStorage.setItem("userId", userId.toString());
-    }
-    if (userId && accessToken) {
-      try {
-        const userRes = await fetch(`/api/user/${userId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          }
-        });
-        if (userRes.ok) {
-          const userData = await userRes.json();
-          if (userData.alias)
-            localStorage.setItem("username", userData.alias);
-          if (userData.theme)
-            localStorage.setItem("userTheme", userData.theme);
-        }
-      } catch (err) {
-        console.error("Can't get user's profile", err);
-      }
-      try {
-        await fetch(`/api/user/${userId}/status`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          },
-          body: JSON.stringify({ status: selectedStatus })
-        });
-      } catch (err) {
-        console.error("Failed to update status on login", err);
-      }
-    }
-    localStorage.setItem("userStatus", selectedStatus);
-    window.history.pushState({}, "", "/home");
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  }
-  function handleLogin() {
-    const button = document.getElementById("login-button");
-    const errorElement = document.getElementById("error-message");
-    const modal2fa = document.getElementById("2fa-modal");
-    const input2fa = document.getElementById("2fa-input-code");
-    const confirm2fa = document.getElementById("confirm-2fa-button");
-    const close2fa = document.getElementById("close-2fa-modal");
-    const error2fa = document.getElementById("2fa-error-message");
-    const backButton = document.getElementById("back-button");
-    let tempToken = null;
-    let cachedStatus = "available";
-    backButton?.addEventListener("click", () => {
-      window.history.pushState({}, "", "/");
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    });
-    button?.addEventListener("click", async () => {
-      const email = document.getElementById("email-input").value;
-      const password = document.getElementById("password-input").value;
-      const selectedStatus = document.getElementById("status-input").value;
-      if (errorElement) {
-        errorElement.classList.add("hidden");
-        errorElement.textContent = "";
-      }
-      if (!email || !password) {
-        if (errorElement) {
-          errorElement.textContent = "Please fill all inputs";
-          errorElement.classList.remove("hidden");
-        }
-        return;
-      }
-      try {
-        const response = await fetch("/api/auth/sessions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-        const result = await response.json();
-        if (result.require2fa) {
-          localStorage.setItem("is2faEnabled", "true");
-          tempToken = result.tempToken;
-          if (modal2fa) {
-            modal2fa.classList.remove("hidden");
-            modal2fa.classList.add("flex");
-            input2fa.value = "";
-            input2fa.focus();
-          }
-          return;
-        }
-        if (result.success) {
-          localStorage.setItem("is2faEnabled", "false");
-          const { accessToken, userId } = result.data;
-          await init2faLogin(accessToken, userId, cachedStatus);
-          if (accessToken) {
-            localStorage.setItem("accessToken", accessToken);
-          }
-          if (userId) {
-            localStorage.setItem("userId", userId.toString());
-          }
-          if (userId && accessToken) {
-            try {
-              const userRes = await fetchWithAuth(`/api/user/${userId}`, {
-                method: "GET"
-              });
-              if (userRes.ok) {
-                const userData = await userRes.json();
-                if (userData.alias) {
-                  localStorage.setItem("username", userData.alias);
-                }
-                if (userData.theme) {
-                  localStorage.setItem("userTheme", userData.theme);
-                }
-              }
-            } catch (err) {
-              console.error("Can't get user's profile", err);
-            }
-            try {
-              await fetchWithAuth(`/api/user/${userId}/status`, {
-                method: "PATCH",
-                body: JSON.stringify({ status: selectedStatus })
-              });
-              console.log("Status updated to database:", selectedStatus);
-            } catch (err) {
-              console.error("Failed to update status on login", err);
-            }
-          }
-          localStorage.setItem("userStatus", selectedStatus);
-          window.history.pushState({}, "", "/home");
-          window.dispatchEvent(new PopStateEvent("popstate"));
-        } else {
-          console.error("Login error:", result.error);
-          if (errorElement) {
-            errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
-            errorElement.classList.remove("hidden");
-          }
-        }
-      } catch (error) {
-        console.error("Network error:", error);
-        if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
-          errorElement.classList.remove("hidden");
-        }
-      }
-    });
-    confirm2fa?.addEventListener("click", async () => {
-      const code = input2fa.value.trim();
-      if (error2fa) {
-        error2fa.classList.add("hidden");
-      }
-      if (!code || !tempToken) {
-        return;
-      }
-      try {
-        const response = await fetch("/api/auth/2fa/challenge", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${tempToken}`
-          },
-          body: JSON.stringify({ code })
-        });
-        const result = await response.json();
-        if (response.ok && result.success) {
-          localStorage.setItem("is2faEnabled", "true");
-          const { accessToken, userId } = result;
-          if (modal2fa) {
-            modal2fa.classList.add("hidden");
-          }
-          await updateUserStatus("online");
-          await init2faLogin(accessToken, userId, cachedStatus);
-        } else {
-          if (error2fa) {
-            error2fa.textContent = "Invalid code.";
-            error2fa.classList.remove("hidden");
-            console.error("2FA Error:", result.error.message);
-          }
-        }
-      } catch (error) {
-        if (error2fa) {
-          error2fa.textContent = "Error during verification.";
-          error2fa.classList.remove("hidden");
-        }
-      }
-    });
-    const closeFunc = () => {
-      if (modal2fa) {
-        modal2fa.classList.add("hidden");
-        modal2fa.classList.remove("flex");
-        tempToken = null;
-      }
-    };
-    close2fa?.addEventListener("click", closeFunc);
-    modal2fa?.addEventListener("click", (e) => {
-      if (e.target === modal2fa) closeFunc();
-    });
-  }
-  function loginEvents() {
-    handleLogin();
-    const toggleBtn = document.getElementById("page-lang-toggle-btn");
-    const menuContent = document.getElementById("page-lang-menu-content");
-    if (toggleBtn && menuContent) {
-      toggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        menuContent.classList.toggle("hidden");
-      });
-      window.addEventListener("click", () => {
-        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
-      });
-    }
-    document.querySelectorAll(".page-lang-select").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        const target = e.currentTarget;
-        const lang = target.getAttribute("data-lang");
-        if (lang) {
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
-        }
-      });
-    });
-  }
-
-  // scripts/pages/HomePage.html
-  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
-
-	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-		 style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
-	</div>
-
-	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
-		
-		<!-- Container avec left et right qui prennent toute la hauteur restante -->
-		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
-
-			<!-- ========= LEFT COLUMN ========= -->
-			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
-				
-				<!-- ========= PROFILE WINDOW ========= -->
-				<div class="window flex flex-col">
-					<div class="title-bar">
-						<div class="title-bar-text">Profile</div>
-						<div class="title-bar-controls">
-							<button aria-label="Minimize"></button>
-							<button aria-label="Maximize"></button>
-							<button aria-label="Close"></button>
-						</div>
-					</div>
-
-					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
-						<div class="flex flex-row w-full rounded-sm p-2"> 
-							<!-- Cadre du profil -->
-							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
-								<div class="relative w-[110px] h-[110px] flex-shrink-0">
-									<!-- l'image (profil principal) -->
-									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
-										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-									<!-- le cadre -->
-									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
-								</div>
-		
-								<!-- username, bio et status -->
-								<div class="flex flex-col justify-center pl-4 flex-1">
-									<div class="flex items-center gap-2 mb-1">
-										<p class="text-xl font-semibold" id="user-name">{{profile.username}}</p>
-		
-										<!-- selection du status = dynamique -->
-										<div class="relative">
-											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-												<span id="current-status-text">(Available)</span>
-												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
-											</button>
-		
-											<!-- Menu dropdown pour le status -->
-											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
-													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.available}}</span>
-												</button>
-												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
-													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.busy}}</span>
-												</button>
-												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
-													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.away}}</span>
-												</button>
-												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
-													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.offline}}</span>
-												</button>
-											</div>
-										</div>
-									</div>
-									<div id="bio-wrapper">
-										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">{{profile.bio}}</p>
-										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-									</div>
-								</div>
-		
-								<!-- Notifications -->
-								<div class="ml-auto flex items-start relative">
-									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-										<img id="notification-icon" 
-											src="/assets/basic/no_notification.png" 
-											alt="Notifications" 
-											class="w-full h-full object-contain">
-											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
-									</button>
-									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
-										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
-											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-												{{notifications.title}}
-											</h3>
-										</div>
-										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-											<div class="p-4 text-center text-xs text-gray-500">{{notifications.no_notification}}</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- ========= GAMES WINDOW ========= -->
-				<div class="window flex flex-col flex-1">
-					<div class="title-bar">
-						<div class="title-bar-text">{{games.title}}</div>
-						<div class="title-bar-controls">
-							<button aria-label="Minimize"></button>
-							<button aria-label="Maximize"></button>
-							<button aria-label="Close"></button>
-						</div>
-					</div>
-
-					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
-						<div class="bg-white p-6 flex flex-col flex-1">
-							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">{{games.choose_mode}}</h1>
-
-							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
-								<button id="local-game" 
-									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
-									{{games.local}}
-								</button>
-
-								<button id="remote-game" 
-									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									{{games.remote}}
-								</button>
-
-								<button id="tournament-game" 
-									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									{{games.tournament}}
-								</button>
-							</div>
-						</div>
-					</div>
-				</div>
-
-			</div>
-
-
-			<!-- ========= RIGHT WINDOW ========= -->
-			<div class="window flex flex-col flex-1 min-w-0">
-				<div class="title-bar">
-					<div class="title-bar-text">{{chat.title}}</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
-					</div>
-				</div>
-
-				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-
-					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-
-						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
-							<div class="flex flex-row items-center justify-between">
-								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{chat.friends}}</p>
-								
-								<div class="ml-auto flex items-center mb-3 relative">
-									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
-										<img id="add-friend-icon" 
-											src="/assets/basic/1441.png" 
-											alt="Friends button" 
-											class="w-full h-full object-contain">
-									</button>
-									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
-										<p class="text-sm font-semibold mb-2 text-center">{{chat.add_friend}}</p>
-										<input type="text" 
-											id="friend-search-input" 
-											placeholder="Type in username or email" 
-											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-										<div class="flex gap-2">
-											<button id="send-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{chat.send_request}}
-											</button>
-											<button id="cancel-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{chat.cancel}}
-											</button>
-										</div>
-										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
-									</div>
-								</div>
-							</div>
-
-							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
-
-								<details open class="group">
-									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-										{{chat.contact}}
-									</summary>
-
-									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
-										</div>
-								</details>
-							</div>
-						</div>
-
-						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
-							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
-							<p class="text-gray-400 text-lg font-semibold">{{chat.placeholder}}</p>
-						</div>
-
-						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-							
-							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
-								<div class="flex gap-4 items-center">
-									<div class="relative w-[80px] h-[80px] flex-shrink-0">
-										<img id="chat-header-avatar" 
-											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
-											src="" 
-											alt="User avatar">
-										<img id="chat-header-status" 
-											class="absolute inset-0 w-full h-full object-contain" 
-											src="/assets/basic/status_online_small.png" 
-											alt="Status frame">
-									</div>
-									<div class="flex flex-col justify-start leading-tight">
-										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
-										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
-									</div>
-								</div>
-								
-								<div class="relative self-start mt-2">
-									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
-									</button>
-
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-    
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												{{chat.view_profile}}
-											</button>
-										</div>
-
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												{{chat.invite_game}}
-											</button>
-										</div>
-
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												{{chat.block_user}}
-											</button>
-										</div>
-
-									</div>
-
-								</div>
-
-
-							</div>
-
-
-
-							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
-
-							<div class="flex flex-col">
-								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-
-								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-									<button id="select-emoticon" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-											</div>
-										</div>
-									</button>
-
-									<button id="select-animation" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-											</div>
-										</div>
-									</button>
-
-									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-
-									<button id="change-font" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-										</div>
-
-										</div>
-									</button>
-
-									<div class="relative">
-									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-									</button>
-
-									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-													
-										<div class="grid grid-cols-3 gap-2">
-														
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/fish_background.jpg')"
-													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-											</button>
-
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/heart_background.jpg')"
-													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-											</button>
-
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-											</button>
-
-											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-												Default background
-											</button>
-										</div>
-									</div>
-								</div>
-						</div>
-					</div> 
-				</div>
-			</div> 
-		</div>
-
-	</div>
-
-<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-        <div class="title-bar">
-            <div class="title-bar-text">User Profile</div>
-            <div class="title-bar-controls">
-                <button id="close-friend-modal" aria-label="Close"></button>
-            </div>
-        </div>
-        <div class="window-body p-6">
-            
-            <div class="flex flex-row gap-6 mb-6 items-center">
-                
-                <div class="relative w-[130px] h-[130px] flex-shrink-0">
-                    <img id="friend-modal-status" 
-                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="/assets/basic/status_frame_online_large.png">
-                    
-                    <img id="friend-modal-avatar" 
-                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="/assets/basic/default.png">
-                </div>
-
-                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
-                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
-                    
-                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
-                </div>	
-            </div>
-
-            <fieldset class="border border-gray-300 p-4 rounded-sm">
-                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Games Played:</span>
-                        <span id="friend-stat-games" class="font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Wins:</span>
-                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Losses:</span>
-                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Winning streak:</span>
-                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
-                    </div>
-                </div>
-            </fieldset>
-
-            <div class="flex justify-end mt-4">
-                    <button id="close-friend-modal-button" 
-                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
- <!-- MODALE POUR L'AVATAR -->
-
-
-    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Change Picture</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Minimize"></button>
-                    <button aria-label="Maximize"></button>
-                    <button id="close-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6">
-                <div class="mb-6">
-                    <h2 class="text-xl mb-1">Select a picture</h2>
-                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
-                </div>
-                
-                <div class="flex flex-row gap-6">
-                    <div class="flex-1">
-                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
-                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
-                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-center gap-4 w-[200px]">
-                        <div class="relative w-[170px] h-[170px]">
-                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                            src="/assets/basic/status_frame_offline_large.png">
-                            
-                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-                            src="/assets/basic/default.png">
-                        </div>
-
-                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
-                            <input type="file" id="file-input" accept="image/*" hidden>
-
-                            <button id="browse-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            BROWSE
-                            </button>
-                            
-                            <button id="delete-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            DELETE
-                            </button>
-
-                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
-                                <button id="validation-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        OK
-                                </button>
-                                <button id="cancel-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        CANCEL
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-`;
-
-  // scripts/components/FriendList.ts
-  var FriendList = class {
-    constructor() {
-      this.notificationInterval = null;
-      this.container = document.getElementById("contacts-list");
-      this.userId = localStorage.getItem("userId");
-    }
-    init() {
-      SocketService_default.getInstance().connectChat();
-      SocketService_default.getInstance().connectGame();
-      this.loadFriends();
-      this.setupFriendRequests();
-      this.setupNotifications();
-      this.checkNotifications();
-      this.listenToUpdates();
-      this.setupBlockListener();
-      this.registerSocketUser();
-      if (this.notificationInterval) clearInterval(this.notificationInterval);
-      this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
-    }
-    // AJOUT
-    destroy() {
-      if (this.notificationInterval) {
-        clearInterval(this.notificationInterval);
-        this.notificationInterval = null;
-      }
-    }
-    registerSocketUser() {
-      const gameSocket = SocketService_default.getInstance().getGameSocket();
-      const userId = this.userId;
-      if (gameSocket && gameSocket.connected) {
-        gameSocket.emit("registerGameSocket", userId);
-      }
-    }
-    async loadFriends() {
-      const contactsList = this.container;
-      if (!this.userId || !contactsList) return;
-      try {
-        const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
-        if (!response.ok) throw new Error("Failed to fetch friends");
-        const responseData = await response.json();
-        const friendList = responseData.data;
-        contactsList.innerHTML = "";
-        if (!friendList || friendList.length === 0) {
-          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
-          return;
-        }
-        friendList.forEach((friendship) => {
-          const user = friendship.user;
-          const friend = friendship.friend;
-          if (!user || !friend) return;
-          const currentUserId = Number(this.userId);
-          const selectedFriend = user.id === currentUserId ? friend : user;
-          let rawStatus = selectedFriend.status || "offline";
-          const status = rawStatus.toLowerCase();
-          const friendItem = document.createElement("div");
-          friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
-          friendItem.dataset.id = selectedFriend.id;
-          friendItem.dataset.friendshipId = friendship.id;
-          friendItem.dataset.login = selectedFriend.username;
-          friendItem.dataset.alias = selectedFriend.alias;
-          friendItem.dataset.status = status;
-          friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
-          friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
-          friendItem.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="relative w-[40px] h-[40px] flex-shrink-0">
-                         <img class="w-full h-full rounded-full object-cover border border-gray-200"
-                             src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
-                        
-                        <img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
-                             src="${getStatusDot(status)}" alt="status">
-                    </div>
-                    <div class="flex flex-col leading-tight">
-                        <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
-                        <span class="text-xs text-gray-400 status-text">${status}</span>
-                    </div>
-                </div>
-
-                <div id="badge-${selectedFriend.id}" 
-                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
-                    1
-                </div>
-
-                `;
-          contactsList.appendChild(friendItem);
-          friendItem.addEventListener("click", (e) => {
-            if (e.target.closest(".invite-btn")) return;
-            this.clearNotifications(selectedFriend.id);
-            const event = new CustomEvent("friendSelected", {
-              detail: { friend: selectedFriend, friendshipId: friendship.id }
-            });
-            window.dispatchEvent(event);
-          });
-          const inviteBtn = friendItem.querySelector(".invite-btn");
-          inviteBtn?.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
-          });
-        });
-      } catch (error) {
-        console.error("Error loading friends:", error);
-        contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
-      }
-    }
-    clearNotifications(friendId) {
-      const badge = document.getElementById(`badge-${friendId}`);
-      if (badge) {
-        badge.classList.add("hidden");
-        badge.innerText = "0";
-      }
-    }
-    handleMessageNotification(senderId) {
-      const badge = document.getElementById(`badge-${senderId}`);
-      if (badge) {
-        badge.classList.remove("hidden");
-      }
-    }
-    // AJOUT: Fonction pour envoyer une invitation depuis la liste
-    sendInviteDirectly(friendId, friendName) {
-      const gameSocket = SocketService_default.getInstance().getGameSocket();
-      const myName = localStorage.getItem("username");
-      if (!gameSocket || !gameSocket.connected) {
-        alert("Game is disconnected, please refresh");
-        SocketService_default.getInstance().connectGame();
-        return;
-      }
-      console.debug(`Sending game invite to ${friendName} via GameSocket`);
-      gameSocket.emit("sendGameInvite", {
-        targetId: friendId,
-        senderName: myName
-      });
-      alert(`Invitation sent to ${friendName}`);
-    }
-    listenToUpdates() {
-      const socketService = SocketService_default.getInstance();
-      const chatSocket = socketService.getChatSocket();
-      const gameSocket = socketService.getGameSocket();
-      if (!chatSocket) return;
-      chatSocket.on("unreadNotification", (data) => {
-        this.handleMessageNotification(data.senderId);
-      });
-      chatSocket.on("friendStatusUpdate", (data) => {
-        console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
-        this.updateFriendUI(data.username, data.status);
-      });
-      chatSocket.on("userConnected", (data) => {
-        const currentUsername = localStorage.getItem("username");
-        if (data.username !== currentUsername) {
-          this.updateFriendUI(data.username, data.status);
-        }
-      });
-      chatSocket.on("receiveFriendRequestNotif", () => {
-        console.log("New friend request received!");
-        this.checkNotifications();
-      });
-      chatSocket.on("friendRequestAccepted", () => {
-        console.log("Friend request accepted by other user!");
-        this.loadFriends();
-      });
-      if (!gameSocket) {
-        console.error("GameSocket cannot be found");
-        return;
-      }
-      const attachGameListeners = () => {
-        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
-        gameSocket.emit("registerGameSocket");
-        gameSocket.off("receiveGameInvite");
-        gameSocket.on("receiveGameInvite", (data) => {
-          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
-          this.showGameInviteNotification(data.senderId, data.senderName);
-        });
-      };
-      if (gameSocket.connected) {
-        attachGameListeners();
-      } else {
-        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
-        gameSocket.once("connect", () => {
-          attachGameListeners();
-        });
-      }
-    }
-    ///// pour la notification de l'invitation
-    showGameInviteNotification(senderId, senderName) {
-      console.log("showGameInvite");
-      const notifIcon = document.getElementById("notification-icon");
-      if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
-      const toast = document.createElement("div");
-      toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
-      toast.innerHTML = `
-            <div class="font-bold text-gray-800">\u{1F3AE} Game Invite</div> 
-            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
-            <div class="flex gap-2 mt-2">
-                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
-                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
-            </div>
-        `;
-      document.body.appendChild(toast);
-      toast.querySelector("#accept-invite")?.addEventListener("click", () => {
-        const gameSocket = SocketService_default.getInstance().getGameSocket();
-        if (!gameSocket || !gameSocket.connected) {
-          alert("Error: connexion to server lost");
-          toast.remove();
-          return;
-        }
-        console.log("Accepting game invite from", senderName);
-        gameSocket.once("matchFound", (data) => {
-          console.log("\u2705 Match found from invitation:", data);
-          sessionStorage.setItem("pendingMatch", JSON.stringify(data));
-          window.history.pushState({ gameMode: "remote" }, "", "/game");
-          const event = new PopStateEvent("popstate");
-          window.dispatchEvent(event);
-        });
-        gameSocket.emit("acceptGameInvite", { senderId });
-        toast.remove();
-      });
-      toast.querySelector("#decline-invite")?.addEventListener("click", () => {
-        const gameSocket = SocketService_default.getInstance().getGameSocket()?.emit("declineGameInvite", { senderId });
-        if (gameSocket && gameSocket.connected) {
-          gameSocket.emit("declineGameInivite", { senderId });
-        }
-        toast.remove();
-      });
-      setTimeout(() => {
-        if (document.body.contains(toast)) toast.remove();
-      }, 1e4);
-    }
-    updateFriendUI(loginOrUsername, newStatus) {
-      const friendItems = document.querySelectorAll(".friend-item");
-      friendItems.forEach((item) => {
-        const el = item;
-        if (el.dataset.login === loginOrUsername || el.dataset.alias === loginOrUsername) {
-          let status = (newStatus || "offline").toLowerCase();
-          el.dataset.status = status;
-          const statusImg = el.querySelector('img[alt="status"]');
-          if (statusImg) {
-            statusImg.src = getStatusDot(status);
-          }
-          console.log(`[FriendList] Updated UI for ${loginOrUsername} to ${status}`);
-        }
-      });
-    }
-    setupBlockListener() {
-      window.addEventListener("friendBlocked", (e) => {
-        const blockedUsername = e.detail?.username;
-        if (!blockedUsername || !this.container) return;
-        const friendToRemove = this.container.querySelector(`.friend-item[data-login="${blockedUsername}"]`);
-        if (friendToRemove) {
-          friendToRemove.style.opacity = "0";
-          setTimeout(() => {
-            friendToRemove.remove();
-            if (this.container && this.container.children.length === 0) {
-              this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
-            }
-          }, 300);
-        }
-      });
-    }
-    setupFriendRequests() {
-      const addFriendButton = document.getElementById("add-friend-button");
-      const addFriendDropdown = document.getElementById("add-friend-dropdown");
-      const friendSearchInput = document.getElementById("friend-search-input");
-      const sendFriendRequestButton = document.getElementById("send-friend-request");
-      const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
-      const friendRequestMessage = document.getElementById("friend-request-message");
-      if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
-        addFriendButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          addFriendDropdown.classList.toggle("hidden");
-          document.getElementById("status-dropdown")?.classList.add("hidden");
-          if (!addFriendDropdown.classList.contains("hidden")) {
-            friendSearchInput.focus();
-          }
-        });
-        const sendFriendRequest = async () => {
-          const searchValue = friendSearchInput.value.trim();
-          if (!searchValue) {
-            this.showFriendMessage("Please enter a username or email", "error", friendRequestMessage);
-            return;
-          }
-          const userId = localStorage.getItem("userId");
-          try {
-            const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ alias: searchValue })
-            });
-            const data = await response.json();
-            if (response.ok) {
-              this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
-              const targetId = data.data.friend_id || data.data.friend?.id;
-              if (targetId) {
-                SocketService_default.getInstance().getChatSocket()?.emit("sendFriendRequestNotif", {
-                  targetId
-                });
-              }
-              friendSearchInput.value = "";
-              setTimeout(() => {
-                addFriendDropdown.classList.add("hidden");
-                friendRequestMessage?.classList.add("hidden");
-              }, 1500);
-            } else {
-              this.showFriendMessage(data.error.message || "Error sending request", "error", friendRequestMessage);
-            }
-          } catch (error) {
-            console.error("Error:", error);
-            this.showFriendMessage("Network error", "error", friendRequestMessage);
-          }
-        };
-        sendFriendRequestButton.addEventListener("click", sendFriendRequest);
-        friendSearchInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") sendFriendRequest();
-        });
-        cancelFriendRequestButton.addEventListener("click", () => {
-          addFriendDropdown.classList.add("hidden");
-          friendSearchInput.value = "";
-          friendRequestMessage?.classList.add("hidden");
-        });
-        document.addEventListener("click", (e) => {
-          const target = e.target;
-          if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
-            addFriendDropdown.classList.add("hidden");
-            friendRequestMessage?.classList.add("hidden");
-          }
-        });
-      }
-    }
-    showFriendMessage(message, type, element) {
-      if (element) {
-        element.textContent = message;
-        element.classList.remove("hidden", "text-green-600", "text-red-600");
-        element.classList.add(type === "success" ? "text-green-600" : "text-red-600");
-      }
-    }
-    setupNotifications() {
-      const notifButton = document.getElementById("notification-button");
-      const notifDropdown = document.getElementById("notification-dropdown");
-      if (notifButton && notifDropdown) {
-        notifButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifDropdown.classList.toggle("hidden");
-          document.getElementById("add-friend-dropdown")?.classList.add("hidden");
-          if (!notifDropdown.classList.contains("hidden")) {
-            this.checkNotifications();
-          }
-        });
-        document.addEventListener("click", (e) => {
-          if (!notifDropdown.contains(e.target) && !notifButton.contains(e.target))
-            notifDropdown.classList.add("hidden");
-        });
-      }
-    }
-    async checkNotifications() {
-      const userId = localStorage.getItem("userId");
-      const notifList = document.getElementById("notification-list");
-      if (!userId || !notifList) return;
-      try {
-        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-        if (!response.ok) throw new Error("Failed to fetch pendings");
-        const requests = await response.json();
-        const pendingList = requests.data;
-        const notifIcon = document.getElementById("notification-icon");
-        if (pendingList.length > 0) {
-          if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
-        } else {
-          if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
-        }
-        notifList.innerHTML = "";
-        if (pendingList.length === 0) {
-          notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
-          return;
-        }
-        pendingList.forEach((req) => {
-          const item = document.createElement("div");
-          item.dataset.friendshipId = req.id.toString();
-          item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-          item.innerHTML = `
-                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                        <img src="/assets/basic/logo.png" 
-                            class="w-full h-full object-cover rounded"
-                            alt="avatar">
-                    </div>
-                    <div class="flex-1 min-w-0 pr-4">
-                        <p class="text-sm text-gray-800">
-                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
-                        </p>
-                    </div>
-                    <div class="flex gap-2 flex-shrink-0">
-                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
-                            <span class="text-green-600 font-bold text-sm">\u2713</span>
-                        </button>
-                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
-                            <span class="text-red-600 font-bold text-sm">\u2715</span>
-                        </button>
-                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
-                            <span class="text-gray-600 text-xs">\u{1F6AB}</span>
-                        </button>
-                    </div>
-                `;
-          const buttonAccept = item.querySelector(".btn-accept");
-          const buttonReject = item.querySelector(".btn-reject");
-          const buttonBlock = item.querySelector(".btn-block");
-          if (req.user && req.user.id) {
-            buttonAccept?.addEventListener("click", (e) => {
-              e.stopPropagation();
-              this.handleRequest(req.user.id, "validated", item);
-            });
-            buttonReject?.addEventListener("click", (e) => {
-              e.stopPropagation();
-              this.handleRequest(req.user.id, "rejected", item);
-            });
-            buttonBlock?.addEventListener("click", (e) => {
-              e.stopPropagation();
-              this.handleRequest(req.user.id, "blocked", item);
-            });
-          }
-          notifList.appendChild(item);
-        });
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    }
-    async handleRequest(requesterId, action, itemDiv) {
-      const userId = localStorage.getItem("userId");
-      if (!itemDiv.dataset.friendshipId) return;
-      try {
-        const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: action })
-        });
-        if (response.ok) {
-          itemDiv.style.opacity = "0";
-          setTimeout(() => {
-            itemDiv.remove();
-            if (action === "validated") {
-              this.loadFriends();
-              const socket = SocketService_default.getInstance().getChatSocket();
-              if (socket) {
-                socket.emit("acceptFriendRequest", {
-                  targetId: requesterId
-                });
-              }
-            }
-            this.checkNotifications();
-          }, 300);
-        } else {
-          console.error("Failed to update request");
-        }
-      } catch (error) {
-        console.error("Network error", error);
-      }
-    }
-  };
-
-  // scripts/components/ChatUtils.ts
-  var escapeHTML = (text) => {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  };
-  var escapeRegex = (string) => {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  };
-  var parseMessage = (message) => {
-    let formattedMessage = escapeHTML(message);
-    const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
-    sortedKeys.forEach((key) => {
-      const imgUrl = emoticons[key];
-      const escapedKey = escapeRegex(escapeHTML(key));
-      const regex = new RegExp(escapedKey, "g");
-      formattedMessage = formattedMessage.replace(
-        regex,
-        `<img src="${imgUrl}" alt="${key}" class="inline-block w-[20px] h-[20px] align-middle mx-0.5" />`
-      );
-    });
-    formattedMessage = formattedMessage.replace(/\[b\](.*?)\[\/b\]/g, "<strong>$1</strong>").replace(/\[i\](.*?)\[\/i\]/g, "<em>$1</em>").replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>").replace(/\[s\](.*?)\[\/s\]/g, "<s>$1</s>").replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>');
-    return formattedMessage;
-  };
-
-  // scripts/components/UserProfile.ts
-  var UserProfile = class {
-    constructor() {
-      this.selectedImageSrc = "";
-      this.bioText = document.getElementById("user-bio");
-      this.bioWrapper = document.getElementById("bio-wrapper");
-      this.statusFrame = document.getElementById("user-status");
-      this.statusText = document.getElementById("current-status-text");
-      this.userConnected = document.getElementById("user-name");
-      this.userProfileImg = document.getElementById("user-profile");
-      this.statusSelector = document.getElementById("status-selector");
-      this.statusDropdown = document.getElementById("status-dropdown");
-      this.charCountElement = document.querySelector("#bio-wrapper .char-count");
-      this.pictureModal = document.getElementById("picture-modal");
-      this.modalPreviewAvatar = document.getElementById("modal-preview-avatar");
-    }
-    init() {
-      this.loadUserData();
-      this.setupBioEdit();
-      this.setupStatusSelector();
-      this.loadSavedStatus();
-      this.setupAvatarEdit();
-    }
-    // CHARGEMENT DE LA BIO
-    async loadUserData() {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        console.warn("No user ID found");
-        return;
-      }
-      try {
-        const response = await fetchWithAuth(`/api/user/${userId}`);
-        if (!response.ok) throw new Error("Failed to fetch user profile");
-        const userData = await response.json();
-        if (this.userConnected && userData.alias) {
-          this.userConnected.textContent = userData.alias;
-          localStorage.setItem("username", userData.alias);
-        }
-        if (this.bioText && userData.bio) {
-          this.bioText.dataset.raw = userData.bio;
-          this.bioText.innerHTML = parseMessage(userData.bio);
-        }
-        if (this.userProfileImg) {
-          this.userProfileImg.src = userData.avatar_url || userData.avatar;
-        }
-        if (userData.status) {
-          const normalizedStatus = userData.status.toLowerCase();
-          this.updateStatusDisplay(normalizedStatus);
-          localStorage.setItem("userStatus", normalizedStatus);
-        }
-      } catch (error) {
-        console.error("Error loading user profile:", error);
-      }
-    }
-    // LOGIQUE DE LA BIO et de la PHOTO
-    setupBioEdit() {
-      if (!this.bioText || !this.bioWrapper) return;
-      const updateCharCount = (currentLength) => {
-        if (this.charCountElement) {
-          this.charCountElement.innerText = `${currentLength}/70`;
-          if (currentLength > 70) {
-            this.charCountElement.classList.remove("text-gray-500");
-            this.charCountElement.classList.add("text-red-500");
-          } else {
-            this.charCountElement.classList.remove("text-red-500");
-            this.charCountElement.classList.add("text-gray-500");
-          }
-        }
-      };
-      this.bioText.addEventListener("click", () => {
-        const input = document.createElement("input");
-        const currentText = this.bioText.dataset.raw || "";
-        input.type = "text";
-        input.value = currentText;
-        input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
-        this.bioWrapper.replaceChild(input, this.bioText);
-        if (this.charCountElement) {
-          this.charCountElement.classList.remove("hidden");
-          updateCharCount(currentText.length);
-        }
-        input.focus();
-        input.addEventListener("input", () => {
-          const currentLength = input.value.length;
-          updateCharCount(currentLength);
-        });
-        const finalize = async (text) => {
-          if (!this.bioWrapper || !this.bioText) return;
-          if (this.charCountElement) {
-            this.charCountElement.classList.add("hidden");
-          }
-          const newBio = text.trim() || "Share a quick message";
-          const userId = localStorage.getItem("userId");
-          const trimmedBio = newBio.trim();
-          if (trimmedBio.length > 70) {
-            console.error("Error: Cannot exceed 70 characters.");
-            alert(`Your message cannot exceed 70 characters. Stop talking!`);
-            this.bioWrapper.replaceChild(this.bioText, input);
-            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || "Share a quick message");
-            return false;
-          }
-          try {
-            const response = await fetchWithAuth(`api/user/${userId}/bio`, {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ bio: trimmedBio })
-            });
-            if (response.ok) {
-              this.bioText.dataset.raw = trimmedBio;
-              this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
-              this.bioWrapper.replaceChild(this.bioText, input);
-              console.log("Message updated");
-              const socket = SocketService_default.getInstance().socket;
-              socket.emit("notifyProfileUpdate", {
-                userId: Number(userId),
-                bio: trimmedBio,
-                username: localStorage.getItem("username")
-              });
-              return true;
-            } else {
-              console.error("Error while updating your message");
-              this.bioWrapper.replaceChild(this.bioText, input);
-              return false;
-            }
-          } catch (error) {
-            console.error("Network error:", error);
-            this.bioWrapper.replaceChild(this.bioText, input);
-            return false;
-          }
-        };
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") finalize(input.value);
-        });
-        input.addEventListener("blur", () => {
-          if (input.value.trim().length <= 70) {
-            finalize(input.value);
-          } else {
-            alert(`Your message cannot exceed 70 characters. Stop talking!`);
-            if (this.charCountElement) {
-              this.charCountElement.classList.add("hidden");
-            }
-            this.bioWrapper.replaceChild(this.bioText, input);
-          }
-        });
-      });
-    }
-    // LOGIQUE DES STATUS DYNAMIQUES
-    setupStatusSelector() {
-      if (this.statusSelector && this.statusDropdown) {
-        this.statusSelector.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this.statusDropdown.classList.toggle("hidden");
-          document.getElementById("emoticon-dropdown")?.classList.add("hidden");
-          document.getElementById("add-friend-dropdown")?.classList.add("hidden");
-        });
-        const statusOptions = document.querySelectorAll(".status-option");
-        statusOptions.forEach((option) => {
-          option.addEventListener("click", async (e) => {
-            e.stopPropagation();
-            const selectedStatus = option.dataset.status;
-            if (selectedStatus) {
-              this.updateStatusDisplay(selectedStatus);
-              localStorage.setItem("userStatus", selectedStatus);
-              const userId = localStorage.getItem("userId");
-              try {
-                await fetchWithAuth(`/api/user/${userId}/status`, {
-                  method: "PATCH",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ status: selectedStatus })
-                });
-                const socket = SocketService_default.getInstance().socket;
-                const username = localStorage.getItem("username");
-                if (socket && username) {
-                  socket.emit("notifyStatusChange", {
-                    userId: Number(userId),
-                    status: selectedStatus,
-                    username
-                  });
-                }
-                this.updateStatusDisplay(selectedStatus);
-              } catch (error) {
-                console.error("Error updating status:", error);
-              }
-            }
-            this.statusDropdown.classList.add("hidden");
-          });
-        });
-        document.addEventListener("click", (e) => {
-          const target = e.target;
-          if (this.statusDropdown && !this.statusDropdown.contains(target) && !this.statusSelector.contains(target)) {
-            this.statusDropdown.classList.add("hidden");
-          }
-        });
-      }
-    }
-    loadSavedStatus() {
-      const rawStatus = localStorage.getItem("userStatus") || "available";
-      const savedStatus = rawStatus.toLowerCase();
-      this.updateStatusDisplay(savedStatus);
-      window.addEventListener("storage", (e) => {
-        if (e.key === "userStatus" && e.newValue) {
-          this.updateStatusDisplay(e.newValue.toLowerCase());
-        }
-      });
-    }
-    updateStatusDisplay(status) {
-      if (this.statusFrame && statusImages[status]) {
-        console.log("Status:", this.statusFrame);
-        this.statusFrame.src = statusImages[status];
-      }
-      if (this.statusText && statusLabels[status]) {
-        this.statusText.textContent = statusLabels[status];
-      }
-      const statusOptions = document.querySelectorAll(".status-option");
-      statusOptions.forEach((option) => {
-        const opt = option;
-        const optionStatus = opt.dataset.status;
-        if (optionStatus === status) opt.classList.add("bg-blue-50");
-        else opt.classList.remove("bg-blue-50");
-      });
-    }
-    setupAvatarEdit() {
-      if (!this.userProfileImg || !this.pictureModal) return;
-      this.userProfileImg.classList.add("cursor-pointer", "hover:opacity-80", "transition");
-      this.userProfileImg.addEventListener("click", () => {
-        this.pictureModal?.classList.remove("hidden");
-        this.pictureModal?.classList.add("flex");
-        this.selectedImageSrc = this.userProfileImg?.src || "";
-        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
-      });
-      const closeModal = () => {
-        this.pictureModal?.classList.add("hidden");
-        this.pictureModal?.classList.remove("flex");
-      };
-      document.getElementById("close-modal")?.addEventListener("click", closeModal);
-      document.getElementById("cancel-button")?.addEventListener("click", closeModal);
-      const gridContainer = document.getElementById("modal-grid");
-      if (gridContainer) {
-        const gridImages = gridContainer.querySelectorAll("img");
-        gridImages.forEach((img) => {
-          img.addEventListener("click", () => {
-            this.selectedImageSrc = img.src;
-            if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
-            gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
-            img.classList.add("border-[#0078D7]");
-          });
-        });
-      }
-      const fileInput = document.getElementById("file-input");
-      document.getElementById("browse-button")?.addEventListener("click", () => fileInput?.click());
-      fileInput?.addEventListener("change", (event) => {
-        const file = event.target.files?.[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              this.selectedImageSrc = e.target.result;
-              if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-      document.getElementById("delete-button")?.addEventListener("click", () => {
-        const defaultAvatar = "/assets/basic/default.png";
-        this.selectedImageSrc = defaultAvatar;
-        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = defaultAvatar;
-      });
-      document.getElementById("validation-button")?.addEventListener("click", async () => {
-        const userId = localStorage.getItem("userId");
-        if (!userId) return;
-        try {
-          const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ avatar: this.selectedImageSrc })
-          });
-          const result = await response.json();
-          if (response.ok) {
-            const cleanAvatarUrl = result.data.avatar;
-            if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
-            const socket = SocketService_default.getInstance().getChatSocket();
-            const username = localStorage.getItem("username");
-            if (socket) {
-              socket.emit("notifyProfileUpdate", {
-                userId: Number(userId),
-                avatar: cleanAvatarUrl,
-                username
-              });
-            }
-            closeModal();
-          } else {
-            alert("Error while saving avatar");
-          }
-        } catch (error) {
-          console.error("Network error:", error);
-        }
-      });
-    }
-  };
-
-  // scripts/components/Chat.ts
-  var Chat = class {
-    //private unreadChannels: Set<string> = new Set();
-    constructor() {
-      this.chatSocket = null;
-      this.gameSocket = null;
-      this.currentChannel = "general";
-      this.currentFriendshipId = null;
-      this.currentFriendId = null;
-      this.messagesContainer = document.getElementById("chat-messages");
-      this.messageInput = document.getElementById("chat-input");
-      this.wizzContainer = document.getElementById("wizz-container");
-    }
-    init() {
-      const socketService = SocketService_default.getInstance();
-      socketService.connectChat();
-      socketService.connectGame();
-      this.chatSocket = socketService.getChatSocket();
-      this.gameSocket = socketService.getGameSocket();
-      if (!this.gameSocket) {
-        console.log("Gamesocket does not exist");
-      }
-      if (!this.chatSocket) {
-        console.error("Chat: Impossible to retrieve chat socket (not connected).");
-        return;
-      }
-      this.setupSocketEvents();
-      this.setupInputListeners();
-      this.setupWizz();
-      this.setupTools();
-    }
-    joinChannel(channelKey, friendshipId, friendId) {
-      this.currentChannel = channelKey;
-      this.currentFriendshipId = friendshipId || null;
-      this.currentFriendId = friendId || null;
-      if (this.chatSocket) {
-        this.chatSocket.emit("joinChannel", channelKey);
-      }
-      if (this.messagesContainer) {
-        this.messagesContainer.innerHTML = "";
-      }
-    }
-    // ---------------------------------------------------
-    // ----      MISE EN ÉCOUTE DES SOCKETS           ----
-    // ---------------------------------------------------
-    setupSocketEvents() {
-      this.chatSocket.on("connect", () => {
-        this.addMessage("You can now chat with your friend!", "System");
-      });
-      this.chatSocket.on("chatMessage", (data) => {
-        this.addMessage(data.msg_content, data.sender_alias);
-      });
-      this.chatSocket.on("msg_history", (data) => {
-        if (this.messagesContainer) {
-          this.messagesContainer.innerHTML = "";
-          if (data.msg_history && data.msg_history.length > 0) {
-            data.msg_history.forEach((msg) => {
-              this.addMessage(msg.msg_content, msg.sender_alias);
-            });
-          } else {
-            console.log("No former message in this channel");
-          }
-        }
-      });
-      this.chatSocket.on("systemMessage", (data) => {
-        this.addSystemMessage(data.content);
-      });
-      this.chatSocket.on("receivedWizz", (data) => {
-        if (data.channel_key && data.channel_key !== this.currentChannel) {
-          return;
-        }
-        const currentUser = localStorage.getItem("username");
-        this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
-        if (data.author !== currentUser) {
-          this.shakeElement(this.wizzContainer, 3e3);
-        }
-      });
-      this.chatSocket.on("receivedAnimation", (data) => {
-        const { animationKey, author } = data;
-        const imgUrl = animations[animationKey];
-        if (imgUrl) {
-          const animationHTML = `
-					<div>
-						<strong>${author} said:</strong><br>
-						<img src="${imgUrl}" alt="${animationKey}">
-					</div>
-				`;
-          this.addCustomContent(animationHTML);
-        } else {
-          this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
-        }
-      });
-      this.chatSocket.on("disconnected", () => {
-        this.addMessage("Disconnected from chat server!", "System");
-      });
-    }
-    //================================================
-    //============= READ/UNREAD MESSAGES =============
-    //================================================
-    // private handleUnreadMessage(channel_key: string) {
-    // 	this.unreadChannels.add(channel_key);
-    // 	// changer l'icone dans la liste d'ami?
-    // 	const friendElement = document.getElementById(`friend-item-${channel_key}`);
-    // 	if (friendElement) {
-    // 		const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
-    // 		if (notifIcon) {
-    // 			notifIcon.src = '/assets/basic/message_notif.png';
-    // 		}
-    // 		friendElement.classList.add('font-bold', 'text-white');
-    // 	}
-    // }
-    //================================================
-    //=============== INPUT MANAGEMENT ===============
-    //================================================
-    setupInputListeners() {
-      if (!this.messageInput) {
-        return;
-      }
-      this.messageInput.addEventListener("keyup", (event) => {
-        if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
-          const msg_content = this.messageInput.value;
-          const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
-          const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
-          this.chatSocket.emit("chatMessage", {
-            sender_id,
-            sender_alias,
-            channel_key: this.currentChannel,
-            msg_content
-          });
-          this.messageInput.value = "";
-        }
-      });
-    }
-    // ---------------------------------------------------
-    // ----            LOGIQUE DU WIZZ                ----
-    // ---------------------------------------------------
-    setupWizz() {
-      const wizzButton = document.getElementById("send-wizz");
-      if (wizzButton) {
-        wizzButton.addEventListener("click", () => {
-          const currentUsername = localStorage.getItem("username");
-          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
-          this.shakeElement(this.wizzContainer, 500);
-        });
-      }
-    }
-    emitWizzOnly() {
-      if (!this.chatSocket) {
-        return;
-      }
-      const currentUsername = localStorage.getItem("username");
-      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
-    }
-    shakeElement(element, duration = 500) {
-      if (!element) {
-        return;
-      }
-      if (this.shakeTimeout) {
-        clearTimeout(this.shakeTimeout);
-      }
-      element.classList.remove("wizz-shake");
-      void element.offsetWidth;
-      element.classList.add("wizz-shake");
-      this.shakeTimeout = window.setTimeout(() => {
-        element.classList.remove("wizz-shake");
-        this.shakeTimeout = void 0;
-      }, duration);
-      try {
-        const wizzSound = new Audio("/assets/chat/wizz_sound.mp3");
-        wizzSound.play().catch((e) => console.log("Could not play wizz sound:", e.message));
-      } catch (e) {
-        console.log("Audio API error:", e.message);
-      }
-    }
-    getWizzContainer() {
-      return this.wizzContainer;
-    }
-    // ---------------------------------------------------
-    // ----         AFFICHAGE DES MESSAGES            ----
-    // ---------------------------------------------------
-    sendSystemNotification(message) {
-      if (this.chatSocket) {
-        this.chatSocket.emit("sendSystemMessage", {
-          channel_key: this.currentChannel,
-          content: message
-        });
-      } else {
-        this.addSystemMessage(message);
-      }
-    }
-    addSystemMessage(message) {
-      this.addMessage(`[b]${message}[/b]`, "System");
-    }
-    //faustine
-    addMessage(message, author) {
-      if (!this.messagesContainer) return;
-      const msgElement = document.createElement("div");
-      msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
-      const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
-      const match = message.match(inviteRegex);
-      if (match) {
-        const friendshipId = match[1];
-        const myUsername = localStorage.getItem("username") || sessionStorage.getItem("username") || "Guest";
-        const isMe = author === myUsername;
-        msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
-        msgElement.innerHTML = `
-				<div class="flex flex-col gap-2">
-					<strong>${author}</strong> want to play Pong with you ! <br>
-
-					<button 
-						id="join-${friendshipId}"
-						class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-							px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-							active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
-					>
-						${isMe ? "Join my waitroom" : "Accept the match"}
-					</button>
-				</div>
-			`;
-        const joinButton = msgElement.querySelector(`#join-${friendshipId}`);
-        joinButton?.addEventListener("click", () => {
-          sessionStorage.setItem("privateGameId", friendshipId);
-          window.history.pushState({ gameMode: "remote" }, "", "/game");
-          window.dispatchEvent(new PopStateEvent("popstate"));
-        });
-      } else {
-        msgElement.classList.add("bg-white");
-        const contentEmoticons = parseMessage(message);
-        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
-      }
-      this.messagesContainer.appendChild(msgElement);
-      this.scrollToBottom();
-    }
-    addCustomContent(htmlContent) {
-      if (!this.messagesContainer) return;
-      const msgElement = document.createElement("div");
-      msgElement.className = "mb-1";
-      msgElement.innerHTML = htmlContent;
-      this.messagesContainer.appendChild(msgElement);
-      this.scrollToBottom();
-    }
-    scrollToBottom() {
-      if (this.messagesContainer) {
-        setTimeout(() => {
-          if (this.messagesContainer)
-            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-        }, 50);
-      }
-    }
-    // ---------------------------------------------------
-    // ----      OUTILS (EMOTICONES, FONTS...)        ----
-    // ---------------------------------------------------
-    setupTools() {
-      const emoticonButton = document.getElementById("select-emoticon");
-      const emoticonDropdown = document.getElementById("emoticon-dropdown");
-      const emoticonGrid = document.getElementById("emoticon-grid");
-      if (emoticonButton && emoticonDropdown && emoticonGrid) {
-        emoticonGrid.innerHTML = "";
-        const emoticonsByUrl = /* @__PURE__ */ new Map();
-        const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
-        sortedKeys.forEach((key) => {
-          const imgUrl = emoticons[key];
-          if (!emoticonsByUrl.has(imgUrl)) emoticonsByUrl.set(imgUrl, []);
-          emoticonsByUrl.get(imgUrl).push(key);
-        });
-        emoticonsByUrl.forEach((keys, imgUrl) => {
-          const primaryKey = keys[0];
-          const tooltipTitle = keys.join(" | ");
-          const emoticonItem = document.createElement("div");
-          emoticonItem.className = "cursor-pointer w-7 h-7 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
-          emoticonItem.innerHTML = `<img src="${imgUrl}" alt="${primaryKey}" title="${tooltipTitle}" class="w-[20px] h-[20px]">`;
-          emoticonItem.addEventListener("click", (event) => {
-            event.stopPropagation();
-            this.insertText(primaryKey + " ");
-            emoticonDropdown.classList.add("hidden");
-          });
-          emoticonGrid.appendChild(emoticonItem);
-        });
-        emoticonButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          emoticonDropdown.classList.toggle("hidden");
-          this.closeOtherMenus("emoticon");
-        });
-        document.addEventListener("click", (e) => {
-          if (!emoticonDropdown.contains(e.target) && !emoticonButton.contains(e.target)) {
-            emoticonDropdown.classList.add("hidden");
-          }
-        });
-      }
-      const animationButton = document.getElementById("select-animation");
-      const animationDropdown = document.getElementById("animation-dropdown");
-      const animationGrid = document.getElementById("animation-grid");
-      if (animationButton && animationDropdown && animationGrid) {
-        animationGrid.innerHTML = "";
-        Object.keys(icons).forEach((key) => {
-          const imgUrl = icons[key];
-          const animationItem = document.createElement("div");
-          animationItem.className = "cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
-          animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
-          animationItem.addEventListener("click", (event) => {
-            event.stopPropagation();
-            const currentUsername = localStorage.getItem("username");
-            this.chatSocket.emit("sendAnimation", {
-              animationKey: key,
-              author: currentUsername,
-              channel_key: this.currentChannel
-            });
-            animationDropdown.classList.add("hidden");
-          });
-          animationGrid.appendChild(animationItem);
-        });
-        animationButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          animationDropdown.classList.toggle("hidden");
-          this.closeOtherMenus("animation");
-        });
-        document.addEventListener("click", (e) => {
-          if (!animationDropdown.contains(e.target) && !animationButton.contains(e.target)) {
-            animationDropdown.classList.add("hidden");
-          }
-        });
-      }
-      const fontButton = document.getElementById("change-font");
-      const fontDropdown = document.getElementById("font-dropdown");
-      const fontGrid = document.getElementById("font-grid");
-      if (fontButton && fontDropdown && fontGrid) {
-        fontGrid.innerHTML = "";
-        const colors2 = ["#000000", "#F42F25", "#F934FB", "#F76D2A", "#217F1C", "#3019F7", "#F9CA37", "#42FB37"];
-        colors2.forEach((color2) => {
-          const colorButton = document.createElement("div");
-          colorButton.className = "w-6 h-6 cursor-pointer border border-gray-300 hover:border-blue-500 hover:shadow-sm rounded-[2px]";
-          colorButton.style.backgroundColor = color2;
-          colorButton.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.wrapSelection(color2, true);
-            fontDropdown.classList.add("hidden");
-          });
-          fontGrid.appendChild(colorButton);
-        });
-        const styles = [
-          { tag: "b", icon: "font_bold.png", title: "Bold" },
-          { tag: "i", icon: "font_italic.png", title: "Italic" },
-          { tag: "u", icon: "font_underline.png", title: "Underline" },
-          { tag: "s", icon: "font_strikethrough.png", title: "Strikethrough" }
-        ];
-        styles.forEach((style) => {
-          const styleButton = document.createElement("div");
-          styleButton.className = "w-6 h-6 flex justify-center items-center cursor-pointer border border-transparent hover:bg-blue-50 hover:border-blue-200 rounded-[2px] transition-all";
-          styleButton.innerHTML = `<img src="/assets/chat/${style.icon}" alt="${style.title}" class="w-[14px] h-[14px]">`;
-          styleButton.addEventListener("click", (e) => {
-            e.stopPropagation();
-            this.wrapSelection(style.tag, false);
-            fontDropdown.classList.add("hidden");
-          });
-          fontGrid.appendChild(styleButton);
-        });
-        fontButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          fontDropdown.classList.toggle("hidden");
-          this.closeOtherMenus("font");
-        });
-        document.addEventListener("click", (e) => {
-          if (!fontDropdown.contains(e.target) && !fontButton.contains(e.target)) {
-            fontDropdown.classList.add("hidden");
-          }
-        });
-      }
-      const bgButton = document.getElementById("select-background");
-      const bgDropdown = document.getElementById("background-dropdown");
-      const chatFrame = document.getElementById("chat-frame");
-      const bgOptions = document.querySelectorAll(".bg-option");
-      if (bgButton && bgDropdown && chatFrame) {
-        bgButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          bgDropdown.classList.toggle("hidden");
-          this.closeOtherMenus("background");
-        });
-        bgOptions.forEach((option) => {
-          option.addEventListener("click", () => {
-            const bgImage = option.getAttribute("data-bg");
-            if (bgImage === "none") {
-              chatFrame.style.backgroundImage = "";
-              chatFrame.classList.add("bg-[#3DB6EC]");
-            } else if (bgImage) {
-              chatFrame.classList.remove("bg-[#BC787B]");
-              chatFrame.style.backgroundImage = bgImage;
-              chatFrame.style.backgroundSize = "cover";
-              chatFrame.style.backgroundPosition = "center";
-            }
-            bgDropdown.classList.add("hidden");
-          });
-        });
-        document.addEventListener("click", (e) => {
-          if (!bgDropdown.contains(e.target) && !bgButton.contains(e.target)) {
-            bgDropdown.classList.add("hidden");
-          }
-        });
-      }
-      const chatOptionsButton = document.getElementById("chat-options-button");
-      const chatOptionsDropdown = document.getElementById("chat-options-dropdown");
-      if (chatOptionsButton && chatOptionsDropdown) {
-        chatOptionsButton.addEventListener("click", (e) => {
-          e.stopPropagation();
-          chatOptionsDropdown.classList.toggle("hidden");
-          this.closeOtherMenus("options");
-        });
-        document.addEventListener("click", (e) => {
-          if (!chatOptionsDropdown.contains(e.target) && !chatOptionsButton.contains(e.target)) {
-            chatOptionsDropdown.classList.add("hidden");
-          }
-        });
-        document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (this.currentFriendId && this.currentFriendshipId) {
-            const myName = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
-            const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
-            if (this.chatSocket && this.chatSocket.connected) {
-              console.log("chatSocket connected");
-              const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
-              this.chatSocket.emit("chatMessage", {
-                sender_id,
-                sender_alias: myName,
-                channel_key: this.currentChannel,
-                msg_content: inviteCode
-                // ici au lieu du message on "envois" le code d'invitation
-              });
-            } else {
-              console.log("chatSocket disconnected");
-            }
-          } else {
-            console.error("Game socket not connected", this.gameSocket);
-            this.addSystemMessage("Error: Game server not reachable.");
-          }
-          chatOptionsDropdown.classList.add("hidden");
-        });
-        document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          console.log("friendhsop id:", this.currentFriendshipId);
-          if (!this.currentFriendshipId) {
-            console.error("Cannot block: no friendship id associated to this conv");
-            chatOptionsDropdown.classList.add("hidden");
-            return;
-          }
-          const currentChatUser = document.getElementById("chat-header-username")?.textContent;
-          if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
-            try {
-              const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
-              const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
-                method: "PATCH",
-                body: JSON.stringify({ status: "blocked" })
-              });
-              if (response.ok) {
-                console.log(`User ${currentChatUser} blocked successfully`);
-                const event = new CustomEvent("friendBlocked", {
-                  detail: { username: currentChatUser }
-                });
-                window.dispatchEvent(event);
-                if (this.messagesContainer) {
-                  this.messagesContainer.innerHTML = "";
-                  const infoMsg = document.createElement("div");
-                  infoMsg.className = "text-center text-gray-400 text-sm mt-10";
-                  infoMsg.innerText = "Conversation deleted (User blocked).";
-                  this.messagesContainer.appendChild(infoMsg);
-                }
-                if (this.messageInput) {
-                  this.messageInput.value = "";
-                  this.messageInput.disabled = true;
-                  this.messageInput.placeholder = "You blocked this user.";
-                }
-                this.currentChannel = "";
-                this.currentFriendshipId = null;
-              } else {
-                console.error("Network error while blocking");
-                alert("Error while blocking");
-              }
-            } catch (error) {
-              console.error("Networik error:", error);
-            }
-          }
-          chatOptionsDropdown.classList.add("hidden");
-        });
-      }
-    }
-    closeOtherMenus(current) {
-      if (current !== "emoticon") document.getElementById("emoticon-dropdown")?.classList.add("hidden");
-      if (current !== "animation") document.getElementById("animation-dropdown")?.classList.add("hidden");
-      if (current !== "font") document.getElementById("font-dropdown")?.classList.add("hidden");
-      if (current !== "background") document.getElementById("background-dropdown")?.classList.add("hidden");
-      if (current !== "options") document.getElementById("chat-options-dropdown")?.classList.add("hidden");
-      document.getElementById("add-friend-dropdown")?.classList.add("hidden");
-      document.getElementById("status-dropdown")?.classList.add("hidden");
-    }
-    // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
-    insertText(text) {
-      if (!this.messageInput) return;
-      const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
-      const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
-      const newValue = this.messageInput.value.substring(0, start) + text + this.messageInput.value.substring(end);
-      this.messageInput.value = newValue;
-      const newPos = start + text.length;
-      this.messageInput.setSelectionRange(newPos, newPos);
-      this.messageInput.focus();
-    }
-    // insertion des balises autour du texte selectionne
-    wrapSelection(tagOrColor, isColor) {
-      if (!this.messageInput) return;
-      const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
-      const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
-      const selectedText = this.messageInput.value.substring(start, end);
-      let replacement;
-      let cursorOffset;
-      if (isColor) {
-        const openTag = `[color=${tagOrColor}]`;
-        replacement = `${openTag}${selectedText}[/color]`;
-        cursorOffset = openTag.length;
-      } else {
-        const openTag = `[${tagOrColor}]`;
-        replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
-        cursorOffset = openTag.length;
-      }
-      this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
-      const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
-      this.messageInput.setSelectionRange(newCursorPos, newCursorPos);
-      this.messageInput.focus();
-    }
-    destroy() {
-      if (this.chatSocket) {
-        this.chatSocket.off("connect");
-        this.chatSocket.off("chatMessage");
-        this.chatSocket.off("msg_history");
-        this.chatSocket.off("receivedWizz");
-        this.chatSocket.off("receivedAnimation");
-        this.chatSocket.off("systemMessage");
-        this.chatSocket.off("disconnected");
-      }
-    }
-  };
-
-  // scripts/components/FriendProfileModal.ts
-  var FriendProfileModal = class {
-    constructor() {
-      this.modal = document.getElementById("friend-profile-modal");
-      this.closeButton = document.getElementById("close-friend-modal");
-      this.closeButtonBottom = document.getElementById("close-friend-modal-button");
-      this.avatar = document.getElementById("friend-modal-avatar");
-      this.status = document.getElementById("friend-modal-status");
-      this.username = document.getElementById("friend-modal-username");
-      this.bio = document.getElementById("friend-modal-bio");
-      this.stats = {
-        games: document.getElementById("friend-stat-games"),
-        wins: document.getElementById("friend-stat-wins"),
-        losses: document.getElementById("friend-stat-losses"),
-        streak: document.getElementById("friend-stat-streak"),
-        avgScore: document.getElementById("friend-stat-average-score"),
-        winRate: document.getElementById("friend-stat-win-rate"),
-        opponent: document.getElementById("friend-stat-opponent"),
-        favGame: document.getElementById("friend-stat-fav-game")
-      };
-      this.initListeners();
-    }
-    initListeners() {
-      const close = () => this.modal?.classList.add("hidden");
-      this.closeButton?.addEventListener("click", close);
-      this.closeButtonBottom?.addEventListener("click", close);
-      this.modal?.addEventListener("click", (e) => {
-        if (e.target === this.modal) close();
-      });
-    }
-    // on appelle cette methode dans homepage
-    async open(friendId) {
-      if (!this.modal || !friendId) return;
-      try {
-        if (this.username) this.username.innerText = "Loading...";
-        const [userRes, statsRes] = await Promise.all([
-          fetchWithAuth(`api/user/${friendId}`),
-          fetchWithAuth(`api/game/users/${friendId}/stats`)
-        ]);
-        if (userRes.ok) {
-          const user = await userRes.json();
-          let stats = null;
-          if (statsRes.ok) {
-            const statsJson = await statsRes.json();
-            stats = statsJson.data || statsJson;
-          }
-          this.updateUI(user, stats);
-          this.modal.classList.remove("hidden");
-          this.modal.classList.add("flex");
-        }
-      } catch (error) {
-        console.error("Error modal:", error);
-      }
-    }
-    updateUI(user, stats) {
-      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
-      if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
-      if (this.username) this.username.innerText = user.alias;
-      if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
-      if (stats) {
-        const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
-        const wins = stats.wins || 0;
-        if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
-        if (this.stats.wins) this.stats.wins.innerText = wins.toString();
-        if (this.stats.losses) this.stats.losses.innerText = (stats.losses || 0).toString();
-        if (this.stats.avgScore) this.stats.avgScore.innerText = (stats.average_score ?? 0).toString();
-        const streak = stats.streak ?? stats.current_win_streak ?? stats.currentWinStreak ?? 0;
-        if (this.stats.streak) this.stats.streak.innerText = streak.toString();
-        if (this.stats.winRate) {
-          let rate = 0;
-          if (gamesPlayed > 0) {
-            rate = Math.round(wins / gamesPlayed * 100);
-          }
-          this.stats.winRate.innerText = `${rate}%`;
-        }
-        if (this.stats.opponent) this.stats.opponent.innerText = stats.biggest_opponent || "-";
-        if (this.stats.favGame) this.stats.favGame.innerText = stats.favorite_game || "Local";
-      } else {
-        Object.values(this.stats).forEach((el) => {
-          if (el) el.innerText = el === this.stats.opponent || el === this.stats.favGame ? "-" : "0";
-        });
-        if (this.stats.winRate) this.stats.winRate.innerText = "0%";
-      }
-    }
-  };
-
   // node_modules/i18next/dist/esm/i18next.js
   var isString = (obj) => typeof obj === "string";
   var defer = () => {
@@ -8347,7 +6194,7 @@
         available: "Disponible",
         busy: "Occup\xE9",
         away: "Absent",
-        invisible: "Hors ligne"
+        offline: "Hors ligne"
       }
     },
     games: {
@@ -8409,7 +6256,7 @@
         available: "Available",
         busy: "Busy",
         away: "Away",
-        invisible: "Offline"
+        offline: "Offline"
       }
     },
     games: {
@@ -8471,7 +6318,7 @@
         available: "",
         busy: "",
         away: "",
-        invisible: ""
+        offline: ""
       }
     },
     games: {
@@ -8522,6 +6369,2161 @@
   }
   var i18n_default = instance;
 
+  // scripts/controllers/LoginPage.ts
+  function render() {
+    return LoginPage_default;
+  }
+  async function init2faLogin(accessToken, userId, selectedStatus) {
+    if (accessToken) {
+      localStorage.setItem("accessToken", accessToken);
+    }
+    if (userId) {
+      localStorage.setItem("userId", userId.toString());
+    }
+    if (userId && accessToken) {
+      try {
+        const userRes = await fetch(`/api/user/${userId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          if (userData.alias)
+            localStorage.setItem("username", userData.alias);
+          if (userData.theme)
+            localStorage.setItem("userTheme", userData.theme);
+        }
+      } catch (err) {
+        console.error("Can't get user's profile", err);
+      }
+      try {
+        await fetch(`/api/user/${userId}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({ status: selectedStatus })
+        });
+      } catch (err) {
+        console.error("Failed to update status on login", err);
+      }
+    }
+    localStorage.setItem("userStatus", selectedStatus);
+    window.history.pushState({}, "", "/home");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }
+  function handleLogin() {
+    const button = document.getElementById("login-button");
+    const errorElement = document.getElementById("error-message");
+    const modal2fa = document.getElementById("2fa-modal");
+    const input2fa = document.getElementById("2fa-input-code");
+    const confirm2fa = document.getElementById("confirm-2fa-button");
+    const close2fa = document.getElementById("close-2fa-modal");
+    const error2fa = document.getElementById("2fa-error-message");
+    const backButton = document.getElementById("back-button");
+    let tempToken = null;
+    let cachedStatus = "available";
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    button?.addEventListener("click", async () => {
+      const email = document.getElementById("email-input").value;
+      const password = document.getElementById("password-input").value;
+      const selectedStatus = document.getElementById("status-input").value;
+      if (errorElement) {
+        errorElement.classList.add("hidden");
+        errorElement.textContent = "";
+      }
+      if (!email || !password) {
+        if (errorElement) {
+          errorElement.textContent = "Please fill all inputs";
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const result = await response.json();
+        if (result.require2fa) {
+          localStorage.setItem("is2faEnabled", "true");
+          tempToken = result.tempToken;
+          if (modal2fa) {
+            modal2fa.classList.remove("hidden");
+            modal2fa.classList.add("flex");
+            input2fa.value = "";
+            input2fa.focus();
+          }
+          return;
+        }
+        if (result.success) {
+          localStorage.setItem("is2faEnabled", "false");
+          const { accessToken, userId } = result.data;
+          await init2faLogin(accessToken, userId, cachedStatus);
+          if (accessToken) {
+            localStorage.setItem("accessToken", accessToken);
+          }
+          if (userId) {
+            localStorage.setItem("userId", userId.toString());
+          }
+          if (userId && accessToken) {
+            try {
+              const userRes = await fetchWithAuth(`/api/user/${userId}`, {
+                method: "GET"
+              });
+              if (userRes.ok) {
+                const userData = await userRes.json();
+                if (userData.alias) {
+                  localStorage.setItem("username", userData.alias);
+                }
+                if (userData.theme) {
+                  localStorage.setItem("userTheme", userData.theme);
+                }
+              }
+            } catch (err) {
+              console.error("Can't get user's profile", err);
+            }
+            try {
+              await fetchWithAuth(`/api/user/${userId}/status`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: selectedStatus })
+              });
+              console.log("Status updated to database:", selectedStatus);
+            } catch (err) {
+              console.error("Failed to update status on login", err);
+            }
+          }
+          localStorage.setItem("userStatus", selectedStatus);
+          window.history.pushState({}, "", "/home");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        } else {
+          console.error("Login error:", result.error);
+          if (errorElement) {
+            errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
+            errorElement.classList.remove("hidden");
+          }
+        }
+      } catch (error) {
+        console.error("Network error:", error);
+        if (errorElement) {
+          errorElement.textContent = "Network error, please try again";
+          errorElement.classList.remove("hidden");
+        }
+      }
+    });
+    confirm2fa?.addEventListener("click", async () => {
+      const code = input2fa.value.trim();
+      if (error2fa) {
+        error2fa.classList.add("hidden");
+      }
+      if (!code || !tempToken) {
+        return;
+      }
+      try {
+        const response = await fetch("/api/auth/2fa/challenge", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${tempToken}`
+          },
+          body: JSON.stringify({ code })
+        });
+        const result = await response.json();
+        if (response.ok && result.success) {
+          localStorage.setItem("is2faEnabled", "true");
+          const { accessToken, userId } = result;
+          if (modal2fa) {
+            modal2fa.classList.add("hidden");
+          }
+          await updateUserStatus("online");
+          await init2faLogin(accessToken, userId, cachedStatus);
+        } else {
+          if (error2fa) {
+            error2fa.textContent = "Invalid code.";
+            error2fa.classList.remove("hidden");
+            console.error("2FA Error:", result.error.message);
+          }
+        }
+      } catch (error) {
+        if (error2fa) {
+          error2fa.textContent = "Error during verification.";
+          error2fa.classList.remove("hidden");
+        }
+      }
+    });
+    const closeFunc = () => {
+      if (modal2fa) {
+        modal2fa.classList.add("hidden");
+        modal2fa.classList.remove("flex");
+        tempToken = null;
+      }
+    };
+    close2fa?.addEventListener("click", closeFunc);
+    modal2fa?.addEventListener("click", (e) => {
+      if (e.target === modal2fa) closeFunc();
+    });
+  }
+  function loginEvents() {
+    handleLogin();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          await changeLanguage2(lang);
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
+  }
+
+  // scripts/pages/HomePage.html
+  var HomePage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+
+	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+	</div>
+
+	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
+		
+		<!-- Container avec left et right qui prennent toute la hauteur restante -->
+		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+
+			<!-- ========= LEFT COLUMN ========= -->
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
+				
+				<!-- ========= PROFILE WINDOW ========= -->
+				<div class="window flex flex-col">
+					<div class="title-bar">
+						<div class="title-bar-text">Profile</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
+
+					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
+						<div class="flex flex-row w-full rounded-sm p-2"> 
+							<!-- Cadre du profil -->
+							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
+								<div class="relative w-[110px] h-[110px] flex-shrink-0">
+									<!-- l'image (profil principal) -->
+									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
+										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
+									<!-- le cadre -->
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+								</div>
+		
+								<!-- username, bio et status -->
+								<div class="flex flex-col justify-center pl-4 flex-1">
+									<div class="flex items-center gap-2 mb-1">
+										<p class="text-xl font-semibold" id="user-name">{{profile.username}}</p>
+		
+										<!-- selection du status = dynamique -->
+										<div class="relative">
+											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
+												<span id="current-status-text">(Available)</span>
+												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+											</button>
+		
+											<!-- Menu dropdown pour le status -->
+											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>{{profile.status.available}}</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>{{profile.status.busy}}</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>{{profile.status.away}}</span>
+												</button>
+												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
+													<span class="w-2 h-2 rounded-full"></span>
+													<span>{{profile.status.offline}}</span>
+												</button>
+											</div>
+										</div>
+									</div>
+									<div id="bio-wrapper">
+										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">{{profile.bio}}</p>
+										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
+									</div>
+								</div>
+		
+								<!-- Notifications -->
+								<div class="ml-auto flex items-start relative">
+									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
+										<img id="notification-icon" 
+											src="/assets/basic/no_notification.png" 
+											alt="Notifications" 
+											class="w-full h-full object-contain">
+											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
+									</button>
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
+												{{notifications.title}}
+											</h3>
+										</div>
+										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
+											<div class="p-4 text-center text-xs text-gray-500">{{notifications.no_notification}}</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- ========= GAMES WINDOW ========= -->
+				<div class="window flex flex-col flex-1">
+					<div class="title-bar">
+						<div class="title-bar-text">{{games.title}}</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
+
+					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
+						<div class="bg-white p-6 flex flex-col flex-1">
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">{{games.choose_mode}}</h1>
+
+							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
+								<button id="local-game" 
+									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+									{{games.local}}
+								</button>
+
+								<button id="remote-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									{{games.remote}}
+								</button>
+
+								<button id="tournament-game" 
+									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+									{{games.tournament}}
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+
+			<!-- ========= RIGHT WINDOW ========= -->
+			<div class="window flex flex-col flex-1 min-w-0">
+				<div class="title-bar">
+					<div class="title-bar-text">{{chat.title}}</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
+
+				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
+
+					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
+							<div class="flex flex-row items-center justify-between">
+								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{chat.friends}}</p>
+								
+								<div class="ml-auto flex items-center mb-3 relative">
+									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
+										<img id="add-friend-icon" 
+											src="/assets/basic/1441.png" 
+											alt="Friends button" 
+											class="w-full h-full object-contain">
+									</button>
+									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
+										<p class="text-sm font-semibold mb-2 text-center">{{chat.add_friend}}</p>
+										<input type="text" 
+											id="friend-search-input" 
+											placeholder="Type in username or email" 
+											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<div class="flex gap-2">
+											<button id="send-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												{{chat.send_request}}
+											</button>
+											<button id="cancel-friend-request" 
+												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+												{{chat.cancel}}
+											</button>
+										</div>
+										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
+									</div>
+								</div>
+							</div>
+
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
+
+								<details open class="group">
+									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
+										{{chat.contact}}
+									</summary>
+
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
+										</div>
+								</details>
+							</div>
+						</div>
+
+						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
+							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
+							<p class="text-gray-400 text-lg font-semibold">{{chat.placeholder}}</p>
+						</div>
+
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+							
+							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+								<div class="flex gap-4 items-center">
+									<div class="relative w-[80px] h-[80px] flex-shrink-0">
+										<img id="chat-header-avatar" 
+											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
+											src="" 
+											alt="User avatar">
+										<img id="chat-header-status" 
+											class="absolute inset-0 w-full h-full object-contain" 
+											src="/assets/basic/status_online_small.png" 
+											alt="Status frame">
+									</div>
+									<div class="flex flex-col justify-start leading-tight">
+										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+									</div>
+								</div>
+								
+								<div class="relative self-start mt-2">
+									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
+										<img src="/assets/chat/meatball.png"
+											 alt="options"
+											 class="w-6 h-6 object-contain"
+											 style="width: 15px; height: 15px; vertical-align: -25px;">
+									</button>
+
+									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
+    
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/view_profile.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
+												{{chat.view_profile}}
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/game_notification.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
+												{{chat.invite_game}}
+											</button>
+										</div>
+
+										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
+												<img src="/assets/basic/block.png" 
+													class="w-6 h-6 object-cover rounded"
+													alt="avatar">
+											</div>
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
+												{{chat.block_user}}
+											</button>
+										</div>
+
+									</div>
+
+								</div>
+
+
+							</div>
+
+
+
+							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+
+										</div>
+									</button>
+
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
+						</div>
+					</div> 
+				</div>
+			</div> 
+		</div>
+
+	</div>
+
+<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+        <div class="title-bar">
+            <div class="title-bar-text">User Profile</div>
+            <div class="title-bar-controls">
+                <button id="close-friend-modal" aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="window-body p-6">
+            
+            <div class="flex flex-row gap-6 mb-6 items-center">
+                
+                <div class="relative w-[130px] h-[130px] flex-shrink-0">
+                    <img id="friend-modal-status" 
+                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
+                            src="/assets/basic/status_frame_online_large.png">
+                    
+                    <img id="friend-modal-avatar" 
+                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
+                            src="/assets/basic/default.png">
+                </div>
+
+                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
+                    
+                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
+                </div>	
+            </div>
+
+            <fieldset class="border border-gray-300 p-4 rounded-sm">
+                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Games Played:</span>
+                        <span id="friend-stat-games" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Wins:</span>
+                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Losses:</span>
+                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-1">
+                        <span>Winning streak:</span>
+                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex justify-end mt-4">
+                    <button id="close-friend-modal-button" 
+                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+ <!-- MODALE POUR L'AVATAR -->
+
+
+    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+            <div class="title-bar">
+                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-controls">
+                    <button aria-label="Minimize"></button>
+                    <button aria-label="Maximize"></button>
+                    <button id="close-modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="window-body p-6">
+                <div class="mb-6">
+                    <h2 class="text-xl mb-1">Select a picture</h2>
+                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                </div>
+                
+                <div class="flex flex-row gap-6">
+                    <div class="flex-1">
+                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
+                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4 w-[200px]">
+                        <div class="relative w-[170px] h-[170px]">
+                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
+                            src="/assets/basic/status_frame_offline_large.png">
+                            
+                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
+                            src="/assets/basic/default.png">
+                        </div>
+
+                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
+                            <input type="file" id="file-input" accept="image/*" hidden>
+
+                            <button id="browse-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            BROWSE
+                            </button>
+                            
+                            <button id="delete-button" 
+                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                            DELETE
+                            </button>
+
+                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+                                <button id="validation-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        OK
+                                </button>
+                                <button id="cancel-button" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                        CANCEL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+  // scripts/components/FriendList.ts
+  var FriendList = class {
+    constructor() {
+      this.notificationInterval = null;
+      this.container = document.getElementById("contacts-list");
+      this.userId = localStorage.getItem("userId");
+    }
+    init() {
+      SocketService_default.getInstance().connectChat();
+      SocketService_default.getInstance().connectGame();
+      this.loadFriends();
+      this.setupFriendRequests();
+      this.setupNotifications();
+      this.checkNotifications();
+      this.listenToUpdates();
+      this.setupBlockListener();
+      this.registerSocketUser();
+      if (this.notificationInterval) clearInterval(this.notificationInterval);
+      this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
+    }
+    // AJOUT
+    destroy() {
+      if (this.notificationInterval) {
+        clearInterval(this.notificationInterval);
+        this.notificationInterval = null;
+      }
+    }
+    registerSocketUser() {
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const userId = this.userId;
+      if (gameSocket && gameSocket.connected) {
+        gameSocket.emit("registerGameSocket", userId);
+      }
+    }
+    async loadFriends() {
+      const contactsList = this.container;
+      if (!this.userId || !contactsList) return;
+      try {
+        const response = await fetchWithAuth(`/api/user/${this.userId}/friends?t=${(/* @__PURE__ */ new Date()).getTime()}`);
+        if (!response.ok) throw new Error("Failed to fetch friends");
+        const responseData = await response.json();
+        const friendList = responseData.data;
+        contactsList.innerHTML = "";
+        if (!friendList || friendList.length === 0) {
+          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+          return;
+        }
+        friendList.forEach((friendship) => {
+          const user = friendship.user;
+          const friend = friendship.friend;
+          if (!user || !friend) return;
+          const currentUserId = Number(this.userId);
+          const selectedFriend = user.id === currentUserId ? friend : user;
+          let rawStatus = selectedFriend.status || "offline";
+          const status = rawStatus.toLowerCase();
+          const friendItem = document.createElement("div");
+          friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
+          friendItem.dataset.id = selectedFriend.id;
+          friendItem.dataset.friendshipId = friendship.id;
+          friendItem.dataset.login = selectedFriend.username;
+          friendItem.dataset.alias = selectedFriend.alias;
+          friendItem.dataset.status = status;
+          friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+          friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
+          friendItem.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="relative w-[40px] h-[40px] flex-shrink-0">
+                         <img class="w-full h-full rounded-full object-cover border border-gray-200"
+                             src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
+                        
+                        <img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
+                             src="${getStatusDot(status)}" alt="status">
+                    </div>
+                    <div class="flex flex-col leading-tight">
+                        <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
+                        <span class="text-xs text-gray-400 status-text">${status}</span>
+                    </div>
+                </div>
+
+                <div id="badge-${selectedFriend.id}" 
+                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                    1
+                </div>
+
+                `;
+          contactsList.appendChild(friendItem);
+          friendItem.addEventListener("click", (e) => {
+            if (e.target.closest(".invite-btn")) return;
+            this.clearNotifications(selectedFriend.id);
+            const event = new CustomEvent("friendSelected", {
+              detail: { friend: selectedFriend, friendshipId: friendship.id }
+            });
+            window.dispatchEvent(event);
+          });
+          const inviteBtn = friendItem.querySelector(".invite-btn");
+          inviteBtn?.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.sendInviteDirectly(selectedFriend.id, selectedFriend.alias);
+          });
+        });
+      } catch (error) {
+        console.error("Error loading friends:", error);
+        contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    }
+    clearNotifications(friendId) {
+      const badge = document.getElementById(`badge-${friendId}`);
+      if (badge) {
+        badge.classList.add("hidden");
+        badge.innerText = "0";
+      }
+    }
+    handleMessageNotification(senderId) {
+      const badge = document.getElementById(`badge-${senderId}`);
+      if (badge) {
+        badge.classList.remove("hidden");
+      }
+    }
+    // AJOUT: Fonction pour envoyer une invitation depuis la liste
+    sendInviteDirectly(friendId, friendName) {
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const myName = localStorage.getItem("username");
+      if (!gameSocket || !gameSocket.connected) {
+        alert("Game is disconnected, please refresh");
+        SocketService_default.getInstance().connectGame();
+        return;
+      }
+      console.debug(`Sending game invite to ${friendName} via GameSocket`);
+      gameSocket.emit("sendGameInvite", {
+        targetId: friendId,
+        senderName: myName
+      });
+      alert(`Invitation sent to ${friendName}`);
+    }
+    listenToUpdates() {
+      const socketService = SocketService_default.getInstance();
+      const chatSocket = socketService.getChatSocket();
+      const gameSocket = socketService.getGameSocket();
+      if (!chatSocket) return;
+      chatSocket.on("unreadNotification", (data) => {
+        this.handleMessageNotification(data.senderId);
+      });
+      chatSocket.on("friendStatusUpdate", (data) => {
+        console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
+        this.updateFriendUI(data.username, data.status);
+      });
+      chatSocket.on("userConnected", (data) => {
+        const currentUsername = localStorage.getItem("username");
+        if (data.username !== currentUsername) {
+          this.updateFriendUI(data.username, data.status);
+        }
+      });
+      chatSocket.on("receiveFriendRequestNotif", () => {
+        console.log("New friend request received!");
+        this.checkNotifications();
+      });
+      chatSocket.on("friendRequestAccepted", () => {
+        console.log("Friend request accepted by other user!");
+        this.loadFriends();
+      });
+      if (!gameSocket) {
+        console.error("GameSocket cannot be found");
+        return;
+      }
+      const attachGameListeners = () => {
+        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
+        gameSocket.emit("registerGameSocket");
+        gameSocket.off("receiveGameInvite");
+        gameSocket.on("receiveGameInvite", (data) => {
+          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+          this.showGameInviteNotification(data.senderId, data.senderName);
+        });
+      };
+      if (gameSocket.connected) {
+        attachGameListeners();
+      } else {
+        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
+        gameSocket.once("connect", () => {
+          attachGameListeners();
+        });
+      }
+    }
+    ///// pour la notification de l'invitation
+    showGameInviteNotification(senderId, senderName) {
+      console.log("showGameInvite");
+      const notifIcon = document.getElementById("notification-icon");
+      if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+      const toast = document.createElement("div");
+      toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
+      toast.innerHTML = `
+            <div class="font-bold text-gray-800">\u{1F3AE} Game Invite</div> 
+            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="flex gap-2 mt-2">
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+            </div>
+        `;
+      document.body.appendChild(toast);
+      toast.querySelector("#accept-invite")?.addEventListener("click", () => {
+        const gameSocket = SocketService_default.getInstance().getGameSocket();
+        if (!gameSocket || !gameSocket.connected) {
+          alert("Error: connexion to server lost");
+          toast.remove();
+          return;
+        }
+        console.log("Accepting game invite from", senderName);
+        gameSocket.once("matchFound", (data) => {
+          console.log("\u2705 Match found from invitation:", data);
+          sessionStorage.setItem("pendingMatch", JSON.stringify(data));
+          window.history.pushState({ gameMode: "remote" }, "", "/game");
+          const event = new PopStateEvent("popstate");
+          window.dispatchEvent(event);
+        });
+        gameSocket.emit("acceptGameInvite", { senderId });
+        toast.remove();
+      });
+      toast.querySelector("#decline-invite")?.addEventListener("click", () => {
+        const gameSocket = SocketService_default.getInstance().getGameSocket()?.emit("declineGameInvite", { senderId });
+        if (gameSocket && gameSocket.connected) {
+          gameSocket.emit("declineGameInivite", { senderId });
+        }
+        toast.remove();
+      });
+      setTimeout(() => {
+        if (document.body.contains(toast)) toast.remove();
+      }, 1e4);
+    }
+    updateFriendUI(loginOrUsername, newStatus) {
+      const friendItems = document.querySelectorAll(".friend-item");
+      friendItems.forEach((item) => {
+        const el = item;
+        if (el.dataset.login === loginOrUsername || el.dataset.alias === loginOrUsername) {
+          let status = (newStatus || "offline").toLowerCase();
+          el.dataset.status = status;
+          const statusImg = el.querySelector('img[alt="status"]');
+          if (statusImg) {
+            statusImg.src = getStatusDot(status);
+          }
+          console.log(`[FriendList] Updated UI for ${loginOrUsername} to ${status}`);
+        }
+      });
+    }
+    setupBlockListener() {
+      window.addEventListener("friendBlocked", (e) => {
+        const blockedUsername = e.detail?.username;
+        if (!blockedUsername || !this.container) return;
+        const friendToRemove = this.container.querySelector(`.friend-item[data-login="${blockedUsername}"]`);
+        if (friendToRemove) {
+          friendToRemove.style.opacity = "0";
+          setTimeout(() => {
+            friendToRemove.remove();
+            if (this.container && this.container.children.length === 0) {
+              this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+            }
+          }, 300);
+        }
+      });
+    }
+    setupFriendRequests() {
+      const addFriendButton = document.getElementById("add-friend-button");
+      const addFriendDropdown = document.getElementById("add-friend-dropdown");
+      const friendSearchInput = document.getElementById("friend-search-input");
+      const sendFriendRequestButton = document.getElementById("send-friend-request");
+      const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
+      const friendRequestMessage = document.getElementById("friend-request-message");
+      if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
+        addFriendButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          addFriendDropdown.classList.toggle("hidden");
+          document.getElementById("status-dropdown")?.classList.add("hidden");
+          if (!addFriendDropdown.classList.contains("hidden")) {
+            friendSearchInput.focus();
+          }
+        });
+        const sendFriendRequest = async () => {
+          const searchValue = friendSearchInput.value.trim();
+          if (!searchValue) {
+            this.showFriendMessage("Please enter a username or email", "error", friendRequestMessage);
+            return;
+          }
+          const userId = localStorage.getItem("userId");
+          try {
+            const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ alias: searchValue })
+            });
+            const data = await response.json();
+            if (response.ok) {
+              this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
+              const targetId = data.data.friend_id || data.data.friend?.id;
+              if (targetId) {
+                SocketService_default.getInstance().getChatSocket()?.emit("sendFriendRequestNotif", {
+                  targetId
+                });
+              }
+              friendSearchInput.value = "";
+              setTimeout(() => {
+                addFriendDropdown.classList.add("hidden");
+                friendRequestMessage?.classList.add("hidden");
+              }, 1500);
+            } else {
+              this.showFriendMessage(data.error.message || "Error sending request", "error", friendRequestMessage);
+            }
+          } catch (error) {
+            console.error("Error:", error);
+            this.showFriendMessage("Network error", "error", friendRequestMessage);
+          }
+        };
+        sendFriendRequestButton.addEventListener("click", sendFriendRequest);
+        friendSearchInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") sendFriendRequest();
+        });
+        cancelFriendRequestButton.addEventListener("click", () => {
+          addFriendDropdown.classList.add("hidden");
+          friendSearchInput.value = "";
+          friendRequestMessage?.classList.add("hidden");
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (!addFriendDropdown.contains(target) && !addFriendButton.contains(target)) {
+            addFriendDropdown.classList.add("hidden");
+            friendRequestMessage?.classList.add("hidden");
+          }
+        });
+      }
+    }
+    showFriendMessage(message, type, element) {
+      if (element) {
+        element.textContent = message;
+        element.classList.remove("hidden", "text-green-600", "text-red-600");
+        element.classList.add(type === "success" ? "text-green-600" : "text-red-600");
+      }
+    }
+    setupNotifications() {
+      const notifButton = document.getElementById("notification-button");
+      const notifDropdown = document.getElementById("notification-dropdown");
+      if (notifButton && notifDropdown) {
+        notifButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifDropdown.classList.toggle("hidden");
+          document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+          if (!notifDropdown.classList.contains("hidden")) {
+            this.checkNotifications();
+          }
+        });
+        document.addEventListener("click", (e) => {
+          if (!notifDropdown.contains(e.target) && !notifButton.contains(e.target))
+            notifDropdown.classList.add("hidden");
+        });
+      }
+    }
+    async checkNotifications() {
+      const userId = localStorage.getItem("userId");
+      const notifList = document.getElementById("notification-list");
+      if (!userId || !notifList) return;
+      try {
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+        if (!response.ok) throw new Error("Failed to fetch pendings");
+        const requests = await response.json();
+        const pendingList = requests.data;
+        const notifIcon = document.getElementById("notification-icon");
+        if (pendingList.length > 0) {
+          if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
+        } else {
+          if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
+        }
+        notifList.innerHTML = "";
+        if (pendingList.length === 0) {
+          notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+          return;
+        }
+        pendingList.forEach((req) => {
+          const item = document.createElement("div");
+          item.dataset.friendshipId = req.id.toString();
+          item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+          item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                        <img src="/assets/basic/logo.png" 
+                            class="w-full h-full object-cover rounded"
+                            alt="avatar">
+                    </div>
+                    <div class="flex-1 min-w-0 pr-4">
+                        <p class="text-sm text-gray-800">
+                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                        </p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                            <span class="text-green-600 font-bold text-sm">\u2713</span>
+                        </button>
+                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                            <span class="text-red-600 font-bold text-sm">\u2715</span>
+                        </button>
+                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                            <span class="text-gray-600 text-xs">\u{1F6AB}</span>
+                        </button>
+                    </div>
+                `;
+          const buttonAccept = item.querySelector(".btn-accept");
+          const buttonReject = item.querySelector(".btn-reject");
+          const buttonBlock = item.querySelector(".btn-block");
+          if (req.user && req.user.id) {
+            buttonAccept?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "validated", item);
+            });
+            buttonReject?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "rejected", item);
+            });
+            buttonBlock?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "blocked", item);
+            });
+          }
+          notifList.appendChild(item);
+        });
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    }
+    async handleRequest(requesterId, action, itemDiv) {
+      const userId = localStorage.getItem("userId");
+      if (!itemDiv.dataset.friendshipId) return;
+      try {
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/${itemDiv.dataset.friendshipId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: action })
+        });
+        if (response.ok) {
+          itemDiv.style.opacity = "0";
+          setTimeout(() => {
+            itemDiv.remove();
+            if (action === "validated") {
+              this.loadFriends();
+              const socket = SocketService_default.getInstance().getChatSocket();
+              if (socket) {
+                socket.emit("acceptFriendRequest", {
+                  targetId: requesterId
+                });
+              }
+            }
+            this.checkNotifications();
+          }, 300);
+        } else {
+          console.error("Failed to update request");
+        }
+      } catch (error) {
+        console.error("Network error", error);
+      }
+    }
+  };
+
+  // scripts/components/ChatUtils.ts
+  var escapeHTML = (text) => {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  };
+  var escapeRegex = (string) => {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  };
+  var parseMessage = (message) => {
+    let formattedMessage = escapeHTML(message);
+    const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
+    sortedKeys.forEach((key) => {
+      const imgUrl = emoticons[key];
+      const escapedKey = escapeRegex(escapeHTML(key));
+      const regex = new RegExp(escapedKey, "g");
+      formattedMessage = formattedMessage.replace(
+        regex,
+        `<img src="${imgUrl}" alt="${key}" class="inline-block w-[20px] h-[20px] align-middle mx-0.5" />`
+      );
+    });
+    formattedMessage = formattedMessage.replace(/\[b\](.*?)\[\/b\]/g, "<strong>$1</strong>").replace(/\[i\](.*?)\[\/i\]/g, "<em>$1</em>").replace(/\[u\](.*?)\[\/u\]/g, "<u>$1</u>").replace(/\[s\](.*?)\[\/s\]/g, "<s>$1</s>").replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>');
+    return formattedMessage;
+  };
+
+  // scripts/components/UserProfile.ts
+  var UserProfile = class {
+    constructor() {
+      this.selectedImageSrc = "";
+      this.bioText = document.getElementById("user-bio");
+      this.bioWrapper = document.getElementById("bio-wrapper");
+      this.statusFrame = document.getElementById("user-status");
+      this.statusText = document.getElementById("current-status-text");
+      this.userConnected = document.getElementById("user-name");
+      this.userProfileImg = document.getElementById("user-profile");
+      this.statusSelector = document.getElementById("status-selector");
+      this.statusDropdown = document.getElementById("status-dropdown");
+      this.charCountElement = document.querySelector("#bio-wrapper .char-count");
+      this.pictureModal = document.getElementById("picture-modal");
+      this.modalPreviewAvatar = document.getElementById("modal-preview-avatar");
+    }
+    init() {
+      this.loadUserData();
+      this.setupBioEdit();
+      this.setupStatusSelector();
+      this.loadSavedStatus();
+      this.setupAvatarEdit();
+    }
+    // CHARGEMENT DE LA BIO
+    async loadUserData() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        console.warn("No user ID found");
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(`/api/user/${userId}`);
+        if (!response.ok) throw new Error("Failed to fetch user profile");
+        const userData = await response.json();
+        if (this.userConnected && userData.alias) {
+          this.userConnected.textContent = userData.alias;
+          localStorage.setItem("username", userData.alias);
+        }
+        if (this.bioText && userData.bio) {
+          this.bioText.dataset.raw = userData.bio;
+          this.bioText.innerHTML = parseMessage(userData.bio);
+        }
+        if (this.userProfileImg) {
+          this.userProfileImg.src = userData.avatar_url || userData.avatar;
+        }
+        if (userData.status) {
+          const normalizedStatus = userData.status.toLowerCase();
+          this.updateStatusDisplay(normalizedStatus);
+          localStorage.setItem("userStatus", normalizedStatus);
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    }
+    // LOGIQUE DE LA BIO et de la PHOTO
+    setupBioEdit() {
+      if (!this.bioText || !this.bioWrapper) return;
+      const updateCharCount = (currentLength) => {
+        if (this.charCountElement) {
+          this.charCountElement.innerText = `${currentLength}/70`;
+          if (currentLength > 70) {
+            this.charCountElement.classList.remove("text-gray-500");
+            this.charCountElement.classList.add("text-red-500");
+          } else {
+            this.charCountElement.classList.remove("text-red-500");
+            this.charCountElement.classList.add("text-gray-500");
+          }
+        }
+      };
+      this.bioText.addEventListener("click", () => {
+        const input = document.createElement("input");
+        const currentText = this.bioText.dataset.raw || "";
+        input.type = "text";
+        input.value = currentText;
+        input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+        this.bioWrapper.replaceChild(input, this.bioText);
+        if (this.charCountElement) {
+          this.charCountElement.classList.remove("hidden");
+          updateCharCount(currentText.length);
+        }
+        input.focus();
+        input.addEventListener("input", () => {
+          const currentLength = input.value.length;
+          updateCharCount(currentLength);
+        });
+        const finalize = async (text) => {
+          if (!this.bioWrapper || !this.bioText) return;
+          if (this.charCountElement) {
+            this.charCountElement.classList.add("hidden");
+          }
+          const newBio = text.trim() || "Share a quick message";
+          const userId = localStorage.getItem("userId");
+          const trimmedBio = newBio.trim();
+          if (trimmedBio.length > 70) {
+            console.error("Error: Cannot exceed 70 characters.");
+            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            this.bioWrapper.replaceChild(this.bioText, input);
+            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || "Share a quick message");
+            return false;
+          }
+          try {
+            const response = await fetchWithAuth(`api/user/${userId}/bio`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ bio: trimmedBio })
+            });
+            if (response.ok) {
+              this.bioText.dataset.raw = trimmedBio;
+              this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+              this.bioWrapper.replaceChild(this.bioText, input);
+              console.log("Message updated");
+              const socket = SocketService_default.getInstance().socket;
+              socket.emit("notifyProfileUpdate", {
+                userId: Number(userId),
+                bio: trimmedBio,
+                username: localStorage.getItem("username")
+              });
+              return true;
+            } else {
+              console.error("Error while updating your message");
+              this.bioWrapper.replaceChild(this.bioText, input);
+              return false;
+            }
+          } catch (error) {
+            console.error("Network error:", error);
+            this.bioWrapper.replaceChild(this.bioText, input);
+            return false;
+          }
+        };
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") finalize(input.value);
+        });
+        input.addEventListener("blur", () => {
+          if (input.value.trim().length <= 70) {
+            finalize(input.value);
+          } else {
+            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            if (this.charCountElement) {
+              this.charCountElement.classList.add("hidden");
+            }
+            this.bioWrapper.replaceChild(this.bioText, input);
+          }
+        });
+      });
+    }
+    // LOGIQUE DES STATUS DYNAMIQUES
+    setupStatusSelector() {
+      if (this.statusSelector && this.statusDropdown) {
+        this.statusSelector.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this.statusDropdown.classList.toggle("hidden");
+          document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+          document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+        });
+        const statusOptions = document.querySelectorAll(".status-option");
+        statusOptions.forEach((option) => {
+          option.addEventListener("click", async (e) => {
+            e.stopPropagation();
+            const selectedStatus = option.dataset.status;
+            if (selectedStatus) {
+              this.updateStatusDisplay(selectedStatus);
+              localStorage.setItem("userStatus", selectedStatus);
+              const userId = localStorage.getItem("userId");
+              try {
+                await fetchWithAuth(`/api/user/${userId}/status`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ status: selectedStatus })
+                });
+                const socket = SocketService_default.getInstance().socket;
+                const username = localStorage.getItem("username");
+                if (socket && username) {
+                  socket.emit("notifyStatusChange", {
+                    userId: Number(userId),
+                    status: selectedStatus,
+                    username
+                  });
+                }
+                this.updateStatusDisplay(selectedStatus);
+              } catch (error) {
+                console.error("Error updating status:", error);
+              }
+            }
+            this.statusDropdown.classList.add("hidden");
+          });
+        });
+        document.addEventListener("click", (e) => {
+          const target = e.target;
+          if (this.statusDropdown && !this.statusDropdown.contains(target) && !this.statusSelector.contains(target)) {
+            this.statusDropdown.classList.add("hidden");
+          }
+        });
+      }
+    }
+    loadSavedStatus() {
+      const rawStatus = localStorage.getItem("userStatus") || "available";
+      const savedStatus = rawStatus.toLowerCase();
+      const statusText = `(${i18n_default.t(`profile.status.${savedStatus}`)})`;
+      this.updateStatusDisplay(savedStatus);
+      window.addEventListener("storage", (e) => {
+        if (e.key === "userStatus" && e.newValue) {
+          this.updateStatusDisplay(e.newValue.toLowerCase());
+        }
+      });
+    }
+    updateStatusDisplay(status) {
+      if (this.statusFrame && statusImages[status]) {
+        console.log("Status:", this.statusFrame);
+        this.statusFrame.src = statusImages[status];
+      }
+      if (this.statusText && statusLabels[status]) {
+        this.statusText.textContent = statusLabels[status];
+      }
+      const statusOptions = document.querySelectorAll(".status-option");
+      statusOptions.forEach((option) => {
+        const opt = option;
+        const optionStatus = opt.dataset.status;
+        if (optionStatus === status) opt.classList.add("bg-blue-50");
+        else opt.classList.remove("bg-blue-50");
+      });
+    }
+    setupAvatarEdit() {
+      if (!this.userProfileImg || !this.pictureModal) return;
+      this.userProfileImg.classList.add("cursor-pointer", "hover:opacity-80", "transition");
+      this.userProfileImg.addEventListener("click", () => {
+        this.pictureModal?.classList.remove("hidden");
+        this.pictureModal?.classList.add("flex");
+        this.selectedImageSrc = this.userProfileImg?.src || "";
+        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+      });
+      const closeModal = () => {
+        this.pictureModal?.classList.add("hidden");
+        this.pictureModal?.classList.remove("flex");
+      };
+      document.getElementById("close-modal")?.addEventListener("click", closeModal);
+      document.getElementById("cancel-button")?.addEventListener("click", closeModal);
+      const gridContainer = document.getElementById("modal-grid");
+      if (gridContainer) {
+        const gridImages = gridContainer.querySelectorAll("img");
+        gridImages.forEach((img) => {
+          img.addEventListener("click", () => {
+            this.selectedImageSrc = img.src;
+            if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+            gridImages.forEach((i) => i.classList.remove("border-[#0078D7]"));
+            img.classList.add("border-[#0078D7]");
+          });
+        });
+      }
+      const fileInput = document.getElementById("file-input");
+      document.getElementById("browse-button")?.addEventListener("click", () => fileInput?.click());
+      fileInput?.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            if (e.target?.result) {
+              this.selectedImageSrc = e.target.result;
+              if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+      document.getElementById("delete-button")?.addEventListener("click", () => {
+        const defaultAvatar = "/assets/basic/default.png";
+        this.selectedImageSrc = defaultAvatar;
+        if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = defaultAvatar;
+      });
+      document.getElementById("validation-button")?.addEventListener("click", async () => {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+        try {
+          const response = await fetchWithAuth(`api/user/${userId}/avatar`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ avatar: this.selectedImageSrc })
+          });
+          const result = await response.json();
+          if (response.ok) {
+            const cleanAvatarUrl = result.data.avatar;
+            if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
+            const socket = SocketService_default.getInstance().getChatSocket();
+            const username = localStorage.getItem("username");
+            if (socket) {
+              socket.emit("notifyProfileUpdate", {
+                userId: Number(userId),
+                avatar: cleanAvatarUrl,
+                username
+              });
+            }
+            closeModal();
+          } else {
+            alert("Error while saving avatar");
+          }
+        } catch (error) {
+          console.error("Network error:", error);
+        }
+      });
+    }
+  };
+
+  // scripts/components/Chat.ts
+  var Chat = class {
+    //private unreadChannels: Set<string> = new Set();
+    constructor() {
+      this.chatSocket = null;
+      this.gameSocket = null;
+      this.currentChannel = "general";
+      this.currentFriendshipId = null;
+      this.currentFriendId = null;
+      this.messagesContainer = document.getElementById("chat-messages");
+      this.messageInput = document.getElementById("chat-input");
+      this.wizzContainer = document.getElementById("wizz-container");
+    }
+    init() {
+      const socketService = SocketService_default.getInstance();
+      socketService.connectChat();
+      socketService.connectGame();
+      this.chatSocket = socketService.getChatSocket();
+      this.gameSocket = socketService.getGameSocket();
+      if (!this.gameSocket) {
+        console.log("Gamesocket does not exist");
+      }
+      if (!this.chatSocket) {
+        console.error("Chat: Impossible to retrieve chat socket (not connected).");
+        return;
+      }
+      this.setupSocketEvents();
+      this.setupInputListeners();
+      this.setupWizz();
+      this.setupTools();
+    }
+    joinChannel(channelKey, friendshipId, friendId) {
+      this.currentChannel = channelKey;
+      this.currentFriendshipId = friendshipId || null;
+      this.currentFriendId = friendId || null;
+      if (this.chatSocket) {
+        this.chatSocket.emit("joinChannel", channelKey);
+      }
+      if (this.messagesContainer) {
+        this.messagesContainer.innerHTML = "";
+      }
+    }
+    // ---------------------------------------------------
+    // ----      MISE EN ÉCOUTE DES SOCKETS           ----
+    // ---------------------------------------------------
+    setupSocketEvents() {
+      this.chatSocket.on("connect", () => {
+        this.addMessage("You can now chat with your friend!", "System");
+      });
+      this.chatSocket.on("chatMessage", (data) => {
+        this.addMessage(data.msg_content, data.sender_alias);
+      });
+      this.chatSocket.on("msg_history", (data) => {
+        if (this.messagesContainer) {
+          this.messagesContainer.innerHTML = "";
+          if (data.msg_history && data.msg_history.length > 0) {
+            data.msg_history.forEach((msg) => {
+              this.addMessage(msg.msg_content, msg.sender_alias);
+            });
+          } else {
+            console.log("No former message in this channel");
+          }
+        }
+      });
+      this.chatSocket.on("systemMessage", (data) => {
+        this.addSystemMessage(data.content);
+      });
+      this.chatSocket.on("receivedWizz", (data) => {
+        if (data.channel_key && data.channel_key !== this.currentChannel) {
+          return;
+        }
+        const currentUser = localStorage.getItem("username");
+        this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
+        if (data.author !== currentUser) {
+          this.shakeElement(this.wizzContainer, 3e3);
+        }
+      });
+      this.chatSocket.on("receivedAnimation", (data) => {
+        const { animationKey, author } = data;
+        const imgUrl = animations[animationKey];
+        if (imgUrl) {
+          const animationHTML = `
+					<div>
+						<strong>${author} said:</strong><br>
+						<img src="${imgUrl}" alt="${animationKey}">
+					</div>
+				`;
+          this.addCustomContent(animationHTML);
+        } else {
+          this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
+        }
+      });
+      this.chatSocket.on("disconnected", () => {
+        this.addMessage("Disconnected from chat server!", "System");
+      });
+    }
+    //================================================
+    //============= READ/UNREAD MESSAGES =============
+    //================================================
+    // private handleUnreadMessage(channel_key: string) {
+    // 	this.unreadChannels.add(channel_key);
+    // 	// changer l'icone dans la liste d'ami?
+    // 	const friendElement = document.getElementById(`friend-item-${channel_key}`);
+    // 	if (friendElement) {
+    // 		const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
+    // 		if (notifIcon) {
+    // 			notifIcon.src = '/assets/basic/message_notif.png';
+    // 		}
+    // 		friendElement.classList.add('font-bold', 'text-white');
+    // 	}
+    // }
+    //================================================
+    //=============== INPUT MANAGEMENT ===============
+    //================================================
+    setupInputListeners() {
+      if (!this.messageInput) {
+        return;
+      }
+      this.messageInput.addEventListener("keyup", (event) => {
+        if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
+          const msg_content = this.messageInput.value;
+          const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+          const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
+          this.chatSocket.emit("chatMessage", {
+            sender_id,
+            sender_alias,
+            channel_key: this.currentChannel,
+            msg_content
+          });
+          this.messageInput.value = "";
+        }
+      });
+    }
+    // ---------------------------------------------------
+    // ----            LOGIQUE DU WIZZ                ----
+    // ---------------------------------------------------
+    setupWizz() {
+      const wizzButton = document.getElementById("send-wizz");
+      if (wizzButton) {
+        wizzButton.addEventListener("click", () => {
+          const currentUsername = localStorage.getItem("username");
+          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+          this.shakeElement(this.wizzContainer, 500);
+        });
+      }
+    }
+    emitWizzOnly() {
+      if (!this.chatSocket) {
+        return;
+      }
+      const currentUsername = localStorage.getItem("username");
+      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+    }
+    shakeElement(element, duration = 500) {
+      if (!element) {
+        return;
+      }
+      if (this.shakeTimeout) {
+        clearTimeout(this.shakeTimeout);
+      }
+      element.classList.remove("wizz-shake");
+      void element.offsetWidth;
+      element.classList.add("wizz-shake");
+      this.shakeTimeout = window.setTimeout(() => {
+        element.classList.remove("wizz-shake");
+        this.shakeTimeout = void 0;
+      }, duration);
+      try {
+        const wizzSound = new Audio("/assets/chat/wizz_sound.mp3");
+        wizzSound.play().catch((e) => console.log("Could not play wizz sound:", e.message));
+      } catch (e) {
+        console.log("Audio API error:", e.message);
+      }
+    }
+    getWizzContainer() {
+      return this.wizzContainer;
+    }
+    // ---------------------------------------------------
+    // ----         AFFICHAGE DES MESSAGES            ----
+    // ---------------------------------------------------
+    sendSystemNotification(message) {
+      if (this.chatSocket) {
+        this.chatSocket.emit("sendSystemMessage", {
+          channel_key: this.currentChannel,
+          content: message
+        });
+      } else {
+        this.addSystemMessage(message);
+      }
+    }
+    addSystemMessage(message) {
+      this.addMessage(`[b]${message}[/b]`, "System");
+    }
+    //faustine
+    addMessage(message, author) {
+      if (!this.messagesContainer) return;
+      const msgElement = document.createElement("div");
+      msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+      const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
+      const match = message.match(inviteRegex);
+      if (match) {
+        const friendshipId = match[1];
+        const myUsername = localStorage.getItem("username") || sessionStorage.getItem("username") || "Guest";
+        const isMe = author === myUsername;
+        msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
+        msgElement.innerHTML = `
+				<div class="flex flex-col gap-2">
+					<strong>${author}</strong> want to play Pong with you ! <br>
+
+					<button 
+						id="join-${friendshipId}"
+						class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+							px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+							active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
+					>
+						${isMe ? "Join my waitroom" : "Accept the match"}
+					</button>
+				</div>
+			`;
+        const joinButton = msgElement.querySelector(`#join-${friendshipId}`);
+        joinButton?.addEventListener("click", () => {
+          sessionStorage.setItem("privateGameId", friendshipId);
+          window.history.pushState({ gameMode: "remote" }, "", "/game");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        });
+      } else {
+        msgElement.classList.add("bg-white");
+        const contentEmoticons = parseMessage(message);
+        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+      }
+      this.messagesContainer.appendChild(msgElement);
+      this.scrollToBottom();
+    }
+    addCustomContent(htmlContent) {
+      if (!this.messagesContainer) return;
+      const msgElement = document.createElement("div");
+      msgElement.className = "mb-1";
+      msgElement.innerHTML = htmlContent;
+      this.messagesContainer.appendChild(msgElement);
+      this.scrollToBottom();
+    }
+    scrollToBottom() {
+      if (this.messagesContainer) {
+        setTimeout(() => {
+          if (this.messagesContainer)
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        }, 50);
+      }
+    }
+    // ---------------------------------------------------
+    // ----      OUTILS (EMOTICONES, FONTS...)        ----
+    // ---------------------------------------------------
+    setupTools() {
+      const emoticonButton = document.getElementById("select-emoticon");
+      const emoticonDropdown = document.getElementById("emoticon-dropdown");
+      const emoticonGrid = document.getElementById("emoticon-grid");
+      if (emoticonButton && emoticonDropdown && emoticonGrid) {
+        emoticonGrid.innerHTML = "";
+        const emoticonsByUrl = /* @__PURE__ */ new Map();
+        const sortedKeys = Object.keys(emoticons).sort((a, b) => b.length - a.length);
+        sortedKeys.forEach((key) => {
+          const imgUrl = emoticons[key];
+          if (!emoticonsByUrl.has(imgUrl)) emoticonsByUrl.set(imgUrl, []);
+          emoticonsByUrl.get(imgUrl).push(key);
+        });
+        emoticonsByUrl.forEach((keys, imgUrl) => {
+          const primaryKey = keys[0];
+          const tooltipTitle = keys.join(" | ");
+          const emoticonItem = document.createElement("div");
+          emoticonItem.className = "cursor-pointer w-7 h-7 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
+          emoticonItem.innerHTML = `<img src="${imgUrl}" alt="${primaryKey}" title="${tooltipTitle}" class="w-[20px] h-[20px]">`;
+          emoticonItem.addEventListener("click", (event) => {
+            event.stopPropagation();
+            this.insertText(primaryKey + " ");
+            emoticonDropdown.classList.add("hidden");
+          });
+          emoticonGrid.appendChild(emoticonItem);
+        });
+        emoticonButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          emoticonDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("emoticon");
+        });
+        document.addEventListener("click", (e) => {
+          if (!emoticonDropdown.contains(e.target) && !emoticonButton.contains(e.target)) {
+            emoticonDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const animationButton = document.getElementById("select-animation");
+      const animationDropdown = document.getElementById("animation-dropdown");
+      const animationGrid = document.getElementById("animation-grid");
+      if (animationButton && animationDropdown && animationGrid) {
+        animationGrid.innerHTML = "";
+        Object.keys(icons).forEach((key) => {
+          const imgUrl = icons[key];
+          const animationItem = document.createElement("div");
+          animationItem.className = "cursor-pointer-w10 h-10 flex justify-center items-center hover:bg-blue-100 rounded-sm transition-colors duration-100";
+          animationItem.innerHTML = `<img src="${imgUrl}" alt="${key}" title="${key}" class="w-[32px] h-[32px] object-contain">`;
+          animationItem.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const currentUsername = localStorage.getItem("username");
+            this.chatSocket.emit("sendAnimation", {
+              animationKey: key,
+              author: currentUsername,
+              channel_key: this.currentChannel
+            });
+            animationDropdown.classList.add("hidden");
+          });
+          animationGrid.appendChild(animationItem);
+        });
+        animationButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          animationDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("animation");
+        });
+        document.addEventListener("click", (e) => {
+          if (!animationDropdown.contains(e.target) && !animationButton.contains(e.target)) {
+            animationDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const fontButton = document.getElementById("change-font");
+      const fontDropdown = document.getElementById("font-dropdown");
+      const fontGrid = document.getElementById("font-grid");
+      if (fontButton && fontDropdown && fontGrid) {
+        fontGrid.innerHTML = "";
+        const colors2 = ["#000000", "#F42F25", "#F934FB", "#F76D2A", "#217F1C", "#3019F7", "#F9CA37", "#42FB37"];
+        colors2.forEach((color2) => {
+          const colorButton = document.createElement("div");
+          colorButton.className = "w-6 h-6 cursor-pointer border border-gray-300 hover:border-blue-500 hover:shadow-sm rounded-[2px]";
+          colorButton.style.backgroundColor = color2;
+          colorButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.wrapSelection(color2, true);
+            fontDropdown.classList.add("hidden");
+          });
+          fontGrid.appendChild(colorButton);
+        });
+        const styles = [
+          { tag: "b", icon: "font_bold.png", title: "Bold" },
+          { tag: "i", icon: "font_italic.png", title: "Italic" },
+          { tag: "u", icon: "font_underline.png", title: "Underline" },
+          { tag: "s", icon: "font_strikethrough.png", title: "Strikethrough" }
+        ];
+        styles.forEach((style) => {
+          const styleButton = document.createElement("div");
+          styleButton.className = "w-6 h-6 flex justify-center items-center cursor-pointer border border-transparent hover:bg-blue-50 hover:border-blue-200 rounded-[2px] transition-all";
+          styleButton.innerHTML = `<img src="/assets/chat/${style.icon}" alt="${style.title}" class="w-[14px] h-[14px]">`;
+          styleButton.addEventListener("click", (e) => {
+            e.stopPropagation();
+            this.wrapSelection(style.tag, false);
+            fontDropdown.classList.add("hidden");
+          });
+          fontGrid.appendChild(styleButton);
+        });
+        fontButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          fontDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("font");
+        });
+        document.addEventListener("click", (e) => {
+          if (!fontDropdown.contains(e.target) && !fontButton.contains(e.target)) {
+            fontDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const bgButton = document.getElementById("select-background");
+      const bgDropdown = document.getElementById("background-dropdown");
+      const chatFrame = document.getElementById("chat-frame");
+      const bgOptions = document.querySelectorAll(".bg-option");
+      if (bgButton && bgDropdown && chatFrame) {
+        bgButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          bgDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("background");
+        });
+        bgOptions.forEach((option) => {
+          option.addEventListener("click", () => {
+            const bgImage = option.getAttribute("data-bg");
+            if (bgImage === "none") {
+              chatFrame.style.backgroundImage = "";
+              chatFrame.classList.add("bg-[#3DB6EC]");
+            } else if (bgImage) {
+              chatFrame.classList.remove("bg-[#BC787B]");
+              chatFrame.style.backgroundImage = bgImage;
+              chatFrame.style.backgroundSize = "cover";
+              chatFrame.style.backgroundPosition = "center";
+            }
+            bgDropdown.classList.add("hidden");
+          });
+        });
+        document.addEventListener("click", (e) => {
+          if (!bgDropdown.contains(e.target) && !bgButton.contains(e.target)) {
+            bgDropdown.classList.add("hidden");
+          }
+        });
+      }
+      const chatOptionsButton = document.getElementById("chat-options-button");
+      const chatOptionsDropdown = document.getElementById("chat-options-dropdown");
+      if (chatOptionsButton && chatOptionsDropdown) {
+        chatOptionsButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          chatOptionsDropdown.classList.toggle("hidden");
+          this.closeOtherMenus("options");
+        });
+        document.addEventListener("click", (e) => {
+          if (!chatOptionsDropdown.contains(e.target) && !chatOptionsButton.contains(e.target)) {
+            chatOptionsDropdown.classList.add("hidden");
+          }
+        });
+        document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (this.currentFriendId && this.currentFriendshipId) {
+            const myName = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
+            if (this.chatSocket && this.chatSocket.connected) {
+              console.log("chatSocket connected");
+              const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
+              this.chatSocket.emit("chatMessage", {
+                sender_id,
+                sender_alias: myName,
+                channel_key: this.currentChannel,
+                msg_content: inviteCode
+                // ici au lieu du message on "envois" le code d'invitation
+              });
+            } else {
+              console.log("chatSocket disconnected");
+            }
+          } else {
+            console.error("Game socket not connected", this.gameSocket);
+            this.addSystemMessage("Error: Game server not reachable.");
+          }
+          chatOptionsDropdown.classList.add("hidden");
+        });
+        document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          console.log("friendhsop id:", this.currentFriendshipId);
+          if (!this.currentFriendshipId) {
+            console.error("Cannot block: no friendship id associated to this conv");
+            chatOptionsDropdown.classList.add("hidden");
+            return;
+          }
+          const currentChatUser = document.getElementById("chat-header-username")?.textContent;
+          if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
+            try {
+              const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
+              const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
+                method: "PATCH",
+                body: JSON.stringify({ status: "blocked" })
+              });
+              if (response.ok) {
+                console.log(`User ${currentChatUser} blocked successfully`);
+                const event = new CustomEvent("friendBlocked", {
+                  detail: { username: currentChatUser }
+                });
+                window.dispatchEvent(event);
+                if (this.messagesContainer) {
+                  this.messagesContainer.innerHTML = "";
+                  const infoMsg = document.createElement("div");
+                  infoMsg.className = "text-center text-gray-400 text-sm mt-10";
+                  infoMsg.innerText = "Conversation deleted (User blocked).";
+                  this.messagesContainer.appendChild(infoMsg);
+                }
+                if (this.messageInput) {
+                  this.messageInput.value = "";
+                  this.messageInput.disabled = true;
+                  this.messageInput.placeholder = "You blocked this user.";
+                }
+                this.currentChannel = "";
+                this.currentFriendshipId = null;
+              } else {
+                console.error("Network error while blocking");
+                alert("Error while blocking");
+              }
+            } catch (error) {
+              console.error("Networik error:", error);
+            }
+          }
+          chatOptionsDropdown.classList.add("hidden");
+        });
+      }
+    }
+    closeOtherMenus(current) {
+      if (current !== "emoticon") document.getElementById("emoticon-dropdown")?.classList.add("hidden");
+      if (current !== "animation") document.getElementById("animation-dropdown")?.classList.add("hidden");
+      if (current !== "font") document.getElementById("font-dropdown")?.classList.add("hidden");
+      if (current !== "background") document.getElementById("background-dropdown")?.classList.add("hidden");
+      if (current !== "options") document.getElementById("chat-options-dropdown")?.classList.add("hidden");
+      document.getElementById("add-friend-dropdown")?.classList.add("hidden");
+      document.getElementById("status-dropdown")?.classList.add("hidden");
+    }
+    // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
+    insertText(text) {
+      if (!this.messageInput) return;
+      const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
+      const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
+      const newValue = this.messageInput.value.substring(0, start) + text + this.messageInput.value.substring(end);
+      this.messageInput.value = newValue;
+      const newPos = start + text.length;
+      this.messageInput.setSelectionRange(newPos, newPos);
+      this.messageInput.focus();
+    }
+    // insertion des balises autour du texte selectionne
+    wrapSelection(tagOrColor, isColor) {
+      if (!this.messageInput) return;
+      const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
+      const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
+      const selectedText = this.messageInput.value.substring(start, end);
+      let replacement;
+      let cursorOffset;
+      if (isColor) {
+        const openTag = `[color=${tagOrColor}]`;
+        replacement = `${openTag}${selectedText}[/color]`;
+        cursorOffset = openTag.length;
+      } else {
+        const openTag = `[${tagOrColor}]`;
+        replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
+        cursorOffset = openTag.length;
+      }
+      this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
+      const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
+      this.messageInput.setSelectionRange(newCursorPos, newCursorPos);
+      this.messageInput.focus();
+    }
+    destroy() {
+      if (this.chatSocket) {
+        this.chatSocket.off("connect");
+        this.chatSocket.off("chatMessage");
+        this.chatSocket.off("msg_history");
+        this.chatSocket.off("receivedWizz");
+        this.chatSocket.off("receivedAnimation");
+        this.chatSocket.off("systemMessage");
+        this.chatSocket.off("disconnected");
+      }
+    }
+  };
+
+  // scripts/components/FriendProfileModal.ts
+  var FriendProfileModal = class {
+    constructor() {
+      this.modal = document.getElementById("friend-profile-modal");
+      this.closeButton = document.getElementById("close-friend-modal");
+      this.closeButtonBottom = document.getElementById("close-friend-modal-button");
+      this.avatar = document.getElementById("friend-modal-avatar");
+      this.status = document.getElementById("friend-modal-status");
+      this.username = document.getElementById("friend-modal-username");
+      this.bio = document.getElementById("friend-modal-bio");
+      this.stats = {
+        games: document.getElementById("friend-stat-games"),
+        wins: document.getElementById("friend-stat-wins"),
+        losses: document.getElementById("friend-stat-losses"),
+        streak: document.getElementById("friend-stat-streak"),
+        avgScore: document.getElementById("friend-stat-average-score"),
+        winRate: document.getElementById("friend-stat-win-rate"),
+        opponent: document.getElementById("friend-stat-opponent"),
+        favGame: document.getElementById("friend-stat-fav-game")
+      };
+      this.initListeners();
+    }
+    initListeners() {
+      const close = () => this.modal?.classList.add("hidden");
+      this.closeButton?.addEventListener("click", close);
+      this.closeButtonBottom?.addEventListener("click", close);
+      this.modal?.addEventListener("click", (e) => {
+        if (e.target === this.modal) close();
+      });
+    }
+    // on appelle cette methode dans homepage
+    async open(friendId) {
+      if (!this.modal || !friendId) return;
+      try {
+        if (this.username) this.username.innerText = "Loading...";
+        const [userRes, statsRes] = await Promise.all([
+          fetchWithAuth(`api/user/${friendId}`),
+          fetchWithAuth(`api/game/users/${friendId}/stats`)
+        ]);
+        if (userRes.ok) {
+          const user = await userRes.json();
+          let stats = null;
+          if (statsRes.ok) {
+            const statsJson = await statsRes.json();
+            stats = statsJson.data || statsJson;
+          }
+          this.updateUI(user, stats);
+          this.modal.classList.remove("hidden");
+          this.modal.classList.add("flex");
+        }
+      } catch (error) {
+        console.error("Error modal:", error);
+      }
+    }
+    updateUI(user, stats) {
+      if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
+      if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
+      if (this.username) this.username.innerText = user.alias;
+      if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
+      if (stats) {
+        const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
+        const wins = stats.wins || 0;
+        if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
+        if (this.stats.wins) this.stats.wins.innerText = wins.toString();
+        if (this.stats.losses) this.stats.losses.innerText = (stats.losses || 0).toString();
+        if (this.stats.avgScore) this.stats.avgScore.innerText = (stats.average_score ?? 0).toString();
+        const streak = stats.streak ?? stats.current_win_streak ?? stats.currentWinStreak ?? 0;
+        if (this.stats.streak) this.stats.streak.innerText = streak.toString();
+        if (this.stats.winRate) {
+          let rate = 0;
+          if (gamesPlayed > 0) {
+            rate = Math.round(wins / gamesPlayed * 100);
+          }
+          this.stats.winRate.innerText = `${rate}%`;
+        }
+        if (this.stats.opponent) this.stats.opponent.innerText = stats.biggest_opponent || "-";
+        if (this.stats.favGame) this.stats.favGame.innerText = stats.favorite_game || "Local";
+      } else {
+        Object.values(this.stats).forEach((el) => {
+          if (el) el.innerText = el === this.stats.opponent || el === this.stats.favGame ? "-" : "0";
+        });
+        if (this.stats.winRate) this.stats.winRate.innerText = "0%";
+      }
+    }
+  };
+
   // scripts/controllers/HomePage.ts
   var friendListInstance = null;
   var chatInstance = null;
@@ -8529,14 +8531,14 @@
   console.log("Avant render");
   function render2() {
     let html = HomePage_default;
-    console.log("\u{1F525} RENDER HOMEPAGE - LANGUE ACTUELLE:", i18n_default.language);
+    console.log("RENDER HOMEPAGE - LANGUE ACTUELLE:", i18n_default.language);
     html = html.replace(/\{\{profile\.title\}\}/g, i18n_default.t("profile.title"));
     html = html.replace(/\{\{profile\.bio\}\}/g, i18n_default.t("profile.bio"));
     html = html.replace(/\{\{profile\.username\}\}/g, i18n_default.t("profile.username"));
     html = html.replace(/\{\{profile\.status.available\}\}/g, i18n_default.t("profile.status.available"));
     html = html.replace(/\{\{profile\.status.busy\}\}/g, i18n_default.t("profile.status.busy"));
     html = html.replace(/\{\{profile\.status.away\}\}/g, i18n_default.t("profile.status.away"));
-    html = html.replace(/\{\{profile\.status.invisible\}\}/g, i18n_default.t("profile.status.invisible"));
+    html = html.replace(/\{\{profile\.status.offline\}\}/g, i18n_default.t("profile.status.offline"));
     html = html.replace(/\{\{games\.title\}\}/g, i18n_default.t("games.title"));
     html = html.replace(/\{\{games\.choose_mode\}\}/g, i18n_default.t("games.choose_mode"));
     html = html.replace(/\{\{games\.local\}\}/g, i18n_default.t("games.local"));
@@ -27467,6 +27469,10 @@
         });
       });
     };
+    const currentStatus = localStorage.getItem("userStatus") || "available";
+    const statusText = document.getElementById("current-status-text");
+    if (statusText)
+      statusText.textContent = `(${i18n_default.t(`profile.status.${currentStatus}`)})`;
     const langDropdownHtml = `
         <div class="relative" id="lang-dropdown">
             <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">

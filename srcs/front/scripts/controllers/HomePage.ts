@@ -22,7 +22,7 @@ console.log('Avant render');
 export function render(): string {
     let html = htmlContent;
     // console.log("HTML CONTENT:", htmlContent);
-    console.log("🔥 RENDER HOMEPAGE - LANGUE ACTUELLE:", i18next.language); // Ajoute ça
+    console.log("RENDER HOMEPAGE - LANGUE ACTUELLE:", i18next.language);
 
     // html = html.replace(/\{\{nav\.home\}\}/g, i18next.t('nav.home'));
     // html = html.replace(/\{\{nav\.profile\}\}/g, i18next.t('nav.profile'));
@@ -35,7 +35,7 @@ export function render(): string {
     html = html.replace(/\{\{profile\.status.available\}\}/g, i18next.t('profile.status.available'));
     html = html.replace(/\{\{profile\.status.busy\}\}/g, i18next.t('profile.status.busy'));
     html = html.replace(/\{\{profile\.status.away\}\}/g, i18next.t('profile.status.away'));
-    html = html.replace(/\{\{profile\.status.invisible\}\}/g, i18next.t('profile.status.invisible'));
+    html = html.replace(/\{\{profile\.status.offline\}\}/g, i18next.t('profile.status.offline'));
 
     html = html.replace(/\{\{games\.title\}\}/g, i18next.t('games.title'));
     html = html.replace(/\{\{games\.choose_mode\}\}/g, i18next.t('games.choose_mode'));

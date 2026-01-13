@@ -14,7 +14,7 @@
       "available": "Available",
       "busy": "Busy",
       "away": "Away",
-      "invisible": "Offline"
+      "offline": "Offline"
     }
   },
   "games": {

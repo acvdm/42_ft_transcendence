@@ -292,6 +292,13 @@ const handleLocationChange = () => {
         // handleLocationChange();
     };
     
+    const currentStatus = localStorage.getItem('userStatus') || 'available';
+    const statusText = document.getElementById('current-status-text');
+    if (statusText)
+        statusText.textContent = `(${i18next.t(`profile.status.${currentStatus}`)})`;
+
+
+
     // Dropdown HTML
     const langDropdownHtml = `
         <div class="relative" id="lang-dropdown">
@@ -315,7 +322,6 @@ const handleLocationChange = () => {
         </div>
     `;
 
-	// const currentLang = i18next.language; // on recupere la langue actuelle
 
     const navbar = document.getElementById('main-navbar');
 

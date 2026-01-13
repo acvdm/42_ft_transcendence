@@ -1,6 +1,7 @@
 import htmlContent from "../pages/LoginPage.html";
 import { fetchWithAuth } from "../services/api";
 import { updateUserStatus } from "../components/Data";
+import { changeLanguage } from "../i18n";
 
 export function render(): string {
 	return htmlContent;
@@ -277,10 +278,11 @@ export function loginEvents() {
     }
     
     document.querySelectorAll('.page-lang-select').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             const target = e.currentTarget as HTMLElement;
             const lang = target.getAttribute('data-lang');
             if (lang) {
+                await changeLanguage(lang);
                 const display = document.getElementById('page-current-lang-display');
                 if (display) display.textContent = lang.toUpperCase();
             }
