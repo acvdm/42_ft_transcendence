@@ -7,13 +7,13 @@
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
 		
 		<!-- Container avec left et right qui prennent toute la hauteur restante -->
-		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+		<div class="flex gap-6 min-h-0" style="gap:80px; height: calc(100vh - 320px);">
 
 			<!-- ========= LEFT COLUMN ========= -->
-			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]" style="height: 100%;">
 				
 				<!-- ========= PROFILE WINDOW ========= -->
-				<div class="window flex flex-col">
+				<div class="window flex flex-col" style="height: 190px; min-height: 190px;">
 					<div class="title-bar">
 						<div class="title-bar-text">Profile</div>
 						<div class="title-bar-controls">
@@ -100,7 +100,7 @@
 				</div>
 
 				<!-- ========= GAMES WINDOW ========= -->
-				<div class="window flex flex-col flex-1">
+				<div class="window flex flex-col" style="flex: 1; min-height: 0;">
 					<div class="title-bar">
 						<div class="title-bar-text">Games</div>
 						<div class="title-bar-controls">
@@ -112,9 +112,11 @@
 
 					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
 						<div class="bg-white p-6 flex flex-col flex-1">
-							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">CHOOSE YOUR GAME MODE</h1>
-
-							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">CHOOSE YOUR GAME MODE</h1>
+							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
+								<p>Select how you would like to start a new game.</p>
+							</div>
+							<div class="flex flex-col gap-4 flex-1 justify-center items-center">
 								<button id="local-game" 
 									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
@@ -122,6 +124,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
 									LOCAL GAME
 								</button>
+								<p>Play again another player on this computer</p>
 
 								<button id="remote-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
@@ -130,6 +133,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
 									REMOTE GAME
 								</button>
+								<p>Connect and play with friends and more online</p>
 
 								<button id="tournament-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
@@ -138,6 +142,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
 									TOURNAMENT
 								</button>
+								<p>Compete in a 4-multiplayer tournament on this computer</p>
 							</div>
 						</div>
 					</div>
@@ -147,7 +152,7 @@
 
 
 			<!-- ========= RIGHT WINDOW ========= -->
-			<div class="window flex flex-col flex-1 min-w-0">
+			<div class="window flex flex-col min-w-0" style="flex: 1; height: 100%;">
 				<div class="title-bar">
 					<div class="title-bar-text">Messenger</div>
 					<div class="title-bar-controls">

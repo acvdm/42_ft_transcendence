@@ -35,8 +35,12 @@
                                 <div class="title-bar-text">Tournament setup</div>
                             </div>
                             <div class="window-body flex flex-col gap-4 p-6 bg-white">
-                                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>
-                                
+                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
+                                    <p class="font-semibold mb-2">Game instructions</p>
+                                    <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>
+                                    <p>Player on the right uses the ⬆️⬇️ keys.</p>
+                                    <p>The space bar can be used to distract your opponent.</p>
+                                </div>
                                 <div class="flex flex-col gap-1">
                                     <label class="font-bold text-sm">Tournament name:</label>
                                     <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urNÔîï d33s b0ggggg0ôôssss">
@@ -65,7 +69,7 @@
                                 </fieldset>
 
                                 <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">
-                                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>
+                                    <legend class="text-sm font-semibold px-1 text-blue-800">Choose your ball and background:</legend>
                                     <div class="flex flex-row items-center gap-8 justify-center">
                                         <div class="flex flex-row items-center gap-2 relative">
                                             <label class="text-sm font-semibold">Ball :</label>
@@ -101,12 +105,14 @@
 
                                 <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>
 
-                                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                    START TOURNAMENT
-                                </button>
+                                <div class="flex justify-center mt-4">
+                                    <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                        START TOURNAMENT
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
