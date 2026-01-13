@@ -52,7 +52,7 @@
 	</div>
 	`;
   }
-  function loginEvents() {
+  function handleLogin() {
     const button = document.getElementById("login-button");
     button?.addEventListener("click", () => {
       const email = document.getElementById("email-input").value;
@@ -60,61 +60,31 @@
       console.log("Tentative de connexion avec :", email, password);
     });
   }
-
-  // scripts/pages/HomePage.ts
-  function HomePage() {
-    return `
-    <div class="relative w-full h-[calc(100vh-50px)] overflow-hidden bg-gradient-to-b from-white via-white to-[#7ED5F4]">
-
-        <div class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" 
-             style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;">
-        </div>
-
-        <div class="absolute top-[20px] bottom-0 left-0 right-0 flex justify-center p-6 overflow-y-auto">
-
-            <div class="flex flex-row min-w-[1000px] h-full gap-4">
-
-                <div class="w-[1300px] h-full bg-gradient-to-b from-blue-50 to-blue-100 border border-gray-300 shadow-inner rounded-sm flex items-center justify-center min-w-[650px]">
-                    <h1 class="text-lg font-semibold"> Pong \u{1F47E}</h1>
-                </div>
-
-                <div class="flex flex-col gap-4 w-[600px] h-full">
-                    
-                    <div class="bg-white border border-gray-300 rounded-sm shadow-sm w-full p-4 flex flex-col">
-                        <p class="font-semibold mb-2"> Game info</p>
-                        <div class="relative w-[50px] h-[50px] mb-4">
-                            <img class="absolute inset-0 w-full h-full object-cover" src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png">
-                            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[38px] h-[38px] object-cover" src="https://wlm.vercel.app/assets/usertiles/default.png">
-                        </div>
-                        <button id="play-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 focus:ring-1 focus:ring-blue-400">Play</button>
-                    </div>
-
-                    <div class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 overflow-hidden">
-                        <h1 class="text-lg font-bold mb-2">Live chat </h1>
-                        <div class="flex-1 overflow-y-auto border-t border-gray-200 pt-2 space-y-2 text-sm">
-                            <p><strong>Faustoche01:</strong> coucou</p>
-                            <p><strong>Faustoche03:</strong> salu sa va</p>
-                        </div>
-                        <input type="text" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-	`;
+  function handleRegister() {
+    const button = document.getElementById("register-button");
+    button?.addEventListener("click", () => {
+      const email = document.getElementById("email-input").value;
+      const password = document.getElementById("password-input").value;
+      console.log("Tentative de cr\xE9ation de compte avec : ", email, password);
+    });
+  }
+  function handleGuest() {
+    const button = document.getElementById("guest-button");
+    button?.addEventListener("click", () => {
+      const email = document.getElementById("email-input").value;
+      console.log("Tentative de cr\xE9ation de compte avec : ", email);
+    });
+  }
+  function authEvents() {
+    handleLogin();
+    handleRegister();
+    handleGuest();
   }
 
   // scripts/pages/ProfilePage.ts
   function ProfilPage() {
     return `
-		<div class="p-8">
-			<h1 class="text-4xl font-bold text-green-400 mb-4">
-				My profil \u{1F47A}
-			</h1>
-			<p class="text-lg text-gray-300">
-				Infos perso, addresse mail, statistiques? amis
-			</p>
-			</div>
+
 	`;
   }
 
@@ -139,7 +109,7 @@
   var appElement = document.getElementById("app");
   var routes = {
     "/": {
-      render: HomePage,
+      render: ProfilPage,
       afterRender: () => console.log("HomePage charg\xE9e")
     },
     "/profile": {
@@ -148,7 +118,7 @@
     },
     "/logout": {
       render: LoginPage,
-      afterRender: loginEvents
+      afterRender: authEvents
     },
     "/404": {
       render: NotFoundPage
