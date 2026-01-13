@@ -67,15 +67,18 @@ fastify.ready().then(() => {
         const userId = socket.user.sub;
 
         console.log(`Client connected (Fastify): ${socket.id}`);
-
+        console.log(`[Back] Client connected: ${socket.id} (User ID from Token: ${userId})`);
 
 
 
         socket.on('registerUser', (userId: string) => {
             const id = Number(userId);
+
+            if (id !== Number(userId)) console.warn(`[Back] Warning: Socket ${socket.id} registering for user ${id} but token is ${userId}`);
             userSockets.set(id, socket.id); // AJOUT: on stocke le socket id
-            socket.join(`user_${userId}`);
-            console.log(`User ${userId} registered for notifications`);
+            const roomName = `user_${id}`;
+            socket.join(roomName);
+            console.log(`[Back] ✅ User ${id} joined room: ${roomName}`);
         });
 
         // On envoie le signal uniquement à la personne concernée
@@ -220,7 +223,8 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 }
 
 async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
-    const { channel_key, sender_id, sender_alias, msg_content } = data;
+    const { channel_key, sender_alias, msg_content } = data;
+    const sender_id = Number(data.sender_id);
     console.log("Back: chatMessage ligne 654")
 
     try {
@@ -243,13 +247,24 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
         const ids = channel_key.split('-').map(Number);
         if (ids.length === 2 && !ids.some(isNaN)) {
             const targetId = ids.find(id => id !== sender_id);
+            const notifRoom = `user_${targetId}`;
+            console.log(`[Back] 🔍 Notification logic: Sender=${sender_id}, IDs=${ids}, Target=${targetId}, Room=${notifRoom}`);
+
             if (targetId) {
+
+                const room = io.sockets.adapter.rooms.get(notifRoom);
+                const clientCount = room ? room.size : 0;
+                console.log(`[Back] 🚀 Emitting unreadNotification to ${notifRoom} (Clients in room: ${clientCount})`);
                 // On envoie un signal direct à l'utilisateur cible via sa room personnelle
-                io.to(`user_${targetId}`).emit('unreadNotification', {
+                io.to(notifRoom).emit('unreadNotification', {
                     senderId: sender_id,
                     content: msg_content
                 });
+            } else {
+                console.warn(`[Back] ⚠️ Cannot determine targetId for notification (Ids: ${ids}, Sender: ${sender_id})`);
             }
+        } else {
+            console.log(`[Back] Skipped notification (Channel ${channel_key} is not a DM)`);
         }
         
     } catch (err: any) {

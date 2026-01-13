@@ -97,7 +97,13 @@ export class Chat {
 				this.addMessage(data.msg_content, data.sender_alias);
 				this.chatSocket.emit("markRead", data.channelKey);
 			} else {
-				this.handleUnreadMessage(data.sender_id);
+				const myId = Number(localStorage.getItem('userId') || sessionStorage.getItem('userId'));
+				const ids = data.channelKey.split('-').map(Number);
+				const friendId = ids.find(id => id !== myId);
+				
+				if (friendId) {
+					this.handleUnreadMessage(friendId);
+				}
 			}
 		});
 

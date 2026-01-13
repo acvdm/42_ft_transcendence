@@ -4732,6 +4732,7 @@
       this.userId = localStorage.getItem("userId");
     }
     init() {
+      console.log("[FriendList] Initializing...");
       SocketService_default.getInstance().connectChat();
       SocketService_default.getInstance().connectGame();
       this.loadFriends();
@@ -4749,6 +4750,12 @@
       if (this.notificationInterval) {
         clearInterval(this.notificationInterval);
         this.notificationInterval = null;
+      }
+      const chatSocket = SocketService_default.getInstance().getChatSocket();
+      if (chatSocket) {
+        chatSocket.off("chatMessage");
+        chatSocket.off("unreadNotification");
+        chatSocket.off("unreadStatus");
       }
     }
     registerSocketUser() {
@@ -4825,10 +4832,10 @@
                 </div>
 
                 <div id="badge-${selectedFriend.id}" 
-                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                     class="hidden bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md z-10"
+                     style="background-color: #dc2626; color: white;">
                     1
                 </div>
-
                 `;
           contactsList.appendChild(friendItem);
           const chatSocket = SocketService_default.getInstance().getChatSocket();
@@ -4876,9 +4883,12 @@
       }
     }
     handleMessageNotification(senderId) {
+      console.log(`[FriendList] \u{1F534} Displaying badge for user ${senderId}`);
       const badge = document.getElementById(`badge-${senderId}`);
       if (badge) {
         badge.classList.remove("hidden");
+      } else {
+        console.warn(`[FriendList] Badge element badge-${senderId} not found in DOM`);
       }
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
@@ -4902,12 +4912,17 @@
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
       if (!chatSocket) return;
+      chatSocket.on("chatMessage", (data) => {
+        console.log(`[FriendList] \u{1F4E8} Received chatMessage event from ${data.sender_id}`);
+        this.handleMessageNotification(data.sender_id);
+      });
       chatSocket.on("unreadStatus", (data) => {
         if (data.hasUnread) {
           this.handleMessageNotification(data.friendId);
         }
       });
       chatSocket.on("unreadNotification", (data) => {
+        console.log("[FriendList] \u{1F514} Event 'unreadNotification' received from:", data.senderId);
         this.handleMessageNotification(data.senderId);
       });
       chatSocket.on("friendStatusUpdate", (data) => {
@@ -5618,7 +5633,12 @@
           this.addMessage(data.msg_content, data.sender_alias);
           this.chatSocket.emit("markRead", data.channelKey);
         } else {
-          this.handleUnreadMessage(data.sender_id);
+          const myId = Number(localStorage.getItem("userId") || sessionStorage.getItem("userId"));
+          const ids = data.channelKey.split("-").map(Number);
+          const friendId = ids.find((id) => id !== myId);
+          if (friendId) {
+            this.handleUnreadMessage(friendId);
+          }
         }
       });
       this.chatSocket.on("msg_history", (data) => {

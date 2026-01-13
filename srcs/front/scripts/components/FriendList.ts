@@ -14,6 +14,7 @@ export class FriendList {
     }
 
     public init() {
+        console.log("[FriendList] Initializing..."); // LOG AJOUTÉ
         SocketService.getInstance().connectChat();
         SocketService.getInstance().connectGame();
         this.loadFriends();
@@ -37,6 +38,13 @@ export class FriendList {
         if (this.notificationInterval) {
             clearInterval(this.notificationInterval);
             this.notificationInterval = null;
+        }
+
+        const chatSocket = SocketService.getInstance().getChatSocket();
+        if (chatSocket) {
+            chatSocket.off('chatMessage');
+            chatSocket.off('unreadNotification');
+            chatSocket.off('unreadStatus');
         }
     }
 
@@ -110,8 +118,6 @@ export class FriendList {
 
                 const friendItem = document.createElement('div');
                 friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
-                //friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
-
 
                 friendItem.dataset.id = selectedFriend.id;
                 friendItem.dataset.friendshipId = friendship.id;
@@ -123,16 +129,6 @@ export class FriendList {
                 friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
                 friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
                 
-                // friendItem.innerHTML = `
-                //     <div class="relative w-[50px] h-[50px] flex-shrink-0">
-                //         <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
-                //              src="${getStatusDot(status)}" alt="status">
-                //     </div>
-                //     <div class="flex flex-col leading-tight">
-                //         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
-                //     </div>
-                // `;
-
                 friendItem.innerHTML = `
                 <div class="flex items-center gap-3">
                     <div class="relative w-[40px] h-[40px] flex-shrink-0">
@@ -149,10 +145,10 @@ export class FriendList {
                 </div>
 
                 <div id="badge-${selectedFriend.id}" 
-                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                     class="hidden bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md z-10"
+                     style="background-color: #dc2626; color: white;">
                     1
                 </div>
-
                 `;
 
                 contactsList.appendChild(friendItem);
@@ -213,9 +209,12 @@ export class FriendList {
     }
 
     private handleMessageNotification(senderId: number) {
+        console.log(`[FriendList] 🔴 Displaying badge for user ${senderId}`);
         const badge = document.getElementById(`badge-${senderId}`);
         if (badge) {
             badge.classList.remove('hidden');
+        } else {
+            console.warn(`[FriendList] Badge element badge-${senderId} not found in DOM`);
         }
     }
 
@@ -248,6 +247,11 @@ export class FriendList {
 
         if (!chatSocket) return;
         
+        chatSocket.on('chatMessage', (data: { sender_id: number, channelKey: string}) => {
+            console.log(`[FriendList] 📨 Received chatMessage event from ${data.sender_id}`);
+            this.handleMessageNotification(data.sender_id);
+        })
+
         chatSocket.on('unreadStatus', (data: { friendId: number, hasUnread: boolean }) => {
             if (data.hasUnread) {
                 this.handleMessageNotification(data.friendId);
@@ -255,6 +259,7 @@ export class FriendList {
         });
 
         chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
+            console.log("[FriendList] 🔔 Event 'unreadNotification' received from:", data.senderId);
             this.handleMessageNotification(data.senderId);
         });
 
