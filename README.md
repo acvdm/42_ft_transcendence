@@ -50,6 +50,11 @@ docker ps
 
 L'application est disponible sur https://localhost:8443
 
+### Script de création de match pour un user déjà créé
+```bash
+make add_stats user=<username>
+```
+
 ### Arrêter l'application
 ```bash
 # Arrêter les conteneurs
@@ -69,3 +74,9 @@ docker logs <nom_du_docker>
 # Entrer dans un docker
 docker exec -it <nom_du_docker> sh
 ```
+
+
+## Architecture du projet
+
+![architecture](/schema/architecture.png)
+
