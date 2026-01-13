@@ -263,7 +263,7 @@ export class UserProfile {
     private loadSavedStatus() {
         const rawStatus = localStorage.getItem('userStatus') || 'available';
         const savedStatus = rawStatus.toLowerCase();
-        const statusText = `(${i18next.t(`profile.status.${savedStatus}`)})`;
+        const statusText = `(${i18next.t(`homepage.profile.status.${savedStatus}`)})`;
         this.updateStatusDisplay(savedStatus);
         
         window.addEventListener('storage', (e) => {

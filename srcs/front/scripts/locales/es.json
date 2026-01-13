@@ -1,44 +1,50 @@
 {
-  "nav": {
-    "home": "",
-    "profile": "",
-    "dashboard": "",
-    "logout": "",
-    "guest_area": ""
-  },
-  "profile": {
-    "title": "",
-    "username": "",
-    "bio": "",
-    "status": {
-      "available": "",
-      "busy": "",
-      "away": "",
-      "offline": ""
+  "homepage": {
+    "nav": {
+      "home": "Inicio",
+      "profile": "Perfil",
+      "dashboard": "Panel de control",
+      "logout": "Desconexión",
+      "guest_area": "Espacio para invitados"
+    },
+    "profile": {
+      "title": "Perfil",
+      "username": "Nombre de usuario",
+      "bio": "Comparte un mensaje rápido",
+      "status": {
+        "available": "Disponible",
+        "busy": "Ocupado",
+        "away": "Ausente",
+        "offline": "Desconectado"
+      }
+    },
+    "games": {
+      "title": "Juegos",
+      "choose_mode": "Elige tu modo de juego",
+      "local": "",
+      "remote": "",
+      "tournament": "",
+      "local_describe": "Play against another player on this computer",
+      "remote_describe": "Connect and play with friends and more online",
+      "tournament_describe": "Compete in a 4-multiplayer tournament on this computer"
+    },
+    "chat": {
+      "title": "",
+      "friends": "",
+      "add_friend": "",
+      "send_request": "",
+      "cancel": "",
+      "contact": "",
+      "placeholder": "",
+      "input_placeholder": "",
+      "view_profile": "",
+      "invite_game": "",
+      "block_user": ""
+    },
+    "notifications": {
+      "title": "",
+      "no_notification": ""
     }
-  },
-  "games": {
-    "title": "",
-    "choose_mode": "",
-    "local": "",
-    "remote": "",
-    "tournament": ""
-  },
-  "chat": {
-    "title": "",
-    "friends": "",
-    "add_friend": "",
-    "send_request": "",
-    "cancel": "",
-    "contact": "",
-    "placeholder": "",
-    "input_placeholder": "",
-    "view_profile": "",
-    "invite_game": "",
-    "block_user": ""
-  },
-  "notifications": {
-    "title": "",
-    "no_notification": ""
   }
+
 }
