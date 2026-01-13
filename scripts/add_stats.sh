@@ -1,4 +1,4 @@
-#1/bin/bash
+#!/bin/bash
 
 TARGET_USER="$1"
 
@@ -47,8 +47,8 @@ for OPPONENT in "${OPPONENTS[@]}"; do
 
     # Creation du match
     MATCH_ID=$(docker exec -i game sqlite3 /app/data/game.sqlite <<EOF
-    INSERT INTO "MATCHES" (game_type, player1_alias, player2_alias, score_p1, score_p2, winner_alias, status, total_duration_in_minutes, round)
-    VALUES('$GAME_TYPE', '$TARGET_USER', '$OPPONENT', $SCORE_USER, $SCORE_OPP, '$WINNER', 'finished', 1, '1v1')
+    INSERT INTO "MATCHES" (game_type, player1_alias, player2_alias, score_p1, score_p2, winner_alias, status, started_at, finished_at, total_duration_in_minutes, round)
+    VALUES('$GAME_TYPE', '$TARGET_USER', '$OPPONENT', $SCORE_USER, $SCORE_OPP, '$WINNER', 'finished', datetime('now'), datetime('now', '+1 minute'), 1, '1v1')
     RETURNING match_id
 EOF
     )

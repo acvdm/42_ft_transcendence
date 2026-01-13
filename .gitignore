@@ -1,6 +1,4 @@
 .env
-.gitignore
-
 node_modules/
 
 data/
