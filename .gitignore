@@ -1,5 +1,6 @@
 .env
-
+datadev/
+zdata.old/
 node_modules/
 
 data/

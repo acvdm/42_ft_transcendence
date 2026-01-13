@@ -1,6 +1,17 @@
 import { fetchWithAuth } from "../services/api";
 import SocketService from "../services/SocketService";
 
+export class Data {
+    static get hasUnreadMessage(): boolean {
+        return localStorage.getItem('hasUnreadMessage') === 'true';
+    }
+
+    // Écriture dans le localStorage
+    static set hasUnreadMessage(value: boolean) {
+        localStorage.setItem('hasUnreadMessage', String(value));
+    }
+}
+
 let globalPath = "/assets/emoticons/";
 let animationPath = "/assets/animated/";
 let gamePath = "/assets/game/";

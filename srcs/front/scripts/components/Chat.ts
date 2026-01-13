@@ -15,7 +15,7 @@ export class Chat {
 	private currentFriendshipId: number | null = null;
 	private currentFriendId: number | null = null;
 	private shakeTimeout: number | undefined;
-	//private unreadChannels: Set<string> = new Set();
+	private unreadChannels: Set<string> = new Set();
 
 	constructor() {
 		this.messagesContainer = document.getElementById('chat-messages');
@@ -47,10 +47,18 @@ export class Chat {
 	}
 	
 
-	public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
-		this.currentChannel = channelKey;
-		this.currentFriendshipId = friendshipId || null;
-		this.currentFriendId = friendId || null;
+    public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
+        if (this.currentChannel && this.currentChannel !==channelKey) {
+            if (this.chatSocket)
+            {
+                console.log(`Leaving channel: ${this.currentChannel}`);
+                this.chatSocket.emit("leaveChannel", this.currentChannel);
+            }
+        }
+        
+        this.currentChannel = channelKey;
+        this.currentFriendshipId = friendshipId || null;
+        this.currentFriendId = friendId || null;
 
 		if (this.chatSocket) {
 			this.chatSocket.emit("joinChannel", channelKey);
@@ -59,20 +67,20 @@ export class Chat {
 			this.messagesContainer.innerHTML = '';
 		}
 
-		// if (this.unreadChannels.has(channelKey)) {
-		// 	this.unreadChannels.delete(channelKey);
+		if (this.unreadChannels.has(channelKey)) {
+			this.unreadChannels.delete(channelKey);
 
-		// 	const friendElement = document.getElementById(`friend-item-${channelKey}`);
-        //     if (friendElement) {
-        //         const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
-        //         // Remettre l'icône de statut par défaut (il faudra passer le vrai statut ici idéalement)
-        //         if (notifIcon) notifIcon.src = '/assets/basic/status_online_small.png'; 
-        //         friendElement.classList.remove('font-bold', 'text-white');
-        //     }
-		// }
-		// if (this.chatSocket) {
-		// 	this.chatSocket.emit("markRead", channelKey)
-		// }
+			const friendElement = document.getElementById(`friend-item-${channelKey}`);
+            if (friendElement) {
+                const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
+                // Remettre l'icône de statut par défaut (il faudra passer le vrai statut ici idéalement)
+                if (notifIcon) notifIcon.src = '/assets/basic/status_online_small.png'; 
+                friendElement.classList.remove('font-bold', 'text-white');
+            }
+		}
+		if (this.chatSocket) {
+			this.chatSocket.emit("markRead", channelKey)
+		}
 	}
 
 	// ---------------------------------------------------
@@ -84,13 +92,19 @@ export class Chat {
 			this.addMessage("You can now chat with your friend!", "System");
 		});
 
-		this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
-			//if (data.channelKey === this.currentChannel) {
+		this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string, sender_id: number }) => {
+			if (data.channelKey === this.currentChannel) {
 				this.addMessage(data.msg_content, data.sender_alias);
-			//	this.chatSocket.emit("markRead", data.channelKey);
-			//} else {
-			//	this.handleUnreadMessage(data.channelKey);
-			//}
+				this.chatSocket.emit("markRead", data.channelKey);
+			} else {
+				const myId = Number(localStorage.getItem('userId') || sessionStorage.getItem('userId'));
+				const ids = data.channelKey.split('-').map(Number);
+				const friendId = ids.find(id => id !== myId);
+				
+				if (friendId) {
+					this.handleUnreadMessage(friendId);
+				}
+			}
 		});
 
 		this.chatSocket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
@@ -152,19 +166,12 @@ export class Chat {
 	//============= READ/UNREAD MESSAGES =============
 	//================================================
 
-	// private handleUnreadMessage(channel_key: string) {
-	// 	this.unreadChannels.add(channel_key);
-
-	// 	// changer l'icone dans la liste d'ami?
-	// 	const friendElement = document.getElementById(`friend-item-${channel_key}`);
-	// 	if (friendElement) {
-	// 		const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
-	// 		if (notifIcon) {
-	// 			notifIcon.src = '/assets/basic/message_notif.png';
-	// 		}
-	// 		friendElement.classList.add('font-bold', 'text-white');
-	// 	}
-	// }
+	private handleUnreadMessage(friendId: number | string) {
+		const badge = document.getElementById(`badge-${friendId}`);
+		if (badge) {
+			badge.classList.remove('hidden');
+		}
+	}
 
 
 	//================================================
@@ -202,7 +209,7 @@ export class Chat {
 		const wizzButton = document.getElementById('send-wizz');
 		if (wizzButton) {
 			wizzButton.addEventListener('click', () => {
-				const currentUsername = localStorage.getItem('username');
+				const currentUsername = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
 				this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
 				this.shakeElement(this.wizzContainer, 500);
 			});
@@ -213,7 +220,7 @@ export class Chat {
 		if (!this.chatSocket) {
 			return;
 		}
-		const currentUsername = localStorage.getItem('username');
+		const currentUsername = localStorage.getItem('username')  || sessionStorage.getItem('cachedAlias');
 		this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
 	}
 
@@ -407,7 +414,7 @@ export class Chat {
 				// clic sur l'anumation
 				animationItem.addEventListener('click', (event) => {
 					event.stopPropagation();
-					const currentUsername = localStorage.getItem('username');
+					const currentUsername = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
 					// envoi de l'animation via la sockettt
 
 					this.chatSocket.emit("sendAnimation", {
@@ -689,15 +696,20 @@ export class Chat {
 		this.messageInput.focus();
 	}
 
-	public destroy() {
-		if (this.chatSocket) {
-			this.chatSocket.off("connect");
-			this.chatSocket.off("chatMessage");
-			this.chatSocket.off("msg_history");
-			this.chatSocket.off("receivedWizz");
-			this.chatSocket.off("receivedAnimation");
-			this.chatSocket.off("systemMessage");
-			this.chatSocket.off("disconnected");
-		}
-	}
+    public destroy() {
+        if (this.chatSocket && this.currentChannel)
+        {
+            this.chatSocket.emit("leaveChannel", this.currentChannel);
+        }
+
+        if (this.chatSocket) {
+            this.chatSocket.off("connect");
+            this.chatSocket.off("chatMessage");
+            this.chatSocket.off("msg_history"); // ajout
+            this.chatSocket.off("receivedWizz");
+            this.chatSocket.off("receivedAnimation");
+            this.chatSocket.off("systemMessage");
+            this.chatSocket.off("disconnected");
+        }
+    }
 }

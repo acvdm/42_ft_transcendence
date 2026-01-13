@@ -137,7 +137,7 @@ export class LocalGameManager {
         // Starting the game
         if (startButton) 
         {
-            let p1Alias = localStorage.getItem('username');
+            let p1Alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || "Guest";
             const newStartBtn = startButton.cloneNode(true);
             startButton.parentNode?.replaceChild(newStartBtn, startButton);
             newStartBtn.addEventListener('click', () => {
@@ -226,7 +226,7 @@ export class LocalGameManager {
 
                                 const p1Score = activeGame.score.player1;
                                 const p2Score = activeGame.score.player2;
-                                const p1Alias = localStorage.getItem('username') || "Player 1";
+                                const p1Alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || "Guest";
                                 const p2Alias = opponentName;
                                 const p1Wins = p1Score > p2Score;
                                 const winnerAlias = p1Wins ? p1Alias : p2Alias;
