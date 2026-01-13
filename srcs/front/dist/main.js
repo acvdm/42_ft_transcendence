@@ -7,7 +7,28 @@
   };
 
   // scripts/pages/LoginPage.html
-  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var LoginPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -3749,7 +3770,7 @@
     }
   };
   var ballEmoticons = {
-    "smile": gamePath + "smile.png",
+    "smile": gamePath + "smiling.png",
     "surprised": gamePath + "surprised.png",
     "confused": gamePath + "confused.png",
     "hot": gamePath + "hot.png",
@@ -4002,8 +4023,13 @@
     const confirm2fa = document.getElementById("confirm-2fa-button");
     const close2fa = document.getElementById("close-2fa-modal");
     const error2fa = document.getElementById("2fa-error-message");
+    const backButton = document.getElementById("back-button");
     let tempToken = null;
     let cachedStatus = "available";
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -4146,6 +4172,27 @@
   }
   function loginEvents() {
     handleLogin();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
   }
 
   // scripts/pages/HomePage.html
@@ -4674,10 +4721,6 @@
 
   // scripts/components/FriendList.ts
   var FriendList = class {
-    // cass: 
-    // init() interval est appele a chaque fois auon va sur la HomePage
-    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
-    // qui s'accumulent quand on change de page et quon revient sur la homePage
     constructor() {
       this.notificationInterval = null;
       this.container = document.getElementById("contacts-list");
@@ -4732,7 +4775,7 @@
           let rawStatus = selectedFriend.status || "offline";
           const status = rawStatus.toLowerCase();
           const friendItem = document.createElement("div");
-          friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
           friendItem.dataset.id = selectedFriend.id;
           friendItem.dataset.friendshipId = friendship.id;
           friendItem.dataset.login = selectedFriend.username;
@@ -4741,17 +4784,30 @@
           friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
           friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
           friendItem.innerHTML = `
-                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                <div class="flex items-center gap-3">
+                    <div class="relative w-[40px] h-[40px] flex-shrink-0">
+                         <img class="w-full h-full rounded-full object-cover border border-gray-200"
+                             src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
+                        
+                        <img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
+                        <span class="text-xs text-gray-400 status-text">${status}</span>
                     </div>
+                </div>
+
+                <div id="badge-${selectedFriend.id}" 
+                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                    1
+                </div>
+
                 `;
           contactsList.appendChild(friendItem);
           friendItem.addEventListener("click", (e) => {
             if (e.target.closest(".invite-btn")) return;
+            this.clearNotifications(selectedFriend.id);
             const event = new CustomEvent("friendSelected", {
               detail: { friend: selectedFriend, friendshipId: friendship.id }
             });
@@ -4766,6 +4822,19 @@
       } catch (error) {
         console.error("Error loading friends:", error);
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    }
+    clearNotifications(friendId) {
+      const badge = document.getElementById(`badge-${friendId}`);
+      if (badge) {
+        badge.classList.add("hidden");
+        badge.innerText = "0";
+      }
+    }
+    handleMessageNotification(senderId) {
+      const badge = document.getElementById(`badge-${senderId}`);
+      if (badge) {
+        badge.classList.remove("hidden");
       }
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
@@ -4785,11 +4854,13 @@
       alert(`Invitation sent to ${friendName}`);
     }
     listenToUpdates() {
-      console.debug("listen to updates");
       const socketService = SocketService_default.getInstance();
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
       if (!chatSocket) return;
+      chatSocket.on("unreadNotification", (data) => {
+        this.handleMessageNotification(data.senderId);
+      });
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
@@ -5428,6 +5499,7 @@
 
   // scripts/components/Chat.ts
   var Chat = class {
+    //private unreadChannels: Set<string> = new Set();
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
@@ -5521,9 +5593,24 @@
         this.addMessage("Disconnected from chat server!", "System");
       });
     }
-    // ---------------------------------------------------
-    // ----           GESTION DE L'INPUT              ----
-    // ---------------------------------------------------
+    //================================================
+    //============= READ/UNREAD MESSAGES =============
+    //================================================
+    // private handleUnreadMessage(channel_key: string) {
+    // 	this.unreadChannels.add(channel_key);
+    // 	// changer l'icone dans la liste d'ami?
+    // 	const friendElement = document.getElementById(`friend-item-${channel_key}`);
+    // 	if (friendElement) {
+    // 		const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
+    // 		if (notifIcon) {
+    // 			notifIcon.src = '/assets/basic/message_notif.png';
+    // 		}
+    // 		friendElement.classList.add('font-bold', 'text-white');
+    // 	}
+    // }
+    //================================================
+    //=============== INPUT MANAGEMENT ===============
+    //================================================
     setupInputListeners() {
       if (!this.messageInput) {
         return;
@@ -8243,7 +8330,196 @@
   var loadNamespaces = instance.loadNamespaces;
   var loadLanguages = instance.loadLanguages;
 
+  // scripts/locales/fr.json
+  var fr_default = {
+    nav: {
+      home: "Accueil",
+      profile: "Profil",
+      dashboard: "Tableau de bord",
+      logout: "D\xE9connexion",
+      guest_area: "Espace invit\xE9"
+    },
+    profile: {
+      title: "Profil",
+      username: "Nom d'utilisateur",
+      bio: "Partagez un message rapide",
+      status: {
+        available: "Disponible",
+        busy: "Occup\xE9",
+        away: "Absent",
+        invisible: "Hors ligne"
+      }
+    },
+    games: {
+      title: "Jeux",
+      choose_mode: "CHOISISSEZ VOTRE MODE DE JEU",
+      local: "JEU LOCAL",
+      remote: "JEU EN LIGNE",
+      tournament: "TOURNOI"
+    },
+    chat: {
+      title: "Messagerie",
+      friends: "MES AMIS",
+      add_friend: "Ajouter un ami",
+      send_request: "Send request",
+      cancel: "Cancel",
+      contact: "\u2B50 Contacts",
+      placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
+      input_placeholder: "\xC9crire un message...",
+      view_profile: "Voir le profil",
+      invite_game: "Inviter \xE0 jouer",
+      block_user: "Bloquer l'utilisateur"
+    },
+    notifications: {
+      title: "Notifications",
+      no_notification: "Aucune notification"
+    },
+    modal: {
+      user_profile: "User Profile",
+      statistics: "Statistics",
+      games_played: "Games Played:",
+      wins: "Wins:",
+      losses: "Losses:",
+      winning_streak: "Winning streak:",
+      close: "Close",
+      change_picture: "Change Picture",
+      select_picture: "Select a picture",
+      picture_description: "Choose how you want to appear on transcendence.",
+      browse: "BROWSE",
+      delete: "DELETE",
+      ok: "OK",
+      cancel: "CANCEL"
+    }
+  };
+
+  // scripts/locales/en.json
+  var en_default = {
+    nav: {
+      home: "Home",
+      profile: "Profile",
+      dashboard: "Dashboard",
+      logout: "Log out",
+      guest_area: "Guest area"
+    },
+    profile: {
+      title: "Profile",
+      username: "Username",
+      bio: "Share a quick message",
+      status: {
+        available: "Available",
+        busy: "Busy",
+        away: "Away",
+        invisible: "Offline"
+      }
+    },
+    games: {
+      title: "Games",
+      choose_mode: "CHOOSE YOUR GAME MODE",
+      local: "LOCAL GAME",
+      remote: "REMOTE GAME",
+      tournament: "TOURNAMENT"
+    },
+    chat: {
+      title: "Messenger",
+      friends: "MY FRIENDS",
+      add_friend: "Add a friend",
+      send_request: "Send request",
+      cancel: "Cancel",
+      contact: "\u2B50 Contacts",
+      placeholder: "Select a friend to start chatting",
+      input_placeholder: "Write a message...",
+      view_profile: "View profile",
+      invite_game: "Invite to play",
+      block_user: "Block user"
+    },
+    notifications: {
+      title: "Notifications",
+      no_notification: "No notification"
+    },
+    modal: {
+      user_profile: "User Profile",
+      statistics: "Statistics",
+      games_played: "Games Played:",
+      wins: "Wins:",
+      losses: "Losses:",
+      winning_streak: "Winning streak:",
+      close: "Close",
+      change_picture: "Change Picture",
+      select_picture: "Select a picture",
+      picture_description: "Choose how you want to appear on transcendence.",
+      browse: "BROWSE",
+      delete: "DELETE",
+      ok: "OK",
+      cancel: "CANCEL"
+    }
+  };
+
+  // scripts/locales/es.json
+  var es_default = {
+    nav: {
+      home: "",
+      profile: "",
+      dashboard: "",
+      logout: "",
+      guest_area: ""
+    },
+    profile: {
+      title: "",
+      username: "",
+      bio: "",
+      status: {
+        available: "",
+        busy: "",
+        away: "",
+        invisible: ""
+      }
+    },
+    games: {
+      title: "",
+      choose_mode: "",
+      local: "",
+      remote: "",
+      tournament: ""
+    },
+    chat: {
+      title: "",
+      friends: "",
+      add_friend: "",
+      send_request: "",
+      cancel: "",
+      contact: "",
+      placeholder: "",
+      input_placeholder: "",
+      view_profile: "",
+      invite_game: "",
+      block_user: ""
+    },
+    notifications: {
+      title: "",
+      no_notification: ""
+    }
+  };
+
   // scripts/i18n.ts
+  async function initI18n() {
+    const savedLang = localStorage.getItem("userLanguage") || "en";
+    await instance.init({
+      lng: savedLang,
+      fallbackLng: "en",
+      debug: true,
+      resources: {
+        en: { translation: en_default },
+        fr: { translation: fr_default },
+        es: { translation: es_default }
+      }
+    });
+    console.log("i18n initialized with language:", instance.language);
+  }
+  async function changeLanguage2(lang) {
+    await instance.changeLanguage(lang);
+    localStorage.setItem("userLanguage", lang);
+    console.log("Language changed to:", lang);
+  }
   var i18n_default = instance;
 
   // scripts/controllers/HomePage.ts
@@ -9815,7 +10091,28 @@
   }
 
   // scripts/pages/LandingPage.html
-  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var LandingPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
@@ -9840,7 +10137,33 @@
   function render4() {
     return LandingPage_default;
   }
+  function setupPageLangDropdown() {
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) {
+          menuContent.classList.add("hidden");
+        }
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
+  }
   function initLandingPage() {
+    setupPageLangDropdown();
     const loginButton = document.getElementById("login-button");
     const registerButton = document.getElementById("register-button");
     const guestButton = document.getElementById("guest-button");
@@ -9904,7 +10227,28 @@
   }
 
   // scripts/pages/RegisterPage.html
-  var RegisterPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var RegisterPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -9953,10 +10297,15 @@
   function handleRegister() {
     const button = document.getElementById("register-button");
     const errorElement = document.getElementById("error-message");
+    const backButton = document.getElementById("back-button");
     if (!button) {
       console.error("Can't find register button in DOM");
       return;
     }
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     button.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -10030,6 +10379,27 @@
   }
   function registerEvents() {
     handleRegister();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
   }
 
   // scripts/pages/GuestPage.html
@@ -10149,7 +10519,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    \n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">Game instructions</p>\n                                        <p>Player on the left moves the paddle with \u{1F1FC} and \u{1F1F8}.</p>\n                                        <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>\n                                        <p>The space bar can be used to distract your opponent.</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -26978,7 +27348,6 @@
     },
     "/game": {
       render: render7,
-      // La fonction HTML
       afterRender: () => {
         const state = window.history.state;
         const mode = state && state.gameMode ? state.gameMode : "local";
@@ -26996,12 +27365,9 @@
         headers: {
           "Content-Type": "application/json"
         },
-        // force l'envoi du cookie HttpOnly au serveur
         credentials: "include",
         body: JSON.stringify({})
-        // force le format JSON
       });
-      console.log("Deconnection from the backend server succeed");
     } catch (error) {
       console.error("Error during the deconnection from the server: ", error);
     } finally {
@@ -27030,73 +27396,108 @@
     if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
       clearGuestSession();
     }
+    if (path === "/") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      localStorage.removeItem("userTheme");
+    }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    if (isGameRunning() && path !== "/game") cleanup();
+    if (isGameRunning() && path !== "/game") {
+      cleanup();
+    }
     if (path === "/logout") {
       handleLogout();
       return;
     }
+    const setupLangDropdown = () => {
+      const toggleBtn = document.getElementById("lang-toggle-btn");
+      const menuContent = document.getElementById("lang-menu-content");
+      if (toggleBtn && menuContent) {
+        const newToggle = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode?.replaceChild(newToggle, toggleBtn);
+        newToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          menuContent.classList.toggle("hidden");
+        });
+        const closeMenu = () => {
+          if (!menuContent.classList.contains("hidden"))
+            menuContent.classList.add("hidden");
+        };
+        document.addEventListener("click", closeMenu);
+      }
+      document.querySelectorAll(".lang-select").forEach((btn) => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const target = e.target;
+          const lang = target.getAttribute("data-lang");
+          if (lang) {
+            console.log("Langue chang\xE9e vers :", lang);
+            await changeLanguage2(lang);
+            const display = document.getElementById("current-lang-display");
+            if (display) display.textContent = lang.toUpperCase();
+            const menuContent2 = document.getElementById("lang-menu-content");
+            if (menuContent2)
+              menuContent2.classList.add("hidden");
+            handleLocationChange();
+          }
+        });
+      });
+      const currentLangDisplay = document.getElementById("current-lang-display");
+      if (currentLangDisplay)
+        currentLangDisplay.textContent = i18n_default.language.toUpperCase();
+    };
+    const langDropdownHtml = `
+        <div class="relative" id="lang-dropdown">
+            <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
+                <span class="text-lg">\u{1F310}</span>
+                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">${i18n_default.language.toUpperCase()}</span>
+                <span class="text-[10px] opacity-70">\u25BC</span>
+            </button>
+            
+            <div id="lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                    <span>\u{1F1EC}\u{1F1E7}</span> English
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                    <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                    <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+                </button>
+            </div>
+        </div>
+    `;
     const navbar = document.getElementById("main-navbar");
-    const currentLang = i18n_default.language;
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline">${i18n_default.t("nav.home")}</a>
-        <a href="/profile" class="text-white hover:underline">${i18n_default.t("nav.profile")}</a>
-        <a href="/dashboard" class="text-white hover:underline">${i18n_default.t("nav.dashboard")}</a>
-        <a href="/logout" class="text-white hover:underline">${i18n_default.t("nav.logout")}</a>
-
-		<div id="language-switcher" class="flex gap-2 items-center ml-4">
-		<button data-lang="en" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">EN</button>
-		<button data-lang="fr" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">FR</button>
-		<button data-lang="es" class="lang-btn bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded">ES</button>
-		</div>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline">${i18n_default.t("nav.guest_area")}</a>
-        <a href="/logout" class="text-white hover:underline">${i18n_default.t("nav.logout")}</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
     if (navbar) {
-      const activeMenu = navbar.getAttribute("data-menu");
-      const activeLang = navbar.getAttribute("data-lang");
-      console.log("\u{1F50D} Navbar trouv\xE9e");
-      console.log("\u{1F50D} accessToken:", accessToken ? "OUI" : "NON");
-      console.log("\u{1F50D} isGuest:", isGuest);
-      console.log("\u{1F50D} activeMenu:", activeMenu);
-      console.log("\u{1F50D} activeLang:", activeLang);
-      console.log("\u{1F50D} currentLang:", currentLang);
-      if (isGuest) {
+      if (isGuest || accessToken) {
         navbar.style.display = "flex";
-        if (activeMenu !== "guest" || activeLang !== currentLang) {
-          navbar.innerHTML = guestMenuHtml;
-          navbar.setAttribute("data-menu", "guest");
-          navbar.setAttribute("data-lang", currentLang);
+        navbar.classList.add("justify-between", "items-center", "px-8");
+        const currentHTML = navbar.innerHTML;
+        const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
+        const isCurrentGuest = currentHTML.includes("Guest Area");
+        if (isGuest && !isCurrentGuest || !isGuest && isCurrentGuest || !currentHTML.includes("lang-dropdown")) {
+          navbar.innerHTML = targetHTML;
+          setupLangDropdown();
         }
-      } else if (accessToken) {
-        navbar.style.display = "flex";
-        navbar.classList.add("justify-between");
-        if (activeMenu !== "user" || activeLang !== currentLang) {
-          navbar.innerHTML = userMenuHtml;
-          navbar.setAttribute("data-menu", "user");
-          navbar.setAttribute("data-lang", currentLang);
-        }
-        const langButtons = document.querySelectorAll(".lang-btn");
-        langButtons.forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const target = e.currentTarget;
-            const lang = target.getAttribute("data-lang");
-            if (lang && lang !== currentLang) {
-              console.log(`Changement de langue vers: ${lang}`);
-              localStorage.setItem("preferedLanguage", lang);
-              i18n_default.changeLanguage(lang);
-            }
-          });
-        });
       } else {
         navbar.style.display = "none";
-        navbar.removeAttribute("data-menu");
-        navbar.removeAttribute("data-lang");
       }
     }
     const page = routes[path] || routes["/404"];
@@ -27139,7 +27540,9 @@
     }
     handleLocationChange();
   });
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await initI18n();
+    console.log("i18n initialise, langue:", i18n_default.language);
     handleLocationChange();
   });
 })();

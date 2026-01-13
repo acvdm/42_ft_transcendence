@@ -75,9 +75,15 @@ function handleLogin() {
     const confirm2fa = document.getElementById('confirm-2fa-button');
     const close2fa = document.getElementById('close-2fa-modal');
     const error2fa = document.getElementById('2fa-error-message');
+    const backButton = document.getElementById('back-button');
 
     let tempToken: string | null = null;
     let cachedStatus = 'available';
+
+    backButton?.addEventListener('click', () => {
+        window.history.pushState({}, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+    });
 
     button?.addEventListener('click', async () => {
         const email = (document.getElementById('email-input') as HTMLInputElement).value;
@@ -252,4 +258,32 @@ function handleLogin() {
 
 export function loginEvents() {
     handleLogin();
+
+    //================================================
+    //=============== LANGUAGE MANAGER ===============
+    //================================================
+
+    const toggleBtn = document.getElementById('page-lang-toggle-btn');
+    const menuContent = document.getElementById('page-lang-menu-content');
+    
+    if (toggleBtn && menuContent) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.classList.toggle('hidden');
+        });
+        window.addEventListener('click', () => {
+            if (!menuContent.classList.contains('hidden')) menuContent.classList.add('hidden');
+        });
+    }
+    
+    document.querySelectorAll('.page-lang-select').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const target = e.currentTarget as HTMLElement;
+            const lang = target.getAttribute('data-lang');
+            if (lang) {
+                const display = document.getElementById('page-current-lang-display');
+                if (display) display.textContent = lang.toUpperCase();
+            }
+        });
+    });
 }

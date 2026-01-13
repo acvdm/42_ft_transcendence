@@ -1,43 +1,44 @@
 {
   "nav": {
-    "home": "Home",
-    "profile": "Profile",
-    "dashboard": "Dashboard",
-    "logout": "Log out"
+    "home": "",
+    "profile": "",
+    "dashboard": "",
+    "logout": "",
+    "guest_area": ""
   },
   "profile": {
-    "title": "Profile",
-    "username": "Username",
-    "bio": "Share a quick message",
+    "title": "",
+    "username": "",
+    "bio": "",
     "status": {
-      "available": "Available",
-      "busy": "Busy",
-      "away": "Away",
-      "invisible": "Offline"
+      "available": "",
+      "busy": "",
+      "away": "",
+      "invisible": ""
     }
   },
   "games": {
-    "title": "Games",
-    "choose_mode": "CHOOSE YOUR GAME MODE",
-    "local": "LOCAL GAME",
-    "remote": "REMOTE GAME",
-    "tournament": "TOURNAMENT"
+    "title": "",
+    "choose_mode": "",
+    "local": "",
+    "remote": "",
+    "tournament": ""
   },
   "chat": {
-    "title": "Messenger",
-    "friends": "MY FRIENDS",
-    "add_friend": "Add a friend",
-    "send_request": "Send request",
-    "cancel": "Cancel",
-    "contact": "⭐ Contacts",
-    "placeholder": "Select a friend to start chatting",
-    "input_placeholder": "Write a message...",
-    "view_profile": "View profile",
-    "invite_game": "Invite to play",
-    "block_user": "Block user"
+    "title": "",
+    "friends": "",
+    "add_friend": "",
+    "send_request": "",
+    "cancel": "",
+    "contact": "",
+    "placeholder": "",
+    "input_placeholder": "",
+    "view_profile": "",
+    "invite_game": "",
+    "block_user": ""
   },
   "notifications": {
-    "title": "Notifications",
-    "no_notification": "No notification"
+    "title": "",
+    "no_notification": ""
   }
 }

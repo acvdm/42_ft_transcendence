@@ -7,11 +7,17 @@ export function render(): string {
 function handleRegister() {
 	const button = document.getElementById('register-button');
 	const errorElement = document.getElementById('error-message');
+	const backButton = document.getElementById('back-button');
 
 	if (!button) {
 		console.error("Can't find register button in DOM");
 		return;
 	}
+
+	backButton?.addEventListener('click', () => {
+        window.history.pushState({}, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+    });
 
 	button.addEventListener('click', async () => {
 		const email = (document.getElementById('email-input') as HTMLInputElement).value;
@@ -98,4 +104,32 @@ function handleRegister() {
 
 export function registerEvents() {
 	handleRegister();
+
+
+	//================================================
+    //=============== LANGUAGE MANAGER ===============
+    //================================================
+    const toggleBtn = document.getElementById('page-lang-toggle-btn');
+    const menuContent = document.getElementById('page-lang-menu-content');
+    
+    if (toggleBtn && menuContent) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.classList.toggle('hidden');
+        });
+        window.addEventListener('click', () => {
+            if (!menuContent.classList.contains('hidden')) menuContent.classList.add('hidden');
+        });
+    }
+    
+    document.querySelectorAll('.page-lang-select').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const target = e.currentTarget as HTMLElement;
+            const lang = target.getAttribute('data-lang');
+            if (lang) {
+                const display = document.getElementById('page-current-lang-display');
+                if (display) display.textContent = lang.toUpperCase();
+            }
+        });
+    });
 }

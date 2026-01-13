@@ -127,7 +127,7 @@ export const appThemes: { [key: string]: Theme } = {
 };
 
 export const ballEmoticons: { [key: string]: string } = {
-    "smile": gamePath + "smile.png",
+    "smile": gamePath + "smiling.png",
     "surprised": gamePath + "surprised.png",
     "confused": gamePath + "confused.png",
     "hot": gamePath + "hot.png",
