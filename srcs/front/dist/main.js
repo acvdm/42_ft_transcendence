@@ -7,7 +7,28 @@
   };
 
   // scripts/pages/LoginPage.html
-  var LoginPage_default = `	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var LoginPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -52,6 +73,10 @@
 			<!-- Bouton de connexion/Register/Guest -->
 			<div class="flex flex-col gap-2 w-48">
 				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
+			</div>
+
+			<div>
+				<button id="back-button" class="text-sm" style="color: grey;">Back to landing page</button>
 			</div>
 	</div>
 
@@ -3574,7 +3599,7 @@
     // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
     // Méthode privée pour ne pas dupliquer le code de config
     createSocketConnection(path) {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
         return null;
@@ -3650,7 +3675,7 @@
       headerUrl: "/assets/basic/background.jpg",
       navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
       bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)",
-      textColor: "#1f2937"
+      textColor: "#3E73B0"
     },
     "bamboo": {
       name: "Zen Bamboo",
@@ -3678,7 +3703,7 @@
       headerUrl: "/assets/headers/punk_header.jpg",
       navColor: "linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)",
       bgColor: "linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)",
-      textColor: "#340547"
+      textColor: "#631C6E"
     },
     "dotted": {
       name: "Spring Dots",
@@ -3706,14 +3731,14 @@
       headerUrl: "/assets/headers/hill_header.png",
       navColor: "linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)",
       bgColor: "linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)",
-      textColor: "#80C432"
+      textColor: "#6CB85A"
     },
     "love": {
       name: "Lovely Heart",
       headerUrl: "/assets/headers/love_header.jpg",
       navColor: "linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)",
       bgColor: "linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)",
-      textColor: "#5A0908"
+      textColor: "#7E2223"
     },
     "diary": {
       name: "Dear Diary",
@@ -3745,7 +3770,7 @@
     }
   };
   var ballEmoticons = {
-    "smile": gamePath + "smile.png",
+    "smile": gamePath + "smiling.png",
     "surprised": gamePath + "surprised.png",
     "confused": gamePath + "confused.png",
     "hot": gamePath + "hot.png",
@@ -3998,8 +4023,13 @@
     const confirm2fa = document.getElementById("confirm-2fa-button");
     const close2fa = document.getElementById("close-2fa-modal");
     const error2fa = document.getElementById("2fa-error-message");
+    const backButton = document.getElementById("back-button");
     let tempToken = null;
     let cachedStatus = "available";
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     button?.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -4142,6 +4172,27 @@
   }
   function loginEvents() {
     handleLogin();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
   }
 
   // scripts/pages/HomePage.html
@@ -4154,13 +4205,13 @@
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
 		
 		<!-- Container avec left et right qui prennent toute la hauteur restante -->
-		<div class="flex gap-6 flex-1 min-h-0" style="gap:80px;">
+		<div class="flex gap-6 min-h-0" style="gap:80px; height: calc(100vh - 320px);">
 
 			<!-- ========= LEFT COLUMN ========= -->
-			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]" style="height: 100%;">
 				
 				<!-- ========= PROFILE WINDOW ========= -->
-				<div class="window flex flex-col">
+				<div class="window flex flex-col" style="height: 190px; min-height: 190px;">
 					<div class="title-bar">
 						<div class="title-bar-text">Profile</div>
 						<div class="title-bar-controls">
@@ -4247,7 +4298,7 @@
 				</div>
 
 				<!-- ========= GAMES WINDOW ========= -->
-				<div class="window flex flex-col flex-1">
+				<div class="window flex flex-col" style="flex: 1; min-height: 0;">
 					<div class="title-bar">
 						<div class="title-bar-text">Games</div>
 						<div class="title-bar-controls">
@@ -4259,9 +4310,11 @@
 
 					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
 						<div class="bg-white p-6 flex flex-col flex-1">
-							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide">CHOOSE YOUR GAME MODE</h1>
-
-							<div class="flex flex-col gap-4 flex-1 justify-center px-8 items-center">
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">CHOOSE YOUR GAME MODE</h1>
+							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
+								<p>Select how you would like to start a new game.</p>
+							</div>
+							<div class="flex flex-col gap-4 flex-1 justify-center items-center">
 								<button id="local-game" 
 									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
@@ -4269,6 +4322,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
 									LOCAL GAME
 								</button>
+								<p>Play again another player on this computer</p>
 
 								<button id="remote-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
@@ -4277,6 +4331,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
 									REMOTE GAME
 								</button>
+								<p>Connect and play with friends and more online</p>
 
 								<button id="tournament-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
@@ -4285,6 +4340,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
 									TOURNAMENT
 								</button>
+								<p>Compete in a 4-multiplayer tournament on this computer</p>
 							</div>
 						</div>
 					</div>
@@ -4294,7 +4350,7 @@
 
 
 			<!-- ========= RIGHT WINDOW ========= -->
-			<div class="window flex flex-col flex-1 min-w-0">
+			<div class="window flex flex-col min-w-0" style="flex: 1; height: 100%;">
 				<div class="title-bar">
 					<div class="title-bar-text">Messenger</div>
 					<div class="title-bar-controls">
@@ -4408,14 +4464,6 @@
 											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
 												Invite to play
 											</button>
-										</div>
-
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/report.png" 
-													class="w-5 h-5 object-cover rounded"
-													alt="avatar">
-											</div>
 										</div>
 
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
@@ -4678,10 +4726,6 @@
 
   // scripts/components/FriendList.ts
   var FriendList = class {
-    // cass: 
-    // init() interval est appele a chaque fois auon va sur la HomePage
-    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
-    // qui s'accumulent quand on change de page et quon revient sur la homePage
     constructor() {
       this.notificationInterval = null;
       this.container = document.getElementById("contacts-list");
@@ -4736,7 +4780,7 @@
           let rawStatus = selectedFriend.status || "offline";
           const status = rawStatus.toLowerCase();
           const friendItem = document.createElement("div");
-          friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+          friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
           friendItem.dataset.id = selectedFriend.id;
           friendItem.dataset.friendshipId = friendship.id;
           friendItem.dataset.login = selectedFriend.username;
@@ -4745,17 +4789,30 @@
           friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
           friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
           friendItem.innerHTML = `
-                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                <div class="flex items-center gap-3">
+                    <div class="relative w-[40px] h-[40px] flex-shrink-0">
+                         <img class="w-full h-full rounded-full object-cover border border-gray-200"
+                             src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
+                        
+                        <img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
+                        <span class="text-xs text-gray-400 status-text">${status}</span>
                     </div>
+                </div>
+
+                <div id="badge-${selectedFriend.id}" 
+                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                    1
+                </div>
+
                 `;
           contactsList.appendChild(friendItem);
           friendItem.addEventListener("click", (e) => {
             if (e.target.closest(".invite-btn")) return;
+            this.clearNotifications(selectedFriend.id);
             const event = new CustomEvent("friendSelected", {
               detail: { friend: selectedFriend, friendshipId: friendship.id }
             });
@@ -4770,6 +4827,19 @@
       } catch (error) {
         console.error("Error loading friends:", error);
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    }
+    clearNotifications(friendId) {
+      const badge = document.getElementById(`badge-${friendId}`);
+      if (badge) {
+        badge.classList.add("hidden");
+        badge.innerText = "0";
+      }
+    }
+    handleMessageNotification(senderId) {
+      const badge = document.getElementById(`badge-${senderId}`);
+      if (badge) {
+        badge.classList.remove("hidden");
       }
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
@@ -4789,11 +4859,13 @@
       alert(`Invitation sent to ${friendName}`);
     }
     listenToUpdates() {
-      console.debug("listen to updates");
       const socketService = SocketService_default.getInstance();
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
       if (!chatSocket) return;
+      chatSocket.on("unreadNotification", (data) => {
+        this.handleMessageNotification(data.senderId);
+      });
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
@@ -5432,6 +5504,7 @@
 
   // scripts/components/Chat.ts
   var Chat = class {
+    //private unreadChannels: Set<string> = new Set();
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
@@ -5511,11 +5584,11 @@
         const imgUrl = animations[animationKey];
         if (imgUrl) {
           const animationHTML = `
-                    <div>
-                        <strong>${author} said:</strong><br>
-                        <img src="${imgUrl}" alt="${animationKey}">
-                    </div>
-                `;
+					<div>
+						<strong>${author} said:</strong><br>
+						<img src="${imgUrl}" alt="${animationKey}">
+					</div>
+				`;
           this.addCustomContent(animationHTML);
         } else {
           this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
@@ -5525,9 +5598,24 @@
         this.addMessage("Disconnected from chat server!", "System");
       });
     }
-    // ---------------------------------------------------
-    // ----           GESTION DE L'INPUT              ----
-    // ---------------------------------------------------
+    //================================================
+    //============= READ/UNREAD MESSAGES =============
+    //================================================
+    // private handleUnreadMessage(channel_key: string) {
+    // 	this.unreadChannels.add(channel_key);
+    // 	// changer l'icone dans la liste d'ami?
+    // 	const friendElement = document.getElementById(`friend-item-${channel_key}`);
+    // 	if (friendElement) {
+    // 		const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
+    // 		if (notifIcon) {
+    // 			notifIcon.src = '/assets/basic/message_notif.png';
+    // 		}
+    // 		friendElement.classList.add('font-bold', 'text-white');
+    // 	}
+    // }
+    //================================================
+    //=============== INPUT MANAGEMENT ===============
+    //================================================
     setupInputListeners() {
       if (!this.messageInput) {
         return;
@@ -5535,8 +5623,8 @@
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
-          const sender_alias = localStorage.getItem("username");
-          const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+          const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+          const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
           this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
@@ -5616,23 +5704,29 @@
       const match = message.match(inviteRegex);
       if (match) {
         const friendshipId = match[1];
-        const isMe = author === localStorage.getItem("username");
+        const myUsername = localStorage.getItem("username") || sessionStorage.getItem("username") || "Guest";
+        const isMe = author === myUsername;
         msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
         msgElement.innerHTML = `
-                <div class="flex flex-col gap-2">
-                    <strong>${author}</strong> veut jouer \xE0 Pong ! \u{1F3D3}<br>
-                    <button 
-                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
-                        onclick="
-                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
-                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                        "
-                    >
-                        ${isMe ? "Join my waitroom" : "Accept the match"}
-                    </button>
-                </div>
-            `;
+				<div class="flex flex-col gap-2">
+					<strong>${author}</strong> want to play Pong with you ! <br>
+
+					<button 
+						id="join-${friendshipId}"
+						class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+							px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+							active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
+					>
+						${isMe ? "Join my waitroom" : "Accept the match"}
+					</button>
+				</div>
+			`;
+        const joinButton = msgElement.querySelector(`#join-${friendshipId}`);
+        joinButton?.addEventListener("click", () => {
+          sessionStorage.setItem("privateGameId", friendshipId);
+          window.history.pushState({ gameMode: "remote" }, "", "/game");
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        });
       } else {
         msgElement.classList.add("bg-white");
         const contentEmoticons = parseMessage(message);
@@ -5822,8 +5916,8 @@
         document.getElementById("button-invite-game")?.addEventListener("click", (e) => {
           e.stopPropagation();
           if (this.currentFriendId && this.currentFriendshipId) {
-            const myName = localStorage.getItem("username");
-            const sender_id = Number.parseInt(localStorage.getItem("userId") || "0");
+            const myName = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
+            const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
             if (this.chatSocket && this.chatSocket.connected) {
               console.log("chatSocket connected");
               const inviteCode = `[GAME_INVITE|${this.currentFriendshipId}]`;
@@ -5854,7 +5948,7 @@
           const currentChatUser = document.getElementById("chat-header-username")?.textContent;
           if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
             try {
-              const userId = localStorage.getItem("userId");
+              const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
               const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                 method: "PATCH",
                 body: JSON.stringify({ status: "blocked" })
@@ -5934,14 +6028,14 @@
       this.messageInput.focus();
     }
     destroy() {
-      if (this.socket) {
-        this.socket.off("connect");
-        this.socket.off("chatMessage");
-        this.socket.off("msg_history");
-        this.socket.off("receivedWizz");
-        this.socket.off("receivedAnimation");
-        this.socket.off("systemMessage");
-        this.socket.off("disconnected");
+      if (this.chatSocket) {
+        this.chatSocket.off("connect");
+        this.chatSocket.off("chatMessage");
+        this.chatSocket.off("msg_history");
+        this.chatSocket.off("receivedWizz");
+        this.chatSocket.off("receivedAnimation");
+        this.chatSocket.off("systemMessage");
+        this.chatSocket.off("disconnected");
       }
     }
   };
@@ -6011,8 +6105,9 @@
         if (this.stats.games) this.stats.games.innerText = gamesPlayed.toString();
         if (this.stats.wins) this.stats.wins.innerText = wins.toString();
         if (this.stats.losses) this.stats.losses.innerText = (stats.losses || 0).toString();
-        if (this.stats.streak) this.stats.streak.innerText = (stats.streak ?? 0).toString();
         if (this.stats.avgScore) this.stats.avgScore.innerText = (stats.average_score ?? 0).toString();
+        const streak = stats.streak ?? stats.current_win_streak ?? stats.currentWinStreak ?? 0;
+        if (this.stats.streak) this.stats.streak.innerText = streak.toString();
         if (this.stats.winRate) {
           let rate = 0;
           if (gamesPlayed > 0) {
@@ -6172,7 +6267,7 @@
                         <div class="flex flex-row gap-6 w-full">
                             
                             <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
-                                <h1 class="theme-label text-lg font-normal mb-4 text-gray-700">My profile</h1>
+                                <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700">My profile</h1>
 
                                 <div class="relative w-[170px] h-[170px] mb-3">
                                     <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
@@ -6291,7 +6386,7 @@
                         </div>
 
                     </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
-                        <h1 class="theme-label text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
+                        <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
 
                         <div class="grid grid-cols-4 gap-4 mb-8">
                             <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
@@ -6310,29 +6405,11 @@
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
-                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
                                 <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
                                 <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
-                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
-                            </div>
 
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
-                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
-                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -7590,7 +7667,28 @@
   }
 
   // scripts/pages/LandingPage.html
-  var LandingPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var LandingPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
 		<div class="relative w-[170px] h-[170px] mb-4">
@@ -7615,7 +7713,33 @@
   function render4() {
     return LandingPage_default;
   }
+  function setupPageLangDropdown() {
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) {
+          menuContent.classList.add("hidden");
+        }
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
+  }
   function initLandingPage() {
+    setupPageLangDropdown();
     const loginButton = document.getElementById("login-button");
     const registerButton = document.getElementById("register-button");
     const guestButton = document.getElementById("guest-button");
@@ -7679,7 +7803,28 @@
   }
 
   // scripts/pages/RegisterPage.html
-  var RegisterPage_default = `<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
+  var RegisterPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
+    <div class="relative">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+            <span class="text-lg">\u{1F310}</span>
+            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+            <span class="text-[10px] opacity-70">\u25BC</span>
+        </button>
+        
+        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                <span>\u{1F1EC}\u{1F1E7}</span> English
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+            </button>
+            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+            </button>
+        </div>
+    </div>
+</div>
+<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
 	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
 		<!-- Picture div -->
@@ -7714,6 +7859,10 @@
 			<div class="flex flex-col gap-2 w-48">
 				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
 			</div>
+
+			<div>
+				<button id="back-button" class="text-sm text-gray-400" style="color: grey;">Back to landing page</button>
+			</div>
 	</div>
 </div>`;
 
@@ -7724,10 +7873,15 @@
   function handleRegister() {
     const button = document.getElementById("register-button");
     const errorElement = document.getElementById("error-message");
+    const backButton = document.getElementById("back-button");
     if (!button) {
       console.error("Can't find register button in DOM");
       return;
     }
+    backButton?.addEventListener("click", () => {
+      window.history.pushState({}, "", "/");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
     button.addEventListener("click", async () => {
       const email = document.getElementById("email-input").value;
       const password = document.getElementById("password-input").value;
@@ -7801,6 +7955,27 @@
   }
   function registerEvents() {
     handleRegister();
+    const toggleBtn = document.getElementById("page-lang-toggle-btn");
+    const menuContent = document.getElementById("page-lang-menu-content");
+    if (toggleBtn && menuContent) {
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuContent.classList.toggle("hidden");
+      });
+      window.addEventListener("click", () => {
+        if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
+      });
+    }
+    document.querySelectorAll(".page-lang-select").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const target = e.currentTarget;
+        const lang = target.getAttribute("data-lang");
+        if (lang) {
+          const display = document.getElementById("page-current-lang-display");
+          if (display) display.textContent = lang.toUpperCase();
+        }
+      });
+    });
   }
 
   // scripts/pages/GuestPage.html
@@ -7920,7 +8095,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    \n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">Game instructions</p>\n                                        <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>\n                                        <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>\n                                        <p>The space bar can be used to distract your opponent.</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -7966,7 +8141,12 @@
                             </div>
 
                             <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
-  
+                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
+                                    <p class="font-semibold mb-2">Game instructions</p>
+                                    <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>
+                                    <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>
+                                    <p>The space bar can be used to distract your opponent.</p>
+                                </div>
                                 <fieldset class="border-2 border-gray-300 p-2 mt-2">
                                     <div class="flex flex-row items-center gap-2 mb-3 relative">
                                         <label class="text-sm font-semibold">Choose your ball :</label>
@@ -8076,52 +8256,6 @@
 								
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<p>Chat room</p>
-								<div class="relative self-start mt-2">
-									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
-									</button>
-	
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-		
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-													<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												View profile
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												Invite to play
-											</button>
-										</div>
-	
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												Block user
-											</button>
-										</div>
-	
-									</div>
-	
-								</div>
 							</div>
 	
 							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
@@ -8208,7 +8342,7 @@
 </div>`;
 
   // scripts/pages/TournamentPage.html
-  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Arena</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                        <div class="window w-[600px] bg-white shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament setup</div>\n                            </div>\n                            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Create a new tournament</h2>\n                                \n                                <div class="flex flex-col gap-1">\n                                    <label class="font-bold text-sm">Tournament name:</label>\n                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urN\xD4\xEE\xEF d33s b0ggggg0\xF4\xF4ssss">\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>\n                                    <div class="grid grid-cols-2 gap-4">\n                                        <div>\n                                            <label class="text-xs font-bold">Player 1 (You):</label>\n                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 2:</label>\n                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 3:</label>\n                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 4:</label>\n                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800">Game Settings</legend>\n                                    <div class="flex flex-row items-center gap-8 justify-center">\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Ball :</label>\n                                            <div class="relative">\n                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                </div>\n                                            </div>\n                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                        </div>\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Background :</label>\n                                            <div class="relative">\n                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                            </div>\n                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    START TOURNAMENT\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament</div>\n                            </div>\n\n                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                    TOURNAMENT IS ABOUT TO START\n                                </h2>\n\n                                <div class="flex flex-col gap-6 w-full items-center">\n\n                                    <!-- SEMI FINALS -->\n                                    <div class="flex flex-row justify-between w-full px-8">\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 1\n                                            </span>\n                                            <span id="bracket-sf1" class="match-display"></span>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 2\n                                            </span>\n                                            <span id="bracket-sf2" class="match-display"></span>\n                                        </div>\n                                    </div>\n\n                                    <!-- FINAL -->\n                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                            Final\n                                        </span>\n                                        <span id="bracket-final" class="match-display final-match"></span>\n                                    </div>\n\n                                </div>\n\n                                <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                <p id="bracket-status-msg" class="text-gray-600 italic">\n                                    Ready for the next match...\n                                </p>\n\n                                <button\n                                    id="bracket-continue-btn"\n                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    CONTINUE TO MATCH\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n\n                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                            <div class="title-bar bg-blue-800">\n                                <div class="title-bar-text text-white">Next match</div>\n                            </div>\n                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">SEMI-FINAL 1</h2>\n                                \n                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">VS</div>\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                </div>\n\n                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">The game will start as soon as you click Play.</p>\n\n                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    PLAY !\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the tournament</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					    </div>\n				    </div>\n			    </div> \n            </div>\n        </div>\n    </div>\n</div>';
+  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Arena</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                        <div class="window w-[600px] bg-white shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament setup</div>\n                            </div>\n                            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                    <p class="font-semibold mb-2">Game instructions</p>\n                                    <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>\n                                    <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>\n                                    <p>The space bar can be used to distract your opponent.</p>\n                                </div>\n                                <div class="flex flex-col gap-1">\n                                    <label class="font-bold text-sm">Tournament name:</label>\n                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urN\xD4\xEE\xEF d33s b0ggggg0\xF4\xF4ssss">\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>\n                                    <div class="grid grid-cols-2 gap-4">\n                                        <div>\n                                            <label class="text-xs font-bold">Player 1 (You):</label>\n                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 2:</label>\n                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 3:</label>\n                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 4:</label>\n                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800">Choose your ball and background:</legend>\n                                    <div class="flex flex-row items-center gap-8 justify-center">\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Ball :</label>\n                                            <div class="relative">\n                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                </div>\n                                            </div>\n                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                        </div>\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Background :</label>\n                                            <div class="relative">\n                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                            </div>\n                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        START TOURNAMENT\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament</div>\n                            </div>\n\n                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                    TOURNAMENT IS ABOUT TO START\n                                </h2>\n\n                                <div class="flex flex-col gap-6 w-full items-center">\n\n                                    <!-- SEMI FINALS -->\n                                    <div class="flex flex-row justify-between w-full px-8">\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 1\n                                            </span>\n                                            <span id="bracket-sf1" class="match-display"></span>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 2\n                                            </span>\n                                            <span id="bracket-sf2" class="match-display"></span>\n                                        </div>\n                                    </div>\n\n                                    <!-- FINAL -->\n                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                            Final\n                                        </span>\n                                        <span id="bracket-final" class="match-display final-match"></span>\n                                    </div>\n\n                                </div>\n\n                                <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                <p id="bracket-status-msg" class="text-gray-600 italic">\n                                    Ready for the next match...\n                                </p>\n\n                                <button\n                                    id="bracket-continue-btn"\n                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    CONTINUE TO MATCH\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n\n                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                            <div class="title-bar bg-blue-800">\n                                <div class="title-bar-text text-white">Next match</div>\n                            </div>\n                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">SEMI-FINAL 1</h2>\n                                \n                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">VS</div>\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                </div>\n\n                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">The game will start as soon as you click Play.</p>\n\n                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    PLAY !\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the tournament</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					    </div>\n				    </div>\n			    </div> \n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/game/Paddle.ts
   var Paddle = class {
@@ -8330,12 +8464,17 @@
         this.gameLoop();
       }
     }
+    resetScore() {
+      this.score = { player1: 0, player2: 0 };
+      this.notifyScoreUpdate();
+    }
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId, role) {
-      console.log("startRemote");
+      console.log("startRemote Initial score:", this.score);
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
+      this.score = { player1: 0, player2: 0 };
       const socketService = SocketService_default.getInstance();
       socketService.connectGame();
       this.socket = socketService.getGameSocket();
@@ -9033,19 +9172,11 @@
         });
       }
       const startGameFromData = async (data, p1Alias, p2Alias) => {
-        console.log("startGameFromData");
         const gameSocket2 = SocketService_default.getInstance().getGameSocket();
         if (gameSocket2) {
-          console.log("Nettoyage pr\xE9ventif des \xE9couteurs sockets");
           gameSocket2.off("gameState");
           gameSocket2.off("gameEnded");
           gameSocket2.off("opponentLeft");
-        }
-        if (this.context.getGame()) {
-          console.log("\u{1F6D1} Arr\xEAt de l'ancien jeu");
-          this.context.getGame().stop();
-          this.context.getGame().onScoreChange = void 0;
-          this.context.setGame(null);
         }
         const scoreBoard = document.getElementById("score-board");
         if (scoreBoard) {
@@ -9054,6 +9185,22 @@
         const myAlias = await getPlayerAlias();
         const myId = Number(localStorage.getItem("userId"));
         let opponentId = data.opponent ? Number(data.opponent) : null;
+        if (opponentId && myId === opponentId) {
+          console.error("Error: cannot play against yourself");
+          if (status) {
+            status.innerText = "You cannot play against yourself";
+            status.style.color = "red";
+          }
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = "PLAY (QUEUE)";
+          }
+          const socket = SocketService_default.getInstance().getGameSocket();
+          if (socket) {
+            socket.emit("leaveQueue");
+          }
+          return;
+        }
         const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
         const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
         let p1Id = data.role === "player1" ? myId : opponentId;
@@ -9130,7 +9277,18 @@
               this.context.setGame(null);
             }
             const newGame = new Game_default(canvas, ctx, input, selectedBallSkin);
+            newGame.resetScore();
             this.context.setGame(newGame);
+            const spaceHandler = (e) => {
+              if (e.code === "Space") {
+                const game = this.context.getGame();
+                if (game && game.isRunning) {
+                  e.preventDefault();
+                  this.context.chat?.emitWizzOnly();
+                }
+              }
+            };
+            document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
               const activeGame2 = this.context.getGame();
@@ -9139,6 +9297,7 @@
                 activeGame2.stop();
                 gameSocket2.off("gameState");
                 gameSocket2.off("gameEnded");
+                document.removeEventListener("keydown", spaceHandler);
                 const s1 = activeGame2.score.player1;
                 const s2 = activeGame2.score.player2;
                 let winnerAlias = "";
@@ -9162,6 +9321,7 @@
               }
             });
             newGame.onGameEnd = async (endData) => {
+              document.removeEventListener("keydown", spaceHandler);
               let winnerAlias = "Winner";
               if (endData.winner === "player1") {
                 winnerAlias = this.currentP1Alias;
@@ -9928,7 +10088,7 @@
   }
 
   // scripts/pages/DashboardPage.html
-  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" style="gap: 1rem;">\n                        <label class="theme-label text-xs font-semibold text-gray-600 pr-2" style="margin-right: 8px;">Filter:</label>\n                        <input type="text" id="filter-opponent" placeholder="Rival name" class="text-xs p-1.5 border border-gray-300 rounded-sm w-[120px] text-center" style="margin-right: 8px;">\n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm bg-white p-1" style="margin-right: 8px;">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n                        \n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-bold hover:from-gray-200" style="margin-right: 12px;">Apply</button>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1" style="margin-left: 12px; margin-right: 12px;"></div>\n                        \n                        <label class="theme-label text-xs font-semibold text-gray-600 pl-1" style="margin-right: 8px;">Sort:</label>\n                        <select id="sort-order" class="text-xs border border-gray-300 rounded-sm bg-white p-1 focus:outline-none focus:border-blue-400 cursor-pointer">\n                            <option value="date-descending">Date \u2193 (Newest)</option>\n                            <option value="date-ascending">Date \u2191 (Oldest)</option>\n                            <option value="name-ascending">Rival (A-Z)</option>\n                            <option value="name-descending">Rival (Z-A)</option>\n                        </select>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0 overflow-hidden">\n                        <div class="overflow-y-auto h-full">\n                            <style>\n                                #match-history-list td {\n                                    padding-top: 12px !important;\n                                    padding-bottom: 12px !important;\n                                }\n                                #match-history-list tr {\n                                    height: 48px;\n                                }\n                            </style>\n                            <table class="w-full text-xs text-center border-collapse table-fixed">\n                                <thead class="text-gray-600 font-bold bg-gray-100 sticky top-0 shadow-sm z-10">\n                                    <tr>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Date</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-3/12">Rival</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Score</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Type</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-1/12">Round</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Result</th>\n                                    </tr>\n                                </thead>\n                                <tbody id="match-history-list" class="divide-y divide-gray-100">\n                                    <tr class="hover:bg-blue-50 transition-colors">\n                                        <td class="py-2 text-gray-500">Loading...</td>\n                                    </tr>\n                                </tbody>\n                            </table>\n                        </div>\n                    </div>\n\n\n                    <div id="pagination-controls" class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">\n                        <button id="prev-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            &lt; Previous\n                        </button>\n                        <span id="page-info" class="text-xs text-gray-600 font-semibold">Page 1</span>\n                        <button id="next-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            Next &gt;\n                        </button>\n                    </div>\n\n\n\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <div class="w-[220px] h-[120px]">\n                                <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                                <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" style="gap: 1rem;">\n                        <label class="theme-label text-xs font-semibold text-gray-600 pr-2" style="margin-right: 8px;">Filter:</label>\n                        <input type="text" id="filter-opponent" placeholder="Rival name" class="text-xs p-1.5 border border-gray-300 rounded-sm w-[120px] text-center" style="margin-right: 8px;">\n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm bg-white p-1" style="margin-right: 8px;">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n                        \n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-bold hover:from-gray-200" style="margin-right: 12px;">Apply</button>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1" style="margin-left: 12px; margin-right: 12px;"></div>\n                        \n                        <label class="theme-label text-xs font-semibold text-gray-600 pl-1" style="margin-right: 8px;">Sort:</label>\n                        <select id="sort-order" class="text-xs border border-gray-300 rounded-sm bg-white p-1 focus:outline-none focus:border-blue-400 cursor-pointer">\n                            <option value="date-descending">Date \u2193 (Newest)</option>\n                            <option value="date-ascending">Date \u2191 (Oldest)</option>\n                            <option value="name-ascending">Rival (A-Z)</option>\n                            <option value="name-descending">Rival (Z-A)</option>\n                        </select>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0 overflow-hidden">\n                        <div class="overflow-y-auto h-full">\n                            <style>\n                                #match-history-list td {\n                                    padding-top: 12px !important;\n                                    padding-bottom: 12px !important;\n                                }\n                                #match-history-list tr {\n                                    height: 48px;\n                                }\n                            </style>\n                            <table class="w-full text-xs text-center border-collapse table-fixed">\n                                <thead class="text-gray-600 font-bold bg-gray-100 sticky top-0 shadow-sm z-10">\n                                    <tr>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Date</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-3/12">Rival</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Score</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Type</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-1/12">Round</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Result</th>\n                                    </tr>\n                                </thead>\n                                <tbody id="match-history-list" class="divide-y divide-gray-100">\n                                    <tr class="hover:bg-blue-50 transition-colors">\n                                        <td class="py-2 text-gray-500">Loading...</td>\n                                    </tr>\n                                </tbody>\n                            </table>\n                        </div>\n                    </div>\n\n\n                    <div id="pagination-controls" class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">\n                        <button id="prev-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            &lt; Previous\n                        </button>\n                        <span id="page-info" class="text-xs text-gray-600 font-semibold">Page 1</span>\n                        <button id="next-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            Next &gt;\n                        </button>\n                    </div>\n\n\n\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
 
   // node_modules/@kurkle/color/dist/color.esm.js
   function round(v) {
@@ -24408,7 +24568,7 @@
   var rivalChart = null;
   var globalMatchHistory = [];
   var currentPage = 1;
-  var itemsPerPage = 10;
+  var itemsPerPage = 20;
   function render8() {
     return DashboardPage_default;
   }
@@ -24685,7 +24845,7 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
-          scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? "#666" : "#eee", lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
+          scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, callback: (value2) => Number(value2).toString() }, display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? "#666" : "#eee", lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
         }
       });
     }
@@ -24769,7 +24929,6 @@
     },
     "/game": {
       render: render7,
-      // La fonction HTML
       afterRender: () => {
         const state = window.history.state;
         const mode = state && state.gameMode ? state.gameMode : "local";
@@ -24787,15 +24946,13 @@
         headers: {
           "Content-Type": "application/json"
         },
-        // force l'envoi du cookie HttpOnly au serveur
         credentials: "include",
         body: JSON.stringify({})
-        // force le format JSON
       });
-      console.log("Deconnection from the backend server succeed");
     } catch (error) {
       console.error("Error during the deconnection from the server: ", error);
     } finally {
+      SocketService_default.getInstance().disconnectAll();
       localStorage.removeItem("accessToken");
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
@@ -24807,6 +24964,7 @@
     }
   };
   var clearGuestSession = () => {
+    SocketService_default.getInstance().disconnectAll();
     sessionStorage.removeItem("accessToken");
     sessionStorage.removeItem("userId");
     sessionStorage.removeItem("username");
@@ -24819,35 +24977,96 @@
     if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
       clearGuestSession();
     }
+    if (path === "/") {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("userId");
+      localStorage.removeItem("username");
+      localStorage.removeItem("userStatus");
+      localStorage.removeItem("userTheme");
+    }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    if (isGameRunning() && path !== "/game") cleanup();
+    if (isGameRunning() && path !== "/game") {
+      cleanup();
+    }
     if (path === "/logout") {
       handleLogout();
       return;
     }
+    const setupLangDropdown = () => {
+      const toggleBtn = document.getElementById("lang-toggle-btn");
+      const menuContent = document.getElementById("lang-menu-content");
+      if (toggleBtn && menuContent) {
+        const newToggle = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode?.replaceChild(newToggle, toggleBtn);
+        newToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          menuContent.classList.toggle("hidden");
+        });
+        window.addEventListener("click", () => {
+          if (!menuContent.classList.contains("hidden")) {
+            menuContent.classList.add("hidden");
+          }
+        });
+      }
+      document.querySelectorAll(".lang-select").forEach((btn) => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode?.replaceChild(newBtn, btn);
+        newBtn.addEventListener("click", (e) => {
+          const target = e.target;
+          const lang = target.getAttribute("data-lang");
+          if (lang) {
+            console.log("Langue chang\xE9e vers :", lang);
+            const display = document.getElementById("current-lang-display");
+            if (display) display.textContent = lang.toUpperCase();
+          }
+        });
+      });
+    };
+    const langDropdownHtml = `
+        <div class="relative" id="lang-dropdown">
+            <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
+                <span class="text-lg">\u{1F310}</span>
+                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+                <span class="text-[10px] opacity-70">\u25BC</span>
+            </button>
+            
+            <div id="lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+                    <span>\u{1F1EC}\u{1F1E7}</span> English
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+                    <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
+                </button>
+                <button class="lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+                    <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
+                </button>
+            </div>
+        </div>
+    `;
     const navbar = document.getElementById("main-navbar");
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline">Home</a>
-        <a href="/profile" class="text-white hover:underline">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        ${langDropdownHtml}
     `;
     if (navbar) {
-      if (isGuest) {
+      if (isGuest || accessToken) {
         navbar.style.display = "flex";
-        if (!navbar.innerHTML.includes("Guest Area")) {
-          navbar.innerHTML = guestMenuHtml;
-        }
-      } else if (accessToken) {
-        navbar.style.display = "flex";
-        navbar.classList.add("justify-between");
-        if (!navbar.innerHTML.includes("Dashboard")) {
-          navbar.innerHTML = userMenuHtml;
+        navbar.classList.add("justify-between", "items-center", "px-8");
+        const currentHTML = navbar.innerHTML;
+        const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
+        const isCurrentGuest = currentHTML.includes("Guest Area");
+        if (isGuest && !isCurrentGuest || !isGuest && isCurrentGuest || !currentHTML.includes("lang-dropdown")) {
+          navbar.innerHTML = targetHTML;
+          setupLangDropdown();
         }
       } else {
         navbar.style.display = "none";

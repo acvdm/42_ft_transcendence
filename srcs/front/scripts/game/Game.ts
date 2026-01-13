@@ -40,7 +40,6 @@ class Game {
         if (this.socket) {
             this.socket.off('gameState');
             this.socket.off('gameEnded');
-            //this.socket.off('opponentLeft');
         }
     }
 
@@ -56,14 +55,20 @@ class Game {
         }
     }
 
+    resetScore() {
+        this.score = { player1: 0, player2: 0 };
+        this.notifyScoreUpdate();
+    }
+
     // Fonction pour démarrer le jeu en remote
     startRemote(roomId: string, role: 'player1' | 'player2') {
-        console.log("startRemote");
+        console.log("startRemote Initial score:", this.score);
         this.isRemote = true;
         this.roomId = roomId;
         this.playerRole = role;
         // this.socket = SocketService.getInstance().socket;
 
+        this.score = { player1: 0, player2: 0 };
         const socketService = SocketService.getInstance();
         socketService.connectGame();
         this.socket = socketService.getGameSocket();

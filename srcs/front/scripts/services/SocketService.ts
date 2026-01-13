@@ -18,7 +18,7 @@ class SocketService {
     // -- LOGIQUE GÉNÉRIQUE DE CONNEXION
     // Méthode privée pour ne pas dupliquer le code de config
     private createSocketConnection(path: string): Socket | null {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
         if (!token)
         {

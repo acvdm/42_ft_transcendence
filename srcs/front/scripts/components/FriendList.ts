@@ -7,10 +7,6 @@ export class FriendList {
     private container: HTMLElement | null;
     private userId: string | null;
     private notificationInterval: any = null;
-    // cass: 
-    // init() interval est appele a chaque fois auon va sur la HomePage
-    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
-    // qui s'accumulent quand on change de page et quon revient sur la homePage
 
     constructor() {
         this.container = document.getElementById('contacts-list');
@@ -30,11 +26,9 @@ export class FriendList {
 
         // setInterval(() => this.checkNotifications(), 30000);
 
-        // AJOUT
-        // nettoyer l'ancien si il existe
+
         if (this.notificationInterval) clearInterval(this.notificationInterval);
 
-        // stocker l'id
         this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
     }
 
@@ -103,7 +97,8 @@ export class FriendList {
                 const status = rawStatus.toLowerCase(); 
 
                 const friendItem = document.createElement('div');
-                friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+                friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
+                //friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
 
                 friendItem.dataset.id = selectedFriend.id;
                 friendItem.dataset.friendshipId = friendship.id;
@@ -115,14 +110,36 @@ export class FriendList {
                 friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
                 friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
                 
+                // friendItem.innerHTML = `
+                //     <div class="relative w-[50px] h-[50px] flex-shrink-0">
+                //         <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                //              src="${getStatusDot(status)}" alt="status">
+                //     </div>
+                //     <div class="flex flex-col leading-tight">
+                //         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
+                //     </div>
+                // `;
+
                 friendItem.innerHTML = `
-                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                <div class="flex items-center gap-3">
+                    <div class="relative w-[40px] h-[40px] flex-shrink-0">
+                         <img class="w-full h-full rounded-full object-cover border border-gray-200"
+                             src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
+                        
+                        <img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
+                        <span class="text-xs text-gray-400 status-text">${status}</span>
                     </div>
+                </div>
+
+                <div id="badge-${selectedFriend.id}" 
+                     class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-pulse">
+                    1
+                </div>
+
                 `;
 
                 contactsList.appendChild(friendItem);
@@ -130,6 +147,8 @@ export class FriendList {
                 friendItem.addEventListener('click', (e) => {
                     // Si on clique sur le bouton inviter, on ne déclenche pas l'ouverture du chat ici
                     if ((e.target as HTMLElement).closest('.invite-btn')) return;
+
+                    this.clearNotifications(selectedFriend.id);
 
                     const event = new CustomEvent('friendSelected', { 
                         detail: { friend: selectedFriend, friendshipId: friendship.id } 
@@ -147,6 +166,21 @@ export class FriendList {
         } catch (error) {
             console.error("Error loading friends:", error);
             contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+        }
+    }
+
+    private clearNotifications(friendId: number) {
+        const badge = document.getElementById(`badge-${friendId}`);
+        if (badge) {
+            badge.classList.add('hidden');
+            badge.innerText = '0';
+        }
+    }
+
+    private handleMessageNotification(senderId: number) {
+        const badge = document.getElementById(`badge-${senderId}`);
+        if (badge) {
+            badge.classList.remove('hidden');
         }
     }
 
@@ -172,13 +206,17 @@ export class FriendList {
     }
 
     private listenToUpdates() {
-        console.debug("listen to updates");
+
         const socketService = SocketService.getInstance();
         const chatSocket = socketService.getChatSocket();
         const gameSocket = socketService.getGameSocket();
 
         if (!chatSocket) return;
         
+        chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
+            this.handleMessageNotification(data.senderId);
+        });
+
         chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
             this.updateFriendUI(data.username, data.status);
