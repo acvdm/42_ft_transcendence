@@ -25,6 +25,13 @@ clean:
 
 	@docker network rm $$(docker network ls -q) || true
 
+add_stats:
+	@if [ -z "$(user)" ]; then \
+		echo "Error: enter user's alias. Example: make add_stats user=AnneChat"; \
+	else \
+		bash ./scripts/add_stats.sh $(user); \
+	fi
+
 re: clean up
 
 prune:	clean
