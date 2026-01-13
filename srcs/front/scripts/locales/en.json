@@ -337,8 +337,17 @@
       "placeholder_input": "You cannot speak to the system"
     }
 
-  }
+  },
 
+  "guestPage": {
+    "title": "Guest Mode",
+    "welcome": "Welcome on transcendence",
+    "description": "You are actually playing as a guest. If you want to access any game's feature, you need to register!",
+    "select_mode": "Select a mode to start playing",
+    "local": "LOCAL GAME",
+    "remote": "REMOTE GAME",
+    "tournament": "TOURNAMENT"
+  }
 
   
 }

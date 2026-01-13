@@ -312,5 +312,15 @@
       "info": "Notification système",
       "placeholder_input": "Vous ne pouvez pas répondre au système"
     }
+  },
+
+  "guestPage": {
+    "title": "Mode Invité",
+    "welcome": "Bienvenue sur Transcendence",
+    "description": "Vous jouez actuellement en tant qu'invité. Pour accéder à toutes les fonctionnalités de jeu, vous devez vous inscrire !",
+    "select_mode": "Sélectionnez un mode pour commencer à jouer",
+    "local": "JEU LOCAL",
+    "remote": "JEU À DISTANCE",
+    "tournament": "TOURNOI"
   }
 }

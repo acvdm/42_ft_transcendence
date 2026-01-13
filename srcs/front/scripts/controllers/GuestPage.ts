@@ -1,8 +1,19 @@
 import htmlContent from "../pages/GuestPage.html";
 import { Chat } from "../components/Chat";
+import i18next from "../i18n";
 
 export function render(): string {
-    return htmlContent;
+    let html = htmlContent;
+
+    html = html.replace(/\{\{guestPage\.title_window\}\}/g, i18next.t('guestPage.title'));
+    html = html.replace(/\{\{guestPage\.welcome\}\}/g, i18next.t('guestPage.welcome'));
+    html = html.replace(/\{\{guestPage\.description\}\}/g, i18next.t('guestPage.description'));
+    html = html.replace(/\{\{guestPage\.select_mode\}\}/g, i18next.t('guestPage.select_mode'));
+    html = html.replace(/\{\{guestPage\.local\}\}/g, i18next.t('guestPage.local'));
+    html = html.replace(/\{\{guestPage\.remote\}\}/g, i18next.t('guestPage.remote'));
+    html = html.replace(/\{\{guestPage\.tournament\}\}/g, i18next.t('guestPage.tournament'));
+
+    return html;
 }
 
 export function afterRender(): void {

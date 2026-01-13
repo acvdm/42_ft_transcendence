@@ -296,5 +296,15 @@
       "info": "Notificación del sistema",
       "placeholder_input": "No puedes hablar con el sistema"
     }
+  },
+
+  "guestPage": {
+    "title": "Modo Invitado",
+    "welcome": "Bienvenido a Transcendence",
+    "description": "Actualmente estás jugando como invitado. ¡Si quieres acceder a todas las funciones del juego, debes registrarte!",
+    "select_mode": "Selecciona un modo para empezar a jugar",
+    "local": "JUEGO LOCAL",
+    "remote": "JUEGO REMOTO",
+    "tournament": "TORNEO"
   }
 }
