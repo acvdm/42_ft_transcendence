@@ -56,5 +56,261 @@
     "delete": "DELETE",
     "ok": "OK",
     "cancel": "CANCEL"
+  },
+
+
+
+
+
+  "landing": {
+    "welcome": "Bienvenue sur Transcendence",
+    "login_button": "Connexion",
+    "register_button": "Inscription",
+    "guest_button": "Jouer en invité"
+  },
+  "loginPage": {
+    "welcome": "Se connecter à Transcendence",
+    "password": "Entrez votre mot de passe",
+    "connect_as": "Se connecter en tant que",
+    "status": {
+      "available": "Disponible",
+      "busy": "Occupé",
+      "away": "Absent",
+      "offline": "Hors ligne"
+    },
+    "login_button": "Connexion",
+    "back": "Retour à l'accueil",
+    "2fa": "Authentification à deux facteurs",
+    "security": "Contrôle de sécurité",
+    "enter_code": "Veuillez entrer le code de sécurité.",
+    "verify_button": "VÉRIFIER"
+  },
+  "registerPage": {
+    "welcome": "S'inscrire sur Transcendence",
+    "password": "Entrez votre mot de passe",
+    "register_button": "S'inscrire",
+    "back": "Retour à l'accueil"
+  },
+  "profilePage": {
+    "window_profile": "Profil",
+    "my_profile": "Mon profil",
+    "my_status": "Statut :",
+    "status": {
+      "available": "Disponible",
+      "busy": "Occupé",
+      "away": "Absent",
+      "offline": "Hors ligne"
+    },
+    "fallback_username": "Attente...",
+    "fallback_bio": "Chargement de la bio...",
+    "username": "Pseudo :",
+    "placeholder_username": "Nom d'utilisateur",
+    "change_button": "Modifier",
+    "confirm_button": "Confirmer",
+    "back": "Retour à l'accueil",
+    "bio": "Message rapide :",
+    "placeholder_bio": "Partagez un message rapide",
+    "password": "Mot de passe :",
+    "placeholder_password": "Nouveau mot de passe",
+    "2fa_button": "Activer la 2FA",
+    "download_button": "Télécharger mes données",
+    "delete_button": "Supprimer mon compte",
+    "game_stats": "Mes statistiques de jeu",
+    "game_played": "Parties jouées",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "winning_streak": "Série de victoires actuelle",
+    "2fa_modal": {
+      "title": "Authentification à deux facteurs",
+      "choose_method": "Choisir la méthode",
+      "message_method": "Sélectionnez comment configurer la 2FA",
+      "authenticator": "App d'authentification",
+      "message_authenticator": "Utiliser Google Authenticator ou similaire",
+      "email_verif": "Vérification par email",
+      "message_email_verif": "Recevoir les codes par email",
+      "qr_code": "Scanner le QR Code",
+      "message_qr_code": "Ouvrez Google Authenticator et scannez ce code",
+      "6_digit": "Entrez le code à 6 chiffres :",
+      "validate": "VALIDER",
+      "cancel": "ANNULER",
+      "verif_email": "Nous enverrons un code à votre email.",
+      "message_verif_email": "Le code sera envoyé à :",
+      "code_send": "ENVOYER LE CODE",
+      "code_received": "Entrez le code reçu :"
+    },
+    "picture_modal": {
+      "title": "Changer d'image",
+      "select_pic": "Sélectionnez une image",
+      "message_select": "Choisissez votre avatar sur Transcendence.",
+      "browse": "PARCOURIR",
+      "delete": "SUPPRIMER",
+      "ok": "OK",
+      "cancel": "ANNULER"
+    },
+    "theme_modal": {
+      "title": "Sélectionner un thème"
+    },
+    "password_modal": {
+      "title": "Changer le mot de passe",
+      "current_pwd": "Mot de passe actuel :",
+      "new_pwd": "Nouveau mot de passe :",
+      "confirm_pwd": "Confirmer le mot de passe :",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "delete_modal": {
+      "title": "Supprimer mon compte",
+      "confirm_delete": "Voulez-vous vraiment supprimer votre compte ?",
+      "confirm_message": "Cette action sera irréversible.",
+      "yes": "Oui, supprimer mon compte",
+      "cancel": "Annuler"
+    }
+  },
+  "dashboardPage": {
+    "title": "Aperçu du tableau de bord",
+    "game_played": "Parties jouées",
+    "avg_score": "Score moyen",
+    "time_playing": "Temps de jeu",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "win_rate": "Taux de victoire",
+    "win_loss_evol": "Évolution victoires/défaites",
+    "type_game": "Types de jeux",
+    "bigg_rival": "Mes plus grands rivaux",
+    "match_history": "Historique et analyse des matchs",
+    "placeholder_rival": "Nom du rival",
+    "all_modes": "Tous les modes",
+    "local": "Local",
+    "remote": "À distance",
+    "tournament": "Tournoi",
+    "apply_button": "Appliquer",
+    "sort": "Trier",
+    "date_asc": "Date ↑ (Ancien)",
+    "date_desc": "Date ↓ (Récent)",
+    "name_a": "Rival (A-Z)",
+    "name_z": "Rival (Z-A)",
+    "date": "Date",
+    "rival": "Rival",
+    "score": "Score",
+    "type": "Type",
+    "round": "Tour",
+    "result": "Résultat",
+    "loading": "Chargement...",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "page": "Page 1"
+  },
+  "localPage": {
+    "title": "Jeux",
+    "p1": "Joueur 1",
+    "p2": "Joueur 2",
+    "start_game": "Démarrer la partie",
+    "game_instr": "Instructions de jeu",
+    "ws": "Le joueur de gauche déplace sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "Le joueur de droite utilise les touches ⬆️⬇️.",
+    "space_bar": "La barre d'espace peut servir à distraire votre adversaire",
+    "opp_name": "Avec qui jouez-vous ? :",
+    "placeholder_opp": "Entrez un nom...",
+    "err_message": "Veuillez remplir ce champ !",
+    "choose_ball": "Choisissez votre balle :",
+    "select_ball": "Sélectionner une balle :",
+    "choose_bg": "Choisissez votre fond :",
+    "select_bg": "Sélectionner un fond :",
+    "reset_color": "Réinitialiser couleur",
+    "play": "JOUER",
+    "countdown_title": "À vos marques, prêts, partez !",
+    "summary_modal": {
+      "title": "Fin de partie",
+      "congrat": "FÉLICITATIONS",
+      "name": "NOM",
+      "back_menu": "Retour au menu"
+    },
+    "chat": {
+      "title": "Notifications",
+      "info": "Notification système",
+      "placeholder_input": "Vous ne pouvez pas répondre au système"
+    }
+  },
+  "remotePage": {
+    "title": "Jeux",
+    "p1": "Joueur 1",
+    "p2": "Joueur 2",
+    "start_game": "Démarrer la partie",
+    "game_instr": "Instructions de jeu",
+    "ws": "Le joueur de gauche déplace sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "Le joueur de droite utilise les touches ⬆️⬇️.",
+    "space_bar": "La barre d'espace peut servir à distraire votre adversaire",
+    "choose_ball": "Choisissez votre balle :",
+    "select_ball": "Sélectionner une balle :",
+    "choose_bg": "Choisissez votre fond :",
+    "select_bg": "Sélectionner un fond :",
+    "reset_color": "Réinitialiser couleur",
+    "play": "JOUER (FILE D'ATTENTE)",
+    "countdown_title": "À vos marques, prêts, partez !",
+    "summary_modal": {
+      "title": "Fin de partie",
+      "congrat": "FÉLICITATIONS",
+      "name": "???",
+      "back_menu": "Retour au menu"
+    },
+    "chat": {
+      "title": "Chat de jeu",
+      "info": "Salon de discussion",
+      "choose_bg": "Choisir un fond :",
+      "default_bg": "Fond par défaut"
+    }
+  },
+  "tournamentPage": {
+    "title": "Arène de Tournoi",
+    "p1": "Joueur 1",
+    "p2": "Joueur 2",
+    "setup_modal": {
+      "title_modal": "Configuration du tournoi",
+      "game_instr": "Instructions de jeu",
+      "ws": "Le joueur de gauche déplace sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      "up_down": "Le joueur de droite utilise les touches ⬆️⬇️.",
+      "space_bar": "La barre d'espace peut servir à distraire votre adversaire",
+      "tournament_name": "Nom du tournoi :",
+      "placeholder_trnmt": "Mon super tournoi",
+      "participant": "Participants",
+      "p1": "Joueur 1 (Vous) :",
+      "p2": "Joueur 2 :",
+      "p3": "Joueur 3 :",
+      "p4": "Joueur 4 :",
+      "choose__ball_bg": "Choisissez votre balle et le fond :",
+      "choose__ball": "Balle :",
+      "choose_bg": "Fond :",
+      "select_bg": "Sélectionner un fond :",
+      "reset_color": "Réinitialiser couleur",
+      "play": "DÉMARRER LE TOURNOI",
+      "countdown_title": "À vos marques, prêts, partez !"
+    },
+    "tournament_bracket_modal": {
+      "title": "Tournoi",
+      "heading": "LE TOURNOI VA COMMENCER",
+      "semi_final_1": "Demi-finale 1",
+      "semi_final_2": "Demi-finale 2",
+      "final": "Finale",
+      "status_ready": "Prêt pour le prochain match...",
+      "continue_btn": "CONTINUER VERS LE MATCH"
+    },
+    "tournament_next_match_modal": {
+      "title": "Match suivant",
+      "match_title": "DEMI-FINALE 1",
+      "player_vs": "VS",
+      "start_info": "Le jeu commencera dès que vous cliquerez sur Jouer.",
+      "play_btn": "JOUER !"
+    },
+    "tournament_summary_modal": {
+      "title": "Fin du tournoi",
+      "congratulations": "FÉLICITATIONS",
+      "winner_name": "NOM",
+      "back_menu": "Retour au menu"
+    },
+    "chat": {
+      "title": "Notifications",
+      "info": "Notification système",
+      "placeholder_input": "Vous ne pouvez pas répondre au système"
+    }
   }
 }

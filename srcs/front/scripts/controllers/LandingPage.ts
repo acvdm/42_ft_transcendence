@@ -1,8 +1,17 @@
 import { fetchWithAuth } from "../services/api";
 import htmlContent from "../pages/LandingPage.html"
+import i18next from "../i18n";
 
 export function render(): string {
-	return htmlContent;
+    let html = htmlContent;
+
+	html = html.replace(/\{\{landing\.welcome\}\}/g, i18next.t('landing.welcome'));
+	html = html.replace(/\{\{landing\.login_button\}\}/g, i18next.t('landing.login_button'));
+	html = html.replace(/\{\{landing\.register_button\}\}/g, i18next.t('landing.register_button'));
+	html = html.replace(/\{\{landing\.guest_button\}\}/g, i18next.t('landing.guest_button'));
+
+	return html;
+
 };
 
 

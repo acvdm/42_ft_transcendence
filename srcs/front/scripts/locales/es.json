@@ -40,5 +40,261 @@
   "notifications": {
     "title": "",
     "no_notification": ""
+  },
+
+
+
+
+
+  "landing": {
+    "welcome": "Bienvenido a Transcendence",
+    "login_button": "Entrar",
+    "register_button": "Registrarse",
+    "guest_button": "Jugar como invitado"
+  },
+  "loginPage": {
+    "welcome": "Iniciar sesión en Transcendence",
+    "password": "Introduce tu contraseña",
+    "connect_as": "Conectarse como",
+    "status": {
+      "available": "Disponible",
+      "busy": "Ocupado",
+      "away": "Ausente",
+      "offline": "Invisible"
+    },
+    "login_button": "Entrar",
+    "back": "Volver al inicio",
+    "2fa": "Autenticación de dos factores",
+    "security": "Control de seguridad",
+    "enter_code": "Por favor, introduce el código de seguridad.",
+    "verify_button": "VERIFICAR"
+  },
+  "registerPage": {
+    "welcome": "Registrarse en Transcendence",
+    "password": "Introduce tu contraseña",
+    "register_button": "Registrarse",
+    "back": "Volver al inicio"
+  },
+  "profilePage": {
+    "window_profile": "Perfil",
+    "my_profile": "Mi perfil",
+    "my_status": "Estado:",
+    "status": {
+      "available": "Disponible",
+      "busy": "Ocupado",
+      "away": "Ausente",
+      "offline": "Invisible"
+    },
+    "fallback_username": "Espera...",
+    "fallback_bio": "Cargando biografía...",
+    "username": "Usuario:",
+    "placeholder_username": "Nombre de usuario",
+    "change_button": "Cambiar",
+    "confirm_button": "Confirmar",
+    "back": "Volver al inicio",
+    "bio": "Mensaje rápido:",
+    "placeholder_bio": "Comparte un mensaje rápido",
+    "password": "Contraseña:",
+    "placeholder_password": "Nueva contraseña",
+    "2fa_button": "Activar 2FA",
+    "download_button": "Descargar datos",
+    "delete_button": "Eliminar mi cuenta",
+    "game_stats": "Mis estadísticas",
+    "game_played": "Partidas jugadas",
+    "wins": "Victorias",
+    "losses": "Derrotas",
+    "winning_streak": "Racha de victorias actual",
+    "2fa_modal": {
+      "title": "Autenticación de dos factores",
+      "choose_method": "Elegir método",
+      "message_method": "Selecciona cómo configurar el 2FA",
+      "authenticator": "App de Autenticación",
+      "message_authenticator": "Usa Google Authenticator o similar",
+      "email_verif": "Verificación por email",
+      "message_email_verif": "Recibe códigos por email",
+      "qr_code": "Escanear código QR",
+      "message_qr_code": "Abre Google Authenticator y escanea este código",
+      "6_digit": "Introduce el código de 6 dígitos:",
+      "validate": "VALIDAR",
+      "cancel": "CANCELAR",
+      "verif_email": "Enviaremos un código a tu email.",
+      "message_verif_email": "El código se enviará a:",
+      "code_send": "ENVIAR CÓDIGO",
+      "code_received": "Introduce el código recibido:"
+    },
+    "picture_modal": {
+      "title": "Cambiar imagen",
+      "select_pic": "Selecciona una imagen",
+      "message_select": "Elige tu avatar para Transcendence.",
+      "browse": "BUSCAR",
+      "delete": "ELIMINAR",
+      "ok": "OK",
+      "cancel": "CANCELAR"
+    },
+    "theme_modal": {
+      "title": "Seleccionar tema"
+    },
+    "password_modal": {
+      "title": "Cambiar contraseña",
+      "current_pwd": "Contraseña actual:",
+      "new_pwd": "Nueva contraseña:",
+      "confirm_pwd": "Confirmar contraseña:",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "delete_modal": {
+      "title": "Eliminar cuenta",
+      "confirm_delete": "¿Seguro que quieres eliminar tu cuenta?",
+      "confirm_message": "Esta acción será irreversible.",
+      "yes": "Sí, eliminar mi cuenta",
+      "cancel": "Cancelar"
+    }
+  },
+  "dashboardPage": {
+    "title": "Resumen del panel",
+    "game_played": "Partidas jugadas",
+    "avg_score": "Puntuación media",
+    "time_playing": "Tiempo de juego",
+    "wins": "Victorias",
+    "losses": "Derrotas",
+    "win_rate": "Tasa de victorias",
+    "win_loss_evol": "Evolución victorias/derrotas",
+    "type_game": "Tipos de juego",
+    "bigg_rival": "Mis mayores rivales",
+    "match_history": "Historial y análisis",
+    "placeholder_rival": "Nombre del rival",
+    "all_modes": "Todos los modos",
+    "local": "Local",
+    "remote": "Remoto",
+    "tournament": "Torneo",
+    "apply_button": "Aplicar",
+    "sort": "Ordenar",
+    "date_asc": "Fecha ↑ (Antiguo)",
+    "date_desc": "Fecha ↓ (Reciente)",
+    "name_a": "Rival (A-Z)",
+    "name_z": "Rival (Z-A)",
+    "date": "Fecha",
+    "rival": "Rival",
+    "score": "Puntos",
+    "type": "Tipo",
+    "round": "Ronda",
+    "result": "Resultado",
+    "loading": "Cargando...",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "page": "Página 1"
+  },
+  "localPage": {
+    "title": "Juegos",
+    "p1": "Jugador 1",
+    "p2": "Jugador 2",
+    "start_game": "Empezar partida",
+    "game_instr": "Instrucciones",
+    "ws": "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "El jugador de la derecha usa las teclas ⬆️⬇️.",
+    "space_bar": "La barra espaciadora sirve para distraer al oponente",
+    "opp_name": "¿Con quién juegas? :",
+    "placeholder_opp": "Escribe un nombre...",
+    "err_message": "¡Por favor, rellena esto!",
+    "choose_ball": "Elige tu bola:",
+    "select_ball": "Seleccionar bola:",
+    "choose_bg": "Elige tu fondo:",
+    "select_bg": "Seleccionar fondo:",
+    "reset_color": "Restablecer color",
+    "play": "JUGAR",
+    "countdown_title": "¡Listos, preparados, ya!",
+    "summary_modal": {
+      "title": "Fin de la partida",
+      "congrat": "¡FELICIDADES!",
+      "name": "NOMBRE",
+      "back_menu": "Volver al menú"
+    },
+    "chat": {
+      "title": "Notificaciones",
+      "info": "Notificación del sistema",
+      "placeholder_input": "No puedes hablar con el sistema"
+    }
+  },
+  "remotePage": {
+    "title": "Juegos",
+    "p1": "Jugador 1",
+    "p2": "Jugador 2",
+    "start_game": "Empezar partida",
+    "game_instr": "Instrucciones",
+    "ws": "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "El jugador de la derecha usa las teclas ⬆️⬇️.",
+    "space_bar": "La barra espaciadora sirve para distraer al oponente",
+    "choose_ball": "Elige tu bola:",
+    "select_ball": "Seleccionar bola:",
+    "choose_bg": "Elige tu fondo:",
+    "select_bg": "Seleccionar fondo:",
+    "reset_color": "Restablecer color",
+    "play": "JUGAR (COLA)",
+    "countdown_title": "¡Listos, preparados, ya!",
+    "summary_modal": {
+      "title": "Fin de la partida",
+      "congrat": "¡FELICIDADES!",
+      "name": "???",
+      "back_menu": "Volver al menú"
+    },
+    "chat": {
+      "title": "Chat de juego",
+      "info": "Sala de chat",
+      "choose_bg": "Elegir fondo:",
+      "default_bg": "Fondo por defecto"
+    }
+  },
+  "tournamentPage": {
+    "title": "Arena de Torneo",
+    "p1": "Jugador 1",
+    "p2": "Jugador 2",
+    "setup_modal": {
+      "title_modal": "Configuración del torneo",
+      "game_instr": "Instrucciones",
+      "ws": "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      "up_down": "El jugador de la derecha usa las teclas ⬆️⬇️.",
+      "space_bar": "La barra espaciadora sirve para distraer al oponente",
+      "tournament_name": "Nombre del torneo:",
+      "placeholder_trnmt": "Mi gran torneo",
+      "participant": "Participantes",
+      "p1": "Jugador 1 (Tú):",
+      "p2": "Jugador 2:",
+      "p3": "Jugador 3:",
+      "p4": "Jugador 4:",
+      "choose__ball_bg": "Elige tu bola y fondo:",
+      "choose__ball": "Bola:",
+      "choose_bg": "Fondo:",
+      "select_bg": "Seleccionar fondo:",
+      "reset_color": "Restablecer color",
+      "play": "EMPEZAR TORNEO",
+      "countdown_title": "¡Listos, preparados, ya!"
+    },
+    "tournament_bracket_modal": {
+      "title": "Torneo",
+      "heading": "EL TORNEO ESTÁ POR EMPEZAR",
+      "semi_final_1": "Semi-Final 1",
+      "semi_final_2": "Semi-Final 2",
+      "final": "Final",
+      "status_ready": "Listo para el siguiente partido...",
+      "continue_btn": "CONTINUAR AL PARTIDO"
+    },
+    "tournament_next_match_modal": {
+      "title": "Siguiente partido",
+      "match_title": "SEMI-FINAL 1",
+      "player_vs": "VS",
+      "start_info": "El juego empezará en cuanto pulses Jugar.",
+      "play_btn": "¡JUGAR!"
+    },
+    "tournament_summary_modal": {
+      "title": "Fin del torneo",
+      "congratulations": "¡FELICIDADES!",
+      "winner_name": "NOMBRE",
+      "back_menu": "Volver al menú"
+    },
+    "chat": {
+      "title": "Notificaciones",
+      "info": "Notificación del sistema",
+      "placeholder_input": "No puedes hablar con el sistema"
+    }
   }
 }

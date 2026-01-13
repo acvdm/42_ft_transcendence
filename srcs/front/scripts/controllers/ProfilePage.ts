@@ -5,6 +5,7 @@ import { appThemes } from "../components/Data";
 import SocketService from "../services/SocketService";
 import { AvatarManager } from "../components/AvatarManager";
 import { TwoFactorManager } from "../components/TwoFactorManager";
+import i18next from "../i18n";
 
 //================================================
 //================== INTERFACES ==================
@@ -41,8 +42,82 @@ interface FieldElements {
 }
 
 export function render(): string {
-	return htmlContent;
-}
+    let html = htmlContent;
+
+    // Main Page
+    html = html.replace(/\{\{profilePage\.window_profile\}\}/g, i18next.t('profilePage.window_profile'));
+    html = html.replace(/\{\{profilePage\.my_profile\}\}/g, i18next.t('profilePage.my_profile'));
+    html = html.replace(/\{\{profilePage\.my_status\}\}/g, i18next.t('profilePage.my_status'));
+    html = html.replace(/\{\{profilePage\.status\.available\}\}/g, i18next.t('profilePage.status.available'));
+    html = html.replace(/\{\{profilePage\.status\.busy\}\}/g, i18next.t('profilePage.status.busy'));
+    html = html.replace(/\{\{profilePage\.status\.away\}\}/g, i18next.t('profilePage.status.away'));
+    html = html.replace(/\{\{profilePage\.status\.offline\}\}/g, i18next.t('profilePage.status.offline'));
+    html = html.replace(/\{\{profilePage\.fallback_username\}\}/g, i18next.t('profilePage.fallback_username'));
+    html = html.replace(/\{\{profilePage\.fallback_bio\}\}/g, i18next.t('profilePage.fallback_bio'));
+    html = html.replace(/\{\{profilePage\.username\}\}/g, i18next.t('profilePage.username'));
+    html = html.replace(/\{\{profilePage\.placeholder_username\}\}/g, i18next.t('profilePage.placeholder_username'));
+    html = html.replace(/\{\{profilePage\.change_button\}\}/g, i18next.t('profilePage.change_button'));
+    html = html.replace(/\{\{profilePage\.confirm_button\}\}/g, i18next.t('profilePage.confirm_button'));
+    html = html.replace(/\{\{profilePage\.bio\}\}/g, i18next.t('profilePage.bio'));
+    html = html.replace(/\{\{profilePage\.placeholder_bio\}\}/g, i18next.t('profilePage.placeholder_bio'));
+    html = html.replace(/\{\{profilePage\.password\}\}/g, i18next.t('profilePage.password'));
+    html = html.replace(/\{\{profilePage\.placeholder_password\}\}/g, i18next.t('profilePage.placeholder_password'));
+    html = html.replace(/\{\{profilePage\.2fa_button\}\}/g, i18next.t('profilePage.2fa_button'));
+    html = html.replace(/\{\{profilePage\.download_button\}\}/g, i18next.t('profilePage.download_button'));
+    html = html.replace(/\{\{profilePage\.delete_button\}\}/g, i18next.t('profilePage.delete_button'));
+    html = html.replace(/\{\{profilePage\.game_stats\}\}/g, i18next.t('profilePage.game_stats'));
+    html = html.replace(/\{\{profilePage\.game_played\}\}/g, i18next.t('profilePage.game_played'));
+    html = html.replace(/\{\{profilePage\.wins\}\}/g, i18next.t('profilePage.wins'));
+    html = html.replace(/\{\{profilePage\.losses\}\}/g, i18next.t('profilePage.losses'));
+    html = html.replace(/\{\{profilePage\.winning_streak\}\}/g, i18next.t('profilePage.winning_streak'));
+
+    // 2FA Modal
+    html = html.replace(/\{\{profilePage\.2fa_modal\.title\}\}/g, i18next.t('profilePage.2fa_modal.title'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.choose_method\}\}/g, i18next.t('profilePage.2fa_modal.choose_method'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_method\}\}/g, i18next.t('profilePage.2fa_modal.message_method'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.authenticator\}\}/g, i18next.t('profilePage.2fa_modal.authenticator'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_authenticator\}\}/g, i18next.t('profilePage.2fa_modal.message_authenticator'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.email_verif\}\}/g, i18next.t('profilePage.2fa_modal.email_verif'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_email_verif\}\}/g, i18next.t('profilePage.2fa_modal.message_email_verif'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.qr_code\}\}/g, i18next.t('profilePage.2fa_modal.qr_code'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_qr_code\}\}/g, i18next.t('profilePage.2fa_modal.message_qr_code'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.6_digit\}\}/g, i18next.t('profilePage.2fa_modal.6_digit'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.validate\}\}/g, i18next.t('profilePage.2fa_modal.validate'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.cancel\}\}/g, i18next.t('profilePage.2fa_modal.cancel'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.verif_email\}\}/g, i18next.t('profilePage.2fa_modal.verif_email'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_verif_email\}\}/g, i18next.t('profilePage.2fa_modal.message_verif_email'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.code_send\}\}/g, i18next.t('profilePage.2fa_modal.code_send'));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.code_received\}\}/g, i18next.t('profilePage.2fa_modal.code_received'));
+
+    // Picture Modal
+    html = html.replace(/\{\{profilePage\.picture_modal\.title\}\}/g, i18next.t('profilePage.picture_modal.title'));
+    html = html.replace(/\{\{profilePage\.picture_modal\.select_pic\}\}/g, i18next.t('profilePage.picture_modal.select_pic'));
+    html = html.replace(/\{\{profilePage\.picture_modal\.message_select\}\}/g, i18next.t('profilePage.picture_modal.message_select'));
+    html = html.replace(/\{\{profilePage\.picture_modal\.browse\}\}/g, i18next.t('profilePage.picture_modal.browse'));
+    html = html.replace(/\{\{profilePage\.picture_modal\.delete\}\}/g, i18next.t('profilePage.picture_modal.delete'));
+    html = html.replace(/\{\{profilePage\.picture_modal\.ok\}\}/g, i18next.t('profilePage.picture_modal.ok'));
+    html = html.replace(/\{\{profilePage\.picture_modal\.cancel\}\}/g, i18next.t('profilePage.picture_modal.cancel'));
+
+    // Theme Modal
+    html = html.replace(/\{\{profilePage\.theme_modal\.title\}\}/g, i18next.t('profilePage.theme_modal.title'));
+
+    // Password Modal
+    html = html.replace(/\{\{profilePage\.password_modal\.title\}\}/g, i18next.t('profilePage.password_modal.title'));
+    html = html.replace(/\{\{profilePage\.password_modal\.current_pwd\}\}/g, i18next.t('profilePage.password_modal.current_pwd'));
+    html = html.replace(/\{\{profilePage\.password_modal\.new_pwd\}\}/g, i18next.t('profilePage.password_modal.new_pwd'));
+    html = html.replace(/\{\{profilePage\.password_modal\.confirm_pwd\}\}/g, i18next.t('profilePage.password_modal.confirm_pwd'));
+    html = html.replace(/\{\{profilePage\.password_modal\.save\}\}/g, i18next.t('profilePage.password_modal.save'));
+    html = html.replace(/\{\{profilePage\.password_modal\.cancel\}\}/g, i18next.t('profilePage.password_modal.cancel'));
+
+    // Delete Modal
+    html = html.replace(/\{\{profilePage\.delete_modal\.title\}\}/g, i18next.t('profilePage.delete_modal.title'));
+    html = html.replace(/\{\{profilePage\.delete_modal\.confirm_delete\}\}/g, i18next.t('profilePage.delete_modal.confirm_delete'));
+    html = html.replace(/\{\{profilePage\.delete_modal\.confirm_message\}\}/g, i18next.t('profilePage.delete_modal.confirm_message'));
+    html = html.replace(/\{\{profilePage\.delete_modal\.yes\}\}/g, i18next.t('profilePage.delete_modal.yes'));
+    html = html.replace(/\{\{profilePage\.delete_modal\.cancel\}\}/g, i18next.t('profilePage.delete_modal.cancel'));
+
+    return html;
+};
 
 //================================================
 //================ APPLYING THEME ================

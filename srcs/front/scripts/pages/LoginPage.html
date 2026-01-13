@@ -30,7 +30,7 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			{{loginPage.welcome}}
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -40,19 +40,19 @@
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 		
 				<!-- Mot de passe -->
-				<input type="password" placeholder="Enter your password" id="password-input"
+				<input type="password" placeholder="{{loginPage.password}}" id="password-input"
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 
 				<!-- Status -> disponible, busy, not displayed -->
 				<div class="flex items-center justify-between mb-3 text-sm">
 					<div class="flex items-center gap-1 mb-3">
-						<span> Sign in as:</span>
+						<span> {{loginPage.connect_as}}</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
-								<option value="available">Available</option>
-								<option value="busy">Busy</option>
-								<option value="away">Away</option>
-								<option value="offline">Appear offline</option>
+								<option value="available">{{loginPage.status.available}}</option>
+								<option value="busy">{{loginPage.status.busy}}</option>
+								<option value="away">{{loginPage.status.away}}</option>
+								<option value="offline">{{loginPage.status.offline}}</option>
 							</select>
 						</div>
 					</div>
@@ -63,11 +63,11 @@
 			</div>
 			<!-- Bouton de connexion/Register/Guest -->
 			<div class="flex flex-col gap-2 w-48">
-				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
+				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{loginPage.login-button}}</button>
 			</div>
 
 			<div>
-				<button id="back-button" class="text-sm" style="color: grey;">Back to landing page</button>
+				<button id="back-button" class="text-sm" style="color: grey;">{{loginPage.back}}</button>
 			</div>
 	</div>
 
@@ -76,15 +76,15 @@
 	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Two-Factor Authentication</div>
+                <div class="title-bar-text">{{loginPage.2fa}}</div>
                 <div class="title-bar-controls">
                     <button id="close-2fa-modal" aria-label="Close"></button>
                 </div>
             </div>
             <div class="window-body p-6 flex flex-col items-center gap-4">
                 <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Security Check</h2>
-                    <p class="text-xs text-gray-600 mb-4">Please enter the security code.</p>
+                    <h2 class="text-lg font-bold mb-2">{{loginPage.security}}</h2>
+                    <p class="text-xs text-gray-600 mb-4">{{loginPage.enter_code}}</p>
                 </div>
 
                 <div class="w-full flex flex-col gap-2 mt-2">
@@ -101,7 +101,7 @@
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
-                        VERIFY
+                        {{loginPage.verify_button}}
                     </button>
                 </div>
             </div>

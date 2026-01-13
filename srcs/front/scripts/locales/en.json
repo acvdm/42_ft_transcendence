@@ -14,7 +14,7 @@
       "available": "Available",
       "busy": "Busy",
       "away": "Away",
-      "offline": "Offline"
+      "offline": "Appear offline"
     }
   },
   "games": {
@@ -56,5 +56,289 @@
     "delete": "DELETE",
     "ok": "OK",
     "cancel": "CANCEL"
+  }, 
+
+
+
+
+  "landing": {
+    "welcome": "Welcome on Transcendence",
+    "login_button": "Login",
+    "register_button": "Register",
+    "guest_button": "Play as guest"
+  },
+
+  "loginPage": {
+    "welcome": "Sign in to Transcendence",
+    "password": "Enter your password",
+    "connect_as": "Sign in as",
+    "status": {
+      "available": "Available",
+      "busy": "Busy",
+      "away": "Away",
+      "offline": "Appear offline"
+    },
+    "login_button": "Login",
+    "back": "Back to landing page",
+    "2fa": "Two-Factor Authentication",
+    "security": "Security check",
+    "enter_code": "Please enter the security code.",
+    "verify_button": "VERIFY"
+  },
+
+  "registerPage": {
+    "welcome": "Sign up to Transcendence",
+    "password": "Enter your password",
+    "register_button": "Register",
+    "back": "Back to landing page"
+  },
+
+  "profilePage": {
+    "window_profile": "Profile",
+    "my_profile": "My profile",
+    "my_status": "Status:",
+    "status": {
+      "available": "Available",
+      "busy": "Busy",
+      "away": "Away",
+      "offline": "Appear offline"
+    },
+    "fallback_username": "Wait...",
+    "fallback_bio": "Loading bio...",
+    "username": "Username:",
+    "placeholder_username": "Username",
+    "change_button": "Change",
+    "confirm_button": "Confirm",
+    "back": "Back to landing page",
+    "bio": "Share a quick message:",
+    "placeholder_bio": "Share a quick message",
+    "password": "Password:",
+    "placeholder_password": "New password",
+    "2fa_button": "Enable 2FA authentication",
+    "download_button": "Donwload personal data",
+    "delete_button": "Delete my account",
+    "game_stats": "My game statistics",
+    "game_played": "Games played",
+    "wins": "Wins",
+    "losses": "Losses",
+    "winning_streak": "Current winning streak",
+
+    "2fa_modal": {
+      "title": "Two-Factor Authentication",
+      "choose_method": "Choose authentication method",
+      "message_method": "Select how you want to set up 2FA",
+      "authenticator": "Authenticator App",
+      "message_authenticator": "Use Google Authenticator or similar",
+      "email_verif": "Email Verification",
+      "message_email_verif": "Receive codes via email",
+      "qr_code": "Scan QR Code",
+      "message_qr_code": "Open Google Authenticator and scan this code",
+      "6_digit": "Enter the 6-digit code:",
+      "validate": "VALIDATE",
+      "cancel": "CANCEL",
+      "verif_email": "We'll send a verification code to your email.",
+      "message_verif_email": "Code will be sent to:",
+      "code_send": "SEND CODE",
+      "code_received": "Enter code received:"
+    },
+
+    "picture_modal": {
+      "title": "Change picture",
+      "select_pic": "Select a picture",
+      "message_select": "Choose how you want to appear on transcendence.",
+      "browse": "BROWSE",
+      "delete": "DELETE",
+      "ok": "OK",
+      "cancel": "CANCEL"
+    },
+
+    "theme_modal": {
+      "title": "Select a Theme"
+    },
+
+    "password_modal": {
+      "title": "Change password",
+      "current_pwd": "Current Password:",
+      "new_pwd": "New Password:",
+      "confirm_pwd": "Confirm new password:",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+
+    "delete_modal": {
+      "title": "Delete my account",
+      "confirm_delete": "Are you sure you want to delete your account?",
+      "confirm_message": "This action will be irreversible.",
+      "yes": "Yes, delete my account",
+      "cancel": "Cancel",
+      "ici": "HA"
+    }
+  },
+
+  "dashboardPage": {
+    "title": "Dashboard overview",
+    "game_played": "Game played",
+    "avg_score": "Average score",
+    "time_playing": "Time playing",
+    "wins": "Wins",
+    "losses": "Losses",
+    "win_rate": "Win rate",
+    "win_loss_evol": "Win and loss evolution",
+    "type_game": "Type of games",
+    "bigg_rival": "My biggest rivals",
+    "match_history": "Match history and analysis",
+    "placeholder_rival": "Rival name",
+    "all_modes": "All Modes",
+    "local": "Local",
+    "remote": "Remote",
+    "tournament": "Tournament",
+    "apply_button": "Apply",
+    "sort": "Sort",
+    "date_asc": "Date ↑ (Oldest)",
+    "date_desc": "Date ↓ (Newest)",
+    "name_a": "Rival (A-Z)",
+    "name_z": "Rival (Z-A)",
+    "date": "Date",
+    "rival": "Rival",
+    "score": "Score",
+    "type": "Type",
+    "round": "Round",
+    "result": "Result",
+    "loading": "Loading...",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page 1"
+  },
+
+    "localPage": {
+    "title": "Games",
+    "p1": "Player 1",
+    "p2": "Player 2",
+    "start_game": "Start the game",
+    "game_instr": "Game instructions",
+    "ws": "Player on the left moves the paddle with <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "Player on the right uses the ⬆️⬇️ keys.",
+    "space_bar": "The space bar can be used to distract your opponent",
+    "opp_name": "Who are you playing with? :",
+    "placeholder_opp": "Type in a name...",
+    "err_message": "Please fill in!",
+    "choose_ball": "Choose your ball :",
+    "select_ball": "Select a ball:",
+    "choose_bg": "Choose your background :",
+    "select_bg": "Select a background:",
+    "reset_color": "Reset color",
+    "play": "PLAY",
+    "countdown_title": "Ready, steady, go!",
+
+
+    "summary_modal": {
+      "title": "End of the game",
+      "congrat": "CONGRATULATIONS",
+      "name": "NAME",
+      "back_menu": "Return to menu"
+    },
+
+    "chat": {
+      "title": "Notifications",
+      "info": "System notification",
+      "placeholder_input": "You cannot speak to the system"
+    }
+  },
+
+  "remotePage": {
+    "title": "Games",
+    "p1": "Player 1",
+    "p2": "Player 2",
+    "start_game": "Start the game",
+    "game_instr": "Game instructions",
+    "ws": "Player on the left moves the paddle with <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "Player on the right uses the ⬆️⬇️ keys.",
+    "space_bar": "The space bar can be used to distract your opponent",
+    "choose_ball": "Choose your ball :",
+    "select_ball": "Select a ball:",
+    "choose_bg": "Choose your background :",
+    "select_bg": "Select a background:",
+    "reset_color": "Reset color",
+    "play": "PLAY (QUEUE)",
+    "countdown_title": "Ready, steady, go!",
+
+
+    "summary_modal": {
+      "title": "End of the game",
+      "congrat": "CONGRATULATIONS",
+      "name": "???",
+      "back_menu": "Return to menu"
+    },
+
+    "chat": {
+      "title": "Game chat",
+      "info": "Chat room",
+      "choose_bg": "Choose a background:",
+      "default_bg": "Default background"
+    }
+  },
+
+
+  "tournamentPage": {
+    "title": "Tournament Arena",
+    "p1": "Player 1",
+    "p2": "Player 2",
+
+    "setup_modal": {
+      "title_modal": "Tournament setup",
+      "game_instr": "Game instructions",
+      "ws": "Player on the left moves the paddle with <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      "up_down": "Player on the right uses the ⬆️⬇️ keys.",
+      "space_bar": "The space bar can be used to distract your opponent",
+      "tournament_name": "Tournament name:",
+      "placeholder_trnmt": "yeah yeah yeah",
+      "participant": "Participants",
+      "p1": "Player 1 (You):",
+      "p2": "Player 2:",
+      "p3": "Player 3:",
+      "p4": "Player 4:",
+      "choose__ball_bg": "Choose your ball and background:",
+      "choose__ball": "Ball :",
+      "choose_bg": "Background:",
+      "select_bg": "Select a background:",
+      "reset_color": "Reset color",
+      "play": "START TOURNAMENT",
+      "countdown_title": "Ready, steady, go!"
+    },
+
+    "tournament_bracket_modal": {
+      "title": "Tournament",
+      "heading": "TOURNAMENT IS ABOUT TO START",
+      "semi_final_1": "Semi-Final 1",
+      "semi_final_2": "Semi-Final 2",
+      "final": "Final",
+      "status_ready": "Ready for the next match...",
+      "continue_btn": "CONTINUE TO MATCH"
+    },
+
+    "tournament_next_match_modal": {
+      "title": "Next match",
+      "match_title": "SEMI-FINAL 1",
+      "player_vs": "VS",
+      "start_info": "The game will start as soon as you click Play.",
+      "play_btn": "PLAY !"
+    },
+
+    "tournament_summary_modal": {
+      "title": "End of the tournament",
+      "congratulations": "CONGRATULATIONS",
+      "winner_name": "NAME",
+      "back_menu": "Return to Menu"
+    },
+
+    "chat": {
+      "title": "Notifications",
+      "info": "System notification",
+      "placeholder_input": "You cannot speak to the system"
+    }
+
   }
+
+
+  
 }

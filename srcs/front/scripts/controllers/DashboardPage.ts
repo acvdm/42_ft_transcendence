@@ -2,6 +2,7 @@ import htmlContent from "../pages/DashboardPage.html";
 import { applyTheme } from "../controllers/ProfilePage";
 import { fetchWithAuth } from "../services/api";
 import { Chart } from "chart.js/auto";
+import i18next from "../i18n";
 
 // Match's info interface
 interface MatchHistoryElement {
@@ -33,7 +34,44 @@ let globalMatchHistory: MatchHistoryElement[] = []
 let currentPage = 1;
 const itemsPerPage = 20;
 
-export function render(): string { return htmlContent; }
+export function render(): string {
+    let html = htmlContent;
+
+    html = html.replace(/\{\{dashboardPage\.title\}\}/g, i18next.t('dashboardPage.title'));
+    html = html.replace(/\{\{dashboardPage\.game_played\}\}/g, i18next.t('dashboardPage.game_played'));
+    html = html.replace(/\{\{dashboardPage\.avg_score\}\}/g, i18next.t('dashboardPage.avg_score'));
+    html = html.replace(/\{\{dashboardPage\.time_playing\}\}/g, i18next.t('dashboardPage.time_playing'));
+    html = html.replace(/\{\{dashboardPage\.wins\}\}/g, i18next.t('dashboardPage.wins'));
+    html = html.replace(/\{\{dashboardPage\.losses\}\}/g, i18next.t('dashboardPage.losses'));
+    html = html.replace(/\{\{dashboardPage\.win_rate\}\}/g, i18next.t('dashboardPage.win_rate'));
+    html = html.replace(/\{\{dashboardPage\.win_loss_evol\}\}/g, i18next.t('dashboardPage.win_loss_evol'));
+    html = html.replace(/\{\{dashboardPage\.type_game\}\}/g, i18next.t('dashboardPage.type_game'));
+    html = html.replace(/\{\{dashboardPage\.bigg_rival\}\}/g, i18next.t('dashboardPage.bigg_rival'));
+    html = html.replace(/\{\{dashboardPage\.match_history\}\}/g, i18next.t('dashboardPage.match_history'));
+    html = html.replace(/\{\{dashboardPage\.placeholder_rival\}\}/g, i18next.t('dashboardPage.placeholder_rival'));
+    html = html.replace(/\{\{dashboardPage\.all_modes\}\}/g, i18next.t('dashboardPage.all_modes'));
+    html = html.replace(/\{\{dashboardPage\.local\}\}/g, i18next.t('dashboardPage.local'));
+    html = html.replace(/\{\{dashboardPage\.remote\}\}/g, i18next.t('dashboardPage.remote'));
+    html = html.replace(/\{\{dashboardPage\.tournament\}\}/g, i18next.t('dashboardPage.tournament'));
+    html = html.replace(/\{\{dashboardPage\.apply_button\}\}/g, i18next.t('dashboardPage.apply_button'));
+    html = html.replace(/\{\{dashboardPage\.sort\}\}/g, i18next.t('dashboardPage.sort'));
+    html = html.replace(/\{\{dashboardPage\.date_asc\}\}/g, i18next.t('dashboardPage.date_asc'));
+    html = html.replace(/\{\{dashboardPage\.date_desc\}\}/g, i18next.t('dashboardPage.date_desc'));
+    html = html.replace(/\{\{dashboardPage\.name_a\}\}/g, i18next.t('dashboardPage.name_a'));
+    html = html.replace(/\{\{dashboardPage\.name_z\}\}/g, i18next.t('dashboardPage.name_z'));
+    html = html.replace(/\{\{dashboardPage\.date\}\}/g, i18next.t('dashboardPage.date'));
+    html = html.replace(/\{\{dashboardPage\.rival\}\}/g, i18next.t('dashboardPage.rival'));
+    html = html.replace(/\{\{dashboardPage\.score\}\}/g, i18next.t('dashboardPage.score'));
+    html = html.replace(/\{\{dashboardPage\.type\}\}/g, i18next.t('dashboardPage.type'));
+    html = html.replace(/\{\{dashboardPage\.round\}\}/g, i18next.t('dashboardPage.round'));
+    html = html.replace(/\{\{dashboardPage\.result\}\}/g, i18next.t('dashboardPage.result'));
+    html = html.replace(/\{\{dashboardPage\.loading\}\}/g, i18next.t('dashboardPage.loading'));
+    html = html.replace(/\{\{dashboardPage\.prev\}\}/g, i18next.t('dashboardPage.prev'));
+    html = html.replace(/\{\{dashboardPage\.next\}\}/g, i18next.t('dashboardPage.next'));
+    html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18next.t('dashboardPage.page'));
+
+    return html;
+};
 
 export function afterRender(): void {
 	

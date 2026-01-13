@@ -2,11 +2,27 @@ import htmlContent from "../pages/LoginPage.html";
 import { fetchWithAuth } from "../services/api";
 import { updateUserStatus } from "../components/Data";
 import { changeLanguage } from "../i18n";
+import i18next from "../i18n";
 
 export function render(): string {
-	return htmlContent;
-};
+    let html = htmlContent;
 
+    html = html.replace(/\{\{loginPage\.welcome\}\}/g, i18next.t('loginPage.welcome'));
+    html = html.replace(/\{\{loginPage\.password\}\}/g, i18next.t('loginPage.password'));
+    html = html.replace(/\{\{loginPage\.connect_as\}\}/g, i18next.t('loginPage.connect_as'));
+    html = html.replace(/\{\{loginPage\.status\.available\}\}/g, i18next.t('loginPage.status.available'));
+    html = html.replace(/\{\{loginPage\.status\.busy\}\}/g, i18next.t('loginPage.status.busy'));
+    html = html.replace(/\{\{loginPage\.status\.away\}\}/g, i18next.t('loginPage.status.away'));
+    html = html.replace(/\{\{loginPage\.status\.offline\}\}/g, i18next.t('loginPage.status.offline'));
+    html = html.replace(/\{\{loginPage\.login-button\}\}/g, i18next.t('loginPage.login_button'));
+    html = html.replace(/\{\{loginPage\.back\}\}/g, i18next.t('loginPage.back'));
+    html = html.replace(/\{\{loginPage\.2fa\}\}/g, i18next.t('loginPage.2fa'));
+    html = html.replace(/\{\{loginPage\.security\}\}/g, i18next.t('loginPage.security'));
+    html = html.replace(/\{\{loginPage\.enter_code\}\}/g, i18next.t('loginPage.enter_code'));
+    html = html.replace(/\{\{loginPage\.verify_button\}\}/g, i18next.t('loginPage.verify_button'));
+
+    return html;
+}
 //================================================
 //================ LOGIN WITH 2FA ================
 //================================================

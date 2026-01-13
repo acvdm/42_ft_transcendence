@@ -5,6 +5,7 @@ import Game from "../../game/Game";
 import Input from "../../game/Input";
 import { getSqlDate, launchCountdown, showVictoryModal } from "./GameUI";
 import { Chat } from "../Chat";
+import i18next from "../../i18n";
 
 interface GameContext {
     setGame: (game: Game | null) => void;

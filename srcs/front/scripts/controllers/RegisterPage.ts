@@ -1,8 +1,16 @@
 import htmlContent from "../pages/RegisterPage.html"
+import i18next from "../i18n";
 
 export function render(): string {
-	return htmlContent;
-}
+    let html = htmlContent;
+
+    html = html.replace(/\{\{registerPage\.welcome\}\}/g, i18next.t('registerPage.welcome'));
+    html = html.replace(/\{\{registerPage\.password\}\}/g, i18next.t('registerPage.password'));
+    html = html.replace(/\{\{registerPage\.register_button\}\}/g, i18next.t('registerPage.register_button'));
+    html = html.replace(/\{\{registerPage\.back\}\}/g, i18next.t('registerPage.back'));
+
+    return html;
+};
 
 function handleRegister() {
 	const button = document.getElementById('register-button');
