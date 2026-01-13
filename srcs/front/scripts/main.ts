@@ -1,9 +1,13 @@
-// j'importe mes composants c'est a dire les autres fonctions crees qui appelle du html
-import { LoginPage, authEvents } from "./pages/LoginPage"; // j'importe les fonctions que je veux utiliser dans le fichier x
-//import { HomePage } from "./pages/HomePage"
-import { ProfilPage } from "./pages/ProfilePage";
-import { NotFoundPage } from "./pages/NotFound";
-
+import { render as LoginPage, loginEvents } from "./controllers/LoginPage"; 
+import { render as HomePage, afterRender as HomePageAfterRender } from "./controllers/HomePage";
+import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./controllers/ProfilePage";
+import { NotFoundPage } from "./pages/NotFound"; // Celui-ci semble correct s'il est resté dans pages/
+import { render as LandingPage, initLandingPage } from "./controllers/LandingPage";
+import { render as RegisterPage, registerEvents } from "./controllers/RegisterPage";
+import { render as GuestPage, afterRender as GuestAfterRender } from "./controllers/GuestPage";
+import { applyTheme } from "./controllers/ProfilePage";
+import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfirmationModal } from "./controllers/GamePage";
+import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
 // 1. C'est l'élément principal où le contenu des 'pages' sera injecté
 const appElement = document.getElementById('app');
 
@@ -13,6 +17,7 @@ interface Page {
 	afterRender?: () => void;
 }
 
+const publicRoutes = ['/', '/login', '/register', '/404', '/guest'];
 
 
 // 3. On va définir nos pages ici, on reste pour le moment sur du HTML simple avant de réaliser les pages de base
@@ -20,21 +25,100 @@ interface Page {
 // on associe chaque route a l'affiche et a la fonction concernée pour faire fonctionner la page
 const routes: { [key: string]: Page } = {
 	'/': {
-		render: ProfilPage,
-		afterRender: () => console.log('HomePage chargée')
+		render: LandingPage,
+		afterRender: initLandingPage
+	},
+	'/home': {
+		render: HomePage,
+		afterRender: HomePageAfterRender
 	},
 	'/profile': {
-		render: ProfilPage,
-		afterRender: () => console.log('Profil page chargée -> modifications de la page de profil, photo etc')
+		render: ProfilePage,
+		afterRender: ProfilePageAfterRender
 	},
-	'/logout': {
+	'/dashboard': {
+		render: DashboardPage,
+		afterRender: DashboardPageAfterRender
+	},
+	'/register': {
+		render: RegisterPage,
+		afterRender: registerEvents
+	},
+	'/login': {
 		render: LoginPage,
-		afterRender: authEvents
+		afterRender: loginEvents
 	},
+	'/guest': {
+		render: GuestPage,
+		afterRender: GuestAfterRender
+	},
+	'/game': {
+        render: GamePage, // La fonction HTML
+        afterRender: () => {
+			const state = window.history.state;
+			const mode = state && state.gameMode ? state.gameMode : 'local';
+			initGamePage(mode);
+		}
+    },
 	'/404': {
 		render: NotFoundPage
 	}
 };
+
+
+const getAccessToken = (): string | null => {
+	return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+};
+
+const isGuestUser = (): boolean => {
+	return sessionStorage.getItem('userRole') === 'guest';
+}
+
+// gestion du logout
+const handleLogout = async () => {
+
+	try {
+		// appel au backend
+		await fetch('/api/auth/logout', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			// force l'envoi du cookie HttpOnly au serveur
+			credentials: 'include',
+			body: JSON.stringify({}) // force le format JSON
+		});
+
+		console.log("Deconnection from the backend server succeed");
+	} catch (error) {
+		console.error("Error during the deconnection from the server: ", error);
+	} finally {
+		// on nettoie le client
+		localStorage.removeItem('accessToken');
+		localStorage.removeItem('userId');
+		localStorage.removeItem('username');
+		localStorage.removeItem('userStatus');
+		sessionStorage.clear(); // faustine: faut le mettre ailleurs pour gérer le guest
+	
+		// redirection vers la page d'accueil
+		window.history.pushState({}, '', '/');
+		// manuellement chargement pour recharger la vue
+		const popStateEvent = new PopStateEvent('popstate');
+		window.dispatchEvent(popStateEvent);
+	}
+}
+
+// faustine
+// on clean la guest session pour ne pas avoir de persistance
+const clearGuestSession = () => {
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('username');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('isGuest');
+};
+
+
 
 /*
 ** On créé une fonction va lire l'URL, et trouver le contenu HTML correspond dans les routes qu'on a défini plus haut
@@ -53,16 +137,84 @@ const routes: { [key: string]: Page } = {
 const handleLocationChange = () => {
 	if (!appElement) return;
 
-	const path = window.location.pathname;
-	const page = routes[path] || routes['/404']; // html = routes.count(path) ? route[path] : route[/404]
-	appElement.innerHTML = page.render(); // on injecte le html
+	let path = window.location.pathname;
+	
+	// faustine
+	if ((path === '/' || path === '/login' || path === '/register') && sessionStorage.getItem('isGuest') === 'true') {
+        clearGuestSession();
+    } // pour clean la session guest
+	// Récupération des tokens (User normal OU Guest)
+	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
-	// on lance la logique js pour faire vivre la page
+	// si le jeu est en train de tourner mais que l'url n'est pas game
+	if (isGameRunning() && path !== '/game') cleanup(); // on arrete le jeu et activegame devient nul
+
+	if (path === '/logout') {
+		handleLogout();
+		return; // On arrête tout ici pour laisser le logout se faire
+	}
+
+
+	/////////////// NAVBAR 
+
+    const navbar = document.getElementById('main-navbar');
+    
+    // nouvelle définition des menus
+    const userMenuHtml = `
+        <a href="/home" class="text-white hover:underline">Home</a>
+        <a href="/profile" class="text-white hover:underline">Profile</a>
+        <a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
+
+    const guestMenuHtml = `
+        <a href="/guest" class="text-white hover:underline">Guest Area</a>
+        <a href="/logout" class="text-white hover:underline">Log out</a>
+    `;
+
+    if (navbar) {
+        if (isGuest) {
+            navbar.style.display = 'flex'; // pour le guest on affiche quand meme la navbar personnalisée
+            if (!navbar.innerHTML.includes('Guest Area')) { // si ce n'est pas le guest on l'affiche pour eviter de reecrire a chaque fois
+                navbar.innerHTML = guestMenuHtml;
+            }
+        } 
+        else if (accessToken) {
+            navbar.style.display = 'flex'; // navbar pour le user
+			navbar.classList.add('justify-between');
+            if (!navbar.innerHTML.includes('Dashboard')) { // 
+                navbar.innerHTML = userMenuHtml;
+            }
+        } 
+        else {
+            navbar.style.display = 'none'; // si pas connecte2 --> on cache tout
+        }
+    }
+	
+	///////// AFFICHAGE DE LA PAGE 
+	
+	const page = routes[path] || routes['/404'];
+	appElement.innerHTML = page.render();
+
 	if (page.afterRender) {
 		page.afterRender();
 	}
-};
 
+	// Gestion du thème
+	if (publicRoutes.includes(path) || isGuest)
+		applyTheme('basic');
+	else {
+		const savedTheme = localStorage.getItem('userTheme') || 'basic';
+		applyTheme(savedTheme);
+	}
+
+	if (path === '/guest' && !isGuest) {
+        // On redirige vers l'accueil pour se faire éjecter par la sécurité
+        window.history.replaceState({}, '', '/'); 
+        handleLocationChange();
+    }
+};
 /*
 ** Fonction pour la navigation. Elle met à jour l'url dans recharger la page
 ** Appelé quand on clique sur un lien
@@ -91,12 +243,34 @@ window.addEventListener('click', (event) => {
 	// on va verifier si la cible est un lien interne
 
 	if (anchor && anchor.href.startsWith(window.location.origin)) {
-		navigate(event as unknown as MouseEvent);
+		// On convertit l'event original pour notre fonction navigate
+        // (Astuce: on passe l'event, et dans navigate on récupère la cible via l'event)
+        // Note: Ici on simplifie l'appel en passant l'event original
+        event.preventDefault();
+		if (isGameRunning()) {
+			event.stopImmediatePropagation();
+			showExitConfirmationModal();
+			return ;
+		}
+
+        const href = anchor.href;
+        
+        if (href === window.location.href) return;
+        
+        window.history.pushState({}, '', href);
+        handleLocationChange();
+
+		// pourquoi faire ça?
 	}
 });
 
 // 2. Gestion des contenus suivant/precedent
 window.addEventListener('popstate', () => {
+	if (isGameRunning()) {
+		window.history.pushState(null, '', '/game');
+		showExitConfirmationModal();
+		return ;
+	}
 	handleLocationChange();
 });
 
@@ -104,4 +278,3 @@ window.addEventListener('popstate', () => {
 document.addEventListener('DOMContentLoaded', () => {
 	handleLocationChange();
 });
-

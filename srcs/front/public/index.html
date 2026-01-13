@@ -2,113 +2,149 @@
 <html lang="fr">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tr4nsc3nd3nc3 🚧</title>
-    <link href="./dist/style.css" rel="stylesheet">
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-    </style>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>tr4nsc3nd3nc3 🚧</title>
+		<link href="/dist/style.css" rel="stylesheet">
+
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+			.window {
+            position: relative;
+            z-index: 0;
+            box-shadow: 2px 2px 10px 1px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.67);
+            border: 1px solid rgba(0, 0, 0, 0.7);
+            border-radius: 6px;
+			}
+			
+			.window::before {
+				content: "";
+				position: absolute;
+				z-index: -1;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				border-radius: 6px;
+				background: none;
+				box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.87);
+			}
+			
+			.title-bar {
+				box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.87), 
+							inset 1px 0 0 rgba(255, 255, 255, 0.87), 
+							inset -1px 0 0 rgba(255, 255, 255, 0.87);
+				border: 1px solid rgba(0, 0, 0, 0.7);
+				border-radius: 6px 6px 0 0;
+				padding: 6px;
+				padding-top: 0;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				background: linear-gradient(to right, rgba(255, 255, 255, 0.4), rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2)), #4580c4;
+			}
+			
+			.title-bar-text {
+				color: #000;
+				letter-spacing: 0;
+				line-height: 15px;
+				padding-top: 6px;
+				text-shadow: 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+				font-family: "Segoe UI", Tahoma, sans-serif;
+				font-size: 12px;
+			}
+			
+			.title-bar-controls {
+				display: flex;
+				background: rgba(255, 255, 255, 0.2);
+				border: 1px solid rgba(0, 0, 0, 0.3);
+				border-top: 0;
+				border-radius: 0 0 5px 5px;
+				box-shadow: 0 1px 0 rgba(255, 255, 255, 0.67), 
+							1px 0 0 rgba(255, 255, 255, 0.67), 
+							-1px 0 0 rgba(255, 255, 255, 0.67);
+			}
+			
+			.title-bar-controls button {
+				position: relative;
+				min-width: 29px;
+				min-height: 19px;
+				padding: 0;
+				border: 0;
+				border-right: 1px solid rgba(0, 0, 0, 0.3);
+				border-radius: 0;
+				box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.33);
+				background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5));
+				cursor: pointer;
+			}
+			
+			.title-bar-controls button:first-child {
+				border-bottom-left-radius: 5px;
+			}
+			
+			.title-bar-controls button:last-child {
+				border: 0;
+				border-bottom-right-radius: 5px;
+				min-width: 48px;
+			}
+
+			.title-bar-controls button:last-child {
+				background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.3) 45%, rgba(0, 0, 0, 0.1) 50%, rgba(0, 0, 0, 0.1) 75%, rgba(255, 255, 255, 0.5)),
+							radial-gradient(circle at -60% 50%, rgba(0, 0, 0, 0.47) 5% 10%, transparent 50%), 
+							radial-gradient(circle at 160% 50%, rgba(0, 0, 0, 0.47) 5% 10%, transparent 50%),
+							linear-gradient(rgba(224, 161, 151, 0.9), #cf796a 25% 50%, #d54f36 50%);
+			}
+			
+			/* Icônes des boutons */
+			.title-bar-controls button[aria-label="Minimize"]::before {
+			content: "";
+			background: url("./assets/windows/minimize.png") no-repeat center 10px;
+			position: absolute;
+			inset: 0;
+			}
+
+			.title-bar-controls button[aria-label="Maximize"]::before {
+			content: "";
+			background: url("./assets/windows/maximize.png") no-repeat center;
+			position: absolute;
+			inset: 0;
+			}
+
+			.title-bar-controls button[aria-label="Close"]::before {
+			content: "";
+			background: url("./assets/windows/close.png") no-repeat center;
+			position: absolute;
+			inset: 0;
+			}
+
+			
+			.window-body {
+				margin: 6px;
+				margin-top: 0;
+				border: 1px solid rgba(0, 0, 0, 0.7);
+				background: transparent;
+				box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+				min-height: 150px;
+			}
+		</style>
 </head>
 
-<body class="m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen">
-    
-    <nav    class="w-full h-[50px] bg-cover bg-center bg-no-repeat flex items-center justify-between px-4 shadow-x1/30"
-            style="background-image: url(https://wlm.vercel.app/assets/background/chat_navbar_background.png); background-size: cover;">
-        <a href="/" class="p-2 text-white hover:underline">Home</a>
-        <a href="/profile" class="p-2 text-white hover:underline">Profile</a>
-        <a href="/stats" class="p-2 text-white hover:underline">Stats</a>
-        <a href="/friends" class="p-2 text-white hover:underline">Friends</a>
-        <a href="/logout" class="p-2 text-white hover:underline">Log out</a>
-    </nav>
-    
-	<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(https://wlm.vercel.app/assets/background/background.jpg); background-size: cover;"></div>
+<body id="app-body" class="m-0 p-0 overflow-x-auto min-w-[1000px] min-h-screen bg-gradient-to-b from-white via-white to-[#7ED5F4]">
+		
+		<nav id="main-navbar" class="w-full h-[50px] flex items-center justify-between px-4 shadow-xl/30"
+			style="background: linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%); background-size: cover;">
+				<a href="/home" class="text-white hover:underline">Home</a>
+				<a href="/profile" class="text-white hover:underline">Profile</a>
+				<a href="/dashboard" class="text-white hover:underline">Dashboard</a>
+				<a href="/logout" class="text-white hover:underline">Log out</a>
+		</nav>
+	
 
-<!-- Main content -->
-  <div class="flex flex-col items-center py-8">
 
-    <div class="flex flex-row gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
-
-      <!-- Left: My Profile -->
-      <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm">
-        <h1 class="text-lg font-normal mb-4">My Profile</h1>
-
-        <!-- Profile picture -->
-        <div class="relative w-[170px] h-[170px] mb-4">
-          <img class="absolute inset-0 w-full h-full object-cover"
-            src="https://wlm.vercel.app/assets/status/status_frame_offline_large.png" alt="profile frame">
-          <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-            src="https://wlm.vercel.app/assets/usertiles/default.png" alt="user photo">
-        </div>
-
-        <!-- Profile info -->
-        <div class="text-sm text-left w-full leading-6">
-          <p><strong>FAUSToche01</strong></p>
-          <p>c00uköü les kop1</p>
-          <p>Status: <span class="text-red-600">dcdscsd</span></p>
-          <p>Email: fsdsdsfsd</p>
-          <p>Password: dfsdcsd</p>
-          <p>Background: scscsd</p>
-        </div>
-      </div>
-
-      <!-- Right: Profile editor -->
-      <div class="flex flex-col justify-between flex-1">
-
-        <!-- Upper section -->
-        <div class="flex flex-col gap-4">
-          <div>
-            <label class="text-sm">Username:</label>
-            <input type="text" value="FAUSToche01"
-              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-          </div>
-
-          <div>
-            <label class="text-sm">Choose your message:</label>
-            <input type="text" value="c00uköü les kop1"
-              class="w-full border border-gray-300 rounded-sm p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400" />
-          </div>
-          <div>
-            <label class="text-sm">Status:</label>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="text-gray-600 text-sm">Choose your status:</span>
-              <select
-                class="border border-gray-300 rounded-sm px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400">
-                <option>Available</option>
-                <option selected>Busy</option>
-                <option>Away</option>
-                <option>Appear offline</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="mt-8 border-t border-gray-300 pt-4">
-          <h2 class="text-red-600 text-base font-semibold mb-2">DANGER ZONE !!! ⚠️</h2>
-          <div class="flex items-center justify-start gap-6">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">Email</span>
-              <button
-                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                Change
-              </button>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm">Password</span>
-              <button
-                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                Change
-              </button>
-            </div>
-          </div>
-        </div>
-
-    
     <div id="app"></div>
-    <script src="./dist/main.js" defer></script>
+    <script src="/dist/main.js" defer></script>
 </body>
 </html>

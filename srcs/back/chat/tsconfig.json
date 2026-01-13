@@ -1,14 +1,15 @@
 {
 	"compilerOptions": {
-		"target": "ES2022", // version de javascript modern (pour avoir async/await)
-		"module": "commonjs", // système d'import
+		"target": "ES2020", // version de javascript modern (pour avoir async/await)
+		"module": "ESNext", // système d'import
+		"moduleResolution": "node",
 		"outDir": "./dist", // où mettre le code compilé -> .ts devient .js dans ce dossier
-		"rootDir": "./scripts", // où est le code source -> le typescript doit être dans src
+		"rootDir": "./src", // où est le code source -> le typescript doit être dans src
 		"strict": true, // mode strict activé -> ts devient exigeant pour éviter les bugs
 		"esModuleInterop": true, // compatibilité -> 
 		"skipLibCheck": true, // ignore les erreurs dans les bibliothèques
 		"forceConsistentCasingInFileNames": true, // cohérence des noms de fichiers
 	},
-	"include": ["scripts/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
+	"include": ["src/**/*"], // compile tous les fichiers dans src et ses sous-dossiers
 	"exclude": ["node_modules"] // ne pas compiler les bibliothèques externes
 }
