@@ -164,7 +164,6 @@ export async function updateBio (
     if (bio.length > 75)
         throw new ValidationError(`Error: bio too long. Max 75 characters`);
 
-    // console.log("update bio dans users.ts");
     await db.run(`
         UPDATE USERS SET bio = ? WHERE id = ?`,
         [bio, user_id]
@@ -187,40 +186,34 @@ export async function updateTheme (
     );
 }
 
-// export async function updateEmail (
-//     db: Database,
-//     user_id: number,
-//     email: string
-// )
-// {
-//     const user = await findUserByID(db, user_id);
-//     if (!user?.id)
-//         throw new Error(`Error id: ${user_id} does not exist`);
 
-//     const emailAlreadyUsed = await db.get(`
-//         SELECT * FROM USERS WHERE email = ?`,
-//         [email]
-//     )
-//     if (emailAlreadyUsed)
-//         throw new Error(`This email is already taken`)
+export async function updateAlias (
+    db: Database,
+    user_id: number,
+    alias: string
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
-//     await db.run(`
-//         UPDATE USERS SET email = ? WHERE id = ?`,
-//         [email, user_id]
-//     );
-// }
+    if (alias.length > 30)
+        throw new ValidationError(`Error: alias too long. Max 30 characters`);
 
-// export async function rollbackChangeEmail (
-//     db: Database,
-//     user_id: number,
-//     email: string
-// )
-// {
-//     await db.run(`
-//         UPDATE USERS SET email = ? WHERE id = ?`,
-//         [email, user_id]
-//     );
-// }
+    const existingUser = await db.get(`
+        SELECT id FROM USERS WHERE alias = ? AND id != ?`,
+        [alias, user_id]
+    );
+
+    if (existingUser)
+        throw new ConflictError('Alias already taken, be original.');
+
+    console.log("update username dans users.ts");
+    await db.run(`
+        UPDATE USERS SET alias = ? WHERE id = ?`,
+        [alias, user_id]
+    );
+}
 
 
 //-------- DELETE / DELETE
@@ -258,35 +251,6 @@ export async function updateAvatar(
     );
 }
 
-// update de l'username
-
-export async function updateAlias (
-    db: Database,
-    user_id: number,
-    alias: string
-)
-{
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new NotFoundError(`Error id: ${user_id} does not exist`);
-
-    if (alias.length > 30)
-        throw new ValidationError(`Error: alias too long. Max 30 characters`);
-
-    const existingUser = await db.get(`
-        SELECT id FROM USERS WHERE alias = ? AND id != ?`,
-        [alias, user_id]
-    );
-
-    if (existingUser)
-        throw new ConflictError('Alias already taken, be original.');
-
-    console.log("update username dans users.ts");
-    await db.run(`
-        UPDATE USERS SET alias = ? WHERE id = ?`,
-        [alias, user_id]
-    );
-}
 
 export async function anonymizeUser(
     db: Database,
