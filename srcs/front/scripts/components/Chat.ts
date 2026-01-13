@@ -46,6 +46,14 @@ export class Chat {
     
 
     public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
+        if (this.currentChannel && this.currentChannel !==channelKey) {
+            if (this.chatSocket)
+            {
+                console.log(`Leaving channel: ${this.currentChannel}`);
+                this.chatSocket.emit("leaveChannel", this.currentChannel);
+            }
+        }
+        
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
         this.currentFriendId = friendId || null;
@@ -639,14 +647,19 @@ export class Chat {
     }
 
     public destroy() {
-        if (this.socket) {
-            this.socket.off("connect");
-            this.socket.off("chatMessage");
-            this.socket.off("msg_history"); // ajout
-            this.socket.off("receivedWizz");
-            this.socket.off("receivedAnimation");
-            this.socket.off("systemMessage");
-            this.socket.off("disconnected");
+        if (this.chatSocket && this.currentChannel)
+        {
+            this.chatSocket.emit("leaveChannel", this.currentChannel);
+        }
+
+        if (this.chatSocket) {
+            this.chatSocket.off("connect");
+            this.chatSocket.off("chatMessage");
+            this.chatSocket.off("msg_history"); // ajout
+            this.chatSocket.off("receivedWizz");
+            this.chatSocket.off("receivedAnimation");
+            this.chatSocket.off("systemMessage");
+            this.chatSocket.off("disconnected");
         }
     }
 }

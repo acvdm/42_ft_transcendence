@@ -7,6 +7,7 @@ import { Socket, Server } from 'socket.io'; // <--- AJOUT DE 'Server' ICI
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
 import { UnauthorizedError } from './utils/error.js';
+import { updateLastRead } from './repositories/channel_reads.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -63,6 +64,8 @@ fastify.ready().then(() => {
     
     // Toute la logique Socket se passe ICI
     fastify.io.on('connection', (socket: Socket) => {
+        const userId = socket.user.sub;
+
         console.log(`Client connected (Fastify): ${socket.id}`);
 
         socket.on('registerUser', (userId: string) => {
@@ -83,8 +86,28 @@ fastify.ready().then(() => {
         });
 
         socket.on("joinChannel", async (channelKey: string) => { 
-            await joinChannel(socket, fastify.io, channelKey); 
+            await joinChannel(socket, fastify.io, channelKey);
+
+            await updateLastRead(db, channelKey, userId); 
+
+            socket.data.currentChannel = channelKey;
+
         });
+
+        socket.on("leaveChannel", async (channelKey: string) => {
+            console.log(`User ${userId} leaving channel ${channelKey}`);
+            socket.leave(channelKey);
+
+            await updateLastRead(db, channelKey, userId);
+            delete socket.data.currentChannel;
+        });
+
+        socket.on("disconnected", async () => {
+            if (socket.data.currentChannel)
+            {
+                await updateLastRead(db, socket.data.currentChannel, userId);
+            }
+        })
         
         socket.on('chatMessage', async (data: any) => { 
             await chatMessage(fastify.io, data); 
