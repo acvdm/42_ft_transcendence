@@ -7,6 +7,7 @@ export async function updateLastRead (
     userId: number
 )
 {
+    console.log("Update last read");
     const channel = await findChannelByKey(db, channelKey);
     if (!channel?.id)
         return ;
@@ -28,6 +29,7 @@ export async function hasUnreadMessages(
     userId: number
 )
 {
+    console.log("has unread message")
     const channel = await findChannelByKey(db, channelKey);
     if (!channel?.id)
         return ;

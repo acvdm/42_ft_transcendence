@@ -4762,11 +4762,12 @@
       console.log("[FriendList] Initializing...");
       SocketService_default.getInstance().connectChat();
       SocketService_default.getInstance().connectGame();
+      this.destroy();
+      this.listenToUpdates();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
       this.checkNotifications();
-      this.listenToUpdates();
       this.setupBlockListener();
       this.registerSocketUser();
       if (this.notificationInterval) clearInterval(this.notificationInterval);
@@ -4870,7 +4871,8 @@
             const myId = Number(this.userId);
             const id1 = Math.min(myId, selectedFriend.id);
             const id2 = Math.max(myId, selectedFriend.id);
-            const channelKey = `${id1}-${id2}`;
+            const channelKey = `${id1}_${id2}`;
+            console.log(`channelK`);
             const check = () => {
               chatSocket.emit("checkUnread", {
                 channelKey,
@@ -4903,6 +4905,7 @@
       }
     }
     clearNotifications(friendId) {
+      console.log("clear notification");
       const badge = document.getElementById(`badge-${friendId}`);
       if (badge) {
         badge.classList.add("hidden");
@@ -4944,12 +4947,14 @@
         this.handleMessageNotification(data.sender_id);
       });
       chatSocket.on("unreadStatus", (data) => {
-        if (data.hasUnread) {
-          this.handleMessageNotification(data.friendId);
+        console.log("[FriendList] \u{1F4E5} Debug unreadStatus data:", data);
+        const idToNotify = data.friendId || data.senderId;
+        if (data.hasUnread && idToNotify) {
+          this.handleMessageNotification(idToNotify);
         }
       });
       chatSocket.on("unreadNotification", (data) => {
-        console.log("[FriendList] \u{1F514} Event 'unreadNotification' received from:", data.senderId);
+        console.log("[FriendList] \u{1F514} Event 'unreadNotification' received", data);
         this.handleMessageNotification(data.senderId);
       });
       chatSocket.on("friendStatusUpdate", (data) => {

@@ -125,7 +125,7 @@ fastify.ready().then(() => {
                     hasUnread 
                 });
             } catch (err) {
-                console.error("Erreur checkUnread:", err);
+                console.error("Error checkUnread:", err);
             }
         });
         
@@ -225,7 +225,7 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
     const { channel_key, sender_alias, msg_content } = data;
     const sender_id = Number(data.sender_id);
-    console.log("Back: chatMessage ligne 654")
+    console.log(`[Back] 📩 Processing chatMessage for channel: ${channel_key} from ${sender_id}`);
 
     try {
         const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);
@@ -244,8 +244,9 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
             sender_id: sender_id
         });
         
-        const ids = channel_key.split('-').map(Number);
-        if (ids.length === 2 && !ids.some(isNaN)) {
+        const ids = channel_key.split('_').map(Number);
+        if (ids.length === 2 && !ids.some(isNaN)) 
+        {
             const targetId = ids.find(id => id !== sender_id);
             const notifRoom = `user_${targetId}`;
             console.log(`[Back] 🔍 Notification logic: Sender=${sender_id}, IDs=${ids}, Target=${targetId}, Room=${notifRoom}`);
@@ -253,18 +254,22 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
             if (targetId) {
 
                 const room = io.sockets.adapter.rooms.get(notifRoom);
-                const clientCount = room ? room.size : 0;
-                console.log(`[Back] 🚀 Emitting unreadNotification to ${notifRoom} (Clients in room: ${clientCount})`);
-                // On envoie un signal direct à l'utilisateur cible via sa room personnelle
-                io.to(notifRoom).emit('unreadNotification', {
-                    senderId: sender_id,
-                    content: msg_content
-                });
+                // const clientCount = room ? room.size : 0;
+                if (room && room.size > 0) {
+
+                    console.log(`[Back] 🚀 Emitting unreadNotification to ${notifRoom} (Clients in room: ${clientCount})`);
+                    // On envoie un signal direct à l'utilisateur cible via sa room personnelle
+                    io.to(notifRoom).emit('unreadNotification', {
+                        senderId: sender_id,
+                        content: msg_content
+                    });
+                    console.log(`[Back] ✅ Notification sent to ${notifRoom}`);
+                }
             } else {
                 console.warn(`[Back] ⚠️ Cannot determine targetId for notification (Ids: ${ids}, Sender: ${sender_id})`);
             }
         } else {
-            console.log(`[Back] Skipped notification (Channel ${channel_key} is not a DM)`);
+            console.warn(`[Back] ⚠️ Weird case: Sender ID ${sender_id} not found in channel key ${channel_key}`);
         }
         
     } catch (err: any) {

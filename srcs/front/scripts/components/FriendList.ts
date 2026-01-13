@@ -17,11 +17,13 @@ export class FriendList {
         console.log("[FriendList] Initializing..."); // LOG AJOUTÉ
         SocketService.getInstance().connectChat();
         SocketService.getInstance().connectGame();
+        this.destroy();
+        this.listenToUpdates();
         this.loadFriends();
         this.setupFriendRequests();
         this.setupNotifications(); 
         this.checkNotifications(); 
-        this.listenToUpdates();
+        
         this.setupBlockListener();
         this.registerSocketUser();
 
@@ -158,8 +160,8 @@ export class FriendList {
                     const myId = Number(this.userId);
                     const id1 = Math.min(myId, selectedFriend.id);
                     const id2 = Math.max(myId, selectedFriend.id);
-                    const channelKey = `${id1}-${id2}`;
-
+                    const channelKey = `${id1}_${id2}`;
+                    console.log(`channelK`)
                     const check = () => {
                         chatSocket.emit('checkUnread', { 
                             channelKey: channelKey, 
@@ -201,6 +203,7 @@ export class FriendList {
     }
 
     private clearNotifications(friendId: number) {
+        console.log("clear notification")
         const badge = document.getElementById(`badge-${friendId}`);
         if (badge) {
             badge.classList.add('hidden');
@@ -252,14 +255,17 @@ export class FriendList {
             this.handleMessageNotification(data.sender_id);
         })
 
-        chatSocket.on('unreadStatus', (data: { friendId: number, hasUnread: boolean }) => {
-            if (data.hasUnread) {
-                this.handleMessageNotification(data.friendId);
+        chatSocket.on('unreadStatus', (data: any) => {
+            console.log("[FriendList] 📥 Debug unreadStatus data:", data);
+            const idToNotify = data.friendId || data.senderId;
+
+            if (data.hasUnread && idToNotify) {
+                this.handleMessageNotification(idToNotify);
             }
         });
 
         chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
-            console.log("[FriendList] 🔔 Event 'unreadNotification' received from:", data.senderId);
+            console.log("[FriendList] 🔔 Event 'unreadNotification' received", data);
             this.handleMessageNotification(data.senderId);
         });
 
