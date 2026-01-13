@@ -4322,7 +4322,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
 									LOCAL GAME
 								</button>
-								<p>Play again another player on this computer</p>
+								<p>Play against another player on this computer</p>
 
 								<button id="remote-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
@@ -5504,13 +5504,13 @@
 
   // scripts/components/Chat.ts
   var Chat = class {
-    //private unreadChannels: Set<string> = new Set();
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
+      this.unreadChannels = /* @__PURE__ */ new Set();
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
       this.wizzContainer = document.getElementById("wizz-container");
@@ -5549,6 +5549,18 @@
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
       }
+      if (this.unreadChannels.has(channelKey)) {
+        this.unreadChannels.delete(channelKey);
+        const friendElement = document.getElementById(`friend-item-${channelKey}`);
+        if (friendElement) {
+          const notifIcon = friendElement.querySelector(".status-icon");
+          if (notifIcon) notifIcon.src = "/assets/basic/status_online_small.png";
+          friendElement.classList.remove("font-bold", "text-white");
+        }
+      }
+      if (this.chatSocket) {
+        this.chatSocket.emit("markRead", channelKey);
+      }
     }
     // ---------------------------------------------------
     // ----      MISE EN ÉCOUTE DES SOCKETS           ----
@@ -5558,7 +5570,12 @@
         this.addMessage("You can now chat with your friend!", "System");
       });
       this.chatSocket.on("chatMessage", (data) => {
-        this.addMessage(data.msg_content, data.sender_alias);
+        if (data.channelKey === this.currentChannel) {
+          this.addMessage(data.msg_content, data.sender_alias);
+          this.chatSocket.emit("markRead", data.channelKey);
+        } else {
+          this.handleUnreadMessage(data.channelKey);
+        }
       });
       this.chatSocket.on("msg_history", (data) => {
         if (this.messagesContainer) {
@@ -5607,18 +5624,17 @@
     //================================================
     //============= READ/UNREAD MESSAGES =============
     //================================================
-    // private handleUnreadMessage(channel_key: string) {
-    // 	this.unreadChannels.add(channel_key);
-    // 	// changer l'icone dans la liste d'ami?
-    // 	const friendElement = document.getElementById(`friend-item-${channel_key}`);
-    // 	if (friendElement) {
-    // 		const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
-    // 		if (notifIcon) {
-    // 			notifIcon.src = '/assets/basic/message_notif.png';
-    // 		}
-    // 		friendElement.classList.add('font-bold', 'text-white');
-    // 	}
-    // }
+    handleUnreadMessage(channel_key) {
+      this.unreadChannels.add(channel_key);
+      const friendElement = document.getElementById(`friend-item-${channel_key}`);
+      if (friendElement) {
+        const notifIcon = friendElement.querySelector(".status-icon");
+        if (notifIcon) {
+          notifIcon.src = "/assets/basic/message_notif.png";
+        }
+        friendElement.classList.add("font-bold", "text-white");
+      }
+    }
     //================================================
     //=============== INPUT MANAGEMENT ===============
     //================================================
