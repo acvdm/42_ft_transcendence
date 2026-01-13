@@ -4752,10 +4752,31 @@
       }
     }
     registerSocketUser() {
-      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const socketService = SocketService_default.getInstance();
+      const chatSocket = socketService.getChatSocket();
+      const gameSocket = socketService.getGameSocket();
       const userId = this.userId;
-      if (gameSocket && gameSocket.connected) {
-        gameSocket.emit("registerGameSocket", userId);
+      if (!userId) return;
+      if (chatSocket) {
+        const registerChat = () => {
+          console.log("[FriendList] Registering user on Chat Socket:", userId);
+          chatSocket.emit("registerUser", userId);
+        };
+        if (chatSocket.connected) {
+          registerChat();
+        } else {
+          chatSocket.on("connect", registerChat);
+        }
+      }
+      if (gameSocket) {
+        const registerGame = () => {
+          gameSocket.emit("registerGameSocket", userId);
+        };
+        if (gameSocket.connected) {
+          registerGame();
+        } else {
+          gameSocket.on("connect", registerGame);
+        }
       }
     }
     async loadFriends() {
@@ -4810,6 +4831,24 @@
 
                 `;
           contactsList.appendChild(friendItem);
+          const chatSocket = SocketService_default.getInstance().getChatSocket();
+          if (chatSocket) {
+            const myId = Number(this.userId);
+            const id1 = Math.min(myId, selectedFriend.id);
+            const id2 = Math.max(myId, selectedFriend.id);
+            const channelKey = `${id1}-${id2}`;
+            const check = () => {
+              chatSocket.emit("checkUnread", {
+                channelKey,
+                friendId: selectedFriend.id
+              });
+            };
+            if (chatSocket.connected) {
+              check();
+            } else {
+              chatSocket.once("connect", check);
+            }
+          }
           friendItem.addEventListener("click", (e) => {
             if (e.target.closest(".invite-btn")) return;
             this.clearNotifications(selectedFriend.id);
@@ -4863,6 +4902,11 @@
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
       if (!chatSocket) return;
+      chatSocket.on("unreadStatus", (data) => {
+        if (data.hasUnread) {
+          this.handleMessageNotification(data.friendId);
+        }
+      });
       chatSocket.on("unreadNotification", (data) => {
         this.handleMessageNotification(data.senderId);
       });
@@ -5574,7 +5618,7 @@
           this.addMessage(data.msg_content, data.sender_alias);
           this.chatSocket.emit("markRead", data.channelKey);
         } else {
-          this.handleUnreadMessage(data.channelKey);
+          this.handleUnreadMessage(data.sender_id);
         }
       });
       this.chatSocket.on("msg_history", (data) => {
@@ -5624,15 +5668,10 @@
     //================================================
     //============= READ/UNREAD MESSAGES =============
     //================================================
-    handleUnreadMessage(channel_key) {
-      this.unreadChannels.add(channel_key);
-      const friendElement = document.getElementById(`friend-item-${channel_key}`);
-      if (friendElement) {
-        const notifIcon = friendElement.querySelector(".status-icon");
-        if (notifIcon) {
-          notifIcon.src = "/assets/basic/message_notif.png";
-        }
-        friendElement.classList.add("font-bold", "text-white");
+    handleUnreadMessage(friendId) {
+      const badge = document.getElementById(`badge-${friendId}`);
+      if (badge) {
+        badge.classList.remove("hidden");
       }
     }
     //================================================

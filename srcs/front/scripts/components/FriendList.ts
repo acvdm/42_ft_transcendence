@@ -41,25 +41,37 @@ export class FriendList {
     }
 
     private registerSocketUser() {
-        // // const socket = SocketService.getInstance().socket;
-        // const socket = SocketService.getInstance().getChatSocket();
-        // const userId = this.userId;
-
-        // if (!socket || !userId) return;
-
-        // if (socket.connected) {
-        //     socket.emit('registerUser', userId);
-        // }
-
-        // socket.on('connect', () => {
-        //     socket.emit('registerUser', userId);
-        // });
-        const gameSocket = SocketService.getInstance().getGameSocket();
+        const socketService = SocketService.getInstance();
+        const chatSocket = socketService.getChatSocket();
+        const gameSocket = socketService.getGameSocket();
         const userId = this.userId;
 
-        if (gameSocket && gameSocket.connected)
-        {
-            gameSocket.emit('registerGameSocket', userId);
+        if (!userId) return;
+
+        if (chatSocket) {
+            const registerChat = () => {
+                console.log("[FriendList] Registering user on Chat Socket:", userId);
+                chatSocket.emit('registerUser', userId);
+            };
+
+            if (chatSocket.connected) {
+                registerChat();
+            } else {
+                chatSocket.on('connect', registerChat);
+            }
+        }
+
+
+        if (gameSocket) {
+             const registerGame = () => {
+                 gameSocket.emit('registerGameSocket', userId);
+             };
+
+             if (gameSocket.connected) {
+                 registerGame();
+             } else {
+                 gameSocket.on('connect', registerGame);
+             }
         }
     }
 
@@ -99,6 +111,7 @@ export class FriendList {
                 const friendItem = document.createElement('div');
                 friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
                 //friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+
 
                 friendItem.dataset.id = selectedFriend.id;
                 friendItem.dataset.friendshipId = friendship.id;
@@ -143,6 +156,28 @@ export class FriendList {
                 `;
 
                 contactsList.appendChild(friendItem);
+
+                const chatSocket = SocketService.getInstance().getChatSocket();
+                if (chatSocket) {
+                    const myId = Number(this.userId);
+                    const id1 = Math.min(myId, selectedFriend.id);
+                    const id2 = Math.max(myId, selectedFriend.id);
+                    const channelKey = `${id1}-${id2}`;
+
+                    const check = () => {
+                        chatSocket.emit('checkUnread', { 
+                            channelKey: channelKey, 
+                            friendId: selectedFriend.id 
+                        });
+                    };
+
+                    if (chatSocket.connected) {
+                        check();
+                    } else {
+                        chatSocket.once('connect', check);
+                    }
+
+                }
                 
                 friendItem.addEventListener('click', (e) => {
                     // Si on clique sur le bouton inviter, on ne déclenche pas l'ouverture du chat ici
@@ -213,6 +248,12 @@ export class FriendList {
 
         if (!chatSocket) return;
         
+        chatSocket.on('unreadStatus', (data: { friendId: number, hasUnread: boolean }) => {
+            if (data.hasUnread) {
+                this.handleMessageNotification(data.friendId);
+            }
+        });
+
         chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
             this.handleMessageNotification(data.senderId);
         });

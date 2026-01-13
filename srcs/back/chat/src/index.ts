@@ -7,7 +7,7 @@ import { Socket, Server } from 'socket.io'; // <--- AJOUT DE 'Server' ICI
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
 import { UnauthorizedError } from './utils/error.js';
-import { updateLastRead } from './repositories/channel_reads.js'
+import { updateLastRead, hasUnreadMessages } from './repositories/channel_reads.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -68,6 +68,9 @@ fastify.ready().then(() => {
 
         console.log(`Client connected (Fastify): ${socket.id}`);
 
+
+
+
         socket.on('registerUser', (userId: string) => {
             const id = Number(userId);
             userSockets.set(id, socket.id); // AJOUT: on stocke le socket id
@@ -107,10 +110,24 @@ fastify.ready().then(() => {
             {
                 await updateLastRead(db, socket.data.currentChannel, userId);
             }
-        })
+        });
+
+        socket.on('checkUnread', async (data: { channelKey: string, friendId: number }) => {
+             // userId est défini via le token (socket.user.sub)
+            try {
+                const hasUnread = await hasUnreadMessages(db, data.channelKey, userId);
+                // On répond uniquement à ce socket pour mettre à jour l'UI
+                socket.emit('unreadStatus', { 
+                    friendId: data.friendId, 
+                    hasUnread 
+                });
+            } catch (err) {
+                console.error("Erreur checkUnread:", err);
+            }
+        });
         
         socket.on('chatMessage', async (data: any) => { 
-            await chatMessage(fastify.io, data); 
+            await chatMessage(fastify.io, data, db); 
         });  
 
         socket.on('sendWizz', (data: any) => { 
@@ -202,7 +219,7 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
     }
 }
 
-async function chatMessage(io: Server, data: messRepo.Message) {
+async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
     const { channel_key, sender_id, sender_alias, msg_content } = data;
     console.log("Back: chatMessage ligne 654")
 
@@ -219,8 +236,21 @@ async function chatMessage(io: Server, data: messRepo.Message) {
         io.to(channel_key).emit('chatMessage', { 
             channelKey: channel_key, 
             msg_content, 
-            sender_alias 
+            sender_alias,
+            sender_id: sender_id
         });
+        
+        const ids = channel_key.split('-').map(Number);
+        if (ids.length === 2 && !ids.some(isNaN)) {
+            const targetId = ids.find(id => id !== sender_id);
+            if (targetId) {
+                // On envoie un signal direct à l'utilisateur cible via sa room personnelle
+                io.to(`user_${targetId}`).emit('unreadNotification', {
+                    senderId: sender_id,
+                    content: msg_content
+                });
+            }
+        }
         
     } catch (err: any) {
         console.error("Critical error in chatMessage :", err);

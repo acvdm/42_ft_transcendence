@@ -92,12 +92,12 @@ export class Chat {
 			this.addMessage("You can now chat with your friend!", "System");
 		});
 
-		this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
+		this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string, sender_id: number }) => {
 			if (data.channelKey === this.currentChannel) {
 				this.addMessage(data.msg_content, data.sender_alias);
 				this.chatSocket.emit("markRead", data.channelKey);
 			} else {
-				this.handleUnreadMessage(data.channelKey);
+				this.handleUnreadMessage(data.sender_id);
 			}
 		});
 
@@ -160,17 +160,10 @@ export class Chat {
 	//============= READ/UNREAD MESSAGES =============
 	//================================================
 
-	private handleUnreadMessage(channel_key: string) {
-		this.unreadChannels.add(channel_key);
-
-		// changer l'icone dans la liste d'ami?
-		const friendElement = document.getElementById(`friend-item-${channel_key}`);
-		if (friendElement) {
-			const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
-			if (notifIcon) {
-				notifIcon.src = '/assets/basic/message_notif.png';
-			}
-			friendElement.classList.add('font-bold', 'text-white');
+	private handleUnreadMessage(friendId: number | string) {
+		const badge = document.getElementById(`badge-${friendId}`);
+		if (badge) {
+			badge.classList.remove('hidden');
 		}
 	}
 
