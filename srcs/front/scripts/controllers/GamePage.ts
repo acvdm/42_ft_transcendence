@@ -30,6 +30,8 @@ export function isGameRunning(): boolean {
 export async function getPlayerAlias(): Promise<string> {
 
     const isGuest = sessionStorage.getItem('userRole') === 'guest';
+    const defaultGuest = i18next.t('gamePage.default_guest'); // TRADUCTION
+    const defaultPlayer = i18next.t('gamePage.default_player'); // TRADUCTION
 
     if (isGuest) {
         const cachedAlias = sessionStorage.getItem('cachedAlias');
@@ -41,14 +43,14 @@ export async function getPlayerAlias(): Promise<string> {
     const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
     
     if (!userId) {
-        return "Player";
+        return defaultPlayer;
     }
     
     try {
         const response = await fetchWithAuth(`api/user/${userId}`);
         if (response.ok) {
             const userData = await response.json();
-            const alias = userData.alias || (isGuest ? "Guest" : "Player");
+            const alias = userData.alias || (isGuest ? defaultGuest : defaultPlayer);
             
             if (isGuest) {
                 sessionStorage.setItem('cachedAlias', alias);
@@ -59,7 +61,7 @@ export async function getPlayerAlias(): Promise<string> {
         console.error('Cannot fetch player alias:', err);
     }
 
-    const result = sessionStorage.getItem('username') || (isGuest ? "Guest" : "Player");
+    const result = sessionStorage.getItem('username') || (isGuest ? defaultGuest : defaultPlayer);
     return (result);
 }
 
@@ -68,8 +70,10 @@ export async function getPlayerAlias(): Promise<string> {
 function handleBeforeUnload(e: BeforeUnloadEvent) {
     if (isGameRunning()) {
         e.preventDefault();
-        e.returnValue = 'A game is in progress. Are you sure you want to leave?';
-        return e.returnValue;
+        // TRADUCTION DU MESSAGE NAVIGATEUR (Note: la plupart des navigateurs modernes ignorent ce texte et affichent leur propre message générique, mais c'est bien de le laisser)
+        const message = i18next.t('gamePage.unload_warning');
+        e.returnValue = message;
+        return message;
     }
 }
 
@@ -96,13 +100,21 @@ export function showExitConfirmationModal() {
         activeGame.pause();
     }
 
+    // TRADUCTION DES TEXTES DE LA MODALE
+    const t_title = i18next.t('gamePage.exit_modal.title');
+    const t_heading = i18next.t('gamePage.exit_modal.heading');
+    const t_question = i18next.t('gamePage.exit_modal.question');
+    const t_warning = i18next.t('gamePage.exit_modal.warning');
+    const t_back = i18next.t('gamePage.exit_modal.back_btn');
+    const t_leave = i18next.t('gamePage.exit_modal.leave_btn');
+
     const modalHtml = `
         <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
             
             <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
                 
                 <div class="title-bar">
-                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
+                    <div class="title-bar-text text-white" style="text-shadow: none;">${t_title}</div>
                     <div class="title-bar-controls">
                         <button aria-label="Close" id="modal-close-x"></button>
                     </div>
@@ -111,12 +123,12 @@ export function showExitConfirmationModal() {
                 <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
                     
                     <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
-                        WAIT A MINUTE !
+                        ${t_heading}
                     </h2>
                     
                     <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
-                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
-                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
+                        <p class="text-2xl font-bold text-gray-800 text-center">${t_question}</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">${t_warning}</p>
                     </div>
 
                     <div class="flex gap-6 w-full justify-center">
@@ -125,11 +137,11 @@ export function showExitConfirmationModal() {
                                                                 px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
                                                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
                                                                 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                            GO BACK TO GAME
+                            ${t_back}
                         </button>
                         
                         <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                            LEAVE
+                            ${t_leave}
                         </button>
                     </div>
 

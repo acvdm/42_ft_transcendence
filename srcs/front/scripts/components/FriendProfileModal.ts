@@ -1,6 +1,7 @@
 import { fetchWithAuth } from "../services/api";
 import { statusImages } from "./Data";
 import { parseMessage } from "./ChatUtils";
+import i18next from "../i18n"; // AJOUT IMPORT
 
 export class FriendProfileModal {
     private modal: HTMLElement | null;
@@ -57,13 +58,14 @@ export class FriendProfileModal {
         });
     }
 
-	// on appelle cette methode dans homepage
+    // on appelle cette methode dans homepage
     public async open(friendId: number) {
         if (!this.modal || !friendId) return;
 
         try {
             // loading pour les millisecondes 
-            if (this.username) this.username.innerText = "Loading...";
+            // TRADUCTION
+            if (this.username) this.username.innerText = i18next.t('friendProfileModal.loading');
             
             const [userRes, statsRes] = await Promise.all([
                 fetchWithAuth(`api/user/${friendId}`),
@@ -92,7 +94,11 @@ export class FriendProfileModal {
         if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
         if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages['invisible'];
         if (this.username) this.username.innerText = user.alias;
-        if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
+        
+        // TRADUCTION BIO
+        if (this.bio) {
+            this.bio.innerHTML = user.bio ? parseMessage(user.bio) : i18next.t('friendProfileModal.no_bio');
+        }
 
         if (stats) {
             const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
@@ -115,7 +121,11 @@ export class FriendProfileModal {
             }
 
             if (this.stats.opponent) this.stats.opponent.innerText = stats.biggest_opponent || "-";
-            if (this.stats.favGame) this.stats.favGame.innerText = stats.favorite_game || "Local";
+            
+            // TRADUCTION JEU
+            if (this.stats.favGame) {
+                this.stats.favGame.innerText = stats.favorite_game || i18next.t('friendProfileModal.default_game');
+            }
 
         } else {
             Object.values(this.stats).forEach(el => {

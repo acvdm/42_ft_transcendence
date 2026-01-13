@@ -124,7 +124,7 @@ export function initLandingPage() {
 			console.error("Network error while guest login: ", err);
 			
 			if (guestError) {
-				guestError.textContent = "Network error. Please try again";
+				guestError.textContent = i18next.t('landing.guest_error_network');
 				guestError.classList.remove('hidden');
 			}
 		}

@@ -3,6 +3,7 @@ import Ball from './Ball';
 import Input from './Input';
 import SocketService from '../services/SocketService'; // Import pour le remote
 import { Socket } from "socket.io-client";
+import i18next from "../i18n"; // <--- AJOUT IMPORT
 
 class Game {
     score: { player1: number; player2: number };
@@ -94,7 +95,11 @@ class Game {
             if (this.onGameEnd) {
                 this.onGameEnd(data);
             } else {
-                alert(`Game Over! Final Score: ${data.finalScore.player1} - ${data.finalScore.player2}`);
+                // MODIFICATION ICI : Utilisation de la traduction avec interpolation
+                alert(i18next.t('game.game_over', { 
+                    score1: data.finalScore.player1, 
+                    score2: data.finalScore.player2 
+                }));
             }
             // Retour menu ou nettoyage
             this.socket.off('gameState');

@@ -61,7 +61,7 @@ export function afterRender(): void {
         const guestChat = new Chat();
         guestChat.init();
         guestChat.joinChannel("general_guest");
-        guestChat.addSystemMessage("Welcome to Guest Mode. Select a game mode to start chatting with your opponents.")
+        guestChat.addSystemMessage(i18next.t('guestPage.chat_welcome'));
     } catch (e) {
         console.error("Error charging chat:", e);
     }

@@ -7,6 +7,7 @@ import i18next from "../i18n";
 export function render(): string {
     let html = htmlContent;
 
+    // Ces remplacements étaient déjà corrects
     html = html.replace(/\{\{loginPage\.welcome\}\}/g, i18next.t('loginPage.welcome'));
     html = html.replace(/\{\{loginPage\.password\}\}/g, i18next.t('loginPage.password'));
     html = html.replace(/\{\{loginPage\.connect_as\}\}/g, i18next.t('loginPage.connect_as'));
@@ -114,7 +115,8 @@ function handleLogin() {
 
         if (!email || !password) {
             if (errorElement) {
-                errorElement.textContent = "Please fill all inputs";
+                // MODIFICATION : Message erreur champs vides
+                errorElement.textContent = i18next.t('loginPage.error_inputs');
                 errorElement.classList.remove('hidden');
             }
             return;
@@ -147,7 +149,7 @@ function handleLogin() {
 
             if (result.success) {
                 localStorage.setItem('is2faEnabled', 'false');
-				const { accessToken, userId } = result.data;
+                const { accessToken, userId } = result.data;
                 await init2faLogin(accessToken, userId, cachedStatus);
 
                 // Tokens and infos storage
@@ -195,14 +197,16 @@ function handleLogin() {
             } else {
                 console.error("Login error:", result.error);
                 if (errorElement) {
-                    errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
+                    // MODIFICATION : Traduction du fallback si pas de message serveur
+                    errorElement.textContent = result.error?.message || result.error.error || i18next.t('loginPage.error_auth_default');
                     errorElement.classList.remove('hidden');
                 }
             }
         } catch (error) {
             console.error("Network error:", error);
             if (errorElement) {
-                errorElement.textContent = "Network error, please try again";
+                // MODIFICATION : Message erreur réseau
+                errorElement.textContent = i18next.t('loginPage.error_network');
                 errorElement.classList.remove('hidden');
             }
         }
@@ -246,14 +250,16 @@ function handleLogin() {
                 await init2faLogin(accessToken, userId, cachedStatus);
             } else {
                 if (error2fa) {
-                    error2fa.textContent = "Invalid code.";
+                    // MODIFICATION : Message code 2FA invalide
+                    error2fa.textContent = i18next.t('loginPage.error_2fa_invalid');
                     error2fa.classList.remove('hidden');
                     console.error("2FA Error:", result.error.message);
                 }
             }
         } catch (error) {
             if (error2fa) {
-                error2fa.textContent = "Error during verification.";
+                // MODIFICATION : Message erreur vérification 2FA
+                error2fa.textContent = i18next.t('loginPage.error_2fa_verify');
                 error2fa.classList.remove('hidden');
             }
         }

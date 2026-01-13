@@ -6,6 +6,7 @@ import Input from "../../game/Input";
 import { getSqlDate, launchCountdown, launchConfetti } from "./GameUI";
 import { Chat } from "../Chat";
 import { getPlayerAlias } from "../../controllers/GamePage";
+import i18next from "../../i18n"; // <--- IMPORT ADDED
 
 interface GameContext {
     setGame: (game: Game | null) => void;
@@ -56,8 +57,8 @@ export class TournamentManager {
     {
         const setupModal = document.getElementById('tournament-setup-modal');
         if (setupModal) {
-			setupModal.classList.remove('hidden');
-		}
+            setupModal.classList.remove('hidden');
+        }
 
         const nameInput = document.getElementById('tournament-name-input') as HTMLInputElement;
         const player1Input = document.getElementById('player1-input') as HTMLInputElement;
@@ -69,7 +70,9 @@ export class TournamentManager {
 
         this.initTournamentSelectors();
 
-        const username = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || "Guest";
+        // Use translation for "Guest" fallback
+        const guestText = i18next.t('gamePage.default_guest'); 
+        const username = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || guestText;
         const isGuest = sessionStorage.getItem('userRole') === 'guest';
 
         getPlayerAlias().then(alias => {
@@ -95,7 +98,8 @@ export class TournamentManager {
 
             if (!tName || players.some(p => !p)) {
                 if (errorDiv) {
-                    errorDiv.innerText = "Please fill all fields.";
+                    // TRANSLATION
+                    errorDiv.innerText = i18next.t('tournamentManager.setup_error_fields');
                     errorDiv.classList.remove('hidden');
                 }
                 return;
@@ -104,7 +108,8 @@ export class TournamentManager {
             const uniqueCheck = new Set(players);
             if (uniqueCheck.size !== 4) {
                 if (errorDiv) {
-                    errorDiv.innerText = "All player aliases must be unique.";
+                    // TRANSLATION
+                    errorDiv.innerText = i18next.t('tournamentManager.setup_error_unique');
                     errorDiv.classList.remove('hidden');
                 }
                 return;
@@ -144,11 +149,11 @@ export class TournamentManager {
                     div.addEventListener('click', (e) => {
                         e.stopPropagation();
                         if(ballImg) {
-							ballImg.src = imgUrl;
-						}
+                            ballImg.src = imgUrl;
+                        }
                         if(ballInput) {
-							ballInput.value = imgUrl;
-						}
+                            ballInput.value = imgUrl;
+                        }
                         ballDrop.classList.add('hidden');
                     });
                     ballGrid.appendChild(div);
@@ -176,14 +181,14 @@ export class TournamentManager {
                 div.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if(bgPrev) {
-						bgPrev.style.backgroundColor = color;
-					}
+                        bgPrev.style.backgroundColor = color;
+                    }
                     if(bgInput) {
-						bgInput.value = color;
-					}
+                        bgInput.value = color;
+                    }
                     if(gameContainer) {
-						gameContainer.style.backgroundColor = color;
-					}
+                        gameContainer.style.backgroundColor = color;
+                    }
                     bgDrop.classList.add('hidden');
                 });
                 bgGrid.appendChild(div);
@@ -195,14 +200,14 @@ export class TournamentManager {
                     e.stopPropagation();
                     const resetColor = '#E8F4F8';
                     if (bgPrev) {
-						bgPrev.style.backgroundColor = resetColor;
-					}
+                        bgPrev.style.backgroundColor = resetColor;
+                    }
                     if (bgInput) {
-						bgInput.value = resetColor;
-					}
+                        bgInput.value = resetColor;
+                    }
                     if (gameContainer) {
-						gameContainer.style.backgroundColor = resetColor;
-					}
+                        gameContainer.style.backgroundColor = resetColor;
+                    }
                     bgDrop.classList.add('hidden');
                 });
             }
@@ -214,7 +219,7 @@ export class TournamentManager {
 
     private startTournamentLogic(name: string, playersAliases: string[], ballSkin: string, bgSkin: string) {
        
-		document.getElementById('tournament-setup-modal')?.classList.add('hidden');
+        document.getElementById('tournament-setup-modal')?.classList.add('hidden');
         const userIdStr = localStorage.getItem('userId');
         const userIdNb = userIdStr ? Number(userIdStr) : null;
         const playersObjects: TournamentPlayer[] = playersAliases.map((alias, index) => ({
@@ -239,7 +244,11 @@ export class TournamentManager {
         };
 
         if (this.context.chat) {
-            this.context.chat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(', ')}`);
+            // TRANSLATION
+            this.context.chat.addSystemMessage(i18next.t('tournamentManager.chat_start', { 
+                name: name, 
+                players: playersAliases.join(', ') 
+            }));
         }
         this.showBracketModal();
     }
@@ -248,8 +257,8 @@ export class TournamentManager {
     private showBracketModal() {
         const bracketModal = document.getElementById('tournament-bracket-modal');
         if (!bracketModal || !this.tournamentState) {
-			return;
-		}
+            return;
+        }
 
         const sf1 = document.getElementById('bracket-sf1');
         const sf2 = document.getElementById('bracket-sf2');
@@ -260,29 +269,30 @@ export class TournamentManager {
         const m1 = this.tournamentState.matches[0];
         const w1 = m1.winner ? `✅ ${m1.winner}` : null;
         if (sf1) {
-			sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
-		}
+            sf1.innerText = w1 || `${m1.p1?.alias} vs ${m1.p2?.alias}`;
+        }
 
         // SF2
         const m2 = this.tournamentState.matches[1];
         const w2 = m2.winner ? `✅ ${m2.winner}` : null;
         if (sf2) {
-			sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
-		}
+            sf2.innerText = w2 || `${m2.p1?.alias} vs ${m2.p2?.alias}`;
+        }
 
         // Finale
         const mf = this.tournamentState.matches[2];
         const p1Final = mf.p1 ? mf.p1.alias : '?';
         const p2Final = mf.p2 ? mf.p2.alias : '?';
         if (fin) {
-			fin.innerText = mf.winner ? `👑 ${mf.winner}` : `${p1Final} vs ${p2Final}`;
-		}
+            fin.innerText = mf.winner ? `👑 ${mf.winner}` : `${p1Final} vs ${p2Final}`;
+        }
 
         const idx = this.tournamentState.currentMatchIdx;
         if (msg) {
-            if (idx === 0) msg.innerText = "Next: Semi-Final 1";
-            else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
-            else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+            // TRANSLATION of bracket steps
+            if (idx === 0) msg.innerText = i18next.t('tournamentManager.bracket_next_sf1');
+            else if (idx === 1) msg.innerText = i18next.t('tournamentManager.bracket_next_sf2');
+            else if (idx === 2) msg.innerText = i18next.t('tournamentManager.bracket_next_final');
         }
 
         bracketModal.classList.remove('hidden');
@@ -311,14 +321,17 @@ export class TournamentManager {
         const p2Alias = match.p2 ? match.p2.alias : "???";
 
         if (matchIdx === 0) {
-            if(title) title.innerText = "SEMI-FINAL 1";
-            if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+            // TRANSLATION SF1
+            if(title) title.innerText = i18next.t('tournamentManager.match_sf1');
+            if (this.context.chat) this.context.chat.addSystemMessage(i18next.t('tournamentManager.chat_next_match', { p1: p1Alias, p2: p2Alias }));
         } else if (matchIdx === 1) {
-            if(title) title.innerText = "SEMI-FINAL 2";
-            if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+            // TRANSLATION SF2
+            if(title) title.innerText = i18next.t('tournamentManager.match_sf2');
+            if (this.context.chat) this.context.chat.addSystemMessage(i18next.t('tournamentManager.chat_next_match', { p1: p1Alias, p2: p2Alias }));
         } else {
-            if(title) title.innerText = "FINALE";
-            if (this.context.chat) this.context.chat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
+            // TRANSLATION FINAL
+            if(title) title.innerText = i18next.t('tournamentManager.match_final');
+            if (this.context.chat) this.context.chat.addSystemMessage(i18next.t('tournamentManager.chat_final_match', { p1: p1Alias, p2: p2Alias }));
         }
 
         if(player1Text) player1Text.innerText = p1Alias;
@@ -341,7 +354,7 @@ export class TournamentManager {
         const p2Name = document.getElementById('player-2-name');
         const gameStartDate = getSqlDate();
         
-		if (p1Name) p1Name.innerText = p1.alias;
+        if (p1Name) p1Name.innerText = p1.alias;
         if (p2Name) p2Name.innerText = p2.alias;
 
         const scoreBoard = document.getElementById('score-board');
@@ -350,10 +363,10 @@ export class TournamentManager {
                 scoreBoard.innerText = "0 - 0";
             }
 
-		const container = document.getElementById('left');
+        const container = document.getElementById('left');
         if(container && this.tournamentState) {
-			container.style.backgroundColor = this.tournamentState.settings.bgSkin;
-		}
+            container.style.backgroundColor = this.tournamentState.settings.bgSkin;
+        }
 
         let canvasContainer = document.getElementById('game-canvas-container');
         if (canvasContainer) {
@@ -407,8 +420,8 @@ export class TournamentManager {
 
     private endMatch(winner: string, scoreP1: number, scoreP2: number, gameStartDate: string) {
         if (!this.tournamentState) {
-			return;
-		}
+            return;
+        }
 
         const idx = this.tournamentState.currentMatchIdx;
         const match = this.tournamentState.matches[idx];
@@ -418,11 +431,11 @@ export class TournamentManager {
         match.winner = winner;
 
         if (match.p1) {
-			match.p1.score = scoreP1;
-		}
+            match.p1.score = scoreP1;
+        }
         if (match.p2) {
-			match.p2.score = scoreP2;
-		}
+            match.p2.score = scoreP2;
+        }
         if (match.p1 && match.p1.userId) {
             const isWinner = (match.p1.alias === winner);
         }
@@ -430,8 +443,9 @@ export class TournamentManager {
             const isWinner = (match.p2.alias === winner);
         }
         if (this.context.chat) {
-			this.context.chat.addSystemMessage(`${winner} wins the match!`);
-		}
+            // TRANSLATION
+            this.context.chat.addSystemMessage(i18next.t('tournamentManager.chat_winner', { winner: winner }));
+        }
         if (idx === 0) {
             const winnerObj = (match.p1?.alias === winner) ? match.p1 : match.p2;
             this.tournamentState.matches[2].p1 = winnerObj ? { ...winnerObj } : null;
@@ -454,10 +468,10 @@ export class TournamentManager {
         launchConfetti(4000);
         const container = document.getElementById('left');
         if (container) {
-			container.style.backgroundColor = 'white';
-		}
+            container.style.backgroundColor = 'white';
+        }
         
-		const summaryModal = document.getElementById('tournament-summary-modal');
+        const summaryModal = document.getElementById('tournament-summary-modal');
         
         if (summaryModal) {
             summaryModal.classList.remove('hidden');
@@ -465,14 +479,15 @@ export class TournamentManager {
             const tourNameDisplay = document.getElementById('tour-name-display');
             
             if (winnerDisplay) {
-				winnerDisplay.innerText = champion;
-			}
+                winnerDisplay.innerText = champion;
+            }
             if (tourNameDisplay && this.tournamentState) {
-				tourNameDisplay.innerText = this.tournamentState.name;
-			}
+                tourNameDisplay.innerText = this.tournamentState.name;
+            }
             if (this.context.chat) {
-				this.context.chat.addSystemMessage(`${champion} wins the match!`);
-			}
+                // TRANSLATION
+                this.context.chat.addSystemMessage(i18next.t('tournamentManager.chat_winner', { winner: champion }));
+            }
 
             const userId = localStorage.getItem('userId');
             if (userId) {
@@ -492,8 +507,8 @@ export class TournamentManager {
     private async saveTournamentToApi(winner: string) {
         
         if (!this.tournamentState) {
-			return;
-		} else {
+            return;
+        } else {
             console.log("DEBUG FRONTEND - Matches à envoyer :", this.tournamentState.matches);
             console.log("DEBUG FRONTEND - Nombre de matches :", this.tournamentState.matches.length);
         }

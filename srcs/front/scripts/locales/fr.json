@@ -66,8 +66,10 @@
     "welcome": "Bienvenue sur Transcendence",
     "login_button": "Connexion",
     "register_button": "Inscription",
-    "guest_button": "Jouer en invité"
+    "guest_button": "Jouer en invité",
+    "guest_error_network": "Erreur réseau. Veuillez réessayer."
   },
+
   "loginPage": {
     "welcome": "Se connecter à Transcendence",
     "password": "Entrez votre mot de passe",
@@ -83,14 +85,24 @@
     "2fa": "Authentification à deux facteurs",
     "security": "Contrôle de sécurité",
     "enter_code": "Veuillez entrer le code de sécurité.",
-    "verify_button": "VÉRIFIER"
+    "verify_button": "VÉRIFIER",
+    "error_inputs": "Veuillez remplir tous les champs",
+    "error_auth_default": "Échec de l'authentification",
+    "error_network": "Erreur réseau, veuillez réessayer",
+    "error_2fa_invalid": "Code invalide.",
+    "error_2fa_verify": "Erreur lors de la vérification."
   },
+
   "registerPage": {
     "welcome": "S'inscrire sur Transcendence",
     "password": "Entrez votre mot de passe",
     "register_button": "S'inscrire",
-    "back": "Retour à l'accueil"
+    "back": "Retour à l'accueil",
+    "error_inputs": "Veuillez remplir tous les champs",
+    "error_auth_default": "Échec de l'authentification",
+    "error_network": "Erreur réseau, veuillez réessayer"
   },
+
   "profilePage": {
     "window_profile": "Profil",
     "my_profile": "Mon profil",
@@ -138,6 +150,10 @@
       "code_send": "ENVOYER LE CODE",
       "code_received": "Entrez le code reçu :"
     },
+    "twoFactor": {
+      "btn_enable": "Activer l'authentification 2FA",
+      "btn_disable": "Désactiver l'authentification 2FA"
+    },
     "picture_modal": {
       "title": "Changer d'image",
       "select_pic": "Sélectionnez une image",
@@ -164,8 +180,37 @@
       "confirm_message": "Cette action sera irréversible.",
       "yes": "Oui, supprimer mon compte",
       "cancel": "Annuler"
-    }
+    },
+    "field_empty": "Vide",
+    "email_empty": "Aucun email",
+    "game_local": "Local",
+    "alerts": {
+      "delete_confirm": "Cette action est irréversible. Êtes-vous vraiment sûr ?",
+      "delete_success": "Votre compte a été supprimé. Vous allez être redirigé.",
+      "delete_error": "Erreur lors de la suppression du compte",
+      "network_error": "Erreur réseau. Veuillez réessayer.",
+      "username_success": "Nom d'utilisateur mis à jour avec succès !",
+      "username_error": "Erreur lors de l'enregistrement du nom d'utilisateur",
+      "bio_limit": "La bio ne peut pas dépasser {{count}} caractères.",
+      "bio_error": "Erreur lors de la mise à jour de la bio",
+      "email_success": "Email mis à jour avec succès !",
+      "email_error": "Erreur lors de l'enregistrement de l'email",
+      "status_error": "Erreur lors de la mise à jour du statut",
+      "pwd_inputs": "Tous les champs sont requis.",
+      "pwd_mismatch": "Les mots de passe ne correspondent pas. Réessayez.",
+      "pwd_length": "Le mot de passe doit contenir au moins 8 caractères.",
+      "pwd_success": "Mot de passe mis à jour avec succès !",
+      "pwd_error": "Erreur lors de la mise à jour du mot de passe",
+      "2fa_init_error": "Erreur lors de l'initialisation de la 2FA",
+      "2fa_invalid_code": "Code invalide",
+      "2fa_enabled": "2FA activée !",
+      "2fa_disable_confirm": "Désactiver la 2FA ?",
+      "2fa_disabled": "2FA désactivée"
+    },
+    "bio_placeholder": "Partagez un court message",
+    "avatar_save_error": "Erreur lors de la sauvegarde de l'avatar"
   },
+
   "dashboardPage": {
     "title": "Aperçu du tableau de bord",
     "game_played": "Parties jouées",
@@ -198,7 +243,25 @@
     "loading": "Chargement...",
     "prev": "Précédent",
     "next": "Suivant",
-    "page": "Page 1"
+    "page": "Page 1",
+    "time_format": "{{h}}h {{m}}min",
+    "pagination_info": "Page {{current}} sur {{total}}",
+    "no_matches": "Aucun match pour l'instant.",
+    "status_victory": "VICTOIRE",
+    "status_defeat": "DÉFAITE",
+    "unknown_user": "Inconnu",
+    "round_final": "Finale",
+    "round_1v1": "1v1",
+    "chart": {
+      "start": "Départ",
+      "net_score": "Score net",
+      "no_data": "Aucune donnée",
+      "games_played": "Parties jouées",
+      "games_count": "({{count}} parties)",
+      "local": "Local",
+      "remote": "Distant",
+      "tournament": "Tournoi"
+    }
   },
   "localPage": {
     "title": "Jeux",
@@ -229,7 +292,9 @@
       "title": "Notifications",
       "info": "Notification système",
       "placeholder_input": "Vous ne pouvez pas répondre au système"
-    }
+    },
+
+    "chat_start_match": "La partie va commencer ! Match : {{p1}} contre {{p2}}"
   },
   "remotePage": {
     "title": "Jeux",
@@ -321,6 +386,148 @@
     "select_mode": "Sélectionnez un mode pour commencer à jouer",
     "local": "JEU LOCAL",
     "remote": "JEU À DISTANCE",
-    "tournament": "TOURNOI"
+    "tournament": "TOURNOI",
+    "chat_welcome": "Bienvenue en mode invité. Sélectionnez un mode de jeu pour discuter avec vos adversaires."
+  },
+  "gamePage": {
+    "default_player": "Joueur",
+    "default_guest": "Invité",
+    "unload_warning": "Une partie est en cours. Êtes-vous sûr de vouloir quitter ?",
+    "exit_modal": {
+      "title": "Quitter la partie",
+      "heading": "ATTENDEZ !",
+      "question": "Êtes-vous sûr de vouloir partir ?",
+      "warning": "Toute la progression actuelle sera perdue.",
+      "back_btn": "RETOURNER AU JEU",
+      "leave_btn": "QUITTER"
+    }
+  },
+
+  "game": {
+    "game_over": "Partie terminée ! Score final : {{score1}} - {{score2}}"
+  },
+
+  "gameUI": {
+    "winner_message": "{{name}} remporte le match !",
+    "game_over": "Partie terminée",
+    "congratulations": "FÉLICITATIONS",
+    "return_menu": "RETOUR AU MENU",
+    "go": "C'EST PARTI !"
+  },
+
+  "remoteManager": {
+    "self_play_error": "Vous ne pouvez pas jouer contre vous-même",
+    "btn_play_queue": "JOUER (FILE D'ATTENTE)",
+    "default_opponent": "Adversaire",
+    "me_suffix": "(Moi)",
+    "match_started": "Le match a commencé !",
+    "match_found": "Adversaire trouvé ! Lancement du jeu...",
+    "opponent_forfeit": "(Forfait de l'adversaire)",
+    "default_winner": "Vainqueur",
+    "error_connection": "Erreur : connexion au serveur de jeu perdue",
+    "waiting_private": "En attente de votre ami dans le salon privé...",
+    "btn_waiting_friend": "EN ATTENTE D'UN AMI...",
+    "looking_rival": "Recherche d'un adversaire...",
+    "btn_waiting": "EN ATTENTE..."
+  },
+
+  "tournamentManager": {
+    "setup_error_fields": "Veuillez remplir tous les champs.",
+    "setup_error_unique": "Tous les pseudonymes doivent être uniques.",
+    "chat_start": "Le tournoi \"{{name}}\" a commencé ! Participants : {{players}}",
+    "bracket_next_sf1": "Suivant : Demi-finale 1",
+    "bracket_next_sf2": "Suivant : Demi-finale 2",
+    "bracket_next_final": "Suivant : La Grande Finale !",
+    "match_sf1": "DEMI-FINALE 1",
+    "match_sf2": "DEMI-FINALE 2",
+    "match_final": "FINALE",
+    "chat_next_match": "À suivre : {{p1}} contre {{p2}} !",
+    "chat_final_match": "FINALE : {{p1}} contre {{p2}} !",
+    "chat_winner": "{{winner}} remporte le match !"
+  },
+
+  "chatComponent": {
+    "system": "Système",
+    "connected": "Vous pouvez maintenant discuter avec votre ami !",
+    "disconnected": "Déconnecté du serveur de chat !",
+    "nudge_sent": "[b]{{author}} a envoyé un wizz[/b]",
+    "animation_unknown": "Animation inconnue ({{key}}) reçue de {{author}}.",
+    "game_invite": "{{author}} veut jouer à Pong avec vous !",
+    "join_waitroom": "Rejoindre mon salon d'attente",
+    "accept_match": "Accepter le match",
+    "game_unreachable": "Erreur : Serveur de jeu inaccessible.",
+    "block_confirm": "Êtes-vous sûr de vouloir bloquer {{name}} ?",
+    "block_success": "Conversation supprimée (Utilisateur bloqué).",
+    "block_error": "Erreur lors du blocage",
+    "input_blocked": "Vous avez bloqué cet utilisateur.",
+    "tools": {
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "strikethrough": "Barré"
+    }
+  },
+
+  "data": {
+    "status": {
+      "available": "(Disponible)",
+      "busy": "(Occupé)",
+      "away": "(Absent)",
+      "invisible": "(Hors ligne)"
+    },
+    "themes": {
+      "basic": "Bleu Classique",
+      "bamboo": "Bambou Zen",
+      "cherry": "Fleurs de Cerisier",
+      "mountain": "Montagnes Brumeuses",
+      "punk": "Cyber Punk",
+      "dotted": "Points Printemps",
+      "sunset": "Coucher de Soleil",
+      "football": "Stade",
+      "spring": "Jardin de Printemps",
+      "love": "Cœur Adorable",
+      "diary": "Cher Journal",
+      "branches": "Branches d'Hiver",
+      "purple": "Rêves Violets",
+      "abstract": "Flux Abstrait"
+    }
+  },
+
+  "friendList": {
+    "no_friends": "Pas encore d'amis",
+    "error_loading": "Erreur lors du chargement des contacts",
+    "default_bio": "Partagez un message rapide",
+    "game_disconnected": "Le jeu est déconnecté, veuillez actualiser",
+    "invite_sent": "Invitation envoyée à {{name}}",
+    "invite_toast": {
+      "title": "🎮 Invitation au jeu",
+      "message": "{{name}} veut jouer à Pong !",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "error_lost": "Erreur : connexion au serveur perdue"
+    },
+    "search_placeholder_error": "Veuillez entrer un pseudo ou un email",
+    "request_sent": "Demande d'ami envoyée !",
+    "request_error": "Erreur lors de l'envoi de la demande",
+    "network_error": "Erreur réseau",
+    "no_notifications": "Aucune nouvelle notification",
+    "wants_to_be_friend": "<span class=\"font-semibold\">{{name}}</span> veut devenir votre ami",
+    "actions": {
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "block": "Bloquer"
+    }
+  },
+
+  "friendProfileModal": {
+    "loading": "Chargement...",
+    "no_bio": "Aucune bio.",
+    "default_game": "Local"
+  },
+
+  "userProfile": {
+    "default_bio": "Partagez un message rapide",
+    "bio_length_error": "Votre message ne peut pas dépasser 70 caractères. Arrêtez de parler !",
+    "avatar_error": "Erreur lors de la sauvegarde de l'avatar"
   }
 }

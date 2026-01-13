@@ -65,7 +65,8 @@
     "welcome": "Welcome on Transcendence",
     "login_button": "Login",
     "register_button": "Register",
-    "guest_button": "Play as guest"
+    "guest_button": "Play as guest",
+    "guest_error_network": "Network error. Please try again"
   },
 
   "loginPage": {
@@ -83,14 +84,22 @@
     "2fa": "Two-Factor Authentication",
     "security": "Security check",
     "enter_code": "Please enter the security code.",
-    "verify_button": "VERIFY"
+    "verify_button": "VERIFY",
+    "error_inputs": "Please fill all inputs",
+    "error_auth_default": "Authentication failed",
+    "error_network": "Network error, please try again",
+    "error_2fa_invalid": "Invalid code.",
+    "error_2fa_verify": "Error during verification."
   },
 
   "registerPage": {
     "welcome": "Sign up to Transcendence",
     "password": "Enter your password",
     "register_button": "Register",
-    "back": "Back to landing page"
+    "back": "Back to landing page",
+    "error_inputs": "Please fill all inputs",
+    "error_auth_default": "Authentication failed",
+    "error_network": "Network error, please try again"
   },
 
   "profilePage": {
@@ -122,7 +131,10 @@
     "wins": "Wins",
     "losses": "Losses",
     "winning_streak": "Current winning streak",
-
+    "twoFactor": {
+      "btn_enable": "Enable 2FA authentication",
+      "btn_disable": "Disable 2FA authentication"
+    },
     "2fa_modal": {
       "title": "Two-Factor Authentication",
       "choose_method": "Choose authentication method",
@@ -172,7 +184,36 @@
       "yes": "Yes, delete my account",
       "cancel": "Cancel",
       "ici": "HA"
-    }
+    },
+
+    "field_empty": "Empty",
+    "email_empty": "No email",
+    "game_local": "Local",
+    "alerts": {
+      "delete_confirm": "This action is irreversible. Are you really sure?",
+      "delete_success": "Your account has been deleted. You will be redirected.",
+      "delete_error": "Error deleting account",
+      "network_error": "Network error. Please try again.",
+      "username_success": "Username updated successfully!",
+      "username_error": "Error while saving username",
+      "bio_limit": "Bio cannot be longer than {{count}} characters.",
+      "bio_error": "Error updating bio",
+      "email_success": "Email updated successfully!",
+      "email_error": "Error saving email",
+      "status_error": "Error updating status",
+      "pwd_inputs": "All inputs are required.",
+      "pwd_mismatch": "These are not the same. Try again",
+      "pwd_length": "Password must be at least 8 characters.",
+      "pwd_success": "Password updated successfully!",
+      "pwd_error": "Error updating password",
+      "2fa_init_error": "Error initializing 2FA setup",
+      "2fa_invalid_code": "Invalid code",
+      "2fa_enabled": "2FA enabled!",
+      "2fa_disable_confirm": "Disable 2FA?",
+      "2fa_disabled": "2FA disabled"
+    },
+    "bio_placeholder": "Share a quick message",
+    "avatar_save_error": "Error while saving avatar"
   },
 
   "dashboardPage": {
@@ -207,7 +248,26 @@
     "loading": "Loading...",
     "prev": "Previous",
     "next": "Next",
-    "page": "Page 1"
+    "page": "Page 1",
+
+    "time_format": "{{h}}h {{m}}min",
+    "pagination_info": "Page {{current}} of {{total}}",
+    "no_matches": "No matches yet.",
+    "status_victory": "VICTORY",
+    "status_defeat": "DEFEAT",
+    "unknown_user": "Unknown",
+    "round_final": "Final",
+    "round_1v1": "1v1",
+    "chart": {
+      "start": "Start",
+      "net_score": "Net Score",
+      "no_data": "No Data",
+      "games_played": "Games Played",
+      "games_count": "({{count}} games)",
+      "local": "Local",
+      "remote": "Remote",
+      "tournament": "Tournament"
+    }
   },
 
     "localPage": {
@@ -242,7 +302,9 @@
       "title": "Notifications",
       "info": "System notification",
       "placeholder_input": "You cannot speak to the system"
-    }
+    },
+
+    "chat_start_match": "Game is about to start! Match: {{p1}} vs {{p2}}"
   },
 
   "remotePage": {
@@ -346,8 +408,149 @@
     "select_mode": "Select a mode to start playing",
     "local": "LOCAL GAME",
     "remote": "REMOTE GAME",
-    "tournament": "TOURNAMENT"
-  }
+    "tournament": "TOURNAMENT",
+    "chat_welcome": "Welcome to Guest Mode. Select a game mode to start chatting with your opponents."
+  },
 
-  
+  "gamePage": {
+    "default_player": "Player",
+    "default_guest": "Guest",
+    "unload_warning": "A game is in progress. Are you sure you want to leave?",
+    "exit_modal": {
+      "title": "Exit Game",
+      "heading": "WAIT A MINUTE !",
+      "question": "Are you sure you want to leave?",
+      "warning": "All current progress will be lost.",
+      "back_btn": "GO BACK TO GAME",
+      "leave_btn": "LEAVE"
+    }
+  },
+
+  "game": {
+    "game_over": "Game Over! Final Score: {{score1}} - {{score2}}"
+  },
+
+  "gameUI": {
+    "winner_message": "{{name}} wins the match!",
+    "game_over": "Game Over",
+    "congratulations": "CONGRATULATIONS",
+    "return_menu": "RETURN TO MENU",
+    "go": "GO!"
+  },
+
+  "remoteManager": {
+    "self_play_error": "You cannot play against yourself",
+    "btn_play_queue": "PLAY (QUEUE)",
+    "default_opponent": "Opponent",
+    "me_suffix": "(Me)",
+    "match_started": "Match started!",
+    "match_found": "We found an opponent! Starting the game...",
+    "opponent_forfeit": "(Opponent forfeit)",
+    "default_winner": "Winner",
+    "error_connection": "Error: lost connection to game server",
+    "waiting_private": "Waiting for your friend in private room...",
+    "btn_waiting_friend": "WAITING FOR FRIEND...",
+    "looking_rival": "Looking for a rival...",
+    "btn_waiting": "WAITING..."
+  },
+
+  "tournamentManager": {
+    "setup_error_fields": "Please fill all fields.",
+    "setup_error_unique": "All player aliases must be unique.",
+    "chat_start": "Tournament \"{{name}}\" started! Participants: {{players}}",
+    "bracket_next_sf1": "Next: Semi-Final 1",
+    "bracket_next_sf2": "Next: Semi-Final 2",
+    "bracket_next_final": "Next: The Grand Finale!",
+    "match_sf1": "SEMI-FINAL 1",
+    "match_sf2": "SEMI-FINAL 2",
+    "match_final": "FINALE",
+    "chat_next_match": "Next up: {{p1}} vs {{p2}} !",
+    "chat_final_match": "FINAL: {{p1}} vs {{p2}} !",
+    "chat_winner": "{{winner}} wins the match!"
+  },
+
+  "chatComponent": {
+    "system": "System",
+    "connected": "You can now chat with your friend!",
+    "disconnected": "Disconnected from chat server!",
+    "nudge_sent": "[b]{{author}} sent a nudge[/b]",
+    "animation_unknown": "Unknown animation ({{key}}) received from {{author}}.",
+    "game_invite": "{{author}} want to play Pong with you!",
+    "join_waitroom": "Join my waitroom",
+    "accept_match": "Accept the match",
+    "game_unreachable": "Error: Game server not reachable.",
+    "block_confirm": "Are you sure you want to block {{name}}?",
+    "block_success": "Conversation deleted (User blocked).",
+    "block_error": "Error while blocking",
+    "input_blocked": "You blocked this user.",
+    "tools": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough"
+    }
+  },
+
+  "data": {
+    "status": {
+      "available": "(Available)",
+      "busy": "(Busy)",
+      "away": "(Away)",
+      "invisible": "(Appear offline)"
+    },
+    "themes": {
+      "basic": "Classic Blue",
+      "bamboo": "Zen Bamboo",
+      "cherry": "Cherry Blossom",
+      "mountain": "Misty Mountains",
+      "punk": "Cyber Punk",
+      "dotted": "Spring Dots",
+      "sunset": "Golden Sunset",
+      "football": "Stadium",
+      "spring": "Spring Garden",
+      "love": "Lovely Heart",
+      "diary": "Dear Diary",
+      "branches": "Winter Branches",
+      "purple": "Purple Dreams",
+      "abstract": "Abstract Flow"
+    }
+  },
+
+  "friendList": {
+    "no_friends": "No friend yet",
+    "error_loading": "Error loading contacts",
+    "default_bio": "Share a quick message",
+    "game_disconnected": "Game is disconnected, please refresh",
+    "invite_sent": "Invitation sent to {{name}}",
+    "invite_toast": {
+      "title": "🎮 Game Invite",
+      "message": "{{name}} wants to play Pong!",
+      "accept": "Accept",
+      "decline": "Decline",
+      "error_lost": "Error: connection to server lost"
+    },
+    "search_placeholder_error": "Please enter a username or email",
+    "request_sent": "Friend request sent!",
+    "request_error": "Error sending request",
+    "network_error": "Network error",
+    "no_notifications": "No new notifications",
+    "wants_to_be_friend": "<span class=\"font-semibold\">{{name}}</span> wants to be your friend",
+    "actions": {
+      "accept": "Accept",
+      "decline": "Decline",
+      "block": "Block"
+    }
+  },
+
+  "friendProfileModal": {
+    "loading": "Loading...",
+    "no_bio": "No bio.",
+    "default_game": "Local"
+  },
+
+  "userProfile": {
+    "default_bio": "Share a quick message",
+    "bio_length_error": "Your message cannot exceed 70 characters. Stop talking!",
+    "avatar_error": "Error while saving avatar"
+  }
 }
