@@ -1,1 +1,5 @@
-./srcs/env
+.env
+.gitignore
+datadev/
+zdata.old/
+node_modules/
