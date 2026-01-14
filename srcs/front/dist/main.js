@@ -5916,7 +5916,7 @@
     profile: {
       title: "Profil",
       username: "Nom d'utilisateur",
-      bio: "Partagez un message rapide",
+      bio: "Partagez un message rapide avec les contacts",
       status: {
         available: "Disponible",
         busy: "Occup\xE9",
@@ -5974,7 +5974,7 @@
     loginPage: {
       welcome: "Se connecter \xE0 Transcendence",
       password: "Entrez votre mot de passe",
-      connect_as: "Se connecter en tant que",
+      connect_as: "Statut de connexion",
       status: {
         available: "Disponible",
         busy: "Occup\xE9",
@@ -6019,8 +6019,8 @@
       change_button: "Modifier",
       confirm_button: "Confirmer",
       back: "Retour \xE0 l'accueil",
-      bio: "Message rapide :",
-      placeholder_bio: "Partagez un message rapide",
+      bio: "Partagez un message rapide avec les contacts :",
+      placeholder_bio: "Partagez un message rapide avec les contacts",
       password: "Mot de passe :",
       placeholder_password: "Nouveau mot de passe",
       "2fa_button": "Activer la 2FA",
@@ -6106,7 +6106,7 @@
         "2fa_disable_confirm": "D\xE9sactiver la 2FA ?",
         "2fa_disabled": "2FA d\xE9sactiv\xE9e"
       },
-      bio_placeholder: "Partagez un court message",
+      bio_placeholder: "Partagez un message rapide avec les contacts",
       avatar_save_error: "Erreur lors de la sauvegarde de l'avatar"
     },
     dashboardPage: {
@@ -6385,7 +6385,7 @@
     friendList: {
       no_friends: "Pas encore d'amis",
       error_loading: "Erreur lors du chargement des contacts",
-      default_bio: "Partagez un message rapide",
+      default_bio: "Partagez un message rapide avec les contacts",
       game_disconnected: "Le jeu est d\xE9connect\xE9, veuillez actualiser",
       invite_sent: "Invitation envoy\xE9e \xE0 {{name}}",
       invite_toast: {
@@ -6413,7 +6413,7 @@
       default_game: "Local"
     },
     userProfile: {
-      default_bio: "Partagez un message rapide",
+      default_bio: "Partagez un message rapide avec les contacts",
       bio_length_error: "Votre message ne peut pas d\xE9passer 70 caract\xE8res. Arr\xEAtez de parler !",
       avatar_error: "Erreur lors de la sauvegarde de l'avatar"
     }
@@ -8034,14 +8034,17 @@
         if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
       });
     }
+    const display = document.getElementById("page-current-lang-display");
+    if (display) {
+      display.textContent = i18n_default.language.toUpperCase();
+    }
     document.querySelectorAll(".page-lang-select").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         const target = e.currentTarget;
         const lang = target.getAttribute("data-lang");
         if (lang) {
           await changeLanguage2(lang);
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       });
     });
@@ -11344,6 +11347,10 @@
   function setupPageLangDropdown() {
     const toggleBtn = document.getElementById("page-lang-toggle-btn");
     const menuContent = document.getElementById("page-lang-menu-content");
+    const display = document.getElementById("page-current-lang-display");
+    if (display) {
+      display.textContent = i18n_default.language.toUpperCase();
+    }
     if (toggleBtn && menuContent) {
       toggleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -11356,12 +11363,12 @@
       });
     }
     document.querySelectorAll(".page-lang-select").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", async (e) => {
         const target = e.currentTarget;
         const lang = target.getAttribute("data-lang");
         if (lang) {
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
+          await changeLanguage2(lang);
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       });
     });
@@ -11538,14 +11545,17 @@
         if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
       });
     }
+    const display = document.getElementById("page-current-lang-display");
+    if (display) {
+      display.textContent = i18n_default.language.toUpperCase();
+    }
     document.querySelectorAll(".page-lang-select").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         const target = e.currentTarget;
         const lang = target.getAttribute("data-lang");
         if (lang) {
           await changeLanguage2(lang);
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       });
     });

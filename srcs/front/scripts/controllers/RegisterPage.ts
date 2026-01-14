@@ -121,6 +121,7 @@ export function registerEvents() {
     //================================================
     //=============== LANGUAGE MANAGER ===============
     //================================================
+
     const toggleBtn = document.getElementById('page-lang-toggle-btn');
     const menuContent = document.getElementById('page-lang-menu-content');
     
@@ -133,16 +134,19 @@ export function registerEvents() {
             if (!menuContent.classList.contains('hidden')) menuContent.classList.add('hidden');
         });
     }
+
+    const display = document.getElementById('page-current-lang-display');
+    if (display) {
+        display.textContent = i18next.language.toUpperCase();
+    }
     
     document.querySelectorAll('.page-lang-select').forEach(btn => {
-        btn.addEventListener('click', async (e) => { // Ajout de async
+        btn.addEventListener('click', async (e) => {
             const target = e.currentTarget as HTMLElement;
             const lang = target.getAttribute('data-lang');
             if (lang) {
-                // MODIFICATION : Appel de changeLanguage pour appliquer le changement
                 await changeLanguage(lang);
-                const display = document.getElementById('page-current-lang-display');
-                if (display) display.textContent = lang.toUpperCase();
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }
         });
     });

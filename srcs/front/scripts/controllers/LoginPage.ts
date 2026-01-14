@@ -298,6 +298,11 @@ export function loginEvents() {
             if (!menuContent.classList.contains('hidden')) menuContent.classList.add('hidden');
         });
     }
+
+    const display = document.getElementById('page-current-lang-display');
+    if (display) {
+        display.textContent = i18next.language.toUpperCase();
+    }
     
     document.querySelectorAll('.page-lang-select').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -305,8 +310,7 @@ export function loginEvents() {
             const lang = target.getAttribute('data-lang');
             if (lang) {
                 await changeLanguage(lang);
-                const display = document.getElementById('page-current-lang-display');
-                if (display) display.textContent = lang.toUpperCase();
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }
         });
     });

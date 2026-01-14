@@ -1,6 +1,6 @@
 import { fetchWithAuth } from "../services/api";
 import htmlContent from "../pages/LandingPage.html"
-import i18next from "../i18n";
+import i18next, { changeLanguage } from "../i18n";
 
 export function render(): string {
     let html = htmlContent;
@@ -23,6 +23,11 @@ function setupPageLangDropdown() {
     const toggleBtn = document.getElementById('page-lang-toggle-btn');
     const menuContent = document.getElementById('page-lang-menu-content');
     
+	const display = document.getElementById('page-current-lang-display');
+    if (display) {
+        display.textContent = i18next.language.toUpperCase();
+    }
+
     if (toggleBtn && menuContent) {
         toggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -37,12 +42,12 @@ function setupPageLangDropdown() {
     }
 
     document.querySelectorAll('.page-lang-select').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             const target = e.currentTarget as HTMLElement;
             const lang = target.getAttribute('data-lang');
             if (lang) {
-                const display = document.getElementById('page-current-lang-display');
-                if (display) display.textContent = lang.toUpperCase();
+                await changeLanguage(lang);
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }
         });
     });
@@ -54,7 +59,7 @@ function setupPageLangDropdown() {
 
 export function initLandingPage() {
 	
-		setupPageLangDropdown();
+	setupPageLangDropdown();
 
 	const loginButton = document.getElementById('login-button');
 	const registerButton = document.getElementById('register-button');

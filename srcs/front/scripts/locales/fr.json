@@ -9,7 +9,7 @@
   "profile": {
     "title": "Profil",
     "username": "Nom d'utilisateur",
-    "bio": "Partagez un message rapide",
+    "bio": "Partagez un message rapide avec les contacts",
     "status": {
       "available": "Disponible",
       "busy": "Occupé",
@@ -73,7 +73,7 @@
   "loginPage": {
     "welcome": "Se connecter à Transcendence",
     "password": "Entrez votre mot de passe",
-    "connect_as": "Se connecter en tant que",
+    "connect_as": "Statut de connexion",
     "status": {
       "available": "Disponible",
       "busy": "Occupé",
@@ -120,8 +120,8 @@
     "change_button": "Modifier",
     "confirm_button": "Confirmer",
     "back": "Retour à l'accueil",
-    "bio": "Message rapide :",
-    "placeholder_bio": "Partagez un message rapide",
+    "bio": "Partagez un message rapide avec les contacts :",
+    "placeholder_bio": "Partagez un message rapide avec les contacts",
     "password": "Mot de passe :",
     "placeholder_password": "Nouveau mot de passe",
     "2fa_button": "Activer la 2FA",
@@ -207,7 +207,7 @@
       "2fa_disable_confirm": "Désactiver la 2FA ?",
       "2fa_disabled": "2FA désactivée"
     },
-    "bio_placeholder": "Partagez un court message",
+    "bio_placeholder": "Partagez un message rapide avec les contacts",
     "avatar_save_error": "Erreur lors de la sauvegarde de l'avatar"
   },
 
@@ -496,7 +496,7 @@
   "friendList": {
     "no_friends": "Pas encore d'amis",
     "error_loading": "Erreur lors du chargement des contacts",
-    "default_bio": "Partagez un message rapide",
+    "default_bio": "Partagez un message rapide avec les contacts",
     "game_disconnected": "Le jeu est déconnecté, veuillez actualiser",
     "invite_sent": "Invitation envoyée à {{name}}",
     "invite_toast": {
@@ -526,7 +526,7 @@
   },
 
   "userProfile": {
-    "default_bio": "Partagez un message rapide",
+    "default_bio": "Partagez un message rapide avec les contacts",
     "bio_length_error": "Votre message ne peut pas dépasser 70 caractères. Arrêtez de parler !",
     "avatar_error": "Erreur lors de la sauvegarde de l'avatar"
   }
