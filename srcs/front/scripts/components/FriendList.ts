@@ -3,14 +3,19 @@ import { getStatusDot, statusImages } from "./Data";
 import { fetchWithAuth } from "../services/api";
 import { Friendship } from '../../../back/user/src/repositories/friendships';
 
+import i18next from "../i18n"; // Import ok
+
+interface UnreadConversation {
+    channel_key: string,
+    sender_alias: string,
+    sender_id: number, 
+    unread_count: number,
+    last_msg_data: string;
+}
 export class FriendList {
     private container: HTMLElement | null;
     private userId: string | null;
     private notificationInterval: any = null;
-    // cass: 
-    // init() interval est appele a chaque fois auon va sur la HomePage
-    // ajouts car besoin de clean pour quil n'y ai pas plusieurs process 
-    // qui s'accumulent quand on change de page et quon revient sur la homePage
 
     constructor() {
         this.container = document.getElementById('contacts-list');
@@ -18,6 +23,7 @@ export class FriendList {
     }
 
     public init() {
+        console.log("[FriendList] Initializing..."); // LOG AJOUTÉ
         SocketService.getInstance().connectChat();
         SocketService.getInstance().connectGame();
         this.loadFriends();
@@ -30,12 +36,16 @@ export class FriendList {
 
         // setInterval(() => this.checkNotifications(), 30000);
 
-        // AJOUT
-        // nettoyer l'ancien si il existe
-        if (this.notificationInterval) clearInterval(this.notificationInterval);
 
-        // stocker l'id
+        if (this.notificationInterval) {
+            clearInterval(this.notificationInterval);
+        }
         this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
+
+        window.addEventListener('notificationUpdate', () => {
+            console.log("Friend received notification");
+            this.checkNotifications();
+        })
     }
 
     // AJOUT
@@ -44,28 +54,48 @@ export class FriendList {
             clearInterval(this.notificationInterval);
             this.notificationInterval = null;
         }
+
+        const chatSocket = SocketService.getInstance().getChatSocket();
+        if (chatSocket) {
+            chatSocket.off('chatMessage');
+            chatSocket.off('unreadNotification');
+            chatSocket.off('unreadStatus');
+        }
     }
 
     private registerSocketUser() {
-        // // const socket = SocketService.getInstance().socket;
-        // const socket = SocketService.getInstance().getChatSocket();
-        // const userId = this.userId;
-
-        // if (!socket || !userId) return;
-
-        // if (socket.connected) {
-        //     socket.emit('registerUser', userId);
-        // }
-
-        // socket.on('connect', () => {
-        //     socket.emit('registerUser', userId);
-        // });
-        const gameSocket = SocketService.getInstance().getGameSocket();
+        const socketService = SocketService.getInstance();
+        const chatSocket = socketService.getChatSocket();
+        const gameSocket = socketService.getGameSocket();
         const userId = this.userId;
 
-        if (gameSocket && gameSocket.connected)
-        {
-            gameSocket.emit('registerGameSocket', userId);
+        if (!userId) return;
+
+        if (chatSocket) {
+            const registerChat = () => {
+                console.log("[FriendList] Registering user on Chat Socket:", userId);
+                chatSocket.emit('registerUser', userId);
+                this.loadFriends();
+            };
+
+            if (chatSocket.connected) {
+                registerChat();
+            } else {
+                chatSocket.on('connect', registerChat);
+            }
+        }
+
+
+        if (gameSocket) {
+             const registerGame = () => {
+                 gameSocket.emit('registerGameSocket', userId);
+             };
+
+             if (gameSocket.connected) {
+                 registerGame();
+             } else {
+                 gameSocket.on('connect', registerGame);
+             }
         }
     }
 
@@ -85,7 +115,8 @@ export class FriendList {
             contactsList.innerHTML = '';
             
             if (!friendList || friendList.length === 0) {
-                contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+                // TRADUCTION
+                contactsList.innerHTML = `<div class="text-xs text-gray-500 ml-2">${i18next.t('friendList.no_friends')}</div>`;
                 return;
             }
 
@@ -103,7 +134,7 @@ export class FriendList {
                 const status = rawStatus.toLowerCase(); 
 
                 const friendItem = document.createElement('div');
-                friendItem.className = "friend-item flex items-center gap-3 p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition";
+                friendItem.className = "friend-item flex items-center justify-between p-2 rounded-sm hover:bg-gray-100 cursor-pointer transition relative";
 
                 friendItem.dataset.id = selectedFriend.id;
                 friendItem.dataset.friendshipId = friendship.id;
@@ -112,24 +143,60 @@ export class FriendList {
                 friendItem.dataset.alias = selectedFriend.alias;
                 
                 friendItem.dataset.status = status;
-                friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+                // TRADUCTION fallback bio
+                friendItem.dataset.bio = selectedFriend.bio || i18next.t('friendList.default_bio');
                 friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
                 
                 friendItem.innerHTML = `
-                    <div class="relative w-[50px] h-[50px] flex-shrink-0">
-                        <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[15px] h-[15px] object-cover"
+                <div class="flex items-center gap-4">
+                    <div class="relative w-[40px] h-[40px] flex-shrink-0">
+                         <img class="w-full h-full rounded-full object-cover border border-gray-200"
+                             src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
+                        
+                        <img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
                              src="${getStatusDot(status)}" alt="status">
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
                     </div>
+                </div>
+
+                <div id="badge-${selectedFriend.id}" 
+                     class="hidden bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md z-10"
+                     style="background-color: #dc2626; color: white;">
+                    1
+                </div>
                 `;
 
                 contactsList.appendChild(friendItem);
+
+                const chatSocket = SocketService.getInstance().getChatSocket();
+                if (chatSocket) {
+                    const myId = Number(this.userId);
+                    const id1 = Math.min(myId, selectedFriend.id);
+                    const id2 = Math.max(myId, selectedFriend.id);
+                    const channelKey = `${id1}-${id2}`;
+
+                    const check = () => {
+                        chatSocket.emit('checkUnread', { 
+                            channelKey: channelKey, 
+                            friendId: selectedFriend.id 
+                        });
+                    };
+
+                    if (chatSocket.connected) {
+                        check();
+                    } else {
+                        chatSocket.once('connect', check);
+                    }
+
+                }
                 
                 friendItem.addEventListener('click', (e) => {
                     // Si on clique sur le bouton inviter, on ne déclenche pas l'ouverture du chat ici
                     if ((e.target as HTMLElement).closest('.invite-btn')) return;
+
+                    this.clearNotifications(selectedFriend.id);
 
                     const event = new CustomEvent('friendSelected', { 
                         detail: { friend: selectedFriend, friendshipId: friendship.id } 
@@ -146,7 +213,26 @@ export class FriendList {
             });
         } catch (error) {
             console.error("Error loading friends:", error);
-            contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+            // TRADUCTION
+            contactsList.innerHTML = `<div class="text-xs text-red-400 ml-2">${i18next.t('friendList.error_loading')}</div>`;
+        }
+    }
+
+    private clearNotifications(friendId: number) {
+        const badge = document.getElementById(`badge-${friendId}`);
+        if (badge) {
+            badge.classList.add('hidden');
+            badge.innerText = '0';
+        }
+    }
+
+    private handleMessageNotification(senderId: number) {
+        console.log(`[FriendList] 🔴 Displaying badge for user ${senderId}`);
+        const badge = document.getElementById(`badge-${senderId}`);
+        if (badge) {
+            badge.classList.remove('hidden');
+        } else {
+            console.warn(`[FriendList] Badge element badge-${senderId} not found in DOM`);
         }
     }
 
@@ -157,7 +243,8 @@ export class FriendList {
 
         if (!gameSocket || !gameSocket.connected) 
         {
-            alert("Game is disconnected, please refresh");
+            // TRADUCTION
+            alert(i18next.t('friendList.game_disconnected'));
             SocketService.getInstance().connectGame();
             return ;
         }
@@ -168,17 +255,20 @@ export class FriendList {
             senderName: myName
         });
 
-        alert(`Invitation sent to ${friendName}`);
+        // TRADUCTION
+        alert(i18next.t('friendList.invite_sent', { name: friendName }));
     }
 
     private listenToUpdates() {
-        console.debug("listen to updates");
+
         const socketService = SocketService.getInstance();
         const chatSocket = socketService.getChatSocket();
         const gameSocket = socketService.getGameSocket();
 
-        if (!chatSocket) return;
-        
+        if (!chatSocket) {
+            return;
+        }
+
         chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
             this.updateFriendUI(data.username, data.status);
@@ -249,13 +339,19 @@ export class FriendList {
 
         const toast = document.createElement('div');
         toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
-        // changer l'emoji pour l'image du jeu 
+        
+        // TRADUCTIONS
+        const t_title = i18next.t('friendList.invite_toast.title');
+        const t_msg = i18next.t('friendList.invite_toast.message', { name: senderName });
+        const t_accept = i18next.t('friendList.invite_toast.accept');
+        const t_decline = i18next.t('friendList.invite_toast.decline');
+
         toast.innerHTML = `
-            <div class="font-bold text-gray-800">🎮 Game Invite</div> 
-            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="font-bold text-gray-800">${t_title}</div> 
+            <div class="text-sm text-gray-600">${t_msg}</div>
             <div class="flex gap-2 mt-2">
-                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
-                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">${t_accept}</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">${t_decline}</button>
             </div>
         `;
 
@@ -265,7 +361,8 @@ export class FriendList {
             const gameSocket = SocketService.getInstance().getGameSocket();
         
             if (!gameSocket || !gameSocket.connected) {
-                alert("Error: connexion to server lost");
+                // TRADUCTION
+                alert(i18next.t('friendList.invite_toast.error_lost'));
                 toast.remove();
                 return;
             }
@@ -339,7 +436,8 @@ export class FriendList {
                 setTimeout(() => {
                     friendToRemove.remove();
                     if (this.container && this.container.children.length === 0) {
-                        this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+                        // TRADUCTION
+                        this.container.innerHTML = `<div class="text-xs text-gray-500 ml-2">${i18next.t('friendList.no_friends')}</div>`;
                     }
                 }, 300);
             }
@@ -355,6 +453,9 @@ export class FriendList {
         const friendRequestMessage = document.getElementById('friend-request-message');
 
         if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
+            // Bloque la saisie utilisateur à 30 chars
+            friendSearchInput.maxLength = 30;
+            
             addFriendButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 addFriendDropdown.classList.toggle('hidden');
@@ -367,9 +468,17 @@ export class FriendList {
             const sendFriendRequest = async () => {
                 const searchValue = friendSearchInput.value.trim();
                 if (!searchValue) {
-                    this.showFriendMessage('Please enter a username or email', 'error', friendRequestMessage);
+                    // TRADUCTION
+                    this.showFriendMessage(i18next.t('friendList.search_placeholder_error'), 'error', friendRequestMessage);
                     return;
                 }
+                // Vérification avant envoi à l'API
+                if (searchValue.length > 30)
+                {
+                    this.showFriendMessage(i18next.t('friendList.error_input_too_long'), 'error', friendRequestMessage);
+                    return ;
+                }
+
                 const userId = localStorage.getItem('userId');
                 try {
                     const response = await fetchWithAuth(`/api/user/${userId}/friendships`, {
@@ -380,7 +489,8 @@ export class FriendList {
                     const data = await response.json();
     
                     if (response.ok) {
-                        this.showFriendMessage('Friend request sent!', 'success', friendRequestMessage);
+                        // TRADUCTION
+                        this.showFriendMessage(i18next.t('friendList.request_sent'), 'success', friendRequestMessage);
                         
                         const targetId = data.data.friend_id || data.data.friend?.id;
                         if (targetId) {
@@ -395,11 +505,16 @@ export class FriendList {
                             friendRequestMessage?.classList.add('hidden');
                         }, 1500);
                     } else {
-                        this.showFriendMessage(data.error.message || 'Error sending request', 'error', friendRequestMessage);
+                        // on essaie de traduire la cle recue du backend, sinon message generique
+                        const backendErrorKey = data.error?.message;
+                        const displayMessage = backendErrorKey ? i18next.t(backendErrorKey) : i18next.t('friendList.request_error');
+                        // TRADUCTION fallback
+                        this.showFriendMessage(displayMessage, 'error', friendRequestMessage);
                     }
                 } catch (error) {
                     console.error('Error:', error);
-                    this.showFriendMessage('Network error', 'error', friendRequestMessage);
+                    // TRADUCTION
+                    this.showFriendMessage(i18next.t('friendList.network_error'), 'error', friendRequestMessage);
                 }
             };
     
@@ -457,65 +572,117 @@ export class FriendList {
         if (!userId || !notifList) return;
 
         try {
-            const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-            if (!response.ok) throw new Error('Failed to fetch pendings');
+            // 1. Récupération des données (Chat + Amis)
+            const [friendsRes, chatRes] = await Promise.all([
+                fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
+                fetchWithAuth(`/api/chat/unread`) // Via API Gateway -> Chat Service
+            ]);
 
-            const requests = await response.json();
-            const pendingList = requests.data;
-            const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+            let pendingList: Friendship[] = [];
+            let unreadMessages: any[] = [];
+
+            if (friendsRes.ok) {
+                const data = await friendsRes.json();
+                pendingList = data.data || [];
+            }
+
+            if (chatRes.ok) {
+                const data = await chatRes.json();
+                unreadMessages = data.data || [];
+            }
+
+            // =========================================================
+            // PARTIE 1 : GESTION DES MESSAGES (BADGES SUR LA LISTE D'AMIS)
+            // =========================================================
             
-            if (pendingList.length > 0) {
+            // A. D'abord, on cache TOUS les badges existants pour éviter les erreurs
+            const allBadges = document.querySelectorAll('[id^="badge-"]');
+            allBadges.forEach(b => {
+                b.classList.add('hidden');
+                b.innerText = '0';
+            });
+
+            // B. Ensuite, on affiche seulement ceux qui ont des messages
+            unreadMessages.forEach((msg) => {
+                // On cherche le badge correspondant à l'ID de l'envoyeur
+                const badge = document.getElementById(`badge-${msg.sender_id}`);
+                
+                if (badge) {
+                    badge.classList.remove('hidden');
+                    badge.innerText = msg.unread_count.toString();
+                    
+                    // Optionnel : Ajouter une animation visuelle
+                    badge.classList.add('animate-pulse'); 
+                }
+            });
+
+            // =========================================================
+            // PARTIE 2 : GESTION DES DEMANDES D'AMIS (MENU DÉROULANT)
+            // =========================================================
+
+            // Mise à jour de l'icône de la cloche (Uniquement pour les demandes d'amis maintenant ?)
+            // Si vous voulez que la cloche s'allume AUSSI pour les messages, ajoutez + unreadMessages.length
+            const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+            const totalNotifs = pendingList.length; // + unreadMessages.length; (Décommentez si vous voulez que la cloche sonne aussi pour les chats)
+
+            if (totalNotifs > 0) {
                 if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
             } else {
                 if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
             }
 
+            // Remplissage de la liste déroulante (Uniquement demandes d'amis)
             notifList.innerHTML = '';
+            
             if (pendingList.length === 0) {
-                notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
-                return;
+                // S'il n'y a pas de demande d'ami
+                notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18next.t('friendList.no_notifications')}</div>`;
+            } else {
+                // S'il y a des demandes d'amis, on les affiche
+                pendingList.forEach((req: Friendship) => {
+                    const item = document.createElement('div');
+                    item.dataset.friendshipId = req.id.toString();
+                    item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+
+                    const reqMessage = i18next.t('friendList.wants_to_be_friend', { name: req.user?.alias });
+                    const t_accept = i18next.t('friendList.actions.accept');
+                    const t_decline = i18next.t('friendList.actions.decline');
+                    const t_block = i18next.t('friendList.actions.block');
+
+                    item.innerHTML = `
+                        <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                            <img src="/assets/basic/logo.png" class="w-full h-full object-cover rounded" alt="avatar">
+                        </div>
+                        <div class="flex-1 min-w-0 pr-4">
+                            <p class="text-sm text-gray-800">${reqMessage}</p>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
+                                <span class="text-green-600 font-bold text-sm">✓</span>
+                            </button>
+                            <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
+                                <span class="text-red-600 font-bold text-sm">✕</span>
+                            </button>
+                            <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
+                                <span class="text-gray-600 text-xs">🚫</span>
+                            </button>
+                        </div>
+                    `;
+                    
+                    const buttonAccept = item.querySelector('.btn-accept');
+                    const buttonReject = item.querySelector('.btn-reject');
+                    const buttonBlock  = item.querySelector('.btn-block');
+
+                    if (req.user && req.user.id) {
+                        buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'validated', item); });
+                        buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'rejected', item); });
+                        buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'blocked', item); });
+                    }
+
+                    notifList.appendChild(item);
+                });
             }
 
-            pendingList.forEach((req: Friendship) => {
-                const item = document.createElement('div');
-                item.dataset.friendshipId = req.id.toString();
-                item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-
-                item.innerHTML = `
-                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                        <img src="/assets/basic/logo.png" 
-                            class="w-full h-full object-cover rounded"
-                            alt="avatar">
-                    </div>
-                    <div class="flex-1 min-w-0 pr-4">
-                        <p class="text-sm text-gray-800">
-                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
-                        </p>
-                    </div>
-                    <div class="flex gap-2 flex-shrink-0">
-                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
-                            <span class="text-green-600 font-bold text-sm">✓</span>
-                        </button>
-                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
-                            <span class="text-red-600 font-bold text-sm">✕</span>
-                        </button>
-                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
-                            <span class="text-gray-600 text-xs">🚫</span>
-                        </button>
-                    </div>
-                `;
-                const buttonAccept = item.querySelector('.btn-accept');
-                const buttonReject = item.querySelector('.btn-reject');
-                const buttonBlock  = item.querySelector('.btn-block');
-
-                if (req.user && req.user.id) {
-                    buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'validated', item); });
-                    buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'rejected', item); });
-                    buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'blocked', item); });
-                }
-
-                notifList.appendChild(item);
-            });
         } catch (error) {
             console.error("Error fetching notifications:", error);
         }

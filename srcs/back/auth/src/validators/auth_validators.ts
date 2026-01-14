@@ -4,6 +4,7 @@ import { ValidationError} from '../utils/error.js';
 export function isValidPassword(pwd: string): boolean 
 {
     const hasMinLength: boolean = pwd.length >= 8;
+    const isNotTooLong: boolean = pwd.length <= 128;
     const hasLowerCase: boolean = /[a-z]/.test(pwd);
     const hasUpperCase: boolean = /[A-Z]/.test(pwd);
     const hasDigit: boolean = /[0-9]/.test(pwd);
@@ -13,7 +14,7 @@ export function isValidPassword(pwd: string): boolean
     if (pwd.length <= 72)
         maxLengthOK = true;
 
-    return hasMinLength && hasLowerCase && hasUpperCase && hasDigit && hasSpecialChar && maxLengthOK;
+    return hasMinLength && isNotTooLong && hasLowerCase && hasUpperCase && hasDigit && hasSpecialChar && maxLengthOK;
 }
 
 export function validateRegisterInput(body: any) 
@@ -43,7 +44,12 @@ export function validateNewEmail(body: any)
     {
         console.log("body email n'existe pas");
         throw new ValidationError('Missing required field');
-    }    
+    }
+    
+    if (body.email.length > 254)
+    {
+        throw new ValidationError('Email address not supported. Too long');
+    }
     if (!validator.isEmail(body.email))
     {
         console.log("email ne ressemble pas à un email");

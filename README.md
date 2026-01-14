@@ -38,7 +38,8 @@ docker compose version
 ### Installation
 ```bash
 # 1. Cloner le projet
-git clone https://github.com/acvdm/42_ft_transcendence.git
+git clone https://github.com/acvdm/42_ft_transcendence.git transcendence
+cd transcendence
 
 # 2. Lancer les services
 Make
@@ -48,6 +49,11 @@ docker ps
 ```
 
 L'application est disponible sur https://localhost:8443
+
+### Script de création de match pour un user déjà créé
+```bash
+make add_stats user=<username>
+```
 
 ### Arrêter l'application
 ```bash
@@ -68,3 +74,9 @@ docker logs <nom_du_docker>
 # Entrer dans un docker
 docker exec -it <nom_du_docker> sh
 ```
+
+
+## Architecture du projet
+
+![architecture](/schema/architecture.png)
+

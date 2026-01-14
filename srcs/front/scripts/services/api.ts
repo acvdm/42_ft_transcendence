@@ -46,6 +46,21 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
     // Initial try
     let response = await fetch(url, getConfigWithAuth(token, options));
 
+    const userId = localStorage.getItem('userId');
+
+    if (response.status === 404 && userId && url.includes(userId)) {
+        console.warn("Cannot find user. Launching immediat deconnection");
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('username');
+        localStorage.removeItem('userStatus');
+        sessionStorage.clear();
+
+        window.history.pushState({}, '', '/');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+
+        return response;
+    }
     // Expiration management with mutex
     if (response.status === 401) {
         console.warn(`401 detected for ${url}`);

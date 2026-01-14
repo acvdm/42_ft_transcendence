@@ -10,7 +10,8 @@ export interface Credential {
     twoFaSecret: string | null;
     twoFaMethod: string;
     emailOtp: string | null;
-    emailOtpExpiresAt: string | null; 
+    emailOtpExpiresAt: string | null;
+    preferredLanguage: string;
     createdAt: string;
 }
 
@@ -202,18 +203,7 @@ export async function getAuthDataForExport(
     }
 }
 
-/* MODIFIER LA METHODE POUR RECUP NONE APP OU EMAIL */
-// export async function is2FAEnabled(
-//     db: Database,
-//     user_id: number
-// ): Promise<boolean>
-// {
-//     const row = await db.get(`
-//         SELECT is_2fa_enabled FROM CREDENTIALS WHERE user_id = ?`,
-//         [user_id]
-//     );
-//     return row?.is_2fa_enabled === 1;
-// }
+
 
 //-------- PUT / UPDATE
 
@@ -333,3 +323,5 @@ export async function deleteCredentialsByUserId(
         [userId]
     );
 }
+
+

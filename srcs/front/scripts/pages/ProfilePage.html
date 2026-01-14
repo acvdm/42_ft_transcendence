@@ -7,7 +7,7 @@
     <div class="min-h-screen flex items-center justify-center">
         <div class="window" style="width:900px; margin-top:-100px;">
             <div class="title-bar">
-                <div class="title-bar-text">Profile</div>
+                <div class="title-bar-text">{{profilePage.window_profile}}</div>
                 <div class="title-bar-controls">
                     <button aria-label="Minimize"></button>
                     <button aria-label="Maximize"></button>
@@ -23,7 +23,7 @@
                         <div class="flex flex-row gap-6 w-full">
                             
                             <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
-                                <h1 class="theme-label text-lg font-normal mb-4 text-gray-700">My profile</h1>
+                                <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700">{{profilePage.my_profile}}</h1>
 
                                 <div class="relative w-[170px] h-[170px] mb-3">
                                     <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
@@ -63,46 +63,54 @@
 
                                 <div class="w-full px-4 mb-4 mt-4">
                                     <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
-                                        <label class="text-xs text-gray-500 pl-1">Status:</label>
+                                        <label class="text-xs text-gray-500 pl-1">{{profilePage.my_status}}</label>
                                         <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
-                                            <option>Available</option>
-                                            <option selected>Busy</option>
-                                            <option>Away</option>
-                                            <option>Appear offline</option>
+                                            <option>{{profilePage.status.available}}</option>
+                                            <option selected>{{profilePage.status.busy}}</option>
+                                            <option>{{profilePage.status.away}}</option>
+                                            <option>{{profilePage.status.offline}}</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="text-sm text-center w-full leading-6 mt-2">
-                                    <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
-                                    <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
+                                    <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>{{profilePage.fallback_username}}</strong></p>
+                                    <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">{{profilePage.fallback_bio}}</p>
                                 </div>
                             </div>
                 
                             <div class="flex flex-col justify-between flex-1">
                                 <div class="flex flex-col gap-4">
 
-                                    <label class="theme-label text-sm">Username:</label>
+                                    <label class="theme-label text-sm">{{profilePage.username}}</label>
                                     <div class="flex flex-row gap-2" data-field="alias">
-                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
-                                        <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">{{profilePage.fallback_username}}</p>
+                                        <input type="text" value="" placeholder="{{profilePage.placeholder_username}}" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
                                         
-                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>
                                     </div>
 
-                                    <label class="theme-label text-sm">Share a quick message:</label>
+                                    <label class="theme-label text-sm">{{profilePage.bio}}</label>
                                     <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
-                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
+                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">{{profilePage.placeholder_bio}}</p>
                                         <input
                                             type="text"
                                             value=""
-                                            placeholder="Share a quick message"
+                                            placeholder="{{profilePage.placeholder_bio}}"
                                             class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"
                                             style="width:350px; overflow: hidden;" disabled/>
                                         <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>
                                     </div>
                                 </div>
                 
@@ -110,20 +118,28 @@
                                     <div class="flex flex-col gap-4">
                                         <label class="theme-label text-sm">Email:</label>
                                         <div class="flex flex-row gap-2" data-field="email">
-                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
+                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">{{profilePage.fallback_username}}</p>
                                             <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
                                             
-                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>
                                         </div>
 
-                                        <label class="theme-label text-sm">Password:</label>
+                                        <label class="theme-label text-sm">{{profilePage.password}}</label>
                                         <div class="flex flex-row gap-2" data-field="password">
-                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
-                                            <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
+                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">{{profilePage.fallback_username}}</p>
+                                            <input type="password" value="" placeholder="{{profilePage.placeholder_password}}" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
                                             
-                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
+                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>
+                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -132,58 +148,40 @@
                         <div class="flex flex-row justify-center items-center gap-4 w-full border-t border-gray-200 pt-4" style="padding-top: 25px;">
                             <button id="2fa-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                     px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Enable 2FA authentication</button>
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.2fa_button}}</button>
                             <button id="download-data-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                     px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Download personal data</button>
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.download_button}}</button>
                             <button id="delete-account-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                     px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold" style="color: #DC2626;">Delete my account</button>
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold" style="color: #DC2626;">{{profilePage.delete_button}}</button>
                         </div>
 
                     </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
-                        <h1 class="theme-label text-lg font-normal mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
+                        <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700 border-b border-gray-200 pb-2">{{profilePage.game_stats}}</h1>
 
                         <div class="grid grid-cols-4 gap-4 mb-8">
                             <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
-                                <span class="theme-label text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
+                                <span class="theme-label text-gray-500 text-xs uppercase tracking-wider font-semibold">{{profilePage.game_played}}</span>
                                 <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
                             </div>
                             
                             <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">{{profilePage.wins}}</span>
                                 <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
+                                <span class="theme-label text-red-600 text-xs uppercase tracking-wider font-semibold">{{profilePage.losses}}</span>
                                 <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
                             <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Average score</span>
-                                <span id="stats-average-score" class="text-3xl font-bold text-red-700 mt-1">0</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
+                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">{{profilePage.winning_streak}}</span>
                                 <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
                             </div>
 
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Win rate</span>
-                                <span id="stats-win-rate" class="text-3xl font-bold text-blue-700 mt-1">0%</span>
-                            </div>
 
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Biggest opponent</span>
-                                <span id="stats-opponent" class="text-3xl font-bold text-blue-700 mt-1">xxxx</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-blue-50/50 border border-blue-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-blue-600 text-xs uppercase tracking-wider font-semibold">Favorite type of game</span>
-                                <span id="stats-fav-game" class="text-3xl font-bold text-blue-700 mt-1">Local</span>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -194,7 +192,7 @@
         <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
     <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
         <div class="title-bar">
-            <div class="title-bar-text">Two-Factor Authentication</div>
+            <div class="title-bar-text">{{profilePage.2fa_modal.title}}</div>
             <div class="title-bar-controls">
                 <button id="close-2fa-modal" aria-label="Close"></button>
             </div>
@@ -204,15 +202,15 @@
             
             <div id="method-selection" class="flex flex-col gap-4 items-center">
                 <div class="text-center mb-2 border-b border-gray-500 p-4">
-                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
-                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
+                    <h2 class="text-lg font-bold mb-2">{{profilePage.2fa_modal.choose_method}}</h2>
+                    <p class="text-xs text-gray-600">{{profilePage.2fa_modal.message_method}}</p>
                 </div>
                 
                 <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <h3 class="font-bold text-sm text-center">Authenticator App</h3>
-                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
+                            <h3 class="font-bold text-sm text-center">{{profilePage.2fa_modal.authenticator}}</h3>
+                            <p class="text-xs text-gray-600">{{profilePage.2fa_modal.message_authenticator}}</p>
                         </div>
                     </div>
                 </div>
@@ -220,8 +218,8 @@
                 <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
                     <div class="flex items-center gap-3">
                         <div class="flex-1">
-                            <h3 class="font-bold text-sm text-center">Email Verification</h3>
-                            <p class="text-xs text-gray-600">Receive codes via email</p>
+                            <h3 class="font-bold text-sm text-center">{{profilePage.2fa_modal.email_verif}}</h3>
+                            <p class="text-xs text-gray-600">{{profilePage.2fa_modal.message_email_verif}}</p>
                         </div>
                     </div>
                 </div>
@@ -229,8 +227,8 @@
 
             <div id="qr-content" class="hidden flex-col items-center gap-4">
                 
-                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
-                    <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
+                <div class="text-center"> <h2 class="text-lg font-bold mb-2">{{profilePage.2fa_modal.qr_code}}</h2>
+                    <p class="text-xs text-gray-600 mb-4">{{profilePage.2fa_modal.message_qr_code}}</p>
                 </div>
 
                 <div class="border border-gray-300 p-2 bg-white shadow-inner">
@@ -238,7 +236,7 @@
                 </div>
 
                 <div class="w-full flex flex-col gap-2 mt-2">
-                    <label class="text-sm">Enter the 6-digit code:</label>
+                    <label class="text-sm">{{profilePage.2fa_modal.6_digit}}</label>
                     <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" 
                            class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
                 </div>
@@ -246,13 +244,15 @@
                 <div class="flex justify-center gap-4 mt-4 w-full">
                     <button id="confirm-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
-                        VALIDATE
+                                    px-4 py-1 text-sm shadow-sm p-2 font-semibold hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">
+                        {{profilePage.2fa_modal.validate}}
                     </button>
                     <button id="cancel-2fa-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-                        CANCEL
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">
+                        {{profilePage.2fa_modal.cancel}}
                     </button>
                 </div>
             </div>
@@ -260,12 +260,12 @@
             <div id="email-content" class="hidden flex-col items-center gap-4">
                 
                 <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
-                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
+                    <h2 class="text-lg font-bold mb-2">{{profilePage.2fa_modal.email_verif}}</h2>
+                    <p class="text-xs text-gray-600 mb-4">{{profilePage.2fa_modal.verif_email}}</p>
                 </div>
                 
                 <div class="w-full flex flex-col gap-2">
-                    <label class="text-sm">Code will be sent to:</label>
+                    <label class="text-sm">{{profilePage.2fa_modal.message_verif_email}}</label>
                     <input type="email" id="2fa-email-input" 
                         class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
                         disabled 
@@ -273,18 +273,22 @@
                 </div>
                 
                 <button id="send-code-button" 
-                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
-                    SEND CODE
+                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">
+                    {{profilePage.2fa_modal.code_send}}
                 </button>
                 
                 <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
-                    <label class="text-sm">Enter code received:</label>
+                    <label class="text-sm">{{profilePage.2fa_modal.code_received}}</label>
                     <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
                            class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
                     
                     <button id="confirm-2fa-email" 
-                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
-                        VALIDATE
+                            class="bg-gradient-to-b from-gray-100 font-semibold to-gray-300 border border-gray-400 rounded-sm 
+                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
+                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">
+                        {{profilePage.2fa_modal.validate}}
                     </button>
                 </div>
             </div>
@@ -296,7 +300,7 @@
         <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-text">{{profilePage.picture_modal.title}}</div>
                 <div class="title-bar-controls">
                     <button aria-label="Minimize"></button>
                     <button aria-label="Maximize"></button>
@@ -305,8 +309,8 @@
             </div>
             <div class="window-body p-6">
                 <div class="mb-6">
-                    <h2 class="text-xl mb-1">Select a picture</h2>
-                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                    <h2 class="text-xl mb-1">{{profilePage.picture_modal.select_pic}}</h2>
+                    <p class="text-gray-500 text-sm">{{profilePage.picture_modal.message_select}}</p>
                 </div>
                 
                 <div class="flex flex-row gap-6">
@@ -349,14 +353,14 @@
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            BROWSE
+                            {{profilePage.picture_modal.browse}}
                             </button>
                             
                             <button id="delete-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            DELETE
+                            {{profilePage.picture_modal.delete}}
                             </button>
 
                             <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
@@ -364,13 +368,13 @@
                                         class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                             px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                             active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        OK
+                                        {{profilePage.picture_modal.ok}}
                                 </button>
                                 <button id="cancel-button" 
                                         class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                             px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                             active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        CANCEL
+                                        {{profilePage.picture_modal.cancel}}
                                 </button>
                             </div>
                         </div>
@@ -385,7 +389,7 @@
         <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
             
             <div class="title-bar flex-none">
-                <div class="title-bar-text">Select a Theme</div>
+                <div class="title-bar-text">{{profilePage.theme_modal.title}}</div>
                 <div class="title-bar-controls">
                     <button id="close-theme-modal" aria-label="Close"></button>
                 </div>
@@ -404,64 +408,57 @@
     <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Change password</div>
+                <div class="title-bar-text">{{profilePage.password_modal.title}}</div>
                 <div class="title-bar-controls">
                     <button id="close-password-modal" aria-label="Close"></button>
                 </div>
             </div>
             <div class="window-body p-6 flex flex-col gap-4 items-center">
-                <h2 class="text-lg font-bold mb-2">Change Password</h2>
+                <h2 class="text-lg font-bold mb-2">{{profilePage.password_modal.title}}</h2>
 
                 <div class="flex flex-col gap-1">
-                    <label class="text-sm text-gray-600">Current Password:</label>
+                    <label class="text-sm text-gray-600">{{profilePage.password_modal.current_pwd}}</label>
                     <input type="password" id="pwd-current" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label class="text-sm text-gray-600">New Password:</label>
+                    <label class="text-sm text-gray-600">{{profilePage.password_modal.new_pwd}}</label>
                     <input type="password" id="pwd-new" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
                 </div>
 
                 <div class="flex flex-col gap-1">
-                    <label class="text-sm text-gray-600">Confirm New Password:</label>
+                    <label class="text-sm text-gray-600">{{profilePage.password_modal.confirm_pwd}}</label>
                     <input type="password" id="pwd-confirm" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
                 </div>
 
                 <p id="pwd-error" class="text-red-500 text-xs hidden"></p>
 
                 <div class="flex justify-end gap-2 mt-4">
-                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Save</button>
-                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
+                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.password_modal.save}}</button>
+                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.password_modal.cancel}}</button>
                 </div>
             </div>
         </div>
     </div>
 
 
-    <!------------------------ DELETE CONFIRMATION MODALE -->
-
     <div id="delete-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Delete my account</div>
+                <div class="title-bar-text">{{profilePage.delete_modal.title}}</div>
                 <div class="title-bar-controls">
                     <button id="close-delete-modal" aria-label="Close"></button>
                 </div>
             </div>
             <div class="window-body p-6 flex flex-col gap-4 items-center justify-center">
-                <h2 class="text-lg font-bold mb-2 text-red-600 text-center">Are you sure you want to delete your account?</h2>
-                <p>This action will be irreversible.</p>
+                <h2 class="text-lg font-bold mb-2 text-red-600 text-center">{{profilePage.delete_modal.confirm_delete}}</h2>
+                <p>{{profilePage.delete_modal.confirm_message}}</p>
 
                 <div class="flex justify-end gap-2 mt-4">
-                    <button id="confirm-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Yes, delete my account</button>
-                    <button id="cancel-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
+                    <button id="confirm-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.delete_modal.yes}}</button>
+                    <button id="cancel-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.delete_modal.cancel}}</button>
                 </div>
             </div>
         </div>
     </div>
-
-
-
-
-    
 </div>

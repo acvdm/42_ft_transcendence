@@ -1,8 +1,10 @@
+// srcs/front/scripts/components/Chat.ts
 import SocketService from "../services/SocketService";
 import { emoticons, animations, icons } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import { fetchWithAuth } from "../services/api";
 import { Socket } from "socket.io-client";
+import i18next from "../i18n"; // IMPORT
 
 export class Chat {
     private chatSocket: Socket | null = null;
@@ -14,11 +16,18 @@ export class Chat {
     private currentFriendshipId: number | null = null;
     private currentFriendId: number | null = null;
     private shakeTimeout: number | undefined;
+    private unreadChannels: Set<string> = new Set();
 
     constructor() {
         this.messagesContainer = document.getElementById('chat-messages');
         this.messageInput = document.getElementById('chat-input') as HTMLInputElement;
         this.wizzContainer = document.getElementById('wizz-container');
+
+        // Bloque la saisie des message à 5000 chars
+        if (this.messageInput)
+        {
+            this.messageInput.maxLength = 5000;
+        }
     }
 
     public init() {
@@ -46,6 +55,14 @@ export class Chat {
     
 
     public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
+        if (this.currentChannel && this.currentChannel !==channelKey) {
+            if (this.chatSocket)
+            {
+                console.log(`Leaving channel: ${this.currentChannel}`);
+                this.chatSocket.emit("leaveChannel", this.currentChannel);
+            }
+        }
+        
         this.currentChannel = channelKey;
         this.currentFriendshipId = friendshipId || null;
         this.currentFriendId = friendId || null;
@@ -56,6 +73,21 @@ export class Chat {
         if (this.messagesContainer) {
             this.messagesContainer.innerHTML = '';
         }
+
+        if (this.unreadChannels.has(channelKey)) {
+            this.unreadChannels.delete(channelKey);
+
+            const friendElement = document.getElementById(`friend-item-${channelKey}`);
+            if (friendElement) {
+                const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
+                // Remettre l'icône de statut par défaut (il faudra passer le vrai statut ici idéalement)
+                if (notifIcon) notifIcon.src = '/assets/basic/status_online_small.png'; 
+                friendElement.classList.remove('font-bold', 'text-white');
+            }
+        }
+        if (this.chatSocket) {
+            this.chatSocket.emit("markRead", channelKey)
+        }
     }
 
     // ---------------------------------------------------
@@ -64,11 +96,23 @@ export class Chat {
 
     private setupSocketEvents() {
         this.chatSocket.on("connect", () => {
-            this.addMessage("You can now chat with your friend!", "System");
+            // MODIFIE ICI
+            this.addMessage(i18next.t('chatComponent.connected'), i18next.t('chatComponent.system'));
         });
 
-        this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string }) => {
-            this.addMessage(data.msg_content, data.sender_alias);
+        this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string, sender_id: number }) => {
+            if (data.channelKey === this.currentChannel) {
+                this.addMessage(data.msg_content, data.sender_alias);
+                this.chatSocket.emit("markRead", data.channelKey);
+            } else {
+                const myId = Number(localStorage.getItem('userId') || sessionStorage.getItem('userId'));
+                const ids = data.channelKey.split('-').map(Number);
+                const friendId = ids.find(id => id !== myId);
+                
+                if (friendId) {
+                    this.handleUnreadMessage(friendId);
+                }
+            }
         });
 
         this.chatSocket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
@@ -95,7 +139,8 @@ export class Chat {
             }
             
             const currentUser = localStorage.getItem('username');
-            this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
+            // MODIFIE ICI
+            this.addMessage(i18next.t('chatComponent.nudge_sent', { author: data.author }), i18next.t('chatComponent.system'));
 
             if (data.author !== currentUser) {
                 this.shakeElement(this.wizzContainer, 3000);
@@ -116,18 +161,36 @@ export class Chat {
                 `;
                 this.addCustomContent(animationHTML);
             } else {
-                this.addMessage(`Animation inconnue (${animationKey}) reçue de ${author}.`, "Système");
+                // MODIFIE ICI
+                this.addMessage(
+                    i18next.t('chatComponent.animation_unknown', { key: animationKey, author: author }), 
+                    i18next.t('chatComponent.system')
+                );
             }
         });
 
         this.chatSocket.on("disconnected", () => {
-            this.addMessage("Disconnected from chat server!", "System");
+            // MODIFIE ICI
+            this.addMessage(i18next.t('chatComponent.disconnected'), i18next.t('chatComponent.system'));
         });
     }
 
-    // ---------------------------------------------------
-    // ----           GESTION DE L'INPUT              ----
-    // ---------------------------------------------------
+
+    //================================================
+    //============= READ/UNREAD MESSAGES =============
+    //================================================
+
+    private handleUnreadMessage(friendId: number | string) {
+        const badge = document.getElementById(`badge-${friendId}`);
+        if (badge) {
+            badge.classList.remove('hidden');
+        }
+    }
+
+
+    //================================================
+    //=============== INPUT MANAGEMENT ===============
+    //================================================
 
     private setupInputListeners() {
         if (!this.messageInput) {
@@ -138,8 +201,14 @@ export class Chat {
             if (event.key == 'Enter' && this.messageInput?.value.trim() != '') {
                 
                 const msg_content = this.messageInput.value;
-                const sender_alias = localStorage.getItem('username');
-                const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+
+                if (msg_content.length > 5000)
+                {
+                    this.addSystemMessage(i18next.t('chatComponent.error_message_too_long'));
+                    return ;
+                }
+                const sender_alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || i18next.t('gamePage.default_guest');
+                const sender_id = Number.parseInt(localStorage.getItem('userId') || sessionStorage.getItem('userId') || "0");
                 
                 this.chatSocket.emit("chatMessage", {
                     sender_id: sender_id,
@@ -160,7 +229,7 @@ export class Chat {
         const wizzButton = document.getElementById('send-wizz');
         if (wizzButton) {
             wizzButton.addEventListener('click', () => {
-                const currentUsername = localStorage.getItem('username');
+                const currentUsername = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
                 this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
                 this.shakeElement(this.wizzContainer, 500);
             });
@@ -171,7 +240,7 @@ export class Chat {
         if (!this.chatSocket) {
             return;
         }
-        const currentUsername = localStorage.getItem('username');
+        const currentUsername = localStorage.getItem('username')  || sessionStorage.getItem('cachedAlias');
         this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
     }
 
@@ -221,7 +290,8 @@ export class Chat {
     }
     
     public addSystemMessage(message: string) {
-        this.addMessage(`[b]${message}[/b]`, "System");
+        // MODIFIE ICI
+        this.addMessage(`[b]${message}[/b]`, i18next.t('chatComponent.system'));
     }
 
 //faustine
@@ -237,32 +307,46 @@ export class Chat {
         if (match) {
             // invitation
             const friendshipId = match[1];
-            const isMe = author === localStorage.getItem('username');
+            // TRADUCTION fallback
+            const myUsername = localStorage.getItem('username') || sessionStorage.getItem('username') || i18next.t('gamePage.default_guest');
+            const isMe = author === myUsername;
             
             // style different selon qui invite
             msgElement.classList.add(isMe ? 'bg-blue-100' : 'bg-green-100');
 
+            // MODIFIE ICI : TRADUCTION DES TEXTES D'INVITATION
+            const textInvite = i18next.t('chatComponent.game_invite', { author: author });
+            const btnText = isMe ? i18next.t('chatComponent.join_waitroom') : i18next.t('chatComponent.accept_match');
+
             //on store le private id dans session storage pour qu'il soit pas garde quand on rejoins une autre roo,
             msgElement.innerHTML = `
                 <div class="flex flex-col gap-2">
-                    <strong>${author}</strong> veut jouer à Pong ! 🏓<br>
+                    <strong>${textInvite}</strong> <br>
+
                     <button 
-                        class="bg-blue-500 hover:bg-blue-600 text-black font-bold py-1 px-3 rounded shadow-md text-xs transition-transform transform active:scale-95"
-                        onclick="
-                            sessionStorage.setItem('privateGameId', '${friendshipId}'); 
-                            window.history.pushState({ gameMode: 'remote' }, '', '/game');
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                        "
+                        id="join-${friendshipId}"
+                        class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
                     >
-                        ${isMe ? 'Join my waitroom' : 'Accept the match'}
+                        ${btnText}
                     </button>
                 </div>
             `;
+            
+            const joinButton = msgElement.querySelector(`#join-${friendshipId}`) as HTMLButtonElement;
+
+            joinButton?.addEventListener('click', () => {
+                sessionStorage.setItem('privateGameId', friendshipId);
+                window.history.pushState({ gameMode: 'remote' }, '', '/game');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            });
+
         } else {
             // pour envoyer un message normal
             msgElement.classList.add('bg-white'); // ou transparent a tester
             const contentEmoticons = parseMessage(message);
-            msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+            msgElement.innerHTML = `<strong>${author}:</strong><br> ${contentEmoticons}`;
         }
 
         this.messagesContainer.appendChild(msgElement);
@@ -356,7 +440,7 @@ export class Chat {
                 // clic sur l'anumation
                 animationItem.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const currentUsername = localStorage.getItem('username');
+                    const currentUsername = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
                     // envoi de l'animation via la sockettt
 
                     this.chatSocket.emit("sendAnimation", {
@@ -403,12 +487,12 @@ export class Chat {
                 fontGrid.appendChild(colorButton);
             });
 
-            // poiyur les styles de police
+            // poiyur les styles de police (MODIFIE ICI)
             const styles = [
-                { tag: 'b', icon: 'font_bold.png', title: 'Bold' },
-                { tag: 'i', icon: 'font_italic.png', title: 'Italic' },
-                { tag: 'u', icon: 'font_underline.png', title: 'Underline' },
-                { tag: 's', icon: 'font_strikethrough.png', title: 'Strikethrough' }
+                { tag: 'b', icon: 'font_bold.png', title: i18next.t('chatComponent.tools.bold') },
+                { tag: 'i', icon: 'font_italic.png', title: i18next.t('chatComponent.tools.italic') },
+                { tag: 'u', icon: 'font_underline.png', title: i18next.t('chatComponent.tools.underline') },
+                { tag: 's', icon: 'font_strikethrough.png', title: i18next.t('chatComponent.tools.strikethrough') }
             ];
 
             styles.forEach(style => {
@@ -500,8 +584,8 @@ export class Chat {
 
                 if (this.currentFriendId && this.currentFriendshipId) // on check aussi que le friendship id est pas nul
                 {
-                    const myName = localStorage.getItem('username');
-                    const sender_id = Number.parseInt(localStorage.getItem('userId') || "0");
+                    const myName = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias');
+                    const sender_id = Number.parseInt(localStorage.getItem('userId') || sessionStorage.getItem('userId') || "0");
             
 
                     if (this.chatSocket && this.chatSocket.connected) {
@@ -518,7 +602,8 @@ export class Chat {
                     }
                 } else {
                     console.error("Game socket not connected", this.gameSocket)
-                    this.addSystemMessage("Error: Game server not reachable.");
+                    // MODIFIE ICI
+                    this.addSystemMessage(i18next.t('chatComponent.game_unreachable'));
                 }
 
             // document.getElementById('button-view-profile')?.addEventListener('click', (e) => {
@@ -538,9 +623,10 @@ export class Chat {
                 }
 
                 const currentChatUser = document.getElementById('chat-header-username')?.textContent;
-                if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) { // on confirme au cas ou
+                // MODIFIE ICI
+                if (currentChatUser && confirm(i18next.t('chatComponent.block_confirm', { name: currentChatUser }))) { 
                     try {
-                        const userId = localStorage.getItem('userId');
+                        const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
                         const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
                             method: 'PATCH',
                             body: JSON.stringify({ status: 'blocked' })
@@ -559,7 +645,8 @@ export class Chat {
                                 
                                 const infoMsg = document.createElement('div');
                                 infoMsg.className = "text-center text-gray-400 text-sm mt-10";
-                                infoMsg.innerText = "Conversation deleted (User blocked).";
+                                // MODIFIE ICI
+                                infoMsg.innerText = i18next.t('chatComponent.block_success');
                                 this.messagesContainer.appendChild(infoMsg);
                             }
 
@@ -567,14 +654,16 @@ export class Chat {
                             if (this.messageInput) {
                                 this.messageInput.value = "";
                                 this.messageInput.disabled = true;
-                                this.messageInput.placeholder = "You blocked this user.";
+                                // MODIFIE ICI
+                                this.messageInput.placeholder = i18next.t('chatComponent.input_blocked');
                             }
 
                             this.currentChannel = "";
                             this.currentFriendshipId = null;
                         } else {
                             console.error("Network error while blocking");
-                            alert("Error while blocking");
+                            // MODIFIE ICI
+                            alert(i18next.t('chatComponent.block_error'));
                         }
                     } catch (error) {
                         console.error("Networik error:", error);
@@ -599,6 +688,13 @@ export class Chat {
     // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
     private insertText(text: string) {
         if (!this.messageInput) return;
+
+        // Vérification de la longueur avant insertion
+        if (this.messageInput.value.length + text.length > 5000)
+        {
+            this.addSystemMessage(i18next.t('chatComponent.error_length_exceeded'));
+            return ;
+        }
         const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
         const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
         
@@ -631,6 +727,13 @@ export class Chat {
             cursorOffset = openTag.length;
         }
 
+        const predictedLength = this.messageInput.value.length - selectedText.length + replacement.length;
+        if (predictedLength > 5000)
+        {
+            this.addSystemMessage(i18next.t('chatComponent.error_length_exceeded'));
+            return ;
+        }
+
         this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
         
         const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
@@ -639,14 +742,19 @@ export class Chat {
     }
 
     public destroy() {
-        if (this.socket) {
-            this.socket.off("connect");
-            this.socket.off("chatMessage");
-            this.socket.off("msg_history"); // ajout
-            this.socket.off("receivedWizz");
-            this.socket.off("receivedAnimation");
-            this.socket.off("systemMessage");
-            this.socket.off("disconnected");
+        if (this.chatSocket && this.currentChannel)
+        {
+            this.chatSocket.emit("leaveChannel", this.currentChannel);
+        }
+
+        if (this.chatSocket) {
+            this.chatSocket.off("connect");
+            this.chatSocket.off("chatMessage");
+            this.chatSocket.off("msg_history"); // ajout
+            this.chatSocket.off("receivedWizz");
+            this.chatSocket.off("receivedAnimation");
+            this.chatSocket.off("systemMessage");
+            this.chatSocket.off("disconnected");
         }
     }
 }

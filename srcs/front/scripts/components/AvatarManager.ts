@@ -1,5 +1,6 @@
 import { fetchWithAuth } from "../services/api";
 import SocketService from "../services/SocketService";
+import i18next from "../i18n"; // <--- AJOUT IMPORT
 
 export class AvatarManager {
     private modal: HTMLElement | null;
@@ -17,8 +18,8 @@ export class AvatarManager {
 
     public init() {
         if (!this.modal || !this.mainAvatar) {
-			return;
-		}
+            return;
+        }
 
         const editButton = document.getElementById('edit-picture-button');
         const closeButton = document.getElementById('close-modal');
@@ -35,8 +36,8 @@ export class AvatarManager {
         cancelButton?.addEventListener('click', () => this.closeModal());
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) {
-				this.closeModal();
-			}
+                this.closeModal();
+            }
         });
 
         // Grid for the profil pic
@@ -46,9 +47,9 @@ export class AvatarManager {
                 img.addEventListener('click', () => {
                     this.selectedImageSrc = img.src;
                     
-					if (this.previewAvatar) {
-						this.previewAvatar.src = this.selectedImageSrc;
-					}
+                    if (this.previewAvatar) {
+                        this.previewAvatar.src = this.selectedImageSrc;
+                    }
                     gridImages.forEach(i => i.classList.remove('border-[#0078D7]'));
                     img.classList.add('border-[#0078D7]'); 
                 });
@@ -65,8 +66,8 @@ export class AvatarManager {
                     if (e.target?.result) {
                         this.selectedImageSrc = e.target.result as string;
                         if (this.previewAvatar) {
-							this.previewAvatar.src = this.selectedImageSrc;
-						}
+                            this.previewAvatar.src = this.selectedImageSrc;
+                        }
                     }
                 };
                 reader.readAsDataURL(file);
@@ -78,8 +79,8 @@ export class AvatarManager {
             const defaultAvatar = "/assets/basic/default.png";
             this.selectedImageSrc = defaultAvatar;
             if (this.previewAvatar) {
-				this.previewAvatar.src = defaultAvatar;
-			}
+                this.previewAvatar.src = defaultAvatar;
+            }
         });
 
         okButton?.addEventListener('click', async () => this.saveAvatar());
@@ -87,8 +88,8 @@ export class AvatarManager {
 
     private openModal() {
         if (!this.modal || !this.previewAvatar || !this.mainAvatar) {
-			return;
-		}
+            return;
+        }
 
         this.selectedImageSrc = this.mainAvatar.src;
         this.previewAvatar.src = this.selectedImageSrc;
@@ -103,8 +104,8 @@ export class AvatarManager {
 
     private async saveAvatar() {
         if (!this.userId) {
-			return;
-		}
+            return;
+        }
 
         try {
             const response = await fetchWithAuth(`api/user/${this.userId}/avatar`, {
@@ -118,8 +119,8 @@ export class AvatarManager {
                 const cleanAvatarUrl = result.data.avatar;
                 
                 if (this.mainAvatar) {
-					this.mainAvatar.src = cleanAvatarUrl;
-				}
+                    this.mainAvatar.src = cleanAvatarUrl;
+                }
                 
                 SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
                     userId: Number(this.userId),
@@ -128,7 +129,8 @@ export class AvatarManager {
                 });
                 this.closeModal();
             } else {
-                alert("Error while saving");
+                // MODIFICATION : Utilisation de i18next pour l'alerte
+                alert(i18next.t('profilePage.alerts.avatar_save_error'));
             }
         } catch (error) {
             console.error("Network error:", error);

@@ -3,6 +3,8 @@ import { statusImages, statusLabels } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import SocketService from "../services/SocketService";
 
+import i18next from "../i18n"; // Import ok
+
 export class UserProfile {
     private bioText: HTMLElement | null;
     private bioWrapper: HTMLElement | null;
@@ -61,7 +63,7 @@ export class UserProfile {
                 localStorage.setItem('username', userData.alias);
             }
             if (this.bioText && userData.bio) {
-				this.bioText.dataset.raw = userData.bio;
+                this.bioText.dataset.raw = userData.bio;
                 this.bioText.innerHTML = parseMessage(userData.bio);
             }
             if (this.userProfileImg) {
@@ -104,7 +106,11 @@ export class UserProfile {
             
             input.type = "text";
             input.value = currentText;
+            // Blocage natif du navigateur à 70 chars
+            input.maxLength = 70;
             input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+
+
 
             this.bioWrapper!.replaceChild(input, this.bioText!);
             
@@ -131,7 +137,9 @@ export class UserProfile {
                     this.charCountElement.classList.add('hidden');
                 }
 
-                const newBio = text.trim() || "Share a quick message";
+                // TRADUCTION default bio
+                const defaultBio = i18next.t('userProfile.default_bio');
+                const newBio = text.trim() || defaultBio;
                 const userId = localStorage.getItem('userId');
                 
                 const trimmedBio = newBio.trim(); 
@@ -139,11 +147,12 @@ export class UserProfile {
                 // check de lal ongueyr
                 if (trimmedBio.length > 70) {
                     console.error("Error: Cannot exceed 70 characters.");
-                    alert(`Your message cannot exceed 70 characters. Stop talking!`);
+                    // TRADUCTION alert
+                    alert(i18next.t('userProfile.bio_length_error'));
                     
                     // on revient a l'ancienne biuo
                     this.bioWrapper!.replaceChild(this.bioText!, input);
-                    this.bioText!.innerHTML = parseMessage(this.bioText!.dataset.raw || "Share a quick message");
+                    this.bioText!.innerHTML = parseMessage(this.bioText!.dataset.raw || defaultBio);
                     
                     return false;
                 }
@@ -158,7 +167,7 @@ export class UserProfile {
                     
                     if (response.ok) {
                         this.bioText!.dataset.raw = trimmedBio;
-                        this.bioText!.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+                        this.bioText!.innerHTML = parseMessage(trimmedBio) || defaultBio;
                         this.bioWrapper!.replaceChild(this.bioText!, input);
                         console.log("Message updated");
                         const socket = SocketService.getInstance().socket;
@@ -189,7 +198,8 @@ export class UserProfile {
                 if (input.value.trim().length <= 70) {
                     finalize(input.value);
                 } else {
-                    alert(`Your message cannot exceed 70 characters. Stop talking!`);
+                    // TRADUCTION alert
+                    alert(i18next.t('userProfile.bio_length_error'));
                     
                     if (this.charCountElement) {
                         this.charCountElement.classList.add('hidden');
@@ -261,6 +271,7 @@ export class UserProfile {
     private loadSavedStatus() {
         const rawStatus = localStorage.getItem('userStatus') || 'available';
         const savedStatus = rawStatus.toLowerCase();
+        // Ligne supprimée car inutile (la mise à jour se fait via updateStatusDisplay)
         this.updateStatusDisplay(savedStatus);
         
         window.addEventListener('storage', (e) => {
@@ -275,6 +286,7 @@ export class UserProfile {
             console.log("Status:", this.statusFrame);
             this.statusFrame.src = statusImages[status];
         }
+        // statusLabels est importé de Data.ts et utilise désormais des getters avec i18next
         if (this.statusText && statusLabels[status]) {
             this.statusText.textContent = statusLabels[status];
         }
@@ -329,6 +341,13 @@ export class UserProfile {
         fileInput?.addEventListener('change', (event) => {
             const file = (event.target as HTMLInputElement).files?.[0];
             if (file) {
+                // Taille max 2Mo
+                if (file.size > 2 * 1024 * 1024)
+                {
+                    alert(i18next.t('userProfile.avatar_size_error'));
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     if (e.target?.result) {
@@ -378,7 +397,8 @@ export class UserProfile {
 
                     closeModal();
                 } else {
-                    alert("Error while saving avatar");
+                    // TRADUCTION alert
+                    alert(i18next.t('userProfile.avatar_error'));
                 }
             } catch (error) {
                 console.error("Network error:", error);

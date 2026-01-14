@@ -1,15 +1,66 @@
 import { fetchWithAuth } from "../services/api";
 import htmlContent from "../pages/LandingPage.html"
+import i18next, { changeLanguage } from "../i18n";
 
 export function render(): string {
-	return htmlContent;
+    let html = htmlContent;
+
+	html = html.replace(/\{\{landing\.welcome\}\}/g, i18next.t('landing.welcome'));
+	html = html.replace(/\{\{landing\.login_button\}\}/g, i18next.t('landing.login_button'));
+	html = html.replace(/\{\{landing\.register_button\}\}/g, i18next.t('landing.register_button'));
+	html = html.replace(/\{\{landing\.guest_button\}\}/g, i18next.t('landing.guest_button'));
+
+	return html;
+
 };
+
+
+	//================================================
+	//============= LANGUAGE MANAGEMENT ==============
+	//================================================
+
+function setupPageLangDropdown() {
+    const toggleBtn = document.getElementById('page-lang-toggle-btn');
+    const menuContent = document.getElementById('page-lang-menu-content');
+    
+	const display = document.getElementById('page-current-lang-display');
+    if (display) {
+        display.textContent = i18next.language.toUpperCase();
+    }
+
+    if (toggleBtn && menuContent) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            menuContent.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', () => {
+            if (!menuContent.classList.contains('hidden')) {
+                menuContent.classList.add('hidden');
+            }
+        });
+    }
+
+    document.querySelectorAll('.page-lang-select').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const target = e.currentTarget as HTMLElement;
+            const lang = target.getAttribute('data-lang');
+            if (lang) {
+                await changeLanguage(lang);
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            }
+        });
+    });
+}
 
 	//================================================
 	//============= LANDING PAGE BUTTONS =============
 	//================================================
 
 export function initLandingPage() {
+	
+	setupPageLangDropdown();
+
 	const loginButton = document.getElementById('login-button');
 	const registerButton = document.getElementById('register-button');
 	const guestButton = document.getElementById('guest-button');
@@ -78,7 +129,7 @@ export function initLandingPage() {
 			console.error("Network error while guest login: ", err);
 			
 			if (guestError) {
-				guestError.textContent = "Network error. Please try again";
+				guestError.textContent = i18next.t('landing.guest_error_network');
 				guestError.classList.remove('hidden');
 			}
 		}

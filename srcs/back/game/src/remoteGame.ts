@@ -172,7 +172,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
     }
 
     // Fin de partie
-    if (game.score.player1 >= 11 || game.score.player2 >= 11) {
+    if (game.score.player1 >= 11 || game.score.player2 >= 11){
         stopGame(game.roomId, io);
     }
 
@@ -201,7 +201,6 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
         console.debug(`[SERVER] UserSockets Map keys:`, [...userSockets.keys()]);
         console.log(`🔍 [SERVER] Recherche socket pour User ID: ${targetIdNum} (Type: ${typeof targetIdNum})`);
         
-
         const targetSocketId = userSockets.get(targetIdNum);
         
         if (targetSocketId) {
@@ -280,11 +279,7 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
             const sock1 = io.sockets.sockets.get(p1);
             const sock2 = io.sockets.sockets.get(p2);
 
-            console.log(`🎮 [MATCH] Attempting to start match: ${roomId}`);
-            console.log(`   Player 1 socket found: ${!!sock1}`);
-            console.log(`   Player 2 socket found: ${!!sock2}`);
-
-            if (sock1 && sock2) {
+            if (sock1 && sock2 && sock1 != sock2) {
                 sock1.join(roomId);
                 sock2.join(roomId);
 
