@@ -20,13 +20,14 @@
     },
     "games": {
       "title": "Games",
+      "mode": "CHOOSE YOUR GAME MODE",
       "choose_mode": "Select how you would like to start a new game.",
       "local": "LOCAL GAME",
       "remote": "REMOTE GAME",
       "tournament": "TOURNAMENT",
-      "local_describe": "Play against another player on this computer",
-      "remote_describe": "Connect and play with friends and more online",
-      "tournament_describe": "Compete in a 4-multiplayer tournament on this computer"
+      "local_describe": "Play against another player on this computer.",
+      "remote_describe": "Connect and play with friends and more online.",
+      "tournament_describe": "Compete in a 4-multiplayer tournament on this computer."
     },
     "chat": {
       "title": "Messenger",

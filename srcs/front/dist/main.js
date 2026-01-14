@@ -5928,20 +5928,21 @@
       },
       games: {
         title: "Jeux",
-        choose_mode: "Choisi ton mode de jeu",
+        mode: "CHOISIS TON MODE DE JEU",
+        choose_mode: "S\xE9lectionne le mode de jeu pour d\xE9marrer une partie.",
         local: "JEU LOCAL",
         remote: "JEU EN LIGNE",
         tournament: "TOURNOI",
-        local_describe: "Joue contre un autre joueur sur cet ordinateur",
-        remote_describe: "Joue avec tes amis et bien plus en ligne",
+        local_describe: "Joue contre un autre joueur sur cet ordinateur.",
+        remote_describe: "Joue avec tes amis et bien plus en ligne.",
         tournament_describe: "Participe \xE0 un tournoi \xE0 4 joueurs sur cet ordinateur."
       },
       chat: {
         title: "Messagerie",
         friends: "MES AMIS",
         add_friend: "Ajouter un ami",
-        send_request: "Send request",
-        cancel: "Cancel",
+        send_request: "Envoyer une demande d'ami",
+        cancel: "Annuler",
         contact: "\u2B50 Contacts",
         placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
         input_placeholder: "\xC9crire un message...",
@@ -5954,20 +5955,20 @@
         no_notification: "Aucune notification"
       },
       modal: {
-        user_profile: "User Profile",
-        statistics: "Statistics",
-        games_played: "Games Played:",
-        wins: "Wins:",
-        losses: "Losses:",
-        winning_streak: "Winning streak:",
-        close: "Close",
-        change_picture: "Change Picture",
-        select_picture: "Select a picture",
-        picture_description: "Choose how you want to appear on transcendence.",
-        browse: "BROWSE",
-        delete: "DELETE",
+        user_profile: "Profil utilisateur",
+        statistics: "Statistiques",
+        games_played: "Jeux jou\xE9s:",
+        wins: "Victoires:",
+        losses: "D\xE9faites:",
+        winning_streak: "S\xE9rie de victoires actuelle",
+        close: "Fermer",
+        change_picture: "Changer d'image",
+        select_picture: "Selectionner une image",
+        picture_description: "Choisir votre avatar sur Transcendence.",
+        browse: "PARCOURIR",
+        delete: "SUPPRIMER",
         ok: "OK",
-        cancel: "CANCEL"
+        cancel: "ANNULER"
       }
     },
     landing: {
@@ -6456,13 +6457,14 @@
       },
       games: {
         title: "Games",
+        mode: "CHOOSE YOUR GAME MODE",
         choose_mode: "Select how you would like to start a new game.",
         local: "LOCAL GAME",
         remote: "REMOTE GAME",
         tournament: "TOURNAMENT",
-        local_describe: "Play against another player on this computer",
-        remote_describe: "Connect and play with friends and more online",
-        tournament_describe: "Compete in a 4-multiplayer tournament on this computer"
+        local_describe: "Play against another player on this computer.",
+        remote_describe: "Connect and play with friends and more online.",
+        tournament_describe: "Compete in a 4-multiplayer tournament on this computer."
       },
       chat: {
         title: "Messenger",
@@ -6985,7 +6987,8 @@
       },
       games: {
         title: "Juegos",
-        choose_mode: "Elige tu modo de juego",
+        mode: "ELIGE TU MODO DE JUEGO",
+        choose_mode: "Selecciona c\xF3mo deseas iniciar una nueva partida.",
         local: "JUEGO LOCAL",
         remote: "JUEGO REMOTO",
         tournament: "TORNEOS",
@@ -7009,6 +7012,22 @@
       notifications: {
         title: "Notificaciones",
         no_notification: "Sin notificaci\xF3n"
+      },
+      modal: {
+        user_profile: "Perfil de usuario",
+        statistics: "Estad\xEDsticas",
+        games_played: "Partidas jugadas:",
+        wins: "Victorias:",
+        losses: "Derrotas:",
+        winning_streak: "Racha de victorias actual",
+        close: "Cerrar",
+        change_picture: "Cambiar imagen",
+        select_picture: "Selecciona una imagen",
+        picture_description: "Elige tu avatar en Transcendence.",
+        browse: "BUSCAR",
+        delete: "ELIMINAR",
+        ok: "OK",
+        cancel: "CANCELAR"
       }
     },
     landing: {
@@ -8205,7 +8224,7 @@
 
 					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
 						<div class="bg-white p-6 flex flex-col flex-1">
-							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">CHOOSE YOUR GAME MODE</h1>
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">{{homepage.games.mode}}</h1>
 							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
 								<p>{{homepage.games.choose_mode}}</p>
 							</div>
@@ -8432,7 +8451,7 @@
 									</button>
 
 									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+										<p class="text-xs text-gray-500 mb-2 pl-1">{{chat.choose_bg}}</p>
 													
 										<div class="grid grid-cols-3 gap-2">
 														
@@ -8452,7 +8471,7 @@
 											</button>
 
 											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-												Default background
+												{{chat.default_bg}}
 											</button>
 										</div>
 									</div>
@@ -8468,7 +8487,7 @@
 <div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
     <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
         <div class="title-bar">
-            <div class="title-bar-text">User Profile</div>
+            <div class="title-bar-text">{{homepage.modal.user_profile}}</div>
             <div class="title-bar-controls">
                 <button id="close-friend-modal" aria-label="Close"></button>
             </div>
@@ -8488,29 +8507,29 @@
                 </div>
 
                 <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
-                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
+                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">{{homepage.profile.username}}</h2>
                     
-                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
+                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">{{friendProfileModal.no_bio}}</p>
                 </div>	
             </div>
 
             <fieldset class="border border-gray-300 p-4 rounded-sm">
-                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
+                <legend class="text-sm px-2 text-gray-600">{{homepage.modal.statistics}}</legend>
                 <div class="grid grid-cols-2 gap-4 text-sm">
                     <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Games Played:</span>
+                        <span>{{homepage.modal.games_played}}</span>
                         <span id="friend-stat-games" class="font-bold">0</span>
                     </div>
                     <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Wins:</span>
+                        <span>{{homepage.modal.wins}}</span>
                         <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
                     </div>
                     <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Losses:</span>
+                        <span>{{homepage.modal.losses}}</span>
                         <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
                     </div>
                     <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Winning streak:</span>
+                        <span>{{homepage.modal.winning_streak}}</span>
                         <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
                     </div>
                 </div>
@@ -8521,7 +8540,7 @@
                     class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                         px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                         active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                    Close
+                    {{homepage.modal.close}}
                 </button>
             </div>
         </div>
@@ -8534,7 +8553,7 @@
     <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Change Picture</div>
+                <div class="title-bar-text">{{homepage.modal.change_picture}}</div>
                 <div class="title-bar-controls">
                     <button aria-label="Minimize"></button>
                     <button aria-label="Maximize"></button>
@@ -8543,8 +8562,8 @@
             </div>
             <div class="window-body p-6">
                 <div class="mb-6">
-                    <h2 class="text-xl mb-1">Select a picture</h2>
-                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
+                    <h2 class="text-xl mb-1">{{homepage.modal.select_picture}}</h2>
+                    <p class="text-gray-500 text-sm">{{homepage.modal.picture_description}}</p>
                 </div>
                 
                 <div class="flex flex-row gap-6">
@@ -8587,14 +8606,14 @@
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            BROWSE
+                            {{homepage.modal.browse}}
                             </button>
                             
                             <button id="delete-button" 
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            DELETE
+                            {{homepage.modal.delete}}
                             </button>
 
                             <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
@@ -8602,13 +8621,13 @@
                                         class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                             px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                             active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        OK
+                                        {{homepage.modal.ok}}
                                 </button>
                                 <button id="cancel-button" 
                                         class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                             px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                             active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        CANCEL
+                                        {{homepage.modal.cancel}}
                                 </button>
                             </div>
                         </div>
@@ -10181,6 +10200,7 @@
     html = html.replace(/\{\{homepage.profile\.status.away\}\}/g, i18n_default.t("homepage.profile.status.away"));
     html = html.replace(/\{\{homepage.profile\.status.offline\}\}/g, i18n_default.t("homepage.profile.status.offline"));
     html = html.replace(/\{\{homepage.games\.title\}\}/g, i18n_default.t("homepage.games.title"));
+    html = html.replace(/\{\{homepage.games\.mode\}\}/g, i18n_default.t("homepage.games.mode"));
     html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18n_default.t("homepage.games.choose_mode"));
     html = html.replace(/\{\{homepage.games\.local\}\}/g, i18n_default.t("homepage.games.local"));
     html = html.replace(/\{\{homepage.games\.remote\}\}/g, i18n_default.t("homepage.games.remote"));
@@ -10201,6 +10221,24 @@
     html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18n_default.t("homepage.chat.block_user"));
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18n_default.t("homepage.notifications.title"));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18n_default.t("homepage.notifications.no_notification"));
+    html = html.replace(/\{\{chat\.choose_bg\}\}/g, i18n_default.t("chat.choose_bg"));
+    html = html.replace(/\{\{chat\.default_bg\}\}/g, i18n_default.t("chat.default_bg"));
+    html = html.replace(/\{\{homepage.modal\.user_profile\}\}/g, i18n_default.t("homepage.modal.user_profile"));
+    html = html.replace(/\{\{homepage.modal\.username\}\}/g, i18n_default.t("homepage.modal.username"));
+    html = html.replace(/\{\{friendProfileModal\.no_bio\}\}/g, i18n_default.t("friendProfileModal.no_bio"));
+    html = html.replace(/\{\{homepage.modal\.statistics\}\}/g, i18n_default.t("homepage.modal.statistics"));
+    html = html.replace(/\{\{homepage.modal\.games_played\}\}/g, i18n_default.t("homepage.modal.games_played"));
+    html = html.replace(/\{\{homepage.modal\.wins\}\}/g, i18n_default.t("homepage.modal.wins"));
+    html = html.replace(/\{\{homepage.modal\.losses\}\}/g, i18n_default.t("homepage.modal.losses"));
+    html = html.replace(/\{\{homepage.modal\.winning_streak\}\}/g, i18n_default.t("homepage.modal.winning_streak"));
+    html = html.replace(/\{\{homepage.modal\.close\}\}/g, i18n_default.t("homepage.modal.close"));
+    html = html.replace(/\{\{homepage.modal\.change_picture\}\}/g, i18n_default.t("homepage.modal.change_picture"));
+    html = html.replace(/\{\{homepage.modal\.select_picture\}\}/g, i18n_default.t("homepage.modal.select_picture"));
+    html = html.replace(/\{\{homepage.modal\.picture_description\}\}/g, i18n_default.t("homepage.modal.picture_description"));
+    html = html.replace(/\{\{homepage.modal\.browse\}\}/g, i18n_default.t("homepage.modal.browse"));
+    html = html.replace(/\{\{homepage.modal\.delete\}\}/g, i18n_default.t("homepage.modal.delete"));
+    html = html.replace(/\{\{homepage.modal\.ok\}\}/g, i18n_default.t("homepage.modal.ok"));
+    html = html.replace(/\{\{homepage.modal\.cancel\}\}/g, i18n_default.t("homepage.modal.cancel"));
     return html;
   }
   function afterRender() {

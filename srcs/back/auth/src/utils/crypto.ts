@@ -40,9 +40,9 @@ export async function verifyPassword(
 
 // Module JWT
 // Access Token : Signe avec le secret du .env
-export function generateAccessToken(user_id: number, credential_id: number): string {
+export function generateAccessToken(userId: number, credential_id: number): string {
     const payload = {
-        sub: user_id,
+        sub: userId,
         cred_id: credential_id
     };
     return jwt.sign(payload, JWT_SECRET!, { expiresIn: '7m'});
