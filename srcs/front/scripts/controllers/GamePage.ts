@@ -16,6 +16,7 @@ let gameChat: Chat | null = null;
 let activeGame: Game | null = null;
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null;
 let isNavigationBlocked = false;
+let exitDestination:string | null = null;
 
 export function isGameRunning(): boolean {
     return activeGame !== null && activeGame.isRunning;
@@ -91,10 +92,12 @@ function handlePopState(e: PopStateEvent) {
 //=========== EXIT GAME CONFIRMATION =============
 //================================================
 
-export function showExitConfirmationModal() {
+export function showExitConfirmationModal(destination = null) {
     if (document.getElementById('exit-confirm-modal')) {
         return;
     }
+
+    exitDestination = destination;
 
     if (activeGame) {
         activeGame.pause();
@@ -161,6 +164,7 @@ export function showExitConfirmationModal() {
     const closeFunc = () => {
         document.getElementById('exit-confirm-modal')?.remove();
 
+        exitDestination = null;
         if (activeGame) {
             activeGame.resume();
         }
@@ -182,18 +186,12 @@ function confirmExit() {
         const wasRemote = activeGame.isRemote;
         const roomId = activeGame.roomId;
         const playerRole = activeGame.playerRole;
-        //const currentScore = { ...activeGame.score };
 
         activeGame.isRunning = false;
         activeGame.stop();
 
         if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
             SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
-            
-            const userIdStr = localStorage.getItem('userId');
-            if (userIdStr && playerRole) {
-                // Pour la sauvegarde stats, on pourrait appeler une fonction dans remoteManager, mais c'est ok de laisser la déconnexion "brutale" ici
-            }
         }
         activeGame = null;
     }
@@ -203,7 +201,14 @@ function confirmExit() {
     
     setTimeout(() => {
         isNavigationBlocked = false;
-        window.history.back();
+        if (exitDestination) {
+            window.history.pushState({}, '', exitDestination);
+            const popStateEvent = new PopStateEvent('popstate');
+            window.dispatchEvent(popStateEvent);
+            exitDestination = null;
+        } else {
+            window.history.back(); // Fallback
+        }
     }, 100);
 }
 

@@ -8553,6 +8553,7 @@
       if (chatSocket) {
         chatSocket.off("chatMessage");
         chatSocket.off("unreadNotification");
+        chatSocket.off("friendStatusUpdate");
         chatSocket.off("unreadStatus");
       }
     }
@@ -8565,7 +8566,7 @@
       if (chatSocket) {
         const registerChat = () => {
           console.log("[FriendList] Registering user on Chat Socket:", userId);
-          chatSocket.emit("registerUser", userId);
+          chatSocket.emit("registerUser", Number(this.userId));
           this.loadFriends();
         };
         if (chatSocket.connected) {
@@ -8648,6 +8649,7 @@
                 friendId: selectedFriend.id
               });
             };
+            console.log("Channel key:", channelKey);
             if (chatSocket.connected) {
               check();
             } else {
@@ -8934,7 +8936,6 @@
         const [friendsRes, chatRes] = await Promise.all([
           fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
           fetchWithAuth(`/api/chat/unread`)
-          // Via API Gateway -> Chat Service
         ]);
         let pendingList = [];
         let unreadMessages = [];
@@ -10126,7 +10127,8 @@
       });
       chatSocket.on("friendStatusUpdate", (data) => {
         const headerName = document.getElementById("chat-header-username");
-        if (headerName && headerName.textContent === data.username) {
+        const currentChatUser = headerName?.dataset.username || headerName?.textContent;
+        if (headerName && currentChatUser === data.username) {
           const headerStatus = document.getElementById("chat-header-status");
           if (headerStatus && statusImages[data.status]) {
             headerStatus.src = statusImages[data.status];
@@ -10159,6 +10161,7 @@
       const headerBio = document.getElementById("chat-header-bio");
       if (headerName) {
         headerName.textContent = friend.alias;
+        headerName.dataset.username = friend.username;
       }
       if (headerBio) {
         headerBio.innerHTML = parseMessage(friend.bio || "");
@@ -13371,6 +13374,7 @@
   var activeGame = null;
   var spaceKeyListener = null;
   var isNavigationBlocked = false;
+  var exitDestination = null;
   function isGameRunning() {
     return activeGame !== null && activeGame.isRunning;
   }
@@ -13420,10 +13424,11 @@
       showExitConfirmationModal();
     }
   }
-  function showExitConfirmationModal() {
+  function showExitConfirmationModal(destination = null) {
     if (document.getElementById("exit-confirm-modal")) {
       return;
     }
+    exitDestination = destination;
     if (activeGame) {
       activeGame.pause();
     }
@@ -13482,6 +13487,7 @@
     });
     const closeFunc = () => {
       document.getElementById("exit-confirm-modal")?.remove();
+      exitDestination = null;
       if (activeGame) {
         activeGame.resume();
       }
@@ -13499,9 +13505,6 @@
       activeGame.stop();
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
-        const userIdStr = localStorage.getItem("userId");
-        if (userIdStr && playerRole) {
-        }
       }
       activeGame = null;
     }
@@ -13509,7 +13512,14 @@
     document.getElementById("exit-confirm-modal")?.remove();
     setTimeout(() => {
       isNavigationBlocked = false;
-      window.history.back();
+      if (exitDestination) {
+        window.history.pushState({}, "", exitDestination);
+        const popStateEvent = new PopStateEvent("popstate");
+        window.dispatchEvent(popStateEvent);
+        exitDestination = null;
+      } else {
+        window.history.back();
+      }
     }, 100);
   }
   function cleanup() {
@@ -28837,7 +28847,8 @@
       event.preventDefault();
       if (isGameRunning()) {
         event.stopImmediatePropagation();
-        showExitConfirmationModal();
+        const destinationPath = new URL(anchor.href).pathname;
+        showExitConfirmationModal(destinationPath);
         return;
       }
       const href = anchor.href;

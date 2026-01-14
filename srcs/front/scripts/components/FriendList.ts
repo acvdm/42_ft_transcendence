@@ -59,6 +59,7 @@ export class FriendList {
         if (chatSocket) {
             chatSocket.off('chatMessage');
             chatSocket.off('unreadNotification');
+            chatSocket.off('friendStatusUpdate');
             chatSocket.off('unreadStatus');
         }
     }
@@ -74,7 +75,7 @@ export class FriendList {
         if (chatSocket) {
             const registerChat = () => {
                 console.log("[FriendList] Registering user on Chat Socket:", userId);
-                chatSocket.emit('registerUser', userId);
+                chatSocket.emit('registerUser', Number(this.userId));
                 this.loadFriends();
             };
 
@@ -184,6 +185,7 @@ export class FriendList {
                         });
                     };
 
+                    console.log("Channel key:", channelKey);
                     if (chatSocket.connected) {
                         check();
                     } else {
@@ -562,7 +564,7 @@ export class FriendList {
             // 1. Récupération des données (Chat + Amis)
             const [friendsRes, chatRes] = await Promise.all([
                 fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
-                fetchWithAuth(`/api/chat/unread`) // Via API Gateway -> Chat Service
+                fetchWithAuth(`/api/chat/unread`)
             ]);
 
             let pendingList: Friendship[] = [];

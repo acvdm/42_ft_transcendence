@@ -465,7 +465,8 @@ window.addEventListener('click', (event) => {
         event.preventDefault();
 		if (isGameRunning()) {
 			event.stopImmediatePropagation();
-			showExitConfirmationModal();
+            const destinationPath = new URL(anchor.href).pathname;
+			showExitConfirmationModal(destinationPath);
 			return ;
 		}
 

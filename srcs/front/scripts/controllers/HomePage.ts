@@ -155,8 +155,9 @@ export function afterRender(): void {
         chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
 
                 const headerName = document.getElementById('chat-header-username');
+                const currentChatUser = headerName?.dataset.username || headerName?.textContent;
 
-                if (headerName && headerName.textContent === data.username) {
+                if (headerName && currentChatUser === data.username) {
                     const headerStatus = document.getElementById('chat-header-status') as HTMLImageElement;
                     if (headerStatus && statusImages[data.status]) {
                         headerStatus.src = statusImages[data.status];
@@ -202,6 +203,7 @@ export function afterRender(): void {
 
         if (headerName) {
             headerName.textContent = friend.alias;
+            headerName.dataset.username = friend.username;
         }
         if (headerBio) {
             headerBio.innerHTML = parseMessage(friend.bio || '');
