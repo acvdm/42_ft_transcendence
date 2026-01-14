@@ -22,6 +22,12 @@ export class Chat {
         this.messagesContainer = document.getElementById('chat-messages');
         this.messageInput = document.getElementById('chat-input') as HTMLInputElement;
         this.wizzContainer = document.getElementById('wizz-container');
+
+        // Bloque la saisie des message à 5000 chars
+        if (this.messageInput)
+        {
+            this.messageInput.maxLength = 5000;
+        }
     }
 
     public init() {
@@ -195,6 +201,12 @@ export class Chat {
             if (event.key == 'Enter' && this.messageInput?.value.trim() != '') {
                 
                 const msg_content = this.messageInput.value;
+
+                if (msg_content.length > 5000)
+                {
+                    this.addSystemMessage(i18next.t('Error: message too long'));
+                    return ;
+                }
                 const sender_alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || i18next.t('gamePage.default_guest');
                 const sender_id = Number.parseInt(localStorage.getItem('userId') || sessionStorage.getItem('userId') || "0");
                 
@@ -676,6 +688,13 @@ export class Chat {
     // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
     private insertText(text: string) {
         if (!this.messageInput) return;
+
+        // Vérification de la longueur avant insertion
+        if (this.messageInput.value.length + text.length > 5000)
+        {
+            this.addSystemMessage(i18next.t('Error: message too long'));
+            return ;
+        }
         const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
         const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
         
@@ -706,6 +725,13 @@ export class Chat {
             const openTag = `[${tagOrColor}]`;
             replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
             cursorOffset = openTag.length;
+        }
+
+        const predictedLength = this.messageInput.value.length - selectedText.length + replacement.length;
+        if (predictedLength > 5000)
+        {
+            this.addSystemMessage(i18next.t('Error: message too long'));
+            return ;
         }
 
         this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);

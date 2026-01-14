@@ -73,6 +73,17 @@ export function render(): string {
     return html;
 };
 
+// Fonction utilitaire pour neutraliser le code HTML malveillant
+function escapeHtml(text: string): string {
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 export function afterRender(): void {
     
     // Statistics
@@ -176,8 +187,16 @@ export function afterRender(): void {
             return;
         }
 
+        filterOpponent.maxLength = 30;
+
         const applyFiltersAndSort = () => {
-            const opponentValue = filterOpponent.value.toLowerCase().trim();
+            let rawVal = filterOpponent.value;
+            if (rawVal.length > 30)
+            {
+                rawVal = rawVal.substring(0, 30);
+            }
+            const opponentValue = rawVal.toLowerCase().trim();
+            
             const modeValue = filterMode.value;
             const sortValue = sortOrder.value;
 
@@ -323,8 +342,9 @@ export function afterRender(): void {
 
             // MODIFIED: Use i18n for game type and unknown user
             const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
-            const opponentName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
-            
+            const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
+            const opponentName = escapeHtml(rawName);
+
             // Adding a new row for each new match
             const row = document.createElement('tr');
             row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";

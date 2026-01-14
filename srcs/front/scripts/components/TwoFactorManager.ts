@@ -165,7 +165,14 @@ export class TwoFactorManager {
     }
 
     private async enable2fa(code: string, type: 'qr' | 'email') {
-        if (!code || code.length < 6) {
+        if (!code) {
+            // TRADUCTION
+            alert(i18next.t('profilePage.alerts.2fa_invalid_code'));
+            return;
+        }
+
+        const cleanCode = code.trim().replace(/[^0-9]/g, '');
+        if (code.length != 6) {
             // TRADUCTION
             alert(i18next.t('profilePage.alerts.2fa_invalid_code'));
             return;

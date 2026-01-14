@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import fastifyProxy from '@fastify/http-proxy';
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from './utils/error.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET){
@@ -51,7 +52,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 	try {
 		const authHeader = request.headers['authorization'];
 		if (!authHeader) {
-			throw new Error('No token provided');
+			throw new UnauthorizedError('No token provided');
 		}
 
 		const token = authHeader.split(' ')[1];
@@ -65,7 +66,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		if (decoded.scope == '2fa_login'){
 			// on autorise seulement la route de verification du 2FA
 			if (!url.includes('/2fa/challenge'))
-				throw new Error("2FA verification pending");
+				throw new UnauthorizedError("2FA verification pending");
 			console.log(`2FA Token user for verification endpoint -> Allowed`);
 		}
 

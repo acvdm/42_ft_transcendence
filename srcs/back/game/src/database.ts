@@ -21,7 +21,7 @@ export async function initDatabase(): Promise<Database>{
             winner_alias TEXT,
             status TEXT DEFAULT 'pending',
             started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            finished_at DATETIME,
+            finished_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             total_duration_in_minutes INTEGER DEFAULT 0,
             round default '1v1',
             fk_tournament_id INTEGER,

@@ -106,7 +106,11 @@ export class UserProfile {
             
             input.type = "text";
             input.value = currentText;
+            // Blocage natif du navigateur à 70 chars
+            input.maxLength = 70;
             input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
+
+
 
             this.bioWrapper!.replaceChild(input, this.bioText!);
             
@@ -337,6 +341,13 @@ export class UserProfile {
         fileInput?.addEventListener('change', (event) => {
             const file = (event.target as HTMLInputElement).files?.[0];
             if (file) {
+                // Taille max 2Mo
+                if (file.size > 2 * 1024 * 1024)
+                {
+                    alert(i18next.t('userProfile.avatar_size_error'));
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     if (e.target?.result) {

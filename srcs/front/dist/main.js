@@ -7938,8 +7938,14 @@
     const close2fa = document.getElementById("close-2fa-modal");
     const error2fa = document.getElementById("2fa-error-message");
     const backButton = document.getElementById("back-button");
+    const emailInput = document.getElementById("email-input");
+    const passwordInput = document.getElementById("password-input");
     let tempToken = null;
     let cachedStatus = "available";
+    if (emailInput)
+      emailInput.maxLength = 254;
+    if (passwordInput)
+      passwordInput.maxLength = 128;
     backButton?.addEventListener("click", () => {
       window.history.pushState({}, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -7953,6 +7959,13 @@
         errorElement.textContent = "";
       }
       if (!email || !password) {
+        if (errorElement) {
+          errorElement.textContent = i18n_default.t("loginPage.error_inputs");
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      if (email.length > 254 || password.length > 128) {
         if (errorElement) {
           errorElement.textContent = i18n_default.t("loginPage.error_inputs");
           errorElement.classList.remove("hidden");
@@ -8037,7 +8050,11 @@
       if (error2fa) {
         error2fa.classList.add("hidden");
       }
-      if (!code || !tempToken) {
+      if (!code || code.length !== 6 || !tempToken) {
+        if (error2fa) {
+          error2fa.textContent = i18n_default.t("loginPage.error_2fa_invalid");
+          error2fa.classList.remove("hidden");
+        }
         return;
       }
       try {
@@ -8868,6 +8885,7 @@
       const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
       const friendRequestMessage = document.getElementById("friend-request-message");
       if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
+        friendSearchInput.maxLength = 30;
         addFriendButton.addEventListener("click", (e) => {
           e.stopPropagation();
           addFriendDropdown.classList.toggle("hidden");
@@ -8880,6 +8898,10 @@
           const searchValue = friendSearchInput.value.trim();
           if (!searchValue) {
             this.showFriendMessage(i18n_default.t("friendList.search_placeholder_error"), "error", friendRequestMessage);
+            return;
+          }
+          if (searchValue.length > 30) {
+            this.showFriendMessage(i18n_default.t("friendList.error_input_too_long"), "error", friendRequestMessage);
             return;
           }
           const userId = localStorage.getItem("userId");
@@ -9181,6 +9203,7 @@
         const currentText = this.bioText.dataset.raw || "";
         input.type = "text";
         input.value = currentText;
+        input.maxLength = 70;
         input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
         this.bioWrapper.replaceChild(input, this.bioText);
         if (this.charCountElement) {
@@ -9360,6 +9383,10 @@
       fileInput?.addEventListener("change", (event) => {
         const file = event.target.files?.[0];
         if (file) {
+          if (file.size > 2 * 1024 * 1024) {
+            alert(i18n_default.t("userProfile.avatar_size_error"));
+            return;
+          }
           const reader = new FileReader();
           reader.onload = (e) => {
             if (e.target?.result) {
@@ -9420,6 +9447,9 @@
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
       this.wizzContainer = document.getElementById("wizz-container");
+      if (this.messageInput) {
+        this.messageInput.maxLength = 5e3;
+      }
     }
     init() {
       const socketService = SocketService_default.getInstance();
@@ -9554,6 +9584,10 @@
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
+          if (msg_content.length > 5e3) {
+            this.addSystemMessage(i18n_default.t("Error: message too long"));
+            return;
+          }
           const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || i18n_default.t("gamePage.default_guest");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
           this.chatSocket.emit("chatMessage", {
@@ -9930,6 +9964,10 @@
     // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
     insertText(text) {
       if (!this.messageInput) return;
+      if (this.messageInput.value.length + text.length > 5e3) {
+        this.addSystemMessage(i18n_default.t("Error: message too long"));
+        return;
+      }
       const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
       const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
       const newValue = this.messageInput.value.substring(0, start) + text + this.messageInput.value.substring(end);
@@ -9954,6 +9992,11 @@
         const openTag = `[${tagOrColor}]`;
         replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
         cursorOffset = openTag.length;
+      }
+      const predictedLength = this.messageInput.value.length - selectedText.length + replacement.length;
+      if (predictedLength > 5e3) {
+        this.addSystemMessage(i18n_default.t("Error: message too long"));
+        return;
       }
       this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
       const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
@@ -10487,7 +10530,12 @@
       }
     }
     async enable2fa(code, type) {
-      if (!code || code.length < 6) {
+      if (!code) {
+        alert(i18n_default.t("profilePage.alerts.2fa_invalid_code"));
+        return;
+      }
+      const cleanCode = code.trim().replace(/[^0-9]/g, "");
+      if (code.length != 6) {
         alert(i18n_default.t("profilePage.alerts.2fa_invalid_code"));
         return;
       }
@@ -10897,7 +10945,8 @@
     };
     loadUserData();
     const updateUsername = async (newUsername) => {
-      if (!userId || !newUsername.trim()) {
+      if (!userId || !newUsername.trim() || newUsername.length > 30) {
+        alert(i18n_default.t("profilePage.alerts.username_error"));
         return false;
       }
       try {
@@ -10913,7 +10962,7 @@
             usernameDisplay.innerText = newUsername;
           }
           localStorage.setItem("username", newUsername);
-          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+          SocketService_default.getInstance().chatSocket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             username: newUsername
           });
@@ -10954,7 +11003,7 @@
           if (bioDisplay) {
             bioDisplay.innerHTML = parseMessage(trimmedBio) || i18n_default.t("profilePage.bio_placeholder");
           }
-          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+          SocketService_default.getInstance().chatSocket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             bio: trimmedBio,
             username: localStorage.getItem("username")
@@ -10973,6 +11022,11 @@
     };
     const updateEmail = async (newEmail) => {
       if (!userId || !newEmail.trim()) {
+        return false;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (newEmail.length > 254 || !emailRegex.test(newEmail)) {
+        alert(i18n_default.t("profilePage.alerts.email_error"));
         return false;
       }
       try {
@@ -11021,6 +11075,12 @@
       let initialValue = display.innerText;
       const MAX_BIO_LENGTH = 70;
       const charCountElement = fieldName === "bio" ? elements2.container.querySelector(".char-count") : null;
+      if (fieldName === "alias")
+        input.maxLength = 30;
+      if (fieldName === "bio")
+        input.maxLength = 70;
+      if (fieldName === "email")
+        input.maxLength = 254;
       const updateCharCount = (currentLength) => {
         if (charCountElement) {
           charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
@@ -11152,7 +11212,7 @@
           updateStatusFrame(newStatus);
           localStorage.setItem("userStatus", newStatus);
           const username = localStorage.getItem("username");
-          SocketService_default.getInstance().socket?.emit("notifyStatusChange", {
+          SocketService_default.getInstance().chatSocket?.emit("notifyStatusChange", {
             userId: Number(userId),
             status: newStatus,
             username
@@ -11191,6 +11251,12 @@
     const pwdError = document.getElementById("pwd-error");
     const passwordContainer = document.querySelector('div[data-field="password"]');
     const openPwdModalButton = passwordContainer?.querySelector(".change-button");
+    if (currentPwdInput)
+      currentPwdInput.maxLength = 254;
+    if (newPwdInput)
+      newPwdInput.maxLength = 254;
+    if (confirmPwdInput)
+      confirmPwdInput.maxLength = 254;
     const resetPwdForm = () => {
       if (currentPwdInput) {
         currentPwdInput.value = "";
@@ -11221,7 +11287,7 @@
       const oldPass = currentPwdInput.value;
       const newPass = newPwdInput.value;
       const confirmPass = confirmPwdInput.value;
-      if (!oldPass || !newPass || !confirmPass) {
+      if (!oldPass || !newPass || !confirmPass || oldPass.length > 254 || newPass.length > 254 || confirmPass.length > 254) {
         if (pwdError) {
           pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_inputs");
           pwdError.classList.remove("hidden");
@@ -11236,7 +11302,7 @@
         }
         return;
       }
-      if (newPass.length < 8) {
+      if (newPass.length < 8 || newPass.length > 128) {
         if (pwdError) {
           pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_length");
           pwdError.classList.remove("hidden");
@@ -11451,18 +11517,27 @@
     const button = document.getElementById("register-button");
     const errorElement = document.getElementById("error-message");
     const backButton = document.getElementById("back-button");
+    const aliasInput = document.getElementById("alias-input");
+    const emailInput = document.getElementById("email-input");
+    const passwordInput = document.getElementById("password-input");
     if (!button) {
       console.error("Can't find register button in DOM");
       return;
     }
+    if (aliasInput)
+      aliasInput.maxLength = 30;
+    if (emailInput)
+      emailInput.maxLength = 254;
+    if (passwordInput)
+      passwordInput.maxLength = 128;
     backButton?.addEventListener("click", () => {
       window.history.pushState({}, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
     button.addEventListener("click", async () => {
-      const email = document.getElementById("email-input").value;
-      const password = document.getElementById("password-input").value;
-      const alias2 = document.getElementById("alias-input").value;
+      const alias2 = aliasInput?.value.trim() || "";
+      const email = emailInput?.value.trim() || "";
+      const password = passwordInput?.value || "";
       if (errorElement) {
         errorElement.classList.add("hidden");
         errorElement.textContent = "";
@@ -11471,6 +11546,13 @@
         if (errorElement) {
           errorElement.textContent = i18n_default.t("registerPage.error_inputs");
           errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      if (alias2.length > 30 || email.length > 254 || password.length > 128) {
+        if (errorElement) {
+          errorElement.textContent = i18n_default("registerPage.error_inputs");
+          errorElement.classList.remove.apply("hidden");
         }
         return;
       }
@@ -12998,6 +13080,13 @@
       const player4Input = document.getElementById("player4-input");
       const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
+      if (nameInput)
+        nameInput.maxLength = 45;
+      const pInputs = [player1Input, player2Input, player3Input, player4Input];
+      pInputs.forEach((input) => {
+        if (input)
+          input.maxLength = 15;
+      });
       this.initTournamentSelectors();
       const guestText = i18n_default.t("gamePage.default_guest");
       const username = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || guestText;
@@ -13023,6 +13112,13 @@
         if (!tName || players.some((p) => !p)) {
           if (errorDiv) {
             errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_fields");
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        if (tName.length > 45 || players.some((p) => p.length > 15)) {
+          if (errorDiv) {
+            errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_length");
             errorDiv.classList.remove("hidden");
           }
           return;
@@ -28255,6 +28351,10 @@
     html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18n_default.t("dashboardPage.page"));
     return html;
   }
+  function escapeHtml(text) {
+    if (!text) return text;
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
   function afterRender4() {
     const totalGame = document.getElementById("dashboard-total-games");
     const avgScore = document.getElementById("dashboard-avg-score");
@@ -28321,8 +28421,13 @@
       if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
         return;
       }
+      filterOpponent.maxLength = 30;
       const applyFiltersAndSort = () => {
-        const opponentValue = filterOpponent.value.toLowerCase().trim();
+        let rawVal = filterOpponent.value;
+        if (rawVal.length > 30) {
+          rawVal = rawVal.substring(0, 30);
+        }
+        const opponentValue = rawVal.toLowerCase().trim();
         const modeValue = filterMode.value;
         const sortValue = sortOrder.value;
         let resultData = globalMatchHistory.filter((match) => {
@@ -28424,7 +28529,8 @@
         const scoreString = `${match.my_score} - ${match.opponent_score !== void 0 ? match.opponent_score : 0}`;
         const roundString = match.round ? match.round : match.game_type === "tournament" ? i18n_default.t("dashboardPage.round_final") : i18n_default.t("dashboardPage.round_1v1");
         const translatedType = i18n_default.t(`dashboardPage.chart.${match.game_type || "local"}`);
-        const opponentName = match.opponent_alias || i18n_default.t("dashboardPage.unknown_user");
+        const rawName = match.opponent_alias || i18n_default.t("dashboardPage.unknown_user");
+        const opponentName = escapeHtml(rawName);
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `

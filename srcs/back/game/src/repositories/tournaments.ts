@@ -3,6 +3,7 @@ import { updateUserStats } from './stats.js'
 import { localTournament } from "./tournament_interfaces.js";
 import { addPlayerMatch } from './player_match.js';
 import { createMatch } from './matches.js';
+import { NotFoundError } from '../utils/error.js';
 
 
 export interface Tournament {
@@ -158,7 +159,7 @@ export async function findTournamentById (
 
     // toute petite correction ici
     if (!tournament?.tournament_id)
-        throw new Error(`No tournament matching ${id}`);
+        throw new NotFoundError(`No tournament matching ${id}`);
 
     return tournament;
 }

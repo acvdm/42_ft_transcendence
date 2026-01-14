@@ -45,6 +45,18 @@ export interface TournamentData
     startedAt: string
 }
 
+function escapeHtml(text: string): string 
+{
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
 export class TournamentManager {
     private context: GameContext;
     private tournamentState: TournamentData | null = null;
@@ -67,6 +79,15 @@ export class TournamentManager {
         const player4Input = document.getElementById('player4-input') as HTMLInputElement;
         const startButton = document.getElementById('start-tournament-btn'); 
         const errorDiv = document.getElementById('setup-error');
+
+        // Blocage natif de la taille des inputs
+        if (nameInput)
+            nameInput.maxLength = 45;
+        const pInputs = [player1Input, player2Input, player3Input, player4Input];
+        pInputs.forEach(input => {
+            if (input)
+                input.maxLength = 15;
+        });
 
         this.initTournamentSelectors();
 
@@ -103,6 +124,16 @@ export class TournamentManager {
                     errorDiv.classList.remove('hidden');
                 }
                 return;
+            }
+
+            if (tName.length > 45 || players.some(p => p.length > 15))
+            {
+                if (errorDiv)
+                {
+                    errorDiv.innerText = i18next.t('tournamentManager.setup_error_length');
+                    errorDiv.classList.remove('hidden');
+                }
+                return ;
             }
 
             const uniqueCheck = new Set(players);
@@ -463,6 +494,7 @@ export class TournamentManager {
             this.showSummary(winner);
         }
     }
+
 
     private showSummary(champion: string) {
         launchConfetti(4000);

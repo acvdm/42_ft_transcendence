@@ -53,6 +53,10 @@ fastify.post('/users', async (request, reply) => {
 		if (body.alias.length > 30) 
 		{
 		  throw new ValidationError('Error: Alias is too long, max 30 characters');
+		}
+		if (body.email.length > 254)
+		{
+			throw new ValidationError('Error: email is too long')
 		}		
 		// 1. Créer le user localement dans user.sqlite
 		userId = await userRepo.createUserInDB(db, body)		
@@ -577,7 +581,7 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
     try 
 	{
         if (!avatar) 
-			throw new Error("No avatar provided");
+			throw new ValidationError("No avatar provided");
 
         if (avatar.includes('/assets/')) {
             avatar = avatar.substring(avatar.indexOf('/assets/'));
@@ -612,7 +616,7 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
     try 
 	{
         if (!theme) 
-			throw new Error("No theme provided");
+			throw new ValidationError("No theme provided");
 
         await userRepo.updateTheme(db, userId, theme);
         
@@ -1034,3 +1038,4 @@ main().then(start).catch(err =>
 	console.error("Startup error:", err);
 	process.exit(1);
 })
+
