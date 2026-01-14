@@ -77,7 +77,6 @@ export async function getUnreadConversations(
         WHERE 
             m.sender_id != ? -- On ignore ses propres messages
             AND (r.last_read_at IS NULL OR m.sent_at > r.last_read_at)
-            AND c.channel_key  = ?
             
         GROUP BY c.id
     `;

@@ -74,6 +74,15 @@ export class Chat {
             this.messagesContainer.innerHTML = '';
         }
 
+        if (friendId) {
+            const badge = document.getElementById(`badge-${friendId}`);
+            if (badge) {
+                badge.classList.add('hidden');
+                badge.innerText = '0';
+                console.log(`[Chat] Cleared badge for friend ${friendId}`);
+            }
+        }
+
         if (this.unreadChannels.has(channelKey)) {
             this.unreadChannels.delete(channelKey);
 

@@ -2,8 +2,7 @@ import SocketService from "../services/SocketService";
 import { getStatusDot, statusImages } from "./Data";
 import { fetchWithAuth } from "../services/api";
 import { Friendship } from '../../../back/user/src/repositories/friendships';
-
-import i18next from "../i18n"; // Import ok
+import i18next from "../i18n";
 
 interface UnreadConversation {
     channel_key: string,
@@ -22,21 +21,27 @@ export class FriendList {
         this.userId = localStorage.getItem('userId');
     }
 
-    public init() {
-        console.log("[FriendList] Initializing..."); // LOG AJOUTÉ
+    public async init() {
+        console.log("[FriendList] Initializing...");
+        
         SocketService.getInstance().connectChat();
         SocketService.getInstance().connectGame();
-        this.loadFriends();
+        
+        // ✅ ATTENDRE que l'utilisateur soit enregistré dans sa room AVANT de charger les amis
+        await this.registerSocketUser();
+
+        this.listenToUpdates();
+        
+        // ✅ Maintenant on peut charger les amis et les messages non lus
+        await this.loadFriends();
+        await this.loadUnreadMessages(); // Plus besoin de setTimeout !
+        
         this.setupFriendRequests();
         this.setupNotifications(); 
         this.checkNotifications(); 
-        this.listenToUpdates();
         this.setupBlockListener();
-        this.registerSocketUser();
 
-        // setInterval(() => this.checkNotifications(), 30000);
-
-
+        // ✅ Polling toutes les 30s pour les demandes d'amis uniquement
         if (this.notificationInterval) {
             clearInterval(this.notificationInterval);
         }
@@ -45,7 +50,7 @@ export class FriendList {
         window.addEventListener('notificationUpdate', () => {
             console.log("Friend received notification");
             this.checkNotifications();
-        })
+        });
     }
 
     // AJOUT
@@ -64,43 +69,49 @@ export class FriendList {
         }
     }
 
-    private registerSocketUser() {
-        const socketService = SocketService.getInstance();
-        const chatSocket = socketService.getChatSocket();
-        const gameSocket = socketService.getGameSocket();
-        const userId = this.userId;
+    private registerSocketUser(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const socketService = SocketService.getInstance();
+            const chatSocket = socketService.getChatSocket();
+            const userId = this.userId;
 
-        if (!userId) return;
+            if (!userId) {
+                console.error('[FriendList] No userId found');
+                return reject('No userId');
+            }
 
-        if (chatSocket) {
+            if (!chatSocket) {
+                console.error('[FriendList] No chat socket available');
+                return reject('No chat socket');
+            }
+
             const registerChat = () => {
-                console.log("[FriendList] Registering user on Chat Socket:", userId);
-                chatSocket.emit('registerUser', Number(this.userId));
-                this.loadFriends();
+                console.log(`[FriendList] ✅ Registering user ${userId} on Chat Socket`);
+                chatSocket.emit('registerUser', Number(userId));
+                
+                // ✅ Attendre la confirmation du backend (optionnel mais recommandé)
+                chatSocket.once('userRegistered', () => {
+                    console.log(`[FriendList] ✅ User ${userId} successfully registered`);
+                    resolve();
+                });
+
+                // ✅ Timeout de sécurité (2 secondes max)
+                setTimeout(() => {
+                    console.warn('[FriendList] ⚠️ User registration timeout');
+                    resolve(); // On continue quand même
+                }, 2000);
             };
 
             if (chatSocket.connected) {
                 registerChat();
             } else {
-                chatSocket.on('connect', registerChat);
+                console.log('[FriendList] ⏳ Waiting for socket connection...');
+                chatSocket.once('connect', registerChat);
             }
-        }
-
-
-        if (gameSocket) {
-             const registerGame = () => {
-                 gameSocket.emit('registerGameSocket', userId);
-             };
-
-             if (gameSocket.connected) {
-                 registerGame();
-             } else {
-                 gameSocket.on('connect', registerGame);
-             }
-        }
+        });
     }
 
-    private async loadFriends() {
+    private async loadFriends(): Promise<void> {
         const contactsList = this.container;
         if (!this.userId || !contactsList) return;
 
@@ -171,29 +182,7 @@ export class FriendList {
 
                 contactsList.appendChild(friendItem);
 
-                const chatSocket = SocketService.getInstance().getChatSocket();
-                if (chatSocket) {
-                    const myId = Number(this.userId);
-                    const id1 = Math.min(myId, selectedFriend.id);
-                    const id2 = Math.max(myId, selectedFriend.id);
-                    const channelKey = `${id1}-${id2}`;
-
-                    const check = () => {
-                        chatSocket.emit('checkUnread', { 
-                            channelKey: channelKey, 
-                            friendId: selectedFriend.id 
-                        });
-                    };
-
-                    console.log("Channel key:", channelKey);
-                    if (chatSocket.connected) {
-                        check();
-                    } else {
-                        chatSocket.once('connect', check);
-                    }
-
-                }
-                
+            
                 friendItem.addEventListener('click', (e) => {
                     // Si on clique sur le bouton inviter, on ne déclenche pas l'ouverture du chat ici
                     if ((e.target as HTMLElement).closest('.invite-btn')) return;
@@ -270,6 +259,27 @@ export class FriendList {
         if (!chatSocket) {
             return;
         }
+
+        chatSocket.off('unreadNotification'); // Évite les doublons
+        chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
+            console.log(`[FriendList] 🔔 Unread notification from user ${data.senderId}`);
+            
+            const badge = document.getElementById(`badge-${data.senderId}`);
+            
+            if (badge) {
+                // ✅ Si le badge est caché, l'afficher avec "1"
+                if (badge.classList.contains('hidden')) {
+                    badge.classList.remove('hidden');
+                    badge.innerText = '1';
+                } else {
+                    // ✅ Sinon, incrémenter le compteur
+                    const currentCount = parseInt(badge.innerText) || 0;
+                    badge.innerText = (currentCount + 1).toString();
+                }
+            } else {
+                console.warn(`[FriendList] ⚠️ Badge badge-${data.senderId} not found in DOM`);
+            }
+        });
 
         chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
@@ -575,63 +585,26 @@ export class FriendList {
 
         try {
             // 1. Récupération des données (Chat + Amis)
-            const [friendsRes, chatRes] = await Promise.all([
-                fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
-                fetchWithAuth(`/api/chat/unread`)
-            ]);
+            const friendsRes = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+
 
             let pendingList: Friendship[] = [];
-            let unreadMessages: any[] = [];
 
             if (friendsRes.ok) {
                 const data = await friendsRes.json();
                 pendingList = data.data || [];
             }
 
-            if (chatRes.ok) {
-                const data = await chatRes.json();
-                unreadMessages = data.data || [];
-            }
-
-            // =========================================================
-            // PARTIE 1 : GESTION DES MESSAGES (BADGES SUR LA LISTE D'AMIS)
-            // =========================================================
-            
-            // A. D'abord, on cache TOUS les badges existants pour éviter les erreurs
-            const allBadges = document.querySelectorAll('[id^="badge-"]');
-            allBadges.forEach(b => {
-                b.classList.add('hidden');
-                b.innerText = '0';
-            });
-
-            // B. Ensuite, on affiche seulement ceux qui ont des messages
-            unreadMessages.forEach((msg) => {
-                // On cherche le badge correspondant à l'ID de l'envoyeur
-                const badge = document.getElementById(`badge-${msg.sender_id}`);
-                
-                if (badge) {
-                    badge.classList.remove('hidden');
-                    badge.innerText = msg.unread_count.toString();
-                    
-                    // Optionnel : Ajouter une animation visuelle
-                    badge.classList.add('animate-pulse'); 
-                }
-            });
-
-            // =========================================================
-            // PARTIE 2 : GESTION DES DEMANDES D'AMIS (MENU DÉROULANT)
-            // =========================================================
-
-            // Mise à jour de l'icône de la cloche (Uniquement pour les demandes d'amis maintenant ?)
-            // Si vous voulez que la cloche s'allume AUSSI pour les messages, ajoutez + unreadMessages.length
             const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
-            const totalNotifs = pendingList.length; // + unreadMessages.length; (Décommentez si vous voulez que la cloche sonne aussi pour les chats)
+            const totalNotifs = pendingList.length;
 
             if (totalNotifs > 0) {
                 if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
             } else {
                 if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
             }
+
+
 
             // Remplissage de la liste déroulante (Uniquement demandes d'amis)
             notifList.innerHTML = '';
@@ -687,6 +660,46 @@ export class FriendList {
 
         } catch (error) {
             console.error("Error fetching notifications:", error);
+        }
+    }
+
+
+    private async loadUnreadMessages(): Promise<void> {
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            console.warn('[FriendList] No userId for loading unread messages');
+            return;
+        }
+
+        try {
+            console.log('[FriendList] 📥 Fetching unread messages...');
+            const response = await fetchWithAuth(`/api/chat/unread`);
+            
+            if (!response.ok) {
+                console.error(`[FriendList] ❌ Failed to fetch unread messages: ${response.status}`);
+                return;
+            }
+
+            const data = await response.json();
+            const unreadMessages = data.data || [];
+
+            console.log(`[FriendList] ✅ Loaded ${unreadMessages.length} unread conversations`);
+
+            // ✅ Afficher les badges
+            unreadMessages.forEach((msg: any) => {
+                const badge = document.getElementById(`badge-${msg.sender_id}`);
+                
+                if (badge) {
+                    badge.classList.remove('hidden');
+                    badge.innerText = msg.unread_count.toString();
+                    console.log(`[FriendList] 🔴 Badge set for user ${msg.sender_id}: ${msg.unread_count}`);
+                } else {
+                    console.warn(`[FriendList] ⚠️ Badge badge-${msg.sender_id} not found in DOM`);
+                }
+            });
+
+        } catch (error) {
+            console.error('[FriendList] ❌ Error loading unread messages:', error);
         }
     }
 

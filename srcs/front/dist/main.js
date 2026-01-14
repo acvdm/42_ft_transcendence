@@ -8571,17 +8571,18 @@
       this.container = document.getElementById("contacts-list");
       this.userId = localStorage.getItem("userId");
     }
-    init() {
+    async init() {
       console.log("[FriendList] Initializing...");
       SocketService_default.getInstance().connectChat();
       SocketService_default.getInstance().connectGame();
-      this.loadFriends();
+      await this.registerSocketUser();
+      this.listenToUpdates();
+      await this.loadFriends();
+      await this.loadUnreadMessages();
       this.setupFriendRequests();
       this.setupNotifications();
       this.checkNotifications();
-      this.listenToUpdates();
       this.setupBlockListener();
-      this.registerSocketUser();
       if (this.notificationInterval) {
         clearInterval(this.notificationInterval);
       }
@@ -8606,33 +8607,37 @@
       }
     }
     registerSocketUser() {
-      const socketService = SocketService_default.getInstance();
-      const chatSocket = socketService.getChatSocket();
-      const gameSocket = socketService.getGameSocket();
-      const userId = this.userId;
-      if (!userId) return;
-      if (chatSocket) {
+      return new Promise((resolve2, reject) => {
+        const socketService = SocketService_default.getInstance();
+        const chatSocket = socketService.getChatSocket();
+        const userId = this.userId;
+        if (!userId) {
+          console.error("[FriendList] No userId found");
+          return reject("No userId");
+        }
+        if (!chatSocket) {
+          console.error("[FriendList] No chat socket available");
+          return reject("No chat socket");
+        }
         const registerChat = () => {
-          console.log("[FriendList] Registering user on Chat Socket:", userId);
-          chatSocket.emit("registerUser", Number(this.userId));
-          this.loadFriends();
+          console.log(`[FriendList] \u2705 Registering user ${userId} on Chat Socket`);
+          chatSocket.emit("registerUser", Number(userId));
+          chatSocket.once("userRegistered", () => {
+            console.log(`[FriendList] \u2705 User ${userId} successfully registered`);
+            resolve2();
+          });
+          setTimeout(() => {
+            console.warn("[FriendList] \u26A0\uFE0F User registration timeout");
+            resolve2();
+          }, 2e3);
         };
         if (chatSocket.connected) {
           registerChat();
         } else {
-          chatSocket.on("connect", registerChat);
+          console.log("[FriendList] \u23F3 Waiting for socket connection...");
+          chatSocket.once("connect", registerChat);
         }
-      }
-      if (gameSocket) {
-        const registerGame = () => {
-          gameSocket.emit("registerGameSocket", userId);
-        };
-        if (gameSocket.connected) {
-          registerGame();
-        } else {
-          gameSocket.on("connect", registerGame);
-        }
-      }
+      });
     }
     async loadFriends() {
       const contactsList = this.container;
@@ -8685,25 +8690,6 @@
                 </div>
                 `;
           contactsList.appendChild(friendItem);
-          const chatSocket = SocketService_default.getInstance().getChatSocket();
-          if (chatSocket) {
-            const myId = Number(this.userId);
-            const id1 = Math.min(myId, selectedFriend.id);
-            const id2 = Math.max(myId, selectedFriend.id);
-            const channelKey = `${id1}-${id2}`;
-            const check = () => {
-              chatSocket.emit("checkUnread", {
-                channelKey,
-                friendId: selectedFriend.id
-              });
-            };
-            console.log("Channel key:", channelKey);
-            if (chatSocket.connected) {
-              check();
-            } else {
-              chatSocket.once("connect", check);
-            }
-          }
           friendItem.addEventListener("click", (e) => {
             if (e.target.closest(".invite-btn")) return;
             this.clearNotifications(selectedFriend.id);
@@ -8762,6 +8748,22 @@
       if (!chatSocket) {
         return;
       }
+      chatSocket.off("unreadNotification");
+      chatSocket.on("unreadNotification", (data) => {
+        console.log(`[FriendList] \u{1F514} Unread notification from user ${data.senderId}`);
+        const badge = document.getElementById(`badge-${data.senderId}`);
+        if (badge) {
+          if (badge.classList.contains("hidden")) {
+            badge.classList.remove("hidden");
+            badge.innerText = "1";
+          } else {
+            const currentCount = parseInt(badge.innerText) || 0;
+            badge.innerText = (currentCount + 1).toString();
+          }
+        } else {
+          console.warn(`[FriendList] \u26A0\uFE0F Badge badge-${data.senderId} not found in DOM`);
+        }
+      });
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
@@ -8988,33 +8990,12 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const [friendsRes, chatRes] = await Promise.all([
-          fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
-          fetchWithAuth(`/api/chat/unread`)
-        ]);
+        const friendsRes = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
         let pendingList = [];
-        let unreadMessages = [];
         if (friendsRes.ok) {
           const data = await friendsRes.json();
           pendingList = data.data || [];
         }
-        if (chatRes.ok) {
-          const data = await chatRes.json();
-          unreadMessages = data.data || [];
-        }
-        const allBadges = document.querySelectorAll('[id^="badge-"]');
-        allBadges.forEach((b) => {
-          b.classList.add("hidden");
-          b.innerText = "0";
-        });
-        unreadMessages.forEach((msg) => {
-          const badge = document.getElementById(`badge-${msg.sender_id}`);
-          if (badge) {
-            badge.classList.remove("hidden");
-            badge.innerText = msg.unread_count.toString();
-            badge.classList.add("animate-pulse");
-          }
-        });
         const notifIcon = document.getElementById("notification-icon");
         const totalNotifs = pendingList.length;
         if (totalNotifs > 0) {
@@ -9075,6 +9056,36 @@
         }
       } catch (error) {
         console.error("Error fetching notifications:", error);
+      }
+    }
+    async loadUnreadMessages() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        console.warn("[FriendList] No userId for loading unread messages");
+        return;
+      }
+      try {
+        console.log("[FriendList] \u{1F4E5} Fetching unread messages...");
+        const response = await fetchWithAuth(`/api/chat/unread`);
+        if (!response.ok) {
+          console.error(`[FriendList] \u274C Failed to fetch unread messages: ${response.status}`);
+          return;
+        }
+        const data = await response.json();
+        const unreadMessages = data.data || [];
+        console.log(`[FriendList] \u2705 Loaded ${unreadMessages.length} unread conversations`);
+        unreadMessages.forEach((msg) => {
+          const badge = document.getElementById(`badge-${msg.sender_id}`);
+          if (badge) {
+            badge.classList.remove("hidden");
+            badge.innerText = msg.unread_count.toString();
+            console.log(`[FriendList] \u{1F534} Badge set for user ${msg.sender_id}: ${msg.unread_count}`);
+          } else {
+            console.warn(`[FriendList] \u26A0\uFE0F Badge badge-${msg.sender_id} not found in DOM`);
+          }
+        });
+      } catch (error) {
+        console.error("[FriendList] \u274C Error loading unread messages:", error);
       }
     }
     async handleRequest(requesterId, action, itemDiv) {
@@ -9488,6 +9499,14 @@
       }
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
+      }
+      if (friendId) {
+        const badge = document.getElementById(`badge-${friendId}`);
+        if (badge) {
+          badge.classList.add("hidden");
+          badge.innerText = "0";
+          console.log(`[Chat] Cleared badge for friend ${friendId}`);
+        }
       }
       if (this.unreadChannels.has(channelKey)) {
         this.unreadChannels.delete(channelKey);

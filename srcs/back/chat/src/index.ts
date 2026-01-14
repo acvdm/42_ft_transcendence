@@ -275,30 +275,33 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
 }
 
 fastify.get('/unread', async (request, reply) => {
-    // 1. On récupère le token dans le header "Authorization"
     const authHeader = request.headers.authorization;
+    
+    console.log('[/unread] Headers:', request.headers); // ✅ LOG
+    
     if (!authHeader) {
+        console.error('[/unread] No Authorization header'); // ✅ LOG
         return reply.code(401).send({ success: false, error: "No token provided" });
     }
 
     try {
-        // 2. On nettoie le token (enlève "Bearer ") et on le vérifie
         const token = authHeader.replace('Bearer ', '');
         const decoded: any = jwt.verify(token, JWT_SECRET);
-        const userId = decoded.sub; // On a l'ID de l'utilisateur !
+        const userId = decoded.sub;
 
-        console.log(`[API] Fetching unread for UserID: ${userId}`); // <--- LOG
-        // 3. On demande à la DB les conversations non lues
+        console.log(`[/unread] ✅ User authenticated: ${userId}`); // ✅ LOG
+        
         const unreadConvs = await getUnreadConversations(db, userId);
+        
+        console.log(`[/unread] Found ${unreadConvs.length} unread conversations`); // ✅ LOG
 
-        // 4. On renvoie la liste au front
         return reply.send({
             success: true,
             data: unreadConvs
         });
 
     } catch (err) {
-        console.error("Error fetching unread:", err);
+        console.error("[/unread] Error:", err); // ✅ LOG
         return reply.code(401).send({ success: false, error: "Invalid token" });
     }
 });
