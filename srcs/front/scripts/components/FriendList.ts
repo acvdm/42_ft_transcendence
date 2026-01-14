@@ -147,7 +147,7 @@ export class FriendList {
                 friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
                 
                 friendItem.innerHTML = `
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
                     <div class="relative w-[40px] h-[40px] flex-shrink-0">
                          <img class="w-full h-full rounded-full object-cover border border-gray-200"
                              src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
@@ -157,7 +157,6 @@ export class FriendList {
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
-                        <span class="text-xs text-gray-400 status-text">${status}</span>
                     </div>
                 </div>
 
