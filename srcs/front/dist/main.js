@@ -12174,10 +12174,27 @@
       const prevBallY = this.ball.y;
       const newBallX = data.ball.x * scaleX;
       const newBallY = data.ball.y * scaleY;
-      this.ball.x = prevBallX + (newBallX - prevBallX) * 0.7;
-      this.ball.y = prevBallY + (newBallY - prevBallY) * 0.7;
-      this.ball.velocityX = data.ball.velocityX;
-      this.ball.velocityY = data.ball.velocityY;
+      const currentBallSpeed = Math.abs(data.ball.vx) + Math.abs(data.ball.vy);
+      const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
+      this.lastBallSpeed = currentBallSpeed;
+      const paddle1Right = data.paddle1.x + data.paddle1.width;
+      const paddle2Left = data.paddle2.x;
+      const distanceToPaddle1 = Math.abs(data.ball.x - paddle1Right);
+      const distanceToPaddle2 = Math.abs(data.ball.x - paddle2Left);
+      const minDistance = Math.min(distanceToPaddle1, distanceToPaddle2);
+      const nearPaddle = minDistance < 50;
+      if (ballJustLaunched) {
+        this.ball.x = newBallX;
+        this.ball.y = newBallY;
+      } else if (nearPaddle) {
+        this.ball.x = newBallX;
+        this.ball.y = newBallY;
+      } else {
+        this.ball.x = prevBallX + (newBallX - prevBallX) * 0.55;
+        this.ball.y = prevBallY + (newBallY - prevBallY) * 0.55;
+      }
+      this.ball.velocityX = data.ball.vx;
+      this.ball.velocityY = data.ball.vy;
       this.paddle1.y = data.paddle1.y * scaleY;
       this.paddle1.x = data.paddle1.x * scaleX;
       this.paddle2.y = data.paddle2.y * scaleY;

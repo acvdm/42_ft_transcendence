@@ -200,13 +200,36 @@ class Game {
         const newBallX = data.ball.x * scaleX;
         const newBallY = data.ball.y * scaleY;
 
-        // Adapter les positions de la balle
-        this.ball.x = prevBallX + (newBallX - prevBallX) * 0.7; // 70% nouvelle position
-        this.ball.y = prevBallY + (newBallY - prevBallY) * 0.7;
+        // [FIX] Détecter le lancement de la balle (vitesse passe de 0 à > 0)
+        const currentBallSpeed = Math.abs(data.ball.vx) + Math.abs(data.ball.vy);
+        const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
+        this.lastBallSpeed = currentBallSpeed;
 
-        // Mettre à jour la vélocité depuis le serveur
-        this.ball.velocityX = data.ball.velocityX;
-        this.ball.velocityY = data.ball.velocityY;
+        // [FIX] Détecter si la balle est proche d'un paddle (zone critique de collision)
+        const paddle1Right = data.paddle1.x + data.paddle1.width;
+        const paddle2Left = data.paddle2.x;
+        const distanceToPaddle1 = Math.abs(data.ball.x - paddle1Right);
+        const distanceToPaddle2 = Math.abs(data.ball.x - paddle2Left);
+        const minDistance = Math.min(distanceToPaddle1, distanceToPaddle2);
+        const nearPaddle = minDistance < 50; // Zone critique : 50px du paddle
+
+        if (ballJustLaunched) {
+            // Téléportation directe UNIQUEMENT au lancement (pas pendant countdown)
+            this.ball.x = newBallX;
+            this.ball.y = newBallY;
+        } else if (nearPaddle) {
+            // [FIX] Proche d'un paddle : pas d'interpolation (0%) pour synchronisation parfaite
+            this.ball.x = newBallX;
+            this.ball.y = newBallY;
+        } else {
+            // Adapter les positions de la balle avec interpolation (55% = plus réactif)
+            this.ball.x = prevBallX + (newBallX - prevBallX) * 0.55;
+            this.ball.y = prevBallY + (newBallY - prevBallY) * 0.55;
+        }
+
+        // Mettre à jour la vélocité depuis le serveur (utiliser vx/vy côté serveur)
+        this.ball.velocityX = data.ball.vx;
+        this.ball.velocityY = data.ball.vy;
 
 
         // Adapter les raquettes
