@@ -92,7 +92,10 @@
     "error_auth_default": "Échec de l'authentification",
     "error_network": "Erreur réseau, veuillez réessayer",
     "error_2fa_invalid": "Code invalide.",
-    "error_2fa_verify": "Erreur lors de la vérification."
+    "error_2fa_verify": "Erreur lors de la vérification.",
+    "error_no_user": "Aucun utilisateur ne correspond à cet email.",
+    "error_invalid_pwd": "Mauvais mot de passe.",
+    "error_text_default": "Erreur d'authentification"
   },
 
   "registerPage": {

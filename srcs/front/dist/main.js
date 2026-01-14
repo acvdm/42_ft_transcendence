@@ -6001,7 +6001,10 @@
       error_auth_default: "\xC9chec de l'authentification",
       error_network: "Erreur r\xE9seau, veuillez r\xE9essayer",
       error_2fa_invalid: "Code invalide.",
-      error_2fa_verify: "Erreur lors de la v\xE9rification."
+      error_2fa_verify: "Erreur lors de la v\xE9rification.",
+      error_no_user: "Aucun utilisateur ne correspond \xE0 cet email.",
+      error_invalid_pwd: "Mauvais mot de passe.",
+      error_text_default: "Erreur d'authentification"
     },
     registerPage: {
       welcome: "S'inscrire sur Transcendence",
@@ -6531,7 +6534,10 @@
       error_auth_default: "Authentication failed",
       error_network: "Network error, please try again",
       error_2fa_invalid: "Invalid code.",
-      error_2fa_verify: "Error during verification."
+      error_2fa_verify: "Error during verification.",
+      error_no_user: "No user matches the email",
+      error_invalid_pwd: "Invalid password",
+      error_text_default: "Authentication error"
     },
     registerPage: {
       welcome: "Sign up to Transcendence",
@@ -7061,7 +7067,10 @@
       error_auth_default: "Autenticaci\xF3n fallida",
       error_network: "Error de red, int\xE9ntelo de nuevo",
       error_2fa_invalid: "C\xF3digo inv\xE1lido.",
-      error_2fa_verify: "Error durante la verificaci\xF3n."
+      error_2fa_verify: "Error durante la verificaci\xF3n.",
+      error_no_user: "Ning\xFAn usuario coincide con el correo electr\xF3nico.",
+      error_invalid_pwd: "Contrase\xF1a no v\xE1lida",
+      error_text_default: "Error de autenticaci\xF3n"
     },
     registerPage: {
       welcome: "Registrarse en Transcendence",
@@ -8033,7 +8042,11 @@
         } else {
           console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = result.error?.message || result.error.error || i18n_default.t("loginPage.error_auth_default");
+            const backendErrorkey = result.error?.message;
+            if (backendErrorkey)
+              errorElement.textContent = i18n_default.t(backendErrorkey);
+            else
+              errorElement.textContent = i18n_default.t("loginPage.error_text_default");
             errorElement.classList.remove("hidden");
           }
         }
@@ -11322,7 +11335,11 @@
         } else {
           if (pwdError) {
             console.log("pwdError");
-            pwdError.innerText = result.error?.message || i18n_default.t("profilePage.alerts.pwd_error");
+            const backendErrorKey = result.error?.message;
+            if (backendErrorKey)
+              pwdError.innerText = i18n_default.t(backendErrorKey);
+            else
+              pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_error");
             pwdError.classList.remove("hidden");
           }
         }

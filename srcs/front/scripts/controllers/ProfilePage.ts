@@ -1024,7 +1024,13 @@ export function afterRender(): void {
                 if (pwdError) {
                     console.log("pwdError");
                     // MODIFICATION: Translation fallback
-                    pwdError.innerText = result.error?.message || i18next.t('profilePage.alerts.pwd_error');
+                    const backendErrorKey = result.error?.message;
+                    if (backendErrorKey)
+                        pwdError.innerText = i18next.t(backendErrorKey);
+                    else
+                        pwdError.innerText = i18next.t('profilePage.alerts.pwd_error');
+
+                    // pwdError.innerText = result.error?.message || i18next.t('profilePage.alerts.pwd_error');
                     pwdError.classList.remove('hidden');
                 }
             }

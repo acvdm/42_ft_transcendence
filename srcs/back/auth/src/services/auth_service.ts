@@ -186,7 +186,7 @@ export async function loginUser(
     
     const userId = await credRepo.findUserIdByEmail(db, email);
     if (!userId)
-        throw new NotFoundError('No user matches the email');
+        throw new NotFoundError('loginPage.error_no_user');
 
     const credentialId = await credRepo.findByEmail(db, email);
     if (!credentialId)
@@ -194,7 +194,7 @@ export async function loginUser(
 
     const isPasswordValid = await authenticatePassword(db, credentialId, password);
     if (!isPasswordValid)
-        throw new UnauthorizedError ('Invalid password');
+        throw new UnauthorizedError ('loginPage.error_invalid_pwd');
 
     // QUELLE EST LA METHODE 2FA ACTIVE
 

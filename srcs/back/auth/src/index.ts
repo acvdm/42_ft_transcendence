@@ -181,7 +181,7 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
 
 		const isOldPwdValid = await authenticatePassword(db, credentialId, body.oldPass);
 		if (! isOldPwdValid)
-			throw new UnauthorizedError('Invalid Password');
+			throw new UnauthorizedError('loginPage.error_invalid_pwd');
 
 		const isvalidNewPass = await isValidPassword(body.newPass);
 		if (!isvalidNewPass)
