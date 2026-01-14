@@ -1,6 +1,6 @@
 import { Database } from 'sqlite';
 import { User } from './users';
-import { NotFoundError, ValidationError, ConflictError } from '../utils/error.js';
+import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../utils/error.js';
 
 export interface Friendship {
     id: number,
@@ -32,10 +32,10 @@ export async function makeFriendshipRequest (
     console.log(`${friend.alias} is guest ? ${friend.is_guest_bool}`);
 
     if (friend.is_guest_bool === "true")
-        throw new Error(`You cannot add a guest as friend`);
+        throw new ForbiddenError(`You cannot add a guest as friend`);
 
     if (friend.id == user_id)
-        throw new Error(`You cannot add yourself as a friend. Loser.`);
+        throw new ValidationError(`You cannot add yourself as a friend. Loser.`);
 
     console.log("line 38");
     const is_blocked = await db.get(`

@@ -4,7 +4,7 @@ import * as crypt from '../utils/crypto.js';
 import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
 import * as QRCode from 'qrcode';
 import { send2FAEmail } from "../utils/mailer.js";
-import { ConflictError, NotFoundError, UnauthorizedError } from "../utils/error.js";
+import { ConflictError, NotFoundError, ServiceUnavailableError, UnauthorizedError, ValidationError } from "../utils/error.js";
 
 import { 
     generateAccessToken, 
@@ -225,7 +225,7 @@ export async function loginUser(
             await send2FAEmail(email, code);
         } catch (error) {
             console.error("Error during the sending of the code by email:", error);
-            throw new Error("Not possible to send verification email");
+            throw new ServiceUnavailableError("Not possible to send verification email");
         }
 
         console.log(`[ACTIVATION] Code envoyé à ${email}`)
@@ -393,7 +393,7 @@ export async function  generateTwoFA(
             await send2FAEmail(email, code);
         } catch (error) {
             console.error("Erreur d'envoi de mail:", error);
-            throw new Error("Not possible to send verification email");
+            throw new ServiceUnavailableError("Not possible to send verification email");
         }
 
         console.log(`[ACTIVATION] Code envoyé à ${email}`)
@@ -401,7 +401,7 @@ export async function  generateTwoFA(
         return { message : 'Code send by email' };
     }
 
-    throw new Error("Invalid 2FA type");
+    throw new ValidationError("Invalid 2FA type");
 }
 
 // fonciton qui verifie le code envoye par lutilisateur et permet lactivation du 2FA
@@ -419,7 +419,7 @@ export async function verifyAndEnable2FA(
         // 1. Recuperer le secret en DB
         const secretStr = await credRepo.get2FASecret(db, userId);
         if (!secretStr)
-            throw new Error("2FA not initiated");
+            throw new ConflictError("2FA not initiated");
 
         // 2. Creer l'objet TOTP pour verifier
         const totp = new TOTP({
@@ -439,7 +439,7 @@ export async function verifyAndEnable2FA(
     {
         const data = await credRepo.getEmailCodeData(db, userId);
         if (!data.code || !data.expiresAt)
-            throw new Error("No code requested");
+            throw new ConflictError("No code requested");
         
         const now = new Date();
         const expiredAt = new Date(data.expiresAt);
@@ -481,7 +481,7 @@ export async function finalizeLogin2FA(
     {
         const secretStr = await credRepo.get2FASecret(db, userId);
         if (!secretStr)
-            throw new Error("2FA not configured for this user");
+            throw new ConflictError("2FA not configured for this user");
 
         // verifier le code totp
         const totp = new TOTP({

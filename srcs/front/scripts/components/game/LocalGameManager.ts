@@ -5,6 +5,7 @@ import Game from "../../game/Game";
 import Input from "../../game/Input";
 import { getSqlDate, launchCountdown, showVictoryModal } from "./GameUI";
 import { Chat } from "../Chat";
+import i18next from "../../i18n";
 
 interface GameContext {
     setGame: (game: Game | null) => void;
@@ -45,13 +46,13 @@ export class LocalGameManager {
 
         if (modal) modal.classList.remove('hidden');
 
-		// Ball selection
+        // Ball selection
         if (ballButton && ballDropdown && ballGrid) {
 
             const uniqueUrls = new Set<string>();
             ballGrid.innerHTML = '';
             
-			Object.keys(ballEmoticons).forEach(key => {
+            Object.keys(ballEmoticons).forEach(key => {
                 const imgUrl = ballEmoticons[key];
                 if (!uniqueUrls.has(imgUrl)) {
                     uniqueUrls.add(imgUrl);
@@ -137,7 +138,9 @@ export class LocalGameManager {
         // Starting the game
         if (startButton) 
         {
-            let p1Alias = localStorage.getItem('username');
+            // MODIFICATION : Utilisation de i18n pour le fallback "Guest"
+            let p1Alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || i18next.t('gamePage.default_guest');
+            
             const newStartBtn = startButton.cloneNode(true);
             startButton.parentNode?.replaceChild(newStartBtn, startButton);
             newStartBtn.addEventListener('click', () => {
@@ -149,13 +152,17 @@ export class LocalGameManager {
                 }
 
                 if (this.context.chat) {
-                    this.context.chat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
+                    // MODIFICATION : Utilisation de i18n pour le message système avec interpolation
+                    this.context.chat.addSystemMessage(i18next.t('localPage.chat_start_match', {
+                        p1: p1Alias,
+                        p2: opponentName
+                    }));
                 }
 
                 const selectedBall = ballValueInput ? ballValueInput.value : 'classic';
                 const selectedBg = bgValueInput ? bgValueInput.value : '#E8F4F8';
 
-				if (player2Display) {
+                if (player2Display) {
                     player2Display.innerText = opponentName;
                 }
 
@@ -226,7 +233,9 @@ export class LocalGameManager {
 
                                 const p1Score = activeGame.score.player1;
                                 const p2Score = activeGame.score.player2;
-                                const p1Alias = localStorage.getItem('username') || "Player 1";
+                                
+                                // MODIFICATION : Réutilisation de la traduction pour Guest
+                                const p1Alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || i18next.t('gamePage.default_guest');
                                 const p2Alias = opponentName;
                                 const p1Wins = p1Score > p2Score;
                                 const winnerAlias = p1Wins ? p1Alias : p2Alias;

@@ -224,7 +224,7 @@ export async function rollbackDeleteUser (
 {
     const user = await findUserByID(db, user_id);
     if (!user.id) {
-        throw new Error(`Error id: ${user_id} does not exist`);
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
     }
 
     await db.run(`
@@ -243,7 +243,7 @@ export async function updateAvatar(
 ) {
     const user = await findUserByID(db, user_id);
     if (!user?.id)
-        throw new Error(`Error id: ${user_id} does not exist`);
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
     await db.run(
         `UPDATE USERS SET avatar_url = ? WHERE id = ?`,
@@ -270,5 +270,36 @@ export async function anonymizeUser(
             theme = 'Blue'
         WHERE id = ?`,
     [anonymousAlias, userId]
+    );
+}
+
+
+/* REPRENDRE */
+export async function getPreferredLanguage(
+    db: Database,
+    userId: number
+) : Promise<string>
+{
+    const row = await db.get(`
+        SELECT preferred_language 
+        FROM USERS 
+        WHERE id = ?`,
+        [userId]
+    );
+    return row?.preferred_language || null;
+}
+
+
+export async function updatePreferredLanguage(
+    db: Database,
+    userId: number,
+    preferredLanguage: string
+) : Promise<void>
+{
+    await db.run(`
+        UPDATE USERS
+        SET preferred_language = ? 
+        WHERE id = ?`,
+        [preferredLanguage, userId]
     );
 }

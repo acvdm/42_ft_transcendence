@@ -10,6 +10,11 @@ import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfi
 import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
 import SocketService from "./services/SocketService";
 
+/* translations */
+import { initI18n, changeLanguage } from "./i18n";
+import i18next from "./i18n";
+import { access } from "fs";
+
 const appElement = document.getElementById('app');
 
 interface Page {
@@ -147,6 +152,12 @@ const handleLocationChange = () => {
     const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
+    if (!publicRoutes.includes(path) && !accessToken && !isGuest) {
+        window.history.replaceState(null, '', '/');
+        handleLocationChange();
+        return ;
+    }
+
     if (isGameRunning() && path !== '/game') {
 		cleanup();
 	}
@@ -154,6 +165,40 @@ const handleLocationChange = () => {
         handleLogout();
         return; 
     }
+
+
+    /* AJOUT POUR CHARGER LA LANGUE SAUVEGARDEE EN DB DANS USER
+//     fastify.get('/users/:id/language', async (request, reply) => 
+// {
+// 	try
+// 	{
+// 		const { id } = request.params as { id: string };
+// 		const userId = Number(id);
+// 		if (!userId) {
+// 			return reply.status(400).send({ error: "Invalid User ID" });
+// 		}
+
+// 		const prefferedLanguage = await getPreferredLanguage(db, userId);
+
+// 		return reply.status(200).send({
+// 			success: true,
+// 			language: prefferedLanguage,
+// 			error: null
+// 		});
+// 	}
+// 	catch (err: any) 
+// 	{
+// 		console.error("Export Auth Error:", err);
+// 		const statusCode = err.statusCode || 500;
+
+// 		return reply.status(statusCode).send({
+// 			success: false,
+// 			// language: prefferedLanguage,
+// 			error: { message: err.message || "Failed to export language"}
+// 		});
+// 	}
+// });
+     */
 
 	//================================================
 	//============= NAVIGATION BAR LOGIC =============
@@ -174,37 +219,98 @@ const handleLocationChange = () => {
                 menuContent.classList.toggle('hidden');
             });
 
-            window.addEventListener('click', () => {
-                if (!menuContent.classList.contains('hidden')) {
-                    menuContent.classList.add('hidden');
-                }
-            });
-        }
+            // window.addEventListener('click', () => {
+            //     if (!menuContent.classList.contains('hidden')) {
+            //         menuContent.classList.add('hidden');
+            //     }
+            // });
 
+            // /* Rajout cassandre */
+            const closeMenu = () => {
+                if (!menuContent.classList.contains('hidden'))
+                    menuContent.classList.add('hidden');
+            };
+
+            document.addEventListener('click', closeMenu);
+        }
+        
+        const currentLangDisplay = document.getElementById('current-lang-display');
+        if (currentLangDisplay)
+            currentLangDisplay.textContent = i18next.language.toUpperCase();
+        
         // Choose langage
-        document.querySelectorAll('.lang-select').forEach(btn => {
-            const newBtn = btn.cloneNode(true); 
+        const langButtons = document.querySelectorAll('.lang-select');
+
+        langButtons.forEach(btn => {
+            const newBtn = btn.cloneNode(true) as HTMLElement;
             btn.parentNode?.replaceChild(newBtn, btn);
-            
-            newBtn.addEventListener('click', (e) => {
-                const target = e.target as HTMLElement;
-                const lang = target.getAttribute('data-lang');
-                if (lang) {
+
+            newBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation(); //pourquoi?
+
+                const lang = (e.currentTarget as HTMLElement).getAttribute('data-lang');
+                const currentLang = i18next.language;
+
+                /* PB ICI ??*/
+                if (lang && lang !== currentLang) 
+                {
                     console.log("Langue changée vers :", lang);
+                    await changeLanguage(lang);
+
+                    const userId = localStorage.getItem('userId');
+                    const accessToken = localStorage.getItem('accessToken');
                     
+                    if (userId && accessToken)
+                    {
+                        try {
+		                    const response = await fetch(`/api/user/${userId}/language`, {
+		                    	method: 'PATCH',
+		                    	headers: {
+		                    		'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+		                    	},
+		                    	credentials: 'include',
+		                    	body: JSON.stringify({ language: lang })
+		                    });
+                            if (!response.ok)
+                                console.error("Error during the modification of the language");
+                        } catch (error) {
+                            console.error("Error during update of preffered language");
+                        }
+                    }
+
+                    handleLocationChange();
+
                     const display = document.getElementById('current-lang-display');
                     if (display) display.textContent = lang.toUpperCase();
+                    //fermer le menu
+                    const menuContent = document.getElementById('lang-menu-content');
+                    if (menuContent)
+                        menuContent.classList.add('hidden');
                 }
-            });
+                    
+                    
+	        });    
+                   
+            
         });
+        // handleLocationChange();
     };
     
+    const currentStatus = localStorage.getItem('userStatus') || 'available';
+    const statusText = document.getElementById('current-status-text');
+    if (statusText)
+        statusText.textContent = `(${i18next.t(`profile.status.${currentStatus}`)})`;
+
+
+
     // Dropdown HTML
     const langDropdownHtml = `
         <div class="relative" id="lang-dropdown">
             <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
                 <span class="text-lg">🌐</span>
-                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">${i18next.language.toUpperCase()}</span>
                 <span class="text-[10px] opacity-70">▼</span>
             </button>
             
@@ -222,6 +328,7 @@ const handleLocationChange = () => {
         </div>
     `;
 
+
     const navbar = document.getElementById('main-navbar');
 
     const userMenuHtml = `
@@ -231,7 +338,7 @@ const handleLocationChange = () => {
         <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
         ${langDropdownHtml}
     `;
-
+	
     const guestMenuHtml = `
         <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
         <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
@@ -251,6 +358,7 @@ const handleLocationChange = () => {
             if ((isGuest && !isCurrentGuest) || (!isGuest && isCurrentGuest) || !currentHTML.includes('lang-dropdown')) {
                 navbar.innerHTML = targetHTML;
                 setupLangDropdown();
+                // translateElements(); // TRADUIRE ELEMENTS DE LA NAVBAR
             }
         } 
         else {
@@ -299,6 +407,49 @@ const handleLocationChange = () => {
 // 	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
 // };
 
+
+/* RECUPERATION DE LA LANGUE EN DB */
+
+const loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem('userId');
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (userId)
+    {
+        try {
+            const response = await fetch(`/api/user/${userId}/language`, {
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            if (response.ok)
+            {
+                const data = await response.json();
+                if (data.success && data.language)
+                {
+                    const dbLang = data.language;
+                    const currentLang = i18next.language;
+
+                    if (dbLang && dbLang !== currentLang)
+                    {
+                        console.log(`Langue en BDD trouvee (${dbLang})`);
+                        await changeLanguage(dbLang);
+                    }
+                }
+            }
+
+
+        } 
+        catch (error) {
+            console.error("Impossible de charger la langue utilisateur");
+        }
+    }
+}
+
+
+
 	//================================================
 	//============ ROUTEUR INITIALISATION ============
 	//================================================
@@ -336,6 +487,14 @@ window.addEventListener('popstate', () => {
 	handleLocationChange();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+// initialiser i18next avant le premier rendu
+document.addEventListener('DOMContentLoaded', async () => {
+    // init de base
+    await initI18n();
+    // recuperation de la langue en DB
+    await loadUserLanguageFromDB();
+
+    console.log("i18n initialise, langue:", i18next.language);
+
 	handleLocationChange();
 });

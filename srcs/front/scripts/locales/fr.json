@@ -1,0 +1,533 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "profile": "Profil",
+    "dashboard": "Tableau de bord",
+    "logout": "Déconnexion",
+    "guest_area": "Espace invité"
+  },
+  "profile": {
+    "title": "Profil",
+    "username": "Nom d'utilisateur",
+    "bio": "Partagez un message rapide avec les contacts",
+    "status": {
+      "available": "Disponible",
+      "busy": "Occupé",
+      "away": "Absent",
+      "offline": "Hors ligne"
+    }
+  },
+  "games": {
+    "title": "Jeux",
+    "choose_mode": "CHOISISSEZ VOTRE MODE DE JEU",
+    "local": "JEU LOCAL",
+    "remote": "JEU EN LIGNE",
+    "tournament": "TOURNOI"
+  },
+  "chat": {
+    "title": "Messagerie",
+    "friends": "MES AMIS",
+    "add_friend": "Ajouter un ami",
+    "send_request": "Send request",
+    "cancel": "Cancel",
+    "contact": "⭐ Contacts",
+    "placeholder": "Sélectionnez un ami pour commencer à discuter",
+    "input_placeholder": "Écrire un message...",
+    "view_profile": "Voir le profil",
+    "invite_game": "Inviter à jouer",
+    "block_user": "Bloquer l'utilisateur"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "no_notification": "Aucune notification"
+  },
+  "modal": {
+    "user_profile": "User Profile",
+    "statistics": "Statistics",
+    "games_played": "Games Played:",
+    "wins": "Wins:",
+    "losses": "Losses:",
+    "winning_streak": "Winning streak:",
+    "close": "Close",
+    "change_picture": "Change Picture",
+    "select_picture": "Select a picture",
+    "picture_description": "Choose how you want to appear on transcendence.",
+    "browse": "BROWSE",
+    "delete": "DELETE",
+    "ok": "OK",
+    "cancel": "CANCEL"
+  },
+
+
+
+
+
+  "landing": {
+    "welcome": "Bienvenue sur Transcendence",
+    "login_button": "Connexion",
+    "register_button": "Inscription",
+    "guest_button": "Jouer en invité",
+    "guest_error_network": "Erreur réseau. Veuillez réessayer."
+  },
+
+  "loginPage": {
+    "welcome": "Se connecter à Transcendence",
+    "password": "Entrez votre mot de passe",
+    "connect_as": "Statut de connexion",
+    "status": {
+      "available": "Disponible",
+      "busy": "Occupé",
+      "away": "Absent",
+      "offline": "Hors ligne"
+    },
+    "login_button": "Connexion",
+    "back": "Retour à l'accueil",
+    "2fa": "Authentification à deux facteurs",
+    "security": "Contrôle de sécurité",
+    "enter_code": "Veuillez entrer le code de sécurité.",
+    "verify_button": "VÉRIFIER",
+    "error_inputs": "Veuillez remplir tous les champs",
+    "error_auth_default": "Échec de l'authentification",
+    "error_network": "Erreur réseau, veuillez réessayer",
+    "error_2fa_invalid": "Code invalide.",
+    "error_2fa_verify": "Erreur lors de la vérification."
+  },
+
+  "registerPage": {
+    "welcome": "S'inscrire sur Transcendence",
+    "password": "Entrez votre mot de passe",
+    "register_button": "S'inscrire",
+    "back": "Retour à l'accueil",
+    "error_inputs": "Veuillez remplir tous les champs",
+    "error_auth_default": "Échec de l'authentification",
+    "error_network": "Erreur réseau, veuillez réessayer"
+  },
+
+  "profilePage": {
+    "window_profile": "Profil",
+    "my_profile": "Mon profil",
+    "my_status": "Statut :",
+    "status": {
+      "available": "Disponible",
+      "busy": "Occupé",
+      "away": "Absent",
+      "offline": "Hors ligne"
+    },
+    "fallback_username": "Attente...",
+    "fallback_bio": "Chargement de la bio...",
+    "username": "Pseudo :",
+    "placeholder_username": "Nom d'utilisateur",
+    "change_button": "Modifier",
+    "confirm_button": "Confirmer",
+    "back": "Retour à l'accueil",
+    "bio": "Partagez un message rapide avec les contacts :",
+    "placeholder_bio": "Partagez un message rapide avec les contacts",
+    "password": "Mot de passe :",
+    "placeholder_password": "Nouveau mot de passe",
+    "2fa_button": "Activer la 2FA",
+    "download_button": "Télécharger mes données",
+    "delete_button": "Supprimer mon compte",
+    "game_stats": "Mes statistiques de jeu",
+    "game_played": "Parties jouées",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "winning_streak": "Série de victoires actuelle",
+    "2fa_modal": {
+      "title": "Authentification à deux facteurs",
+      "choose_method": "Choisir la méthode",
+      "message_method": "Sélectionnez comment configurer la 2FA",
+      "authenticator": "App d'authentification",
+      "message_authenticator": "Utiliser Google Authenticator ou similaire",
+      "email_verif": "Vérification par email",
+      "message_email_verif": "Recevoir les codes par email",
+      "qr_code": "Scanner le QR Code",
+      "message_qr_code": "Ouvrez Google Authenticator et scannez ce code",
+      "6_digit": "Entrez le code à 6 chiffres :",
+      "validate": "VALIDER",
+      "cancel": "ANNULER",
+      "verif_email": "Nous enverrons un code à votre email.",
+      "message_verif_email": "Le code sera envoyé à :",
+      "code_send": "ENVOYER LE CODE",
+      "code_received": "Entrez le code reçu :"
+    },
+    "twoFactor": {
+      "btn_enable": "Activer l'authentification 2FA",
+      "btn_disable": "Désactiver l'authentification 2FA"
+    },
+    "picture_modal": {
+      "title": "Changer d'image",
+      "select_pic": "Sélectionnez une image",
+      "message_select": "Choisissez votre avatar sur Transcendence.",
+      "browse": "PARCOURIR",
+      "delete": "SUPPRIMER",
+      "ok": "OK",
+      "cancel": "ANNULER"
+    },
+    "theme_modal": {
+      "title": "Sélectionner un thème"
+    },
+    "password_modal": {
+      "title": "Changer le mot de passe",
+      "current_pwd": "Mot de passe actuel :",
+      "new_pwd": "Nouveau mot de passe :",
+      "confirm_pwd": "Confirmer le mot de passe :",
+      "save": "Enregistrer",
+      "cancel": "Annuler"
+    },
+    "delete_modal": {
+      "title": "Supprimer mon compte",
+      "confirm_delete": "Voulez-vous vraiment supprimer votre compte ?",
+      "confirm_message": "Cette action sera irréversible.",
+      "yes": "Oui, supprimer mon compte",
+      "cancel": "Annuler"
+    },
+    "field_empty": "Vide",
+    "email_empty": "Aucun email",
+    "game_local": "Local",
+    "alerts": {
+      "delete_confirm": "Cette action est irréversible. Êtes-vous vraiment sûr ?",
+      "delete_success": "Votre compte a été supprimé. Vous allez être redirigé.",
+      "delete_error": "Erreur lors de la suppression du compte",
+      "network_error": "Erreur réseau. Veuillez réessayer.",
+      "username_success": "Nom d'utilisateur mis à jour avec succès !",
+      "username_error": "Erreur lors de l'enregistrement du nom d'utilisateur",
+      "bio_limit": "La bio ne peut pas dépasser {{count}} caractères.",
+      "bio_error": "Erreur lors de la mise à jour de la bio",
+      "email_success": "Email mis à jour avec succès !",
+      "email_error": "Erreur lors de l'enregistrement de l'email",
+      "status_error": "Erreur lors de la mise à jour du statut",
+      "pwd_inputs": "Tous les champs sont requis.",
+      "pwd_mismatch": "Les mots de passe ne correspondent pas. Réessayez.",
+      "pwd_length": "Le mot de passe doit contenir au moins 8 caractères.",
+      "pwd_success": "Mot de passe mis à jour avec succès !",
+      "pwd_error": "Erreur lors de la mise à jour du mot de passe",
+      "2fa_init_error": "Erreur lors de l'initialisation de la 2FA",
+      "2fa_invalid_code": "Code invalide",
+      "2fa_enabled": "2FA activée !",
+      "2fa_disable_confirm": "Désactiver la 2FA ?",
+      "2fa_disabled": "2FA désactivée"
+    },
+    "bio_placeholder": "Partagez un message rapide avec les contacts",
+    "avatar_save_error": "Erreur lors de la sauvegarde de l'avatar"
+  },
+
+  "dashboardPage": {
+    "title": "Aperçu du tableau de bord",
+    "game_played": "Parties jouées",
+    "avg_score": "Score moyen",
+    "time_playing": "Temps de jeu",
+    "wins": "Victoires",
+    "losses": "Défaites",
+    "win_rate": "Taux de victoire",
+    "win_loss_evol": "Évolution victoires/défaites",
+    "type_game": "Types de jeux",
+    "bigg_rival": "Mes plus grands rivaux",
+    "match_history": "Historique et analyse des matchs",
+    "placeholder_rival": "Nom du rival",
+    "all_modes": "Tous les modes",
+    "local": "Local",
+    "remote": "À distance",
+    "tournament": "Tournoi",
+    "apply_button": "Appliquer",
+    "sort": "Trier",
+    "date_asc": "Date ↑ (Ancien)",
+    "date_desc": "Date ↓ (Récent)",
+    "name_a": "Rival (A-Z)",
+    "name_z": "Rival (Z-A)",
+    "date": "Date",
+    "rival": "Rival",
+    "score": "Score",
+    "type": "Type",
+    "round": "Tour",
+    "result": "Résultat",
+    "loading": "Chargement...",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "page": "Page 1",
+    "time_format": "{{h}}h {{m}}min",
+    "pagination_info": "Page {{current}} sur {{total}}",
+    "no_matches": "Aucun match pour l'instant.",
+    "status_victory": "VICTOIRE",
+    "status_defeat": "DÉFAITE",
+    "unknown_user": "Inconnu",
+    "round_final": "Finale",
+    "round_1v1": "1v1",
+    "chart": {
+      "start": "Départ",
+      "net_score": "Score net",
+      "no_data": "Aucune donnée",
+      "games_played": "Parties jouées",
+      "games_count": "({{count}} parties)",
+      "local": "Local",
+      "remote": "Distant",
+      "tournament": "Tournoi"
+    }
+  },
+  "localPage": {
+    "title": "Jeux",
+    "p1": "Joueur 1",
+    "p2": "Joueur 2",
+    "start_game": "Démarrer la partie",
+    "game_instr": "Instructions de jeu",
+    "ws": "Le joueur de gauche déplace sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "Le joueur de droite utilise les touches ⬆️⬇️.",
+    "space_bar": "La barre d'espace peut servir à distraire votre adversaire",
+    "opp_name": "Avec qui jouez-vous ? :",
+    "placeholder_opp": "Entrez un nom...",
+    "err_message": "Veuillez remplir ce champ !",
+    "choose_ball": "Choisissez votre balle :",
+    "select_ball": "Sélectionner une balle :",
+    "choose_bg": "Choisissez votre fond :",
+    "select_bg": "Sélectionner un fond :",
+    "reset_color": "Réinitialiser couleur",
+    "play": "JOUER",
+    "countdown_title": "À vos marques, prêts, partez !",
+    "summary_modal": {
+      "title": "Fin de partie",
+      "congrat": "FÉLICITATIONS",
+      "name": "NOM",
+      "back_menu": "Retour au menu"
+    },
+    "chat": {
+      "title": "Notifications",
+      "info": "Notification système",
+      "placeholder_input": "Vous ne pouvez pas répondre au système"
+    },
+
+    "chat_start_match": "La partie va commencer ! Match : {{p1}} contre {{p2}}"
+  },
+  "remotePage": {
+    "title": "Jeux",
+    "p1": "Joueur 1",
+    "p2": "Joueur 2",
+    "start_game": "Démarrer la partie",
+    "game_instr": "Instructions de jeu",
+    "ws": "Le joueur de gauche déplace sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "Le joueur de droite utilise les touches ⬆️⬇️.",
+    "space_bar": "La barre d'espace peut servir à distraire votre adversaire",
+    "choose_ball": "Choisissez votre balle :",
+    "select_ball": "Sélectionner une balle :",
+    "choose_bg": "Choisissez votre fond :",
+    "select_bg": "Sélectionner un fond :",
+    "reset_color": "Réinitialiser couleur",
+    "play": "JOUER (FILE D'ATTENTE)",
+    "countdown_title": "À vos marques, prêts, partez !",
+    "summary_modal": {
+      "title": "Fin de partie",
+      "congrat": "FÉLICITATIONS",
+      "name": "???",
+      "back_menu": "Retour au menu"
+    },
+    "chat": {
+      "title": "Chat de jeu",
+      "info": "Salon de discussion",
+      "choose_bg": "Choisir un fond :",
+      "default_bg": "Fond par défaut"
+    }
+  },
+  "tournamentPage": {
+    "title": "Arène de Tournoi",
+    "p1": "Joueur 1",
+    "p2": "Joueur 2",
+    "setup_modal": {
+      "title_modal": "Configuration du tournoi",
+      "game_instr": "Instructions de jeu",
+      "ws": "Le joueur de gauche déplace sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      "up_down": "Le joueur de droite utilise les touches ⬆️⬇️.",
+      "space_bar": "La barre d'espace peut servir à distraire votre adversaire",
+      "tournament_name": "Nom du tournoi :",
+      "placeholder_trnmt": "Mon super tournoi",
+      "participant": "Participants",
+      "p1": "Joueur 1 (Vous) :",
+      "p2": "Joueur 2 :",
+      "p3": "Joueur 3 :",
+      "p4": "Joueur 4 :",
+      "choose__ball_bg": "Choisissez votre balle et le fond :",
+      "choose__ball": "Balle :",
+      "choose_bg": "Fond :",
+      "select_bg": "Sélectionner un fond :",
+      "reset_color": "Réinitialiser couleur",
+      "play": "DÉMARRER LE TOURNOI",
+      "countdown_title": "À vos marques, prêts, partez !"
+    },
+    "tournament_bracket_modal": {
+      "title": "Tournoi",
+      "heading": "LE TOURNOI VA COMMENCER",
+      "semi_final_1": "Demi-finale 1",
+      "semi_final_2": "Demi-finale 2",
+      "final": "Finale",
+      "status_ready": "Prêt pour le prochain match...",
+      "continue_btn": "CONTINUER VERS LE MATCH"
+    },
+    "tournament_next_match_modal": {
+      "title": "Match suivant",
+      "match_title": "DEMI-FINALE 1",
+      "player_vs": "VS",
+      "start_info": "Le jeu commencera dès que vous cliquerez sur Jouer.",
+      "play_btn": "JOUER !"
+    },
+    "tournament_summary_modal": {
+      "title": "Fin du tournoi",
+      "congratulations": "FÉLICITATIONS",
+      "winner_name": "NOM",
+      "back_menu": "Retour au menu"
+    },
+    "chat": {
+      "title": "Notifications",
+      "info": "Notification système",
+      "placeholder_input": "Vous ne pouvez pas répondre au système"
+    }
+  },
+
+  "guestPage": {
+    "title": "Mode Invité",
+    "welcome": "Bienvenue sur Transcendence",
+    "description": "Vous jouez actuellement en tant qu'invité. Pour accéder à toutes les fonctionnalités de jeu, vous devez vous inscrire !",
+    "select_mode": "Sélectionnez un mode pour commencer à jouer",
+    "local": "JEU LOCAL",
+    "remote": "JEU À DISTANCE",
+    "tournament": "TOURNOI",
+    "chat_welcome": "Bienvenue en mode invité. Sélectionnez un mode de jeu pour discuter avec vos adversaires."
+  },
+  "gamePage": {
+    "default_player": "Joueur",
+    "default_guest": "Invité",
+    "unload_warning": "Une partie est en cours. Êtes-vous sûr de vouloir quitter ?",
+    "exit_modal": {
+      "title": "Quitter la partie",
+      "heading": "ATTENDEZ !",
+      "question": "Êtes-vous sûr de vouloir partir ?",
+      "warning": "Toute la progression actuelle sera perdue.",
+      "back_btn": "RETOURNER AU JEU",
+      "leave_btn": "QUITTER"
+    }
+  },
+
+  "game": {
+    "game_over": "Partie terminée ! Score final : {{score1}} - {{score2}}"
+  },
+
+  "gameUI": {
+    "winner_message": "{{name}} remporte le match !",
+    "game_over": "Partie terminée",
+    "congratulations": "FÉLICITATIONS",
+    "return_menu": "RETOUR AU MENU",
+    "go": "C'EST PARTI !"
+  },
+
+  "remoteManager": {
+    "self_play_error": "Vous ne pouvez pas jouer contre vous-même",
+    "btn_play_queue": "JOUER (FILE D'ATTENTE)",
+    "default_opponent": "Adversaire",
+    "me_suffix": "(Moi)",
+    "match_started": "Le match a commencé !",
+    "match_found": "Adversaire trouvé ! Lancement du jeu...",
+    "opponent_forfeit": "(Forfait de l'adversaire)",
+    "default_winner": "Vainqueur",
+    "error_connection": "Erreur : connexion au serveur de jeu perdue",
+    "waiting_private": "En attente de votre ami dans le salon privé...",
+    "btn_waiting_friend": "EN ATTENTE D'UN AMI...",
+    "looking_rival": "Recherche d'un adversaire...",
+    "btn_waiting": "EN ATTENTE..."
+  },
+
+  "tournamentManager": {
+    "setup_error_fields": "Veuillez remplir tous les champs.",
+    "setup_error_unique": "Tous les pseudonymes doivent être uniques.",
+    "chat_start": "Le tournoi \"{{name}}\" a commencé ! Participants : {{players}}",
+    "bracket_next_sf1": "Suivant : Demi-finale 1",
+    "bracket_next_sf2": "Suivant : Demi-finale 2",
+    "bracket_next_final": "Suivant : La Grande Finale !",
+    "match_sf1": "DEMI-FINALE 1",
+    "match_sf2": "DEMI-FINALE 2",
+    "match_final": "FINALE",
+    "chat_next_match": "À suivre : {{p1}} contre {{p2}} !",
+    "chat_final_match": "FINALE : {{p1}} contre {{p2}} !",
+    "chat_winner": "{{winner}} remporte le match !"
+  },
+
+  "chatComponent": {
+    "system": "Système",
+    "connected": "Vous pouvez maintenant discuter avec votre ami !",
+    "disconnected": "Déconnecté du serveur de chat !",
+    "nudge_sent": "[b]{{author}} a envoyé un wizz[/b]",
+    "animation_unknown": "Animation inconnue ({{key}}) reçue de {{author}}.",
+    "game_invite": "{{author}} veut jouer à Pong avec vous !",
+    "join_waitroom": "Rejoindre mon salon d'attente",
+    "accept_match": "Accepter le match",
+    "game_unreachable": "Erreur : Serveur de jeu inaccessible.",
+    "block_confirm": "Êtes-vous sûr de vouloir bloquer {{name}} ?",
+    "block_success": "Conversation supprimée (Utilisateur bloqué).",
+    "block_error": "Erreur lors du blocage",
+    "input_blocked": "Vous avez bloqué cet utilisateur.",
+    "tools": {
+      "bold": "Gras",
+      "italic": "Italique",
+      "underline": "Souligné",
+      "strikethrough": "Barré"
+    }
+  },
+
+  "data": {
+    "status": {
+      "available": "(Disponible)",
+      "busy": "(Occupé)",
+      "away": "(Absent)",
+      "invisible": "(Hors ligne)"
+    },
+    "themes": {
+      "basic": "Bleu Classique",
+      "bamboo": "Bambou Zen",
+      "cherry": "Fleurs de Cerisier",
+      "mountain": "Montagnes Brumeuses",
+      "punk": "Cyber Punk",
+      "dotted": "Points Printemps",
+      "sunset": "Coucher de Soleil",
+      "football": "Stade",
+      "spring": "Jardin de Printemps",
+      "love": "Cœur Adorable",
+      "diary": "Cher Journal",
+      "branches": "Branches d'Hiver",
+      "purple": "Rêves Violets",
+      "abstract": "Flux Abstrait"
+    }
+  },
+
+  "friendList": {
+    "no_friends": "Pas encore d'amis",
+    "error_loading": "Erreur lors du chargement des contacts",
+    "default_bio": "Partagez un message rapide avec les contacts",
+    "game_disconnected": "Le jeu est déconnecté, veuillez actualiser",
+    "invite_sent": "Invitation envoyée à {{name}}",
+    "invite_toast": {
+      "title": "🎮 Invitation au jeu",
+      "message": "{{name}} veut jouer à Pong !",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "error_lost": "Erreur : connexion au serveur perdue"
+    },
+    "search_placeholder_error": "Veuillez entrer un pseudo ou un email",
+    "request_sent": "Demande d'ami envoyée !",
+    "request_error": "Erreur lors de l'envoi de la demande",
+    "network_error": "Erreur réseau",
+    "no_notifications": "Aucune nouvelle notification",
+    "wants_to_be_friend": "<span class=\"font-semibold\">{{name}}</span> veut devenir votre ami",
+    "actions": {
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "block": "Bloquer"
+    }
+  },
+
+  "friendProfileModal": {
+    "loading": "Chargement...",
+    "no_bio": "Aucune bio.",
+    "default_game": "Local"
+  },
+
+  "userProfile": {
+    "default_bio": "Partagez un message rapide avec les contacts",
+    "bio_length_error": "Votre message ne peut pas dépasser 70 caractères. Arrêtez de parler !",
+    "avatar_error": "Erreur lors de la sauvegarde de l'avatar"
+  }
+}

@@ -1,10 +1,7 @@
 .env
-node_modules/
-
-data/
-zdata.old/
-
 datadev/
+zdata.old/
+node_modules/
 
 certificate.crt 
 private_key.key

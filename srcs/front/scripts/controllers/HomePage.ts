@@ -3,17 +3,62 @@ import SocketService from "../services/SocketService";
 import { FriendList } from "../components/FriendList";
 import { UserProfile } from "../components/UserProfile";
 import { Chat } from "../components/Chat";
-import { statusImages } from "../components/Data";
+import { statusImages, Data } from "../components/Data";
 import { FriendProfileModal } from "../components/FriendProfileModal";
 import { parseMessage } from "../components/ChatUtils";
 
+import i18next from "../i18n";
 
 let friendListInstance: FriendList | null = null;
 let chatInstance: Chat | null = null;
 let friendSelectedHandler: ((e: any) => void) | null = null;
 
+// export function render(): string {
+//     return htmlContent;
+// }
+
+console.log('Avant render');
+
 export function render(): string {
-    return htmlContent;
+    let html = htmlContent;
+    // console.log("HTML CONTENT:", htmlContent);
+    console.log("RENDER HOMEPAGE - LANGUE ACTUELLE:", i18next.language);
+
+    // html = html.replace(/\{\{nav\.home\}\}/g, i18next.t('nav.home'));
+    // html = html.replace(/\{\{nav\.profile\}\}/g, i18next.t('nav.profile'));
+    // html = html.replace(/\{\{nav\.dashboard\}\}/g, i18next.t('nav.dashboard'));
+    // html = html.replace(/\{\{nav\.logout\}\}/g, i18next.t('nav.logout'));
+
+    html = html.replace(/\{\{profile\.title\}\}/g, i18next.t('profile.title'));
+    html = html.replace(/\{\{profile\.bio\}\}/g, i18next.t('profile.bio'));
+    html = html.replace(/\{\{profile\.username\}\}/g, i18next.t('profile.username'));
+    html = html.replace(/\{\{profile\.status.available\}\}/g, i18next.t('profile.status.available'));
+    html = html.replace(/\{\{profile\.status.busy\}\}/g, i18next.t('profile.status.busy'));
+    html = html.replace(/\{\{profile\.status.away\}\}/g, i18next.t('profile.status.away'));
+    html = html.replace(/\{\{profile\.status.offline\}\}/g, i18next.t('profile.status.offline'));
+
+    html = html.replace(/\{\{games\.title\}\}/g, i18next.t('games.title'));
+    html = html.replace(/\{\{games\.choose_mode\}\}/g, i18next.t('games.choose_mode'));
+    html = html.replace(/\{\{games\.local\}\}/g, i18next.t('games.local'));
+    html = html.replace(/\{\{games\.remote\}\}/g, i18next.t('games.remote'));
+    html = html.replace(/\{\{games\.tournament\}\}/g, i18next.t('games.tournament'));
+
+    html = html.replace(/\{\{chat\.title\}\}/g, i18next.t('chat.title'));
+    html = html.replace(/\{\{chat\.friends\}\}/g, i18next.t('chat.friends'));
+    html = html.replace(/\{\{chat\.add_friend\}\}/g, i18next.t('chat.add_friend'));
+    html = html.replace(/\{\{chat\.send_request\}\}/g, i18next.t('chat.send_request'));
+    html = html.replace(/\{\{chat\.cancel\}\}/g, i18next.t('chat.cancel'));
+    html = html.replace(/\{\{chat\.contact\}\}/g, i18next.t('chat.contact'));
+    html = html.replace(/\{\{chat\.placeholder\}\}/g, i18next.t('chat.placeholder'));
+    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18next.t('chat.input_placeholder'));
+    html = html.replace(/\{\{chat\.view_profile\}\}/g, i18next.t('chat.view_profile'));
+    html = html.replace(/\{\{chat\.invite_game\}\}/g, i18next.t('chat.invite_game'));
+    html = html.replace(/\{\{chat\.block_user\}\}/g, i18next.t('chat.block_user'));
+
+    html = html.replace(/\{\{notifications\.title\}\}/g, i18next.t('notifications.title'));
+    html = html.replace(/\{\{notifications\.no_notification\}\}/g, i18next.t('notifications.no_notification'));
+
+    return html;
 }
 
 export function cleanup() {
@@ -49,6 +94,13 @@ export function afterRender(): void {
     socketService.connectChat();
     friendListInstance = new FriendList();
     friendListInstance.init();
+
+    if (Data.hasUnreadMessage) {
+        const notifElement = document.getElementById('message-notification');
+        if (notifElement) {
+            notifElement.style.display = 'block'; // Ou remove la classe 'hidden'
+        }
+    }
 
     const userProfile = new UserProfile();
     userProfile.init();
@@ -101,6 +153,13 @@ export function afterRender(): void {
 
     friendSelectedHandler = (e: any) => {
 
+  
+        Data.hasUnreadMessage = false;
+        const notifElement = document.getElementById('message-notification');
+        if (notifElement) {
+            notifElement.style.display = 'none';
+        }
+        
         const { friend, friendshipId } = e.detail;
 
         currentChatFriendId = friend.id;
