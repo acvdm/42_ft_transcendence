@@ -125,15 +125,30 @@ class Game {
         // --- MODE REMOTE ---
         if (this.isRemote && this.socket && this.roomId) {
             // On envoie juste les inputs au serveur
-            // On détermine si on bouge (Up ou Down)
-            const up = (this.playerRole === 'player1' ? inputState.player1.up : inputState.player2.up) || inputState.player1.up; // Support fleches pour les deux
-            const down = (this.playerRole === 'player1' ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
+            // [FIX] En remote, tout le monde utilise W/S (touches player1)
+            const up = inputState.player1.up;
+            const down = inputState.player1.down;
 
             this.socket.emit('gameInput', {
                 roomId: this.roomId,
                 up: up,
                 down: down
             });
+            
+            // [FIX] Prédiction client pour la raquette locale (réactivité immédiate)
+            const myPaddle = this.playerRole === 'player1' ? this.paddle1 : this.paddle2;
+            if (up) {
+                myPaddle.move(true);
+            }
+            if (down) {
+                myPaddle.move(false);
+            }
+            
+            // [FIX] Limiter la raquette locale
+            const maxY = canvas.height - myPaddle.height;
+            if (myPaddle.y < 0) myPaddle.y = 0;
+            if (myPaddle.y > maxY) myPaddle.y = maxY;
+            
             return; 
         }
         // --- MODE LOCAL ---

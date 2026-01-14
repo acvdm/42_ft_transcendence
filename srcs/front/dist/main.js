@@ -8387,13 +8387,23 @@
     update(canvas) {
       const inputState = this.input.getInput();
       if (this.isRemote && this.socket && this.roomId) {
-        const up = (this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up) || inputState.player1.up;
-        const down = (this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down) || inputState.player1.down;
+        const up = inputState.player1.up;
+        const down = inputState.player1.down;
         this.socket.emit("gameInput", {
           roomId: this.roomId,
           up,
           down
         });
+        const myPaddle = this.playerRole === "player1" ? this.paddle1 : this.paddle2;
+        if (up) {
+          myPaddle.move(true);
+        }
+        if (down) {
+          myPaddle.move(false);
+        }
+        const maxY = canvas.height - myPaddle.height;
+        if (myPaddle.y < 0) myPaddle.y = 0;
+        if (myPaddle.y > maxY) myPaddle.y = maxY;
         return;
       }
       if (inputState.player1.up) {

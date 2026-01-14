@@ -96,6 +96,9 @@ export function updateGamePhysics(game: GameState, io: Server) {
         nextY = prevY + game.ball.vy; // On recalcule nextY avec la nouvelle direction
     }
 
+    // Pour empecher le tunnelling
+    const MAX_SPEED = 10;
+
     // Collision Raquettes
     // P1 (Gauche)
     if (game.ball.vx < 0) { 
@@ -106,11 +109,21 @@ export function updateGamePhysics(game: GameState, io: Server) {
         if (prevX - game.ball.radius >= paddleRightEdge && 
             nextX - game.ball.radius <= paddleRightEdge) {
             
-            // Vérification verticale (Y)
-            if (game.ball.y + game.ball.radius >= game.paddle1.y && 
-                game.ball.y - game.ball.radius <= game.paddle1.y + game.paddle1.height) {
+            // [FIX] Vérification verticale avec nextY
+            if (nextY + game.ball.radius >= game.paddle1.y && 
+                nextY - game.ball.radius <= game.paddle1.y + game.paddle1.height) {
                 
-                game.ball.vx = -game.ball.vx * 1.05;
+                // [FIX] Calcul de l'angle de rebond basé sur où la balle frappe
+                let hitPos = (nextY - (game.paddle1.y + game.paddle1.height / 2)) / (game.paddle1.height / 2);
+                let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
+                
+                let speed = Math.sqrt(game.ball.vx * game.ball.vx + game.ball.vy * game.ball.vy);
+                speed *= 1.05;
+                if (speed > MAX_SPEED) speed = MAX_SPEED;
+                
+                game.ball.vx = speed * Math.cos(angle);
+                game.ball.vy = speed * Math.sin(angle);
+                
                 // On replace la balle juste devant la raquette pour éviter qu'elle reste coincée
                 nextX = paddleRightEdge + game.ball.radius;
             }
@@ -125,10 +138,21 @@ export function updateGamePhysics(game: GameState, io: Server) {
         if (prevX + game.ball.radius <= paddleLeftEdge && 
             nextX + game.ball.radius >= paddleLeftEdge) {
             
-            if (game.ball.y + game.ball.radius >= game.paddle2.y && 
-                game.ball.y - game.ball.radius <= game.paddle2.y + game.paddle2.height) {
+            // [FIX] Vérification verticale avec nextY
+            if (nextY + game.ball.radius >= game.paddle2.y && 
+                nextY - game.ball.radius <= game.paddle2.y + game.paddle2.height) {
                 
-                game.ball.vx = -game.ball.vx * 1.05;
+                // [FIX] Calcul de l'angle de rebond basé sur où la balle frappe
+                let hitPos = (nextY - (game.paddle2.y + game.paddle2.height / 2)) / (game.paddle2.height / 2);
+                let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
+                
+                let speed = Math.sqrt(game.ball.vx * game.ball.vx + game.ball.vy * game.ball.vy);
+                speed *= 1.05;
+                if (speed > MAX_SPEED) speed = MAX_SPEED;
+                
+                game.ball.vx = -speed * Math.cos(angle);
+                game.ball.vy = speed * Math.sin(angle);
+                
                 nextX = paddleLeftEdge - game.ball.radius;
             }
         }
@@ -148,7 +172,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
     }
 
     // Fin de partie
-    if (game.score.player1 >= 5 || game.score.player2 >= 5) {
+    if (game.score.player1 >= 11 || game.score.player2 >= 11) {
         stopGame(game.roomId, io);
     }
 
