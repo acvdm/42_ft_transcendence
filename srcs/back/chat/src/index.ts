@@ -287,6 +287,7 @@ fastify.get('/unread', async (request, reply) => {
         const decoded: any = jwt.verify(token, JWT_SECRET);
         const userId = decoded.sub; // On a l'ID de l'utilisateur !
 
+        console.log(`[API] Fetching unread for UserID: ${userId}`); // <--- LOG
         // 3. On demande à la DB les conversations non lues
         const unreadConvs = await getUnreadConversations(db, userId);
 

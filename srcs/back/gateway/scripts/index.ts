@@ -101,6 +101,15 @@ fastify.register(fastifyProxy,
 });
 
 fastify.register(fastifyProxy, {
+    upstream: 'http://chat:3002',
+    prefix: '/api/chat', // Nouveau préfixe pour les requêtes HTTP
+    websocket: false,    // Pas de websocket ici
+    rewritePrefix: ''    // On enlève '/api/chat' ou on le garde selon comment votre back est fait
+    // NOTE : Si dans votre chat/src/index.ts vous avez 'fastify.get('/unread')', 
+    // alors il faut rewritePrefix: '' pour que le back reçoive juste '/unread'.
+});
+
+fastify.register(fastifyProxy, {
 	upstream: 'http://game:3003',
 	prefix: '/socket-game',
 	websocket: true,

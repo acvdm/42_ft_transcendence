@@ -648,14 +648,14 @@
     return Math.ceil((obj.byteLength || obj.size) * BASE64_OVERHEAD);
   }
   function utf8Length(str) {
-    let c2 = 0, length = 0;
+    let c = 0, length = 0;
     for (let i = 0, l = str.length; i < l; i++) {
-      c2 = str.charCodeAt(i);
-      if (c2 < 128) {
+      c = str.charCodeAt(i);
+      if (c < 128) {
         length += 1;
-      } else if (c2 < 2048) {
+      } else if (c < 2048) {
         length += 2;
-      } else if (c2 < 55296 || c2 >= 57344) {
+      } else if (c < 55296 || c >= 57344) {
         length += 3;
       } else {
         i++;
@@ -2299,8 +2299,8 @@
       if ("/" === str.charAt(i + 1)) {
         const start = i + 1;
         while (++i) {
-          const c2 = str.charAt(i);
-          if ("," === c2)
+          const c = str.charAt(i);
+          if ("," === c)
             break;
           if (i === str.length)
             break;
@@ -2313,8 +2313,8 @@
       if ("" !== next && Number(next) == next) {
         const start = i + 1;
         while (++i) {
-          const c2 = str.charAt(i);
-          if (null == c2 || Number(c2) != c2) {
+          const c = str.charAt(i);
+          if (null == c || Number(c) != c) {
             --i;
             break;
           }
@@ -3643,10 +3643,13 @@
         this.chatSocket.on("unreadNotification", (payload) => {
           console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
-            c;
             console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
             this.showNotificationIcon();
+            const event = new CustomEvent("notificationUpdate", {
+              detail: { type: "chat", payload }
+            });
+            window.dispatchEvent(event);
           }
         });
       }
@@ -3843,9 +3846,9 @@
   var looksLikeObjectPath = (key, nsSeparator, keySeparator) => {
     nsSeparator = nsSeparator || "";
     keySeparator = keySeparator || "";
-    const possibleChars = chars2.filter((c2) => nsSeparator.indexOf(c2) < 0 && keySeparator.indexOf(c2) < 0);
+    const possibleChars = chars2.filter((c) => nsSeparator.indexOf(c) < 0 && keySeparator.indexOf(c) < 0);
     if (possibleChars.length === 0) return true;
-    const r = looksLikeObjectPathRegExpCache.getRegExp(`(${possibleChars.map((c2) => c2 === "?" ? "\\?" : c2).join("|")})`);
+    const r = looksLikeObjectPathRegExpCache.getRegExp(`(${possibleChars.map((c) => c === "?" ? "\\?" : c).join("|")})`);
     let matched = !r.test(key);
     if (!matched) {
       const ki = key.indexOf(keySeparator);
@@ -4659,12 +4662,12 @@
     toResolveHierarchy(code, fallbackCode) {
       const fallbackCodes = this.getFallbackCodes((fallbackCode === false ? [] : fallbackCode) || this.options.fallbackLng || [], code);
       const codes = [];
-      const addCode = (c2) => {
-        if (!c2) return;
-        if (this.isSupportedCode(c2)) {
-          codes.push(c2);
+      const addCode = (c) => {
+        if (!c) return;
+        if (this.isSupportedCode(c)) {
+          codes.push(c);
         } else {
-          this.logger.warn(`rejecting language code not found in supportedLngs: ${c2}`);
+          this.logger.warn(`rejecting language code not found in supportedLngs: ${c}`);
         }
       };
       if (isString(code) && (code.indexOf("-") > -1 || code.indexOf("_") > -1)) {
@@ -4900,9 +4903,9 @@
       const handleHasOptions = (key, inheritedOptions) => {
         const sep = this.nestingOptionsSeparator;
         if (key.indexOf(sep) < 0) return key;
-        const c2 = key.split(new RegExp(`${sep}[ ]*{`));
-        let optionsString = `{${c2[1]}`;
-        key = c2[0];
+        const c = key.split(new RegExp(`${sep}[ ]*{`));
+        let optionsString = `{${c[1]}`;
+        key = c[0];
         optionsString = this.interpolate(optionsString, clonedOptions);
         const matchedSingleQuotes = optionsString.match(/'/g);
         const matchedDoubleQuotes = optionsString.match(/"/g);
@@ -5907,63 +5910,69 @@
 
   // scripts/locales/fr.json
   var fr_default = {
-    nav: {
-      home: "Accueil",
-      profile: "Profil",
-      dashboard: "Tableau de bord",
-      logout: "D\xE9connexion",
-      guest_area: "Espace invit\xE9"
-    },
-    profile: {
-      title: "Profil",
-      username: "Nom d'utilisateur",
-      bio: "Partagez un message rapide avec les contacts",
-      status: {
-        available: "Disponible",
-        busy: "Occup\xE9",
-        away: "Absent",
-        offline: "Hors ligne"
+    homepage: {
+      nav: {
+        home: "Accueil",
+        profile: "Profil",
+        dashboard: "Tableau de bord",
+        logout: "D\xE9connexion",
+        guest_area: "Espace invit\xE9"
+      },
+      profile: {
+        title: "Profil",
+        username: "Nom d'utilisateur",
+        bio: "Partagez un message rapide",
+        status: {
+          available: "Disponible",
+          busy: "Occup\xE9",
+          away: "Absent",
+          offline: "Hors ligne"
+        }
+      },
+      games: {
+        title: "Jeux",
+        choose_mode: "S\xE9lectionnez la fa\xE7on dont vous souhaitez commencer une nouvelle partie.",
+        title_mode: "CHOISISSEZ VOTRE MODE DE JEU",
+        local: "JEU LOCAL",
+        remote: "JEU EN LIGNE",
+        tournament: "TOURNOI",
+        local_describe: "Joue contre un autre joueur sur cet ordinateur.",
+        remote_describe: "Joue avec tes amis et bien plus en ligne.",
+        tournament_describe: "Participe \xE0 un tournoi \xE0 4 joueurs sur cet ordinateur."
+      },
+      chat: {
+        title: "Messagerie",
+        friends: "MES AMIS",
+        add_friend: "Ajouter un ami",
+        send_request: "Envoyer une demande d'ami",
+        cancel: "Annuler",
+        contact: "\u2B50 Contacts",
+        placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
+        input_placeholder: "\xC9crire un message...",
+        view_profile: "Voir le profil",
+        invite_game: "Inviter \xE0 jouer",
+        block_user: "Bloquer l'utilisateur"
+      },
+      notifications: {
+        title: "Notifications",
+        no_notification: "Aucune notification"
+      },
+      modal: {
+        user_profile: "Profil Utilisateur",
+        statistics: "Statistiques",
+        games_played: "Parties jou\xE9es :",
+        wins: "Victoires :",
+        losses: "D\xE9faites :",
+        winning_streak: "S\xE9rie de victoires :",
+        close: "Fermer",
+        change_picture: "Changer l'image",
+        select_picture: "S\xE9lectionner une image",
+        picture_description: "Choisissez comment vous voulez appara\xEEtre sur transcendence.",
+        browse: "PARCOURIR",
+        delete: "SUPPRIMER",
+        ok: "OK",
+        cancel: "ANNULER"
       }
-    },
-    games: {
-      title: "Jeux",
-      choose_mode: "CHOISISSEZ VOTRE MODE DE JEU",
-      local: "JEU LOCAL",
-      remote: "JEU EN LIGNE",
-      tournament: "TOURNOI"
-    },
-    chat: {
-      title: "Messagerie",
-      friends: "MES AMIS",
-      add_friend: "Ajouter un ami",
-      send_request: "Send request",
-      cancel: "Cancel",
-      contact: "\u2B50 Contacts",
-      placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
-      input_placeholder: "\xC9crire un message...",
-      view_profile: "Voir le profil",
-      invite_game: "Inviter \xE0 jouer",
-      block_user: "Bloquer l'utilisateur"
-    },
-    notifications: {
-      title: "Notifications",
-      no_notification: "Aucune notification"
-    },
-    modal: {
-      user_profile: "User Profile",
-      statistics: "Statistics",
-      games_played: "Games Played:",
-      wins: "Wins:",
-      losses: "Losses:",
-      winning_streak: "Winning streak:",
-      close: "Close",
-      change_picture: "Change Picture",
-      select_picture: "Select a picture",
-      picture_description: "Choose how you want to appear on transcendence.",
-      browse: "BROWSE",
-      delete: "DELETE",
-      ok: "OK",
-      cancel: "CANCEL"
     },
     landing: {
       welcome: "Bienvenue sur Transcendence",
@@ -6418,68 +6427,83 @@
       default_bio: "Partagez un message rapide avec les contacts",
       bio_length_error: "Votre message ne peut pas d\xE9passer 70 caract\xE8res. Arr\xEAtez de parler !",
       avatar_error: "Erreur lors de la sauvegarde de l'avatar"
+    },
+    friendship_error: {
+      already_friend: "Cet utilisateur est d\xE9j\xE0 ton ami.",
+      already_send: "Une demande a d\xE9j\xE0 \xE9t\xE9 envoy\xE9e \xE0 cet utilisateur. Attends qu'il l'accepte.",
+      sending: "Erreur lors de l'envoi de la demande d'ami.",
+      cannot_find: "Impossible de trouver cet utilisateur.",
+      guest: "Impossible d'ajouter un invit\xE9 comme ami.",
+      yourself: "Tu ne peux pas t'ajouter toi-m\xEAme en ami. Loser."
     }
   };
 
   // scripts/locales/en.json
   var en_default = {
-    nav: {
-      home: "Home",
-      profile: "Profile",
-      dashboard: "Dashboard",
-      logout: "Log out",
-      guest_area: "Guest area"
-    },
-    profile: {
-      title: "Profile",
-      username: "Username",
-      bio: "Share a quick message",
-      status: {
-        available: "Available",
-        busy: "Busy",
-        away: "Away",
-        offline: "Appear offline"
+    homepage: {
+      nav: {
+        home: "Home",
+        profile: "Profile",
+        dashboard: "Dashboard",
+        logout: "Log out",
+        guest_area: "Guest area"
+      },
+      profile: {
+        title: "Profile",
+        username: "Username",
+        bio: "Share a quick message",
+        status: {
+          available: "Available",
+          busy: "Busy",
+          away: "Away",
+          offline: "Offline"
+        }
+      },
+      games: {
+        title: "Games",
+        mode: "CHOOSE YOUR GAME MODE",
+        title_mode: "CHOOSE YOUR GAME MODE",
+        choose_mode: "Select how you would like to start a new game.",
+        local: "LOCAL GAME",
+        remote: "REMOTE GAME",
+        tournament: "TOURNAMENT",
+        local_describe: "Play against another player on this computer.",
+        remote_describe: "Connect and play with friends and more online.",
+        tournament_describe: "Compete in a 4-multiplayer tournament on this computer."
+      },
+      chat: {
+        title: "Messenger",
+        friends: "MY FRIENDS",
+        add_friend: "Add a friend",
+        send_request: "Send request",
+        cancel: "Cancel",
+        contact: "\u2B50 Contacts",
+        placeholder: "Select a friend to start chatting",
+        input_placeholder: "Write a message...",
+        view_profile: "View profile",
+        invite_game: "Invite to play",
+        block_user: "Block user"
+      },
+      notifications: {
+        title: "Notifications",
+        no_notification: "No notification"
+      },
+      modal: {
+        user_profile: "User Profile",
+        statistics: "Statistics",
+        games_played: "Games Played:",
+        wins: "Wins:",
+        losses: "Losses:",
+        winning_streak: "Winning streak:",
+        close: "Close",
+        change_picture: "Change Picture",
+        select_picture: "Select a picture",
+        picture_description: "Choose how you want to appear on transcendence.",
+        browse: "BROWSE",
+        delete: "DELETE",
+        ok: "OK",
+        cancel: "CANCEL"
       }
-    },
-    games: {
-      title: "Games",
-      choose_mode: "Select how you would like to start a new game.",
-      local: "LOCAL GAME",
-      remote: "REMOTE GAME",
-      tournament: "TOURNAMENT"
-    },
-    chat: {
-      title: "Messenger",
-      friends: "MY FRIENDS",
-      add_friend: "Add a friend",
-      send_request: "Send request",
-      cancel: "Cancel",
-      contact: "\u2B50 Contacts",
-      placeholder: "Select a friend to start chatting",
-      input_placeholder: "Write a message...",
-      view_profile: "View profile",
-      invite_game: "Invite to play",
-      block_user: "Block user"
-    },
-    notifications: {
-      title: "Notifications",
-      no_notification: "No notification"
-    },
-    modal: {
-      user_profile: "User Profile",
-      statistics: "Statistics",
-      games_played: "Games Played:",
-      wins: "Wins:",
-      losses: "Losses:",
-      winning_streak: "Winning streak:",
-      close: "Close",
-      change_picture: "Change Picture",
-      select_picture: "Select a picture",
-      picture_description: "Choose how you want to appear on transcendence.",
-      browse: "BROWSE",
-      delete: "DELETE",
-      ok: "OK",
-      cancel: "CANCEL"
     },
     landing: {
       welcome: "Welcome on Transcendence",
@@ -6935,52 +6959,82 @@
       default_bio: "Share a quick message",
       bio_length_error: "Your message cannot exceed 70 characters. Stop talking!",
       avatar_error: "Error while saving avatar"
+    },
+    friendship_error: {
+      already_friend: "This user is already your friend.",
+      already_send: "A request has already been sent to this user. Wait for them to accept it",
+      sending: "Error while sending friendship",
+      cannot_find: "Cannot find this user",
+      guest: "Cannot add a guest as friend",
+      yourself: "You cannot add yourself as a friend. Loser."
     }
   };
 
   // scripts/locales/es.json
   var es_default = {
-    nav: {
-      home: "",
-      profile: "",
-      dashboard: "",
-      logout: "",
-      guest_area: ""
-    },
-    profile: {
-      title: "",
-      username: "",
-      bio: "",
-      status: {
-        available: "",
-        busy: "",
-        away: "",
-        offline: ""
+    homepage: {
+      nav: {
+        home: "Inicio",
+        profile: "Perfil",
+        dashboard: "Panel de control",
+        logout: "Desconexi\xF3n",
+        guest_area: "Espacio para invitados"
+      },
+      profile: {
+        title: "Perfil",
+        username: "Nombre de usuario",
+        bio: "Comparte un mensaje r\xE1pido",
+        status: {
+          available: "Disponible",
+          busy: "Ocupado",
+          away: "Ausente",
+          offline: "Desconectado"
+        }
+      },
+      games: {
+        title: "Juegos",
+        choose_mode: "Selecciona c\xF3mo te gustar\xEDa iniciar una nueva partida.",
+        title_mode: "ELIGE TU MODO DE JUEGO",
+        local: "JUEGO LOCAL",
+        remote: "JUEGO REMOTO",
+        tournament: "TORNEOS",
+        local_describe: "Juega contra otro jugador en este ordenador.",
+        remote_describe: "Con\xE9ctate y juega con amigos y mucho m\xE1s en l\xEDnea.",
+        tournament_describe: "Compite en un torneo multijugador para 4 jugadores en este ordenador."
+      },
+      chat: {
+        title: "Messenger",
+        friends: "MIS AMIGOS",
+        add_friend: "A\xF1adir un amigo",
+        send_request: "Enviar solicitud",
+        cancel: "Cancelar",
+        contact: "\u2B50 Contactos",
+        placeholder: "Selecciona un amigo para empezar a chatear",
+        input_placeholder: "Escribe un mensaje...",
+        view_profile: "Ver perfil",
+        invite_game: "Invitaci\xF3n a jugar",
+        block_user: "Bloquear usuario"
+      },
+      notifications: {
+        title: "Notificaciones",
+        no_notification: "Sin notificaci\xF3n"
+      },
+      modal: {
+        user_profile: "Perfil de Usuario",
+        statistics: "Estad\xEDsticas",
+        games_played: "Partidas jugadas:",
+        wins: "Victorias:",
+        losses: "Derrotas:",
+        winning_streak: "Racha de victorias:",
+        close: "Cerrar",
+        change_picture: "Cambiar imagen",
+        select_picture: "Seleccionar una imagen",
+        picture_description: "Elige c\xF3mo quieres aparecer en transcendence.",
+        browse: "BUSCAR",
+        delete: "ELIMINAR",
+        ok: "OK",
+        cancel: "CANCELAR"
       }
-    },
-    games: {
-      title: "",
-      choose_mode: "",
-      local: "",
-      remote: "",
-      tournament: ""
-    },
-    chat: {
-      title: "",
-      friends: "",
-      add_friend: "",
-      send_request: "",
-      cancel: "",
-      contact: "",
-      placeholder: "",
-      input_placeholder: "",
-      view_profile: "",
-      invite_game: "",
-      block_user: ""
-    },
-    notifications: {
-      title: "",
-      no_notification: ""
     },
     landing: {
       welcome: "Bienvenido a Transcendence",
@@ -6997,7 +7051,7 @@
         available: "Disponible",
         busy: "Ocupado",
         away: "Ausente",
-        offline: "Invisible"
+        offline: "Desconectato"
       },
       login_button: "Entrar",
       back: "Volver al inicio",
@@ -7028,7 +7082,7 @@
         available: "Disponible",
         busy: "Ocupado",
         away: "Ausente",
-        offline: "Invisible"
+        offline: "Desconectado"
       },
       fallback_username: "Espera...",
       fallback_bio: "Cargando biograf\xEDa...",
@@ -7382,7 +7436,7 @@
         available: "(Disponible)",
         busy: "(Ocupado)",
         away: "(Ausente)",
-        invisible: "(Invisible)"
+        invisible: "(Desconectado)"
       },
       themes: {
         basic: "Azul Cl\xE1sico",
@@ -7435,6 +7489,14 @@
       default_bio: "Comparte un mensaje r\xE1pido",
       bio_length_error: "Tu mensaje no puede exceder los 70 caracteres. \xA1Deja de hablar!",
       avatar_error: "Error al guardar el avatar"
+    },
+    friendship_error: {
+      already_friend: "Este usuario ya es tu amigo.",
+      already_send: "Ya has enviado una solicitud a este usuario. Espera a que la acepte.",
+      sending: "Error al enviar la solicitud de amistad.",
+      cannot_find: "No se puede encontrar a este usuario.",
+      guest: "No puedes a\xF1adir a un invitado como amigo.",
+      yourself: "No puedes a\xF1adirte a ti mismo como amigo. Perdedor."
     }
   };
 
@@ -8080,16 +8142,13 @@
 
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
 		
-		<!-- Container avec left et right qui prennent toute la hauteur restante -->
 		<div class="flex gap-6 min-h-0" style="gap:80px; height: calc(100vh - 320px);">
 
-			<!-- ========= LEFT COLUMN ========= -->
-			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]" style="height: 100%;">
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
 				
-				<!-- ========= PROFILE WINDOW ========= -->
 				<div class="window flex flex-col" style="height: 190px; min-height: 190px;">
 					<div class="title-bar">
-						<div class="title-bar-text">Profile</div>
+						<div class="title-bar-text">{{homepage.profile.title}}</div>
 						<div class="title-bar-controls">
 							<button aria-label="Minimize"></button>
 							<button aria-label="Maximize"></button>
@@ -8097,74 +8156,64 @@
 						</div>
 					</div>
 
-					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
+					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
 						<div class="flex flex-row w-full rounded-sm p-2"> 
-							<!-- Cadre du profil -->
 							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
 								<div class="relative w-[110px] h-[110px] flex-shrink-0">
-									<!-- l'image (profil principal) -->
 									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
 										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-									<!-- le cadre -->
-									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_online_small.png" alt="Status frame">
 								</div>
 		
-								<!-- username, bio et status -->
 								<div class="flex flex-col justify-center pl-4 flex-1">
 									<div class="flex items-center gap-2 mb-1">
-										<p class="text-xl font-semibold" id="user-name">{{profile.username}}</p>
+										<p class="text-xl font-semibold" id="user-name">{{homepage.profile.username}}</p>
 		
-										<!-- selection du status = dynamique -->
 										<div class="relative">
 											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
 												<span id="current-status-text">(Available)</span>
 												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
 											</button>
 		
-											<!-- Menu dropdown pour le status -->
 											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.available}}</span>
+													<span>{{homepage.profile.status.available}}</span>
 												</button>
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.busy}}</span>
+													<span>{{homepage.profile.status.busy}}</span>
 												</button>
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.away}}</span>
+													<span>{{homepage.profile.status.away}}</span>
 												</button>
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>{{profile.status.offline}}</span>
+													<span>{{homepage.profile.status.offline}}</span>
 												</button>
 											</div>
 										</div>
 									</div>
 									<div id="bio-wrapper">
-										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">{{profile.bio}}</p>
+										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">{{homepage.profile.bio}}</p>
 										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
 									</div>
 								</div>
 		
-								<!-- Notifications -->
 								<div class="ml-auto flex items-start relative">
 									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-										<img id="notification-icon" 
-											src="/assets/basic/no_notification.png" 
-											alt="Notifications" 
-											class="w-full h-full object-contain">
+										<img id="notification-icon" src="/assets/basic/no_notification.png" alt="Notifications" class="w-full h-full object-contain">
 											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 									</button>
-									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
 										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
 											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-												{{notifications.title}}
+												{{homepage.notifications.title}}
 											</h3>
 										</div>
 										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-											<div class="p-4 text-center text-xs text-gray-500">{{notifications.no_notification}}</div>
+											<div class="p-4 text-center text-xs text-gray-500">{{homepage.notifications.no_notification}}</div>
 										</div>
 									</div>
 								</div>
@@ -8173,10 +8222,9 @@
 					</div>
 				</div>
 
-				<!-- ========= GAMES WINDOW ========= -->
-				<div class="window flex flex-col" style="flex: 1; min-height: 0;">
+				<div class="window flex flex-col flex-1 min-h-0">
 					<div class="title-bar">
-						<div class="title-bar-text">{{games.title}}</div>
+						<div class="title-bar-text">{{homepage.games.title}}</div>
 						<div class="title-bar-controls">
 							<button aria-label="Minimize"></button>
 							<button aria-label="Maximize"></button>
@@ -8184,59 +8232,58 @@
 						</div>
 					</div>
 
-					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
+					<div class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1">
 						<div class="bg-white p-6 flex flex-col flex-1">
-							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">CHOOSE YOUR GAME MODE</h1>
-							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
-								<p>{{games.choose_mode}}</p>
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-300" style="padding-bottom: 25px;">{{homepage.games.title_mode}}</h1>
+							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 25px;">
+								<p>{{homepage.games.choose_mode}}</p>
 							</div>
-							<div class="flex flex-col gap-8 flex-1 justify-center items-center">
-								<div class="flex flex-col items-center gap-2" style="padding-bottom: 35px;">
-									<button id="local-game" 
-										class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-											px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-											active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-											transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
-										{{games.local}}
-									</button>
-									<p class="text-sm text-gray-400 border-b border-gray-200" style="padding-bottom: 35px; color:grey;">Play against another player on this computer</p>
-								</div>
+							<div class="flex flex-col flex-1 items-center justify-between py-8
+">
+                                <div class="flex flex-col items-center gap-1" style="padding-bottom: 15px;">
+									<p class="text-sm text-black" style="padding-bottom: 25px; color:black;">{{homepage.games.local_describe}}</p>
+                                    <button id="local-game" 
+                                        class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                            transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+                                        {{homepage.games.local}}
+                                    </button>
+                                </div>
 
-								<div class="flex flex-col items-center gap-2">
-									<button id="remote-game" 
-										class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-											px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-											active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-											transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-										{{games.remote}}
-									</button>
-									<p class="text-sm text-gray-400 border-b border-gray-200" style="padding-bottom: 35px; color:grey;">Connect and play with friends and more online</p>
+                                <div class="flex flex-col items-center gap-2">
+									<p class="text-sm text-black" style="padding-bottom: 25px; color:black;">{{homepage.games.remote_describe}}</p>
+                                    <button id="remote-game" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                            transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+                                        {{homepage.games.remote}}
+                                    </button>
 
-								</div>
+                                </div>
 
-								<div class="flex flex-col items-center gap-2" style="padding-bottom: 35px;">
-									<button id="tournament-game" 
-										class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-											px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-											active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-											transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-										{{games.tournament}}
-									</button>
-									<p class="text-sm text-gray-400" style="padding-bottom: 35px; color:grey;">Compete in a 4-multiplayer tournament on this computer</p>
+                                <div class="flex flex-col items-center gap-2" style="padding-bottom: 35px;">
+									<p class="text-sm text-black" style="padding-bottom: 35px; color:black;">{{homepage.games.tournament_describe}}</p>
+                                    <button id="tournament-game" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                            transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+                                        {{homepage.games.tournament}}
+                                    </button>
 
-								</div>
-							</div>
+                                </div>
+                            </div>
 						</div>
 					</div>
 				</div>
-
 			</div>
 
 
-			<!-- ========= RIGHT WINDOW ========= -->
-			<div class="window flex flex-col min-w-0" style="flex: 1; height: 100%;">
+			<div class="window flex flex-col flex-1 min-w-0" style="flex: 1; height: 100%;">
 				<div class="title-bar">
-					<div class="title-bar-text">{{chat.title}}</div>
+					<div class="title-bar-text">{{homepage.chat.title}}</div>
 					<div class="title-bar-controls">
 						<button aria-label="Minimize"></button>
 						<button aria-label="Maximize"></button>
@@ -8245,72 +8292,54 @@
 				</div>
 
 				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-
 					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-
-						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[400px] min-w-[400px] h-full" style="width: 400px; min-width: 400px;">
 							<div class="flex flex-row items-center justify-between">
-								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{chat.friends}}</p>
+								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
 								
 								<div class="ml-auto flex items-center mb-3 relative">
 									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
-										<img id="add-friend-icon" 
-											src="/assets/basic/1441.png" 
-											alt="Friends button" 
-											class="w-full h-full object-contain">
+										<img id="add-friend-icon" src="/assets/basic/1441.png" alt="Friends button" class="w-full h-full object-contain">
 									</button>
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
-										<p class="text-sm font-semibold mb-2 text-center">{{chat.add_friend}}</p>
-										<input type="text" 
-											id="friend-search-input" 
-											placeholder="Type in username or email" 
-											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-										<div class="flex gap-2">
-											<button id="send-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{chat.send_request}}
-											</button>
-											<button id="cancel-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{chat.cancel}}
-											</button>
-										</div>
-										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
+									    <p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
+																		
+									    <input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+																		
+									    <p id="friend-request-message" class="text-xs text-center mb-2 hidden"></p>
+									    <div class="flex gap-2">
+									        <button id="send-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+									            {{homepage.chat.send_request}}
+									        </button>
+									        <button id="cancel-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+									            {{homepage.chat.cancel}}
+									        </button>
+									    </div>
 									</div>
 								</div>
 							</div>
 
 							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
-
 								<details open class="group">
 									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-										{{chat.contact}}
+										{{homepage.chat.contact}}
 									</summary>
-
-									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
-										</div>
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2"></div>
 								</details>
 							</div>
 						</div>
 
 						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
 							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
-							<p class="text-gray-400 text-lg font-semibold">{{chat.placeholder}}</p>
+							<p class="text-gray-400 text-lg font-semibold">{{homepage.chat.placeholder}}</p>
 						</div>
 
 						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-							
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
-										<img id="chat-header-avatar" 
-											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
-											src="" 
-											alt="User avatar">
-										<img id="chat-header-status" 
-											class="absolute inset-0 w-full h-full object-contain" 
-											src="/assets/basic/status_online_small.png" 
-											alt="Status frame">
+										<img id="chat-header-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover" src="" alt="User avatar">
+										<img id="chat-header-status" class="absolute inset-0 w-full h-full object-contain" src="/assets/basic/status_online_small.png" alt="Status frame">
 									</div>
 									<div class="flex flex-col justify-start leading-tight">
 										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
@@ -8320,60 +8349,30 @@
 								
 								<div class="relative self-start mt-2">
 									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
+										<img src="/assets/chat/meatball.png" alt="options" class="w-6 h-6 object-contain" style="width: 15px; height: 15px; vertical-align: -25px;">
 									</button>
 
 									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-    
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												{{chat.view_profile}}
-											</button>
+											<img src="/assets/basic/view_profile.png" class="w-6 h-6 object-cover rounded" alt="avatar">
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.view_profile}}</button>
 										</div>
-
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												{{chat.invite_game}}
-											</button>
+											<img src="/assets/basic/game_notification.png" class="w-6 h-6 object-cover rounded" alt="avatar">
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.invite_game}}</button>
 										</div>
-
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												{{chat.block_user}}
-											</button>
+											<img src="/assets/basic/block.png" class="w-6 h-6 object-cover rounded" alt="avatar">
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.block_user}}</button>
 										</div>
-
 									</div>
-
 								</div>
-
-
 							</div>
-
-
 
 							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 
 							<div class="flex flex-col">
-								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+								<input type="text" id="chat-input" placeholder="{{homepage.chat.input_placeholder}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
 
 								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
 									<button id="select-emoticon" class="h-6">
@@ -8446,101 +8445,83 @@
 										</div>
 									</div>
 								</div>
-						</div>
-					</div> 
-				</div>
-			</div> 
+						</div> 
+					</div>
+				</div> 
+			</div>
 		</div>
-
 	</div>
 
-<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-        <div class="title-bar">
-            <div class="title-bar-text">User Profile</div>
-            <div class="title-bar-controls">
-                <button id="close-friend-modal" aria-label="Close"></button>
-            </div>
-        </div>
-        <div class="window-body p-6">
-            
-            <div class="flex flex-row gap-6 mb-6 items-center">
-                
-                <div class="relative w-[130px] h-[130px] flex-shrink-0">
-                    <img id="friend-modal-status" 
-                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="/assets/basic/status_frame_online_large.png">
-                    
-                    <img id="friend-modal-avatar" 
-                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="/assets/basic/default.png">
-                </div>
+	<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+		<div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+			<div class="title-bar">
+				<div class="title-bar-text">{{homepage.modal.user_profile}}</div>
+				<div class="title-bar-controls">
+					<button id="close-friend-modal" aria-label="Close"></button>
+				</div>
+			</div>
+			<div class="window-body p-6">
+				<div class="flex flex-row gap-6 mb-6 items-center">
+					<div class="relative w-[130px] h-[130px] flex-shrink-0">
+						<img id="friend-modal-status" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none" src="/assets/basic/status_frame_online_large.png">
+						<img id="friend-modal-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;" src="/assets/basic/default.png">
+					</div>
+					<div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+						<h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">{{homepage.profile.username}}</h2>
+						<p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">{{homepage.profile.bio}}</p>
+					</div>	
+				</div>
 
-                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
-                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
-                    
-                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
-                </div>	
-            </div>
+				<fieldset class="border border-gray-300 p-4 rounded-sm">
+					<legend class="text-sm px-2 text-gray-600">{{homepage.modal.statistics}}</legend>
+					<div class="grid grid-cols-2 gap-4 text-sm">
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.games_played}}</span>
+							<span id="friend-stat-games" class="font-bold">0</span>
+						</div>
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.wins}}</span>
+							<span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+						</div>
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.losses}}</span>
+							<span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+						</div>
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.winning_streak}}</span>
+							<span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
+						</div>
+					</div>
+				</fieldset>
 
-            <fieldset class="border border-gray-300 p-4 rounded-sm">
-                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Games Played:</span>
-                        <span id="friend-stat-games" class="font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Wins:</span>
-                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Losses:</span>
-                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Winning streak:</span>
-                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
-                    </div>
-                </div>
-            </fieldset>
+				<div class="flex justify-end mt-4">
+					<button id="close-friend-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm">{{homepage.modal.close}}</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-            <div class="flex justify-end mt-4">
-                    <button id="close-friend-modal-button" 
-                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
- <!-- MODALE POUR L'AVATAR -->
-
-
-    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Change Picture</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Minimize"></button>
-                    <button aria-label="Maximize"></button>
-                    <button id="close-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6">
-                <div class="mb-6">
-                    <h2 class="text-xl mb-1">Select a picture</h2>
-                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
-                </div>
-                
-                <div class="flex flex-row gap-6">
-                    <div class="flex-1">
-                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
-                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
-                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+	<div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+		<div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+			<div class="title-bar">
+				<div class="title-bar-text">{{homepage.modal.change_picture}}</div>
+				<div class="title-bar-controls">
+					<button aria-label="Minimize"></button>
+					<button aria-label="Maximize"></button>
+					<button id="close-modal" aria-label="Close"></button>
+				</div>
+			</div>
+			<div class="window-body p-6">
+				<div class="mb-6">
+					<h2 class="text-xl mb-1">{{homepage.modal.select_picture}}</h2>
+					<p class="text-gray-500 text-sm">{{homepage.modal.picture_description}}</p>
+				</div>
+				
+				<div class="flex flex-row gap-6">
+					<div class="flex-1">
+						<div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+							<div id="modal-grid" class="grid grid-cols-4 gap-2">
+								<img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
@@ -8556,56 +8537,32 @@
                                 <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
+							</div>
+						</div>
+					</div>
 
-                    <div class="flex flex-col items-center gap-4 w-[200px]">
-                        <div class="relative w-[170px] h-[170px]">
-                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                            src="/assets/basic/status_frame_offline_large.png">
-                            
-                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-                            src="/assets/basic/default.png">
-                        </div>
+					<div class="flex flex-col items-center gap-4 w-[200px]">
+						<div class="relative w-[170px] h-[170px]">
+							<img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none" src="/assets/basic/status_frame_offline_large.png">
+							<img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
+						</div>
 
-                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
-                            <input type="file" id="file-input" accept="image/*" hidden>
+						<div class="flex flex-col gap-2 w-full mt-2 h-64">
+							<input type="file" id="file-input" accept="image/*" hidden>
+							<button id="browse-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.browse}}</button>
+							<button id="delete-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.delete}}</button>
 
-                            <button id="browse-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            BROWSE
-                            </button>
-                            
-                            <button id="delete-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            DELETE
-                            </button>
-
-                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
-                                <button id="validation-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        OK
-                                </button>
-                                <button id="cancel-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        CANCEL
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>`;
+							<div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+								<button id="validation-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.ok}}</button>
+								<button id="cancel-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.cancel}}</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>`;
 
   // scripts/components/FriendList.ts
   var FriendList = class {
@@ -8657,6 +8614,7 @@
         const registerChat = () => {
           console.log("[FriendList] Registering user on Chat Socket:", userId);
           chatSocket.emit("registerUser", userId);
+          this.loadFriends();
         };
         if (chatSocket.connected) {
           registerChat();
@@ -8706,7 +8664,7 @@
           friendItem.dataset.bio = selectedFriend.bio || i18n_default.t("friendList.default_bio");
           friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
           friendItem.innerHTML = `
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
                     <div class="relative w-[40px] h-[40px] flex-shrink-0">
                          <img class="w-full h-full rounded-full object-cover border border-gray-200"
                              src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
@@ -8716,7 +8674,6 @@
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm text-gray-800">${selectedFriend.alias}</span>
-                        <span class="text-xs text-gray-400 status-text">${status}</span>
                     </div>
                 </div>
 
@@ -8800,20 +8757,9 @@
       const socketService = SocketService_default.getInstance();
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
-      if (!chatSocket) return;
-      chatSocket.on("chatMessage", (data) => {
-        console.log(`[FriendList] \u{1F4E8} Received chatMessage event from ${data.sender_id}`);
-        this.handleMessageNotification(data.sender_id);
-      });
-      chatSocket.on("unreadStatus", (data) => {
-        if (data.hasUnread) {
-          this.handleMessageNotification(data.friendId);
-        }
-      });
-      chatSocket.on("unreadNotification", (data) => {
-        console.log("[FriendList] \u{1F514} Event 'unreadNotification' received from:", data.senderId);
-        this.handleMessageNotification(data.senderId);
-      });
+      if (!chatSocket) {
+        return;
+      }
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
@@ -8983,7 +8929,9 @@
                 friendRequestMessage?.classList.add("hidden");
               }, 1500);
             } else {
-              this.showFriendMessage(data.error.message || i18n_default.t("friendList.request_error"), "error", friendRequestMessage);
+              const backendErrorKey = data.error?.message;
+              const displayMessage = backendErrorKey ? i18n_default.t(backendErrorKey) : i18n_default.t("friendList.request_error");
+              this.showFriendMessage(displayMessage, "error", friendRequestMessage);
             }
           } catch (error) {
             console.error("Error:", error);
@@ -9038,9 +8986,11 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const friendsPromise = fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-        const chatPromise = fetchWithAuth(`/api/chat/unread`);
-        const [friendsRes, chatRes] = await Promise.all([friendsPromise, chatPromise]);
+        const [friendsRes, chatRes] = await Promise.all([
+          fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
+          fetchWithAuth(`/api/chat/unread`)
+          // Via API Gateway -> Chat Service
+        ]);
         let pendingList = [];
         let unreadMessages = [];
         if (friendsRes.ok) {
@@ -9051,93 +9001,77 @@
           const data = await chatRes.json();
           unreadMessages = data.data || [];
         }
-        const totalNotifications = pendingList.length + unreadMessages.length;
+        const allBadges = document.querySelectorAll('[id^="badge-"]');
+        allBadges.forEach((b) => {
+          b.classList.add("hidden");
+          b.innerText = "0";
+        });
+        unreadMessages.forEach((msg) => {
+          const badge = document.getElementById(`badge-${msg.sender_id}`);
+          if (badge) {
+            badge.classList.remove("hidden");
+            badge.innerText = msg.unread_count.toString();
+            badge.classList.add("animate-pulse");
+          }
+        });
         const notifIcon = document.getElementById("notification-icon");
-        if (totalNotifications > 0) {
+        const totalNotifs = pendingList.length;
+        if (totalNotifs > 0) {
           if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
         } else {
           if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
         }
         notifList.innerHTML = "";
-        if (totalNotifications === 0) {
+        if (pendingList.length === 0) {
           notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18n_default.t("friendList.no_notifications")}</div>`;
-          return;
-        }
-        unreadMessages.forEach((msg) => {
-          const item = document.createElement("div");
-          item.className = "flex items-center p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition cursor-pointer bg-blue-50";
-          const text = i18n_default.t("friendList.unread_messages", { count: msg.unread_count, sender: msg.sender_alias }) || `Message from ${msg.sender_alias}`;
-          item.innerHTML = `
-                    <div class="relative w-8 h-8 flex-shrink-0">
-                         <img src="/assets/basic/message_notif.png" class="w-full h-full object-contain" alt="msg">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-800 font-medium">${text}</p>
-                        <p class="text-xs text-gray-400">Click to reply</p>
-                    </div>
-                `;
-          item.addEventListener("click", () => {
-            const event = new CustomEvent("friendSelected", {
-              detail: {
-                friend: { id: msg.sender_id, alias: msg.sender_alias },
-                channelKey: msg.channel_key
-              }
-            });
-            window.dispatchEvent(event);
-            document.getElementById("notification-dropdown")?.classList.add("hidden");
+        } else {
+          pendingList.forEach((req) => {
+            const item = document.createElement("div");
+            item.dataset.friendshipId = req.id.toString();
+            item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+            const reqMessage = i18n_default.t("friendList.wants_to_be_friend", { name: req.user?.alias });
+            const t_accept = i18n_default.t("friendList.actions.accept");
+            const t_decline = i18n_default.t("friendList.actions.decline");
+            const t_block = i18n_default.t("friendList.actions.block");
+            item.innerHTML = `
+                        <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                            <img src="/assets/basic/logo.png" class="w-full h-full object-cover rounded" alt="avatar">
+                        </div>
+                        <div class="flex-1 min-w-0 pr-4">
+                            <p class="text-sm text-gray-800">${reqMessage}</p>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
+                                <span class="text-green-600 font-bold text-sm">\u2713</span>
+                            </button>
+                            <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
+                                <span class="text-red-600 font-bold text-sm">\u2715</span>
+                            </button>
+                            <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
+                                <span class="text-gray-600 text-xs">\u{1F6AB}</span>
+                            </button>
+                        </div>
+                    `;
+            const buttonAccept = item.querySelector(".btn-accept");
+            const buttonReject = item.querySelector(".btn-reject");
+            const buttonBlock = item.querySelector(".btn-block");
+            if (req.user && req.user.id) {
+              buttonAccept?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.handleRequest(req.user.id, "validated", item);
+              });
+              buttonReject?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.handleRequest(req.user.id, "rejected", item);
+              });
+              buttonBlock?.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.handleRequest(req.user.id, "blocked", item);
+              });
+            }
+            notifList.appendChild(item);
           });
-          notifList.appendChild(item);
-        });
-        pendingList.forEach((req) => {
-          const item = document.createElement("div");
-          item.dataset.friendshipId = req.id.toString();
-          item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-          const reqMessage = i18n_default.t("friendList.wants_to_be_friend", { name: req.user?.alias });
-          const t_accept = i18n_default.t("friendList.actions.accept");
-          const t_decline = i18n_default.t("friendList.actions.decline");
-          const t_block = i18n_default.t("friendList.actions.block");
-          item.innerHTML = `
-                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                        <img src="/assets/basic/logo.png" 
-                            class="w-full h-full object-cover rounded"
-                            alt="avatar">
-                    </div>
-                    <div class="flex-1 min-w-0 pr-4">
-                        <p class="text-sm text-gray-800">
-                            ${reqMessage}
-                        </p>
-                    </div>
-                    <div class="flex gap-2 flex-shrink-0">
-                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
-                            <span class="text-green-600 font-bold text-sm">\u2713</span>
-                        </button>
-                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
-                            <span class="text-red-600 font-bold text-sm">\u2715</span>
-                        </button>
-                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
-                            <span class="text-gray-600 text-xs">\u{1F6AB}</span>
-                        </button>
-                    </div>
-                `;
-          const buttonAccept = item.querySelector(".btn-accept");
-          const buttonReject = item.querySelector(".btn-reject");
-          const buttonBlock = item.querySelector(".btn-block");
-          if (req.user && req.user.id) {
-            buttonAccept?.addEventListener("click", (e) => {
-              e.stopPropagation();
-              this.handleRequest(req.user.id, "validated", item);
-            });
-            buttonReject?.addEventListener("click", (e) => {
-              e.stopPropagation();
-              this.handleRequest(req.user.id, "rejected", item);
-            });
-            buttonBlock?.addEventListener("click", (e) => {
-              e.stopPropagation();
-              this.handleRequest(req.user.id, "blocked", item);
-            });
-          }
-          notifList.appendChild(item);
-        });
+        }
       } catch (error) {
         console.error("Error fetching notifications:", error);
       }
@@ -10186,31 +10120,51 @@
   function render2() {
     let html = HomePage_default;
     console.log("RENDER HOMEPAGE - LANGUE ACTUELLE:", i18n_default.language);
-    html = html.replace(/\{\{profile\.title\}\}/g, i18n_default.t("profile.title"));
-    html = html.replace(/\{\{profile\.bio\}\}/g, i18n_default.t("profile.bio"));
-    html = html.replace(/\{\{profile\.username\}\}/g, i18n_default.t("profile.username"));
-    html = html.replace(/\{\{profile\.status.available\}\}/g, i18n_default.t("profile.status.available"));
-    html = html.replace(/\{\{profile\.status.busy\}\}/g, i18n_default.t("profile.status.busy"));
-    html = html.replace(/\{\{profile\.status.away\}\}/g, i18n_default.t("profile.status.away"));
-    html = html.replace(/\{\{profile\.status.offline\}\}/g, i18n_default.t("profile.status.offline"));
-    html = html.replace(/\{\{games\.title\}\}/g, i18n_default.t("games.title"));
-    html = html.replace(/\{\{games\.choose_mode\}\}/g, i18n_default.t("games.choose_mode"));
-    html = html.replace(/\{\{games\.local\}\}/g, i18n_default.t("games.local"));
-    html = html.replace(/\{\{games\.remote\}\}/g, i18n_default.t("games.remote"));
-    html = html.replace(/\{\{games\.tournament\}\}/g, i18n_default.t("games.tournament"));
-    html = html.replace(/\{\{chat\.title\}\}/g, i18n_default.t("chat.title"));
-    html = html.replace(/\{\{chat\.friends\}\}/g, i18n_default.t("chat.friends"));
-    html = html.replace(/\{\{chat\.add_friend\}\}/g, i18n_default.t("chat.add_friend"));
-    html = html.replace(/\{\{chat\.send_request\}\}/g, i18n_default.t("chat.send_request"));
-    html = html.replace(/\{\{chat\.cancel\}\}/g, i18n_default.t("chat.cancel"));
-    html = html.replace(/\{\{chat\.contact\}\}/g, i18n_default.t("chat.contact"));
-    html = html.replace(/\{\{chat\.placeholder\}\}/g, i18n_default.t("chat.placeholder"));
-    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18n_default.t("chat.input_placeholder"));
-    html = html.replace(/\{\{chat\.view_profile\}\}/g, i18n_default.t("chat.view_profile"));
-    html = html.replace(/\{\{chat\.invite_game\}\}/g, i18n_default.t("chat.invite_game"));
-    html = html.replace(/\{\{chat\.block_user\}\}/g, i18n_default.t("chat.block_user"));
-    html = html.replace(/\{\{notifications\.title\}\}/g, i18n_default.t("notifications.title"));
-    html = html.replace(/\{\{notifications\.no_notification\}\}/g, i18n_default.t("notifications.no_notification"));
+    html = html.replace(/\{\{homepage.profile\.title\}\}/g, i18n_default.t("homepage.profile.title"));
+    html = html.replace(/\{\{homepage.profile\.bio\}\}/g, i18n_default.t("homepage.profile.bio"));
+    html = html.replace(/\{\{homepage.profile\.username\}\}/g, i18n_default.t("homepage.profile.username"));
+    html = html.replace(/\{\{homepage.profile\.status.available\}\}/g, i18n_default.t("homepage.profile.status.available"));
+    html = html.replace(/\{\{homepage.profile\.status.busy\}\}/g, i18n_default.t("homepage.profile.status.busy"));
+    html = html.replace(/\{\{homepage.profile\.status.away\}\}/g, i18n_default.t("homepage.profile.status.away"));
+    html = html.replace(/\{\{homepage.profile\.status.offline\}\}/g, i18n_default.t("homepage.profile.status.offline"));
+    html = html.replace(/\{\{homepage.games\.title\}\}/g, i18n_default.t("homepage.games.title"));
+    html = html.replace(/\{\{homepage.games\.mode\}\}/g, i18n_default.t("homepage.games.mode"));
+    html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18n_default.t("homepage.games.choose_mode"));
+    html = html.replace(/\{\{homepage.games\.title_mode\}\}/g, i18n_default.t("homepage.games.title_mode"));
+    html = html.replace(/\{\{homepage.games\.local\}\}/g, i18n_default.t("homepage.games.local"));
+    html = html.replace(/\{\{homepage.games\.remote\}\}/g, i18n_default.t("homepage.games.remote"));
+    html = html.replace(/\{\{homepage.games\.tournament\}\}/g, i18n_default.t("homepage.games.tournament"));
+    html = html.replace(/\{\{homepage.games\.local_describe\}\}/g, i18n_default.t("homepage.games.local_describe"));
+    html = html.replace(/\{\{homepage.games\.remote_describe\}\}/g, i18n_default.t("homepage.games.remote_describe"));
+    html = html.replace(/\{\{homepage.games\.tournament_describe\}\}/g, i18n_default.t("homepage.games.tournament_describe"));
+    html = html.replace(/\{\{homepage.chat\.title\}\}/g, i18n_default.t("homepage.chat.title"));
+    html = html.replace(/\{\{homepage.chat\.friends\}\}/g, i18n_default.t("homepage.chat.friends"));
+    html = html.replace(/\{\{homepage.chat\.add_friend\}\}/g, i18n_default.t("homepage.chat.add_friend"));
+    html = html.replace(/\{\{homepage.chat\.send_request\}\}/g, i18n_default.t("homepage.chat.send_request"));
+    html = html.replace(/\{\{homepage.chat\.cancel\}\}/g, i18n_default.t("homepage.chat.cancel"));
+    html = html.replace(/\{\{homepage.chat\.contact\}\}/g, i18n_default.t("homepage.chat.contact"));
+    html = html.replace(/\{\{homepage.chat\.placeholder\}\}/g, i18n_default.t("homepage.chat.placeholder"));
+    html = html.replace(/\{\{homepage.chat\.input_placeholder\}\}/g, i18n_default.t("homepage.chat.input_placeholder"));
+    html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18n_default.t("homepage.chat.view_profile"));
+    html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18n_default.t("homepage.chat.invite_game"));
+    html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18n_default.t("homepage.chat.block_user"));
+    html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18n_default.t("homepage.notifications.title"));
+    html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18n_default.t("homepage.notifications.no_notification"));
+    html = html.replace(/\{\{homepage.modal\.user_profile\}\}/g, i18n_default.t("homepage.modal.user_profile"));
+    html = html.replace(/\{\{friendProfileModal\.no_bio\}\}/g, i18n_default.t("friendProfileModal.no_bio"));
+    html = html.replace(/\{\{homepage.modal\.statistics\}\}/g, i18n_default.t("homepage.modal.statistics"));
+    html = html.replace(/\{\{homepage.modal\.games_played\}\}/g, i18n_default.t("homepage.modal.games_played"));
+    html = html.replace(/\{\{homepage.modal\.wins\}\}/g, i18n_default.t("homepage.modal.wins"));
+    html = html.replace(/\{\{homepage.modal\.losses\}\}/g, i18n_default.t("homepage.modal.losses"));
+    html = html.replace(/\{\{homepage.modal\.winning_streak\}\}/g, i18n_default.t("homepage.modal.winning_streak"));
+    html = html.replace(/\{\{homepage.modal\.close\}\}/g, i18n_default.t("homepage.modal.close"));
+    html = html.replace(/\{\{homepage.modal\.change_picture\}\}/g, i18n_default.t("homepage.modal.change_picture"));
+    html = html.replace(/\{\{homepage.modal\.select_picture\}\}/g, i18n_default.t("homepage.modal.select_picture"));
+    html = html.replace(/\{\{homepage.modal\.picture_description\}\}/g, i18n_default.t("homepage.modal.picture_description"));
+    html = html.replace(/\{\{homepage.modal\.browse\}\}/g, i18n_default.t("homepage.modal.browse"));
+    html = html.replace(/\{\{homepage.modal\.delete\}\}/g, i18n_default.t("homepage.modal.delete"));
+    html = html.replace(/\{\{homepage.modal\.ok\}\}/g, i18n_default.t("homepage.modal.ok"));
+    html = html.replace(/\{\{homepage.modal\.cancel\}\}/g, i18n_default.t("homepage.modal.cancel"));
     return html;
   }
   function afterRender() {
@@ -10945,6 +10899,8 @@
                 }
               } else if (fieldName === "bio") {
                 value2 = user.bio || "";
+                if (value2.trim() === "Share a quick message")
+                  value2 = "";
                 if (bioDisplay) {
                   bioDisplay.innerHTML = parseMessage(value2) || i18n_default.t("profilePage.bio_placeholder");
                 }
@@ -11900,31 +11856,81 @@
                             </div>
     
                             <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
-    
-                            <div class="flex flex-col">
-                                <input type="text" id="chat-input" placeholder="Type in your message" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                                <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-                                    <div class="relative">
-                                    <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-                                        <div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-                                        <div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-                                    </button>
-    
-                                    <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-                                        <p class="text-xs text-gray-500 mb-2 pl-1">{{remotePage.chat.choose_bg}}</p>
-                                                    
-                                        <div class="grid grid-cols-3 gap-2">
-                                                            
-                                            <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-                                                    data-bg="url('/assets/backgrounds/fish_background.jpg')"
-                                                    style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-                                            </button>
-                                            <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-                                                {{remotePage.chat.default_bg}}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+
+							<div class="flex flex-col">
+								<input type="text" id="chat-input" placeholder="{{remotePage.chat.input_placeholder}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+									<button id="select-emoticon" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<button id="select-animation" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
+											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
+												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
+											</div>
+										</div>
+									</button>
+
+									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
+									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
+									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
+
+									<button id="change-font" class="h-6">
+										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
+
+										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
+											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
+										</div>
+
+										</div>
+									</button>
+
+									<div class="relative">
+									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+									</button>
+
+									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
+													
+										<div class="grid grid-cols-3 gap-2">
+														
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/fish_background.jpg')"
+													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/heart_background.jpg')"
+													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
+											</button>
+
+											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
+													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
+											</button>
+
+											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+												Default background
+											</button>
+										</div>
+									</div>
+								</div>
                         </div>
                     </div>
                 </div>
@@ -11944,7 +11950,7 @@
       this.y = y;
       this.width = 10;
       this.height = 100;
-      this.speed = 5;
+      this.speed = 6;
       this.color = "white";
       if (imageSrc) {
         this.image = new Image();
@@ -11990,7 +11996,11 @@
     update(canvas) {
       this.x += this.velocityX;
       this.y += this.velocityY;
-      if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+      if (this.y - this.radius < 0) {
+        this.y = this.radius;
+        this.velocityY = -this.velocityY;
+      } else if (this.y + this.radius > canvas.height) {
+        this.y = canvas.height - this.radius;
         this.velocityY = -this.velocityY;
       }
     }
@@ -12150,8 +12160,14 @@
       const SERVER_HEIGHT = 600;
       const scaleX = this.canvas.width / SERVER_WIDTH;
       const scaleY = this.canvas.height / SERVER_HEIGHT;
-      this.ball.x = data.ball.x * scaleX;
-      this.ball.y = data.ball.y * scaleY;
+      const prevBallX = this.ball.x;
+      const prevBallY = this.ball.y;
+      const newBallX = data.ball.x * scaleX;
+      const newBallY = data.ball.y * scaleY;
+      this.ball.x = prevBallX + (newBallX - prevBallX) * 0.7;
+      this.ball.y = prevBallY + (newBallY - prevBallY) * 0.7;
+      this.ball.velocityX = data.ball.velocityX;
+      this.ball.velocityY = data.ball.velocityY;
       this.paddle1.y = data.paddle1.y * scaleY;
       this.paddle1.x = data.paddle1.x * scaleX;
       this.paddle2.y = data.paddle2.y * scaleY;
@@ -12178,16 +12194,24 @@
     }
     // ...
     checkCollisions() {
+      let speed = Math.sqrt(this.ball.velocityX ** 2 + this.ball.velocityY ** 2);
+      const MAX_SPEED = 10;
+      if (speed > MAX_SPEED) {
+        const ratio = MAX_SPEED / speed;
+        this.ball.velocityX *= ratio;
+        this.ball.velocityY *= ratio;
+      }
       if (this.ball.velocityX < 0) {
         if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x) {
           if (this.ball.y + this.ball.radius >= this.paddle1.y && this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
             let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
-            let angle = hitPos * (Math.PI / 4);
-            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-            speed *= 1.05;
-            this.ball.velocityX = speed * Math.cos(angle);
-            this.ball.velocityY = speed * Math.sin(angle);
-            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+            let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
+            let speed2 = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed2 *= 1.05;
+            if (speed2 > MAX_SPEED) speed2 = MAX_SPEED;
+            this.ball.velocityX = speed2 * Math.cos(angle);
+            this.ball.velocityY = speed2 * Math.sin(angle);
+            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius + 2;
           }
         }
       }
@@ -12195,23 +12219,23 @@
         if (this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
           if (this.ball.y + this.ball.radius >= this.paddle2.y && this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
             let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
-            let angle = hitPos * (Math.PI / 4);
-            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-            speed *= 1.05;
-            this.ball.velocityX = -speed * Math.cos(angle);
-            this.ball.velocityY = speed * Math.sin(angle);
-            this.ball.x = this.paddle2.x - this.ball.radius;
+            let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
+            let speed2 = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed2 *= 1.05;
+            this.ball.velocityX = -speed2 * Math.cos(angle);
+            this.ball.velocityY = speed2 * Math.sin(angle);
+            this.ball.x = this.paddle2.x - this.ball.radius - 2;
           }
         }
       }
       if (this.ball.x < 0) {
         this.score.player2++;
         this.notifyScoreUpdate();
-        this.reset(1);
+        this.reset(-1);
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
         this.notifyScoreUpdate();
-        this.reset(-1);
+        this.reset(1);
       }
     }
     reset(direction = 1) {
@@ -13929,8 +13953,8 @@
     }
     return [h | 0, s || 0, l];
   }
-  function calln(f, a, b, c2) {
-    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c2)).map(n2b);
+  function calln(f, a, b, c) {
+    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c)).map(n2b);
   }
   function hsl2rgb(h, s, l) {
     return calln(hsl2rgbn, h, s, l);
@@ -16415,9 +16439,9 @@
     };
     const a = _pointInLine(p1, cp1, t2);
     const b = _pointInLine(cp1, cp2, t2);
-    const c2 = _pointInLine(cp2, p2, t2);
+    const c = _pointInLine(cp2, p2, t2);
     const d = _pointInLine(a, b, t2);
-    const e = _pointInLine(b, c2, t2);
+    const e = _pointInLine(b, c, t2);
     return _pointInLine(d, e, t2);
   }
   var getRightToLeftAdapter = function(rectX, width) {
@@ -22372,7 +22396,7 @@
   var instances = {};
   var getChart = (key) => {
     const canvas = getCanvas(key);
-    return Object.values(instances).filter((c2) => c2.canvas === canvas).pop();
+    return Object.values(instances).filter((c) => c.canvas === canvas).pop();
   };
   function moveNumericKeys(obj, start, move) {
     const keys = Object.keys(obj);
@@ -22751,14 +22775,14 @@
       }
       this._dataChanges = [];
       const datasetCount = this.data.datasets.length;
-      const makeSet = (idx) => new Set(_dataChanges.filter((c2) => c2[0] === idx).map((c2, i) => i + "," + c2.splice(1).join(",")));
+      const makeSet = (idx) => new Set(_dataChanges.filter((c) => c[0] === idx).map((c, i) => i + "," + c.splice(1).join(",")));
       const changeSet = makeSet(0);
       for (let i = 1; i < datasetCount; i++) {
         if (!setsEqual(changeSet, makeSet(i))) {
           return;
         }
       }
-      return Array.from(changeSet).map((c2) => c2.split(",")).map((a) => ({
+      return Array.from(changeSet).map((c) => c.split(",")).map((a) => ({
         method: a[1],
         start: +a[2],
         count: +a[3]
@@ -28779,7 +28803,47 @@
     sessionStorage.removeItem("userRole");
     sessionStorage.removeItem("isGuest");
   };
-  var handleLocationChange = () => {
+  var translateNavElements = () => {
+    const elements2 = document.querySelectorAll("[data-i18n]");
+    elements2.forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (key) {
+        const translation = i18n_default.t(key);
+        if (translation && translation !== key)
+          el.textContent = translation;
+      }
+    });
+  };
+  var loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+    if (userId) {
+      try {
+        const response = await fetch(`/api/user/${userId}/language`, {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.language) {
+            const dbLang = data.language;
+            const currentLang = i18n_default.language;
+            if (dbLang && dbLang !== currentLang) {
+              console.log(`Langue en BDD trouvee (${dbLang})`);
+              await changeLanguage2(dbLang);
+              translateNavElements();
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Impossible de charger la langue utilisateur");
+      }
+    }
+  };
+  var handleLocationChange = async () => {
     if (!appElement) return;
     let path = window.location.pathname;
     if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
@@ -28799,6 +28863,8 @@
       handleLocationChange();
       return;
     }
+    if (accessToken && !isGuest)
+      await loadUserLanguageFromDB();
     if (isGameRunning() && path !== "/game") {
       cleanup();
     }
@@ -28893,15 +28959,15 @@
     `;
     const navbar = document.getElementById("main-navbar");
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
-        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.home">homepage.nav.home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.profile">homepage.nav.profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.dashboard">homepage.nav.dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.guest_area">homepage.nav.guest_area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
     if (navbar) {
@@ -28915,6 +28981,7 @@
           navbar.innerHTML = targetHTML;
           setupLangDropdown();
         }
+        translateNavElements();
       } else {
         navbar.style.display = "none";
       }
@@ -28933,34 +29000,6 @@
     if (path === "/guest" && !isGuest) {
       window.history.replaceState({}, "", "/");
       handleLocationChange();
-    }
-  };
-  var loadUserLanguageFromDB = async () => {
-    const userId = localStorage.getItem("userId");
-    const accessToken = localStorage.getItem("accessToken");
-    if (userId) {
-      try {
-        const response = await fetch(`/api/user/${userId}/language`, {
-          method: "GET",
-          headers: {
-            "Content-type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.language) {
-            const dbLang = data.language;
-            const currentLang = i18n_default.language;
-            if (dbLang && dbLang !== currentLang) {
-              console.log(`Langue en BDD trouvee (${dbLang})`);
-              await changeLanguage2(dbLang);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Impossible de charger la langue utilisateur");
-      }
     }
   };
   window.addEventListener("click", (event) => {

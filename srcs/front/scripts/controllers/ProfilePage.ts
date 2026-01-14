@@ -470,6 +470,10 @@ export function afterRender(): void {
                             }
                         } else if (fieldName === 'bio') {
                             value = user.bio || '';
+
+                            if (value.trim() === "Share a quick message") // Si valeur de texte par defaut en anglais, on lignore sinon pb d'affichage de trad
+                                value = "";
+
                             if (bioDisplay) {
                                 // MODIFICATION: Translation for placeholder
                                 bioDisplay.innerHTML = parseMessage(value) || i18next.t('profilePage.bio_placeholder');

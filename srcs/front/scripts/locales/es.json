@@ -1,50 +1,68 @@
 {
-  "nav": {
-    "home": "",
-    "profile": "",
-    "dashboard": "",
-    "logout": "",
-    "guest_area": ""
-  },
-  "profile": {
-    "title": "",
-    "username": "",
-    "bio": "",
-    "status": {
-      "available": "",
-      "busy": "",
-      "away": "",
-      "offline": ""
+  "homepage": {
+    "nav": {
+      "home": "Inicio",
+      "profile": "Perfil",
+      "dashboard": "Panel de control",
+      "logout": "Desconexión",
+      "guest_area": "Espacio para invitados"
+    },
+    "profile": {
+      "title": "Perfil",
+      "username": "Nombre de usuario",
+      "bio": "Comparte un mensaje rápido",
+      "status": {
+        "available": "Disponible",
+        "busy": "Ocupado",
+        "away": "Ausente",
+        "offline": "Desconectado"
+      }
+    },
+    "games": {
+      "title": "Juegos",
+      "choose_mode": "Selecciona cómo te gustaría iniciar una nueva partida.",
+      "title_mode": "ELIGE TU MODO DE JUEGO",
+      "local": "JUEGO LOCAL",
+      "remote": "JUEGO REMOTO",
+      "tournament": "TORNEOS",
+      "local_describe": "Juega contra otro jugador en este ordenador.",
+      "remote_describe": "Conéctate y juega con amigos y mucho más en línea.",
+      "tournament_describe": "Compite en un torneo multijugador para 4 jugadores en este ordenador."
+    },
+    "chat": {
+      "title": "Messenger",
+      "friends": "MIS AMIGOS",
+      "add_friend": "Añadir un amigo",
+      "send_request": "Enviar solicitud",
+      "cancel": "Cancelar",
+      "contact": "⭐ Contactos",
+      "placeholder": "Selecciona un amigo para empezar a chatear",
+      "input_placeholder": "Escribe un mensaje...",
+      "view_profile": "Ver perfil",
+      "invite_game": "Invitación a jugar",
+      "block_user": "Bloquear usuario"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "no_notification": "Sin notificación"
+    },
+    "modal": {
+      "user_profile": "Perfil de Usuario",
+      "statistics": "Estadísticas",
+      "games_played": "Partidas jugadas:",
+      "wins": "Victorias:",
+      "losses": "Derrotas:",
+      "winning_streak": "Racha de victorias:",
+      "close": "Cerrar",
+      "change_picture": "Cambiar imagen",
+      "select_picture": "Seleccionar una imagen",
+      "picture_description": "Elige cómo quieres aparecer en transcendence.",
+      "browse": "BUSCAR",
+      "delete": "ELIMINAR",
+      "ok": "OK",
+      "cancel": "CANCELAR"
     }
   },
-  "games": {
-    "title": "",
-    "choose_mode": "",
-    "local": "",
-    "remote": "",
-    "tournament": ""
-  },
-  "chat": {
-    "title": "",
-    "friends": "",
-    "add_friend": "",
-    "send_request": "",
-    "cancel": "",
-    "contact": "",
-    "placeholder": "",
-    "input_placeholder": "",
-    "view_profile": "",
-    "invite_game": "",
-    "block_user": ""
-  },
-  "notifications": {
-    "title": "",
-    "no_notification": ""
-  },
-
-
-
-
 
   "landing": {
     "welcome": "Bienvenido a Transcendence",
@@ -62,7 +80,7 @@
       "available": "Disponible",
       "busy": "Ocupado",
       "away": "Ausente",
-      "offline": "Invisible"
+      "offline": "Desconectato"
     },
     "login_button": "Entrar",
     "back": "Volver al inicio",
@@ -93,7 +111,7 @@
       "available": "Disponible",
       "busy": "Ocupado",
       "away": "Ausente",
-      "offline": "Invisible"
+      "offline": "Desconectado"
     },
     "fallback_username": "Espera...",
     "fallback_bio": "Cargando biografía...",
@@ -456,7 +474,7 @@
       "available": "(Disponible)",
       "busy": "(Ocupado)",
       "away": "(Ausente)",
-      "invisible": "(Invisible)"
+      "invisible": "(Desconectado)"
     },
     "themes": {
       "basic": "Azul Clásico",
@@ -512,5 +530,15 @@
     "default_bio": "Comparte un mensaje rápido",
     "bio_length_error": "Tu mensaje no puede exceder los 70 caracteres. ¡Deja de hablar!",
     "avatar_error": "Error al guardar el avatar"
+  },
+
+  "friendship_error": {
+    "already_friend": "Este usuario ya es tu amigo.",
+    "already_send": "Ya has enviado una solicitud a este usuario. Espera a que la acepte.",
+    "sending": "Error al enviar la solicitud de amistad.",
+    "cannot_find": "No se puede encontrar a este usuario.",
+    "guest": "No puedes añadir a un invitado como amigo.",
+    "yourself": "No puedes añadirte a ti mismo como amigo. Perdedor."
   }
+
 }

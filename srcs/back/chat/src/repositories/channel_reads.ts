@@ -78,9 +78,15 @@ export async function getUnreadConversations(
             m.sender_id != ? -- On ignore ses propres messages
             AND (r.last_read_at IS NULL OR m.sent_at > r.last_read_at)
             
-        GROUP BY c.id
+        GROUP BY c.id, c.channel_key
     `;
 
-    const rows = await db.all(query, [userId, userId, userId, userId]);
-    return rows || [];
+    try {
+        const rows = await db.all(query, [userId, userId, userId, userId]);
+        console.log(`[DB] getUnreadConversations for user ${userId}: found ${rows.length} rows`);
+        return rows || [];
+    } catch (err) {
+        console.error("[DB] Error in getUnreadConversations:", err);
+        return [];
+    }
 }
