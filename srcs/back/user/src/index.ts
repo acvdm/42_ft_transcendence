@@ -998,12 +998,6 @@ fastify.patch('/users/:id/language', async (request, reply) =>
 });
 
 
-/* LANGUAGE - GET UPDATE  */
-/* routes 
-GET /users/:id/language
-PATCH /users/:id/language 
-*/
-
 
 //---------------------------------------
 //--------------- SERVER ----------------

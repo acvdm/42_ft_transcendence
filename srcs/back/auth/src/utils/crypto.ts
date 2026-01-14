@@ -45,7 +45,7 @@ export function generateAccessToken(userId: number, credential_id: number): stri
         sub: userId,
         cred_id: credential_id
     };
-    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '7m'});
+    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '1m'});
 }
 
 // Refresh Token : comme un pointeur vers la bdd (conserve en securite au niveau du cookie)
@@ -55,7 +55,7 @@ export function generateRefreshToken(user_id: number): string {
  }
 
 // verification du token
-export function verifyAccessToken(token: string): any { // revoir si besoin de specifier le type de retour
+export function verifyAccessToken(token: string): any {
     try {
         return jwt.verify(token, JWT_SECRET!);
     } catch (e) {

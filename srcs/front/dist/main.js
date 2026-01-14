@@ -28673,7 +28673,36 @@
       }
     });
   };
-  var handleLocationChange = () => {
+  var loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+    if (userId) {
+      try {
+        const response = await fetch(`/api/user/${userId}/language`, {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.language) {
+            const dbLang = data.language;
+            const currentLang = i18n_default.language;
+            if (dbLang && dbLang !== currentLang) {
+              console.log(`Langue en BDD trouvee (${dbLang})`);
+              await changeLanguage2(dbLang);
+              translateNavElements();
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Impossible de charger la langue utilisateur");
+      }
+    }
+  };
+  var handleLocationChange = async () => {
     if (!appElement) return;
     let path = window.location.pathname;
     if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
@@ -28693,6 +28722,8 @@
       handleLocationChange();
       return;
     }
+    if (accessToken && !isGuest)
+      await loadUserLanguageFromDB();
     if (isGameRunning() && path !== "/game") {
       cleanup();
     }
@@ -28828,34 +28859,6 @@
     if (path === "/guest" && !isGuest) {
       window.history.replaceState({}, "", "/");
       handleLocationChange();
-    }
-  };
-  var loadUserLanguageFromDB = async () => {
-    const userId = localStorage.getItem("userId");
-    const accessToken = localStorage.getItem("accessToken");
-    if (userId) {
-      try {
-        const response = await fetch(`/api/user/${userId}/language`, {
-          method: "GET",
-          headers: {
-            "Content-type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.language) {
-            const dbLang = data.language;
-            const currentLang = i18n_default.language;
-            if (dbLang && dbLang !== currentLang) {
-              console.log(`Langue en BDD trouvee (${dbLang})`);
-              await changeLanguage2(dbLang);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Impossible de charger la langue utilisateur");
-      }
     }
   };
   window.addEventListener("click", (event) => {

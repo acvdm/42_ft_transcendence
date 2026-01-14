@@ -143,11 +143,56 @@ const translateNavElements = () => {
     });
 };
 
+
+/* RECUPERATION DE LA LANGUE EN DB */
+/* deplacement de la fonciton en haut du fichier pour pouvoir l'appeler dans handleLocationChange
+pour permettre a lutilisateur de retrouver sa langue sauvegardee a la prochaine connexion */
+const loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem('userId');
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (userId)
+    {
+        try {
+            const response = await fetch(`/api/user/${userId}/language`, {
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            if (response.ok)
+            {
+                const data = await response.json();
+                if (data.success && data.language)
+                {
+                    const dbLang = data.language;
+                    const currentLang = i18next.language;
+
+                    if (dbLang && dbLang !== currentLang)
+                    {
+                        console.log(`Langue en BDD trouvee (${dbLang})`);
+                        await changeLanguage(dbLang);
+
+                        translateNavElements();
+                    }
+                }
+            }
+
+
+        } 
+        catch (error) {
+            console.error("Impossible de charger la langue utilisateur");
+        }
+    }
+}
+
 	//================================================
 	//================ CHANGING PAGE =================
 	//================================================
 
-const handleLocationChange = () => {
+// Cass : je rend la fonction asynchrone pour pouvoir recup en db la langue sauvegardee par l'utilisateur
+const handleLocationChange = async () => {
     if (!appElement) return;
 
     let path = window.location.pathname;
@@ -174,6 +219,10 @@ const handleLocationChange = () => {
         return ;
     }
 
+    /* AJOUT */
+    if (accessToken && !isGuest)
+        await loadUserLanguageFromDB();
+
     if (isGameRunning() && path !== '/game') {
 		cleanup();
 	}
@@ -181,40 +230,6 @@ const handleLocationChange = () => {
         handleLogout();
         return; 
     }
-
-
-    /* AJOUT POUR CHARGER LA LANGUE SAUVEGARDEE EN DB DANS USER
-//     fastify.get('/users/:id/language', async (request, reply) => 
-// {
-// 	try
-// 	{
-// 		const { id } = request.params as { id: string };
-// 		const userId = Number(id);
-// 		if (!userId) {
-// 			return reply.status(400).send({ error: "Invalid User ID" });
-// 		}
-
-// 		const prefferedLanguage = await getPreferredLanguage(db, userId);
-
-// 		return reply.status(200).send({
-// 			success: true,
-// 			language: prefferedLanguage,
-// 			error: null
-// 		});
-// 	}
-// 	catch (err: any) 
-// 	{
-// 		console.error("Export Auth Error:", err);
-// 		const statusCode = err.statusCode || 500;
-
-// 		return reply.status(statusCode).send({
-// 			success: false,
-// 			// language: prefferedLanguage,
-// 			error: { message: err.message || "Failed to export language"}
-// 		});
-// 	}
-// });
-     */
 
 	//================================================
 	//============= NAVIGATION BAR LOGIC =============
@@ -422,46 +437,6 @@ const handleLocationChange = () => {
 // 	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
 // };
 
-
-/* RECUPERATION DE LA LANGUE EN DB */
-
-const loadUserLanguageFromDB = async () => {
-    const userId = localStorage.getItem('userId');
-    const accessToken = localStorage.getItem('accessToken');
-
-    if (userId)
-    {
-        try {
-            const response = await fetch(`/api/user/${userId}/language`, {
-                method: 'GET',
-                headers: {
-                    'Content-type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            if (response.ok)
-            {
-                const data = await response.json();
-                if (data.success && data.language)
-                {
-                    const dbLang = data.language;
-                    const currentLang = i18next.language;
-
-                    if (dbLang && dbLang !== currentLang)
-                    {
-                        console.log(`Langue en BDD trouvee (${dbLang})`);
-                        await changeLanguage(dbLang);
-                    }
-                }
-            }
-
-
-        } 
-        catch (error) {
-            console.error("Impossible de charger la langue utilisateur");
-        }
-    }
-}
 
 
 
