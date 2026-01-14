@@ -75,6 +75,7 @@ export class FriendList {
             const registerChat = () => {
                 console.log("[FriendList] Registering user on Chat Socket:", userId);
                 chatSocket.emit('registerUser', userId);
+                this.loadFriends();
             };
 
             if (chatSocket.connected) {
@@ -264,12 +265,9 @@ export class FriendList {
         const chatSocket = socketService.getChatSocket();
         const gameSocket = socketService.getGameSocket();
 
-        if (!chatSocket) return;
-        
-        // chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
-        //     console.log("[FriendList] 🔔 Event 'unreadNotification' received from:", data.senderId);
-        //     this.handleMessageNotification(data.senderId);
-        // });
+        if (!chatSocket) {
+            return;
+        }
 
         chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);

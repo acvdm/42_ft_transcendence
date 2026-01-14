@@ -8142,7 +8142,7 @@
 								<div class="relative w-[110px] h-[110px] flex-shrink-0">
 									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
 										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_online_small.png" alt="Status frame">
 								</div>
 		
 								<div class="flex flex-col justify-center pl-4 flex-1">
@@ -8594,6 +8594,7 @@
         const registerChat = () => {
           console.log("[FriendList] Registering user on Chat Socket:", userId);
           chatSocket.emit("registerUser", userId);
+          this.loadFriends();
         };
         if (chatSocket.connected) {
           registerChat();
@@ -8736,7 +8737,9 @@
       const socketService = SocketService_default.getInstance();
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
-      if (!chatSocket) return;
+      if (!chatSocket) {
+        return;
+      }
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
@@ -11862,7 +11865,7 @@
       this.y = y;
       this.width = 10;
       this.height = 100;
-      this.speed = 5;
+      this.speed = 6;
       this.color = "white";
       if (imageSrc) {
         this.image = new Image();
@@ -11908,7 +11911,11 @@
     update(canvas) {
       this.x += this.velocityX;
       this.y += this.velocityY;
-      if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
+      if (this.y - this.radius < 0) {
+        this.y = this.radius;
+        this.velocityY = -this.velocityY;
+      } else if (this.y + this.radius > canvas.height) {
+        this.y = canvas.height - this.radius;
         this.velocityY = -this.velocityY;
       }
     }
@@ -12068,8 +12075,14 @@
       const SERVER_HEIGHT = 600;
       const scaleX = this.canvas.width / SERVER_WIDTH;
       const scaleY = this.canvas.height / SERVER_HEIGHT;
-      this.ball.x = data.ball.x * scaleX;
-      this.ball.y = data.ball.y * scaleY;
+      const prevBallX = this.ball.x;
+      const prevBallY = this.ball.y;
+      const newBallX = data.ball.x * scaleX;
+      const newBallY = data.ball.y * scaleY;
+      this.ball.x = prevBallX + (newBallX - prevBallX) * 0.7;
+      this.ball.y = prevBallY + (newBallY - prevBallY) * 0.7;
+      this.ball.velocityX = data.ball.velocityX;
+      this.ball.velocityY = data.ball.velocityY;
       this.paddle1.y = data.paddle1.y * scaleY;
       this.paddle1.x = data.paddle1.x * scaleX;
       this.paddle2.y = data.paddle2.y * scaleY;
@@ -12096,16 +12109,24 @@
     }
     // ...
     checkCollisions() {
+      let speed = Math.sqrt(this.ball.velocityX ** 2 + this.ball.velocityY ** 2);
+      const MAX_SPEED = 10;
+      if (speed > MAX_SPEED) {
+        const ratio = MAX_SPEED / speed;
+        this.ball.velocityX *= ratio;
+        this.ball.velocityY *= ratio;
+      }
       if (this.ball.velocityX < 0) {
         if (this.ball.x - this.ball.radius <= this.paddle1.x + this.paddle1.width && this.ball.x - this.ball.radius >= this.paddle1.x) {
           if (this.ball.y + this.ball.radius >= this.paddle1.y && this.ball.y - this.ball.radius <= this.paddle1.y + this.paddle1.height) {
             let hitPos = (this.ball.y - (this.paddle1.y + this.paddle1.height / 2)) / (this.paddle1.height / 2);
-            let angle = hitPos * (Math.PI / 4);
-            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-            speed *= 1.05;
-            this.ball.velocityX = speed * Math.cos(angle);
-            this.ball.velocityY = speed * Math.sin(angle);
-            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius;
+            let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
+            let speed2 = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed2 *= 1.05;
+            if (speed2 > MAX_SPEED) speed2 = MAX_SPEED;
+            this.ball.velocityX = speed2 * Math.cos(angle);
+            this.ball.velocityY = speed2 * Math.sin(angle);
+            this.ball.x = this.paddle1.x + this.paddle1.width + this.ball.radius + 2;
           }
         }
       }
@@ -12113,23 +12134,23 @@
         if (this.ball.x + this.ball.radius >= this.paddle2.x && this.ball.x + this.ball.radius <= this.paddle2.x + this.paddle2.width) {
           if (this.ball.y + this.ball.radius >= this.paddle2.y && this.ball.y - this.ball.radius <= this.paddle2.y + this.paddle2.height) {
             let hitPos = (this.ball.y - (this.paddle2.y + this.paddle2.height / 2)) / (this.paddle2.height / 2);
-            let angle = hitPos * (Math.PI / 4);
-            let speed = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
-            speed *= 1.05;
-            this.ball.velocityX = -speed * Math.cos(angle);
-            this.ball.velocityY = speed * Math.sin(angle);
-            this.ball.x = this.paddle2.x - this.ball.radius;
+            let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
+            let speed2 = Math.sqrt(this.ball.velocityX * this.ball.velocityX + this.ball.velocityY * this.ball.velocityY);
+            speed2 *= 1.05;
+            this.ball.velocityX = -speed2 * Math.cos(angle);
+            this.ball.velocityY = speed2 * Math.sin(angle);
+            this.ball.x = this.paddle2.x - this.ball.radius - 2;
           }
         }
       }
       if (this.ball.x < 0) {
         this.score.player2++;
         this.notifyScoreUpdate();
-        this.reset(1);
+        this.reset(-1);
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
         this.notifyScoreUpdate();
-        this.reset(-1);
+        this.reset(1);
       }
     }
     reset(direction = 1) {
