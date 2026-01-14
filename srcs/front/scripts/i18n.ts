@@ -29,4 +29,5 @@ export async function changeLanguage(lang: string) {
 	console.log("Language changed to:", lang);
 }
 
+
 export default i18next;

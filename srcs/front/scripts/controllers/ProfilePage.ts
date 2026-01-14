@@ -41,6 +41,16 @@ interface FieldElements {
     confirmButton: HTMLButtonElement;
 }
 
+function escapeHtml(text: string): string {
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 export function render(): string {
     let html = htmlContent;
 
@@ -460,6 +470,10 @@ export function afterRender(): void {
                             }
                         } else if (fieldName === 'bio') {
                             value = user.bio || '';
+
+                            if (value.trim() === "Share a quick message") // Si valeur de texte par defaut en anglais, on lignore sinon pb d'affichage de trad
+                                value = "";
+
                             if (bioDisplay) {
                                 // MODIFICATION: Translation for placeholder
                                 bioDisplay.innerHTML = parseMessage(value) || i18next.t('profilePage.bio_placeholder');
@@ -523,7 +537,8 @@ export function afterRender(): void {
     // Updating username
     const updateUsername = async (newUsername: string) => {
         
-        if (!userId || !newUsername.trim()) {
+        if (!userId || !newUsername.trim() || newUsername.length > 30) {
+            alert(i18next.t('profilePage.alerts.username_error'));
             return false;
         }
 
@@ -544,7 +559,7 @@ export function afterRender(): void {
                 }
 
                 localStorage.setItem('username', newUsername);
-                SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
+                SocketService.getInstance().chatSocket?.emit('notifyProfileUpdate', {
                     userId: Number(userId),
                     username: newUsername
                 });
@@ -597,7 +612,7 @@ export function afterRender(): void {
                     bioDisplay.innerHTML = parseMessage(trimmedBio) || i18next.t('profilePage.bio_placeholder');
                 }
 
-                SocketService.getInstance().socket?.emit('notifyProfileUpdate', {
+                SocketService.getInstance().chatSocket?.emit('notifyProfileUpdate', {
                     userId: Number(userId),
                     bio: trimmedBio,
                     username: localStorage.getItem('username')
@@ -623,6 +638,12 @@ export function afterRender(): void {
         if (!userId || !newEmail.trim()) {
             return false;
         }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (newEmail.length > 254 || !emailRegex.test(newEmail)) {
+            alert(i18next.t('profilePage.alerts.email_error'));
+            return false;
+        } 
 
         try {
             const response = await fetchWithAuth(`api/user/${userId}/email`, {
@@ -686,6 +707,13 @@ export function afterRender(): void {
         const MAX_BIO_LENGTH = 70;
         const charCountElement = fieldName === 'bio' ? elements.container.querySelector('.char-count') as HTMLSpanElement : null;
 
+        if (fieldName === 'alias')
+            input.maxLength = 30;
+        if (fieldName === 'bio')
+            input.maxLength = 70;
+        if (fieldName === 'email')
+            input.maxLength = 254;
+        
         const updateCharCount = (currentLength: number) => {
             if (charCountElement) {
                 charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
@@ -850,7 +878,7 @@ export function afterRender(): void {
                 localStorage.setItem('userStatus', newStatus); 
 
                 const username = localStorage.getItem('username');
-                SocketService.getInstance().socket?.emit('notifyStatusChange', { 
+                SocketService.getInstance().chatSocket?.emit('notifyStatusChange', { 
                     userId: Number(userId), 
                     status: newStatus,
                     username: username 
@@ -907,6 +935,15 @@ export function afterRender(): void {
     const passwordContainer = document.querySelector('div[data-field="password"]');
     const openPwdModalButton = passwordContainer?.querySelector('.change-button');
 
+    if (currentPwdInput)
+        currentPwdInput.maxLength = 254;
+
+    if (newPwdInput)
+        newPwdInput.maxLength = 254;
+
+    if (confirmPwdInput)
+        confirmPwdInput.maxLength = 254;
+
     const resetPwdForm = () => {
         if (currentPwdInput) {
             currentPwdInput.value = '';
@@ -941,7 +978,8 @@ export function afterRender(): void {
         const newPass = newPwdInput.value;
         const confirmPass = confirmPwdInput.value;
 
-        if (!oldPass || !newPass || !confirmPass) {
+        if (!oldPass || !newPass || !confirmPass 
+            || oldPass.length > 254 || newPass.length > 254 || confirmPass.length > 254) {
             if (pwdError) {
                 // MODIFICATION: Translation
                 pwdError.innerText = i18next.t('profilePage.alerts.pwd_inputs');
@@ -960,7 +998,7 @@ export function afterRender(): void {
             return;
         }
         
-        if (newPass.length < 8) {
+        if (newPass.length < 8 || newPass.length > 128) {
             if (pwdError) {
                 // MODIFICATION: Translation
                 pwdError.innerText = i18next.t('profilePage.alerts.pwd_length');

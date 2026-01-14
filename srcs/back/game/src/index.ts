@@ -102,7 +102,7 @@ fastify.ready().then(() => {
 
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
-{
+{	
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;

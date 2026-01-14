@@ -14,8 +14,8 @@ export async function initDatabase(): Promise<Database> {
       CREATE TABLE IF NOT EXISTS CREDENTIALS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
-        email TEXT UNIQUE NOT NULL CHECK (length(email) < 75),
-        pwd_hashed TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL CHECK (length(email) <= 254),
+        pwd_hashed TEXT UNIQUE NOT NULL CHECK (length(pwd_hashed) <= 512),
         two_fa_secret TEXT UNIQUE,
         two_fa_method TEXT DEFAULT 'NONE' CHECK(two_fa_method IN ('NONE', 'APP', 'EMAIL')),
         email_otp TEXT,

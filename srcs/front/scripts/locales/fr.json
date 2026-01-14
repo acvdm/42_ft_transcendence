@@ -25,16 +25,16 @@
       "local": "JEU LOCAL",
       "remote": "JEU EN LIGNE",
       "tournament": "TOURNOI",
-      "local_describe": "Joue contre un autre joueur sur cet ordinateur",
-      "remote_describe": "Joue avec tes amis et bien plus en ligne",
+      "local_describe": "Joue contre un autre joueur sur cet ordinateur.",
+      "remote_describe": "Joue avec tes amis et bien plus en ligne.",
       "tournament_describe": "Participe à un tournoi à 4 joueurs sur cet ordinateur."
     },
     "chat": {
       "title": "Messagerie",
       "friends": "MES AMIS",
       "add_friend": "Ajouter un ami",
-      "send_request": "Send request",
-      "cancel": "Cancel",
+      "send_request": "Envoyer une demande d'ami",
+      "cancel": "Annuler",
       "contact": "⭐ Contacts",
       "placeholder": "Sélectionnez un ami pour commencer à discuter",
       "input_placeholder": "Écrire un message...",
@@ -461,6 +461,7 @@
     "block_confirm": "Êtes-vous sûr de vouloir bloquer {{name}} ?",
     "block_success": "Conversation supprimée (Utilisateur bloqué).",
     "block_error": "Erreur lors du blocage",
+    "error_length_exceeded": "Message trop long",
     "input_blocked": "Vous avez bloqué cet utilisateur.",
     "tools": {
       "bold": "Gras",
@@ -531,5 +532,14 @@
     "default_bio": "Partagez un message rapide avec les contacts",
     "bio_length_error": "Votre message ne peut pas dépasser 70 caractères. Arrêtez de parler !",
     "avatar_error": "Erreur lors de la sauvegarde de l'avatar"
+  },
+  
+  "friendship_error": {
+    "already_friend": "Cet utilisateur est déjà ton ami.",
+    "already_send": "Une demande a déjà été envoyée à cet utilisateur. Attends qu'il l'accepte.",
+    "sending": "Erreur lors de l'envoi de la demande d'ami.",
+    "cannot_find": "Impossible de trouver cet utilisateur.",
+    "guest": "Impossible d'ajouter un invité comme ami.",
+    "yourself": "Tu ne peux pas t'ajouter toi-même en ami. Loser."
   }
 }

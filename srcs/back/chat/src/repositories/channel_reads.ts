@@ -49,7 +49,7 @@ export async function hasUnreadMessages(
 
 export async function getUnreadConversations(
     db: Database,
-    userId: number
+    userId: number,
 ) {
     
     const query = `

@@ -95,8 +95,18 @@ function handleLogin() {
     const error2fa = document.getElementById('2fa-error-message');
     const backButton = document.getElementById('back-button');
 
+    const emailInput = document.getElementById('email-input') as HTMLInputElement;
+    const passwordInput = document.getElementById('password-input') as HTMLInputElement;
+
+
     let tempToken: string | null = null;
     let cachedStatus = 'available';
+
+    if (emailInput)
+        emailInput.maxLength = 254;
+
+    if (passwordInput)
+        passwordInput.maxLength = 128;
 
     backButton?.addEventListener('click', () => {
         window.history.pushState({}, '', '/');
@@ -122,6 +132,15 @@ function handleLogin() {
             return;
         }
 
+        if (email.length > 254 || password.length > 128)
+        {
+            if (errorElement)
+            {
+                errorElement.textContent = i18next.t('loginPage.error_inputs');
+                errorElement.classList.remove('hidden');
+            }
+            return ;
+        }
         // Authentication
         try {
             const response = await fetch('/api/auth/sessions', {
@@ -221,7 +240,12 @@ function handleLogin() {
             error2fa.classList.add('hidden');
         }
 
-        if (!code || !tempToken) {
+        if (!code || code.length !== 6 || !tempToken) {
+            if (error2fa)
+            {
+                error2fa.textContent = i18next.t('loginPage.error_2fa_invalid');
+                error2fa.classList.remove('hidden');
+            }
             return;
         }
 

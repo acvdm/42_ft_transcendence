@@ -20,14 +20,15 @@
     },
     "games": {
       "title": "Games",
+      "mode": "CHOOSE YOUR GAME MODE",
       "title_mode": "CHOOSE YOUR GAME MODE",
       "choose_mode": "Select how you would like to start a new game.",
       "local": "LOCAL GAME",
       "remote": "REMOTE GAME",
       "tournament": "TOURNAMENT",
-      "local_describe": "Play against another player on this computer",
-      "remote_describe": "Connect and play with friends and more online",
-      "tournament_describe": "Compete in a 4-multiplayer tournament on this computer"
+      "local_describe": "Play against another player on this computer.",
+      "remote_describe": "Connect and play with friends and more online.",
+      "tournament_describe": "Compete in a 4-multiplayer tournament on this computer."
     },
     "chat": {
       "title": "Messenger",
@@ -485,6 +486,7 @@
     "block_success": "Conversation deleted (User blocked).",
     "block_error": "Error while blocking",
     "input_blocked": "You blocked this user.",
+    "error_length_exceeded": "Message too long",
     "tools": {
       "bold": "Bold",
       "italic": "Italic",
@@ -554,5 +556,14 @@
     "default_bio": "Share a quick message",
     "bio_length_error": "Your message cannot exceed 70 characters. Stop talking!",
     "avatar_error": "Error while saving avatar"
+  },
+
+  "friendship_error": {
+    "already_friend": "This user is already your friend.",
+    "already_send": "A request has already been sent to this user. Wait for them to accept it",
+    "sending": "Error while sending friendship",
+    "cannot_find": "Cannot find this user",
+    "guest": "Cannot add a guest as friend",
+    "yourself": "You cannot add yourself as a friend. Loser."
   }
 }

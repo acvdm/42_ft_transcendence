@@ -18,10 +18,21 @@ function handleRegister() {
     const errorElement = document.getElementById('error-message');
     const backButton = document.getElementById('back-button');
 
+    const aliasInput = document.getElementById('alias-input') as HTMLInputElement;
+    const emailInput = document.getElementById('email-input') as HTMLInputElement;
+    const passwordInput = document.getElementById('password-input') as HTMLInputElement;
+
     if (!button) {
         console.error("Can't find register button in DOM");
         return;
     }
+
+    if (aliasInput)
+        aliasInput.maxLength = 30;
+    if (emailInput)
+        emailInput.maxLength = 254;
+    if (passwordInput)
+        passwordInput.maxLength = 128;
 
     backButton?.addEventListener('click', () => {
         window.history.pushState({}, '', '/');
@@ -29,9 +40,14 @@ function handleRegister() {
     });
 
     button.addEventListener('click', async () => {
-        const email = (document.getElementById('email-input') as HTMLInputElement).value;
-        const password = (document.getElementById('password-input') as HTMLInputElement).value;
-        const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
+        // const email = (document.getElementById('email-input') as HTMLInputElement).value;
+        // const password = (document.getElementById('password-input') as HTMLInputElement).value;
+        // const alias = (document.getElementById('alias-input') as HTMLInputElement).value;
+
+        // Nettoyage des valeurs
+        const alias = aliasInput?.value.trim() || "";
+        const email = emailInput?.value.trim() || "";
+        const password = passwordInput?.value || ""; // Pas de trim sur le pwd
 
         if (errorElement) {
             errorElement.classList.add('hidden');
@@ -43,6 +59,17 @@ function handleRegister() {
                 // MODIFICATION : Message erreur champs vides
                 errorElement.textContent = i18next.t('registerPage.error_inputs');
                 errorElement.classList.remove('hidden');
+            }
+            return ;
+        }
+
+        // Vérification avant d'envoyer au back
+        if (alias.length > 30 || email.length > 254 || password.length > 128)
+        {
+            if (errorElement)
+            {
+                errorElement.textContent = i18next('registerPage.error_inputs');
+                errorElement.classList.remove.apply('hidden');
             }
             return ;
         }

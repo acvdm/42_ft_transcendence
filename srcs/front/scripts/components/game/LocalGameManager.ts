@@ -13,6 +13,16 @@ interface GameContext {
     chat: Chat | null;
 }
 
+function escapeHtml(text: string): string {
+    if (!text) return text;
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 
 //================================================
 //============ LOCAL GAME MANAGEMENT =============
@@ -24,6 +34,8 @@ export class LocalGameManager {
     constructor(context: GameContext) {
         this.context = context;
     }
+
+
 
     public init() {
         const modal = document.getElementById('game-setup-modal');
@@ -43,6 +55,9 @@ export class LocalGameManager {
         const gameField = document.getElementById('left') as HTMLElement;
         const bgResetButton = document.getElementById('bg-reset-button') as HTMLButtonElement;
         const player2Display = document.getElementById('player-2-name') as HTMLElement;
+
+        if (nameInput)
+            nameInput.maxLength = 30;
 
         if (modal) modal.classList.remove('hidden');
 
@@ -144,11 +159,23 @@ export class LocalGameManager {
             const newStartBtn = startButton.cloneNode(true);
             startButton.parentNode?.replaceChild(newStartBtn, startButton);
             newStartBtn.addEventListener('click', () => {
-                const opponentName = nameInput.value.trim();
+                const rawName = nameInput.value.trim();
+                const opponentName = escapeHtml(rawName);
+
                 if (opponentName === "") {
                     if (errorMsg) errorMsg.classList.remove('hidden');
                     nameInput.classList.add('border-red-500');
                     return;
+                }
+
+                if (opponentName.length > 30)
+                {
+                    if (errorMsg)
+                    {
+                        errorMsg.innerText = i18next.t('localPage.erro_name_length');
+                        errorMsg.classList.remove('hidden');
+                    }
+                    return ;
                 }
 
                 if (this.context.chat) {

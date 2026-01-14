@@ -127,11 +127,72 @@ const clearGuestSession = () => {
 };
 
 
+    //================================================
+	//============= NAV BAR TRANSLATION ==============
+	//================================================
+
+const translateNavElements = () => {
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) {
+            const translation = i18next.t(key);
+            if (translation && translation !== key)
+                el.textContent = translation;
+        }
+    });
+};
+
+
+/* RECUPERATION DE LA LANGUE EN DB */
+/* deplacement de la fonciton en haut du fichier pour pouvoir l'appeler dans handleLocationChange
+pour permettre a lutilisateur de retrouver sa langue sauvegardee a la prochaine connexion */
+const loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem('userId');
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (userId)
+    {
+        try {
+            const response = await fetch(`/api/user/${userId}/language`, {
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            if (response.ok)
+            {
+                const data = await response.json();
+                if (data.success && data.language)
+                {
+                    const dbLang = data.language;
+                    const currentLang = i18next.language;
+
+                    if (dbLang && dbLang !== currentLang)
+                    {
+                        console.log(`Langue en BDD trouvee (${dbLang})`);
+                        await changeLanguage(dbLang);
+
+                        translateNavElements();
+                    }
+                }
+            }
+
+
+        } 
+        catch (error) {
+            console.error("Impossible de charger la langue utilisateur");
+        }
+    }
+}
+
 	//================================================
 	//================ CHANGING PAGE =================
 	//================================================
 
-const handleLocationChange = () => {
+// Cass : je rend la fonction asynchrone pour pouvoir recup en db la langue sauvegardee par l'utilisateur
+const handleLocationChange = async () => {
     if (!appElement) return;
 
     let path = window.location.pathname;
@@ -158,6 +219,10 @@ const handleLocationChange = () => {
         return ;
     }
 
+    /* AJOUT */
+    if (accessToken && !isGuest)
+        await loadUserLanguageFromDB();
+
     if (isGameRunning() && path !== '/game') {
 		cleanup();
 	}
@@ -165,40 +230,6 @@ const handleLocationChange = () => {
         handleLogout();
         return; 
     }
-
-
-    /* AJOUT POUR CHARGER LA LANGUE SAUVEGARDEE EN DB DANS USER
-//     fastify.get('/users/:id/language', async (request, reply) => 
-// {
-// 	try
-// 	{
-// 		const { id } = request.params as { id: string };
-// 		const userId = Number(id);
-// 		if (!userId) {
-// 			return reply.status(400).send({ error: "Invalid User ID" });
-// 		}
-
-// 		const prefferedLanguage = await getPreferredLanguage(db, userId);
-
-// 		return reply.status(200).send({
-// 			success: true,
-// 			language: prefferedLanguage,
-// 			error: null
-// 		});
-// 	}
-// 	catch (err: any) 
-// 	{
-// 		console.error("Export Auth Error:", err);
-// 		const statusCode = err.statusCode || 500;
-
-// 		return reply.status(statusCode).send({
-// 			success: false,
-// 			// language: prefferedLanguage,
-// 			error: { message: err.message || "Failed to export language"}
-// 		});
-// 	}
-// });
-     */
 
 	//================================================
 	//============= NAVIGATION BAR LOGIC =============
@@ -252,7 +283,6 @@ const handleLocationChange = () => {
                 const lang = (e.currentTarget as HTMLElement).getAttribute('data-lang');
                 const currentLang = i18next.language;
 
-                /* PB ICI ??*/
                 if (lang && lang !== currentLang) 
                 {
                     console.log("Langue changée vers :", lang);
@@ -332,16 +362,16 @@ const handleLocationChange = () => {
     const navbar = document.getElementById('main-navbar');
 
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
-        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.home">homepage.nav.home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.profile">homepage.nav.profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.dashboard">homepage.nav.dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
 	
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.guest_area">homepage.nav.guest_area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
 
@@ -358,8 +388,8 @@ const handleLocationChange = () => {
             if ((isGuest && !isCurrentGuest) || (!isGuest && isCurrentGuest) || !currentHTML.includes('lang-dropdown')) {
                 navbar.innerHTML = targetHTML;
                 setupLangDropdown();
-                // translateElements(); // TRADUIRE ELEMENTS DE LA NAVBAR
             }
+            translateNavElements(); // TRADUIT ELEMENTS DE LA NAVBAR
         } 
         else {
             navbar.style.display = 'none';
@@ -407,46 +437,6 @@ const handleLocationChange = () => {
 // 	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
 // };
 
-
-/* RECUPERATION DE LA LANGUE EN DB */
-
-const loadUserLanguageFromDB = async () => {
-    const userId = localStorage.getItem('userId');
-    const accessToken = localStorage.getItem('accessToken');
-
-    if (userId)
-    {
-        try {
-            const response = await fetch(`/api/user/${userId}/language`, {
-                method: 'GET',
-                headers: {
-                    'Content-type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            if (response.ok)
-            {
-                const data = await response.json();
-                if (data.success && data.language)
-                {
-                    const dbLang = data.language;
-                    const currentLang = i18next.language;
-
-                    if (dbLang && dbLang !== currentLang)
-                    {
-                        console.log(`Langue en BDD trouvee (${dbLang})`);
-                        await changeLanguage(dbLang);
-                    }
-                }
-            }
-
-
-        } 
-        catch (error) {
-            console.error("Impossible de charger la langue utilisateur");
-        }
-    }
-}
 
 
 

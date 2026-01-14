@@ -459,6 +459,7 @@
     "block_confirm": "¿Estás seguro de que quieres bloquear a {{name}}?",
     "block_success": "Conversación eliminada (Usuario bloqueado).",
     "block_error": "Error al bloquear",
+    "error_length_exceeded": "Mensaje demasiado largo.",
     "input_blocked": "Has bloqueado a este usuario.",
     "tools": {
       "bold": "Negrita",
@@ -529,6 +530,15 @@
     "default_bio": "Comparte un mensaje rápido",
     "bio_length_error": "Tu mensaje no puede exceder los 70 caracteres. ¡Deja de hablar!",
     "avatar_error": "Error al guardar el avatar"
+  },
+
+  "friendship_error": {
+    "already_friend": "Este usuario ya es tu amigo.",
+    "already_send": "Ya has enviado una solicitud a este usuario. Espera a que la acepte.",
+    "sending": "Error al enviar la solicitud de amistad.",
+    "cannot_find": "No se puede encontrar a este usuario.",
+    "guest": "No puedes añadir a un invitado como amigo.",
+    "yourself": "No puedes añadirte a ti mismo como amigo. Perdedor."
   }
 
 }

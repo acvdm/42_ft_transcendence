@@ -5936,16 +5936,16 @@
         local: "JEU LOCAL",
         remote: "JEU EN LIGNE",
         tournament: "TOURNOI",
-        local_describe: "Joue contre un autre joueur sur cet ordinateur",
-        remote_describe: "Joue avec tes amis et bien plus en ligne",
+        local_describe: "Joue contre un autre joueur sur cet ordinateur.",
+        remote_describe: "Joue avec tes amis et bien plus en ligne.",
         tournament_describe: "Participe \xE0 un tournoi \xE0 4 joueurs sur cet ordinateur."
       },
       chat: {
         title: "Messagerie",
         friends: "MES AMIS",
         add_friend: "Ajouter un ami",
-        send_request: "Send request",
-        cancel: "Cancel",
+        send_request: "Envoyer une demande d'ami",
+        cancel: "Annuler",
         contact: "\u2B50 Contacts",
         placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
         input_placeholder: "\xC9crire un message...",
@@ -6360,6 +6360,7 @@
       block_confirm: "\xCAtes-vous s\xFBr de vouloir bloquer {{name}} ?",
       block_success: "Conversation supprim\xE9e (Utilisateur bloqu\xE9).",
       block_error: "Erreur lors du blocage",
+      error_length_exceeded: "Message trop long",
       input_blocked: "Vous avez bloqu\xE9 cet utilisateur.",
       tools: {
         bold: "Gras",
@@ -6426,6 +6427,14 @@
       default_bio: "Partagez un message rapide avec les contacts",
       bio_length_error: "Votre message ne peut pas d\xE9passer 70 caract\xE8res. Arr\xEAtez de parler !",
       avatar_error: "Erreur lors de la sauvegarde de l'avatar"
+    },
+    friendship_error: {
+      already_friend: "Cet utilisateur est d\xE9j\xE0 ton ami.",
+      already_send: "Une demande a d\xE9j\xE0 \xE9t\xE9 envoy\xE9e \xE0 cet utilisateur. Attends qu'il l'accepte.",
+      sending: "Erreur lors de l'envoi de la demande d'ami.",
+      cannot_find: "Impossible de trouver cet utilisateur.",
+      guest: "Impossible d'ajouter un invit\xE9 comme ami.",
+      yourself: "Tu ne peux pas t'ajouter toi-m\xEAme en ami. Loser."
     }
   };
 
@@ -6452,14 +6461,15 @@
       },
       games: {
         title: "Games",
+        mode: "CHOOSE YOUR GAME MODE",
         title_mode: "CHOOSE YOUR GAME MODE",
         choose_mode: "Select how you would like to start a new game.",
         local: "LOCAL GAME",
         remote: "REMOTE GAME",
         tournament: "TOURNAMENT",
-        local_describe: "Play against another player on this computer",
-        remote_describe: "Connect and play with friends and more online",
-        tournament_describe: "Compete in a 4-multiplayer tournament on this computer"
+        local_describe: "Play against another player on this computer.",
+        remote_describe: "Connect and play with friends and more online.",
+        tournament_describe: "Compete in a 4-multiplayer tournament on this computer."
       },
       chat: {
         title: "Messenger",
@@ -6883,6 +6893,7 @@
       block_success: "Conversation deleted (User blocked).",
       block_error: "Error while blocking",
       input_blocked: "You blocked this user.",
+      error_length_exceeded: "Message too long",
       tools: {
         bold: "Bold",
         italic: "Italic",
@@ -6948,6 +6959,14 @@
       default_bio: "Share a quick message",
       bio_length_error: "Your message cannot exceed 70 characters. Stop talking!",
       avatar_error: "Error while saving avatar"
+    },
+    friendship_error: {
+      already_friend: "This user is already your friend.",
+      already_send: "A request has already been sent to this user. Wait for them to accept it",
+      sending: "Error while sending friendship",
+      cannot_find: "Cannot find this user",
+      guest: "Cannot add a guest as friend",
+      yourself: "You cannot add yourself as a friend. Loser."
     }
   };
 
@@ -7403,6 +7422,7 @@
       block_confirm: "\xBFEst\xE1s seguro de que quieres bloquear a {{name}}?",
       block_success: "Conversaci\xF3n eliminada (Usuario bloqueado).",
       block_error: "Error al bloquear",
+      error_length_exceeded: "Mensaje demasiado largo.",
       input_blocked: "Has bloqueado a este usuario.",
       tools: {
         bold: "Negrita",
@@ -7469,6 +7489,14 @@
       default_bio: "Comparte un mensaje r\xE1pido",
       bio_length_error: "Tu mensaje no puede exceder los 70 caracteres. \xA1Deja de hablar!",
       avatar_error: "Error al guardar el avatar"
+    },
+    friendship_error: {
+      already_friend: "Este usuario ya es tu amigo.",
+      already_send: "Ya has enviado una solicitud a este usuario. Espera a que la acepte.",
+      sending: "Error al enviar la solicitud de amistad.",
+      cannot_find: "No se puede encontrar a este usuario.",
+      guest: "No puedes a\xF1adir a un invitado como amigo.",
+      yourself: "No puedes a\xF1adirte a ti mismo como amigo. Perdedor."
     }
   };
 
@@ -7913,8 +7941,14 @@
     const close2fa = document.getElementById("close-2fa-modal");
     const error2fa = document.getElementById("2fa-error-message");
     const backButton = document.getElementById("back-button");
+    const emailInput = document.getElementById("email-input");
+    const passwordInput = document.getElementById("password-input");
     let tempToken = null;
     let cachedStatus = "available";
+    if (emailInput)
+      emailInput.maxLength = 254;
+    if (passwordInput)
+      passwordInput.maxLength = 128;
     backButton?.addEventListener("click", () => {
       window.history.pushState({}, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -7928,6 +7962,13 @@
         errorElement.textContent = "";
       }
       if (!email || !password) {
+        if (errorElement) {
+          errorElement.textContent = i18n_default.t("loginPage.error_inputs");
+          errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      if (email.length > 254 || password.length > 128) {
         if (errorElement) {
           errorElement.textContent = i18n_default.t("loginPage.error_inputs");
           errorElement.classList.remove("hidden");
@@ -8012,7 +8053,11 @@
       if (error2fa) {
         error2fa.classList.add("hidden");
       }
-      if (!code || !tempToken) {
+      if (!code || code.length !== 6 || !tempToken) {
+        if (error2fa) {
+          error2fa.textContent = i18n_default.t("loginPage.error_2fa_invalid");
+          error2fa.classList.remove("hidden");
+        }
         return;
       }
       try {
@@ -8126,7 +8171,7 @@
 		
 										<div class="relative">
 											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-												<span id="current-status-text">({{homepage.profile.status.available}})</span>
+												<span id="current-status-text">(Available)</span>
 												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
 											</button>
 		
@@ -8257,16 +8302,19 @@
 										<img id="add-friend-icon" src="/assets/basic/1441.png" alt="Friends button" class="w-full h-full object-contain">
 									</button>
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
-										<p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
-										<input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-										<div class="flex gap-2">
-											<button id="send-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{homepage.chat.send_request}}
-											</button>
-											<button id="cancel-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{homepage.chat.cancel}}
-											</button>
-										</div>
+									    <p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
+																		
+									    <input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+																		
+									    <p id="friend-request-message" class="text-xs text-center mb-2 hidden"></p>
+									    <div class="flex gap-2">
+									        <button id="send-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+									            {{homepage.chat.send_request}}
+									        </button>
+									        <button id="cancel-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+									            {{homepage.chat.cancel}}
+									        </button>
+									    </div>
 									</div>
 								</div>
 							</div>
@@ -8842,6 +8890,7 @@
       const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
       const friendRequestMessage = document.getElementById("friend-request-message");
       if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
+        friendSearchInput.maxLength = 30;
         addFriendButton.addEventListener("click", (e) => {
           e.stopPropagation();
           addFriendDropdown.classList.toggle("hidden");
@@ -8854,6 +8903,10 @@
           const searchValue = friendSearchInput.value.trim();
           if (!searchValue) {
             this.showFriendMessage(i18n_default.t("friendList.search_placeholder_error"), "error", friendRequestMessage);
+            return;
+          }
+          if (searchValue.length > 30) {
+            this.showFriendMessage(i18n_default.t("friendList.error_input_too_long"), "error", friendRequestMessage);
             return;
           }
           const userId = localStorage.getItem("userId");
@@ -8878,7 +8931,9 @@
                 friendRequestMessage?.classList.add("hidden");
               }, 1500);
             } else {
-              this.showFriendMessage(data.error.message || i18n_default.t("friendList.request_error"), "error", friendRequestMessage);
+              const backendErrorKey = data.error?.message;
+              const displayMessage = backendErrorKey ? i18n_default.t(backendErrorKey) : i18n_default.t("friendList.request_error");
+              this.showFriendMessage(displayMessage, "error", friendRequestMessage);
             }
           } catch (error) {
             console.error("Error:", error);
@@ -9152,6 +9207,7 @@
         const currentText = this.bioText.dataset.raw || "";
         input.type = "text";
         input.value = currentText;
+        input.maxLength = 70;
         input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
         this.bioWrapper.replaceChild(input, this.bioText);
         if (this.charCountElement) {
@@ -9331,6 +9387,10 @@
       fileInput?.addEventListener("change", (event) => {
         const file = event.target.files?.[0];
         if (file) {
+          if (file.size > 2 * 1024 * 1024) {
+            alert(i18n_default.t("userProfile.avatar_size_error"));
+            return;
+          }
           const reader = new FileReader();
           reader.onload = (e) => {
             if (e.target?.result) {
@@ -9391,6 +9451,9 @@
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
       this.wizzContainer = document.getElementById("wizz-container");
+      if (this.messageInput) {
+        this.messageInput.maxLength = 5e3;
+      }
     }
     init() {
       const socketService = SocketService_default.getInstance();
@@ -9525,6 +9588,10 @@
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
+          if (msg_content.length > 5e3) {
+            this.addSystemMessage(i18n_default.t("chatComponent.error_message_too_long"));
+            return;
+          }
           const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || i18n_default.t("gamePage.default_guest");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
           this.chatSocket.emit("chatMessage", {
@@ -9901,6 +9968,10 @@
     // insertion de la clé de l'emoticon a la position actuelle du cursor dans l'unpout
     insertText(text) {
       if (!this.messageInput) return;
+      if (this.messageInput.value.length + text.length > 5e3) {
+        this.addSystemMessage(i18n_default.t("chatComponent.error_length_exceeded"));
+        return;
+      }
       const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
       const end = this.messageInput.selectionEnd ?? this.messageInput.value.length;
       const newValue = this.messageInput.value.substring(0, start) + text + this.messageInput.value.substring(end);
@@ -9925,6 +9996,11 @@
         const openTag = `[${tagOrColor}]`;
         replacement = `${openTag}${selectedText}[/${tagOrColor}]`;
         cursorOffset = openTag.length;
+      }
+      const predictedLength = this.messageInput.value.length - selectedText.length + replacement.length;
+      if (predictedLength > 5e3) {
+        this.addSystemMessage(i18n_default.t("chatComponent.error_length_exceeded"));
+        return;
       }
       this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
       const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + cursorOffset;
@@ -10053,6 +10129,7 @@
     html = html.replace(/\{\{homepage.profile\.status.away\}\}/g, i18n_default.t("homepage.profile.status.away"));
     html = html.replace(/\{\{homepage.profile\.status.offline\}\}/g, i18n_default.t("homepage.profile.status.offline"));
     html = html.replace(/\{\{homepage.games\.title\}\}/g, i18n_default.t("homepage.games.title"));
+    html = html.replace(/\{\{homepage.games\.mode\}\}/g, i18n_default.t("homepage.games.mode"));
     html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18n_default.t("homepage.games.choose_mode"));
     html = html.replace(/\{\{homepage.games\.title_mode\}\}/g, i18n_default.t("homepage.games.title_mode"));
     html = html.replace(/\{\{homepage.games\.local\}\}/g, i18n_default.t("homepage.games.local"));
@@ -10068,26 +10145,27 @@
     html = html.replace(/\{\{homepage.chat\.cancel\}\}/g, i18n_default.t("homepage.chat.cancel"));
     html = html.replace(/\{\{homepage.chat\.contact\}\}/g, i18n_default.t("homepage.chat.contact"));
     html = html.replace(/\{\{homepage.chat\.placeholder\}\}/g, i18n_default.t("homepage.chat.placeholder"));
-    html = html.replace(/\{\{homepage.chat\.inputplace_holder\}\}/g, i18n_default.t("homepage.chat.input_placeholder"));
+    html = html.replace(/\{\{homepage.chat\.input_placeholder\}\}/g, i18n_default.t("homepage.chat.input_placeholder"));
     html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18n_default.t("homepage.chat.view_profile"));
     html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18n_default.t("homepage.chat.invite_game"));
     html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18n_default.t("homepage.chat.block_user"));
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18n_default.t("homepage.notifications.title"));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18n_default.t("homepage.notifications.no_notification"));
-    html = html.replace(/\{\{homepage\.modal\.user_profile\}\}/g, i18n_default.t("homepage.modal.user_profile"));
-    html = html.replace(/\{\{homepage\.modal\.statistics\}\}/g, i18n_default.t("homepage.modal.statistics"));
-    html = html.replace(/\{\{homepage\.modal\.games_played\}\}/g, i18n_default.t("homepage.modal.games_played"));
-    html = html.replace(/\{\{homepage\.modal\.wins\}\}/g, i18n_default.t("homepage.modal.wins"));
-    html = html.replace(/\{\{homepage\.modal\.losses\}\}/g, i18n_default.t("homepage.modal.losses"));
-    html = html.replace(/\{\{homepage\.modal\.winning_streak\}\}/g, i18n_default.t("homepage.modal.winning_streak"));
-    html = html.replace(/\{\{homepage\.modal\.close\}\}/g, i18n_default.t("homepage.modal.close"));
-    html = html.replace(/\{\{homepage\.modal\.change_picture\}\}/g, i18n_default.t("homepage.modal.change_picture"));
-    html = html.replace(/\{\{homepage\.modal\.select_picture\}\}/g, i18n_default.t("homepage.modal.select_picture"));
-    html = html.replace(/\{\{homepage\.modal\.picture_description\}\}/g, i18n_default.t("homepage.modal.picture_description"));
-    html = html.replace(/\{\{homepage\.modal\.browse\}\}/g, i18n_default.t("homepage.modal.browse"));
-    html = html.replace(/\{\{homepage\.modal\.delete\}\}/g, i18n_default.t("homepage.modal.delete"));
-    html = html.replace(/\{\{homepage\.modal\.ok\}\}/g, i18n_default.t("homepage.modal.ok"));
-    html = html.replace(/\{\{homepage\.modal\.cancel\}\}/g, i18n_default.t("homepage.modal.cancel"));
+    html = html.replace(/\{\{homepage.modal\.user_profile\}\}/g, i18n_default.t("homepage.modal.user_profile"));
+    html = html.replace(/\{\{friendProfileModal\.no_bio\}\}/g, i18n_default.t("friendProfileModal.no_bio"));
+    html = html.replace(/\{\{homepage.modal\.statistics\}\}/g, i18n_default.t("homepage.modal.statistics"));
+    html = html.replace(/\{\{homepage.modal\.games_played\}\}/g, i18n_default.t("homepage.modal.games_played"));
+    html = html.replace(/\{\{homepage.modal\.wins\}\}/g, i18n_default.t("homepage.modal.wins"));
+    html = html.replace(/\{\{homepage.modal\.losses\}\}/g, i18n_default.t("homepage.modal.losses"));
+    html = html.replace(/\{\{homepage.modal\.winning_streak\}\}/g, i18n_default.t("homepage.modal.winning_streak"));
+    html = html.replace(/\{\{homepage.modal\.close\}\}/g, i18n_default.t("homepage.modal.close"));
+    html = html.replace(/\{\{homepage.modal\.change_picture\}\}/g, i18n_default.t("homepage.modal.change_picture"));
+    html = html.replace(/\{\{homepage.modal\.select_picture\}\}/g, i18n_default.t("homepage.modal.select_picture"));
+    html = html.replace(/\{\{homepage.modal\.picture_description\}\}/g, i18n_default.t("homepage.modal.picture_description"));
+    html = html.replace(/\{\{homepage.modal\.browse\}\}/g, i18n_default.t("homepage.modal.browse"));
+    html = html.replace(/\{\{homepage.modal\.delete\}\}/g, i18n_default.t("homepage.modal.delete"));
+    html = html.replace(/\{\{homepage.modal\.ok\}\}/g, i18n_default.t("homepage.modal.ok"));
+    html = html.replace(/\{\{homepage.modal\.cancel\}\}/g, i18n_default.t("homepage.modal.cancel"));
     return html;
   }
   function afterRender() {
@@ -10458,7 +10536,12 @@
       }
     }
     async enable2fa(code, type) {
-      if (!code || code.length < 6) {
+      if (!code) {
+        alert(i18n_default.t("profilePage.alerts.2fa_invalid_code"));
+        return;
+      }
+      const cleanCode = code.trim().replace(/[^0-9]/g, "");
+      if (code.length != 6) {
         alert(i18n_default.t("profilePage.alerts.2fa_invalid_code"));
         return;
       }
@@ -10819,6 +10902,8 @@
                 }
               } else if (fieldName === "bio") {
                 value2 = user.bio || "";
+                if (value2.trim() === "Share a quick message")
+                  value2 = "";
                 if (bioDisplay) {
                   bioDisplay.innerHTML = parseMessage(value2) || i18n_default.t("profilePage.bio_placeholder");
                 }
@@ -10866,7 +10951,8 @@
     };
     loadUserData();
     const updateUsername = async (newUsername) => {
-      if (!userId || !newUsername.trim()) {
+      if (!userId || !newUsername.trim() || newUsername.length > 30) {
+        alert(i18n_default.t("profilePage.alerts.username_error"));
         return false;
       }
       try {
@@ -10882,7 +10968,7 @@
             usernameDisplay.innerText = newUsername;
           }
           localStorage.setItem("username", newUsername);
-          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+          SocketService_default.getInstance().chatSocket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             username: newUsername
           });
@@ -10923,7 +11009,7 @@
           if (bioDisplay) {
             bioDisplay.innerHTML = parseMessage(trimmedBio) || i18n_default.t("profilePage.bio_placeholder");
           }
-          SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
+          SocketService_default.getInstance().chatSocket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
             bio: trimmedBio,
             username: localStorage.getItem("username")
@@ -10942,6 +11028,11 @@
     };
     const updateEmail = async (newEmail) => {
       if (!userId || !newEmail.trim()) {
+        return false;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (newEmail.length > 254 || !emailRegex.test(newEmail)) {
+        alert(i18n_default.t("profilePage.alerts.email_error"));
         return false;
       }
       try {
@@ -10990,6 +11081,12 @@
       let initialValue = display.innerText;
       const MAX_BIO_LENGTH = 70;
       const charCountElement = fieldName === "bio" ? elements2.container.querySelector(".char-count") : null;
+      if (fieldName === "alias")
+        input.maxLength = 30;
+      if (fieldName === "bio")
+        input.maxLength = 70;
+      if (fieldName === "email")
+        input.maxLength = 254;
       const updateCharCount = (currentLength) => {
         if (charCountElement) {
           charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
@@ -11121,7 +11218,7 @@
           updateStatusFrame(newStatus);
           localStorage.setItem("userStatus", newStatus);
           const username = localStorage.getItem("username");
-          SocketService_default.getInstance().socket?.emit("notifyStatusChange", {
+          SocketService_default.getInstance().chatSocket?.emit("notifyStatusChange", {
             userId: Number(userId),
             status: newStatus,
             username
@@ -11160,6 +11257,12 @@
     const pwdError = document.getElementById("pwd-error");
     const passwordContainer = document.querySelector('div[data-field="password"]');
     const openPwdModalButton = passwordContainer?.querySelector(".change-button");
+    if (currentPwdInput)
+      currentPwdInput.maxLength = 254;
+    if (newPwdInput)
+      newPwdInput.maxLength = 254;
+    if (confirmPwdInput)
+      confirmPwdInput.maxLength = 254;
     const resetPwdForm = () => {
       if (currentPwdInput) {
         currentPwdInput.value = "";
@@ -11190,7 +11293,7 @@
       const oldPass = currentPwdInput.value;
       const newPass = newPwdInput.value;
       const confirmPass = confirmPwdInput.value;
-      if (!oldPass || !newPass || !confirmPass) {
+      if (!oldPass || !newPass || !confirmPass || oldPass.length > 254 || newPass.length > 254 || confirmPass.length > 254) {
         if (pwdError) {
           pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_inputs");
           pwdError.classList.remove("hidden");
@@ -11205,7 +11308,7 @@
         }
         return;
       }
-      if (newPass.length < 8) {
+      if (newPass.length < 8 || newPass.length > 128) {
         if (pwdError) {
           pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_length");
           pwdError.classList.remove("hidden");
@@ -11420,18 +11523,27 @@
     const button = document.getElementById("register-button");
     const errorElement = document.getElementById("error-message");
     const backButton = document.getElementById("back-button");
+    const aliasInput = document.getElementById("alias-input");
+    const emailInput = document.getElementById("email-input");
+    const passwordInput = document.getElementById("password-input");
     if (!button) {
       console.error("Can't find register button in DOM");
       return;
     }
+    if (aliasInput)
+      aliasInput.maxLength = 30;
+    if (emailInput)
+      emailInput.maxLength = 254;
+    if (passwordInput)
+      passwordInput.maxLength = 128;
     backButton?.addEventListener("click", () => {
       window.history.pushState({}, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
     button.addEventListener("click", async () => {
-      const email = document.getElementById("email-input").value;
-      const password = document.getElementById("password-input").value;
-      const alias2 = document.getElementById("alias-input").value;
+      const alias2 = aliasInput?.value.trim() || "";
+      const email = emailInput?.value.trim() || "";
+      const password = passwordInput?.value || "";
       if (errorElement) {
         errorElement.classList.add("hidden");
         errorElement.textContent = "";
@@ -11440,6 +11552,13 @@
         if (errorElement) {
           errorElement.textContent = i18n_default.t("registerPage.error_inputs");
           errorElement.classList.remove("hidden");
+        }
+        return;
+      }
+      if (alias2.length > 30 || email.length > 254 || password.length > 128) {
+        if (errorElement) {
+          errorElement.textContent = i18n_default("registerPage.error_inputs");
+          errorElement.classList.remove.apply("hidden");
         }
         return;
       }
@@ -12338,6 +12457,10 @@
   }
 
   // scripts/components/game/LocalGameManager.ts
+  function escapeHtml(text) {
+    if (!text) return text;
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
   var LocalGameManager = class {
     constructor(context) {
       this.context = context;
@@ -12360,6 +12483,8 @@
       const gameField = document.getElementById("left");
       const bgResetButton = document.getElementById("bg-reset-button");
       const player2Display = document.getElementById("player-2-name");
+      if (nameInput)
+        nameInput.maxLength = 30;
       if (modal) modal.classList.remove("hidden");
       if (ballButton && ballDropdown && ballGrid) {
         const uniqueUrls = /* @__PURE__ */ new Set();
@@ -12444,10 +12569,18 @@
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
-          const opponentName = nameInput.value.trim();
+          const rawName = nameInput.value.trim();
+          const opponentName = escapeHtml(rawName);
           if (opponentName === "") {
             if (errorMsg) errorMsg.classList.remove("hidden");
             nameInput.classList.add("border-red-500");
+            return;
+          }
+          if (opponentName.length > 30) {
+            if (errorMsg) {
+              errorMsg.innerText = i18n_default.t("localPage.erro_name_length");
+              errorMsg.classList.remove("hidden");
+            }
             return;
           }
           if (this.context.chat) {
@@ -12967,6 +13100,13 @@
       const player4Input = document.getElementById("player4-input");
       const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
+      if (nameInput)
+        nameInput.maxLength = 45;
+      const pInputs = [player1Input, player2Input, player3Input, player4Input];
+      pInputs.forEach((input) => {
+        if (input)
+          input.maxLength = 15;
+      });
       this.initTournamentSelectors();
       const guestText = i18n_default.t("gamePage.default_guest");
       const username = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || guestText;
@@ -12992,6 +13132,13 @@
         if (!tName || players.some((p) => !p)) {
           if (errorDiv) {
             errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_fields");
+            errorDiv.classList.remove("hidden");
+          }
+          return;
+        }
+        if (tName.length > 45 || players.some((p) => p.length > 15)) {
+          if (errorDiv) {
+            errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_length");
             errorDiv.classList.remove("hidden");
           }
           return;
@@ -28231,6 +28378,10 @@
     html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18n_default.t("dashboardPage.page"));
     return html;
   }
+  function escapeHtml2(text) {
+    if (!text) return text;
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
   function afterRender4() {
     const totalGame = document.getElementById("dashboard-total-games");
     const avgScore = document.getElementById("dashboard-avg-score");
@@ -28297,8 +28448,13 @@
       if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
         return;
       }
+      filterOpponent.maxLength = 30;
       const applyFiltersAndSort = () => {
-        const opponentValue = filterOpponent.value.toLowerCase().trim();
+        let rawVal = filterOpponent.value;
+        if (rawVal.length > 30) {
+          rawVal = rawVal.substring(0, 30);
+        }
+        const opponentValue = rawVal.toLowerCase().trim();
         const modeValue = filterMode.value;
         const sortValue = sortOrder.value;
         let resultData = globalMatchHistory.filter((match) => {
@@ -28400,7 +28556,8 @@
         const scoreString = `${match.my_score} - ${match.opponent_score !== void 0 ? match.opponent_score : 0}`;
         const roundString = match.round ? match.round : match.game_type === "tournament" ? i18n_default.t("dashboardPage.round_final") : i18n_default.t("dashboardPage.round_1v1");
         const translatedType = i18n_default.t(`dashboardPage.chart.${match.game_type || "local"}`);
-        const opponentName = match.opponent_alias || i18n_default.t("dashboardPage.unknown_user");
+        const rawName = match.opponent_alias || i18n_default.t("dashboardPage.unknown_user");
+        const opponentName = escapeHtml2(rawName);
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `
@@ -28656,7 +28813,47 @@
     sessionStorage.removeItem("userRole");
     sessionStorage.removeItem("isGuest");
   };
-  var handleLocationChange = () => {
+  var translateNavElements = () => {
+    const elements2 = document.querySelectorAll("[data-i18n]");
+    elements2.forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (key) {
+        const translation = i18n_default.t(key);
+        if (translation && translation !== key)
+          el.textContent = translation;
+      }
+    });
+  };
+  var loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken");
+    if (userId) {
+      try {
+        const response = await fetch(`/api/user/${userId}/language`, {
+          method: "GET",
+          headers: {
+            "Content-type": "application/json",
+            "Authorization": `Bearer ${accessToken}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.language) {
+            const dbLang = data.language;
+            const currentLang = i18n_default.language;
+            if (dbLang && dbLang !== currentLang) {
+              console.log(`Langue en BDD trouvee (${dbLang})`);
+              await changeLanguage2(dbLang);
+              translateNavElements();
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Impossible de charger la langue utilisateur");
+      }
+    }
+  };
+  var handleLocationChange = async () => {
     if (!appElement) return;
     let path = window.location.pathname;
     if ((path === "/" || path === "/login" || path === "/register") && sessionStorage.getItem("isGuest") === "true") {
@@ -28676,6 +28873,8 @@
       handleLocationChange();
       return;
     }
+    if (accessToken && !isGuest)
+      await loadUserLanguageFromDB();
     if (isGameRunning() && path !== "/game") {
       cleanup();
     }
@@ -28770,15 +28969,15 @@
     `;
     const navbar = document.getElementById("main-navbar");
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
-        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.home">homepage.nav.home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.profile">homepage.nav.profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.dashboard">homepage.nav.dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.guest_area">homepage.nav.guest_area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
     if (navbar) {
@@ -28792,6 +28991,7 @@
           navbar.innerHTML = targetHTML;
           setupLangDropdown();
         }
+        translateNavElements();
       } else {
         navbar.style.display = "none";
       }
@@ -28810,34 +29010,6 @@
     if (path === "/guest" && !isGuest) {
       window.history.replaceState({}, "", "/");
       handleLocationChange();
-    }
-  };
-  var loadUserLanguageFromDB = async () => {
-    const userId = localStorage.getItem("userId");
-    const accessToken = localStorage.getItem("accessToken");
-    if (userId) {
-      try {
-        const response = await fetch(`/api/user/${userId}/language`, {
-          method: "GET",
-          headers: {
-            "Content-type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-          }
-        });
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.language) {
-            const dbLang = data.language;
-            const currentLang = i18n_default.language;
-            if (dbLang && dbLang !== currentLang) {
-              console.log(`Langue en BDD trouvee (${dbLang})`);
-              await changeLanguage2(dbLang);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Impossible de charger la langue utilisateur");
-      }
     }
   };
   window.addEventListener("click", (event) => {
