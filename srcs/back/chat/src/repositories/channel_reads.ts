@@ -47,53 +47,44 @@ export async function hasUnreadMessages(
     return result.count > 0;
 }
 
-// import { Database } from 'sqlite';
-// import { findChannelByKey } from './channels.js'
-
-// ... (vos fonctions updateLastRead et hasUnreadMessages existantes) ...
-
-// --- AJOUTEZ CETTE FONCTION ---
 export async function getUnreadConversations(
     db: Database,
     userId: number
 ) {
-    // Cette requête complexe fait les choses suivantes :
-    // 1. Joint les Messages et les Channels
-    // 2. Joint (LEFT JOIN) vos lectures (Channel_Reads)
-    // 3. Filtre les messages que VOUS n'avez pas envoyés (m.sender_id != userId)
-    // 4. Filtre ceux reçus APRES votre dernière lecture (ou si pas de lecture)
-    // 5. Groupe par canal pour ne pas avoir 50 notifs pour 50 messages du même ami
-    
+    // On sélectionne simplement les infos du dernier message du groupe
     const query = `
         SELECT 
             c.channel_key,
             COUNT(m.msg_id) as unread_count,
             MAX(m.sent_at) as last_msg_date,
             
-            -- On récupère l'alias du dernier envoyeur pour l'afficher dans la notif
-            (SELECT sender_alias FROM MESSAGES m2 
-             WHERE m2.channel_id = c.id 
-             AND m2.sender_id != ? 
-             ORDER BY m2.sent_at DESC LIMIT 1) as sender_alias,
+            -- Astuce SQL: On prend l'alias correspondant au message le plus récent
+            (SELECT sender_alias FROM MESSAGES 
+             WHERE channel_id = c.id AND sender_id != ? 
+             ORDER BY sent_at DESC LIMIT 1) as sender_alias,
 
-             -- On récupère aussi son ID au cas où
-            (SELECT sender_id FROM MESSAGES m2 
-             WHERE m2.channel_id = c.id 
-             AND m2.sender_id != ? 
-             ORDER BY m2.sent_at DESC LIMIT 1) as sender_id
+            (SELECT sender_id FROM MESSAGES 
+             WHERE channel_id = c.id AND sender_id != ? 
+             ORDER BY sent_at DESC LIMIT 1) as sender_id
 
         FROM MESSAGES m
         JOIN CHANNELS c ON m.channel_id = c.id
         LEFT JOIN CHANNEL_READS r ON m.channel_id = r.channel_id AND r.user_id = ?
         
         WHERE 
-            m.sender_id != ? -- On ignore ses propres messages
-            AND (r.last_read_at IS NULL OR m.sent_at > r.last_read_at)
-            AND c.channel_key LIKE '%-%' -- Optionnel : cible uniquement les DMs (format 'id-id')
+            m.sender_id != ? 
+            -- IMPORTANT : On gère le cas où sent_at serait NULL (vieux messages)
+            AND (r.last_read_at IS NULL OR COALESCE(m.sent_at, '0') > r.last_read_at)
             
-        GROUP BY c.id
+        GROUP BY c.id, c.channel_key
     `;
 
-    const rows = await db.all(query, [userId, userId, userId, userId]);
-    return rows || [];
+    try {
+        const rows = await db.all(query, [userId, userId, userId, userId]);
+        console.log(`[DB] getUnreadConversations for user ${userId}: found ${rows.length} rows`);
+        return rows || [];
+    } catch (err) {
+        console.error("[DB] Error in getUnreadConversations:", err);
+        return [];
+    }
 }

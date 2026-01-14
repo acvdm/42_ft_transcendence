@@ -21,6 +21,7 @@
     "games": {
       "title": "Games",
       "mode": "CHOOSE YOUR GAME MODE",
+      "title_mode": "CHOOSE YOUR GAME MODE",
       "choose_mode": "Select how you would like to start a new game.",
       "local": "LOCAL GAME",
       "remote": "REMOTE GAME",

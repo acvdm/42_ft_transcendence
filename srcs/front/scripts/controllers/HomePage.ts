@@ -40,6 +40,7 @@ export function render(): string {
     html = html.replace(/\{\{homepage.games\.title\}\}/g, i18next.t('homepage.games.title'));
     html = html.replace(/\{\{homepage.games\.mode\}\}/g, i18next.t('homepage.games.mode'));
     html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18next.t('homepage.games.choose_mode'));
+    html = html.replace(/\{\{homepage.games\.title_mode\}\}/g, i18next.t('homepage.games.title_mode'));
     html = html.replace(/\{\{homepage.games\.local\}\}/g, i18next.t('homepage.games.local'));
     html = html.replace(/\{\{homepage.games\.remote\}\}/g, i18next.t('homepage.games.remote'));
     html = html.replace(/\{\{homepage.games\.tournament\}\}/g, i18next.t('homepage.games.tournament'));
@@ -54,16 +55,16 @@ export function render(): string {
     html = html.replace(/\{\{homepage.chat\.cancel\}\}/g, i18next.t('homepage.chat.cancel'));
     html = html.replace(/\{\{homepage.chat\.contact\}\}/g, i18next.t('homepage.chat.contact'));
     html = html.replace(/\{\{homepage.chat\.placeholder\}\}/g, i18next.t('homepage.chat.placeholder'));
-    html = html.replace(/\{\{homepage.chat\.inputplace_holder\}\}/g, i18next.t('homepage.chat.input_placeholder'));
+    html = html.replace(/\{\{homepage.chat\.input_placeholder\}\}/g, i18next.t('homepage.chat.input_placeholder'));
     html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18next.t('homepage.chat.view_profile'));
     html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18next.t('homepage.chat.invite_game'));
     html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18next.t('homepage.chat.block_user'));
+    html = html.replace(/\{\{chat\.choose_bg\}\}/g, i18next.t('chat.choose_bg'));
+    html = html.replace(/\{\{chat\.default_bg\}\}/g, i18next.t('chat.default_bg'));
 
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18next.t('homepage.notifications.title'));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18next.t('homepage.notifications.no_notification'));
 
-    html = html.replace(/\{\{chat\.choose_bg\}\}/g, i18next.t('chat.choose_bg'));
-    html = html.replace(/\{\{chat\.default_bg\}\}/g, i18next.t('chat.default_bg'));
 
     html = html.replace(/\{\{homepage.modal\.user_profile\}\}/g, i18next.t('homepage.modal.user_profile'));
     html = html.replace(/\{\{homepage.modal\.username\}\}/g, i18next.t('homepage.modal.username'));
@@ -81,12 +82,6 @@ export function render(): string {
     html = html.replace(/\{\{homepage.modal\.delete\}\}/g, i18next.t('homepage.modal.delete'));
     html = html.replace(/\{\{homepage.modal\.ok\}\}/g, i18next.t('homepage.modal.ok'));
     html = html.replace(/\{\{homepage.modal\.cancel\}\}/g, i18next.t('homepage.modal.cancel'));
-
-
-
-
-
-
 
     return html;
 }

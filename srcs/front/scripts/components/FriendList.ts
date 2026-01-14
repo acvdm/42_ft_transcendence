@@ -10,7 +10,7 @@ interface UnreadConversation {
     sender_alias: string,
     sender_id: number, 
     unread_count: number,
-    last_msg_data: number
+    last_msg_data: string;
 }
 export class FriendList {
     private container: HTMLElement | null;
@@ -267,21 +267,10 @@ export class FriendList {
 
         if (!chatSocket) return;
         
-        chatSocket.on('chatMessage', (data: { sender_id: number, channelKey: string}) => {
-            console.log(`[FriendList] 📨 Received chatMessage event from ${data.sender_id}`);
-            this.handleMessageNotification(data.sender_id);
-        })
-
-        chatSocket.on('unreadStatus', (data: { friendId: number, hasUnread: boolean }) => {
-            if (data.hasUnread) {
-                this.handleMessageNotification(data.friendId);
-            }
-        });
-
-        chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
-            console.log("[FriendList] 🔔 Event 'unreadNotification' received from:", data.senderId);
-            this.handleMessageNotification(data.senderId);
-        });
+        // chatSocket.on('unreadNotification', (data: { senderId: number, content: string }) => {
+        //     console.log("[FriendList] 🔔 Event 'unreadNotification' received from:", data.senderId);
+        //     this.handleMessageNotification(data.senderId);
+        // });
 
         chatSocket.on("friendStatusUpdate", (data: { username: string, status: string }) => {
             console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
@@ -576,19 +565,15 @@ export class FriendList {
         if (!userId || !notifList) return;
 
         try {
-            // --- 1. On lance les deux requêtes en parallèle ---
-            // A. Vos demandes d'amis (code existant)
-            const friendsPromise = fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-            
-            // B. Les messages non lus (nouveau)
-            const chatPromise = fetchWithAuth(`/api/chat/unread`);
-
-            const [friendsRes, chatRes] = await Promise.all([friendsPromise, chatPromise]);
+            // 1. Récupération des données (Chat + Amis)
+            const [friendsRes, chatRes] = await Promise.all([
+                fetchWithAuth(`/api/user/${userId}/friendships/pendings`),
+                fetchWithAuth(`/api/chat/unread`) // Via API Gateway -> Chat Service
+            ]);
 
             let pendingList: Friendship[] = [];
             let unreadMessages: any[] = [];
 
-            // --- 2. Récupération des données ---
             if (friendsRes.ok) {
                 const data = await friendsRes.json();
                 pendingList = data.data || [];
@@ -599,105 +584,97 @@ export class FriendList {
                 unreadMessages = data.data || [];
             }
 
-            // --- 3. Mise à jour de l'icône de la cloche ---
-            const totalNotifications = pendingList.length + unreadMessages.length;
-            const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+            // =========================================================
+            // PARTIE 1 : GESTION DES MESSAGES (BADGES SUR LA LISTE D'AMIS)
+            // =========================================================
             
-            if (totalNotifications > 0) {
+            // A. D'abord, on cache TOUS les badges existants pour éviter les erreurs
+            const allBadges = document.querySelectorAll('[id^="badge-"]');
+            allBadges.forEach(b => {
+                b.classList.add('hidden');
+                b.innerText = '0';
+            });
+
+            // B. Ensuite, on affiche seulement ceux qui ont des messages
+            unreadMessages.forEach((msg) => {
+                // On cherche le badge correspondant à l'ID de l'envoyeur
+                const badge = document.getElementById(`badge-${msg.sender_id}`);
+                
+                if (badge) {
+                    badge.classList.remove('hidden');
+                    badge.innerText = msg.unread_count.toString();
+                    
+                    // Optionnel : Ajouter une animation visuelle
+                    badge.classList.add('animate-pulse'); 
+                }
+            });
+
+            // =========================================================
+            // PARTIE 2 : GESTION DES DEMANDES D'AMIS (MENU DÉROULANT)
+            // =========================================================
+
+            // Mise à jour de l'icône de la cloche (Uniquement pour les demandes d'amis maintenant ?)
+            // Si vous voulez que la cloche s'allume AUSSI pour les messages, ajoutez + unreadMessages.length
+            const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
+            const totalNotifs = pendingList.length; // + unreadMessages.length; (Décommentez si vous voulez que la cloche sonne aussi pour les chats)
+
+            if (totalNotifs > 0) {
                 if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
             } else {
                 if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
             }
 
-            // --- 4. Affichage dans la liste ---
+            // Remplissage de la liste déroulante (Uniquement demandes d'amis)
             notifList.innerHTML = '';
             
-            if (totalNotifications === 0) {
+            if (pendingList.length === 0) {
+                // S'il n'y a pas de demande d'ami
                 notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18next.t('friendList.no_notifications')}</div>`;
-                return;
-            }
+            } else {
+                // S'il y a des demandes d'amis, on les affiche
+                pendingList.forEach((req: Friendship) => {
+                    const item = document.createElement('div');
+                    item.dataset.friendshipId = req.id.toString();
+                    item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
 
-            // A. D'ABORD LES MESSAGES NON LUS (NOUVEAU)
-            unreadMessages.forEach((msg) => {
-                const item = document.createElement('div');
-                item.className = "flex items-center p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition cursor-pointer bg-blue-50"; // Petit fond bleu pour distinguer
-                
-                // Texte : "Vous avez X messages de Y"
-                const text = i18next.t('friendList.unread_messages', { count: msg.unread_count, sender: msg.sender_alias }) || `Message from ${msg.sender_alias}`;
+                    const reqMessage = i18next.t('friendList.wants_to_be_friend', { name: req.user?.alias });
+                    const t_accept = i18next.t('friendList.actions.accept');
+                    const t_decline = i18next.t('friendList.actions.decline');
+                    const t_block = i18next.t('friendList.actions.block');
 
-                item.innerHTML = `
-                    <div class="relative w-8 h-8 flex-shrink-0">
-                         <img src="/assets/basic/message_notif.png" class="w-full h-full object-contain" alt="msg">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-800 font-medium">${text}</p>
-                        <p class="text-xs text-gray-400">Click to reply</p>
-                    </div>
-                `;
+                    item.innerHTML = `
+                        <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                            <img src="/assets/basic/logo.png" class="w-full h-full object-cover rounded" alt="avatar">
+                        </div>
+                        <div class="flex-1 min-w-0 pr-4">
+                            <p class="text-sm text-gray-800">${reqMessage}</p>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
+                                <span class="text-green-600 font-bold text-sm">✓</span>
+                            </button>
+                            <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
+                                <span class="text-red-600 font-bold text-sm">✕</span>
+                            </button>
+                            <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
+                                <span class="text-gray-600 text-xs">🚫</span>
+                            </button>
+                        </div>
+                    `;
+                    
+                    const buttonAccept = item.querySelector('.btn-accept');
+                    const buttonReject = item.querySelector('.btn-reject');
+                    const buttonBlock  = item.querySelector('.btn-block');
 
-                // Au clic, on ouvre le chat
-                item.addEventListener('click', () => {
-                    const event = new CustomEvent('friendSelected', { 
-                        detail: { 
-                            friend: { id: msg.sender_id, alias: msg.sender_alias },
-                            channelKey: msg.channel_key 
-                        } 
-                    });
-                    window.dispatchEvent(event);
-                    document.getElementById('notification-dropdown')?.classList.add('hidden');
+                    if (req.user && req.user.id) {
+                        buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'validated', item); });
+                        buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'rejected', item); });
+                        buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'blocked', item); });
+                    }
+
+                    notifList.appendChild(item);
                 });
-
-                notifList.appendChild(item);
-            });
-
-            // B. ENSUITE VOS DEMANDES D'AMIS (VOTRE CODE D'ORIGINE RESTAURÉ)
-            pendingList.forEach((req: Friendship) => {
-                const item = document.createElement('div');
-                item.dataset.friendshipId = req.id.toString();
-                item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-
-                const reqMessage = i18next.t('friendList.wants_to_be_friend', { name: req.user?.alias });
-                const t_accept = i18next.t('friendList.actions.accept');
-                const t_decline = i18next.t('friendList.actions.decline');
-                const t_block = i18next.t('friendList.actions.block');
-
-                item.innerHTML = `
-                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                        <img src="/assets/basic/logo.png" 
-                            class="w-full h-full object-cover rounded"
-                            alt="avatar">
-                    </div>
-                    <div class="flex-1 min-w-0 pr-4">
-                        <p class="text-sm text-gray-800">
-                            ${reqMessage}
-                        </p>
-                    </div>
-                    <div class="flex gap-2 flex-shrink-0">
-                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
-                            <span class="text-green-600 font-bold text-sm">✓</span>
-                        </button>
-                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
-                            <span class="text-red-600 font-bold text-sm">✕</span>
-                        </button>
-                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
-                            <span class="text-gray-600 text-xs">🚫</span>
-                        </button>
-                    </div>
-                `;
-                
-                // Réattachement des événements (exactement comme votre code)
-                const buttonAccept = item.querySelector('.btn-accept');
-                const buttonReject = item.querySelector('.btn-reject');
-                const buttonBlock  = item.querySelector('.btn-block');
-
-                if (req.user && req.user.id) {
-                    buttonAccept?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'validated', item); });
-                    buttonReject?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'rejected', item); });
-                    buttonBlock?.addEventListener('click', (e) => { e.stopPropagation(); this.handleRequest(req.user!.id, 'blocked', item); });
-                }
-
-                notifList.appendChild(item);
-            });
+            }
 
         } catch (error) {
             console.error("Error fetching notifications:", error);
