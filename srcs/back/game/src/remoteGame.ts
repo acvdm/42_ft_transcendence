@@ -39,10 +39,10 @@ export function initGameState(roomId: string, p1: string, p2: string): GameState
     };
 }
 
-function resetBall(game: GameState) {
+function resetBall(game: GameState, dir: number = 1) {
     game.ball.x = game.canvasWidth / 2;
     game.ball.y = game.canvasHeight / 2;
-    game.serveDirection *= -1;
+    game.serveDirection = dir;
     // Vitesse aléatoire mais constante
     const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
     const speed = 7;
@@ -165,10 +165,10 @@ export function updateGamePhysics(game: GameState, io: Server) {
     // Score
     if (game.ball.x < 0) {
         game.score.player2++;
-        resetBall(game);
+        resetBall(game, 1);
     } else if (game.ball.x > game.canvasWidth) {
         game.score.player1++;
-        resetBall(game);
+        resetBall(game, -1);
     }
 
     // Fin de partie
@@ -255,7 +255,10 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 
     // 2. Gestion de la Queue (Matchmaking)
     socket.on('joinQueue', () => {
-        if (waitingQueue.includes(socket.id)) return;
+        if (waitingQueue.includes(socket.id)) {
+            console.log(`⚠️ [QUEUE] Player ${socket.id} already in queue, ignoring duplicate join`);
+            return;
+        }
 
         //netoayge si on rejoint la auque on quitte les salles privees en attente
         for (const [roomId, socketId] of privateWaitingRooms.entries()) {
@@ -263,7 +266,7 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
                 privateWaitingRooms.delete(roomId);
             }
         }
-        console.log(`Player ${socket.id} joined Queue`);
+        console.log(`✅ [QUEUE] Player ${socket.id} joined Queue. Queue size: ${waitingQueue.length + 1}`);
         waitingQueue.push(socket.id);
 
         if (waitingQueue.length >= 2) {
@@ -277,6 +280,10 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
             const sock1 = io.sockets.sockets.get(p1);
             const sock2 = io.sockets.sockets.get(p2);
 
+            console.log(`🎮 [MATCH] Attempting to start match: ${roomId}`);
+            console.log(`   Player 1 socket found: ${!!sock1}`);
+            console.log(`   Player 2 socket found: ${!!sock2}`);
+
             if (sock1 && sock2) {
                 sock1.join(roomId);
                 sock2.join(roomId);
@@ -287,10 +294,15 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
                 sock1.emit('matchFound', { roomId, role: 'player1', opponent: p2UserId });
                 sock2.emit('matchFound', { roomId, role: 'player2', opponent: p1UserId });
 
-                console.log(`Match started: ${roomId}`);
+                console.log(`✅ [MATCH] Match started: ${roomId}`);
                 gameState.intervalId = setInterval(() => {
                     updateGamePhysics(gameState, io);
                 }, GAMESPEED);
+            } else {
+                console.error(`❌ [MATCH] Failed to start match: ${roomId}. Sock1: ${!!sock1}, Sock2: ${!!sock2}`);
+                // Remettre les joueurs en queue en cas de problème
+                if (!sock1) waitingQueue.push(p1);
+                if (!sock2) waitingQueue.push(p2);
             }
         }
     });

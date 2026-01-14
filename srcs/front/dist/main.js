@@ -8447,6 +8447,11 @@
       this.paddle1.x = data.paddle1.x * scaleX;
       this.paddle2.y = data.paddle2.y * scaleY;
       this.paddle2.x = data.paddle2.x * scaleX;
+      const maxY = this.canvas.height - this.paddle1.height;
+      if (this.paddle1.y < 0) this.paddle1.y = 0;
+      if (this.paddle1.y > maxY) this.paddle1.y = maxY;
+      if (this.paddle2.y < 0) this.paddle2.y = 0;
+      if (this.paddle2.y > maxY) this.paddle2.y = maxY;
       if (this.score.player1 !== data.score.player1 || this.score.player2 !== data.score.player2) {
         console.log("\u{1F4C8} Score update re\xE7u du serveur:", data.score);
         this.score = data.score;
