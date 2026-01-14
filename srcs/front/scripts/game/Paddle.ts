@@ -11,7 +11,7 @@ class Paddle {
         this.y = y; // Paddle's y position
         this.width = 10; // Paddle's width
         this.height = 100; // Paddle's height
-        this.speed = 5; // Paddle's movement speed
+        this.speed = 6; // Paddle's movement speed
         this.color = 'white';
 
         if (imageSrc) {
