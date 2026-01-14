@@ -204,7 +204,7 @@ export class Chat {
 
                 if (msg_content.length > 5000)
                 {
-                    this.addSystemMessage(i18next.t('Error: message too long'));
+                    this.addSystemMessage(i18next.t('chatComponent.error_message_too_long'));
                     return ;
                 }
                 const sender_alias = localStorage.getItem('username') || sessionStorage.getItem('cachedAlias') || i18next.t('gamePage.default_guest');
@@ -692,7 +692,7 @@ export class Chat {
         // Vérification de la longueur avant insertion
         if (this.messageInput.value.length + text.length > 5000)
         {
-            this.addSystemMessage(i18next.t('Error: message too long'));
+            this.addSystemMessage(i18next.t('chatComponent.error_length_exceeded'));
             return ;
         }
         const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
@@ -730,7 +730,7 @@ export class Chat {
         const predictedLength = this.messageInput.value.length - selectedText.length + replacement.length;
         if (predictedLength > 5000)
         {
-            this.addSystemMessage(i18next.t('Error: message too long'));
+            this.addSystemMessage(i18next.t('chatComponent.error_length_exceeded'));
             return ;
         }
 

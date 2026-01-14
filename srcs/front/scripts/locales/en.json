@@ -483,6 +483,7 @@
     "block_success": "Conversation deleted (User blocked).",
     "block_error": "Error while blocking",
     "input_blocked": "You blocked this user.",
+    "error_length_exceeded": "Message too long",
     "tools": {
       "bold": "Bold",
       "italic": "Italic",

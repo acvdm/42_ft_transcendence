@@ -6351,6 +6351,7 @@
       block_confirm: "\xCAtes-vous s\xFBr de vouloir bloquer {{name}} ?",
       block_success: "Conversation supprim\xE9e (Utilisateur bloqu\xE9).",
       block_error: "Erreur lors du blocage",
+      error_length_exceeded: "Message trop long",
       input_blocked: "Vous avez bloqu\xE9 cet utilisateur.",
       tools: {
         bold: "Gras",
@@ -6868,6 +6869,7 @@
       block_success: "Conversation deleted (User blocked).",
       block_error: "Error while blocking",
       input_blocked: "You blocked this user.",
+      error_length_exceeded: "Message too long",
       tools: {
         bold: "Bold",
         italic: "Italic",
@@ -7366,6 +7368,7 @@
       block_confirm: "\xBFEst\xE1s seguro de que quieres bloquear a {{name}}?",
       block_success: "Conversaci\xF3n eliminada (Usuario bloqueado).",
       block_error: "Error al bloquear",
+      error_length_exceeded: "Mensaje demasiado largo.",
       input_blocked: "Has bloqueado a este usuario.",
       tools: {
         bold: "Negrita",
@@ -9651,7 +9654,7 @@
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
           if (msg_content.length > 5e3) {
-            this.addSystemMessage(i18n_default.t("Error: message too long"));
+            this.addSystemMessage(i18n_default.t("chatComponent.error_message_too_long"));
             return;
           }
           const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || i18n_default.t("gamePage.default_guest");
@@ -10031,7 +10034,7 @@
     insertText(text) {
       if (!this.messageInput) return;
       if (this.messageInput.value.length + text.length > 5e3) {
-        this.addSystemMessage(i18n_default.t("Error: message too long"));
+        this.addSystemMessage(i18n_default.t("chatComponent.error_length_exceeded"));
         return;
       }
       const start = this.messageInput.selectionStart ?? this.messageInput.value.length;
@@ -10061,7 +10064,7 @@
       }
       const predictedLength = this.messageInput.value.length - selectedText.length + replacement.length;
       if (predictedLength > 5e3) {
-        this.addSystemMessage(i18n_default.t("Error: message too long"));
+        this.addSystemMessage(i18n_default.t("chatComponent.error_length_exceeded"));
         return;
       }
       this.messageInput.value = this.messageInput.value.substring(0, start) + replacement + this.messageInput.value.substring(end);
@@ -12427,6 +12430,10 @@
   }
 
   // scripts/components/game/LocalGameManager.ts
+  function escapeHtml(text) {
+    if (!text) return text;
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
   var LocalGameManager = class {
     constructor(context) {
       this.context = context;
@@ -12449,6 +12456,8 @@
       const gameField = document.getElementById("left");
       const bgResetButton = document.getElementById("bg-reset-button");
       const player2Display = document.getElementById("player-2-name");
+      if (nameInput)
+        nameInput.maxLength = 30;
       if (modal) modal.classList.remove("hidden");
       if (ballButton && ballDropdown && ballGrid) {
         const uniqueUrls = /* @__PURE__ */ new Set();
@@ -12533,10 +12542,18 @@
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
-          const opponentName = nameInput.value.trim();
+          const rawName = nameInput.value.trim();
+          const opponentName = escapeHtml(rawName);
           if (opponentName === "") {
             if (errorMsg) errorMsg.classList.remove("hidden");
             nameInput.classList.add("border-red-500");
+            return;
+          }
+          if (opponentName.length > 30) {
+            if (errorMsg) {
+              errorMsg.innerText = i18n_default.t("localPage.erro_name_length");
+              errorMsg.classList.remove("hidden");
+            }
             return;
           }
           if (this.context.chat) {
@@ -28327,7 +28344,7 @@
     html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18n_default.t("dashboardPage.page"));
     return html;
   }
-  function escapeHtml(text) {
+  function escapeHtml2(text) {
     if (!text) return text;
     return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   }
@@ -28506,7 +28523,7 @@
         const roundString = match.round ? match.round : match.game_type === "tournament" ? i18n_default.t("dashboardPage.round_final") : i18n_default.t("dashboardPage.round_1v1");
         const translatedType = i18n_default.t(`dashboardPage.chart.${match.game_type || "local"}`);
         const rawName = match.opponent_alias || i18n_default.t("dashboardPage.unknown_user");
-        const opponentName = escapeHtml(rawName);
+        const opponentName = escapeHtml2(rawName);
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `

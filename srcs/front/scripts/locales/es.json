@@ -441,6 +441,7 @@
     "block_confirm": "¿Estás seguro de que quieres bloquear a {{name}}?",
     "block_success": "Conversación eliminada (Usuario bloqueado).",
     "block_error": "Error al bloquear",
+    "error_length_exceeded": "Mensaje demasiado largo.",
     "input_blocked": "Has bloqueado a este usuario.",
     "tools": {
       "bold": "Negrita",
