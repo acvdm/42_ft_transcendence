@@ -2,7 +2,7 @@ import { Database } from 'sqlite';
 
 export interface Channel {
     id: number,
-    channel_key: string
+    channelKey: string
 }
 
 export async function findChannelByKey (
@@ -11,7 +11,7 @@ export async function findChannelByKey (
 ): Promise <Channel | undefined>    
 {
 
-    console.log("entrée dans findChannelByKey avec channel_key: ", channelKey);
+    console.log("entrée dans findChannelByKey avec channelKey: ", channelKey);
     const channel = await db.get(`
         SELECT * FROM CHANNELS WHERE channel_key = ?`,
         [channelKey]

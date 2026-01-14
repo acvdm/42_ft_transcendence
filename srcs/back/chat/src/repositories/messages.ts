@@ -6,7 +6,7 @@ export interface Message {
     msg_id: number;
     sender_id: number;
     sender_alias: string;
-    channel_key: string,
+    channelKey: string,
     msg_content: string;
     sent_at: string;
 }
@@ -22,14 +22,14 @@ export interface createMessage {
 //-------- POST / CREATE
 export async function saveNewMessageinDB(
     db: Database,
-    channel_key: string,
+    channelKey: string,
     sender_id: number,
     sender_alias: string,
     msg_content: string 
 ): Promise<number | undefined> 
 {
-    console.log(`channelKey dans saveNewMessageinDB: ${channel_key}`);
-    const channel = await findChannelByKey(db, channel_key);
+    console.log(`channelKey dans saveNewMessageinDB: ${channelKey}`);
+    const channel = await findChannelByKey(db, channelKey);
     if (!channel?.id)
     {
         console.log("channel non trouvé dans saveNewMessage");
@@ -46,7 +46,7 @@ export async function saveNewMessageinDB(
     if (!result?.lastID)
         throw new Error("Table MESSAGES [chat.sqlite]: Could not save message");
 
-    console.log(`message ${result.lastID} saved in ${channel_key}`);
+    console.log(`message ${result.lastID} saved in ${channelKey}`);
     return result.lastID;
 }
 

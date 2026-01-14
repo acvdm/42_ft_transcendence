@@ -4866,6 +4866,7 @@
                 </div>
                 `;
           contactsList.appendChild(friendItem);
+          this.checkUnreadMessagesForFriend(selectedFriend.id);
           const chatSocket = SocketService_default.getInstance().getChatSocket();
           if (chatSocket) {
             const myId = Number(this.userId);
@@ -4902,6 +4903,24 @@
       } catch (error) {
         console.error("Error loading friends:", error);
         contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+      }
+    }
+    // NOUVELLE MÉTHODE : Vérifier les messages non lus pour un ami
+    async checkUnreadMessagesForFriend(friendId) {
+      try {
+        const myId = Number(this.userId);
+        const id1 = Math.min(myId, friendId);
+        const id2 = Math.max(myId, friendId);
+        const channelKey = `${id1}_${id2}`;
+        const response = await fetchWithAuth(`/api/chat/${channelKey}/unread?userId=${myId}`);
+        if (!response.ok) return;
+        const data = await response.json();
+        if (data.hasUnread || data.unreadCount && data.unreadCount > 0) {
+          console.log(`[FriendList] Friend ${friendId} has ${data.unreadCount || 1} unread messages`);
+          this.handleMessageNotification(friendId);
+        }
+      } catch (error) {
+        console.error(`Error checking unread for friend ${friendId}:`, error);
       }
     }
     clearNotifications(friendId) {
@@ -4950,6 +4969,7 @@
         console.log("[FriendList] \u{1F4E5} Debug unreadStatus data:", data);
         const idToNotify = data.friendId || data.senderId;
         if (data.hasUnread && idToNotify) {
+          console.log("hadUnread");
           this.handleMessageNotification(idToNotify);
         }
       });
@@ -5689,7 +5709,7 @@
         this.addSystemMessage(data.content);
       });
       this.chatSocket.on("receivedWizz", (data) => {
-        if (data.channel_key && data.channel_key !== this.currentChannel) {
+        if (data.channelKey && data.channelKey !== this.currentChannel) {
           return;
         }
         const currentUser = localStorage.getItem("username");
@@ -5741,7 +5761,7 @@
           this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
-            channel_key: this.currentChannel,
+            channelKey: this.currentChannel,
             msg_content
           });
           this.messageInput.value = "";
@@ -5756,7 +5776,7 @@
       if (wizzButton) {
         wizzButton.addEventListener("click", () => {
           const currentUsername = localStorage.getItem("username");
-          this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+          this.chatSocket.emit("sendWizz", { author: currentUsername, channelKey: this.currentChannel });
           this.shakeElement(this.wizzContainer, 500);
         });
       }
@@ -5766,7 +5786,7 @@
         return;
       }
       const currentUsername = localStorage.getItem("username");
-      this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+      this.chatSocket.emit("sendWizz", { author: currentUsername, channelKey: this.currentChannel });
     }
     shakeElement(element, duration = 500) {
       if (!element) {
@@ -5798,7 +5818,7 @@
     sendSystemNotification(message) {
       if (this.chatSocket) {
         this.chatSocket.emit("sendSystemMessage", {
-          channel_key: this.currentChannel,
+          channelKey: this.currentChannel,
           content: message
         });
       } else {
@@ -5920,7 +5940,7 @@
             this.chatSocket.emit("sendAnimation", {
               animationKey: key,
               author: currentUsername,
-              channel_key: this.currentChannel
+              channelKey: this.currentChannel
             });
             animationDropdown.classList.add("hidden");
           });
@@ -6037,7 +6057,7 @@
               this.chatSocket.emit("chatMessage", {
                 sender_id,
                 sender_alias: myName,
-                channel_key: this.currentChannel,
+                channelKey: this.currentChannel,
                 msg_content: inviteCode
                 // ici au lieu du message on "envois" le code d'invitation
               });

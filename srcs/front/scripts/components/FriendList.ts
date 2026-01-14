@@ -33,6 +33,7 @@ export class FriendList {
         if (this.notificationInterval) clearInterval(this.notificationInterval);
 
         this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
+        
     }
 
     // AJOUT
@@ -155,6 +156,8 @@ export class FriendList {
 
                 contactsList.appendChild(friendItem);
 
+                this.checkUnreadMessagesForFriend(selectedFriend.id);
+
                 const chatSocket = SocketService.getInstance().getChatSocket();
                 if (chatSocket) {
                     const myId = Number(this.userId);
@@ -199,6 +202,32 @@ export class FriendList {
         } catch (error) {
             console.error("Error loading friends:", error);
             contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+        }
+    }
+
+    // NOUVELLE MÉTHODE : Vérifier les messages non lus pour un ami
+    private async checkUnreadMessagesForFriend(friendId: number) 
+    {
+        try 
+        {
+            const myId = Number(this.userId);
+            const id1 = Math.min(myId, friendId);
+            const id2 = Math.max(myId, friendId);
+            const channelKey = `${id1}_${id2}`;
+
+            // Appel API pour vérifier les messages non lus
+            const response = await fetchWithAuth(`/api/chat/${channelKey}/unread?userId=${myId}`);
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            if (data.hasUnread || (data.unreadCount && data.unreadCount > 0)) {
+                console.log(`[FriendList] Friend ${friendId} has ${data.unreadCount || 1} unread messages`);
+                this.handleMessageNotification(friendId);
+            }
+        } catch (error) {
+            console.error(`Error checking unread for friend ${friendId}:`, error);
         }
     }
 
@@ -260,6 +289,7 @@ export class FriendList {
             const idToNotify = data.friendId || data.senderId;
 
             if (data.hasUnread && idToNotify) {
+                console.log("hadUnread");
                 this.handleMessageNotification(idToNotify);
             }
         });

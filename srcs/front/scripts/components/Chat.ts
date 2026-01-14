@@ -124,9 +124,9 @@ export class Chat {
 			this.addSystemMessage(data.content);
 		})
 
-		this.chatSocket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
+		this.chatSocket.on("receivedWizz", (data: { author: string, channelKey: string }) => {
 			
-			if (data.channel_key && data.channel_key !== this.currentChannel) {
+			if (data.channelKey && data.channelKey !== this.currentChannel) {
 				return;
 			}
 			
@@ -193,7 +193,7 @@ export class Chat {
 				this.chatSocket.emit("chatMessage", {
 					sender_id: sender_id,
 					sender_alias: sender_alias,
-					channel_key: this.currentChannel,
+					channelKey: this.currentChannel,
 					msg_content: msg_content 
 				});
 				this.messageInput.value = '';
@@ -210,7 +210,7 @@ export class Chat {
 		if (wizzButton) {
 			wizzButton.addEventListener('click', () => {
 				const currentUsername = localStorage.getItem('username');
-				this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+				this.chatSocket.emit("sendWizz", { author: currentUsername, channelKey: this.currentChannel });
 				this.shakeElement(this.wizzContainer, 500);
 			});
 		}
@@ -221,7 +221,7 @@ export class Chat {
 			return;
 		}
 		const currentUsername = localStorage.getItem('username');
-		this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
+		this.chatSocket.emit("sendWizz", { author: currentUsername, channelKey: this.currentChannel });
 	}
 
 	public shakeElement(element: HTMLElement | null, duration: number = 500) {
@@ -261,7 +261,7 @@ export class Chat {
 	public sendSystemNotification(message: string) {
 		if (this.chatSocket) {
 			this.chatSocket.emit("sendSystemMessage", {
-				channel_key: this.currentChannel,
+				channelKey: this.currentChannel,
 				content: message
 			});
 		} else {
@@ -420,7 +420,7 @@ export class Chat {
 					this.chatSocket.emit("sendAnimation", {
 						animationKey: key,
 						author: currentUsername,
-						channel_key: this.currentChannel
+						channelKey: this.currentChannel
 					});
 					animationDropdown.classList.add('hidden');
 				});
@@ -568,7 +568,7 @@ export class Chat {
 						this.chatSocket.emit("chatMessage", {
 							sender_id: sender_id,
 							sender_alias: myName,
-							channel_key: this.currentChannel,
+							channelKey: this.currentChannel,
 							msg_content: inviteCode // ici au lieu du message on "envois" le code d'invitation
 						});
 					} else {

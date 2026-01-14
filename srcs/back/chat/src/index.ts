@@ -135,11 +135,11 @@ fastify.ready().then(() => {
 
         socket.on('sendWizz', (data: any) => { 
             // Envoi uniquement au channel concerné
-            fastify.io.to(data.channel_key).emit('receivedWizz', { author: data.author }); 
+            fastify.io.to(data.channelKey).emit('receivedWizz', { author: data.author }); 
         });
 
         socket.on('sendAnimation', (data: any) => {
-            fastify.io.to(data.channel_key).emit('receivedAnimation', { 
+            fastify.io.to(data.channelKey).emit('receivedAnimation', { 
                 animationKey: data.animationKey, 
                 author: data.author 
             }); 
@@ -223,28 +223,28 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 }
 
 async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
-    const { channel_key, sender_alias, msg_content } = data;
+    const { channelKey, sender_alias, msg_content } = data;
     const sender_id = Number(data.sender_id);
-    console.log(`[Back] 📩 Processing chatMessage for channel: ${channel_key} from ${sender_id}`);
+    console.log(`[Back] 📩 Processing chatMessage for channel: ${channelKey} from ${sender_id}`);
 
     try {
-        const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);
+        const saveMessageID = await messRepo.saveNewMessageinDB(db, channelKey, sender_id, sender_alias, msg_content);
         
         if (!saveMessageID) {
             console.error('Error: message could not be saved');
             return;
         }
 
-        // CORRECTION IMPORTANTE : On utilise .to(channel_key)
+        // CORRECTION IMPORTANTE : On utilise .to(channelKey)
         // Sinon tout le serveur reçoit le message, même ceux dans d'autres chats !
-        io.to(channel_key).emit('chatMessage', { 
-            channelKey: channel_key, 
+        io.to(channelKey).emit('chatMessage', { 
+            channelKey: channelKey, 
             msg_content, 
             sender_alias,
             sender_id: sender_id
         });
         
-        const ids = channel_key.split('_').map(Number);
+        const ids = channelKey.split('_').map(Number);
         if (ids.length === 2 && !ids.some(isNaN)) 
         {
             const targetId = ids.find(id => id !== sender_id);
@@ -257,7 +257,7 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
                 // const clientCount = room ? room.size : 0;
                 if (room && room.size > 0) {
 
-                    console.log(`[Back] 🚀 Emitting unreadNotification to ${notifRoom} (Clients in room: ${clientCount})`);
+                    console.log(`[Back] 🚀 Emitting unreadNotification to ${notifRoom} (Clients in room: ${channelKey})`);
                     // On envoie un signal direct à l'utilisateur cible via sa room personnelle
                     io.to(notifRoom).emit('unreadNotification', {
                         senderId: sender_id,
@@ -269,7 +269,7 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
                 console.warn(`[Back] ⚠️ Cannot determine targetId for notification (Ids: ${ids}, Sender: ${sender_id})`);
             }
         } else {
-            console.warn(`[Back] ⚠️ Weird case: Sender ID ${sender_id} not found in channel key ${channel_key}`);
+            console.warn(`[Back] ⚠️ Weird case: Sender ID ${sender_id} not found in channel key ${channelKey}`);
         }
         
     } catch (err: any) {
