@@ -6422,6 +6422,14 @@
       default_bio: "Partagez un message rapide avec les contacts",
       bio_length_error: "Votre message ne peut pas d\xE9passer 70 caract\xE8res. Arr\xEAtez de parler !",
       avatar_error: "Erreur lors de la sauvegarde de l'avatar"
+    },
+    friendship_error: {
+      already_friend: "Cet utilisateur est d\xE9j\xE0 ton ami.",
+      already_send: "Une demande a d\xE9j\xE0 \xE9t\xE9 envoy\xE9e \xE0 cet utilisateur. Attends qu'il l'accepte.",
+      sending: "Erreur lors de l'envoi de la demande d'ami.",
+      cannot_find: "Impossible de trouver cet utilisateur.",
+      guest: "Impossible d'ajouter un invit\xE9 comme ami.",
+      yourself: "Tu ne peux pas t'ajouter toi-m\xEAme en ami. Loser."
     }
   };
 
@@ -6943,6 +6951,14 @@
       default_bio: "Share a quick message",
       bio_length_error: "Your message cannot exceed 70 characters. Stop talking!",
       avatar_error: "Error while saving avatar"
+    },
+    friendship_error: {
+      already_friend: "This user is already your friend.",
+      already_send: "A request has already been sent to this user. Wait for them to accept it",
+      sending: "Error while sending friendship",
+      cannot_find: "Cannot find this user",
+      guest: "Cannot add a guest as friend",
+      yourself: "You cannot add yourself as a friend. Loser."
     }
   };
 
@@ -7447,6 +7463,14 @@
       default_bio: "Comparte un mensaje r\xE1pido",
       bio_length_error: "Tu mensaje no puede exceder los 70 caracteres. \xA1Deja de hablar!",
       avatar_error: "Error al guardar el avatar"
+    },
+    friendship_error: {
+      already_friend: "Este usuario ya es tu amigo.",
+      already_send: "Ya has enviado una solicitud a este usuario. Espera a que la acepte.",
+      sending: "Error al enviar la solicitud de amistad.",
+      cannot_find: "No se puede encontrar a este usuario.",
+      guest: "No puedes a\xF1adir a un invitado como amigo.",
+      yourself: "No puedes a\xF1adirte a ti mismo como amigo. Perdedor."
     }
   };
 
@@ -8965,7 +8989,9 @@
                 friendRequestMessage?.classList.add("hidden");
               }, 1500);
             } else {
-              this.showFriendMessage(data.error.message || i18n_default.t("friendList.request_error"), "error", friendRequestMessage);
+              const backendErrorKey = data.error?.message;
+              const displayMessage = backendErrorKey ? i18n_default.t(backendErrorKey) : i18n_default.t("friendList.request_error");
+              this.showFriendMessage(displayMessage, "error", friendRequestMessage);
             }
           } catch (error) {
             console.error("Error:", error);
@@ -10904,6 +10930,8 @@
                 }
               } else if (fieldName === "bio") {
                 value2 = user.bio || "";
+                if (value2.trim() === "Share a quick message")
+                  value2 = "";
                 if (bioDisplay) {
                   bioDisplay.innerHTML = parseMessage(value2) || i18n_default.t("profilePage.bio_placeholder");
                 }

@@ -530,5 +530,14 @@
     "default_bio": "Partagez un message rapide avec les contacts",
     "bio_length_error": "Votre message ne peut pas dépasser 70 caractères. Arrêtez de parler !",
     "avatar_error": "Erreur lors de la sauvegarde de l'avatar"
+  },
+  
+  "friendship_error": {
+    "already_friend": "Cet utilisateur est déjà ton ami.",
+    "already_send": "Une demande a déjà été envoyée à cet utilisateur. Attends qu'il l'accepte.",
+    "sending": "Erreur lors de l'envoi de la demande d'ami.",
+    "cannot_find": "Impossible de trouver cet utilisateur.",
+    "guest": "Impossible d'ajouter un invité comme ami.",
+    "yourself": "Tu ne peux pas t'ajouter toi-même en ami. Loser."
   }
 }

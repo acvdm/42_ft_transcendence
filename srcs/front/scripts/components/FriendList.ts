@@ -509,8 +509,11 @@ export class FriendList {
                             friendRequestMessage?.classList.add('hidden');
                         }, 1500);
                     } else {
+                        // on essaie de traduire la cle recue du backend, sinon message generique
+                        const backendErrorKey = data.error?.message;
+                        const displayMessage = backendErrorKey ? i18next.t(backendErrorKey) : i18next.t('friendList.request_error');
                         // TRADUCTION fallback
-                        this.showFriendMessage(data.error.message || i18next.t('friendList.request_error'), 'error', friendRequestMessage);
+                        this.showFriendMessage(displayMessage, 'error', friendRequestMessage);
                     }
                 } catch (error) {
                     console.error('Error:', error);
