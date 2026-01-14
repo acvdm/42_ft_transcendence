@@ -8117,7 +8117,7 @@
 								<div class="relative w-[110px] h-[110px] flex-shrink-0">
 									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
 										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
+									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_online_small.png" alt="Status frame">
 								</div>
 		
 								<div class="flex flex-col justify-center pl-4 flex-1">
@@ -8566,6 +8566,7 @@
         const registerChat = () => {
           console.log("[FriendList] Registering user on Chat Socket:", userId);
           chatSocket.emit("registerUser", userId);
+          this.loadFriends();
         };
         if (chatSocket.connected) {
           registerChat();
@@ -8708,7 +8709,9 @@
       const socketService = SocketService_default.getInstance();
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
-      if (!chatSocket) return;
+      if (!chatSocket) {
+        return;
+      }
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
