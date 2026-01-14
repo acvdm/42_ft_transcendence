@@ -1,66 +1,67 @@
 {
-  "nav": {
-    "home": "Home",
-    "profile": "Profile",
-    "dashboard": "Dashboard",
-    "logout": "Log out",
-    "guest_area": "Guest area"
-  },
-  "profile": {
-    "title": "Profile",
-    "username": "Username",
-    "bio": "Share a quick message",
-    "status": {
-      "available": "Available",
-      "busy": "Busy",
-      "away": "Away",
-      "offline": "Appear offline"
+  "homepage": {
+    "nav": {
+      "home": "Home",
+      "profile": "Profile",
+      "dashboard": "Dashboard",
+      "logout": "Log out",
+      "guest_area": "Guest area"
+    },
+    "profile": {
+      "title": "Profile",
+      "username": "Username",
+      "bio": "Share a quick message",
+      "status": {
+        "available": "Available",
+        "busy": "Busy",
+        "away": "Away",
+        "offline": "Offline"
+      }
+    },
+    "games": {
+      "title": "Games",
+      "choose_mode": "Select how you would like to start a new game.",
+      "local": "LOCAL GAME",
+      "remote": "REMOTE GAME",
+      "tournament": "TOURNAMENT",
+      "local_describe": "Play against another player on this computer",
+      "remote_describe": "Connect and play with friends and more online",
+      "tournament_describe": "Compete in a 4-multiplayer tournament on this computer"
+    },
+    "chat": {
+      "title": "Messenger",
+      "friends": "MY FRIENDS",
+      "add_friend": "Add a friend",
+      "send_request": "Send request",
+      "cancel": "Cancel",
+      "contact": "⭐ Contacts",
+      "placeholder": "Select a friend to start chatting",
+      "input_placeholder": "Write a message...",
+      "view_profile": "View profile",
+      "invite_game": "Invite to play",
+      "block_user": "Block user"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "no_notification": "No notification"
+    },
+    "modal": {
+      "user_profile": "User Profile",
+      "statistics": "Statistics",
+      "games_played": "Games Played:",
+      "wins": "Wins:",
+      "losses": "Losses:",
+      "winning_streak": "Winning streak:",
+      "close": "Close",
+      "change_picture": "Change Picture",
+      "select_picture": "Select a picture",
+      "picture_description": "Choose how you want to appear on transcendence.",
+      "browse": "BROWSE",
+      "delete": "DELETE",
+      "ok": "OK",
+      "cancel": "CANCEL"
     }
   },
-  "games": {
-    "title": "Games",
-    "choose_mode": "Select how you would like to start a new game.",
-    "local": "LOCAL GAME",
-    "remote": "REMOTE GAME",
-    "tournament": "TOURNAMENT"
-  },
-  "chat": {
-    "title": "Messenger",
-    "friends": "MY FRIENDS",
-    "add_friend": "Add a friend",
-    "send_request": "Send request",
-    "cancel": "Cancel",
-    "contact": "⭐ Contacts",
-    "placeholder": "Select a friend to start chatting",
-    "input_placeholder": "Write a message...",
-    "view_profile": "View profile",
-    "invite_game": "Invite to play",
-    "block_user": "Block user"
-  },
-  "notifications": {
-    "title": "Notifications",
-    "no_notification": "No notification"
-  },
-  "modal": {
-    "user_profile": "User Profile",
-    "statistics": "Statistics",
-    "games_played": "Games Played:",
-    "wins": "Wins:",
-    "losses": "Losses:",
-    "winning_streak": "Winning streak:",
-    "close": "Close",
-    "change_picture": "Change Picture",
-    "select_picture": "Select a picture",
-    "picture_description": "Choose how you want to appear on transcendence.",
-    "browse": "BROWSE",
-    "delete": "DELETE",
-    "ok": "OK",
-    "cancel": "CANCEL"
-  }, 
-
-
-
-
   "landing": {
     "welcome": "Welcome on Transcendence",
     "login_button": "Login",

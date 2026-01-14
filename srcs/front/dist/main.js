@@ -5910,63 +5910,68 @@
 
   // scripts/locales/fr.json
   var fr_default = {
-    nav: {
-      home: "Accueil",
-      profile: "Profil",
-      dashboard: "Tableau de bord",
-      logout: "D\xE9connexion",
-      guest_area: "Espace invit\xE9"
-    },
-    profile: {
-      title: "Profil",
-      username: "Nom d'utilisateur",
-      bio: "Partagez un message rapide avec les contacts",
-      status: {
-        available: "Disponible",
-        busy: "Occup\xE9",
-        away: "Absent",
-        offline: "Hors ligne"
+    homepage: {
+      nav: {
+        home: "Accueil",
+        profile: "Profil",
+        dashboard: "Tableau de bord",
+        logout: "D\xE9connexion",
+        guest_area: "Espace invit\xE9"
+      },
+      profile: {
+        title: "Profil",
+        username: "Nom d'utilisateur",
+        bio: "Partagez un message rapide",
+        status: {
+          available: "Disponible",
+          busy: "Occup\xE9",
+          away: "Absent",
+          offline: "Hors ligne"
+        }
+      },
+      games: {
+        title: "Jeux",
+        choose_mode: "Choisi ton mode de jeu",
+        local: "JEU LOCAL",
+        remote: "JEU EN LIGNE",
+        tournament: "TOURNOI",
+        local_describe: "Joue contre un autre joueur sur cet ordinateur",
+        remote_describe: "Joue avec tes amis et bien plus en ligne",
+        tournament_describe: "Participe \xE0 un tournoi \xE0 4 joueurs sur cet ordinateur."
+      },
+      chat: {
+        title: "Messagerie",
+        friends: "MES AMIS",
+        add_friend: "Ajouter un ami",
+        send_request: "Send request",
+        cancel: "Cancel",
+        contact: "\u2B50 Contacts",
+        placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
+        input_placeholder: "\xC9crire un message...",
+        view_profile: "Voir le profil",
+        invite_game: "Inviter \xE0 jouer",
+        block_user: "Bloquer l'utilisateur"
+      },
+      notifications: {
+        title: "Notifications",
+        no_notification: "Aucune notification"
+      },
+      modal: {
+        user_profile: "User Profile",
+        statistics: "Statistics",
+        games_played: "Games Played:",
+        wins: "Wins:",
+        losses: "Losses:",
+        winning_streak: "Winning streak:",
+        close: "Close",
+        change_picture: "Change Picture",
+        select_picture: "Select a picture",
+        picture_description: "Choose how you want to appear on transcendence.",
+        browse: "BROWSE",
+        delete: "DELETE",
+        ok: "OK",
+        cancel: "CANCEL"
       }
-    },
-    games: {
-      title: "Jeux",
-      choose_mode: "CHOISISSEZ VOTRE MODE DE JEU",
-      local: "JEU LOCAL",
-      remote: "JEU EN LIGNE",
-      tournament: "TOURNOI"
-    },
-    chat: {
-      title: "Messagerie",
-      friends: "MES AMIS",
-      add_friend: "Ajouter un ami",
-      send_request: "Send request",
-      cancel: "Cancel",
-      contact: "\u2B50 Contacts",
-      placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
-      input_placeholder: "\xC9crire un message...",
-      view_profile: "Voir le profil",
-      invite_game: "Inviter \xE0 jouer",
-      block_user: "Bloquer l'utilisateur"
-    },
-    notifications: {
-      title: "Notifications",
-      no_notification: "Aucune notification"
-    },
-    modal: {
-      user_profile: "User Profile",
-      statistics: "Statistics",
-      games_played: "Games Played:",
-      wins: "Wins:",
-      losses: "Losses:",
-      winning_streak: "Winning streak:",
-      close: "Close",
-      change_picture: "Change Picture",
-      select_picture: "Select a picture",
-      picture_description: "Choose how you want to appear on transcendence.",
-      browse: "BROWSE",
-      delete: "DELETE",
-      ok: "OK",
-      cancel: "CANCEL"
     },
     landing: {
       welcome: "Bienvenue sur Transcendence",
@@ -6425,63 +6430,68 @@
 
   // scripts/locales/en.json
   var en_default = {
-    nav: {
-      home: "Home",
-      profile: "Profile",
-      dashboard: "Dashboard",
-      logout: "Log out",
-      guest_area: "Guest area"
-    },
-    profile: {
-      title: "Profile",
-      username: "Username",
-      bio: "Share a quick message",
-      status: {
-        available: "Available",
-        busy: "Busy",
-        away: "Away",
-        offline: "Appear offline"
+    homepage: {
+      nav: {
+        home: "Home",
+        profile: "Profile",
+        dashboard: "Dashboard",
+        logout: "Log out",
+        guest_area: "Guest area"
+      },
+      profile: {
+        title: "Profile",
+        username: "Username",
+        bio: "Share a quick message",
+        status: {
+          available: "Available",
+          busy: "Busy",
+          away: "Away",
+          offline: "Offline"
+        }
+      },
+      games: {
+        title: "Games",
+        choose_mode: "Select how you would like to start a new game.",
+        local: "LOCAL GAME",
+        remote: "REMOTE GAME",
+        tournament: "TOURNAMENT",
+        local_describe: "Play against another player on this computer",
+        remote_describe: "Connect and play with friends and more online",
+        tournament_describe: "Compete in a 4-multiplayer tournament on this computer"
+      },
+      chat: {
+        title: "Messenger",
+        friends: "MY FRIENDS",
+        add_friend: "Add a friend",
+        send_request: "Send request",
+        cancel: "Cancel",
+        contact: "\u2B50 Contacts",
+        placeholder: "Select a friend to start chatting",
+        input_placeholder: "Write a message...",
+        view_profile: "View profile",
+        invite_game: "Invite to play",
+        block_user: "Block user"
+      },
+      notifications: {
+        title: "Notifications",
+        no_notification: "No notification"
+      },
+      modal: {
+        user_profile: "User Profile",
+        statistics: "Statistics",
+        games_played: "Games Played:",
+        wins: "Wins:",
+        losses: "Losses:",
+        winning_streak: "Winning streak:",
+        close: "Close",
+        change_picture: "Change Picture",
+        select_picture: "Select a picture",
+        picture_description: "Choose how you want to appear on transcendence.",
+        browse: "BROWSE",
+        delete: "DELETE",
+        ok: "OK",
+        cancel: "CANCEL"
       }
-    },
-    games: {
-      title: "Games",
-      choose_mode: "Select how you would like to start a new game.",
-      local: "LOCAL GAME",
-      remote: "REMOTE GAME",
-      tournament: "TOURNAMENT"
-    },
-    chat: {
-      title: "Messenger",
-      friends: "MY FRIENDS",
-      add_friend: "Add a friend",
-      send_request: "Send request",
-      cancel: "Cancel",
-      contact: "\u2B50 Contacts",
-      placeholder: "Select a friend to start chatting",
-      input_placeholder: "Write a message...",
-      view_profile: "View profile",
-      invite_game: "Invite to play",
-      block_user: "Block user"
-    },
-    notifications: {
-      title: "Notifications",
-      no_notification: "No notification"
-    },
-    modal: {
-      user_profile: "User Profile",
-      statistics: "Statistics",
-      games_played: "Games Played:",
-      wins: "Wins:",
-      losses: "Losses:",
-      winning_streak: "Winning streak:",
-      close: "Close",
-      change_picture: "Change Picture",
-      select_picture: "Select a picture",
-      picture_description: "Choose how you want to appear on transcendence.",
-      browse: "BROWSE",
-      delete: "DELETE",
-      ok: "OK",
-      cancel: "CANCEL"
     },
     landing: {
       welcome: "Welcome on Transcendence",
@@ -6941,47 +6951,52 @@
 
   // scripts/locales/es.json
   var es_default = {
-    nav: {
-      home: "",
-      profile: "",
-      dashboard: "",
-      logout: "",
-      guest_area: ""
-    },
-    profile: {
-      title: "",
-      username: "",
-      bio: "",
-      status: {
-        available: "",
-        busy: "",
-        away: "",
-        offline: ""
+    homepage: {
+      nav: {
+        home: "Inicio",
+        profile: "Perfil",
+        dashboard: "Panel de control",
+        logout: "Desconexi\xF3n",
+        guest_area: "Espacio para invitados"
+      },
+      profile: {
+        title: "Perfil",
+        username: "Nombre de usuario",
+        bio: "Comparte un mensaje r\xE1pido",
+        status: {
+          available: "Disponible",
+          busy: "Ocupado",
+          away: "Ausente",
+          offline: "Desconectado"
+        }
+      },
+      games: {
+        title: "Juegos",
+        choose_mode: "Elige tu modo de juego",
+        local: "JUEGO LOCAL",
+        remote: "JUEGO REMOTO",
+        tournament: "TORNEOS",
+        local_describe: "Juega contra otro jugador en este ordenador.",
+        remote_describe: "Con\xE9ctate y juega con amigos y mucho m\xE1s en l\xEDnea.",
+        tournament_describe: "Compite en un torneo multijugador para 4 jugadores en este ordenador."
+      },
+      chat: {
+        title: "Messenger",
+        friends: "MIS AMIGOS",
+        add_friend: "A\xF1adir un amigo",
+        send_request: "Enviar solicitud",
+        cancel: "Cancelar",
+        contact: "\u2B50 Contactos",
+        placeholder: "Selecciona un amigo para empezar a chatear",
+        input_placeholder: "Escribe un mensaje...",
+        view_profile: "Ver perfil",
+        invite_game: "Invitaci\xF3n a jugar",
+        block_user: "Bloquear usuario"
+      },
+      notifications: {
+        title: "Notificaciones",
+        no_notification: "Sin notificaci\xF3n"
       }
-    },
-    games: {
-      title: "",
-      choose_mode: "",
-      local: "",
-      remote: "",
-      tournament: ""
-    },
-    chat: {
-      title: "",
-      friends: "",
-      add_friend: "",
-      send_request: "",
-      cancel: "",
-      contact: "",
-      placeholder: "",
-      input_placeholder: "",
-      view_profile: "",
-      invite_game: "",
-      block_user: ""
-    },
-    notifications: {
-      title: "",
-      no_notification: ""
     },
     landing: {
       welcome: "Bienvenido a Transcendence",
@@ -6998,7 +7013,7 @@
         available: "Disponible",
         busy: "Ocupado",
         away: "Ausente",
-        offline: "Invisible"
+        offline: "Desconectato"
       },
       login_button: "Entrar",
       back: "Volver al inicio",
@@ -7029,7 +7044,7 @@
         available: "Disponible",
         busy: "Ocupado",
         away: "Ausente",
-        offline: "Invisible"
+        offline: "Desconectado"
       },
       fallback_username: "Espera...",
       fallback_bio: "Cargando biograf\xEDa...",
@@ -7382,7 +7397,7 @@
         available: "(Disponible)",
         busy: "(Ocupado)",
         away: "(Ausente)",
-        invisible: "(Invisible)"
+        invisible: "(Desconectado)"
       },
       themes: {
         basic: "Azul Cl\xE1sico",
@@ -8095,7 +8110,7 @@
 								<!-- username, bio et status -->
 								<div class="flex flex-col justify-center pl-4 flex-1">
 									<div class="flex items-center gap-2 mb-1">
-										<p class="text-xl font-semibold" id="user-name">Username</p>
+										<p class="text-xl font-semibold" id="user-name">{{homepage.profile.username}}</p>
 		
 										<!-- selection du status = dynamique -->
 										<div class="relative">
@@ -8108,25 +8123,25 @@
 											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>Available</span>
+													<span>{{homepage.profile.status.available}}</span>
 												</button>
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="busy">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>Busy</span>
+													<span>{{homepage.profile.status.busy}}</span>
 												</button>
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="away">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>Away</span>
+													<span>{{homepage.profile.status.away}}</span>
 												</button>
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="invisible">
 													<span class="w-2 h-2 rounded-full"></span>
-													<span>Offline</span>
+													<span>{{homepage.profile.status.offline}}</span>
 												</button>
 											</div>
 										</div>
 									</div>
 									<div id="bio-wrapper">
-										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">Share a quick message</p>
+										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">{{homepage.profile.bio}}</p>
 										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
 									</div>
 								</div>
@@ -8143,11 +8158,11 @@
 									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
 										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
 											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
-												Notifications
+												{{homepage.notifications.title}}
 											</h3>
 										</div>
 										<div id="notification-list" class="flex flex-col max-h-64 overflow-y-auto divide-y divide-gray-200">
-											<div class="p-4 text-center text-xs text-gray-500">No notification</div>
+											<div class="p-4 text-center text-xs text-gray-500">{{homepage.notifications.no_notification}}</div>
 										</div>
 									</div>
 								</div>
@@ -8159,7 +8174,7 @@
 				<!-- ========= GAMES WINDOW ========= -->
 				<div class="window flex flex-col" style="flex: 1; min-height: 0;">
 					<div class="title-bar">
-						<div class="title-bar-text">Games</div>
+						<div class="title-bar-text">{{homepage.games.title}}</div>
 						<div class="title-bar-controls">
 							<button aria-label="Minimize"></button>
 							<button aria-label="Maximize"></button>
@@ -8171,7 +8186,7 @@
 						<div class="bg-white p-6 flex flex-col flex-1">
 							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">CHOOSE YOUR GAME MODE</h1>
 							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
-								<p>Select how you would like to start a new game.</p>
+								<p>{{homepage.games.choose_mode}}</p>
 							</div>
 							<div class="flex flex-col gap-4 flex-1 justify-center items-center">
 								<button id="local-game" 
@@ -8179,27 +8194,27 @@
 										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
 										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
-									LOCAL GAME
+									{{homepage.games.local}}
 								</button>
-								<p>Play against another player on this computer</p>
+								<p>{{homepage.games.local_describe}}</p>
 
 								<button id="remote-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
 										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									REMOTE GAME
+									{{homepage.games.remote}}
 								</button>
-								<p>Connect and play with friends and more online</p>
+								<p>{{homepage.games.remote_describe}}</p>
 
 								<button id="tournament-game" 
 									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
 										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									TOURNAMENT
+									{{homepage.games.tournament}}
 								</button>
-								<p>Compete in a 4-multiplayer tournament on this computer</p>
+								<p class="text-sm text-gray-400" style="padding-bottom: 35px; color:grey;"></p>{{homepage.games.tournament_describe}}</p>
 							</div>
 						</div>
 					</div>
@@ -8211,7 +8226,7 @@
 			<!-- ========= RIGHT WINDOW ========= -->
 			<div class="window flex flex-col min-w-0" style="flex: 1; height: 100%;">
 				<div class="title-bar">
-					<div class="title-bar-text">Messenger</div>
+					<div class="title-bar-text">{{homepage.chat.title}}</div>
 					<div class="title-bar-controls">
 						<button aria-label="Minimize"></button>
 						<button aria-label="Maximize"></button>
@@ -8225,7 +8240,7 @@
 
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
 							<div class="flex flex-row items-center justify-between">
-								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">MY FRIENDS</p>
+								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
 								
 								<div class="ml-auto flex items-center mb-3 relative">
 									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
@@ -8235,7 +8250,7 @@
 											class="w-full h-full object-contain">
 									</button>
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
-										<p class="text-sm font-semibold mb-2 text-center">Add a friend</p>
+										<p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
 										<input type="text" 
 											id="friend-search-input" 
 											placeholder="Type in username or email" 
@@ -8243,11 +8258,11 @@
 										<div class="flex gap-2">
 											<button id="send-friend-request" 
 												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												Send request
+												{{homepage.chat.send_request}}
 											</button>
 											<button id="cancel-friend-request" 
 												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												Cancel
+												{{homepage.chat.cancel}}
 											</button>
 										</div>
 										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
@@ -8259,7 +8274,7 @@
 
 								<details open class="group">
 									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-										\u2B50 Contacts
+										{{homepage.chat.contact}}
 									</summary>
 
 									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
@@ -8270,7 +8285,7 @@
 
 						<div id="chat-placeholder" class="flex flex-col items-center justify-center flex-1 h-full relative z-10 bg-white border border-gray-300 rounded-sm shadow-sm">
 							<img src="/assets/basic/messenger_logo.png" alt="" class="w-24 h-24 opacity-20 grayscale mb-4">
-							<p class="text-gray-400 text-lg font-semibold">Select a friend to start chatting</p>
+							<p class="text-gray-400 text-lg font-semibold">{{homepage.chat.placeholder}}</p>
 						</div>
 
 						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
@@ -8310,7 +8325,7 @@
 													alt="avatar">
 											</div>
 											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												View profile
+												{{homepage.chat.view_profile}}
 											</button>
 										</div>
 
@@ -8321,7 +8336,7 @@
 													alt="avatar">
 											</div>
 											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												Invite to play
+												{{homepage.chat.invite_game}}
 											</button>
 										</div>
 
@@ -8332,7 +8347,7 @@
 													alt="avatar">
 											</div>
 											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												Block user
+												{{homepage.chat.block_user}}
 											</button>
 										</div>
 
@@ -10108,31 +10123,34 @@
   function render2() {
     let html = HomePage_default;
     console.log("RENDER HOMEPAGE - LANGUE ACTUELLE:", i18n_default.language);
-    html = html.replace(/\{\{profile\.title\}\}/g, i18n_default.t("profile.title"));
-    html = html.replace(/\{\{profile\.bio\}\}/g, i18n_default.t("profile.bio"));
-    html = html.replace(/\{\{profile\.username\}\}/g, i18n_default.t("profile.username"));
-    html = html.replace(/\{\{profile\.status.available\}\}/g, i18n_default.t("profile.status.available"));
-    html = html.replace(/\{\{profile\.status.busy\}\}/g, i18n_default.t("profile.status.busy"));
-    html = html.replace(/\{\{profile\.status.away\}\}/g, i18n_default.t("profile.status.away"));
-    html = html.replace(/\{\{profile\.status.offline\}\}/g, i18n_default.t("profile.status.offline"));
-    html = html.replace(/\{\{games\.title\}\}/g, i18n_default.t("games.title"));
-    html = html.replace(/\{\{games\.choose_mode\}\}/g, i18n_default.t("games.choose_mode"));
-    html = html.replace(/\{\{games\.local\}\}/g, i18n_default.t("games.local"));
-    html = html.replace(/\{\{games\.remote\}\}/g, i18n_default.t("games.remote"));
-    html = html.replace(/\{\{games\.tournament\}\}/g, i18n_default.t("games.tournament"));
-    html = html.replace(/\{\{chat\.title\}\}/g, i18n_default.t("chat.title"));
-    html = html.replace(/\{\{chat\.friends\}\}/g, i18n_default.t("chat.friends"));
-    html = html.replace(/\{\{chat\.add_friend\}\}/g, i18n_default.t("chat.add_friend"));
-    html = html.replace(/\{\{chat\.send_request\}\}/g, i18n_default.t("chat.send_request"));
-    html = html.replace(/\{\{chat\.cancel\}\}/g, i18n_default.t("chat.cancel"));
-    html = html.replace(/\{\{chat\.contact\}\}/g, i18n_default.t("chat.contact"));
-    html = html.replace(/\{\{chat\.placeholder\}\}/g, i18n_default.t("chat.placeholder"));
-    html = html.replace(/\{\{chat\.inputplace_holder\}\}/g, i18n_default.t("chat.input_placeholder"));
-    html = html.replace(/\{\{chat\.view_profile\}\}/g, i18n_default.t("chat.view_profile"));
-    html = html.replace(/\{\{chat\.invite_game\}\}/g, i18n_default.t("chat.invite_game"));
-    html = html.replace(/\{\{chat\.block_user\}\}/g, i18n_default.t("chat.block_user"));
-    html = html.replace(/\{\{notifications\.title\}\}/g, i18n_default.t("notifications.title"));
-    html = html.replace(/\{\{notifications\.no_notification\}\}/g, i18n_default.t("notifications.no_notification"));
+    html = html.replace(/\{\{homepage.profile\.title\}\}/g, i18n_default.t("homepage.profile.title"));
+    html = html.replace(/\{\{homepage.profile\.bio\}\}/g, i18n_default.t("homepage.profile.bio"));
+    html = html.replace(/\{\{homepage.profile\.username\}\}/g, i18n_default.t("homepage.profile.username"));
+    html = html.replace(/\{\{homepage.profile\.status.available\}\}/g, i18n_default.t("homepage.profile.status.available"));
+    html = html.replace(/\{\{homepage.profile\.status.busy\}\}/g, i18n_default.t("homepage.profile.status.busy"));
+    html = html.replace(/\{\{homepage.profile\.status.away\}\}/g, i18n_default.t("homepage.profile.status.away"));
+    html = html.replace(/\{\{homepage.profile\.status.offline\}\}/g, i18n_default.t("homepage.profile.status.offline"));
+    html = html.replace(/\{\{homepage.games\.title\}\}/g, i18n_default.t("homepage.games.title"));
+    html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18n_default.t("homepage.games.choose_mode"));
+    html = html.replace(/\{\{homepage.games\.local\}\}/g, i18n_default.t("homepage.games.local"));
+    html = html.replace(/\{\{homepage.games\.remote\}\}/g, i18n_default.t("homepage.games.remote"));
+    html = html.replace(/\{\{homepage.games\.tournament\}\}/g, i18n_default.t("homepage.games.tournament"));
+    html = html.replace(/\{\{homepage.games\.local_describe\}\}/g, i18n_default.t("homepage.games.local_describe"));
+    html = html.replace(/\{\{homepage.games\.remote_describe\}\}/g, i18n_default.t("homepage.games.remote_describe"));
+    html = html.replace(/\{\{homepage.games\.tournament_describe\}\}/g, i18n_default.t("homepage.games.tournament_describe"));
+    html = html.replace(/\{\{homepage.chat\.title\}\}/g, i18n_default.t("homepage.chat.title"));
+    html = html.replace(/\{\{homepage.chat\.friends\}\}/g, i18n_default.t("homepage.chat.friends"));
+    html = html.replace(/\{\{homepage.chat\.add_friend\}\}/g, i18n_default.t("homepage.chat.add_friend"));
+    html = html.replace(/\{\{homepage.chat\.send_request\}\}/g, i18n_default.t("homepage.chat.send_request"));
+    html = html.replace(/\{\{homepage.chat\.cancel\}\}/g, i18n_default.t("homepage.chat.cancel"));
+    html = html.replace(/\{\{homepage.chat\.contact\}\}/g, i18n_default.t("homepage.chat.contact"));
+    html = html.replace(/\{\{homepage.chat\.placeholder\}\}/g, i18n_default.t("homepage.chat.placeholder"));
+    html = html.replace(/\{\{homepage.chat\.inputplace_holder\}\}/g, i18n_default.t("homepage.chat.input_placeholder"));
+    html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18n_default.t("homepage.chat.view_profile"));
+    html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18n_default.t("homepage.chat.invite_game"));
+    html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18n_default.t("homepage.chat.block_user"));
+    html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18n_default.t("homepage.notifications.title"));
+    html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18n_default.t("homepage.notifications.no_notification"));
     return html;
   }
   function afterRender() {

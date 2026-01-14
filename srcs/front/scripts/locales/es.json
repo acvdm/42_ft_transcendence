@@ -1,50 +1,51 @@
 {
-  "nav": {
-    "home": "",
-    "profile": "",
-    "dashboard": "",
-    "logout": "",
-    "guest_area": ""
-  },
-  "profile": {
-    "title": "",
-    "username": "",
-    "bio": "",
-    "status": {
-      "available": "",
-      "busy": "",
-      "away": "",
-      "offline": ""
+  "homepage": {
+    "nav": {
+      "home": "Inicio",
+      "profile": "Perfil",
+      "dashboard": "Panel de control",
+      "logout": "Desconexión",
+      "guest_area": "Espacio para invitados"
+    },
+    "profile": {
+      "title": "Perfil",
+      "username": "Nombre de usuario",
+      "bio": "Comparte un mensaje rápido",
+      "status": {
+        "available": "Disponible",
+        "busy": "Ocupado",
+        "away": "Ausente",
+        "offline": "Desconectado"
+      }
+    },
+    "games": {
+      "title": "Juegos",
+      "choose_mode": "Elige tu modo de juego",
+      "local": "JUEGO LOCAL",
+      "remote": "JUEGO REMOTO",
+      "tournament": "TORNEOS",
+      "local_describe": "Juega contra otro jugador en este ordenador.",
+      "remote_describe": "Conéctate y juega con amigos y mucho más en línea.",
+      "tournament_describe": "Compite en un torneo multijugador para 4 jugadores en este ordenador."
+    },
+    "chat": {
+      "title": "Messenger",
+      "friends": "MIS AMIGOS",
+      "add_friend": "Añadir un amigo",
+      "send_request": "Enviar solicitud",
+      "cancel": "Cancelar",
+      "contact": "⭐ Contactos",
+      "placeholder": "Selecciona un amigo para empezar a chatear",
+      "input_placeholder": "Escribe un mensaje...",
+      "view_profile": "Ver perfil",
+      "invite_game": "Invitación a jugar",
+      "block_user": "Bloquear usuario"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "no_notification": "Sin notificación"
     }
   },
-  "games": {
-    "title": "",
-    "choose_mode": "",
-    "local": "",
-    "remote": "",
-    "tournament": ""
-  },
-  "chat": {
-    "title": "",
-    "friends": "",
-    "add_friend": "",
-    "send_request": "",
-    "cancel": "",
-    "contact": "",
-    "placeholder": "",
-    "input_placeholder": "",
-    "view_profile": "",
-    "invite_game": "",
-    "block_user": ""
-  },
-  "notifications": {
-    "title": "",
-    "no_notification": ""
-  },
-
-
-
-
 
   "landing": {
     "welcome": "Bienvenido a Transcendence",
@@ -62,7 +63,7 @@
       "available": "Disponible",
       "busy": "Ocupado",
       "away": "Ausente",
-      "offline": "Invisible"
+      "offline": "Desconectato"
     },
     "login_button": "Entrar",
     "back": "Volver al inicio",
@@ -93,7 +94,7 @@
       "available": "Disponible",
       "busy": "Ocupado",
       "away": "Ausente",
-      "offline": "Invisible"
+      "offline": "Desconectado"
     },
     "fallback_username": "Espera...",
     "fallback_bio": "Cargando biografía...",
@@ -455,7 +456,7 @@
       "available": "(Disponible)",
       "busy": "(Ocupado)",
       "away": "(Ausente)",
-      "invisible": "(Invisible)"
+      "invisible": "(Desconectado)"
     },
     "themes": {
       "basic": "Azul Clásico",
@@ -512,4 +513,5 @@
     "bio_length_error": "Tu mensaje no puede exceder los 70 caracteres. ¡Deja de hablar!",
     "avatar_error": "Error al guardar el avatar"
   }
+
 }
