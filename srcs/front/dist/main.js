@@ -8151,7 +8151,7 @@
 		
 										<div class="relative">
 											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-												<span id="current-status-text">({{homepage.profile.status.available}})</span>
+												<span id="current-status-text">(Available)</span>
 												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
 											</button>
 		
@@ -10099,12 +10099,9 @@
     html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18n_default.t("homepage.chat.view_profile"));
     html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18n_default.t("homepage.chat.invite_game"));
     html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18n_default.t("homepage.chat.block_user"));
-    html = html.replace(/\{\{chat\.choose_bg\}\}/g, i18n_default.t("chat.choose_bg"));
-    html = html.replace(/\{\{chat\.default_bg\}\}/g, i18n_default.t("chat.default_bg"));
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18n_default.t("homepage.notifications.title"));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18n_default.t("homepage.notifications.no_notification"));
     html = html.replace(/\{\{homepage.modal\.user_profile\}\}/g, i18n_default.t("homepage.modal.user_profile"));
-    html = html.replace(/\{\{homepage.modal\.username\}\}/g, i18n_default.t("homepage.modal.username"));
     html = html.replace(/\{\{friendProfileModal\.no_bio\}\}/g, i18n_default.t("friendProfileModal.no_bio"));
     html = html.replace(/\{\{homepage.modal\.statistics\}\}/g, i18n_default.t("homepage.modal.statistics"));
     html = html.replace(/\{\{homepage.modal\.games_played\}\}/g, i18n_default.t("homepage.modal.games_played"));

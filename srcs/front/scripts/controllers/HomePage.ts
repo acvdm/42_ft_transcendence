@@ -59,15 +59,15 @@ export function render(): string {
     html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18next.t('homepage.chat.view_profile'));
     html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18next.t('homepage.chat.invite_game'));
     html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18next.t('homepage.chat.block_user'));
-    html = html.replace(/\{\{chat\.choose_bg\}\}/g, i18next.t('chat.choose_bg'));
-    html = html.replace(/\{\{chat\.default_bg\}\}/g, i18next.t('chat.default_bg'));
+    // html = html.replace(/\{\{chat\.choose_bg\}\}/g, i18next.t('chat.choose_bg'));
+    // html = html.replace(/\{\{chat\.default_bg\}\}/g, i18next.t('chat.default_bg'));
 
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18next.t('homepage.notifications.title'));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18next.t('homepage.notifications.no_notification'));
 
 
     html = html.replace(/\{\{homepage.modal\.user_profile\}\}/g, i18next.t('homepage.modal.user_profile'));
-    html = html.replace(/\{\{homepage.modal\.username\}\}/g, i18next.t('homepage.modal.username'));
+    // html = html.replace(/\{\{homepage.modal\.username\}\}/g, i18next.t('homepage.modal.username'));
     html = html.replace(/\{\{friendProfileModal\.no_bio\}\}/g, i18next.t('friendProfileModal.no_bio'));
     html = html.replace(/\{\{homepage.modal\.statistics\}\}/g, i18next.t('homepage.modal.statistics'));
     html = html.replace(/\{\{homepage.modal\.games_played\}\}/g, i18next.t('homepage.modal.games_played'));
