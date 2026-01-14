@@ -5,6 +5,13 @@ import { Friendship } from '../../../back/user/src/repositories/friendships';
 
 import i18next from "../i18n"; // Import ok
 
+interface UnreadConversation {
+    channel_key: string,
+    sender_alias: string,
+    sender_id: number, 
+    unread_count: number,
+    last_msg_data: number
+}
 export class FriendList {
     private container: HTMLElement | null;
     private userId: string | null;
@@ -30,9 +37,15 @@ export class FriendList {
         // setInterval(() => this.checkNotifications(), 30000);
 
 
-        if (this.notificationInterval) clearInterval(this.notificationInterval);
-
+        if (this.notificationInterval) {
+            clearInterval(this.notificationInterval);
+        }
         this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
+
+        window.addEventListener('notificationUpdate', () => {
+            console.log("Friend received notification");
+            this.checkNotifications();
+        })
     }
 
     // AJOUT
@@ -560,32 +573,86 @@ export class FriendList {
         if (!userId || !notifList) return;
 
         try {
-            const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-            if (!response.ok) throw new Error('Failed to fetch pendings');
+            // --- 1. On lance les deux requêtes en parallèle ---
+            // A. Vos demandes d'amis (code existant)
+            const friendsPromise = fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+            
+            // B. Les messages non lus (nouveau)
+            const chatPromise = fetchWithAuth(`/api/chat/unread`);
 
-            const requests = await response.json();
-            const pendingList = requests.data;
+            const [friendsRes, chatRes] = await Promise.all([friendsPromise, chatPromise]);
+
+            let pendingList: Friendship[] = [];
+            let unreadMessages: any[] = [];
+
+            // --- 2. Récupération des données ---
+            if (friendsRes.ok) {
+                const data = await friendsRes.json();
+                pendingList = data.data || [];
+            }
+
+            if (chatRes.ok) {
+                const data = await chatRes.json();
+                unreadMessages = data.data || [];
+            }
+
+            // --- 3. Mise à jour de l'icône de la cloche ---
+            const totalNotifications = pendingList.length + unreadMessages.length;
             const notifIcon = document.getElementById('notification-icon') as HTMLImageElement;
             
-            if (pendingList.length > 0) {
+            if (totalNotifications > 0) {
                 if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
             } else {
                 if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
             }
 
+            // --- 4. Affichage dans la liste ---
             notifList.innerHTML = '';
-            if (pendingList.length === 0) {
-                // TRADUCTION
+            
+            if (totalNotifications === 0) {
                 notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18next.t('friendList.no_notifications')}</div>`;
                 return;
             }
 
+            // A. D'ABORD LES MESSAGES NON LUS (NOUVEAU)
+            unreadMessages.forEach((msg) => {
+                const item = document.createElement('div');
+                item.className = "flex items-center p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition cursor-pointer bg-blue-50"; // Petit fond bleu pour distinguer
+                
+                // Texte : "Vous avez X messages de Y"
+                const text = i18next.t('friendList.unread_messages', { count: msg.unread_count, sender: msg.sender_alias }) || `Message from ${msg.sender_alias}`;
+
+                item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0">
+                         <img src="/assets/basic/message_notif.png" class="w-full h-full object-contain" alt="msg">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-800 font-medium">${text}</p>
+                        <p class="text-xs text-gray-400">Click to reply</p>
+                    </div>
+                `;
+
+                // Au clic, on ouvre le chat
+                item.addEventListener('click', () => {
+                    const event = new CustomEvent('friendSelected', { 
+                        detail: { 
+                            friend: { id: msg.sender_id, alias: msg.sender_alias },
+                            channelKey: msg.channel_key 
+                        } 
+                    });
+                    window.dispatchEvent(event);
+                    document.getElementById('notification-dropdown')?.classList.add('hidden');
+                });
+
+                notifList.appendChild(item);
+            });
+
+            // B. ENSUITE VOS DEMANDES D'AMIS (VOTRE CODE D'ORIGINE RESTAURÉ)
             pendingList.forEach((req: Friendship) => {
                 const item = document.createElement('div');
                 item.dataset.friendshipId = req.id.toString();
                 item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
 
-                // TRADUCTION avec interpolation HTML
                 const reqMessage = i18next.t('friendList.wants_to_be_friend', { name: req.user?.alias });
                 const t_accept = i18next.t('friendList.actions.accept');
                 const t_decline = i18next.t('friendList.actions.decline');
@@ -614,6 +681,8 @@ export class FriendList {
                         </button>
                     </div>
                 `;
+                
+                // Réattachement des événements (exactement comme votre code)
                 const buttonAccept = item.querySelector('.btn-accept');
                 const buttonReject = item.querySelector('.btn-reject');
                 const buttonBlock  = item.querySelector('.btn-block');
@@ -626,6 +695,7 @@ export class FriendList {
 
                 notifList.appendChild(item);
             });
+
         } catch (error) {
             console.error("Error fetching notifications:", error);
         }

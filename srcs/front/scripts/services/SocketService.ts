@@ -64,6 +64,8 @@ export class SocketService {
                 // Si l'URL ne contient pas 'chat', on considère que c'est non lu
                 // (Tu peux affiner cette condition si tu veux)
                 if (!window.location.href.includes('/chat')) { 
+
+                    c
                     console.log("-> Activation de la notif persistante");
                     Data.hasUnreadMessage = true; // Sauvegarde dans localStorage via ton setter
                     this.showNotificationIcon();  // Affichage visuel immédiat
@@ -91,7 +93,6 @@ export class SocketService {
         if (this.gameSocket) return;
         console.log("SocketService: Connecting to Game...");
         this.gameSocket = this.createSocketConnection("/socket-game/");
-        // J'ai retiré le code du chat qui était ici par erreur
     }
 
     public disconnectGame() {

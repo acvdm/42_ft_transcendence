@@ -648,14 +648,14 @@
     return Math.ceil((obj.byteLength || obj.size) * BASE64_OVERHEAD);
   }
   function utf8Length(str) {
-    let c = 0, length = 0;
+    let c2 = 0, length = 0;
     for (let i = 0, l = str.length; i < l; i++) {
-      c = str.charCodeAt(i);
-      if (c < 128) {
+      c2 = str.charCodeAt(i);
+      if (c2 < 128) {
         length += 1;
-      } else if (c < 2048) {
+      } else if (c2 < 2048) {
         length += 2;
-      } else if (c < 55296 || c >= 57344) {
+      } else if (c2 < 55296 || c2 >= 57344) {
         length += 3;
       } else {
         i++;
@@ -2299,8 +2299,8 @@
       if ("/" === str.charAt(i + 1)) {
         const start = i + 1;
         while (++i) {
-          const c = str.charAt(i);
-          if ("," === c)
+          const c2 = str.charAt(i);
+          if ("," === c2)
             break;
           if (i === str.length)
             break;
@@ -2313,8 +2313,8 @@
       if ("" !== next && Number(next) == next) {
         const start = i + 1;
         while (++i) {
-          const c = str.charAt(i);
-          if (null == c || Number(c) != c) {
+          const c2 = str.charAt(i);
+          if (null == c2 || Number(c2) != c2) {
             --i;
             break;
           }
@@ -3643,6 +3643,7 @@
         this.chatSocket.on("unreadNotification", (payload) => {
           console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
+            c;
             console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
             this.showNotificationIcon();
@@ -3842,9 +3843,9 @@
   var looksLikeObjectPath = (key, nsSeparator, keySeparator) => {
     nsSeparator = nsSeparator || "";
     keySeparator = keySeparator || "";
-    const possibleChars = chars2.filter((c) => nsSeparator.indexOf(c) < 0 && keySeparator.indexOf(c) < 0);
+    const possibleChars = chars2.filter((c2) => nsSeparator.indexOf(c2) < 0 && keySeparator.indexOf(c2) < 0);
     if (possibleChars.length === 0) return true;
-    const r = looksLikeObjectPathRegExpCache.getRegExp(`(${possibleChars.map((c) => c === "?" ? "\\?" : c).join("|")})`);
+    const r = looksLikeObjectPathRegExpCache.getRegExp(`(${possibleChars.map((c2) => c2 === "?" ? "\\?" : c2).join("|")})`);
     let matched = !r.test(key);
     if (!matched) {
       const ki = key.indexOf(keySeparator);
@@ -4658,12 +4659,12 @@
     toResolveHierarchy(code, fallbackCode) {
       const fallbackCodes = this.getFallbackCodes((fallbackCode === false ? [] : fallbackCode) || this.options.fallbackLng || [], code);
       const codes = [];
-      const addCode = (c) => {
-        if (!c) return;
-        if (this.isSupportedCode(c)) {
-          codes.push(c);
+      const addCode = (c2) => {
+        if (!c2) return;
+        if (this.isSupportedCode(c2)) {
+          codes.push(c2);
         } else {
-          this.logger.warn(`rejecting language code not found in supportedLngs: ${c}`);
+          this.logger.warn(`rejecting language code not found in supportedLngs: ${c2}`);
         }
       };
       if (isString(code) && (code.indexOf("-") > -1 || code.indexOf("_") > -1)) {
@@ -4899,9 +4900,9 @@
       const handleHasOptions = (key, inheritedOptions) => {
         const sep = this.nestingOptionsSeparator;
         if (key.indexOf(sep) < 0) return key;
-        const c = key.split(new RegExp(`${sep}[ ]*{`));
-        let optionsString = `{${c[1]}`;
-        key = c[0];
+        const c2 = key.split(new RegExp(`${sep}[ ]*{`));
+        let optionsString = `{${c2[1]}`;
+        key = c2[0];
         optionsString = this.interpolate(optionsString, clonedOptions);
         const matchedSingleQuotes = optionsString.match(/'/g);
         const matchedDoubleQuotes = optionsString.match(/"/g);
@@ -8604,8 +8605,14 @@
       this.listenToUpdates();
       this.setupBlockListener();
       this.registerSocketUser();
-      if (this.notificationInterval) clearInterval(this.notificationInterval);
+      if (this.notificationInterval) {
+        clearInterval(this.notificationInterval);
+      }
       this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
+      window.addEventListener("notificationUpdate", () => {
+        console.log("Friend received notification");
+        this.checkNotifications();
+      });
     }
     // AJOUT
     destroy() {
@@ -9006,21 +9013,56 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-        if (!response.ok) throw new Error("Failed to fetch pendings");
-        const requests = await response.json();
-        const pendingList = requests.data;
+        const friendsPromise = fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+        const chatPromise = fetchWithAuth(`/api/chat/unread`);
+        const [friendsRes, chatRes] = await Promise.all([friendsPromise, chatPromise]);
+        let pendingList = [];
+        let unreadMessages = [];
+        if (friendsRes.ok) {
+          const data = await friendsRes.json();
+          pendingList = data.data || [];
+        }
+        if (chatRes.ok) {
+          const data = await chatRes.json();
+          unreadMessages = data.data || [];
+        }
+        const totalNotifications = pendingList.length + unreadMessages.length;
         const notifIcon = document.getElementById("notification-icon");
-        if (pendingList.length > 0) {
+        if (totalNotifications > 0) {
           if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
         } else {
           if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
         }
         notifList.innerHTML = "";
-        if (pendingList.length === 0) {
+        if (totalNotifications === 0) {
           notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18n_default.t("friendList.no_notifications")}</div>`;
           return;
         }
+        unreadMessages.forEach((msg) => {
+          const item = document.createElement("div");
+          item.className = "flex items-center p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition cursor-pointer bg-blue-50";
+          const text = i18n_default.t("friendList.unread_messages", { count: msg.unread_count, sender: msg.sender_alias }) || `Message from ${msg.sender_alias}`;
+          item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0">
+                         <img src="/assets/basic/message_notif.png" class="w-full h-full object-contain" alt="msg">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-800 font-medium">${text}</p>
+                        <p class="text-xs text-gray-400">Click to reply</p>
+                    </div>
+                `;
+          item.addEventListener("click", () => {
+            const event = new CustomEvent("friendSelected", {
+              detail: {
+                friend: { id: msg.sender_id, alias: msg.sender_alias },
+                channelKey: msg.channel_key
+              }
+            });
+            window.dispatchEvent(event);
+            document.getElementById("notification-dropdown")?.classList.add("hidden");
+          });
+          notifList.appendChild(item);
+        });
         pendingList.forEach((req) => {
           const item = document.createElement("div");
           item.dataset.friendshipId = req.id.toString();
@@ -13774,8 +13816,8 @@
     }
     return [h | 0, s || 0, l];
   }
-  function calln(f, a, b, c) {
-    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c)).map(n2b);
+  function calln(f, a, b, c2) {
+    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c2)).map(n2b);
   }
   function hsl2rgb(h, s, l) {
     return calln(hsl2rgbn, h, s, l);
@@ -16260,9 +16302,9 @@
     };
     const a = _pointInLine(p1, cp1, t2);
     const b = _pointInLine(cp1, cp2, t2);
-    const c = _pointInLine(cp2, p2, t2);
+    const c2 = _pointInLine(cp2, p2, t2);
     const d = _pointInLine(a, b, t2);
-    const e = _pointInLine(b, c, t2);
+    const e = _pointInLine(b, c2, t2);
     return _pointInLine(d, e, t2);
   }
   var getRightToLeftAdapter = function(rectX, width) {
@@ -22217,7 +22259,7 @@
   var instances = {};
   var getChart = (key) => {
     const canvas = getCanvas(key);
-    return Object.values(instances).filter((c) => c.canvas === canvas).pop();
+    return Object.values(instances).filter((c2) => c2.canvas === canvas).pop();
   };
   function moveNumericKeys(obj, start, move) {
     const keys = Object.keys(obj);
@@ -22596,14 +22638,14 @@
       }
       this._dataChanges = [];
       const datasetCount = this.data.datasets.length;
-      const makeSet = (idx) => new Set(_dataChanges.filter((c) => c[0] === idx).map((c, i) => i + "," + c.splice(1).join(",")));
+      const makeSet = (idx) => new Set(_dataChanges.filter((c2) => c2[0] === idx).map((c2, i) => i + "," + c2.splice(1).join(",")));
       const changeSet = makeSet(0);
       for (let i = 1; i < datasetCount; i++) {
         if (!setsEqual(changeSet, makeSet(i))) {
           return;
         }
       }
-      return Array.from(changeSet).map((c) => c.split(",")).map((a) => ({
+      return Array.from(changeSet).map((c2) => c2.split(",")).map((a) => ({
         method: a[1],
         start: +a[2],
         count: +a[3]
