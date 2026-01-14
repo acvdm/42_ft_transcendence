@@ -6973,9 +6973,9 @@
         local: "JUEGO LOCAL",
         remote: "JUEGO REMOTO",
         tournament: "TORNEOS",
-        local_describe: "Play against another player on this computer",
-        remote_describe: "Connect and play with friends and more online",
-        tournament_describe: "Compete in a 4-multiplayer tournament on this computer"
+        local_describe: "Juega contra otro jugador en este ordenador.",
+        remote_describe: "Con\xE9ctate y juega con amigos y mucho m\xE1s en l\xEDnea.",
+        tournament_describe: "Compite en un torneo multijugador para 4 jugadores en este ordenador."
       },
       chat: {
         title: "Messenger",
@@ -7010,7 +7010,7 @@
         available: "Disponible",
         busy: "Ocupado",
         away: "Ausente",
-        offline: "Invisible"
+        offline: "Desconectato"
       },
       login_button: "Entrar",
       back: "Volver al inicio",
@@ -7041,7 +7041,7 @@
         available: "Disponible",
         busy: "Ocupado",
         away: "Ausente",
-        offline: "Invisible"
+        offline: "Desconectado"
       },
       fallback_username: "Espera...",
       fallback_bio: "Cargando biograf\xEDa...",
@@ -7394,7 +7394,7 @@
         available: "(Disponible)",
         busy: "(Ocupado)",
         away: "(Ausente)",
-        invisible: "(Invisible)"
+        invisible: "(Desconectado)"
       },
       themes: {
         basic: "Azul Cl\xE1sico",
