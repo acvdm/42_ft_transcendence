@@ -5931,7 +5931,8 @@
       },
       games: {
         title: "Jeux",
-        choose_mode: "Choisi ton mode de jeu",
+        choose_mode: "S\xE9lectionnez la fa\xE7on dont vous souhaitez commencer une nouvelle partie.",
+        title_mode: "CHOISISSEZ VOTRE MODE DE JEU",
         local: "JEU LOCAL",
         remote: "JEU EN LIGNE",
         tournament: "TOURNOI",
@@ -5957,20 +5958,20 @@
         no_notification: "Aucune notification"
       },
       modal: {
-        user_profile: "User Profile",
-        statistics: "Statistics",
-        games_played: "Games Played:",
-        wins: "Wins:",
-        losses: "Losses:",
-        winning_streak: "Winning streak:",
-        close: "Close",
-        change_picture: "Change Picture",
-        select_picture: "Select a picture",
-        picture_description: "Choose how you want to appear on transcendence.",
-        browse: "BROWSE",
-        delete: "DELETE",
+        user_profile: "Profil Utilisateur",
+        statistics: "Statistiques",
+        games_played: "Parties jou\xE9es :",
+        wins: "Victoires :",
+        losses: "D\xE9faites :",
+        winning_streak: "S\xE9rie de victoires :",
+        close: "Fermer",
+        change_picture: "Changer l'image",
+        select_picture: "S\xE9lectionner une image",
+        picture_description: "Choisissez comment vous voulez appara\xEEtre sur transcendence.",
+        browse: "PARCOURIR",
+        delete: "SUPPRIMER",
         ok: "OK",
-        cancel: "CANCEL"
+        cancel: "ANNULER"
       }
     },
     landing: {
@@ -6451,6 +6452,7 @@
       },
       games: {
         title: "Games",
+        title_mode: "CHOOSE YOUR GAME MODE",
         choose_mode: "Select how you would like to start a new game.",
         local: "LOCAL GAME",
         remote: "REMOTE GAME",
@@ -6972,7 +6974,8 @@
       },
       games: {
         title: "Juegos",
-        choose_mode: "Elige tu modo de juego",
+        choose_mode: "Selecciona c\xF3mo te gustar\xEDa iniciar una nueva partida.",
+        title_mode: "ELIGE TU MODO DE JUEGO",
         local: "JUEGO LOCAL",
         remote: "JUEGO REMOTO",
         tournament: "TORNEOS",
@@ -6996,6 +6999,22 @@
       notifications: {
         title: "Notificaciones",
         no_notification: "Sin notificaci\xF3n"
+      },
+      modal: {
+        user_profile: "Perfil de Usuario",
+        statistics: "Estad\xEDsticas",
+        games_played: "Partidas jugadas:",
+        wins: "Victorias:",
+        losses: "Derrotas:",
+        winning_streak: "Racha de victorias:",
+        close: "Cerrar",
+        change_picture: "Cambiar imagen",
+        select_picture: "Seleccionar una imagen",
+        picture_description: "Elige c\xF3mo quieres aparecer en transcendence.",
+        browse: "BUSCAR",
+        delete: "ELIMINAR",
+        ok: "OK",
+        cancel: "CANCELAR"
       }
     },
     landing: {
@@ -8078,16 +8097,13 @@
 
 	<div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
 		
-		<!-- Container avec left et right qui prennent toute la hauteur restante -->
 		<div class="flex gap-6 min-h-0" style="gap:80px; height: calc(100vh - 320px);">
 
-			<!-- ========= LEFT COLUMN ========= -->
-			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]" style="height: 100%;">
+			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]">
 				
-				<!-- ========= PROFILE WINDOW ========= -->
 				<div class="window flex flex-col" style="height: 190px; min-height: 190px;">
 					<div class="title-bar">
-						<div class="title-bar-text">Profile</div>
+						<div class="title-bar-text">{{homepage.profile.title}}</div>
 						<div class="title-bar-controls">
 							<button aria-label="Minimize"></button>
 							<button aria-label="Maximize"></button>
@@ -8095,31 +8111,25 @@
 						</div>
 					</div>
 
-					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="width: 500px; min-width: 500px; background-color: white;">
+					<div id="left" class="window-body flex flex-col h-full w-[700px] min-w-[700px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
 						<div class="flex flex-row w-full rounded-sm p-2"> 
-							<!-- Cadre du profil -->
 							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
 								<div class="relative w-[110px] h-[110px] flex-shrink-0">
-									<!-- l'image (profil principal) -->
 									<img id="user-profile" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75px] h-[75px] object-cover"
 										style="height: 70px; width:70px;" src="/assets/profile/Rubber_Ducky.png" alt="User avatar">
-									<!-- le cadre -->
 									<img id="user-status" class="absolute inset-0 w-full h-full object-cover pointer-events-none" src="/assets/basic/status_away_small.png" alt="Status frame">
 								</div>
 		
-								<!-- username, bio et status -->
 								<div class="flex flex-col justify-center pl-4 flex-1">
 									<div class="flex items-center gap-2 mb-1">
 										<p class="text-xl font-semibold" id="user-name">{{homepage.profile.username}}</p>
 		
-										<!-- selection du status = dynamique -->
 										<div class="relative">
 											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
-												<span id="current-status-text">(Available)</span>
+												<span id="current-status-text">({{homepage.profile.status.available}})</span>
 												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
 											</button>
 		
-											<!-- Menu dropdown pour le status -->
 											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
 												<button class="status-option w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2" data-status="available">
 													<span class="w-2 h-2 rounded-full"></span>
@@ -8146,16 +8156,12 @@
 									</div>
 								</div>
 		
-								<!-- Notifications -->
 								<div class="ml-auto flex items-start relative">
 									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
-										<img id="notification-icon" 
-											src="/assets/basic/no_notification.png" 
-											alt="Notifications" 
-											class="w-full h-full object-contain">
+										<img id="notification-icon" src="/assets/basic/no_notification.png" alt="Notifications" class="w-full h-full object-contain">
 											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 									</button>
-									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 w-150 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
 										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
 											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
 												{{homepage.notifications.title}}
@@ -8171,8 +8177,7 @@
 					</div>
 				</div>
 
-				<!-- ========= GAMES WINDOW ========= -->
-				<div class="window flex flex-col" style="flex: 1; min-height: 0;">
+				<div class="window flex flex-col flex-1 min-h-0">
 					<div class="title-bar">
 						<div class="title-bar-text">{{homepage.games.title}}</div>
 						<div class="title-bar-controls">
@@ -8182,49 +8187,56 @@
 						</div>
 					</div>
 
-					<div id="left" class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1" style="background-color: white;">
+					<div class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1">
 						<div class="bg-white p-6 flex flex-col flex-1">
-							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-200" style="padding-bottom: 25px;">CHOOSE YOUR GAME MODE</h1>
-							<div class="text-center text-grey-400" style="color:grey; padding-top: 20px;">
+							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-300" style="padding-bottom: 25px;">{{homepage.games.title_mode}}</h1>
+							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 25px;">
 								<p>{{homepage.games.choose_mode}}</p>
 							</div>
-							<div class="flex flex-col gap-4 flex-1 justify-center items-center">
-								<button id="local-game" 
-									class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
-									{{homepage.games.local}}
-								</button>
-								<p>{{homepage.games.local_describe}}</p>
+							<div class="flex flex-col flex-1 items-center justify-between py-8
+">
+                                <div class="flex flex-col items-center gap-1" style="padding-bottom: 15px;">
+									<p class="text-sm text-black" style="padding-bottom: 25px; color:black;">{{homepage.games.local_describe}}</p>
+                                    <button id="local-game" 
+                                        class="w-50 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                            transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;" >
+                                        {{homepage.games.local}}
+                                    </button>
+                                </div>
 
-								<button id="remote-game" 
-									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									{{homepage.games.remote}}
-								</button>
-								<p>{{homepage.games.remote_describe}}</p>
+                                <div class="flex flex-col items-center gap-2">
+									<p class="text-sm text-black" style="padding-bottom: 25px; color:black;">{{homepage.games.remote_describe}}</p>
+                                    <button id="remote-game" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                            transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+                                        {{homepage.games.remote}}
+                                    </button>
 
-								<button id="tournament-game" 
-									class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
-									{{homepage.games.tournament}}
-								</button>
-								<p class="text-sm text-gray-400" style="padding-bottom: 35px; color:grey;"></p>{{homepage.games.tournament_describe}}</p>
-							</div>
+                                </div>
+
+                                <div class="flex flex-col items-center gap-2" style="padding-bottom: 35px;">
+									<p class="text-sm text-black" style="padding-bottom: 35px; color:black;">{{homepage.games.tournament_describe}}</p>
+                                    <button id="tournament-game" 
+                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                            transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
+                                        {{homepage.games.tournament}}
+                                    </button>
+
+                                </div>
+                            </div>
 						</div>
 					</div>
 				</div>
-
 			</div>
 
 
-			<!-- ========= RIGHT WINDOW ========= -->
-			<div class="window flex flex-col min-w-0" style="flex: 1; height: 100%;">
+			<div class="window flex flex-col flex-1 min-w-0" style="flex: 1; height: 100%;">
 				<div class="title-bar">
 					<div class="title-bar-text">{{homepage.chat.title}}</div>
 					<div class="title-bar-controls">
@@ -8235,50 +8247,36 @@
 				</div>
 
 				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-
 					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-
-						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[350px] min-w-[350px] relative z-10 min-h-0 h-full"  style="width:350px; min-width: 350px;">
+						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[400px] min-w-[400px] h-full" style="width: 400px; min-width: 400px;">
 							<div class="flex flex-row items-center justify-between">
 								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
 								
 								<div class="ml-auto flex items-center mb-3 relative">
 									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
-										<img id="add-friend-icon" 
-											src="/assets/basic/1441.png" 
-											alt="Friends button" 
-											class="w-full h-full object-contain">
+										<img id="add-friend-icon" src="/assets/basic/1441.png" alt="Friends button" class="w-full h-full object-contain">
 									</button>
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
 										<p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
-										<input type="text" 
-											id="friend-search-input" 
-											placeholder="Type in username or email" 
-											class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
 										<div class="flex gap-2">
-											<button id="send-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+											<button id="send-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
 												{{homepage.chat.send_request}}
 											</button>
-											<button id="cancel-friend-request" 
-												class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+											<button id="cancel-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
 												{{homepage.chat.cancel}}
 											</button>
 										</div>
-										<div id="friend-request-message" class="mt-2 text-xs hidden"></div>
 									</div>
 								</div>
 							</div>
 
 							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
-
 								<details open class="group">
 									<summary class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
 										{{homepage.chat.contact}}
 									</summary>
-
-									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2">
-										</div>
+									<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2"></div>
 								</details>
 							</div>
 						</div>
@@ -8289,18 +8287,11 @@
 						</div>
 
 						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-							
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
-										<img id="chat-header-avatar" 
-											class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover"
-											src="" 
-											alt="User avatar">
-										<img id="chat-header-status" 
-											class="absolute inset-0 w-full h-full object-contain" 
-											src="/assets/basic/status_online_small.png" 
-											alt="Status frame">
+										<img id="chat-header-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover" src="" alt="User avatar">
+										<img id="chat-header-status" class="absolute inset-0 w-full h-full object-contain" src="/assets/basic/status_online_small.png" alt="Status frame">
 									</div>
 									<div class="flex flex-col justify-start leading-tight">
 										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
@@ -8310,227 +8301,118 @@
 								
 								<div class="relative self-start mt-2">
 									<button id="chat-options-button" class="p-1 hover:bg-gray-100 rounded-full transition duration-200 cursor-pointer">
-										<img src="/assets/chat/meatball.png"
-											 alt="options"
-											 class="w-6 h-6 object-contain"
-											 style="width: 15px; height: 15px; vertical-align: -25px;">
+										<img src="/assets/chat/meatball.png" alt="options" class="w-6 h-6 object-contain" style="width: 15px; height: 15px; vertical-align: -25px;">
 									</button>
 
 									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-    
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/view_profile.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">
-												{{homepage.chat.view_profile}}
-											</button>
+											<img src="/assets/basic/view_profile.png" class="w-6 h-6 object-cover rounded" alt="avatar">
+											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.view_profile}}</button>
 										</div>
-
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/game_notification.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">
-												{{homepage.chat.invite_game}}
-											</button>
+											<img src="/assets/basic/game_notification.png" class="w-6 h-6 object-cover rounded" alt="avatar">
+											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.invite_game}}</button>
 										</div>
-
 										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
-											<div class="w-6 h-6 flex items-center justify-center flex-shrink-0">
-												<img src="/assets/basic/block.png" 
-													class="w-6 h-6 object-cover rounded"
-													alt="avatar">
-											</div>
-											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">
-												{{homepage.chat.block_user}}
-											</button>
+											<img src="/assets/basic/block.png" class="w-6 h-6 object-cover rounded" alt="avatar">
+											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.block_user}}</button>
 										</div>
-
 									</div>
-
 								</div>
-
-
 							</div>
-
-
 
 							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 
 							<div class="flex flex-col">
-								<input type="text" id="chat-input" placeholder="\xC9crire un message..." class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-
-								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+								<input type="text" id="chat-input" placeholder="{{homepage.chat.input_placeholder}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url('/assets/chat/chat_icons_background.png');">
 									<button id="select-emoticon" class="h-6">
 										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
 											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
 											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
 												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
 											</div>
 										</div>
 									</button>
-
-									<button id="select-animation" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-											</div>
-										</div>
-									</button>
-
-									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-
-									<button id="change-font" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-
-										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-										</div>
-
-										</div>
-									</button>
-
-									<div class="relative">
-									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-									</button>
-
-									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-													
-										<div class="grid grid-cols-3 gap-2">
-														
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/fish_background.jpg')"
-													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-											</button>
-
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/heart_background.jpg')"
-													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-											</button>
-
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-											</button>
-
-											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-												Default background
-											</button>
-										</div>
 									</div>
-								</div>
-						</div>
-					</div> 
-				</div>
-			</div> 
+							</div>
+						</div> 
+					</div>
+				</div> 
+			</div>
 		</div>
-
 	</div>
 
-<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-    <div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-        <div class="title-bar">
-            <div class="title-bar-text">User Profile</div>
-            <div class="title-bar-controls">
-                <button id="close-friend-modal" aria-label="Close"></button>
-            </div>
-        </div>
-        <div class="window-body p-6">
-            
-            <div class="flex flex-row gap-6 mb-6 items-center">
-                
-                <div class="relative w-[130px] h-[130px] flex-shrink-0">
-                    <img id="friend-modal-status" 
-                            class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                            src="/assets/basic/status_frame_online_large.png">
-                    
-                    <img id="friend-modal-avatar" 
-                            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;"
-                            src="/assets/basic/default.png">
-                </div>
+	<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+		<div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+			<div class="title-bar">
+				<div class="title-bar-text">{{homepage.modal.user_profile}}</div>
+				<div class="title-bar-controls">
+					<button id="close-friend-modal" aria-label="Close"></button>
+				</div>
+			</div>
+			<div class="window-body p-6">
+				<div class="flex flex-row gap-6 mb-6 items-center">
+					<div class="relative w-[130px] h-[130px] flex-shrink-0">
+						<img id="friend-modal-status" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none" src="/assets/basic/status_frame_online_large.png">
+						<img id="friend-modal-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90px] h-[90px] object-cover z-10 bg-gray-200" style="width: 80px; height: 80px;" src="/assets/basic/default.png">
+					</div>
+					<div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
+						<h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">{{homepage.profile.username}}</h2>
+						<p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">{{homepage.profile.bio}}</p>
+					</div>	
+				</div>
 
-                <div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
-                    <h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 truncate">Username</h2>
-                    
-                    <p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words">No bio available.</p>
-                </div>	
-            </div>
+				<fieldset class="border border-gray-300 p-4 rounded-sm">
+					<legend class="text-sm px-2 text-gray-600">{{homepage.modal.statistics}}</legend>
+					<div class="grid grid-cols-2 gap-4 text-sm">
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.games_played}}</span>
+							<span id="friend-stat-games" class="font-bold">0</span>
+						</div>
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.wins}}</span>
+							<span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+						</div>
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.losses}}</span>
+							<span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+						</div>
+						<div class="flex justify-between border-b border-gray-100 pb-1">
+							<span>{{homepage.modal.winning_streak}}</span>
+							<span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
+						</div>
+					</div>
+				</fieldset>
 
-            <fieldset class="border border-gray-300 p-4 rounded-sm">
-                <legend class="text-sm px-2 text-gray-600">Statistics</legend>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Games Played:</span>
-                        <span id="friend-stat-games" class="font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Wins:</span>
-                        <span id="friend-stat-wins" class="font-bold text-green-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Losses:</span>
-                        <span id="friend-stat-losses" class="font-bold text-red-600">0</span>
-                    </div>
-                    <div class="flex justify-between border-b border-gray-100 pb-1">
-                        <span>Winning streak:</span>
-                        <span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
-                    </div>
-                </div>
-            </fieldset>
+				<div class="flex justify-end mt-4">
+					<button id="close-friend-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm">{{homepage.modal.close}}</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-            <div class="flex justify-end mt-4">
-                    <button id="close-friend-modal-button" 
-                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                        px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
- <!-- MODALE POUR L'AVATAR -->
-
-
-    <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Change Picture</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Minimize"></button>
-                    <button aria-label="Maximize"></button>
-                    <button id="close-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6">
-                <div class="mb-6">
-                    <h2 class="text-xl mb-1">Select a picture</h2>
-                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
-                </div>
-                
-                <div class="flex flex-row gap-6">
-                    <div class="flex-1">
-                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
-                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
-                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
+	<div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+		<div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+			<div class="title-bar">
+				<div class="title-bar-text">{{homepage.modal.change_picture}}</div>
+				<div class="title-bar-controls">
+					<button aria-label="Minimize"></button>
+					<button aria-label="Maximize"></button>
+					<button id="close-modal" aria-label="Close"></button>
+				</div>
+			</div>
+			<div class="window-body p-6">
+				<div class="mb-6">
+					<h2 class="text-xl mb-1">{{homepage.modal.select_picture}}</h2>
+					<p class="text-gray-500 text-sm">{{homepage.modal.picture_description}}</p>
+				</div>
+				
+				<div class="flex flex-row gap-6">
+					<div class="flex-1">
+						<div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+							<div id="modal-grid" class="grid grid-cols-4 gap-2">
+								<img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
@@ -8546,56 +8428,32 @@
                                 <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
                                 <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
+							</div>
+						</div>
+					</div>
 
-                    <div class="flex flex-col items-center gap-4 w-[200px]">
-                        <div class="relative w-[170px] h-[170px]">
-                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                            src="/assets/basic/status_frame_offline_large.png">
-                            
-                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-                            src="/assets/basic/default.png">
-                        </div>
+					<div class="flex flex-col items-center gap-4 w-[200px]">
+						<div class="relative w-[170px] h-[170px]">
+							<img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none" src="/assets/basic/status_frame_offline_large.png">
+							<img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
+						</div>
 
-                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
-                            <input type="file" id="file-input" accept="image/*" hidden>
+						<div class="flex flex-col gap-2 w-full mt-2 h-64">
+							<input type="file" id="file-input" accept="image/*" hidden>
+							<button id="browse-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.browse}}</button>
+							<button id="delete-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.delete}}</button>
 
-                            <button id="browse-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            BROWSE
-                            </button>
-                            
-                            <button id="delete-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            DELETE
-                            </button>
-
-                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
-                                <button id="validation-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        OK
-                                </button>
-                                <button id="cancel-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        CANCEL
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>`;
+							<div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+								<button id="validation-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.ok}}</button>
+								<button id="cancel-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.cancel}}</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>`;
 
   // scripts/components/FriendList.ts
   var FriendList = class {
@@ -10132,6 +9990,7 @@
     html = html.replace(/\{\{homepage.profile\.status.offline\}\}/g, i18n_default.t("homepage.profile.status.offline"));
     html = html.replace(/\{\{homepage.games\.title\}\}/g, i18n_default.t("homepage.games.title"));
     html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18n_default.t("homepage.games.choose_mode"));
+    html = html.replace(/\{\{homepage.games\.title_mode\}\}/g, i18n_default.t("homepage.games.title_mode"));
     html = html.replace(/\{\{homepage.games\.local\}\}/g, i18n_default.t("homepage.games.local"));
     html = html.replace(/\{\{homepage.games\.remote\}\}/g, i18n_default.t("homepage.games.remote"));
     html = html.replace(/\{\{homepage.games\.tournament\}\}/g, i18n_default.t("homepage.games.tournament"));
@@ -10151,6 +10010,20 @@
     html = html.replace(/\{\{homepage.chat\.block_user\}\}/g, i18n_default.t("homepage.chat.block_user"));
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18n_default.t("homepage.notifications.title"));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18n_default.t("homepage.notifications.no_notification"));
+    html = html.replace(/\{\{homepage\.modal\.user_profile\}\}/g, i18n_default.t("homepage.modal.user_profile"));
+    html = html.replace(/\{\{homepage\.modal\.statistics\}\}/g, i18n_default.t("homepage.modal.statistics"));
+    html = html.replace(/\{\{homepage\.modal\.games_played\}\}/g, i18n_default.t("homepage.modal.games_played"));
+    html = html.replace(/\{\{homepage\.modal\.wins\}\}/g, i18n_default.t("homepage.modal.wins"));
+    html = html.replace(/\{\{homepage\.modal\.losses\}\}/g, i18n_default.t("homepage.modal.losses"));
+    html = html.replace(/\{\{homepage\.modal\.winning_streak\}\}/g, i18n_default.t("homepage.modal.winning_streak"));
+    html = html.replace(/\{\{homepage\.modal\.close\}\}/g, i18n_default.t("homepage.modal.close"));
+    html = html.replace(/\{\{homepage\.modal\.change_picture\}\}/g, i18n_default.t("homepage.modal.change_picture"));
+    html = html.replace(/\{\{homepage\.modal\.select_picture\}\}/g, i18n_default.t("homepage.modal.select_picture"));
+    html = html.replace(/\{\{homepage\.modal\.picture_description\}\}/g, i18n_default.t("homepage.modal.picture_description"));
+    html = html.replace(/\{\{homepage\.modal\.browse\}\}/g, i18n_default.t("homepage.modal.browse"));
+    html = html.replace(/\{\{homepage\.modal\.delete\}\}/g, i18n_default.t("homepage.modal.delete"));
+    html = html.replace(/\{\{homepage\.modal\.ok\}\}/g, i18n_default.t("homepage.modal.ok"));
+    html = html.replace(/\{\{homepage\.modal\.cancel\}\}/g, i18n_default.t("homepage.modal.cancel"));
     return html;
   }
   function afterRender() {

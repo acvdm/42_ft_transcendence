@@ -20,7 +20,8 @@
     },
     "games": {
       "title": "Jeux",
-      "choose_mode": "Choisi ton mode de jeu",
+      "choose_mode": "Sélectionnez la façon dont vous souhaitez commencer une nouvelle partie.",
+      "title_mode": "CHOISISSEZ VOTRE MODE DE JEU",
       "local": "JEU LOCAL",
       "remote": "JEU EN LIGNE",
       "tournament": "TOURNOI",
@@ -46,20 +47,20 @@
       "no_notification": "Aucune notification"
     },
     "modal": {
-      "user_profile": "User Profile",
-      "statistics": "Statistics",
-      "games_played": "Games Played:",
-      "wins": "Wins:",
-      "losses": "Losses:",
-      "winning_streak": "Winning streak:",
-      "close": "Close",
-      "change_picture": "Change Picture",
-      "select_picture": "Select a picture",
-      "picture_description": "Choose how you want to appear on transcendence.",
-      "browse": "BROWSE",
-      "delete": "DELETE",
+      "user_profile": "Profil Utilisateur",
+      "statistics": "Statistiques",
+      "games_played": "Parties jouées :",
+      "wins": "Victoires :",
+      "losses": "Défaites :",
+      "winning_streak": "Série de victoires :",
+      "close": "Fermer",
+      "change_picture": "Changer l'image",
+      "select_picture": "Sélectionner une image",
+      "picture_description": "Choisissez comment vous voulez apparaître sur transcendence.",
+      "browse": "PARCOURIR",
+      "delete": "SUPPRIMER",
       "ok": "OK",
-      "cancel": "CANCEL"
+      "cancel": "ANNULER"
     }
   },
 

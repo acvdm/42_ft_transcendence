@@ -39,6 +39,7 @@ export function render(): string {
 
     html = html.replace(/\{\{homepage.games\.title\}\}/g, i18next.t('homepage.games.title'));
     html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18next.t('homepage.games.choose_mode'));
+    html = html.replace(/\{\{homepage.games\.title_mode\}\}/g, i18next.t('homepage.games.title_mode'));
     html = html.replace(/\{\{homepage.games\.local\}\}/g, i18next.t('homepage.games.local'));
     html = html.replace(/\{\{homepage.games\.remote\}\}/g, i18next.t('homepage.games.remote'));
     html = html.replace(/\{\{homepage.games\.tournament\}\}/g, i18next.t('homepage.games.tournament'));
@@ -60,6 +61,21 @@ export function render(): string {
 
     html = html.replace(/\{\{homepage.notifications\.title\}\}/g, i18next.t('homepage.notifications.title'));
     html = html.replace(/\{\{homepage.notifications\.no_notification\}\}/g, i18next.t('homepage.notifications.no_notification'));
+
+    html = html.replace(/\{\{homepage\.modal\.user_profile\}\}/g, i18next.t('homepage.modal.user_profile'));
+    html = html.replace(/\{\{homepage\.modal\.statistics\}\}/g, i18next.t('homepage.modal.statistics'));
+    html = html.replace(/\{\{homepage\.modal\.games_played\}\}/g, i18next.t('homepage.modal.games_played'));
+    html = html.replace(/\{\{homepage\.modal\.wins\}\}/g, i18next.t('homepage.modal.wins'));
+    html = html.replace(/\{\{homepage\.modal\.losses\}\}/g, i18next.t('homepage.modal.losses'));
+    html = html.replace(/\{\{homepage\.modal\.winning_streak\}\}/g, i18next.t('homepage.modal.winning_streak'));
+    html = html.replace(/\{\{homepage\.modal\.close\}\}/g, i18next.t('homepage.modal.close'));
+    html = html.replace(/\{\{homepage\.modal\.change_picture\}\}/g, i18next.t('homepage.modal.change_picture'));
+    html = html.replace(/\{\{homepage\.modal\.select_picture\}\}/g, i18next.t('homepage.modal.select_picture'));
+    html = html.replace(/\{\{homepage\.modal\.picture_description\}\}/g, i18next.t('homepage.modal.picture_description'));
+    html = html.replace(/\{\{homepage\.modal\.browse\}\}/g, i18next.t('homepage.modal.browse'));
+    html = html.replace(/\{\{homepage\.modal\.delete\}\}/g, i18next.t('homepage.modal.delete'));
+    html = html.replace(/\{\{homepage\.modal\.ok\}\}/g, i18next.t('homepage.modal.ok'));
+    html = html.replace(/\{\{homepage\.modal\.cancel\}\}/g, i18next.t('homepage.modal.cancel'));
 
     return html;
 }
