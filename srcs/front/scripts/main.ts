@@ -282,12 +282,12 @@ const handleLocationChange = () => {
 
                     handleLocationChange();
 
-                    // const display = document.getElementById('current-lang-display');
-                    // if (display) display.textContent = lang.toUpperCase();
-                    // //fermer le menu
-                    // const menuContent = document.getElementById('lang-menu-content');
-                    // if (menuContent)
-                    //     menuContent.classList.add('hidden');
+                    const display = document.getElementById('current-lang-display');
+                    if (display) display.textContent = lang.toUpperCase();
+                    //fermer le menu
+                    const menuContent = document.getElementById('lang-menu-content');
+                    if (menuContent)
+                        menuContent.classList.add('hidden');
                 }
                     
                     

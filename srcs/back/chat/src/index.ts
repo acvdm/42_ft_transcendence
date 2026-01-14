@@ -7,7 +7,7 @@ import { Socket, Server } from 'socket.io'; // <--- AJOUT DE 'Server' ICI
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
 import { UnauthorizedError } from './utils/error.js';
-import { updateLastRead, hasUnreadMessages } from './repositories/channel_reads.js'
+import { updateLastRead, hasUnreadMessages, getUnreadConversations } from './repositories/channel_reads.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -128,6 +128,8 @@ fastify.ready().then(() => {
                 console.error("Erreur checkUnread:", err);
             }
         });
+
+        
         
         socket.on('chatMessage', async (data: any) => { 
             await chatMessage(fastify.io, data, db); 
@@ -271,6 +273,34 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
         console.error("Critical error in chatMessage :", err);
     }   
 }
+
+fastify.get('/unread', async (request, reply) => {
+    // 1. On récupère le token dans le header "Authorization"
+    const authHeader = request.headers.authorization;
+    if (!authHeader) {
+        return reply.code(401).send({ success: false, error: "No token provided" });
+    }
+
+    try {
+        // 2. On nettoie le token (enlève "Bearer ") et on le vérifie
+        const token = authHeader.replace('Bearer ', '');
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        const userId = decoded.sub; // On a l'ID de l'utilisateur !
+
+        // 3. On demande à la DB les conversations non lues
+        const unreadConvs = await getUnreadConversations(db, userId);
+
+        // 4. On renvoie la liste au front
+        return reply.send({
+            success: true,
+            data: unreadConvs
+        });
+
+    } catch (err) {
+        console.error("Error fetching unread:", err);
+        return reply.code(401).send({ success: false, error: "Invalid token" });
+    }
+});
 
 // 3. Route Health Check
 fastify.get('/health', async () => {

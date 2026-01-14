@@ -39,7 +39,7 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign in to Transcendence
+			{{loginPage.welcome}}
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
@@ -49,19 +49,19 @@
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 		
 				<!-- Mot de passe -->
-				<input type="password" placeholder="Enter your password" id="password-input"
+				<input type="password" placeholder="{{loginPage.password}}" id="password-input"
 					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
 
 				<!-- Status -> disponible, busy, not displayed -->
 				<div class="flex items-center justify-between mb-3 text-sm">
 					<div class="flex items-center gap-1 mb-3">
-						<span> Sign in as:</span>
+						<span> {{loginPage.connect_as}}</span>
 						<div class="flex items-center gap-1">
 							<select id="status-input" class="bg-transparent focus:outline-none text-sm">
-								<option value="available">Available</option>
-								<option value="busy">Busy</option>
-								<option value="away">Away</option>
-								<option value="offline">Appear offline</option>
+								<option value="available">{{loginPage.status.available}}</option>
+								<option value="busy">{{loginPage.status.busy}}</option>
+								<option value="away">{{loginPage.status.away}}</option>
+								<option value="offline">{{loginPage.status.offline}}</option>
 							</select>
 						</div>
 					</div>
@@ -72,11 +72,11 @@
 			</div>
 			<!-- Bouton de connexion/Register/Guest -->
 			<div class="flex flex-col gap-2 w-48">
-				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
+				<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{loginPage.login-button}}</button>
 			</div>
 
 			<div>
-				<button id="back-button" class="text-sm" style="color: grey;">Back to landing page</button>
+				<button id="back-button" class="text-sm" style="color: grey;">{{loginPage.back}}</button>
 			</div>
 	</div>
 
@@ -85,15 +85,15 @@
 	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
         <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
             <div class="title-bar">
-                <div class="title-bar-text">Two-Factor Authentication</div>
+                <div class="title-bar-text">{{loginPage.2fa}}</div>
                 <div class="title-bar-controls">
                     <button id="close-2fa-modal" aria-label="Close"></button>
                 </div>
             </div>
             <div class="window-body p-6 flex flex-col items-center gap-4">
                 <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Security Check</h2>
-                    <p class="text-xs text-gray-600 mb-4">Please enter the security code.</p>
+                    <h2 class="text-lg font-bold mb-2">{{loginPage.security}}</h2>
+                    <p class="text-xs text-gray-600 mb-4">{{loginPage.enter_code}}</p>
                 </div>
 
                 <div class="w-full flex flex-col gap-2 mt-2">
@@ -110,7 +110,7 @@
                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                 px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
-                        VERIFY
+                        {{loginPage.verify_button}}
                     </button>
                 </div>
             </div>
@@ -648,14 +648,14 @@
     return Math.ceil((obj.byteLength || obj.size) * BASE64_OVERHEAD);
   }
   function utf8Length(str) {
-    let c = 0, length = 0;
+    let c2 = 0, length = 0;
     for (let i = 0, l = str.length; i < l; i++) {
-      c = str.charCodeAt(i);
-      if (c < 128) {
+      c2 = str.charCodeAt(i);
+      if (c2 < 128) {
         length += 1;
-      } else if (c < 2048) {
+      } else if (c2 < 2048) {
         length += 2;
-      } else if (c < 55296 || c >= 57344) {
+      } else if (c2 < 55296 || c2 >= 57344) {
         length += 3;
       } else {
         i++;
@@ -2299,8 +2299,8 @@
       if ("/" === str.charAt(i + 1)) {
         const start = i + 1;
         while (++i) {
-          const c = str.charAt(i);
-          if ("," === c)
+          const c2 = str.charAt(i);
+          if ("," === c2)
             break;
           if (i === str.length)
             break;
@@ -2313,8 +2313,8 @@
       if ("" !== next && Number(next) == next) {
         const start = i + 1;
         while (++i) {
-          const c = str.charAt(i);
-          if (null == c || Number(c) != c) {
+          const c2 = str.charAt(i);
+          if (null == c2 || Number(c2) != c2) {
             --i;
             break;
           }
@@ -3643,6 +3643,7 @@
         this.chatSocket.on("unreadNotification", (payload) => {
           console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
+            c;
             console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
             this.showNotificationIcon();
@@ -3694,318 +3695,6 @@
     }
   };
   var SocketService_default = SocketService;
-
-  // scripts/components/Data.ts
-  var Data = class {
-    static get hasUnreadMessage() {
-      return localStorage.getItem("hasUnreadMessage") === "true";
-    }
-    // Écriture dans le localStorage
-    static set hasUnreadMessage(value2) {
-      localStorage.setItem("hasUnreadMessage", String(value2));
-    }
-  };
-  var globalPath = "/assets/emoticons/";
-  var animationPath = "/assets/animated/";
-  var gamePath = "/assets/game/";
-  var appThemes = {
-    "basic": {
-      name: "Classic Blue",
-      headerUrl: "/assets/basic/background.jpg",
-      navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
-      bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)",
-      textColor: "#3E73B0"
-    },
-    "bamboo": {
-      name: "Zen Bamboo",
-      headerUrl: "/assets/headers/bamboo_header.jpg",
-      navColor: "linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)",
-      bgColor: "linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)",
-      textColor: "#33691E"
-    },
-    "cherry": {
-      name: "Cherry Blossom",
-      headerUrl: "/assets/headers/blossoms_header.jpg",
-      navColor: "linear-gradient(to bottom, #F48FB1 0%, #EC407A 50%, #C2185B 100%)",
-      bgColor: "linear-gradient(to bottom, #FFBBB4 0%, #ffffff 50%, #FFBBB4 100%)",
-      textColor: "#C2185B"
-    },
-    "mountain": {
-      name: "Misty Mountains",
-      headerUrl: "/assets/headers/dawn_header.png",
-      navColor: "linear-gradient(to bottom, #5C6BC0 0%, #3949AB 50%, #283593 100%)",
-      bgColor: "linear-gradient(to bottom, #6F94BF 0%, #ffffff 50%, #6F94BF 100%)",
-      textColor: "#283593"
-    },
-    "punk": {
-      name: "Cyber Punk",
-      headerUrl: "/assets/headers/punk_header.jpg",
-      navColor: "linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)",
-      bgColor: "linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)",
-      textColor: "#631C6E"
-    },
-    "dotted": {
-      name: "Spring Dots",
-      headerUrl: "/assets/headers/dott_header.png",
-      navColor: "linear-gradient(to bottom, #9CCC65 0%, #7CB342 50%, #558B2F 100%)",
-      bgColor: "linear-gradient(to bottom, #8BC72C 0%, #ffffff 50%, #8BC72C 100%)",
-      textColor: "#558B2F"
-    },
-    "sunset": {
-      name: "Golden Sunset",
-      headerUrl: "/assets/headers/field_header.png",
-      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
-      bgColor: "linear-gradient(to bottom, #F7A624 0%, #ffffff 50%, #F7A624 100%)",
-      textColor: "#E65100"
-    },
-    "football": {
-      name: "Stadium",
-      headerUrl: "/assets/headers/football_header.png",
-      navColor: "linear-gradient(to bottom, #66BB6A 0%, #43A047 50%, #2E7D32 100%)",
-      bgColor: "linear-gradient(to bottom, #73AD4E 0%, #ffffff 50%, #73AD4E 100%)",
-      textColor: "#2E7D32"
-    },
-    "spring": {
-      name: "Spring Garden",
-      headerUrl: "/assets/headers/hill_header.png",
-      navColor: "linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)",
-      bgColor: "linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)",
-      textColor: "#6CB85A"
-    },
-    "love": {
-      name: "Lovely Heart",
-      headerUrl: "/assets/headers/love_header.jpg",
-      navColor: "linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)",
-      bgColor: "linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)",
-      textColor: "#7E2223"
-    },
-    "diary": {
-      name: "Dear Diary",
-      headerUrl: "/assets/headers/diary_header.jpg",
-      navColor: "linear-gradient(to bottom, #D658A4 0%, #BA3083 50%, #D90082 100%)",
-      bgColor: "linear-gradient(to bottom, #E297B6 0%, #ffffff 50%, #E297B6 100%)",
-      textColor: "#D90082"
-    },
-    "branches": {
-      name: "Winter Branches",
-      headerUrl: "/assets/headers/silhouette_header.jpg",
-      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
-      bgColor: "linear-gradient(to bottom, #F79B34 0%, #ffffff 50%, #F79B34 100%)",
-      textColor: "#E65100"
-    },
-    "purple": {
-      name: "Purple Dreams",
-      headerUrl: "/assets/headers/spring_header.png",
-      navColor: "linear-gradient(to bottom, #9C27B0 0%, #7B1FA2 50%, #6A1B9A 100%)",
-      bgColor: "linear-gradient(to bottom, #663A92 0%, #ffffff 50%, #663A92 100%)",
-      textColor: "#6A1B9A"
-    },
-    "abstract": {
-      name: "Abstract Flow",
-      headerUrl: "/assets/headers/weird_header.jpg",
-      navColor: "linear-gradient(to bottom, #FF6B9D 0%, #FF1744 50%, #D50000 100%)",
-      bgColor: "linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)",
-      textColor: "#D50000"
-    }
-  };
-  var ballEmoticons = {
-    "smile": gamePath + "smiling.png",
-    "surprised": gamePath + "surprised.png",
-    "confused": gamePath + "confused.png",
-    "hot": gamePath + "hot.png",
-    "teeth_smile": gamePath + "teeth_smile.png",
-    "tongue": gamePath + "tongue_smile.png",
-    "sad": gamePath + "sad.png",
-    "disappointed": gamePath + "disappointed.png",
-    "embarrassed": gamePath + "embarrassed.png",
-    "angry": gamePath + "angry.png",
-    "nerd": gamePath + "nerd.png",
-    "teeth": gamePath + "teeth.png",
-    "sarcastic": gamePath + "sarcastic.png",
-    "sick": gamePath + "sick.png",
-    "devil": gamePath + "devil_smile.png"
-  };
-  var gameBackgrounds = {
-    "classic": "#B8E8F9",
-    // Bleu pastel clair
-    "mint": "#D4F1E8",
-    // Vert menthe
-    "lavender": "#E6E6FA",
-    // Lavande
-    "rose": "#FFE1E9",
-    // Rose
-    "lemon": "#FFFACD",
-    // Citron
-    "sky": "#B0E0E6",
-    // Bleu ciel
-    "coral": "#FFCCCB",
-    // Corail
-    "lilac": "#DCD0FF",
-    // Lilas
-    "sage": "#C8E6C9",
-    // Vert sauge
-    "powder": "#B0C4DE",
-    // Bleu poudré
-    "blush": "#FFC0CB",
-    // Rose poudré
-    "apricot": "#FFDAB9"
-    // Abricot
-  };
-  var statusImages = {
-    "available": "/assets/basic/status_online_small.png",
-    "online": "/assets/basic/status_online_small.png",
-    "busy": "/assets/basic/status_busy_small.png",
-    "away": "/assets/basic/status_away_small.png",
-    "invisible": "/assets/basic/status_offline_small.png",
-    "offline": "/assets/basic/status_offline_small.png"
-  };
-  var statusLabels = {
-    "available": "(Available)",
-    "busy": "(Busy)",
-    "away": "(Away)",
-    "invisible": "(Appear offline)"
-  };
-  var getStatusDot = (status) => {
-    switch (status) {
-      case "available":
-        return "/assets/friends/online-dot.png";
-      case "busy":
-        return "/assets/friends/busy-dot.png";
-      case "away":
-        return "/assets/friends/away-dot.png";
-      default:
-        return "/assets/friends/offline-dot.png";
-    }
-  };
-  var animations = {
-    "(boucy_ball)": animationPath + "bouncy_ball.gif",
-    "(bow)": animationPath + "bow.gif",
-    "(crying)": animationPath + "crying.gif",
-    "(dancer)": animationPath + "dancer.gif",
-    "(dancing_pig)": animationPath + "dancing_pig.gif",
-    "(frog)": animationPath + "frog.gif",
-    "(guitar_smash)": animationPath + "guitar_smash.gif",
-    "(heart)": animationPath + "heart.gif",
-    "(kiss)": animationPath + "kiss.gif",
-    "(knock)": animationPath + "knock.gif",
-    "(silly_face)": animationPath + "silly_face.gif",
-    "(ufo)": animationPath + "ufo.gif",
-    "(water_balloon)": animationPath + "water_balloon.gif"
-  };
-  var icons = {
-    "(boucy_ball)": animationPath + "bouncy_ball.png",
-    "(bow)": animationPath + "bow.jpg",
-    "(crying)": animationPath + "crying.png",
-    "(dancer)": animationPath + "dancer.png",
-    "(dancing_pig)": animationPath + "dancing_pig.png",
-    "(frog)": animationPath + "frog.png",
-    "(guitar_smash)": animationPath + "guitar_smash.png",
-    "(heart)": animationPath + "heart.png",
-    "(kiss)": animationPath + "kiss.png",
-    "(knock)": animationPath + "knock.png",
-    "(silly_face)": animationPath + "silly_face.png",
-    "(ufo)": animationPath + "ufo.png",
-    "(water_balloon)": animationPath + "water_balloon.png"
-  };
-  var emoticons = {};
-  function alias(keys, file) {
-    keys.forEach((k) => emoticons[k] = globalPath + file);
-  }
-  Object.assign(emoticons, {
-    ":-)": globalPath + "smile.gif",
-    ":-O": globalPath + "surprised.gif",
-    ";-)": globalPath + "wink_smile.gif",
-    ":-S": globalPath + "confused.gif",
-    ":'(": globalPath + "crying.gif",
-    ":-#": globalPath + "silence.gif",
-    "8-|": globalPath + "nerd.gif",
-    ":-*": globalPath + "secret.gif",
-    ":^)": globalPath + "unknow.gif",
-    "|-)": globalPath + "sleepy.gif",
-    "({)": globalPath + "guy_hug.gif",
-    ":-[": globalPath + "bat.gif",
-    "(@)": globalPath + "cat.gif",
-    "(8)": globalPath + "note.gif",
-    "(*)": globalPath + "star.gif",
-    "(sn)": globalPath + "snail.gif",
-    "(pl)": globalPath + "plate.gif",
-    "(pi)": globalPath + "pizza.gif",
-    "(au)": globalPath + "car.gif",
-    "(um)": globalPath + "umbrella.gif",
-    "(co)": globalPath + "computer.gif",
-    "(st)": globalPath + "storm.gif",
-    "(mo)": globalPath + "money.gif",
-    "8o|": globalPath + "teeth.gif",
-    "^o)": globalPath + "sarcastic.gif",
-    "+o(": globalPath + "sick.gif",
-    "*-)": globalPath + "thinking.gif",
-    "8-)": globalPath + "eye_roll.gif",
-    "(6)": globalPath + "devil_smile.gif",
-    "(bah)": globalPath + "sheep.gif",
-    "(||)": globalPath + "bowl.gif",
-    "(so)": globalPath + "soccer.gif",
-    "(ap)": globalPath + "airplane.gif",
-    "(ip)": globalPath + "island.gif",
-    "(mp)": globalPath + "portable.gif",
-    "(li)": globalPath + "lightning.gif"
-  });
-  alias([":)", ":-)"], "smile.gif");
-  alias([":o", ":-O"], "surprised.gif");
-  alias([";)", ";-)"], "wink_smile.gif");
-  alias([":s", ":-S"], "confused.gif");
-  alias(["(H)", "(h)"], "hot.gif");
-  alias(["(A)", "(a)"], "angel.gif");
-  alias([":[", ":-["], "bat.gif");
-  alias(["(L)", "(l)"], "heart.gif");
-  alias(["(K)", "(k)"], "kiss.gif");
-  alias(["(F)", "(f)"], "rose.gif");
-  alias(["(P)", "(p)"], "camera.gif");
-  alias(["(T)", "(t)"], "phone.gif");
-  alias(["(O)", "(o)"], "clock.gif");
-  alias([":D", ":-D"], "teeth_smile.gif");
-  alias([":p", ":-P"], "tongue_smile.gif");
-  alias([":(", ":-("], "sad.gif");
-  alias([":|", ":-|"], "disappointed.gif");
-  alias([":$", ":-$"], "embarrassed.gif");
-  alias([":@", ":-@"], "angry.gif");
-  alias(["(C)", "(c)"], "coffee.gif");
-  alias(["(N)", "(n)"], "thumbs_down.gif");
-  alias(["(D)", "(d)"], "martini.gif");
-  alias(["(Z)", "(z)"], "guy.gif");
-  alias(["(})", "({)"], "guy_hug.gif");
-  alias(["(U)", "(u)"], "broken_heart.gif");
-  alias(["(G)", "(g)"], "present.gif");
-  alias(["(W)", "(w)"], "wilted_rose.gif");
-  alias(["(E)", "(e)"], "email.gif");
-  alias(["(I)", "(i)"], "lightbulb.gif");
-  alias(["(M)", "(m)"], "messenger.gif");
-  alias(["(Y)", "(y)"], "thumbs_up.gif");
-  alias(["(B)", "(b)"], "beer_mug.gif");
-  alias(["(X)", "(x)"], "girl.gif");
-  async function updateUserStatus(newStatus) {
-    const userId = localStorage.getItem("userId");
-    const username = localStorage.getItem("username");
-    if (!userId) return;
-    try {
-      await fetchWithAuth(`/api/user/${userId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
-      });
-      const socket = SocketService_default.getInstance().socket;
-      if (socket && username) {
-        socket.emit("notifyStatusChange", {
-          userId: Number(userId),
-          status: newStatus,
-          username
-        });
-        console.log(`[Status] Updated to ${newStatus} for ${username}`);
-      }
-      localStorage.setItem("userStatus", newStatus);
-    } catch (error) {
-      console.error("Failed to update status:", error);
-    }
-  }
 
   // node_modules/i18next/dist/esm/i18next.js
   var isString = (obj) => typeof obj === "string";
@@ -4154,9 +3843,9 @@
   var looksLikeObjectPath = (key, nsSeparator, keySeparator) => {
     nsSeparator = nsSeparator || "";
     keySeparator = keySeparator || "";
-    const possibleChars = chars2.filter((c) => nsSeparator.indexOf(c) < 0 && keySeparator.indexOf(c) < 0);
+    const possibleChars = chars2.filter((c2) => nsSeparator.indexOf(c2) < 0 && keySeparator.indexOf(c2) < 0);
     if (possibleChars.length === 0) return true;
-    const r = looksLikeObjectPathRegExpCache.getRegExp(`(${possibleChars.map((c) => c === "?" ? "\\?" : c).join("|")})`);
+    const r = looksLikeObjectPathRegExpCache.getRegExp(`(${possibleChars.map((c2) => c2 === "?" ? "\\?" : c2).join("|")})`);
     let matched = !r.test(key);
     if (!matched) {
       const ki = key.indexOf(keySeparator);
@@ -4970,12 +4659,12 @@
     toResolveHierarchy(code, fallbackCode) {
       const fallbackCodes = this.getFallbackCodes((fallbackCode === false ? [] : fallbackCode) || this.options.fallbackLng || [], code);
       const codes = [];
-      const addCode = (c) => {
-        if (!c) return;
-        if (this.isSupportedCode(c)) {
-          codes.push(c);
+      const addCode = (c2) => {
+        if (!c2) return;
+        if (this.isSupportedCode(c2)) {
+          codes.push(c2);
         } else {
-          this.logger.warn(`rejecting language code not found in supportedLngs: ${c}`);
+          this.logger.warn(`rejecting language code not found in supportedLngs: ${c2}`);
         }
       };
       if (isString(code) && (code.indexOf("-") > -1 || code.indexOf("_") > -1)) {
@@ -5211,9 +4900,9 @@
       const handleHasOptions = (key, inheritedOptions) => {
         const sep = this.nestingOptionsSeparator;
         if (key.indexOf(sep) < 0) return key;
-        const c = key.split(new RegExp(`${sep}[ ]*{`));
-        let optionsString = `{${c[1]}`;
-        key = c[0];
+        const c2 = key.split(new RegExp(`${sep}[ ]*{`));
+        let optionsString = `{${c2[1]}`;
+        key = c2[0];
         optionsString = this.interpolate(optionsString, clonedOptions);
         const matchedSingleQuotes = optionsString.match(/'/g);
         const matchedDoubleQuotes = optionsString.match(/"/g);
@@ -6280,6 +5969,459 @@
         ok: "OK",
         cancel: "CANCEL"
       }
+    },
+    landing: {
+      welcome: "Bienvenue sur Transcendence",
+      login_button: "Connexion",
+      register_button: "Inscription",
+      guest_button: "Jouer en invit\xE9",
+      guest_error_network: "Erreur r\xE9seau. Veuillez r\xE9essayer."
+    },
+    loginPage: {
+      welcome: "Se connecter \xE0 Transcendence",
+      password: "Entrez votre mot de passe",
+      connect_as: "Statut de connexion",
+      status: {
+        available: "Disponible",
+        busy: "Occup\xE9",
+        away: "Absent",
+        offline: "Hors ligne"
+      },
+      login_button: "Connexion",
+      back: "Retour \xE0 l'accueil",
+      "2fa": "Authentification \xE0 deux facteurs",
+      security: "Contr\xF4le de s\xE9curit\xE9",
+      enter_code: "Veuillez entrer le code de s\xE9curit\xE9.",
+      verify_button: "V\xC9RIFIER",
+      error_inputs: "Veuillez remplir tous les champs",
+      error_auth_default: "\xC9chec de l'authentification",
+      error_network: "Erreur r\xE9seau, veuillez r\xE9essayer",
+      error_2fa_invalid: "Code invalide.",
+      error_2fa_verify: "Erreur lors de la v\xE9rification."
+    },
+    registerPage: {
+      welcome: "S'inscrire sur Transcendence",
+      password: "Entrez votre mot de passe",
+      register_button: "S'inscrire",
+      back: "Retour \xE0 l'accueil",
+      error_inputs: "Veuillez remplir tous les champs",
+      error_auth_default: "\xC9chec de l'authentification",
+      error_network: "Erreur r\xE9seau, veuillez r\xE9essayer"
+    },
+    profilePage: {
+      window_profile: "Profil",
+      my_profile: "Mon profil",
+      my_status: "Statut :",
+      status: {
+        available: "Disponible",
+        busy: "Occup\xE9",
+        away: "Absent",
+        offline: "Hors ligne"
+      },
+      fallback_username: "Attente...",
+      fallback_bio: "Chargement de la bio...",
+      username: "Pseudo :",
+      placeholder_username: "Nom d'utilisateur",
+      change_button: "Modifier",
+      confirm_button: "Confirmer",
+      back: "Retour \xE0 l'accueil",
+      bio: "Partagez un message rapide avec les contacts :",
+      placeholder_bio: "Partagez un message rapide avec les contacts",
+      password: "Mot de passe :",
+      placeholder_password: "Nouveau mot de passe",
+      "2fa_button": "Activer la 2FA",
+      download_button: "T\xE9l\xE9charger mes donn\xE9es",
+      delete_button: "Supprimer mon compte",
+      game_stats: "Mes statistiques de jeu",
+      game_played: "Parties jou\xE9es",
+      wins: "Victoires",
+      losses: "D\xE9faites",
+      winning_streak: "S\xE9rie de victoires actuelle",
+      "2fa_modal": {
+        title: "Authentification \xE0 deux facteurs",
+        choose_method: "Choisir la m\xE9thode",
+        message_method: "S\xE9lectionnez comment configurer la 2FA",
+        authenticator: "App d'authentification",
+        message_authenticator: "Utiliser Google Authenticator ou similaire",
+        email_verif: "V\xE9rification par email",
+        message_email_verif: "Recevoir les codes par email",
+        qr_code: "Scanner le QR Code",
+        message_qr_code: "Ouvrez Google Authenticator et scannez ce code",
+        "6_digit": "Entrez le code \xE0 6 chiffres :",
+        validate: "VALIDER",
+        cancel: "ANNULER",
+        verif_email: "Nous enverrons un code \xE0 votre email.",
+        message_verif_email: "Le code sera envoy\xE9 \xE0 :",
+        code_send: "ENVOYER LE CODE",
+        code_received: "Entrez le code re\xE7u :"
+      },
+      twoFactor: {
+        btn_enable: "Activer l'authentification 2FA",
+        btn_disable: "D\xE9sactiver l'authentification 2FA"
+      },
+      picture_modal: {
+        title: "Changer d'image",
+        select_pic: "S\xE9lectionnez une image",
+        message_select: "Choisissez votre avatar sur Transcendence.",
+        browse: "PARCOURIR",
+        delete: "SUPPRIMER",
+        ok: "OK",
+        cancel: "ANNULER"
+      },
+      theme_modal: {
+        title: "S\xE9lectionner un th\xE8me"
+      },
+      password_modal: {
+        title: "Changer le mot de passe",
+        current_pwd: "Mot de passe actuel :",
+        new_pwd: "Nouveau mot de passe :",
+        confirm_pwd: "Confirmer le mot de passe :",
+        save: "Enregistrer",
+        cancel: "Annuler"
+      },
+      delete_modal: {
+        title: "Supprimer mon compte",
+        confirm_delete: "Voulez-vous vraiment supprimer votre compte ?",
+        confirm_message: "Cette action sera irr\xE9versible.",
+        yes: "Oui, supprimer mon compte",
+        cancel: "Annuler"
+      },
+      field_empty: "Vide",
+      email_empty: "Aucun email",
+      game_local: "Local",
+      alerts: {
+        delete_confirm: "Cette action est irr\xE9versible. \xCAtes-vous vraiment s\xFBr ?",
+        delete_success: "Votre compte a \xE9t\xE9 supprim\xE9. Vous allez \xEAtre redirig\xE9.",
+        delete_error: "Erreur lors de la suppression du compte",
+        network_error: "Erreur r\xE9seau. Veuillez r\xE9essayer.",
+        username_success: "Nom d'utilisateur mis \xE0 jour avec succ\xE8s !",
+        username_error: "Erreur lors de l'enregistrement du nom d'utilisateur",
+        bio_limit: "La bio ne peut pas d\xE9passer {{count}} caract\xE8res.",
+        bio_error: "Erreur lors de la mise \xE0 jour de la bio",
+        email_success: "Email mis \xE0 jour avec succ\xE8s !",
+        email_error: "Erreur lors de l'enregistrement de l'email",
+        status_error: "Erreur lors de la mise \xE0 jour du statut",
+        pwd_inputs: "Tous les champs sont requis.",
+        pwd_mismatch: "Les mots de passe ne correspondent pas. R\xE9essayez.",
+        pwd_length: "Le mot de passe doit contenir au moins 8 caract\xE8res.",
+        pwd_success: "Mot de passe mis \xE0 jour avec succ\xE8s !",
+        pwd_error: "Erreur lors de la mise \xE0 jour du mot de passe",
+        "2fa_init_error": "Erreur lors de l'initialisation de la 2FA",
+        "2fa_invalid_code": "Code invalide",
+        "2fa_enabled": "2FA activ\xE9e !",
+        "2fa_disable_confirm": "D\xE9sactiver la 2FA ?",
+        "2fa_disabled": "2FA d\xE9sactiv\xE9e"
+      },
+      bio_placeholder: "Partagez un message rapide avec les contacts",
+      avatar_save_error: "Erreur lors de la sauvegarde de l'avatar"
+    },
+    dashboardPage: {
+      title: "Aper\xE7u du tableau de bord",
+      game_played: "Parties jou\xE9es",
+      avg_score: "Score moyen",
+      time_playing: "Temps de jeu",
+      wins: "Victoires",
+      losses: "D\xE9faites",
+      win_rate: "Taux de victoire",
+      win_loss_evol: "\xC9volution victoires/d\xE9faites",
+      type_game: "Types de jeux",
+      bigg_rival: "Mes plus grands rivaux",
+      match_history: "Historique et analyse des matchs",
+      placeholder_rival: "Nom du rival",
+      all_modes: "Tous les modes",
+      local: "Local",
+      remote: "\xC0 distance",
+      tournament: "Tournoi",
+      apply_button: "Appliquer",
+      sort: "Trier",
+      date_asc: "Date \u2191 (Ancien)",
+      date_desc: "Date \u2193 (R\xE9cent)",
+      name_a: "Rival (A-Z)",
+      name_z: "Rival (Z-A)",
+      date: "Date",
+      rival: "Rival",
+      score: "Score",
+      type: "Type",
+      round: "Tour",
+      result: "R\xE9sultat",
+      loading: "Chargement...",
+      prev: "Pr\xE9c\xE9dent",
+      next: "Suivant",
+      page: "Page 1",
+      time_format: "{{h}}h {{m}}min",
+      pagination_info: "Page {{current}} sur {{total}}",
+      no_matches: "Aucun match pour l'instant.",
+      status_victory: "VICTOIRE",
+      status_defeat: "D\xC9FAITE",
+      unknown_user: "Inconnu",
+      round_final: "Finale",
+      round_1v1: "1v1",
+      chart: {
+        start: "D\xE9part",
+        net_score: "Score net",
+        no_data: "Aucune donn\xE9e",
+        games_played: "Parties jou\xE9es",
+        games_count: "({{count}} parties)",
+        local: "Local",
+        remote: "Distant",
+        tournament: "Tournoi"
+      }
+    },
+    localPage: {
+      title: "Jeux",
+      p1: "Joueur 1",
+      p2: "Joueur 2",
+      start_game: "D\xE9marrer la partie",
+      game_instr: "Instructions de jeu",
+      ws: "Le joueur de gauche d\xE9place sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      up_down: "Le joueur de droite utilise les touches \u2B06\uFE0F\u2B07\uFE0F.",
+      space_bar: "La barre d'espace peut servir \xE0 distraire votre adversaire",
+      opp_name: "Avec qui jouez-vous ? :",
+      placeholder_opp: "Entrez un nom...",
+      err_message: "Veuillez remplir ce champ !",
+      choose_ball: "Choisissez votre balle :",
+      select_ball: "S\xE9lectionner une balle :",
+      choose_bg: "Choisissez votre fond :",
+      select_bg: "S\xE9lectionner un fond :",
+      reset_color: "R\xE9initialiser couleur",
+      play: "JOUER",
+      countdown_title: "\xC0 vos marques, pr\xEAts, partez !",
+      summary_modal: {
+        title: "Fin de partie",
+        congrat: "F\xC9LICITATIONS",
+        name: "NOM",
+        back_menu: "Retour au menu"
+      },
+      chat: {
+        title: "Notifications",
+        info: "Notification syst\xE8me",
+        placeholder_input: "Vous ne pouvez pas r\xE9pondre au syst\xE8me"
+      },
+      chat_start_match: "La partie va commencer ! Match : {{p1}} contre {{p2}}"
+    },
+    remotePage: {
+      title: "Jeux",
+      p1: "Joueur 1",
+      p2: "Joueur 2",
+      start_game: "D\xE9marrer la partie",
+      game_instr: "Instructions de jeu",
+      ws: "Le joueur de gauche d\xE9place sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      up_down: "Le joueur de droite utilise les touches \u2B06\uFE0F\u2B07\uFE0F.",
+      space_bar: "La barre d'espace peut servir \xE0 distraire votre adversaire",
+      choose_ball: "Choisissez votre balle :",
+      select_ball: "S\xE9lectionner une balle :",
+      choose_bg: "Choisissez votre fond :",
+      select_bg: "S\xE9lectionner un fond :",
+      reset_color: "R\xE9initialiser couleur",
+      play: "JOUER (FILE D'ATTENTE)",
+      countdown_title: "\xC0 vos marques, pr\xEAts, partez !",
+      summary_modal: {
+        title: "Fin de partie",
+        congrat: "F\xC9LICITATIONS",
+        name: "???",
+        back_menu: "Retour au menu"
+      },
+      chat: {
+        title: "Chat de jeu",
+        info: "Salon de discussion",
+        choose_bg: "Choisir un fond :",
+        default_bg: "Fond par d\xE9faut"
+      }
+    },
+    tournamentPage: {
+      title: "Ar\xE8ne de Tournoi",
+      p1: "Joueur 1",
+      p2: "Joueur 2",
+      setup_modal: {
+        title_modal: "Configuration du tournoi",
+        game_instr: "Instructions de jeu",
+        ws: "Le joueur de gauche d\xE9place sa raquette avec <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+        up_down: "Le joueur de droite utilise les touches \u2B06\uFE0F\u2B07\uFE0F.",
+        space_bar: "La barre d'espace peut servir \xE0 distraire votre adversaire",
+        tournament_name: "Nom du tournoi :",
+        placeholder_trnmt: "Mon super tournoi",
+        participant: "Participants",
+        p1: "Joueur 1 (Vous) :",
+        p2: "Joueur 2 :",
+        p3: "Joueur 3 :",
+        p4: "Joueur 4 :",
+        choose__ball_bg: "Choisissez votre balle et le fond :",
+        choose__ball: "Balle :",
+        choose_bg: "Fond :",
+        select_bg: "S\xE9lectionner un fond :",
+        reset_color: "R\xE9initialiser couleur",
+        play: "D\xC9MARRER LE TOURNOI",
+        countdown_title: "\xC0 vos marques, pr\xEAts, partez !"
+      },
+      tournament_bracket_modal: {
+        title: "Tournoi",
+        heading: "LE TOURNOI VA COMMENCER",
+        semi_final_1: "Demi-finale 1",
+        semi_final_2: "Demi-finale 2",
+        final: "Finale",
+        status_ready: "Pr\xEAt pour le prochain match...",
+        continue_btn: "CONTINUER VERS LE MATCH"
+      },
+      tournament_next_match_modal: {
+        title: "Match suivant",
+        match_title: "DEMI-FINALE 1",
+        player_vs: "VS",
+        start_info: "Le jeu commencera d\xE8s que vous cliquerez sur Jouer.",
+        play_btn: "JOUER !"
+      },
+      tournament_summary_modal: {
+        title: "Fin du tournoi",
+        congratulations: "F\xC9LICITATIONS",
+        winner_name: "NOM",
+        back_menu: "Retour au menu"
+      },
+      chat: {
+        title: "Notifications",
+        info: "Notification syst\xE8me",
+        placeholder_input: "Vous ne pouvez pas r\xE9pondre au syst\xE8me"
+      }
+    },
+    guestPage: {
+      title: "Mode Invit\xE9",
+      welcome: "Bienvenue sur Transcendence",
+      description: "Vous jouez actuellement en tant qu'invit\xE9. Pour acc\xE9der \xE0 toutes les fonctionnalit\xE9s de jeu, vous devez vous inscrire !",
+      select_mode: "S\xE9lectionnez un mode pour commencer \xE0 jouer",
+      local: "JEU LOCAL",
+      remote: "JEU \xC0 DISTANCE",
+      tournament: "TOURNOI",
+      chat_welcome: "Bienvenue en mode invit\xE9. S\xE9lectionnez un mode de jeu pour discuter avec vos adversaires."
+    },
+    gamePage: {
+      default_player: "Joueur",
+      default_guest: "Invit\xE9",
+      unload_warning: "Une partie est en cours. \xCAtes-vous s\xFBr de vouloir quitter ?",
+      exit_modal: {
+        title: "Quitter la partie",
+        heading: "ATTENDEZ !",
+        question: "\xCAtes-vous s\xFBr de vouloir partir ?",
+        warning: "Toute la progression actuelle sera perdue.",
+        back_btn: "RETOURNER AU JEU",
+        leave_btn: "QUITTER"
+      }
+    },
+    game: {
+      game_over: "Partie termin\xE9e ! Score final : {{score1}} - {{score2}}"
+    },
+    gameUI: {
+      winner_message: "{{name}} remporte le match !",
+      game_over: "Partie termin\xE9e",
+      congratulations: "F\xC9LICITATIONS",
+      return_menu: "RETOUR AU MENU",
+      go: "C'EST PARTI !"
+    },
+    remoteManager: {
+      self_play_error: "Vous ne pouvez pas jouer contre vous-m\xEAme",
+      btn_play_queue: "JOUER (FILE D'ATTENTE)",
+      default_opponent: "Adversaire",
+      me_suffix: "(Moi)",
+      match_started: "Le match a commenc\xE9 !",
+      match_found: "Adversaire trouv\xE9 ! Lancement du jeu...",
+      opponent_forfeit: "(Forfait de l'adversaire)",
+      default_winner: "Vainqueur",
+      error_connection: "Erreur : connexion au serveur de jeu perdue",
+      waiting_private: "En attente de votre ami dans le salon priv\xE9...",
+      btn_waiting_friend: "EN ATTENTE D'UN AMI...",
+      looking_rival: "Recherche d'un adversaire...",
+      btn_waiting: "EN ATTENTE..."
+    },
+    tournamentManager: {
+      setup_error_fields: "Veuillez remplir tous les champs.",
+      setup_error_unique: "Tous les pseudonymes doivent \xEAtre uniques.",
+      chat_start: 'Le tournoi "{{name}}" a commenc\xE9 ! Participants : {{players}}',
+      bracket_next_sf1: "Suivant : Demi-finale 1",
+      bracket_next_sf2: "Suivant : Demi-finale 2",
+      bracket_next_final: "Suivant : La Grande Finale !",
+      match_sf1: "DEMI-FINALE 1",
+      match_sf2: "DEMI-FINALE 2",
+      match_final: "FINALE",
+      chat_next_match: "\xC0 suivre : {{p1}} contre {{p2}} !",
+      chat_final_match: "FINALE : {{p1}} contre {{p2}} !",
+      chat_winner: "{{winner}} remporte le match !"
+    },
+    chatComponent: {
+      system: "Syst\xE8me",
+      connected: "Vous pouvez maintenant discuter avec votre ami !",
+      disconnected: "D\xE9connect\xE9 du serveur de chat !",
+      nudge_sent: "[b]{{author}} a envoy\xE9 un wizz[/b]",
+      animation_unknown: "Animation inconnue ({{key}}) re\xE7ue de {{author}}.",
+      game_invite: "{{author}} veut jouer \xE0 Pong avec vous !",
+      join_waitroom: "Rejoindre mon salon d'attente",
+      accept_match: "Accepter le match",
+      game_unreachable: "Erreur : Serveur de jeu inaccessible.",
+      block_confirm: "\xCAtes-vous s\xFBr de vouloir bloquer {{name}} ?",
+      block_success: "Conversation supprim\xE9e (Utilisateur bloqu\xE9).",
+      block_error: "Erreur lors du blocage",
+      input_blocked: "Vous avez bloqu\xE9 cet utilisateur.",
+      tools: {
+        bold: "Gras",
+        italic: "Italique",
+        underline: "Soulign\xE9",
+        strikethrough: "Barr\xE9"
+      }
+    },
+    data: {
+      status: {
+        available: "(Disponible)",
+        busy: "(Occup\xE9)",
+        away: "(Absent)",
+        invisible: "(Hors ligne)"
+      },
+      themes: {
+        basic: "Bleu Classique",
+        bamboo: "Bambou Zen",
+        cherry: "Fleurs de Cerisier",
+        mountain: "Montagnes Brumeuses",
+        punk: "Cyber Punk",
+        dotted: "Points Printemps",
+        sunset: "Coucher de Soleil",
+        football: "Stade",
+        spring: "Jardin de Printemps",
+        love: "C\u0153ur Adorable",
+        diary: "Cher Journal",
+        branches: "Branches d'Hiver",
+        purple: "R\xEAves Violets",
+        abstract: "Flux Abstrait"
+      }
+    },
+    friendList: {
+      no_friends: "Pas encore d'amis",
+      error_loading: "Erreur lors du chargement des contacts",
+      default_bio: "Partagez un message rapide avec les contacts",
+      game_disconnected: "Le jeu est d\xE9connect\xE9, veuillez actualiser",
+      invite_sent: "Invitation envoy\xE9e \xE0 {{name}}",
+      invite_toast: {
+        title: "\u{1F3AE} Invitation au jeu",
+        message: "{{name}} veut jouer \xE0 Pong !",
+        accept: "Accepter",
+        decline: "Refuser",
+        error_lost: "Erreur : connexion au serveur perdue"
+      },
+      search_placeholder_error: "Veuillez entrer un pseudo ou un email",
+      request_sent: "Demande d'ami envoy\xE9e !",
+      request_error: "Erreur lors de l'envoi de la demande",
+      network_error: "Erreur r\xE9seau",
+      no_notifications: "Aucune nouvelle notification",
+      wants_to_be_friend: '<span class="font-semibold">{{name}}</span> veut devenir votre ami',
+      actions: {
+        accept: "Accepter",
+        decline: "Refuser",
+        block: "Bloquer"
+      }
+    },
+    friendProfileModal: {
+      loading: "Chargement...",
+      no_bio: "Aucune bio.",
+      default_game: "Local"
+    },
+    userProfile: {
+      default_bio: "Partagez un message rapide avec les contacts",
+      bio_length_error: "Votre message ne peut pas d\xE9passer 70 caract\xE8res. Arr\xEAtez de parler !",
+      avatar_error: "Erreur lors de la sauvegarde de l'avatar"
     }
   };
 
@@ -6347,6 +6489,460 @@
         ok: "OK",
         cancel: "CANCEL"
       }
+    },
+    landing: {
+      welcome: "Welcome on Transcendence",
+      login_button: "Login",
+      register_button: "Register",
+      guest_button: "Play as guest",
+      guest_error_network: "Network error. Please try again"
+    },
+    loginPage: {
+      welcome: "Sign in to Transcendence",
+      password: "Enter your password",
+      connect_as: "Sign in as",
+      status: {
+        available: "Available",
+        busy: "Busy",
+        away: "Away",
+        offline: "Appear offline"
+      },
+      login_button: "Login",
+      back: "Back to landing page",
+      "2fa": "Two-Factor Authentication",
+      security: "Security check",
+      enter_code: "Please enter the security code.",
+      verify_button: "VERIFY",
+      error_inputs: "Please fill all inputs",
+      error_auth_default: "Authentication failed",
+      error_network: "Network error, please try again",
+      error_2fa_invalid: "Invalid code.",
+      error_2fa_verify: "Error during verification."
+    },
+    registerPage: {
+      welcome: "Sign up to Transcendence",
+      password: "Enter your password",
+      register_button: "Register",
+      back: "Back to landing page",
+      error_inputs: "Please fill all inputs",
+      error_auth_default: "Authentication failed",
+      error_network: "Network error, please try again"
+    },
+    profilePage: {
+      window_profile: "Profile",
+      my_profile: "My profile",
+      my_status: "Status:",
+      status: {
+        available: "Available",
+        busy: "Busy",
+        away: "Away",
+        offline: "Appear offline"
+      },
+      fallback_username: "Wait...",
+      fallback_bio: "Loading bio...",
+      username: "Username:",
+      placeholder_username: "Username",
+      change_button: "Change",
+      confirm_button: "Confirm",
+      back: "Back to landing page",
+      bio: "Share a quick message:",
+      placeholder_bio: "Share a quick message",
+      password: "Password:",
+      placeholder_password: "New password",
+      "2fa_button": "Enable 2FA authentication",
+      download_button: "Donwload personal data",
+      delete_button: "Delete my account",
+      game_stats: "My game statistics",
+      game_played: "Games played",
+      wins: "Wins",
+      losses: "Losses",
+      winning_streak: "Current winning streak",
+      twoFactor: {
+        btn_enable: "Enable 2FA authentication",
+        btn_disable: "Disable 2FA authentication"
+      },
+      "2fa_modal": {
+        title: "Two-Factor Authentication",
+        choose_method: "Choose authentication method",
+        message_method: "Select how you want to set up 2FA",
+        authenticator: "Authenticator App",
+        message_authenticator: "Use Google Authenticator or similar",
+        email_verif: "Email Verification",
+        message_email_verif: "Receive codes via email",
+        qr_code: "Scan QR Code",
+        message_qr_code: "Open Google Authenticator and scan this code",
+        "6_digit": "Enter the 6-digit code:",
+        validate: "VALIDATE",
+        cancel: "CANCEL",
+        verif_email: "We'll send a verification code to your email.",
+        message_verif_email: "Code will be sent to:",
+        code_send: "SEND CODE",
+        code_received: "Enter code received:"
+      },
+      picture_modal: {
+        title: "Change picture",
+        select_pic: "Select a picture",
+        message_select: "Choose how you want to appear on transcendence.",
+        browse: "BROWSE",
+        delete: "DELETE",
+        ok: "OK",
+        cancel: "CANCEL"
+      },
+      theme_modal: {
+        title: "Select a Theme"
+      },
+      password_modal: {
+        title: "Change password",
+        current_pwd: "Current Password:",
+        new_pwd: "New Password:",
+        confirm_pwd: "Confirm new password:",
+        save: "Save",
+        cancel: "Cancel"
+      },
+      delete_modal: {
+        title: "Delete my account",
+        confirm_delete: "Are you sure you want to delete your account?",
+        confirm_message: "This action will be irreversible.",
+        yes: "Yes, delete my account",
+        cancel: "Cancel",
+        ici: "HA"
+      },
+      field_empty: "Empty",
+      email_empty: "No email",
+      game_local: "Local",
+      alerts: {
+        delete_confirm: "This action is irreversible. Are you really sure?",
+        delete_success: "Your account has been deleted. You will be redirected.",
+        delete_error: "Error deleting account",
+        network_error: "Network error. Please try again.",
+        username_success: "Username updated successfully!",
+        username_error: "Error while saving username",
+        bio_limit: "Bio cannot be longer than {{count}} characters.",
+        bio_error: "Error updating bio",
+        email_success: "Email updated successfully!",
+        email_error: "Error saving email",
+        status_error: "Error updating status",
+        pwd_inputs: "All inputs are required.",
+        pwd_mismatch: "These are not the same. Try again",
+        pwd_length: "Password must be at least 8 characters.",
+        pwd_success: "Password updated successfully!",
+        pwd_error: "Error updating password",
+        "2fa_init_error": "Error initializing 2FA setup",
+        "2fa_invalid_code": "Invalid code",
+        "2fa_enabled": "2FA enabled!",
+        "2fa_disable_confirm": "Disable 2FA?",
+        "2fa_disabled": "2FA disabled"
+      },
+      bio_placeholder: "Share a quick message",
+      avatar_save_error: "Error while saving avatar"
+    },
+    dashboardPage: {
+      title: "Dashboard overview",
+      game_played: "Game played",
+      avg_score: "Average score",
+      time_playing: "Time playing",
+      wins: "Wins",
+      losses: "Losses",
+      win_rate: "Win rate",
+      win_loss_evol: "Win and loss evolution",
+      type_game: "Type of games",
+      bigg_rival: "My biggest rivals",
+      match_history: "Match history and analysis",
+      placeholder_rival: "Rival name",
+      all_modes: "All Modes",
+      local: "Local",
+      remote: "Remote",
+      tournament: "Tournament",
+      apply_button: "Apply",
+      sort: "Sort",
+      date_asc: "Date \u2191 (Oldest)",
+      date_desc: "Date \u2193 (Newest)",
+      name_a: "Rival (A-Z)",
+      name_z: "Rival (Z-A)",
+      date: "Date",
+      rival: "Rival",
+      score: "Score",
+      type: "Type",
+      round: "Round",
+      result: "Result",
+      loading: "Loading...",
+      prev: "Previous",
+      next: "Next",
+      page: "Page 1",
+      time_format: "{{h}}h {{m}}min",
+      pagination_info: "Page {{current}} of {{total}}",
+      no_matches: "No matches yet.",
+      status_victory: "VICTORY",
+      status_defeat: "DEFEAT",
+      unknown_user: "Unknown",
+      round_final: "Final",
+      round_1v1: "1v1",
+      chart: {
+        start: "Start",
+        net_score: "Net Score",
+        no_data: "No Data",
+        games_played: "Games Played",
+        games_count: "({{count}} games)",
+        local: "Local",
+        remote: "Remote",
+        tournament: "Tournament"
+      }
+    },
+    localPage: {
+      title: "Games",
+      p1: "Player 1",
+      p2: "Player 2",
+      start_game: "Start the game",
+      game_instr: "Game instructions",
+      ws: "Player on the left moves the paddle with <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      up_down: "Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.",
+      space_bar: "The space bar can be used to distract your opponent",
+      opp_name: "Who are you playing with? :",
+      placeholder_opp: "Type in a name...",
+      err_message: "Please fill in!",
+      choose_ball: "Choose your ball :",
+      select_ball: "Select a ball:",
+      choose_bg: "Choose your background :",
+      select_bg: "Select a background:",
+      reset_color: "Reset color",
+      play: "PLAY",
+      countdown_title: "Ready, steady, go!",
+      summary_modal: {
+        title: "End of the game",
+        congrat: "CONGRATULATIONS",
+        name: "NAME",
+        back_menu: "Return to menu"
+      },
+      chat: {
+        title: "Notifications",
+        info: "System notification",
+        placeholder_input: "You cannot speak to the system"
+      },
+      chat_start_match: "Game is about to start! Match: {{p1}} vs {{p2}}"
+    },
+    remotePage: {
+      title: "Games",
+      p1: "Player 1",
+      p2: "Player 2",
+      start_game: "Start the game",
+      game_instr: "Game instructions",
+      ws: "Player on the left moves the paddle with <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      up_down: "Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.",
+      space_bar: "The space bar can be used to distract your opponent",
+      choose_ball: "Choose your ball :",
+      select_ball: "Select a ball:",
+      choose_bg: "Choose your background :",
+      select_bg: "Select a background:",
+      reset_color: "Reset color",
+      play: "PLAY (QUEUE)",
+      countdown_title: "Ready, steady, go!",
+      summary_modal: {
+        title: "End of the game",
+        congrat: "CONGRATULATIONS",
+        name: "???",
+        back_menu: "Return to menu"
+      },
+      chat: {
+        title: "Game chat",
+        info: "Chat room",
+        choose_bg: "Choose a background:",
+        default_bg: "Default background"
+      }
+    },
+    tournamentPage: {
+      title: "Tournament Arena",
+      p1: "Player 1",
+      p2: "Player 2",
+      setup_modal: {
+        title_modal: "Tournament setup",
+        game_instr: "Game instructions",
+        ws: "Player on the left moves the paddle with <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+        up_down: "Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.",
+        space_bar: "The space bar can be used to distract your opponent",
+        tournament_name: "Tournament name:",
+        placeholder_trnmt: "yeah yeah yeah",
+        participant: "Participants",
+        p1: "Player 1 (You):",
+        p2: "Player 2:",
+        p3: "Player 3:",
+        p4: "Player 4:",
+        choose__ball_bg: "Choose your ball and background:",
+        choose__ball: "Ball :",
+        choose_bg: "Background:",
+        select_bg: "Select a background:",
+        reset_color: "Reset color",
+        play: "START TOURNAMENT",
+        countdown_title: "Ready, steady, go!"
+      },
+      tournament_bracket_modal: {
+        title: "Tournament",
+        heading: "TOURNAMENT IS ABOUT TO START",
+        semi_final_1: "Semi-Final 1",
+        semi_final_2: "Semi-Final 2",
+        final: "Final",
+        status_ready: "Ready for the next match...",
+        continue_btn: "CONTINUE TO MATCH"
+      },
+      tournament_next_match_modal: {
+        title: "Next match",
+        match_title: "SEMI-FINAL 1",
+        player_vs: "VS",
+        start_info: "The game will start as soon as you click Play.",
+        play_btn: "PLAY !"
+      },
+      tournament_summary_modal: {
+        title: "End of the tournament",
+        congratulations: "CONGRATULATIONS",
+        winner_name: "NAME",
+        back_menu: "Return to Menu"
+      },
+      chat: {
+        title: "Notifications",
+        info: "System notification",
+        placeholder_input: "You cannot speak to the system"
+      }
+    },
+    guestPage: {
+      title: "Guest Mode",
+      welcome: "Welcome on transcendence",
+      description: "You are actually playing as a guest. If you want to access any game's feature, you need to register!",
+      select_mode: "Select a mode to start playing",
+      local: "LOCAL GAME",
+      remote: "REMOTE GAME",
+      tournament: "TOURNAMENT",
+      chat_welcome: "Welcome to Guest Mode. Select a game mode to start chatting with your opponents."
+    },
+    gamePage: {
+      default_player: "Player",
+      default_guest: "Guest",
+      unload_warning: "A game is in progress. Are you sure you want to leave?",
+      exit_modal: {
+        title: "Exit Game",
+        heading: "WAIT A MINUTE !",
+        question: "Are you sure you want to leave?",
+        warning: "All current progress will be lost.",
+        back_btn: "GO BACK TO GAME",
+        leave_btn: "LEAVE"
+      }
+    },
+    game: {
+      game_over: "Game Over! Final Score: {{score1}} - {{score2}}"
+    },
+    gameUI: {
+      winner_message: "{{name}} wins the match!",
+      game_over: "Game Over",
+      congratulations: "CONGRATULATIONS",
+      return_menu: "RETURN TO MENU",
+      go: "GO!"
+    },
+    remoteManager: {
+      self_play_error: "You cannot play against yourself",
+      btn_play_queue: "PLAY (QUEUE)",
+      default_opponent: "Opponent",
+      me_suffix: "(Me)",
+      match_started: "Match started!",
+      match_found: "We found an opponent! Starting the game...",
+      opponent_forfeit: "(Opponent forfeit)",
+      default_winner: "Winner",
+      error_connection: "Error: lost connection to game server",
+      waiting_private: "Waiting for your friend in private room...",
+      btn_waiting_friend: "WAITING FOR FRIEND...",
+      looking_rival: "Looking for a rival...",
+      btn_waiting: "WAITING..."
+    },
+    tournamentManager: {
+      setup_error_fields: "Please fill all fields.",
+      setup_error_unique: "All player aliases must be unique.",
+      chat_start: 'Tournament "{{name}}" started! Participants: {{players}}',
+      bracket_next_sf1: "Next: Semi-Final 1",
+      bracket_next_sf2: "Next: Semi-Final 2",
+      bracket_next_final: "Next: The Grand Finale!",
+      match_sf1: "SEMI-FINAL 1",
+      match_sf2: "SEMI-FINAL 2",
+      match_final: "FINALE",
+      chat_next_match: "Next up: {{p1}} vs {{p2}} !",
+      chat_final_match: "FINAL: {{p1}} vs {{p2}} !",
+      chat_winner: "{{winner}} wins the match!"
+    },
+    chatComponent: {
+      system: "System",
+      connected: "You can now chat with your friend!",
+      disconnected: "Disconnected from chat server!",
+      nudge_sent: "[b]{{author}} sent a nudge[/b]",
+      animation_unknown: "Unknown animation ({{key}}) received from {{author}}.",
+      game_invite: "{{author}} want to play Pong with you!",
+      join_waitroom: "Join my waitroom",
+      accept_match: "Accept the match",
+      game_unreachable: "Error: Game server not reachable.",
+      block_confirm: "Are you sure you want to block {{name}}?",
+      block_success: "Conversation deleted (User blocked).",
+      block_error: "Error while blocking",
+      input_blocked: "You blocked this user.",
+      tools: {
+        bold: "Bold",
+        italic: "Italic",
+        underline: "Underline",
+        strikethrough: "Strikethrough"
+      }
+    },
+    data: {
+      status: {
+        available: "(Available)",
+        busy: "(Busy)",
+        away: "(Away)",
+        invisible: "(Appear offline)"
+      },
+      themes: {
+        basic: "Classic Blue",
+        bamboo: "Zen Bamboo",
+        cherry: "Cherry Blossom",
+        mountain: "Misty Mountains",
+        punk: "Cyber Punk",
+        dotted: "Spring Dots",
+        sunset: "Golden Sunset",
+        football: "Stadium",
+        spring: "Spring Garden",
+        love: "Lovely Heart",
+        diary: "Dear Diary",
+        branches: "Winter Branches",
+        purple: "Purple Dreams",
+        abstract: "Abstract Flow"
+      }
+    },
+    friendList: {
+      no_friends: "No friend yet",
+      error_loading: "Error loading contacts",
+      default_bio: "Share a quick message",
+      game_disconnected: "Game is disconnected, please refresh",
+      invite_sent: "Invitation sent to {{name}}",
+      invite_toast: {
+        title: "\u{1F3AE} Game Invite",
+        message: "{{name}} wants to play Pong!",
+        accept: "Accept",
+        decline: "Decline",
+        error_lost: "Error: connection to server lost"
+      },
+      search_placeholder_error: "Please enter a username or email",
+      request_sent: "Friend request sent!",
+      request_error: "Error sending request",
+      network_error: "Network error",
+      no_notifications: "No new notifications",
+      wants_to_be_friend: '<span class="font-semibold">{{name}}</span> wants to be your friend',
+      actions: {
+        accept: "Accept",
+        decline: "Decline",
+        block: "Block"
+      }
+    },
+    friendProfileModal: {
+      loading: "Loading...",
+      no_bio: "No bio.",
+      default_game: "Local"
+    },
+    userProfile: {
+      default_bio: "Share a quick message",
+      bio_length_error: "Your message cannot exceed 70 characters. Stop talking!",
+      avatar_error: "Error while saving avatar"
     }
   };
 
@@ -6374,30 +6970,483 @@
       games: {
         title: "Juegos",
         choose_mode: "Elige tu modo de juego",
-        local: "",
-        remote: "",
-        tournament: "",
+        local: "JUEGO LOCAL",
+        remote: "JUEGO REMOTO",
+        tournament: "TORNEOS",
         local_describe: "Play against another player on this computer",
         remote_describe: "Connect and play with friends and more online",
         tournament_describe: "Compete in a 4-multiplayer tournament on this computer"
       },
       chat: {
-        title: "",
-        friends: "",
-        add_friend: "",
-        send_request: "",
-        cancel: "",
-        contact: "",
-        placeholder: "",
-        input_placeholder: "",
-        view_profile: "",
-        invite_game: "",
-        block_user: ""
+        title: "Messenger",
+        friends: "MIS AMIGOS",
+        add_friend: "A\xF1adir un amigo",
+        send_request: "Enviar solicitud",
+        cancel: "Cancelar",
+        contact: "\u2B50 Contactos",
+        placeholder: "Selecciona un amigo para empezar a chatear",
+        input_placeholder: "Escribe un mensaje...",
+        view_profile: "Ver perfil",
+        invite_game: "Invitaci\xF3n a jugar",
+        block_user: "Bloquear usuario"
       },
       notifications: {
-        title: "",
-        no_notification: ""
+        title: "Notificaciones",
+        no_notification: "Sin notificaci\xF3n"
       }
+    },
+    landing: {
+      welcome: "Bienvenido a Transcendence",
+      login_button: "Entrar",
+      register_button: "Registrarse",
+      guest_button: "Jugar como invitado",
+      guest_error_network: "Error de red. Por favor, int\xE9ntelo de nuevo."
+    },
+    loginPage: {
+      welcome: "Iniciar sesi\xF3n en Transcendence",
+      password: "Introduce tu contrase\xF1a",
+      connect_as: "Conectarse como",
+      status: {
+        available: "Disponible",
+        busy: "Ocupado",
+        away: "Ausente",
+        offline: "Invisible"
+      },
+      login_button: "Entrar",
+      back: "Volver al inicio",
+      "2fa": "Autenticaci\xF3n de dos factores",
+      security: "Control de seguridad",
+      enter_code: "Por favor, introduce el c\xF3digo de seguridad.",
+      verify_button: "VERIFICAR",
+      error_inputs: "Por favor complete todos los campos",
+      error_auth_default: "Autenticaci\xF3n fallida",
+      error_network: "Error de red, int\xE9ntelo de nuevo",
+      error_2fa_invalid: "C\xF3digo inv\xE1lido.",
+      error_2fa_verify: "Error durante la verificaci\xF3n."
+    },
+    registerPage: {
+      welcome: "Registrarse en Transcendence",
+      password: "Introduce tu contrase\xF1a",
+      register_button: "Registrarse",
+      back: "Volver al inicio",
+      error_inputs: "Por favor complete todos los campos",
+      error_auth_default: "Fallo de autenticaci\xF3n",
+      error_network: "Error de red, int\xE9ntelo de nuevo"
+    },
+    profilePage: {
+      window_profile: "Perfil",
+      my_profile: "Mi perfil",
+      my_status: "Estado:",
+      status: {
+        available: "Disponible",
+        busy: "Ocupado",
+        away: "Ausente",
+        offline: "Invisible"
+      },
+      fallback_username: "Espera...",
+      fallback_bio: "Cargando biograf\xEDa...",
+      username: "Usuario:",
+      placeholder_username: "Nombre de usuario",
+      change_button: "Cambiar",
+      confirm_button: "Confirmar",
+      back: "Volver al inicio",
+      bio: "Mensaje r\xE1pido:",
+      placeholder_bio: "Comparte un mensaje r\xE1pido",
+      password: "Contrase\xF1a:",
+      placeholder_password: "Nueva contrase\xF1a",
+      "2fa_button": "Activar 2FA",
+      download_button: "Descargar datos",
+      delete_button: "Eliminar mi cuenta",
+      game_stats: "Mis estad\xEDsticas",
+      game_played: "Partidas jugadas",
+      wins: "Victorias",
+      losses: "Derrotas",
+      winning_streak: "Racha de victorias actual",
+      "2fa_modal": {
+        title: "Autenticaci\xF3n de dos factores",
+        choose_method: "Elegir m\xE9todo",
+        message_method: "Selecciona c\xF3mo configurar el 2FA",
+        authenticator: "App de Autenticaci\xF3n",
+        message_authenticator: "Usa Google Authenticator o similar",
+        email_verif: "Verificaci\xF3n por email",
+        message_email_verif: "Recibe c\xF3digos por email",
+        qr_code: "Escanear c\xF3digo QR",
+        message_qr_code: "Abre Google Authenticator y escanea este c\xF3digo",
+        "6_digit": "Introduce el c\xF3digo de 6 d\xEDgitos:",
+        validate: "VALIDAR",
+        cancel: "CANCELAR",
+        verif_email: "Enviaremos un c\xF3digo a tu email.",
+        message_verif_email: "El c\xF3digo se enviar\xE1 a:",
+        code_send: "ENVIAR C\xD3DIGO",
+        code_received: "Introduce el c\xF3digo recibido:"
+      },
+      twoFactor: {
+        btn_enable: "Activar autenticaci\xF3n 2FA",
+        btn_disable: "Desactivar autenticaci\xF3n 2FA"
+      },
+      picture_modal: {
+        title: "Cambiar imagen",
+        select_pic: "Selecciona una imagen",
+        message_select: "Elige tu avatar para Transcendence.",
+        browse: "BUSCAR",
+        delete: "ELIMINAR",
+        ok: "OK",
+        cancel: "CANCELAR"
+      },
+      theme_modal: {
+        title: "Seleccionar tema"
+      },
+      password_modal: {
+        title: "Cambiar contrase\xF1a",
+        current_pwd: "Contrase\xF1a actual:",
+        new_pwd: "Nueva contrase\xF1a:",
+        confirm_pwd: "Confirmar contrase\xF1a:",
+        save: "Guardar",
+        cancel: "Cancelar"
+      },
+      delete_modal: {
+        title: "Eliminar cuenta",
+        confirm_delete: "\xBFSeguro que quieres eliminar tu cuenta?",
+        confirm_message: "Esta acci\xF3n ser\xE1 irreversible.",
+        yes: "S\xED, eliminar mi cuenta",
+        cancel: "Cancelar"
+      },
+      field_empty: "Vac\xEDo",
+      email_empty: "Sin correo electr\xF3nico",
+      game_local: "Local",
+      alerts: {
+        delete_confirm: "Esta acci\xF3n es irreversible. \xBFEst\xE1s realmente seguro?",
+        delete_success: "Tu cuenta ha sido eliminada. Ser\xE1s redirigido.",
+        delete_error: "Error al eliminar la cuenta",
+        network_error: "Error de red. Por favor, int\xE9ntelo de nuevo.",
+        username_success: "\xA1Nombre de usuario actualizado con \xE9xito!",
+        username_error: "Error al guardar el nombre de usuario",
+        bio_limit: "La biograf\xEDa no puede tener m\xE1s de {{count}} caracteres.",
+        bio_error: "Error al actualizar la biograf\xEDa",
+        email_success: "\xA1Correo electr\xF3nico actualizado con \xE9xito!",
+        email_error: "Error al guardar el correo electr\xF3nico",
+        status_error: "Error al actualizar el estado",
+        pwd_inputs: "Todos los campos son obligatorios.",
+        pwd_mismatch: "No coinciden. Int\xE9ntalo de nuevo.",
+        pwd_length: "La contrase\xF1a debe tener al menos 8 caracteres.",
+        pwd_success: "\xA1Contrase\xF1a actualizada con \xE9xito!",
+        pwd_error: "Error al actualizar la contrase\xF1a",
+        "2fa_init_error": "Error al inicializar la configuraci\xF3n 2FA",
+        "2fa_invalid_code": "C\xF3digo inv\xE1lido",
+        "2fa_enabled": "\xA12FA activada!",
+        "2fa_disable_confirm": "\xBFDesactivar 2FA?",
+        "2fa_disabled": "2FA desactivada"
+      },
+      bio_placeholder: "Comparte un mensaje breve",
+      avatar_save_error: "Error al guardar el avatar"
+    },
+    dashboardPage: {
+      title: "Resumen del panel",
+      game_played: "Partidas jugadas",
+      avg_score: "Puntuaci\xF3n media",
+      time_playing: "Tiempo de juego",
+      wins: "Victorias",
+      losses: "Derrotas",
+      win_rate: "Tasa de victorias",
+      win_loss_evol: "Evoluci\xF3n victorias/derrotas",
+      type_game: "Tipos de juego",
+      bigg_rival: "Mis mayores rivales",
+      match_history: "Historial y an\xE1lisis",
+      placeholder_rival: "Nombre del rival",
+      all_modes: "Todos los modos",
+      local: "Local",
+      remote: "Remoto",
+      tournament: "Torneo",
+      apply_button: "Aplicar",
+      sort: "Ordenar",
+      date_asc: "Fecha \u2191 (Antiguo)",
+      date_desc: "Fecha \u2193 (Reciente)",
+      name_a: "Rival (A-Z)",
+      name_z: "Rival (Z-A)",
+      date: "Fecha",
+      rival: "Rival",
+      score: "Puntos",
+      type: "Tipo",
+      round: "Ronda",
+      result: "Resultado",
+      loading: "Cargando...",
+      prev: "Anterior",
+      next: "Siguiente",
+      page: "P\xE1gina 1",
+      time_format: "{{h}}h {{m}}min",
+      pagination_info: "P\xE1gina {{current}} de {{total}}",
+      no_matches: "A\xFAn no hay partidos.",
+      status_victory: "VICTORIA",
+      status_defeat: "DERROTA",
+      unknown_user: "Desconocido",
+      round_final: "Final",
+      round_1v1: "1v1",
+      chart: {
+        start: "Inicio",
+        net_score: "Puntuaci\xF3n neta",
+        no_data: "Sin datos",
+        games_played: "Partidos jugados",
+        games_count: "({{count}} partidos)",
+        local: "Local",
+        remote: "Remoto",
+        tournament: "Torneo"
+      }
+    },
+    localPage: {
+      title: "Juegos",
+      p1: "Jugador 1",
+      p2: "Jugador 2",
+      start_game: "Empezar partida",
+      game_instr: "Instrucciones",
+      ws: "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      up_down: "El jugador de la derecha usa las teclas \u2B06\uFE0F\u2B07\uFE0F.",
+      space_bar: "La barra espaciadora sirve para distraer al oponente",
+      opp_name: "\xBFCon qui\xE9n juegas? :",
+      placeholder_opp: "Escribe un nombre...",
+      err_message: "\xA1Por favor, rellena esto!",
+      choose_ball: "Elige tu bola:",
+      select_ball: "Seleccionar bola:",
+      choose_bg: "Elige tu fondo:",
+      select_bg: "Seleccionar fondo:",
+      reset_color: "Restablecer color",
+      play: "JUGAR",
+      countdown_title: "\xA1Listos, preparados, ya!",
+      summary_modal: {
+        title: "Fin de la partida",
+        congrat: "\xA1FELICIDADES!",
+        name: "NOMBRE",
+        back_menu: "Volver al men\xFA"
+      },
+      chat: {
+        title: "Notificaciones",
+        info: "Notificaci\xF3n del sistema",
+        placeholder_input: "No puedes hablar con el sistema"
+      },
+      chat_start_match: "\xA1El juego est\xE1 por comenzar! Partido: {{p1}} vs {{p2}}"
+    },
+    remotePage: {
+      title: "Juegos",
+      p1: "Jugador 1",
+      p2: "Jugador 2",
+      start_game: "Empezar partida",
+      game_instr: "Instrucciones",
+      ws: "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      up_down: "El jugador de la derecha usa las teclas \u2B06\uFE0F\u2B07\uFE0F.",
+      space_bar: "La barra espaciadora sirve para distraer al oponente",
+      choose_ball: "Elige tu bola:",
+      select_ball: "Seleccionar bola:",
+      choose_bg: "Elige tu fondo:",
+      select_bg: "Seleccionar fondo:",
+      reset_color: "Restablecer color",
+      play: "JUGAR (COLA)",
+      countdown_title: "\xA1Listos, preparados, ya!",
+      summary_modal: {
+        title: "Fin de la partida",
+        congrat: "\xA1FELICIDADES!",
+        name: "???",
+        back_menu: "Volver al men\xFA"
+      },
+      chat: {
+        title: "Chat de juego",
+        info: "Sala de chat",
+        choose_bg: "Elegir fondo:",
+        default_bg: "Fondo por defecto"
+      }
+    },
+    tournamentPage: {
+      title: "Arena de Torneo",
+      p1: "Jugador 1",
+      p2: "Jugador 2",
+      setup_modal: {
+        title_modal: "Configuraci\xF3n del torneo",
+        game_instr: "Instrucciones",
+        ws: "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+        up_down: "El jugador de la derecha usa las teclas \u2B06\uFE0F\u2B07\uFE0F.",
+        space_bar: "La barra espaciadora sirve para distraer al oponente",
+        tournament_name: "Nombre del torneo:",
+        placeholder_trnmt: "Mi gran torneo",
+        participant: "Participantes",
+        p1: "Jugador 1 (T\xFA):",
+        p2: "Jugador 2:",
+        p3: "Jugador 3:",
+        p4: "Jugador 4:",
+        choose__ball_bg: "Elige tu bola y fondo:",
+        choose__ball: "Bola:",
+        choose_bg: "Fondo:",
+        select_bg: "Seleccionar fondo:",
+        reset_color: "Restablecer color",
+        play: "EMPEZAR TORNEO",
+        countdown_title: "\xA1Listos, preparados, ya!"
+      },
+      tournament_bracket_modal: {
+        title: "Torneo",
+        heading: "EL TORNEO EST\xC1 POR EMPEZAR",
+        semi_final_1: "Semi-Final 1",
+        semi_final_2: "Semi-Final 2",
+        final: "Final",
+        status_ready: "Listo para el siguiente partido...",
+        continue_btn: "CONTINUAR AL PARTIDO"
+      },
+      tournament_next_match_modal: {
+        title: "Siguiente partido",
+        match_title: "SEMI-FINAL 1",
+        player_vs: "VS",
+        start_info: "El juego empezar\xE1 en cuanto pulses Jugar.",
+        play_btn: "\xA1JUGAR!"
+      },
+      tournament_summary_modal: {
+        title: "Fin del torneo",
+        congratulations: "\xA1FELICIDADES!",
+        winner_name: "NOMBRE",
+        back_menu: "Volver al men\xFA"
+      },
+      chat: {
+        title: "Notificaciones",
+        info: "Notificaci\xF3n del sistema",
+        placeholder_input: "No puedes hablar con el sistema"
+      }
+    },
+    guestPage: {
+      title: "Modo Invitado",
+      welcome: "Bienvenido a Transcendence",
+      description: "Actualmente est\xE1s jugando como invitado. \xA1Si quieres acceder a todas las funciones del juego, debes registrarte!",
+      select_mode: "Selecciona un modo para empezar a jugar",
+      local: "JUEGO LOCAL",
+      remote: "JUEGO REMOTO",
+      tournament: "TORNEO",
+      chat_welcome: "Bienvenido al modo invitado. Selecciona un modo de juego para chatear con tus oponentes."
+    },
+    gamePage: {
+      default_player: "Jugador",
+      default_guest: "Invitado",
+      unload_warning: "Hay una partida en curso. \xBFEst\xE1s seguro de que quieres salir?",
+      exit_modal: {
+        title: "Salir del juego",
+        heading: "\xA1ESPERA UN MOMENTO!",
+        question: "\xBFEst\xE1s seguro de que quieres irte?",
+        warning: "Se perder\xE1 todo el progreso actual.",
+        back_btn: "VOLVER AL JUEGO",
+        leave_btn: "SALIR"
+      }
+    },
+    game: {
+      game_over: "\xA1Juego terminado! Puntuaci\xF3n final: {{score1}} - {{score2}}"
+    },
+    gameUI: {
+      winner_message: "\xA1{{name}} gana el partido!",
+      game_over: "Juego terminado",
+      congratulations: "FELICIDADES",
+      return_menu: "VOLVER AL MEN\xDA",
+      go: "\xA1VAMOS!"
+    },
+    remoteManager: {
+      self_play_error: "No puedes jugar contra ti mismo",
+      btn_play_queue: "JUGAR (COLA)",
+      default_opponent: "Oponente",
+      me_suffix: "(Yo)",
+      match_started: "\xA1El partido ha comenzado!",
+      match_found: "\xA1Oponente encontrado! Iniciando juego...",
+      opponent_forfeit: "(Abandono del oponente)",
+      default_winner: "Ganador",
+      error_connection: "Error: conexi\xF3n perdida con el servidor de juego",
+      waiting_private: "Esperando a tu amigo en la sala privada...",
+      btn_waiting_friend: "ESPERANDO AMIGO...",
+      looking_rival: "Buscando un rival...",
+      btn_waiting: "ESPERANDO..."
+    },
+    tournamentManager: {
+      setup_error_fields: "Por favor complete todos los campos.",
+      setup_error_unique: "Todos los alias deben ser \xFAnicos.",
+      chat_start: '\xA1Torneo "{{name}}" iniciado! Participantes: {{players}}',
+      bracket_next_sf1: "Siguiente: Semifinal 1",
+      bracket_next_sf2: "Siguiente: Semifinal 2",
+      bracket_next_final: "Siguiente: \xA1La Gran Final!",
+      match_sf1: "SEMIFINAL 1",
+      match_sf2: "SEMIFINAL 2",
+      match_final: "FINAL",
+      chat_next_match: "Siguiente: {{p1}} vs {{p2}} !",
+      chat_final_match: "FINAL: {{p1}} vs {{p2}} !",
+      chat_winner: "\xA1{{winner}} gana el partido!"
+    },
+    chatComponent: {
+      system: "Sistema",
+      connected: "\xA1Ahora puedes chatear con tu amigo!",
+      disconnected: "\xA1Desconectado del servidor de chat!",
+      nudge_sent: "[b]{{author}} envi\xF3 un zumbido[/b]",
+      animation_unknown: "Animaci\xF3n desconocida ({{key}}) recibida de {{author}}.",
+      game_invite: "\xA1{{author}} quiere jugar al Pong contigo!",
+      join_waitroom: "Unirse a mi sala de espera",
+      accept_match: "Aceptar el partido",
+      game_unreachable: "Error: Servidor de juego inalcanzable.",
+      block_confirm: "\xBFEst\xE1s seguro de que quieres bloquear a {{name}}?",
+      block_success: "Conversaci\xF3n eliminada (Usuario bloqueado).",
+      block_error: "Error al bloquear",
+      input_blocked: "Has bloqueado a este usuario.",
+      tools: {
+        bold: "Negrita",
+        italic: "Cursiva",
+        underline: "Subrayado",
+        strikethrough: "Tachado"
+      }
+    },
+    data: {
+      status: {
+        available: "(Disponible)",
+        busy: "(Ocupado)",
+        away: "(Ausente)",
+        invisible: "(Invisible)"
+      },
+      themes: {
+        basic: "Azul Cl\xE1sico",
+        bamboo: "Bamb\xFA Zen",
+        cherry: "Flor de Cerezo",
+        mountain: "Monta\xF1as Brumosas",
+        punk: "Cyber Punk",
+        dotted: "Puntos de Primavera",
+        sunset: "Puesta de Sol",
+        football: "Estadio",
+        spring: "Jard\xEDn de Primavera",
+        love: "Coraz\xF3n Encantador",
+        diary: "Querido Diario",
+        branches: "Ramas de Invierno",
+        purple: "Sue\xF1os P\xFArpuras",
+        abstract: "Flujo Abstracto"
+      }
+    },
+    friendList: {
+      no_friends: "A\xFAn no hay amigos",
+      error_loading: "Error al cargar contactos",
+      default_bio: "Comparte un mensaje r\xE1pido",
+      game_disconnected: "El juego est\xE1 desconectado, actualiza",
+      invite_sent: "Invitaci\xF3n enviada a {{name}}",
+      invite_toast: {
+        title: "\u{1F3AE} Invitaci\xF3n de juego",
+        message: "\xA1{{name}} quiere jugar al Pong!",
+        accept: "Aceptar",
+        decline: "Rechazar",
+        error_lost: "Error: conexi\xF3n con el servidor perdida"
+      },
+      search_placeholder_error: "Introduce un nombre de usuario o correo",
+      request_sent: "\xA1Solicitud de amistad enviada!",
+      request_error: "Error al enviar la solicitud",
+      network_error: "Error de red",
+      no_notifications: "No hay notificaciones nuevas",
+      wants_to_be_friend: '<span class="font-semibold">{{name}}</span> quiere ser tu amigo',
+      actions: {
+        accept: "Aceptar",
+        decline: "Rechazar",
+        block: "Bloquear"
+      }
+    },
+    friendProfileModal: {
+      loading: "Cargando...",
+      no_bio: "Sin biograf\xEDa.",
+      default_game: "Local"
+    },
+    userProfile: {
+      default_bio: "Comparte un mensaje r\xE1pido",
+      bio_length_error: "Tu mensaje no puede exceder los 70 caracteres. \xA1Deja de hablar!",
+      avatar_error: "Error al guardar el avatar"
     }
   };
 
@@ -6423,9 +7472,372 @@
   }
   var i18n_default = instance;
 
+  // scripts/components/Data.ts
+  var Data = class {
+    static get hasUnreadMessage() {
+      return localStorage.getItem("hasUnreadMessage") === "true";
+    }
+    // Écriture dans le localStorage
+    static set hasUnreadMessage(value2) {
+      localStorage.setItem("hasUnreadMessage", String(value2));
+    }
+  };
+  var globalPath = "/assets/emoticons/";
+  var animationPath = "/assets/animated/";
+  var gamePath = "/assets/game/";
+  var appThemes = {
+    "basic": {
+      get name() {
+        return i18n_default.t("data.themes.basic", "Classic Blue");
+      },
+      // Getter dynamique
+      headerUrl: "/assets/basic/background.jpg",
+      navColor: "linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)",
+      bgColor: "linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)",
+      textColor: "#3E73B0"
+    },
+    "bamboo": {
+      get name() {
+        return i18n_default.t("data.themes.bamboo", "Zen Bamboo");
+      },
+      headerUrl: "/assets/headers/bamboo_header.jpg",
+      navColor: "linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)",
+      bgColor: "linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)",
+      textColor: "#33691E"
+    },
+    "cherry": {
+      get name() {
+        return i18n_default.t("data.themes.cherry", "Cherry Blossom");
+      },
+      headerUrl: "/assets/headers/blossoms_header.jpg",
+      navColor: "linear-gradient(to bottom, #F48FB1 0%, #EC407A 50%, #C2185B 100%)",
+      bgColor: "linear-gradient(to bottom, #FFBBB4 0%, #ffffff 50%, #FFBBB4 100%)",
+      textColor: "#C2185B"
+    },
+    "mountain": {
+      get name() {
+        return i18n_default.t("data.themes.mountain", "Misty Mountains");
+      },
+      headerUrl: "/assets/headers/dawn_header.png",
+      navColor: "linear-gradient(to bottom, #5C6BC0 0%, #3949AB 50%, #283593 100%)",
+      bgColor: "linear-gradient(to bottom, #6F94BF 0%, #ffffff 50%, #6F94BF 100%)",
+      textColor: "#283593"
+    },
+    "punk": {
+      get name() {
+        return i18n_default.t("data.themes.punk", "Cyber Punk");
+      },
+      headerUrl: "/assets/headers/punk_header.jpg",
+      navColor: "linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)",
+      bgColor: "linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)",
+      textColor: "#631C6E"
+    },
+    "dotted": {
+      get name() {
+        return i18n_default.t("data.themes.dotted", "Spring Dots");
+      },
+      headerUrl: "/assets/headers/dott_header.png",
+      navColor: "linear-gradient(to bottom, #9CCC65 0%, #7CB342 50%, #558B2F 100%)",
+      bgColor: "linear-gradient(to bottom, #8BC72C 0%, #ffffff 50%, #8BC72C 100%)",
+      textColor: "#558B2F"
+    },
+    "sunset": {
+      get name() {
+        return i18n_default.t("data.themes.sunset", "Golden Sunset");
+      },
+      headerUrl: "/assets/headers/field_header.png",
+      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
+      bgColor: "linear-gradient(to bottom, #F7A624 0%, #ffffff 50%, #F7A624 100%)",
+      textColor: "#E65100"
+    },
+    "football": {
+      get name() {
+        return i18n_default.t("data.themes.football", "Stadium");
+      },
+      headerUrl: "/assets/headers/football_header.png",
+      navColor: "linear-gradient(to bottom, #66BB6A 0%, #43A047 50%, #2E7D32 100%)",
+      bgColor: "linear-gradient(to bottom, #73AD4E 0%, #ffffff 50%, #73AD4E 100%)",
+      textColor: "#2E7D32"
+    },
+    "spring": {
+      get name() {
+        return i18n_default.t("data.themes.spring", "Spring Garden");
+      },
+      headerUrl: "/assets/headers/hill_header.png",
+      navColor: "linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)",
+      bgColor: "linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)",
+      textColor: "#6CB85A"
+    },
+    "love": {
+      get name() {
+        return i18n_default.t("data.themes.love", "Lovely Heart");
+      },
+      headerUrl: "/assets/headers/love_header.jpg",
+      navColor: "linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)",
+      bgColor: "linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)",
+      textColor: "#7E2223"
+    },
+    "diary": {
+      get name() {
+        return i18n_default.t("data.themes.diary", "Dear Diary");
+      },
+      headerUrl: "/assets/headers/diary_header.jpg",
+      navColor: "linear-gradient(to bottom, #D658A4 0%, #BA3083 50%, #D90082 100%)",
+      bgColor: "linear-gradient(to bottom, #E297B6 0%, #ffffff 50%, #E297B6 100%)",
+      textColor: "#D90082"
+    },
+    "branches": {
+      get name() {
+        return i18n_default.t("data.themes.branches", "Winter Branches");
+      },
+      headerUrl: "/assets/headers/silhouette_header.jpg",
+      navColor: "linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)",
+      bgColor: "linear-gradient(to bottom, #F79B34 0%, #ffffff 50%, #F79B34 100%)",
+      textColor: "#E65100"
+    },
+    "purple": {
+      get name() {
+        return i18n_default.t("data.themes.purple", "Purple Dreams");
+      },
+      headerUrl: "/assets/headers/spring_header.png",
+      navColor: "linear-gradient(to bottom, #9C27B0 0%, #7B1FA2 50%, #6A1B9A 100%)",
+      bgColor: "linear-gradient(to bottom, #663A92 0%, #ffffff 50%, #663A92 100%)",
+      textColor: "#6A1B9A"
+    },
+    "abstract": {
+      get name() {
+        return i18n_default.t("data.themes.abstract", "Abstract Flow");
+      },
+      headerUrl: "/assets/headers/weird_header.jpg",
+      navColor: "linear-gradient(to bottom, #FF6B9D 0%, #FF1744 50%, #D50000 100%)",
+      bgColor: "linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)",
+      textColor: "#D50000"
+    }
+  };
+  var ballEmoticons = {
+    "smile": gamePath + "smiling.png",
+    "surprised": gamePath + "surprised.png",
+    "confused": gamePath + "confused.png",
+    "hot": gamePath + "hot.png",
+    "teeth_smile": gamePath + "teeth_smile.png",
+    "tongue": gamePath + "tongue_smile.png",
+    "sad": gamePath + "sad.png",
+    "disappointed": gamePath + "disappointed.png",
+    "embarrassed": gamePath + "embarrassed.png",
+    "angry": gamePath + "angry.png",
+    "nerd": gamePath + "nerd.png",
+    "teeth": gamePath + "teeth.png",
+    "sarcastic": gamePath + "sarcastic.png",
+    "sick": gamePath + "sick.png",
+    "devil": gamePath + "devil_smile.png"
+  };
+  var gameBackgrounds = {
+    "classic": "#B8E8F9",
+    // Bleu pastel clair
+    "mint": "#D4F1E8",
+    // Vert menthe
+    "lavender": "#E6E6FA",
+    // Lavande
+    "rose": "#FFE1E9",
+    // Rose
+    "lemon": "#FFFACD",
+    // Citron
+    "sky": "#B0E0E6",
+    // Bleu ciel
+    "coral": "#FFCCCB",
+    // Corail
+    "lilac": "#DCD0FF",
+    // Lilas
+    "sage": "#C8E6C9",
+    // Vert sauge
+    "powder": "#B0C4DE",
+    // Bleu poudré
+    "blush": "#FFC0CB",
+    // Rose poudré
+    "apricot": "#FFDAB9"
+    // Abricot
+  };
+  var statusImages = {
+    "available": "/assets/basic/status_online_small.png",
+    "online": "/assets/basic/status_online_small.png",
+    "busy": "/assets/basic/status_busy_small.png",
+    "away": "/assets/basic/status_away_small.png",
+    "invisible": "/assets/basic/status_offline_small.png",
+    "offline": "/assets/basic/status_offline_small.png"
+  };
+  var statusLabels = {
+    get "available"() {
+      return i18n_default.t("data.status.available", "(Available)");
+    },
+    get "busy"() {
+      return i18n_default.t("data.status.busy", "(Busy)");
+    },
+    get "away"() {
+      return i18n_default.t("data.status.away", "(Away)");
+    },
+    get "invisible"() {
+      return i18n_default.t("data.status.invisible", "(Appear offline)");
+    }
+  };
+  var getStatusDot = (status) => {
+    switch (status) {
+      case "available":
+        return "/assets/friends/online-dot.png";
+      case "busy":
+        return "/assets/friends/busy-dot.png";
+      case "away":
+        return "/assets/friends/away-dot.png";
+      default:
+        return "/assets/friends/offline-dot.png";
+    }
+  };
+  var animations = {
+    "(boucy_ball)": animationPath + "bouncy_ball.gif",
+    "(bow)": animationPath + "bow.gif",
+    "(crying)": animationPath + "crying.gif",
+    "(dancer)": animationPath + "dancer.gif",
+    "(dancing_pig)": animationPath + "dancing_pig.gif",
+    "(frog)": animationPath + "frog.gif",
+    "(guitar_smash)": animationPath + "guitar_smash.gif",
+    "(heart)": animationPath + "heart.gif",
+    "(kiss)": animationPath + "kiss.gif",
+    "(knock)": animationPath + "knock.gif",
+    "(silly_face)": animationPath + "silly_face.gif",
+    "(ufo)": animationPath + "ufo.gif",
+    "(water_balloon)": animationPath + "water_balloon.gif"
+  };
+  var icons = {
+    "(boucy_ball)": animationPath + "bouncy_ball.png",
+    "(bow)": animationPath + "bow.jpg",
+    "(crying)": animationPath + "crying.png",
+    "(dancer)": animationPath + "dancer.png",
+    "(dancing_pig)": animationPath + "dancing_pig.png",
+    "(frog)": animationPath + "frog.png",
+    "(guitar_smash)": animationPath + "guitar_smash.png",
+    "(heart)": animationPath + "heart.png",
+    "(kiss)": animationPath + "kiss.png",
+    "(knock)": animationPath + "knock.png",
+    "(silly_face)": animationPath + "silly_face.png",
+    "(ufo)": animationPath + "ufo.png",
+    "(water_balloon)": animationPath + "water_balloon.png"
+  };
+  var emoticons = {};
+  function alias(keys, file) {
+    keys.forEach((k) => emoticons[k] = globalPath + file);
+  }
+  Object.assign(emoticons, {
+    ":-)": globalPath + "smile.gif",
+    ":-O": globalPath + "surprised.gif",
+    ";-)": globalPath + "wink_smile.gif",
+    ":-S": globalPath + "confused.gif",
+    ":'(": globalPath + "crying.gif",
+    ":-#": globalPath + "silence.gif",
+    "8-|": globalPath + "nerd.gif",
+    ":-*": globalPath + "secret.gif",
+    ":^)": globalPath + "unknow.gif",
+    "|-)": globalPath + "sleepy.gif",
+    "({)": globalPath + "guy_hug.gif",
+    ":-[": globalPath + "bat.gif",
+    "(@)": globalPath + "cat.gif",
+    "(8)": globalPath + "note.gif",
+    "(*)": globalPath + "star.gif",
+    "(sn)": globalPath + "snail.gif",
+    "(pl)": globalPath + "plate.gif",
+    "(pi)": globalPath + "pizza.gif",
+    "(au)": globalPath + "car.gif",
+    "(um)": globalPath + "umbrella.gif",
+    "(co)": globalPath + "computer.gif",
+    "(st)": globalPath + "storm.gif",
+    "(mo)": globalPath + "money.gif",
+    "8o|": globalPath + "teeth.gif",
+    "^o)": globalPath + "sarcastic.gif",
+    "+o(": globalPath + "sick.gif",
+    "*-)": globalPath + "thinking.gif",
+    "8-)": globalPath + "eye_roll.gif",
+    "(6)": globalPath + "devil_smile.gif",
+    "(bah)": globalPath + "sheep.gif",
+    "(||)": globalPath + "bowl.gif",
+    "(so)": globalPath + "soccer.gif",
+    "(ap)": globalPath + "airplane.gif",
+    "(ip)": globalPath + "island.gif",
+    "(mp)": globalPath + "portable.gif",
+    "(li)": globalPath + "lightning.gif"
+  });
+  alias([":)", ":-)"], "smile.gif");
+  alias([":o", ":-O"], "surprised.gif");
+  alias([";)", ";-)"], "wink_smile.gif");
+  alias([":s", ":-S"], "confused.gif");
+  alias(["(H)", "(h)"], "hot.gif");
+  alias(["(A)", "(a)"], "angel.gif");
+  alias([":[", ":-["], "bat.gif");
+  alias(["(L)", "(l)"], "heart.gif");
+  alias(["(K)", "(k)"], "kiss.gif");
+  alias(["(F)", "(f)"], "rose.gif");
+  alias(["(P)", "(p)"], "camera.gif");
+  alias(["(T)", "(t)"], "phone.gif");
+  alias(["(O)", "(o)"], "clock.gif");
+  alias([":D", ":-D"], "teeth_smile.gif");
+  alias([":p", ":-P"], "tongue_smile.gif");
+  alias([":(", ":-("], "sad.gif");
+  alias([":|", ":-|"], "disappointed.gif");
+  alias([":$", ":-$"], "embarrassed.gif");
+  alias([":@", ":-@"], "angry.gif");
+  alias(["(C)", "(c)"], "coffee.gif");
+  alias(["(N)", "(n)"], "thumbs_down.gif");
+  alias(["(D)", "(d)"], "martini.gif");
+  alias(["(Z)", "(z)"], "guy.gif");
+  alias(["(})", "({)"], "guy_hug.gif");
+  alias(["(U)", "(u)"], "broken_heart.gif");
+  alias(["(G)", "(g)"], "present.gif");
+  alias(["(W)", "(w)"], "wilted_rose.gif");
+  alias(["(E)", "(e)"], "email.gif");
+  alias(["(I)", "(i)"], "lightbulb.gif");
+  alias(["(M)", "(m)"], "messenger.gif");
+  alias(["(Y)", "(y)"], "thumbs_up.gif");
+  alias(["(B)", "(b)"], "beer_mug.gif");
+  alias(["(X)", "(x)"], "girl.gif");
+  async function updateUserStatus(newStatus) {
+    const userId = localStorage.getItem("userId");
+    const username = localStorage.getItem("username");
+    if (!userId) return;
+    try {
+      await fetchWithAuth(`/api/user/${userId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const socket = SocketService_default.getInstance().socket;
+      if (socket && username) {
+        socket.emit("notifyStatusChange", {
+          userId: Number(userId),
+          status: newStatus,
+          username
+        });
+        console.log(`[Status] Updated to ${newStatus} for ${username}`);
+      }
+      localStorage.setItem("userStatus", newStatus);
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  }
+
   // scripts/controllers/LoginPage.ts
   function render() {
-    return LoginPage_default;
+    let html = LoginPage_default;
+    html = html.replace(/\{\{loginPage\.welcome\}\}/g, i18n_default.t("loginPage.welcome"));
+    html = html.replace(/\{\{loginPage\.password\}\}/g, i18n_default.t("loginPage.password"));
+    html = html.replace(/\{\{loginPage\.connect_as\}\}/g, i18n_default.t("loginPage.connect_as"));
+    html = html.replace(/\{\{loginPage\.status\.available\}\}/g, i18n_default.t("loginPage.status.available"));
+    html = html.replace(/\{\{loginPage\.status\.busy\}\}/g, i18n_default.t("loginPage.status.busy"));
+    html = html.replace(/\{\{loginPage\.status\.away\}\}/g, i18n_default.t("loginPage.status.away"));
+    html = html.replace(/\{\{loginPage\.status\.offline\}\}/g, i18n_default.t("loginPage.status.offline"));
+    html = html.replace(/\{\{loginPage\.login-button\}\}/g, i18n_default.t("loginPage.login_button"));
+    html = html.replace(/\{\{loginPage\.back\}\}/g, i18n_default.t("loginPage.back"));
+    html = html.replace(/\{\{loginPage\.2fa\}\}/g, i18n_default.t("loginPage.2fa"));
+    html = html.replace(/\{\{loginPage\.security\}\}/g, i18n_default.t("loginPage.security"));
+    html = html.replace(/\{\{loginPage\.enter_code\}\}/g, i18n_default.t("loginPage.enter_code"));
+    html = html.replace(/\{\{loginPage\.verify_button\}\}/g, i18n_default.t("loginPage.verify_button"));
+    return html;
   }
   async function init2faLogin(accessToken, userId, selectedStatus) {
     if (accessToken) {
@@ -6495,7 +7907,7 @@
       }
       if (!email || !password) {
         if (errorElement) {
-          errorElement.textContent = "Please fill all inputs";
+          errorElement.textContent = i18n_default.t("loginPage.error_inputs");
           errorElement.classList.remove("hidden");
         }
         return;
@@ -6561,14 +7973,14 @@
         } else {
           console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
+            errorElement.textContent = result.error?.message || result.error.error || i18n_default.t("loginPage.error_auth_default");
             errorElement.classList.remove("hidden");
           }
         }
       } catch (error) {
         console.error("Network error:", error);
         if (errorElement) {
-          errorElement.textContent = "Network error, please try again";
+          errorElement.textContent = i18n_default.t("loginPage.error_network");
           errorElement.classList.remove("hidden");
         }
       }
@@ -6601,14 +8013,14 @@
           await init2faLogin(accessToken, userId, cachedStatus);
         } else {
           if (error2fa) {
-            error2fa.textContent = "Invalid code.";
+            error2fa.textContent = i18n_default.t("loginPage.error_2fa_invalid");
             error2fa.classList.remove("hidden");
             console.error("2FA Error:", result.error.message);
           }
         }
       } catch (error) {
         if (error2fa) {
-          error2fa.textContent = "Error during verification.";
+          error2fa.textContent = i18n_default.t("loginPage.error_2fa_verify");
           error2fa.classList.remove("hidden");
         }
       }
@@ -6638,14 +8050,17 @@
         if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
       });
     }
+    const display = document.getElementById("page-current-lang-display");
+    if (display) {
+      display.textContent = i18n_default.language.toUpperCase();
+    }
     document.querySelectorAll(".page-lang-select").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
         const target = e.currentTarget;
         const lang = target.getAttribute("data-lang");
         if (lang) {
           await changeLanguage2(lang);
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       });
     });
@@ -6796,7 +8211,7 @@
 										transition-all duration-200 hover:shadow-md" style="width: 150px; padding: 4px;">
 									{{homepage.games.tournament}}
 								</button>
-								<p>{{homepage.games.tournament_describe}}</p>
+								<p class="text-sm text-gray-400" style="padding-bottom: 35px; color:grey;"></p>{{homepage.games.tournament_describe}}</p>
 							</div>
 						</div>
 					</div>
@@ -7177,8 +8592,7 @@
                 </div>
             </div>
         </div>
-    </div>
-`;
+    </div>`;
 
   // scripts/components/FriendList.ts
   var FriendList = class {
@@ -7198,8 +8612,14 @@
       this.listenToUpdates();
       this.setupBlockListener();
       this.registerSocketUser();
-      if (this.notificationInterval) clearInterval(this.notificationInterval);
+      if (this.notificationInterval) {
+        clearInterval(this.notificationInterval);
+      }
       this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
+      window.addEventListener("notificationUpdate", () => {
+        console.log("Friend received notification");
+        this.checkNotifications();
+      });
     }
     // AJOUT
     destroy() {
@@ -7252,7 +8672,7 @@
         const friendList = responseData.data;
         contactsList.innerHTML = "";
         if (!friendList || friendList.length === 0) {
-          contactsList.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+          contactsList.innerHTML = `<div class="text-xs text-gray-500 ml-2">${i18n_default.t("friendList.no_friends")}</div>`;
           return;
         }
         friendList.forEach((friendship) => {
@@ -7270,7 +8690,7 @@
           friendItem.dataset.login = selectedFriend.username;
           friendItem.dataset.alias = selectedFriend.alias;
           friendItem.dataset.status = status;
-          friendItem.dataset.bio = selectedFriend.bio || "Share a quick message";
+          friendItem.dataset.bio = selectedFriend.bio || i18n_default.t("friendList.default_bio");
           friendItem.dataset.avatar = selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png";
           friendItem.innerHTML = `
                 <div class="flex items-center gap-3">
@@ -7328,7 +8748,7 @@
         });
       } catch (error) {
         console.error("Error loading friends:", error);
-        contactsList.innerHTML = '<div class="text-xs text-red-400 ml-2">Error loading contacts</div>';
+        contactsList.innerHTML = `<div class="text-xs text-red-400 ml-2">${i18n_default.t("friendList.error_loading")}</div>`;
       }
     }
     clearNotifications(friendId) {
@@ -7352,7 +8772,7 @@
       const gameSocket = SocketService_default.getInstance().getGameSocket();
       const myName = localStorage.getItem("username");
       if (!gameSocket || !gameSocket.connected) {
-        alert("Game is disconnected, please refresh");
+        alert(i18n_default.t("friendList.game_disconnected"));
         SocketService_default.getInstance().connectGame();
         return;
       }
@@ -7361,7 +8781,7 @@
         targetId: friendId,
         senderName: myName
       });
-      alert(`Invitation sent to ${friendName}`);
+      alert(i18n_default.t("friendList.invite_sent", { name: friendName }));
     }
     listenToUpdates() {
       const socketService = SocketService_default.getInstance();
@@ -7428,19 +8848,23 @@
       if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
       const toast = document.createElement("div");
       toast.className = "fixed top-4 right-4 bg-white shadow-lg rounded-lg p-4 z-50 flex flex-col gap-2 border border-blue-200 animate-bounce-in";
+      const t_title = i18n_default.t("friendList.invite_toast.title");
+      const t_msg = i18n_default.t("friendList.invite_toast.message", { name: senderName });
+      const t_accept = i18n_default.t("friendList.invite_toast.accept");
+      const t_decline = i18n_default.t("friendList.invite_toast.decline");
       toast.innerHTML = `
-            <div class="font-bold text-gray-800">\u{1F3AE} Game Invite</div> 
-            <div class="text-sm text-gray-600">${senderName} wants to play Pong!</div>
+            <div class="font-bold text-gray-800">${t_title}</div> 
+            <div class="text-sm text-gray-600">${t_msg}</div>
             <div class="flex gap-2 mt-2">
-                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">Accept</button>
-                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">Decline</button>
+                <button id="accept-invite" class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition">${t_accept}</button>
+                <button id="decline-invite" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">${t_decline}</button>
             </div>
         `;
       document.body.appendChild(toast);
       toast.querySelector("#accept-invite")?.addEventListener("click", () => {
         const gameSocket = SocketService_default.getInstance().getGameSocket();
         if (!gameSocket || !gameSocket.connected) {
-          alert("Error: connexion to server lost");
+          alert(i18n_default.t("friendList.invite_toast.error_lost"));
           toast.remove();
           return;
         }
@@ -7491,7 +8915,7 @@
           setTimeout(() => {
             friendToRemove.remove();
             if (this.container && this.container.children.length === 0) {
-              this.container.innerHTML = '<div class="text-xs text-gray-500 ml-2">No friend yet</div>';
+              this.container.innerHTML = `<div class="text-xs text-gray-500 ml-2">${i18n_default.t("friendList.no_friends")}</div>`;
             }
           }, 300);
         }
@@ -7516,7 +8940,7 @@
         const sendFriendRequest = async () => {
           const searchValue = friendSearchInput.value.trim();
           if (!searchValue) {
-            this.showFriendMessage("Please enter a username or email", "error", friendRequestMessage);
+            this.showFriendMessage(i18n_default.t("friendList.search_placeholder_error"), "error", friendRequestMessage);
             return;
           }
           const userId = localStorage.getItem("userId");
@@ -7528,7 +8952,7 @@
             });
             const data = await response.json();
             if (response.ok) {
-              this.showFriendMessage("Friend request sent!", "success", friendRequestMessage);
+              this.showFriendMessage(i18n_default.t("friendList.request_sent"), "success", friendRequestMessage);
               const targetId = data.data.friend_id || data.data.friend?.id;
               if (targetId) {
                 SocketService_default.getInstance().getChatSocket()?.emit("sendFriendRequestNotif", {
@@ -7541,11 +8965,11 @@
                 friendRequestMessage?.classList.add("hidden");
               }, 1500);
             } else {
-              this.showFriendMessage(data.error.message || "Error sending request", "error", friendRequestMessage);
+              this.showFriendMessage(data.error.message || i18n_default.t("friendList.request_error"), "error", friendRequestMessage);
             }
           } catch (error) {
             console.error("Error:", error);
-            this.showFriendMessage("Network error", "error", friendRequestMessage);
+            this.showFriendMessage(i18n_default.t("friendList.network_error"), "error", friendRequestMessage);
           }
         };
         sendFriendRequestButton.addEventListener("click", sendFriendRequest);
@@ -7596,25 +9020,64 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-        if (!response.ok) throw new Error("Failed to fetch pendings");
-        const requests = await response.json();
-        const pendingList = requests.data;
+        const friendsPromise = fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+        const chatPromise = fetchWithAuth(`/api/chat/unread`);
+        const [friendsRes, chatRes] = await Promise.all([friendsPromise, chatPromise]);
+        let pendingList = [];
+        let unreadMessages = [];
+        if (friendsRes.ok) {
+          const data = await friendsRes.json();
+          pendingList = data.data || [];
+        }
+        if (chatRes.ok) {
+          const data = await chatRes.json();
+          unreadMessages = data.data || [];
+        }
+        const totalNotifications = pendingList.length + unreadMessages.length;
         const notifIcon = document.getElementById("notification-icon");
-        if (pendingList.length > 0) {
+        if (totalNotifications > 0) {
           if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
         } else {
           if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
         }
         notifList.innerHTML = "";
-        if (pendingList.length === 0) {
-          notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
+        if (totalNotifications === 0) {
+          notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18n_default.t("friendList.no_notifications")}</div>`;
           return;
         }
+        unreadMessages.forEach((msg) => {
+          const item = document.createElement("div");
+          item.className = "flex items-center p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition cursor-pointer bg-blue-50";
+          const text = i18n_default.t("friendList.unread_messages", { count: msg.unread_count, sender: msg.sender_alias }) || `Message from ${msg.sender_alias}`;
+          item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0">
+                         <img src="/assets/basic/message_notif.png" class="w-full h-full object-contain" alt="msg">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-800 font-medium">${text}</p>
+                        <p class="text-xs text-gray-400">Click to reply</p>
+                    </div>
+                `;
+          item.addEventListener("click", () => {
+            const event = new CustomEvent("friendSelected", {
+              detail: {
+                friend: { id: msg.sender_id, alias: msg.sender_alias },
+                channelKey: msg.channel_key
+              }
+            });
+            window.dispatchEvent(event);
+            document.getElementById("notification-dropdown")?.classList.add("hidden");
+          });
+          notifList.appendChild(item);
+        });
         pendingList.forEach((req) => {
           const item = document.createElement("div");
           item.dataset.friendshipId = req.id.toString();
           item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+          const reqMessage = i18n_default.t("friendList.wants_to_be_friend", { name: req.user?.alias });
+          const t_accept = i18n_default.t("friendList.actions.accept");
+          const t_decline = i18n_default.t("friendList.actions.decline");
+          const t_block = i18n_default.t("friendList.actions.block");
           item.innerHTML = `
                     <div class="relative w-8 h-8 flex-shrink-0 mr-4">
                         <img src="/assets/basic/logo.png" 
@@ -7623,17 +9086,17 @@
                     </div>
                     <div class="flex-1 min-w-0 pr-4">
                         <p class="text-sm text-gray-800">
-                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                            ${reqMessage}
                         </p>
                     </div>
                     <div class="flex gap-2 flex-shrink-0">
-                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
                             <span class="text-green-600 font-bold text-sm">\u2713</span>
                         </button>
-                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
                             <span class="text-red-600 font-bold text-sm">\u2715</span>
                         </button>
-                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
                             <span class="text-gray-600 text-xs">\u{1F6AB}</span>
                         </button>
                     </div>
@@ -7807,14 +9270,15 @@
           if (this.charCountElement) {
             this.charCountElement.classList.add("hidden");
           }
-          const newBio = text.trim() || "Share a quick message";
+          const defaultBio = i18n_default.t("userProfile.default_bio");
+          const newBio = text.trim() || defaultBio;
           const userId = localStorage.getItem("userId");
           const trimmedBio = newBio.trim();
           if (trimmedBio.length > 70) {
             console.error("Error: Cannot exceed 70 characters.");
-            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            alert(i18n_default.t("userProfile.bio_length_error"));
             this.bioWrapper.replaceChild(this.bioText, input);
-            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || "Share a quick message");
+            this.bioText.innerHTML = parseMessage(this.bioText.dataset.raw || defaultBio);
             return false;
           }
           try {
@@ -7825,7 +9289,7 @@
             });
             if (response.ok) {
               this.bioText.dataset.raw = trimmedBio;
-              this.bioText.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+              this.bioText.innerHTML = parseMessage(trimmedBio) || defaultBio;
               this.bioWrapper.replaceChild(this.bioText, input);
               console.log("Message updated");
               const socket = SocketService_default.getInstance().socket;
@@ -7853,7 +9317,7 @@
           if (input.value.trim().length <= 70) {
             finalize(input.value);
           } else {
-            alert(`Your message cannot exceed 70 characters. Stop talking!`);
+            alert(i18n_default.t("userProfile.bio_length_error"));
             if (this.charCountElement) {
               this.charCountElement.classList.add("hidden");
             }
@@ -7914,7 +9378,6 @@
     loadSavedStatus() {
       const rawStatus = localStorage.getItem("userStatus") || "available";
       const savedStatus = rawStatus.toLowerCase();
-      const statusText = `(${i18n_default.t(`homepage.profile.status.${savedStatus}`)})`;
       this.updateStatusDisplay(savedStatus);
       window.addEventListener("storage", (e) => {
         if (e.key === "userStatus" && e.newValue) {
@@ -8009,7 +9472,7 @@
             }
             closeModal();
           } else {
-            alert("Error while saving avatar");
+            alert(i18n_default.t("userProfile.avatar_error"));
           }
         } catch (error) {
           console.error("Network error:", error);
@@ -8083,7 +9546,7 @@
     // ---------------------------------------------------
     setupSocketEvents() {
       this.chatSocket.on("connect", () => {
-        this.addMessage("You can now chat with your friend!", "System");
+        this.addMessage(i18n_default.t("chatComponent.connected"), i18n_default.t("chatComponent.system"));
       });
       this.chatSocket.on("chatMessage", (data) => {
         if (data.channelKey === this.currentChannel) {
@@ -8118,7 +9581,7 @@
           return;
         }
         const currentUser = localStorage.getItem("username");
-        this.addMessage(`[b]${data.author} sent a nudge[/b]`, "System");
+        this.addMessage(i18n_default.t("chatComponent.nudge_sent", { author: data.author }), i18n_default.t("chatComponent.system"));
         if (data.author !== currentUser) {
           this.shakeElement(this.wizzContainer, 3e3);
         }
@@ -8128,18 +9591,21 @@
         const imgUrl = animations[animationKey];
         if (imgUrl) {
           const animationHTML = `
-					<div>
-						<strong>${author} said:</strong><br>
-						<img src="${imgUrl}" alt="${animationKey}">
-					</div>
-				`;
+                    <div>
+                        <strong>${author} said:</strong><br>
+                        <img src="${imgUrl}" alt="${animationKey}">
+                    </div>
+                `;
           this.addCustomContent(animationHTML);
         } else {
-          this.addMessage(`Animation inconnue (${animationKey}) re\xE7ue de ${author}.`, "Syst\xE8me");
+          this.addMessage(
+            i18n_default.t("chatComponent.animation_unknown", { key: animationKey, author }),
+            i18n_default.t("chatComponent.system")
+          );
         }
       });
       this.chatSocket.on("disconnected", () => {
-        this.addMessage("Disconnected from chat server!", "System");
+        this.addMessage(i18n_default.t("chatComponent.disconnected"), i18n_default.t("chatComponent.system"));
       });
     }
     //================================================
@@ -8161,7 +9627,7 @@
       this.messageInput.addEventListener("keyup", (event) => {
         if (event.key == "Enter" && this.messageInput?.value.trim() != "") {
           const msg_content = this.messageInput.value;
-          const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+          const sender_alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || i18n_default.t("gamePage.default_guest");
           const sender_id = Number.parseInt(localStorage.getItem("userId") || sessionStorage.getItem("userId") || "0");
           this.chatSocket.emit("chatMessage", {
             sender_id,
@@ -8231,7 +9697,7 @@
       }
     }
     addSystemMessage(message) {
-      this.addMessage(`[b]${message}[/b]`, "System");
+      this.addMessage(`[b]${message}[/b]`, i18n_default.t("chatComponent.system"));
     }
     //faustine
     addMessage(message, author) {
@@ -8242,23 +9708,25 @@
       const match = message.match(inviteRegex);
       if (match) {
         const friendshipId = match[1];
-        const myUsername = localStorage.getItem("username") || sessionStorage.getItem("username") || "Guest";
+        const myUsername = localStorage.getItem("username") || sessionStorage.getItem("username") || i18n_default.t("gamePage.default_guest");
         const isMe = author === myUsername;
         msgElement.classList.add(isMe ? "bg-blue-100" : "bg-green-100");
+        const textInvite = i18n_default.t("chatComponent.game_invite", { author });
+        const btnText = isMe ? i18n_default.t("chatComponent.join_waitroom") : i18n_default.t("chatComponent.accept_match");
         msgElement.innerHTML = `
-				<div class="flex flex-col gap-2">
-					<strong>${author}</strong> want to play Pong with you ! <br>
+                <div class="flex flex-col gap-2">
+                    <strong>${textInvite}</strong> <br>
 
-					<button 
-						id="join-${friendshipId}"
-						class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-							px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-							active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
-					>
-						${isMe ? "Join my waitroom" : "Accept the match"}
-					</button>
-				</div>
-			`;
+                    <button 
+                        id="join-${friendshipId}"
+                        class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400" style="width: 165px;"
+                    >
+                        ${btnText}
+                    </button>
+                </div>
+            `;
         const joinButton = msgElement.querySelector(`#join-${friendshipId}`);
         joinButton?.addEventListener("click", () => {
           sessionStorage.setItem("privateGameId", friendshipId);
@@ -8268,7 +9736,7 @@
       } else {
         msgElement.classList.add("bg-white");
         const contentEmoticons = parseMessage(message);
-        msgElement.innerHTML = `<strong>${author} said:</strong><br> ${contentEmoticons}`;
+        msgElement.innerHTML = `<strong>${author}:</strong><br> ${contentEmoticons}`;
       }
       this.messagesContainer.appendChild(msgElement);
       this.scrollToBottom();
@@ -8380,10 +9848,10 @@
           fontGrid.appendChild(colorButton);
         });
         const styles = [
-          { tag: "b", icon: "font_bold.png", title: "Bold" },
-          { tag: "i", icon: "font_italic.png", title: "Italic" },
-          { tag: "u", icon: "font_underline.png", title: "Underline" },
-          { tag: "s", icon: "font_strikethrough.png", title: "Strikethrough" }
+          { tag: "b", icon: "font_bold.png", title: i18n_default.t("chatComponent.tools.bold") },
+          { tag: "i", icon: "font_italic.png", title: i18n_default.t("chatComponent.tools.italic") },
+          { tag: "u", icon: "font_underline.png", title: i18n_default.t("chatComponent.tools.underline") },
+          { tag: "s", icon: "font_strikethrough.png", title: i18n_default.t("chatComponent.tools.strikethrough") }
         ];
         styles.forEach((style) => {
           const styleButton = document.createElement("div");
@@ -8471,7 +9939,7 @@
             }
           } else {
             console.error("Game socket not connected", this.gameSocket);
-            this.addSystemMessage("Error: Game server not reachable.");
+            this.addSystemMessage(i18n_default.t("chatComponent.game_unreachable"));
           }
           chatOptionsDropdown.classList.add("hidden");
         });
@@ -8484,7 +9952,7 @@
             return;
           }
           const currentChatUser = document.getElementById("chat-header-username")?.textContent;
-          if (currentChatUser && confirm(`Are you sure you want to block ${currentChatUser} ?`)) {
+          if (currentChatUser && confirm(i18n_default.t("chatComponent.block_confirm", { name: currentChatUser }))) {
             try {
               const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
               const response = await fetchWithAuth(`api/user/${userId}/friendships/${this.currentFriendshipId}`, {
@@ -8501,19 +9969,19 @@
                   this.messagesContainer.innerHTML = "";
                   const infoMsg = document.createElement("div");
                   infoMsg.className = "text-center text-gray-400 text-sm mt-10";
-                  infoMsg.innerText = "Conversation deleted (User blocked).";
+                  infoMsg.innerText = i18n_default.t("chatComponent.block_success");
                   this.messagesContainer.appendChild(infoMsg);
                 }
                 if (this.messageInput) {
                   this.messageInput.value = "";
                   this.messageInput.disabled = true;
-                  this.messageInput.placeholder = "You blocked this user.";
+                  this.messageInput.placeholder = i18n_default.t("chatComponent.input_blocked");
                 }
                 this.currentChannel = "";
                 this.currentFriendshipId = null;
               } else {
                 console.error("Network error while blocking");
-                alert("Error while blocking");
+                alert(i18n_default.t("chatComponent.block_error"));
               }
             } catch (error) {
               console.error("Networik error:", error);
@@ -8615,7 +10083,7 @@
     async open(friendId) {
       if (!this.modal || !friendId) return;
       try {
-        if (this.username) this.username.innerText = "Loading...";
+        if (this.username) this.username.innerText = i18n_default.t("friendProfileModal.loading");
         const [userRes, statsRes] = await Promise.all([
           fetchWithAuth(`api/user/${friendId}`),
           fetchWithAuth(`api/game/users/${friendId}/stats`)
@@ -8639,7 +10107,9 @@
       if (this.avatar) this.avatar.src = user.avatar_url || user.avatar || "/assets/basic/default.png";
       if (this.status && user.status) this.status.src = statusImages[user.status.toLowerCase()] || statusImages["invisible"];
       if (this.username) this.username.innerText = user.alias;
-      if (this.bio) this.bio.innerHTML = user.bio ? parseMessage(user.bio) : "No bio.";
+      if (this.bio) {
+        this.bio.innerHTML = user.bio ? parseMessage(user.bio) : i18n_default.t("friendProfileModal.no_bio");
+      }
       if (stats) {
         const gamesPlayed = stats.total_games ?? stats.totalGames ?? 0;
         const wins = stats.wins || 0;
@@ -8657,7 +10127,9 @@
           this.stats.winRate.innerText = `${rate}%`;
         }
         if (this.stats.opponent) this.stats.opponent.innerText = stats.biggest_opponent || "-";
-        if (this.stats.favGame) this.stats.favGame.innerText = stats.favorite_game || "Local";
+        if (this.stats.favGame) {
+          this.stats.favGame.innerText = stats.favorite_game || i18n_default.t("friendProfileModal.default_game");
+        }
       } else {
         Object.values(this.stats).forEach((el) => {
           if (el) el.innerText = el === this.stats.opponent || el === this.stats.favGame ? "-" : "0";
@@ -8825,455 +10297,7 @@
   }
 
   // scripts/pages/ProfilePage.html
-  var ProfilePage_default = `<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
-
-    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
-    </div>
-
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="window" style="width:900px; margin-top:-100px;">
-            <div class="title-bar">
-                <div class="title-bar-text">Profile</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Minimize"></button>
-                    <button aria-label="Maximize"></button>
-                    <button aria-label="Close"></button>
-                </div>
-            </div>
-    
-            <div class="window-body bg-white">
-                <div class="flex flex-col items-center py-12">
-                    
-                    <div class="flex flex-col gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">
-            
-                        <div class="flex flex-row gap-6 w-full">
-                            
-                            <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">
-                                <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700">My profile</h1>
-
-                                <div class="relative w-[170px] h-[170px] mb-3">
-                                    <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"
-                                    src="/assets/basic/status_frame_offline_large.png">
-                                    
-                                    <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"
-                                    src="/assets/basic/default.png">
-                                </div>
-
-                                <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">
-                                    
-                                    <button id="edit-picture-button" 
-                                            title="Change Avatar"
-                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1
-                                                bg-gradient-to-b from-white to-gray-200
-                                                rounded-[3px] shadow-sm
-                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
-                                                active:translate-y-[1px] active:shadow-inner transition-all group">
-                                        <img src="/assets/basic/camera.png" 
-                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" 
-                                            alt="Avatar">
-                                    </button>
-
-                                    <button id="theme-button" 
-                                            title="Customize Theme"
-                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1
-                                                bg-gradient-to-b from-white to-gray-200 
-                                                rounded-[3px] shadow-sm
-                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400
-                                                active:translate-y-[1px] active:shadow-inner transition-all group">
-                                        <img src="/assets/basic/headers.png" 
-                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" 
-                                            alt="Theme">
-                                    </button>
-
-                                </div>
-
-                                <div class="w-full px-4 mb-4 mt-4">
-                                    <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">
-                                        <label class="text-xs text-gray-500 pl-1">Status:</label>
-                                        <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">
-                                            <option>Available</option>
-                                            <option selected>Busy</option>
-                                            <option>Away</option>
-                                            <option>Appear offline</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="text-sm text-center w-full leading-6 mt-2">
-                                    <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>Wait...</strong></p>
-                                    <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">Loading bio...</p>
-                                </div>
-                            </div>
-                
-                            <div class="flex flex-col justify-between flex-1">
-                                <div class="flex flex-col gap-4">
-
-                                    <label class="theme-label text-sm">Username:</label>
-                                    <div class="flex flex-row gap-2" data-field="alias">
-                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">Wait...</p>
-                                        <input type="text" value="" placeholder="Username" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>
-                                        
-                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
-                                    </div>
-
-                                    <label class="theme-label text-sm">Share a quick message:</label>
-                                    <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">
-                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">Share a quick message</p>
-                                        <input
-                                            type="text"
-                                            value=""
-                                            placeholder="Share a quick message"
-                                            class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"
-                                            style="width:350px; overflow: hidden;" disabled/>
-                                        <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
-                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
-                                    </div>
-                                </div>
-                
-                                <div class="mt-8 border-t border-gray-300 pt-4">
-                                    <div class="flex flex-col gap-4">
-                                        <label class="theme-label text-sm">Email:</label>
-                                        <div class="flex flex-row gap-2" data-field="email">
-                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
-                                            <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
-                                            
-                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
-                                        </div>
-
-                                        <label class="theme-label text-sm">Password:</label>
-                                        <div class="flex flex-row gap-2" data-field="password">
-                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">Wait...</p>
-                                            <input type="password" value="" placeholder="New password" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>
-                                            
-                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Change</button>
-                                            <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Confirm</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> 
-                        <div class="flex flex-row justify-center items-center gap-4 w-full border-t border-gray-200 pt-4" style="padding-top: 25px;">
-                            <button id="2fa-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Enable 2FA authentication</button>
-                            <button id="download-data-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">Download personal data</button>
-                            <button id="delete-account-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold" style="color: #DC2626;">Delete my account</button>
-                        </div>
-
-                    </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">
-                        <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700 border-b border-gray-200 pb-2">My game statistics</h1>
-
-                        <div class="grid grid-cols-4 gap-4 mb-8">
-                            <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">
-                                <span class="theme-label text-gray-500 text-xs uppercase tracking-wider font-semibold">Games played</span>
-                                <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>
-                            </div>
-                            
-                            <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Wins</span>
-                                <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-red-600 text-xs uppercase tracking-wider font-semibold">Losses</span>
-                                <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>
-                            </div>
-
-                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">
-                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">Current winning streak</span>
-                                <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>
-                            </div>
-
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-        <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-        <div class="title-bar">
-            <div class="title-bar-text">Two-Factor Authentication</div>
-            <div class="title-bar-controls">
-                <button id="close-2fa-modal" aria-label="Close"></button>
-            </div>
-        </div>
-        
-        <div class="window-body p-6">
-            
-            <div id="method-selection" class="flex flex-col gap-4 items-center">
-                <div class="text-center mb-2 border-b border-gray-500 p-4">
-                    <h2 class="text-lg font-bold mb-2">Choose authentication method</h2>
-                    <p class="text-xs text-gray-600">Select how you want to set up 2FA</p>
-                </div>
-                
-                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <h3 class="font-bold text-sm text-center">Authenticator App</h3>
-                            <p class="text-xs text-gray-600">Use Google Authenticator or similar</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">
-                    <div class="flex items-center gap-3">
-                        <div class="flex-1">
-                            <h3 class="font-bold text-sm text-center">Email Verification</h3>
-                            <p class="text-xs text-gray-600">Receive codes via email</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="qr-content" class="hidden flex-col items-center gap-4">
-                
-                <div class="text-center"> <h2 class="text-lg font-bold mb-2">Scan QR Code</h2>
-                    <p class="text-xs text-gray-600 mb-4">Open Google Authenticator and scan this code.</p>
-                </div>
-
-                <div class="border border-gray-300 p-2 bg-white shadow-inner">
-                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">
-                </div>
-
-                <div class="w-full flex flex-col gap-2 mt-2">
-                    <label class="text-sm">Enter the 6-digit code:</label>
-                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" 
-                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
-                </div>
-
-                <div class="flex justify-center gap-4 mt-4 w-full">
-                    <button id="confirm-2fa-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 font-bold">
-                        VALIDATE
-                    </button>
-                    <button id="cancel-2fa-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-                        CANCEL
-                    </button>
-                </div>
-            </div>
-
-            <div id="email-content" class="hidden flex-col items-center gap-4">
-                
-                <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">Email Verification</h2>
-                    <p class="text-xs text-gray-600 mb-4">We'll send a verification code to your email.</p>
-                </div>
-                
-                <div class="w-full flex flex-col gap-2">
-                    <label class="text-sm">Code will be sent to:</label>
-                    <input type="email" id="2fa-email-input" 
-                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"
-                        disabled 
-                        readonly>
-                </div>
-                
-                <button id="send-code-button" 
-                        class="w-full bg-gradient-to-b from-blue-100 to-blue-300 border border-blue-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-blue-200 hover:to-blue-400 font-bold mt-2">
-                    SEND CODE
-                </button>
-                
-                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">
-                    <label class="text-sm">Enter code received:</label>
-                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" 
-                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
-                    
-                    <button id="confirm-2fa-email" 
-                            class="w-full bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-2 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 mt-2 font-bold">
-                        VALIDATE
-                    </button>
-                </div>
-            </div>
-            
-        </div>
-    </div>
-</div>
-
-        <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Change Picture</div>
-                <div class="title-bar-controls">
-                    <button aria-label="Minimize"></button>
-                    <button aria-label="Maximize"></button>
-                    <button id="close-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6">
-                <div class="mb-6">
-                    <h2 class="text-xl mb-1">Select a picture</h2>
-                    <p class="text-gray-500 text-sm">Choose how you want to appear on transcendence.</p>
-                </div>
-                
-                <div class="flex flex-row gap-6">
-                    <div class="flex-1">
-                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
-                            <div id="modal-grid" class="grid grid-cols-4 gap-2">
-                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col items-center gap-4 w-[200px]">
-                        <div class="relative w-[170px] h-[170px]">
-                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
-                            src="/assets/basic/status_frame_offline_large.png">
-                            
-                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"
-                            src="/assets/basic/default.png">
-                        </div>
-
-                        <div class="flex flex-col gap-2 w-full mt-2 h-64">
-                            <input type="file" id="file-input" accept="image/*" hidden>
-
-                            <button id="browse-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            BROWSE
-                            </button>
-                            
-                            <button id="delete-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                            DELETE
-                            </button>
-
-                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
-                                <button id="validation-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        OK
-                                </button>
-                                <button id="cancel-button" 
-                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        CANCEL
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">
-            
-            <div class="title-bar flex-none">
-                <div class="title-bar-text">Select a Theme</div>
-                <div class="title-bar-controls">
-                    <button id="close-theme-modal" aria-label="Close"></button>
-                </div>
-            </div>
-
-            <div class="window-body p-4 flex-1 overflow-y-auto">
-                
-                <div id="theme-grid" class="grid grid-cols-2 gap-4">
-                    </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Change password</div>
-                <div class="title-bar-controls">
-                    <button id="close-password-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6 flex flex-col gap-4 items-center">
-                <h2 class="text-lg font-bold mb-2">Change Password</h2>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm text-gray-600">Current Password:</label>
-                    <input type="password" id="pwd-current" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm text-gray-600">New Password:</label>
-                    <input type="password" id="pwd-new" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
-                </div>
-
-                <div class="flex flex-col gap-1">
-                    <label class="text-sm text-gray-600">Confirm New Password:</label>
-                    <input type="password" id="pwd-confirm" class="border border-gray-300 rounded-sm p-2 w-full text-sm">
-                </div>
-
-                <p id="pwd-error" class="text-red-500 text-xs hidden"></p>
-
-                <div class="flex justify-end gap-2 mt-4">
-                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Save</button>
-                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!------------------------ DELETE CONFIRMATION MODALE -->
-
-    <div id="delete-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">Delete my account</div>
-                <div class="title-bar-controls">
-                    <button id="close-delete-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6 flex flex-col gap-4 items-center justify-center">
-                <h2 class="text-lg font-bold mb-2 text-red-600 text-center">Are you sure you want to delete your account?</h2>
-                <p>This action will be irreversible.</p>
-
-                <div class="flex justify-end gap-2 mt-4">
-                    <button id="confirm-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Yes, delete my account</button>
-                    <button id="cancel-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-
-    
-</div>`;
+  var ProfilePage_default = '<div id="main-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="profile-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="min-h-screen flex items-center justify-center">\n        <div class="window" style="width:900px; margin-top:-100px;">\n            <div class="title-bar">\n                <div class="title-bar-text">{{profilePage.window_profile}}</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button aria-label="Close"></button>\n                </div>\n            </div>\n    \n            <div class="window-body bg-white">\n                <div class="flex flex-col items-center py-12">\n                    \n                    <div class="flex flex-col gap-6 border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px]">\n            \n                        <div class="flex flex-row gap-6 w-full">\n                            \n                            <div class="flex flex-col items-center border border-gray-300 rounded-sm p-4 w-[280px] shadow-sm bg-[#F0F0F0]">\n                                <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700">{{profilePage.my_profile}}</h1>\n\n                                <div class="relative w-[170px] h-[170px] mb-3">\n                                    <img id="current-statut" class="absolute inset-0 w-full h-full object-cover z-20 pointer-events-none"\n                                    src="/assets/basic/status_frame_offline_large.png">\n                                    \n                                    <img id="current-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover z-10 bg-black"\n                                    src="/assets/basic/default.png">\n                                </div>\n\n                                <div class="flex flex-row gap-6 w-full justify-center mb-10 px-2">\n                                    \n                                    <button id="edit-picture-button" \n                                            title="Change Avatar"\n                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1\n                                                bg-gradient-to-b from-white to-gray-200\n                                                rounded-[3px] shadow-sm\n                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400\n                                                active:translate-y-[1px] active:shadow-inner transition-all group">\n                                        <img src="/assets/basic/camera.png" \n                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" \n                                            alt="Avatar">\n                                    </button>\n\n                                    <button id="theme-button" \n                                            title="Customize Theme"\n                                            class="flex flex-col items-center justify-center w-20 h-16 gap-1\n                                                bg-gradient-to-b from-white to-gray-200 \n                                                rounded-[3px] shadow-sm\n                                                hover:from-gray-50 hover:to-gray-300 hover:border-blue-400\n                                                active:translate-y-[1px] active:shadow-inner transition-all group">\n                                        <img src="/assets/basic/headers.png" \n                                            class="w-6 h-6 opacity-80 group-hover:opacity-100" \n                                            alt="Theme">\n                                    </button>\n\n                                </div>\n\n                                <div class="w-full px-4 mb-4 mt-4">\n                                    <div class="flex items-center justify-between bg-white border border-gray-300 p-1 rounded-sm shadow-inner">\n                                        <label class="text-xs text-gray-500 pl-1">{{profilePage.my_status}}</label>\n                                        <select class="bg-transparent text-sm font-semibold text-gray-700 outline-none cursor-pointer w-[120px] text-right">\n                                            <option>{{profilePage.status.available}}</option>\n                                            <option selected>{{profilePage.status.busy}}</option>\n                                            <option>{{profilePage.status.away}}</option>\n                                            <option>{{profilePage.status.offline}}</option>\n                                        </select>\n                                    </div>\n                                </div>\n\n                                <div class="text-sm text-center w-full leading-6 mt-2">\n                                    <p id="username-profile" class="text-xl font-semibold text-gray-800"><strong>{{profilePage.fallback_username}}</strong></p>\n                                    <p id="bio-profile" class="text-sm text-gray-600 italic px-2" style="word-break: break-all;">{{profilePage.fallback_bio}}</p>\n                                </div>\n                            </div>\n                \n                            <div class="flex flex-col justify-between flex-1">\n                                <div class="flex flex-col gap-4">\n\n                                    <label class="theme-label text-sm">{{profilePage.username}}</label>\n                                    <div class="flex flex-row gap-2" data-field="alias">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED;">{{profilePage.fallback_username}}</p>\n                                        <input type="text" value="" placeholder="{{profilePage.placeholder_username}}" class="placeholder-gray-500 field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px;"/>\n                                        \n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>\n                                    </div>\n\n                                    <label class="theme-label text-sm">{{profilePage.bio}}</label>\n                                    <div class="flex flex-row gap-2 bg-gray-400" data-field="bio">\n                                        <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-500 flex items-center" style="width:350px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #EDEDED">{{profilePage.placeholder_bio}}</p>\n                                        <input\n                                            type="text"\n                                            value=""\n                                            placeholder="{{profilePage.placeholder_bio}}"\n                                            class="field-input w-full bg-gray-400 border border-gray-300 rounded-sm p-2 text-sm text-gray-600 hidden"\n                                            style="width:350px; overflow: hidden;" disabled/>\n                                        <span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>\n                                        <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>\n                                    </div>\n                                </div>\n                \n                                <div class="mt-8 border-t border-gray-300 pt-4">\n                                    <div class="flex flex-col gap-4">\n                                        <label class="theme-label text-sm">Email:</label>\n                                        <div class="flex flex-row gap-2" data-field="email">\n                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">{{profilePage.fallback_username}}</p>\n                                            <input type="email" value="" placeholder="email@gmail.com" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                            \n                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>\n                                        </div>\n\n                                        <label class="theme-label text-sm">{{profilePage.password}}</label>\n                                        <div class="flex flex-row gap-2" data-field="password">\n                                            <p class="field-display w-full border border-gray-300 rounded-sm p-2 text-sm bg-gray-50 flex items-center" style="width:350px; background-color: #EDEDED">{{profilePage.fallback_username}}</p>\n                                            <input type="password" value="" placeholder="{{profilePage.placeholder_password}}" class="field-input w-full border border-gray-300 rounded-sm p-2 text-sm hidden" style="width:350px" disabled/>\n                                            \n                                            <button class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.change_button}}</button>\n                                        <button class="confirm-button hidden bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.confirm_button}}</button>\n                                        </div>\n                                    </div>\n                                </div>\n                            </div>\n                        </div> \n                        <div class="flex flex-row justify-center items-center gap-4 w-full border-t border-gray-200 pt-4" style="padding-top: 25px;">\n                            <button id="2fa-modal-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.2fa_button}}</button>\n                            <button id="download-data-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">{{profilePage.download_button}}</button>\n                            <button id="delete-account-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold" style="color: #DC2626;">{{profilePage.delete_button}}</button>\n                        </div>\n\n                    </div> <div class="flex flex-col border border-gray-300 rounded-sm bg-white shadow-sm p-6 w-[880px] mt-6">\n                        <h1 class="theme-label text-lg font-semibold mb-4 text-gray-700 border-b border-gray-200 pb-2">{{profilePage.game_stats}}</h1>\n\n                        <div class="grid grid-cols-4 gap-4 mb-8">\n                            <div class="flex flex-col items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-sm shadow-sm hover:bg-gray-100 transition-colors">\n                                <span class="theme-label text-gray-500 text-xs uppercase tracking-wider font-semibold">{{profilePage.game_played}}</span>\n                                <span id="stats-total-games" class="text-3xl font-bold text-gray-800 mt-1">0</span>\n                            </div>\n                            \n                            <div class="flex flex-col items-center justify-center p-4 bg-green-50/50 border border-green-200 rounded-sm shadow-sm">\n                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">{{profilePage.wins}}</span>\n                                <span id="stats-wins" class="text-3xl font-bold text-green-700 mt-1">0</span>\n                            </div>\n\n                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">\n                                <span class="theme-label text-red-600 text-xs uppercase tracking-wider font-semibold">{{profilePage.losses}}</span>\n                                <span id="stats-losses" class="text-3xl font-bold text-red-700 mt-1">0</span>\n                            </div>\n\n                            <div class="flex flex-col items-center justify-center p-4 bg-red-50/50 border border-red-200 rounded-sm shadow-sm">\n                                <span class="theme-label text-green-600 text-xs uppercase tracking-wider font-semibold">{{profilePage.winning_streak}}</span>\n                                <span id="stats-streak" class="text-3xl font-bold text-red-700 mt-1">0</span>\n                            </div>\n\n\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n        <div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n    <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n        <div class="title-bar">\n            <div class="title-bar-text">{{profilePage.2fa_modal.title}}</div>\n            <div class="title-bar-controls">\n                <button id="close-2fa-modal" aria-label="Close"></button>\n            </div>\n        </div>\n        \n        <div class="window-body p-6">\n            \n            <div id="method-selection" class="flex flex-col gap-4 items-center">\n                <div class="text-center mb-2 border-b border-gray-500 p-4">\n                    <h2 class="text-lg font-bold mb-2">{{profilePage.2fa_modal.choose_method}}</h2>\n                    <p class="text-xs text-gray-600">{{profilePage.2fa_modal.message_method}}</p>\n                </div>\n                \n                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="qr">\n                    <div class="flex items-center gap-3">\n                        <div class="flex-1">\n                            <h3 class="font-bold text-sm text-center">{{profilePage.2fa_modal.authenticator}}</h3>\n                            <p class="text-xs text-gray-600">{{profilePage.2fa_modal.message_authenticator}}</p>\n                        </div>\n                    </div>\n                </div>\n                \n                <div class="option-card p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 border border-transparent hover:border-blue-300 transition-all" data-method="email">\n                    <div class="flex items-center gap-3">\n                        <div class="flex-1">\n                            <h3 class="font-bold text-sm text-center">{{profilePage.2fa_modal.email_verif}}</h3>\n                            <p class="text-xs text-gray-600">{{profilePage.2fa_modal.message_email_verif}}</p>\n                        </div>\n                    </div>\n                </div>\n            </div>\n\n            <div id="qr-content" class="hidden flex-col items-center gap-4">\n                \n                <div class="text-center"> <h2 class="text-lg font-bold mb-2">{{profilePage.2fa_modal.qr_code}}</h2>\n                    <p class="text-xs text-gray-600 mb-4">{{profilePage.2fa_modal.message_qr_code}}</p>\n                </div>\n\n                <div class="border border-gray-300 p-2 bg-white shadow-inner">\n                    <img id="2fa-qr-code" src="" alt="QR Code loading..." class="w-[150px] h-[150px] object-contain">\n                </div>\n\n                <div class="w-full flex flex-col gap-2 mt-2">\n                    <label class="text-sm">{{profilePage.2fa_modal.6_digit}}</label>\n                    <input type="text" id="2fa-input-code" placeholder="123 456" maxlength="6" \n                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">\n                </div>\n\n                <div class="flex justify-center gap-4 mt-4 w-full">\n                    <button id="confirm-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 font-semibold hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">\n                        {{profilePage.2fa_modal.validate}}\n                    </button>\n                    <button id="cancel-2fa-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">\n                        {{profilePage.2fa_modal.cancel}}\n                    </button>\n                </div>\n            </div>\n\n            <div id="email-content" class="hidden flex-col items-center gap-4">\n                \n                <div class="text-center">\n                    <h2 class="text-lg font-bold mb-2">{{profilePage.2fa_modal.email_verif}}</h2>\n                    <p class="text-xs text-gray-600 mb-4">{{profilePage.2fa_modal.verif_email}}</p>\n                </div>\n                \n                <div class="w-full flex flex-col gap-2">\n                    <label class="text-sm">{{profilePage.2fa_modal.message_verif_email}}</label>\n                    <input type="email" id="2fa-email-input" \n                        class="w-full border border-gray-300 rounded-sm p-2 shadow-inner bg-gray-200 text-gray-600 cursor-not-allowed select-none"\n                        disabled \n                        readonly>\n                </div>\n                \n                <button id="send-code-button" \n                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">\n                    {{profilePage.2fa_modal.code_send}}\n                </button>\n                \n                <div id="code-verification" class="w-full flex-col gap-2 mt-2 hidden">\n                    <label class="text-sm">{{profilePage.2fa_modal.code_received}}</label>\n                    <input type="text" id="2fa-input-code-email" placeholder="123456" maxlength="6" \n                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">\n                    \n                    <button id="confirm-2fa-email" \n                            class="bg-gradient-to-b from-gray-100 font-semibold to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-1 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-gray-700">\n                        {{profilePage.2fa_modal.validate}}\n                    </button>\n                </div>\n            </div>\n            \n        </div>\n    </div>\n</div>\n\n        <div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">{{profilePage.picture_modal.title}}</div>\n                <div class="title-bar-controls">\n                    <button aria-label="Minimize"></button>\n                    <button aria-label="Maximize"></button>\n                    <button id="close-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6">\n                <div class="mb-6">\n                    <h2 class="text-xl mb-1">{{profilePage.picture_modal.select_pic}}</h2>\n                    <p class="text-gray-500 text-sm">{{profilePage.picture_modal.message_select}}</p>\n                </div>\n                \n                <div class="flex flex-row gap-6">\n                    <div class="flex-1">\n                        <div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">\n                            <div id="modal-grid" class="grid grid-cols-4 gap-2">\n                                <img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Dirt_Bike.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Friendly_Dog.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Guest_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Orange_Daisy.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Palm_Trees.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rocket_Launch.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Rubber_Ducky.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Running_Horses.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Skateboarder.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Soccer_Ball.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/User_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile11_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile3_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                                <img src="/assets/profile/Usertile8_(Windows_Vista).png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col items-center gap-4 w-[200px]">\n                        <div class="relative w-[170px] h-[170px]">\n                            <img class="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"\n                            src="/assets/basic/status_frame_offline_large.png">\n                            \n                            <img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover"\n                            src="/assets/basic/default.png">\n                        </div>\n\n                        <div class="flex flex-col gap-2 w-full mt-2 h-64">\n                            <input type="file" id="file-input" accept="image/*" hidden>\n\n                            <button id="browse-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            {{profilePage.picture_modal.browse}}\n                            </button>\n                            \n                            <button id="delete-button" \n                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                            {{profilePage.picture_modal.delete}}\n                            </button>\n\n                            <div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">\n                                <button id="validation-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        {{profilePage.picture_modal.ok}}\n                                </button>\n                                <button id="cancel-button" \n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                            px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                        {{profilePage.picture_modal.cancel}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n    <div id="theme-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white flex flex-col" style="width: 600px; height: 800px;">\n            \n            <div class="title-bar flex-none">\n                <div class="title-bar-text">{{profilePage.theme_modal.title}}</div>\n                <div class="title-bar-controls">\n                    <button id="close-theme-modal" aria-label="Close"></button>\n                </div>\n            </div>\n\n            <div class="window-body p-4 flex-1 overflow-y-auto">\n                \n                <div id="theme-grid" class="grid grid-cols-2 gap-4">\n                    </div>\n            </div>\n        </div>\n    </div>\n\n\n\n    <div id="password-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">{{profilePage.password_modal.title}}</div>\n                <div class="title-bar-controls">\n                    <button id="close-password-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6 flex flex-col gap-4 items-center">\n                <h2 class="text-lg font-bold mb-2">{{profilePage.password_modal.title}}</h2>\n\n                <div class="flex flex-col gap-1">\n                    <label class="text-sm text-gray-600">{{profilePage.password_modal.current_pwd}}</label>\n                    <input type="password" id="pwd-current" class="border border-gray-300 rounded-sm p-2 w-full text-sm">\n                </div>\n\n                <div class="flex flex-col gap-1">\n                    <label class="text-sm text-gray-600">{{profilePage.password_modal.new_pwd}}</label>\n                    <input type="password" id="pwd-new" class="border border-gray-300 rounded-sm p-2 w-full text-sm">\n                </div>\n\n                <div class="flex flex-col gap-1">\n                    <label class="text-sm text-gray-600">{{profilePage.password_modal.confirm_pwd}}</label>\n                    <input type="password" id="pwd-confirm" class="border border-gray-300 rounded-sm p-2 w-full text-sm">\n                </div>\n\n                <p id="pwd-error" class="text-red-500 text-xs hidden"></p>\n\n                <div class="flex justify-end gap-2 mt-4">\n                    <button id="save-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.password_modal.save}}</button>\n                    <button id="cancel-password-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.password_modal.cancel}}</button>\n                </div>\n            </div>\n        </div>\n    </div>\n\n\n    <div id="delete-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">\n        <div class="window bg-white" style="width: 450px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">\n            <div class="title-bar">\n                <div class="title-bar-text">{{profilePage.delete_modal.title}}</div>\n                <div class="title-bar-controls">\n                    <button id="close-delete-modal" aria-label="Close"></button>\n                </div>\n            </div>\n            <div class="window-body p-6 flex flex-col gap-4 items-center justify-center">\n                <h2 class="text-lg font-bold mb-2 text-red-600 text-center">{{profilePage.delete_modal.confirm_delete}}</h2>\n                <p>{{profilePage.delete_modal.confirm_message}}</p>\n\n                <div class="flex justify-end gap-2 mt-4">\n                    <button id="confirm-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.delete_modal.yes}}</button>\n                    <button id="cancel-delete-account-button" class="change-button bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-sm">{{profilePage.delete_modal.cancel}}</button>\n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/components/AvatarManager.ts
   var AvatarManager = class {
@@ -9378,7 +10402,7 @@
           });
           this.closeModal();
         } else {
-          alert("Error while saving");
+          alert(i18n_default.t("profilePage.alerts.avatar_save_error"));
         }
       } catch (error) {
         console.error("Network error:", error);
@@ -9423,11 +10447,11 @@
       const btn = this.elements.toggleButton;
       if (!btn) return;
       if (this.is2faEnabled) {
-        btn.innerText = "Disable 2FA authentication";
+        btn.innerText = i18n_default.t("profilePage.twoFactor.btn_disable");
         btn.classList.remove("bg-green-600");
         btn.classList.add("bg-red-600");
       } else {
-        btn.innerText = "Enable 2FA authentication";
+        btn.innerText = i18n_default.t("profilePage.twoFactor.btn_enable");
         btn.classList.remove("bg-red-600");
         btn.classList.add("bg-green-600");
       }
@@ -9440,6 +10464,7 @@
       document.querySelector('[data-method="qr"]')?.addEventListener("click", () => this.initiateSetup("qr"));
       document.querySelector('[data-method="email"]')?.addEventListener("click", () => this.initiateSetup("email"));
       document.getElementById("close-2fa-modal")?.addEventListener("click", () => this.closeModal());
+      document.getElementById("cancel-2fa-button")?.addEventListener("click", () => this.closeModal());
       document.getElementById("confirm-2fa-button")?.addEventListener(
         "click",
         () => this.enable2fa(this.elements.inputQr.value.trim(), "qr")
@@ -9511,7 +10536,7 @@
             this.switchView("email");
           }
         } else {
-          alert("Error initializing 2FA setup");
+          alert(i18n_default.t("profilePage.alerts.2fa_init_error"));
         }
       } catch (error) {
         console.error(error);
@@ -9519,7 +10544,7 @@
     }
     async enable2fa(code, type) {
       if (!code || code.length < 6) {
-        alert("Invalid code");
+        alert(i18n_default.t("profilePage.alerts.2fa_invalid_code"));
         return;
       }
       const backendType = type === "qr" ? "APP" : "EMAIL";
@@ -9534,24 +10559,24 @@
           localStorage.setItem("is2faEnabled", "true");
           this.updateToggleButton();
           this.closeModal();
-          alert("2FA enabled!");
+          alert(i18n_default.t("profilePage.alerts.2fa_enabled"));
         } else {
           const res = await response.json();
-          alert(res.message || "Invalid code");
+          alert(res.message || i18n_default.t("profilePage.alerts.2fa_invalid_code"));
         }
       } catch (e) {
         console.error(e);
       }
     }
     async disable2fa() {
-      if (!confirm("Disable 2FA?")) return;
+      if (!confirm(i18n_default.t("profilePage.alerts.2fa_disable_confirm"))) return;
       try {
         const response = await fetchWithAuth(`api/auth/2fa`, { method: "DELETE" });
         if (response.ok) {
           this.is2faEnabled = false;
           localStorage.setItem("is2faEnabled", "false");
           this.updateToggleButton();
-          alert("2FA disabled");
+          alert(i18n_default.t("profilePage.alerts.2fa_disabled"));
         }
       } catch (e) {
         console.error(e);
@@ -9561,7 +10586,68 @@
 
   // scripts/controllers/ProfilePage.ts
   function render3() {
-    return ProfilePage_default;
+    let html = ProfilePage_default;
+    html = html.replace(/\{\{profilePage\.window_profile\}\}/g, i18n_default.t("profilePage.window_profile"));
+    html = html.replace(/\{\{profilePage\.my_profile\}\}/g, i18n_default.t("profilePage.my_profile"));
+    html = html.replace(/\{\{profilePage\.my_status\}\}/g, i18n_default.t("profilePage.my_status"));
+    html = html.replace(/\{\{profilePage\.status\.available\}\}/g, i18n_default.t("profilePage.status.available"));
+    html = html.replace(/\{\{profilePage\.status\.busy\}\}/g, i18n_default.t("profilePage.status.busy"));
+    html = html.replace(/\{\{profilePage\.status\.away\}\}/g, i18n_default.t("profilePage.status.away"));
+    html = html.replace(/\{\{profilePage\.status\.offline\}\}/g, i18n_default.t("profilePage.status.offline"));
+    html = html.replace(/\{\{profilePage\.fallback_username\}\}/g, i18n_default.t("profilePage.fallback_username"));
+    html = html.replace(/\{\{profilePage\.fallback_bio\}\}/g, i18n_default.t("profilePage.fallback_bio"));
+    html = html.replace(/\{\{profilePage\.username\}\}/g, i18n_default.t("profilePage.username"));
+    html = html.replace(/\{\{profilePage\.placeholder_username\}\}/g, i18n_default.t("profilePage.placeholder_username"));
+    html = html.replace(/\{\{profilePage\.change_button\}\}/g, i18n_default.t("profilePage.change_button"));
+    html = html.replace(/\{\{profilePage\.confirm_button\}\}/g, i18n_default.t("profilePage.confirm_button"));
+    html = html.replace(/\{\{profilePage\.bio\}\}/g, i18n_default.t("profilePage.bio"));
+    html = html.replace(/\{\{profilePage\.placeholder_bio\}\}/g, i18n_default.t("profilePage.placeholder_bio"));
+    html = html.replace(/\{\{profilePage\.password\}\}/g, i18n_default.t("profilePage.password"));
+    html = html.replace(/\{\{profilePage\.placeholder_password\}\}/g, i18n_default.t("profilePage.placeholder_password"));
+    html = html.replace(/\{\{profilePage\.2fa_button\}\}/g, i18n_default.t("profilePage.2fa_button"));
+    html = html.replace(/\{\{profilePage\.download_button\}\}/g, i18n_default.t("profilePage.download_button"));
+    html = html.replace(/\{\{profilePage\.delete_button\}\}/g, i18n_default.t("profilePage.delete_button"));
+    html = html.replace(/\{\{profilePage\.game_stats\}\}/g, i18n_default.t("profilePage.game_stats"));
+    html = html.replace(/\{\{profilePage\.game_played\}\}/g, i18n_default.t("profilePage.game_played"));
+    html = html.replace(/\{\{profilePage\.wins\}\}/g, i18n_default.t("profilePage.wins"));
+    html = html.replace(/\{\{profilePage\.losses\}\}/g, i18n_default.t("profilePage.losses"));
+    html = html.replace(/\{\{profilePage\.winning_streak\}\}/g, i18n_default.t("profilePage.winning_streak"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.title\}\}/g, i18n_default.t("profilePage.2fa_modal.title"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.choose_method\}\}/g, i18n_default.t("profilePage.2fa_modal.choose_method"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_method\}\}/g, i18n_default.t("profilePage.2fa_modal.message_method"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.authenticator\}\}/g, i18n_default.t("profilePage.2fa_modal.authenticator"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_authenticator\}\}/g, i18n_default.t("profilePage.2fa_modal.message_authenticator"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.email_verif\}\}/g, i18n_default.t("profilePage.2fa_modal.email_verif"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_email_verif\}\}/g, i18n_default.t("profilePage.2fa_modal.message_email_verif"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.qr_code\}\}/g, i18n_default.t("profilePage.2fa_modal.qr_code"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_qr_code\}\}/g, i18n_default.t("profilePage.2fa_modal.message_qr_code"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.6_digit\}\}/g, i18n_default.t("profilePage.2fa_modal.6_digit"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.validate\}\}/g, i18n_default.t("profilePage.2fa_modal.validate"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.cancel\}\}/g, i18n_default.t("profilePage.2fa_modal.cancel"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.verif_email\}\}/g, i18n_default.t("profilePage.2fa_modal.verif_email"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.message_verif_email\}\}/g, i18n_default.t("profilePage.2fa_modal.message_verif_email"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.code_send\}\}/g, i18n_default.t("profilePage.2fa_modal.code_send"));
+    html = html.replace(/\{\{profilePage\.2fa_modal\.code_received\}\}/g, i18n_default.t("profilePage.2fa_modal.code_received"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.title\}\}/g, i18n_default.t("profilePage.picture_modal.title"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.select_pic\}\}/g, i18n_default.t("profilePage.picture_modal.select_pic"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.message_select\}\}/g, i18n_default.t("profilePage.picture_modal.message_select"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.browse\}\}/g, i18n_default.t("profilePage.picture_modal.browse"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.delete\}\}/g, i18n_default.t("profilePage.picture_modal.delete"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.ok\}\}/g, i18n_default.t("profilePage.picture_modal.ok"));
+    html = html.replace(/\{\{profilePage\.picture_modal\.cancel\}\}/g, i18n_default.t("profilePage.picture_modal.cancel"));
+    html = html.replace(/\{\{profilePage\.theme_modal\.title\}\}/g, i18n_default.t("profilePage.theme_modal.title"));
+    html = html.replace(/\{\{profilePage\.password_modal\.title\}\}/g, i18n_default.t("profilePage.password_modal.title"));
+    html = html.replace(/\{\{profilePage\.password_modal\.current_pwd\}\}/g, i18n_default.t("profilePage.password_modal.current_pwd"));
+    html = html.replace(/\{\{profilePage\.password_modal\.new_pwd\}\}/g, i18n_default.t("profilePage.password_modal.new_pwd"));
+    html = html.replace(/\{\{profilePage\.password_modal\.confirm_pwd\}\}/g, i18n_default.t("profilePage.password_modal.confirm_pwd"));
+    html = html.replace(/\{\{profilePage\.password_modal\.save\}\}/g, i18n_default.t("profilePage.password_modal.save"));
+    html = html.replace(/\{\{profilePage\.password_modal\.cancel\}\}/g, i18n_default.t("profilePage.password_modal.cancel"));
+    html = html.replace(/\{\{profilePage\.delete_modal\.title\}\}/g, i18n_default.t("profilePage.delete_modal.title"));
+    html = html.replace(/\{\{profilePage\.delete_modal\.confirm_delete\}\}/g, i18n_default.t("profilePage.delete_modal.confirm_delete"));
+    html = html.replace(/\{\{profilePage\.delete_modal\.confirm_message\}\}/g, i18n_default.t("profilePage.delete_modal.confirm_message"));
+    html = html.replace(/\{\{profilePage\.delete_modal\.yes\}\}/g, i18n_default.t("profilePage.delete_modal.yes"));
+    html = html.replace(/\{\{profilePage\.delete_modal\.cancel\}\}/g, i18n_default.t("profilePage.delete_modal.cancel"));
+    return html;
   }
   function applyTheme(themeKey) {
     const theme = appThemes[themeKey] || appThemes["basic"];
@@ -9611,16 +10697,17 @@
     };
     const statusMapping = {
       "Available": "available",
+      // This assumes the dropdown options values or text are in English by default, or mapped
       "Busy": "busy",
       "Away": "away",
       "Appear offline": "invisible"
     };
     const reverseStatusMapping = {
-      "available": "Available",
-      "online": "Available",
-      "busy": "Busy",
-      "away": "Away",
-      "invisible": "Appear offline"
+      "available": i18n_default.t("profilePage.status.available"),
+      "online": i18n_default.t("profilePage.status.available"),
+      "busy": i18n_default.t("profilePage.status.busy"),
+      "away": i18n_default.t("profilePage.status.away"),
+      "invisible": i18n_default.t("profilePage.status.offline")
     };
     const themeButton = document.getElementById("theme-button");
     const themeModal = document.getElementById("theme-modal");
@@ -9650,16 +10737,16 @@
           div.classList.add("border-gray-300", "hover:border-blue-500");
         }
         div.innerHTML = `
-				<div class="relative">
-					<div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
-					
-					<div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
-				</div>
-				
-				<div class="p-2 bg-white text-center border-t border-gray-200">
-					<span class="text-sm font-bold text-gray-800">${theme.name}</span>
-				</div>
-			`;
+                <div class="relative">
+                    <div class="w-full h-12 bg-cover bg-center" style="background-image: url('${theme.headerUrl}')"></div>
+                    
+                    <div class="w-full h-16" style="background: ${theme.bgColor}; background-repeat: no-repeat; background-attachment: fixed;"></div>
+                </div>
+                
+                <div class="p-2 bg-white text-center border-t border-gray-200">
+                    <span class="text-sm font-bold text-gray-800">${theme.name}</span>
+                </div>
+            `;
         div.addEventListener("click", function() {
           const themeKey = this.dataset.themeKey;
           if (selectedThemeElement) {
@@ -9728,7 +10815,7 @@
       if (!userId) {
         return;
       }
-      const confirmation = confirm("This action is irreversible. Are you really sure?");
+      const confirmation = confirm(i18n_default.t("profilePage.alerts.delete_confirm"));
       if (!confirmation) {
         return;
       }
@@ -9737,7 +10824,7 @@
           method: "DELETE"
         });
         if (response.ok) {
-          alert("Your account has been deleted. You will be redirected.");
+          alert(i18n_default.t("profilePage.alerts.delete_success"));
           localStorage.removeItem("accessToken");
           localStorage.removeItem("userId");
           localStorage.removeItem("userTheme");
@@ -9746,12 +10833,12 @@
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
           const result = await response.json();
-          alert(result.error?.message || "Error deleting account");
+          alert(result.error?.message || i18n_default.t("profilePage.alerts.delete_error"));
           closeDeleteModal();
         }
       } catch (error) {
         console.error("Network error during destruction:", error);
-        alert("Network error. Please try again.");
+        alert(i18n_default.t("profilePage.alerts.network_error"));
       }
     });
     const loadUserData = async () => {
@@ -9782,7 +10869,7 @@
               if (avgScore) avgScore.innerText = stats.averageScore?.toString() || "0";
               if (streak) streak.innerText = stats.current_win_streak?.toString() || "0";
               if (opponent) opponent.innerText = stats.biggest_opponent || "-";
-              if (favGame) favGame.innerText = stats.favorite_game || "Local";
+              if (favGame) favGame.innerText = stats.favorite_game || i18n_default.t("profilePage.game_local");
               if (winRateCalcul) {
                 let rateValue = 0;
                 if (stats.total_games > 0) {
@@ -9818,7 +10905,7 @@
               } else if (fieldName === "bio") {
                 value2 = user.bio || "";
                 if (bioDisplay) {
-                  bioDisplay.innerHTML = parseMessage(value2) || "Share a quick message";
+                  bioDisplay.innerHTML = parseMessage(value2) || i18n_default.t("profilePage.bio_placeholder");
                 }
               } else if (fieldName === "email") {
                 value2 = user.email || "";
@@ -9826,16 +10913,16 @@
                 value2 = "********";
               }
               if (value2 !== void 0) {
-                display.innerText = value2 || (fieldName === "email" ? "No email" : "Empty");
+                display.innerText = value2 || (fieldName === "email" ? i18n_default.t("profilePage.email_empty") : i18n_default.t("profilePage.field_empty"));
                 if (fieldName !== "password") {
-                  input.placeholder = value2 || "Empty";
+                  input.placeholder = value2 || i18n_default.t("profilePage.field_empty");
                 }
               }
             }
           });
           if (user.status) {
             const normalizedStatus = user.status.toLowerCase();
-            const statusValue = reverseStatusMapping[normalizedStatus] || "Appear offline";
+            const statusValue = reverseStatusMapping[normalizedStatus] || i18n_default.t("profilePage.status.offline");
             if (statusSelect) statusSelect.value = statusValue;
             updateStatusFrame(normalizedStatus);
           }
@@ -9875,7 +10962,7 @@
         });
         const result = await response.json();
         if (response.ok) {
-          alert("Username updated successfully!");
+          alert(i18n_default.t("profilePage.alerts.username_success"));
           if (usernameDisplay) {
             usernameDisplay.innerText = newUsername;
           }
@@ -9890,13 +10977,13 @@
           if (result.error && result.error.message) {
             alert(result.error.message);
           } else {
-            alert("Error while saving username");
+            alert(i18n_default.t("profilePage.alerts.username_error"));
           }
           return false;
         }
       } catch (error) {
         console.error("Network error:", error);
-        alert("Error while saving username");
+        alert(i18n_default.t("profilePage.alerts.username_error"));
         return false;
       }
     };
@@ -9907,8 +10994,8 @@
       const MAX_BIO_LENGTH = 70;
       const trimmedBio = newBio.trim();
       if (trimmedBio.length > MAX_BIO_LENGTH) {
-        console.error("	Error: Bio is longer than the 70 characters limits.");
-        alert(`Bio cannot be longer than ${MAX_BIO_LENGTH} characteres.`);
+        console.error(" Error: Bio is longer than the 70 characters limits.");
+        alert(i18n_default.t("profilePage.alerts.bio_limit", { count: MAX_BIO_LENGTH }));
         return false;
       }
       try {
@@ -9919,7 +11006,7 @@
         });
         if (response.ok) {
           if (bioDisplay) {
-            bioDisplay.innerHTML = parseMessage(trimmedBio) || "Share a quick message";
+            bioDisplay.innerHTML = parseMessage(trimmedBio) || i18n_default.t("profilePage.bio_placeholder");
           }
           SocketService_default.getInstance().socket?.emit("notifyProfileUpdate", {
             userId: Number(userId),
@@ -9929,12 +11016,12 @@
           return true;
         } else {
           console.error("Error updating bio");
-          alert("Error updating bio");
+          alert(i18n_default.t("profilePage.alerts.bio_error"));
           return false;
         }
       } catch (error) {
         console.error("Network error:", error);
-        alert("Error updating bio");
+        alert(i18n_default.t("profilePage.alerts.bio_error"));
         return false;
       }
     };
@@ -9950,7 +11037,7 @@
         });
         const user = await response.json();
         if (response.ok) {
-          alert("Email updated successfully!");
+          alert(i18n_default.t("profilePage.alerts.email_success"));
           currentUserEmail = newEmail;
           return true;
         } else {
@@ -9960,7 +11047,7 @@
         }
       } catch (error) {
         console.error("Network error:", error);
-        alert("Error saving email");
+        alert(i18n_default.t("profilePage.alerts.email_error"));
         return false;
       }
     };
@@ -10126,16 +11213,24 @@
           });
         } else {
           console.error("Error updating status");
-          alert("Error updating status");
+          alert(i18n_default.t("profilePage.alerts.status_error"));
         }
       } catch (error) {
         console.error("Network error:", error);
-        alert("Error updating status");
+        alert(i18n_default.t("profilePage.alerts.status_error"));
       }
     };
     statusSelect?.addEventListener("change", () => {
       const selectedValue = statusSelect.value;
-      const statusKey = statusMapping[selectedValue];
+      let englishKey = Object.keys(statusMapping).find((key) => {
+        const backendValue = statusMapping[key];
+        const translatedDisplay = reverseStatusMapping[backendValue];
+        return selectedValue === key || selectedValue === translatedDisplay || selectedValue === backendValue;
+      });
+      if (!englishKey && statusMapping[selectedValue]) {
+        englishKey = selectedValue;
+      }
+      const statusKey = englishKey ? statusMapping[englishKey] : null;
       if (statusKey) {
         updateStatus(statusKey);
       }
@@ -10182,7 +11277,7 @@
       const confirmPass = confirmPwdInput.value;
       if (!oldPass || !newPass || !confirmPass) {
         if (pwdError) {
-          pwdError.innerText = "All inputs are required.";
+          pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_inputs");
           pwdError.classList.remove("hidden");
         }
         return;
@@ -10190,14 +11285,14 @@
       if (newPass !== confirmPass) {
         console.log("newpass: , confirmpass:", newPass, confirmPass);
         if (pwdError) {
-          pwdError.innerText = "These are not the same. Try again";
+          pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_mismatch");
           pwdError.classList.remove("hidden");
         }
         return;
       }
       if (newPass.length < 8) {
         if (pwdError) {
-          pwdError.innerText = "Password must be at least 8 characters.";
+          pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_length");
           pwdError.classList.remove("hidden");
         }
         return;
@@ -10210,19 +11305,19 @@
         });
         const result = await response.json();
         if (response.ok) {
-          alert("Password updated successfully!");
+          alert(i18n_default.t("profilePage.alerts.pwd_success"));
           closePwdModal();
         } else {
           if (pwdError) {
             console.log("pwdError");
-            pwdError.innerText = result.error?.message || "Error updating password";
+            pwdError.innerText = result.error?.message || i18n_default.t("profilePage.alerts.pwd_error");
             pwdError.classList.remove("hidden");
           }
         }
       } catch (error) {
         console.error("Catched error:", error);
         if (pwdError) {
-          pwdError.innerText = "Network error.";
+          pwdError.innerText = i18n_default.t("profilePage.alerts.network_error");
           pwdError.classList.remove("hidden");
         }
       }
@@ -10281,24 +11376,33 @@
 			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 		</div>
 		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Welcome to Transcendence
+			{{landing.welcome}}
 		</h1>
 		<!-- Login div -->
 		<div class="flex flex-col justify-center items-center gap-6">
 			<!-- Bouton de connexion/Register/Guest -->
-			<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Login</button>
-	 		<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
- 			<button id="guest-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Play as guest</button>
+			<button id="login-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{landing.login_button}}</button>
+	 		<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{landing.register_button}}</button>
+ 			<button id="guest-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{landing.guest_button}}</button>
 	</div>
 </div>`;
 
   // scripts/controllers/LandingPage.ts
   function render4() {
-    return LandingPage_default;
+    let html = LandingPage_default;
+    html = html.replace(/\{\{landing\.welcome\}\}/g, i18n_default.t("landing.welcome"));
+    html = html.replace(/\{\{landing\.login_button\}\}/g, i18n_default.t("landing.login_button"));
+    html = html.replace(/\{\{landing\.register_button\}\}/g, i18n_default.t("landing.register_button"));
+    html = html.replace(/\{\{landing\.guest_button\}\}/g, i18n_default.t("landing.guest_button"));
+    return html;
   }
   function setupPageLangDropdown() {
     const toggleBtn = document.getElementById("page-lang-toggle-btn");
     const menuContent = document.getElementById("page-lang-menu-content");
+    const display = document.getElementById("page-current-lang-display");
+    if (display) {
+      display.textContent = i18n_default.language.toUpperCase();
+    }
     if (toggleBtn && menuContent) {
       toggleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -10311,12 +11415,12 @@
       });
     }
     document.querySelectorAll(".page-lang-select").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", async (e) => {
         const target = e.currentTarget;
         const lang = target.getAttribute("data-lang");
         if (lang) {
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
+          await changeLanguage2(lang);
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       });
     });
@@ -10378,7 +11482,7 @@
       } catch (err) {
         console.error("Network error while guest login: ", err);
         if (guestError) {
-          guestError.textContent = "Network error. Please try again";
+          guestError.textContent = i18n_default.t("landing.guest_error_network");
           guestError.classList.remove("hidden");
         }
       }
@@ -10386,72 +11490,16 @@
   }
 
   // scripts/pages/RegisterPage.html
-  var RegisterPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
-    <div class="relative">
-        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
-            <span class="text-lg">\u{1F310}</span>
-            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
-            <span class="text-[10px] opacity-70">\u25BC</span>
-        </button>
-        
-        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
-            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
-                <span>\u{1F1EC}\u{1F1E7}</span> English
-            </button>
-            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
-                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais
-            </button>
-            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
-                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol
-            </button>
-        </div>
-    </div>
-</div>
-<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
-		<!-- Main div -->
-	<div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">
-		<!-- Picture div -->
-		<div class="relative w-[170px] h-[170px] mb-4">
-			<!-- le cadre -->
-			<img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">
-			<!-- l'image -->
-			<img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
-		</div>
-		<h1 class="font-sans text-xl font-normal text-blue-950">
-			Sign up to Transcendence
-		</h1>
-		<!-- Login div -->
-		<div class="flex flex-col justify-center items-center gap-6">
-			<div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">
-				<!-- Username -->
-				<input type="alias" placeholder="faufaudu49" id="alias-input"
-					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
-
-				<!-- Email -->
-				<input type="email" placeholder="Example555@hotmail.com" id="email-input"
-					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
-		
-				<!-- Mot de passe -->
-				<input type="password" placeholder="Enter your password" id="password-input"
-					class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>
-				<div class="flex flex-col items-center justify-center">
-					<p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>
-				</div>
-			</div>
-			<!-- Bouton de register -->
-			<div class="flex flex-col gap-2 w-48">
-				<button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">Register</button>
-			</div>
-
-			<div>
-				<button id="back-button" class="text-sm text-gray-400" style="color: grey;">Back to landing page</button>
-			</div>
-	</div>
-</div>`;
+  var RegisterPage_default = '<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">\n    <div class="relative">\n        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">\n            <span class="text-lg">\u{1F310}</span>\n            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>\n            <span class="text-[10px] opacity-70">\u25BC</span>\n        </button>\n        \n        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">\n                <span>\u{1F1EC}\u{1F1E7}</span> English\n            </button>\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">\n                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais\n            </button>\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">\n                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol\n            </button>\n        </div>\n    </div>\n</div>\n<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>\n        <div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">\n        <div class="relative w-[170px] h-[170px] mb-4">\n            <img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">\n            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">\n        </div>\n        <h1 class="font-sans text-xl font-normal text-blue-950">\n            {{registerPage.welcome}}\n        </h1>\n        <div class="flex flex-col justify-center items-center gap-6">\n            <div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">\n                <input type="alias" placeholder="faufaudu49" id="alias-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n\n                <input type="email" placeholder="Example555@hotmail.com" id="email-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n        \n                <input type="password" placeholder="{{registerPage.password}}" id="password-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n                <div class="flex flex-col items-center justify-center">\n                    <p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>\n                </div>\n            </div>\n            <div class="flex flex-col gap-2 w-48">\n                <button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{registerPage.register_button}}</button>\n            </div>\n\n            <div>\n                <button id="back-button" class="text-sm text-gray-400" style="color: grey;">{{registerPage.back}}</button>\n            </div>\n    </div>\n</div>';
 
   // scripts/controllers/RegisterPage.ts
   function render5() {
-    return RegisterPage_default;
+    let html = RegisterPage_default;
+    html = html.replace(/\{\{registerPage\.welcome\}\}/g, i18n_default.t("registerPage.welcome"));
+    html = html.replace(/\{\{registerPage\.password\}\}/g, i18n_default.t("registerPage.password"));
+    html = html.replace(/\{\{registerPage\.register_button\}\}/g, i18n_default.t("registerPage.register_button"));
+    html = html.replace(/\{\{registerPage\.back\}\}/g, i18n_default.t("registerPage.back"));
+    return html;
   }
   function handleRegister() {
     const button = document.getElementById("register-button");
@@ -10475,7 +11523,7 @@
       }
       if (!alias2 || !password || !email) {
         if (errorElement) {
-          errorElement.textContent = "Please fill all inputs";
+          errorElement.textContent = i18n_default.t("registerPage.error_inputs");
           errorElement.classList.remove("hidden");
         }
         return;
@@ -10523,14 +11571,14 @@
         } else {
           console.error("Login error:", result.error.message);
           if (errorElement) {
-            errorElement.textContent = result.error.message || "Authentication failed";
+            errorElement.textContent = result.error.message || i18n_default.t("registerPage.error_auth_default");
             errorElement.classList.remove("hidden");
           }
         }
       } catch (error) {
         console.error("Network error:", error);
         if (errorElement) {
-          errorElement.textContent = "Network error, please try again REGISTER PAGE";
+          errorElement.textContent = i18n_default.t("registerPage.error_network");
           errorElement.classList.remove("hidden");
         }
       }
@@ -10549,90 +11597,36 @@
         if (!menuContent.classList.contains("hidden")) menuContent.classList.add("hidden");
       });
     }
+    const display = document.getElementById("page-current-lang-display");
+    if (display) {
+      display.textContent = i18n_default.language.toUpperCase();
+    }
     document.querySelectorAll(".page-lang-select").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
+      btn.addEventListener("click", async (e) => {
         const target = e.currentTarget;
         const lang = target.getAttribute("data-lang");
         if (lang) {
-          const display = document.getElementById("page-current-lang-display");
-          if (display) display.textContent = lang.toUpperCase();
+          await changeLanguage2(lang);
+          window.dispatchEvent(new PopStateEvent("popstate"));
         }
       });
     });
   }
 
   // scripts/pages/GuestPage.html
-  var GuestPage_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
-
-    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
-    </div>
-
-    <div class="absolute z-10 top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">
-        
-        <div class="flex justify-center items-center flex-1 min-h-0">
-
-            <div class="window w-[500px] min-w-[500px] flex flex-col">
-                <div class="title-bar">
-                    <div class="title-bar-text">Guest Mode</div>
-                    <div class="title-bar-controls">
-                        <button aria-label="Minimize"></button>
-                        <button aria-label="Maximize"></button>
-                        <button aria-label="Close"></button>
-                    </div>
-                </div>
-
-                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm">
-                    
-                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">
-                        <div class="flex flex-col items-center">
-                            <h1 class="text-2xl font-bold text-blue-900 p-4">Welcome on transcendence</h1>
-                            <p class="text-lg text-gray-700 italic text-center border-b border-gray-500 p-4">You are actually playing as a guest. If you want to access any game's feature, you need to register!</p>
-                            <p class="text-sm text-gray-500 mt-4">Select a mode to start playing</p>
-                        </div>
-
-                        <div class="flex flex-col gap-6 px-10">
-                            <button id="local-game" 
-                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
-                                LOCAL GAME
-                            </button>
-
-                            <button id="remote-game" 
-                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
-                                REMOTE GAME
-                            </button>
-
-                            <button id="tournament-game" 
-                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 
-                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">
-                                TOURNAMENT
-                            </button>
-                        </div>
-                    </div>  
-                </div>
-            </div>
-
-
-            <!-- <div class="window flex flex-col flex-1 min-w-0"> <div class="title-bar">
-                    <div class="title-bar-text">Guest Chat</div>
-                </div>
-                <div class="window-body flex flex-col flex-1 bg-white p-2">
-                    <div id="chat-messages" class="flex-1 overflow-y-auto mb-2 border border-gray-300 p-2"></div>
-                    <input type="text" id="chat-input" placeholder="Say hello..." class="w-full border p-1">
-                    </div>
-            </div> -->
-        </div>
-    </div>
-</div>`;
+  var GuestPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute z-10 top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2" style="padding-left: 100px; padding-right: 100px; bottom: 100px;">\n        \n        <div class="flex justify-center items-center flex-1 min-h-0">\n\n            <div class="window w-[500px] min-w-[500px] flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{guestPage.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm">\n                    \n                    <div class="bg-white p-8 flex flex-col items-center justify-center gap-6">\n                        <div class="flex flex-col items-center">\n                            <h1 class="text-2xl font-bold text-blue-900 p-4">{{guestPage.welcome}}</h1>\n                            <p class="text-lg text-gray-700 italic text-center border-b border-gray-500 p-4">{{guestPage.description}}</p>\n                            <p class="text-sm text-gray-500 mt-4">{{guestPage.select_mode}}</p>\n                        </div>\n\n                        <div class="flex flex-col gap-6 px-10">\n                            <button id="local-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                {{guestPage.local}}\n                            </button>\n\n                            <button id="remote-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                {{guestPage.remote}}\n                            </button>\n\n                            <button id="tournament-game" \n                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                    px-4 py-2 text-sm shadow-sm p-2 hover:from-gray-200 hover:to-gray-400 \n                                    active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-semibold text-gray-700">\n                                {{guestPage.tournament}}\n                            </button>\n                        </div>\n                    </div>  \n                </div>\n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/controllers/GuestPage.ts
   function render6() {
-    return GuestPage_default;
+    let html = GuestPage_default;
+    html = html.replace(/\{\{guestPage\.title_window\}\}/g, i18n_default.t("guestPage.title"));
+    html = html.replace(/\{\{guestPage\.welcome\}\}/g, i18n_default.t("guestPage.welcome"));
+    html = html.replace(/\{\{guestPage\.description\}\}/g, i18n_default.t("guestPage.description"));
+    html = html.replace(/\{\{guestPage\.select_mode\}\}/g, i18n_default.t("guestPage.select_mode"));
+    html = html.replace(/\{\{guestPage\.local\}\}/g, i18n_default.t("guestPage.local"));
+    html = html.replace(/\{\{guestPage\.remote\}\}/g, i18n_default.t("guestPage.remote"));
+    html = html.replace(/\{\{guestPage\.tournament\}\}/g, i18n_default.t("guestPage.tournament"));
+    return html;
   }
   function afterRender3() {
     const localButton = document.getElementById("local-game");
@@ -10671,14 +11665,14 @@
       const guestChat = new Chat();
       guestChat.init();
       guestChat.joinChannel("general_guest");
-      guestChat.addSystemMessage("Welcome to Guest Mode. Select a game mode to start chatting with your opponents.");
+      guestChat.addSystemMessage(i18n_default.t("guestPage.chat_welcome"));
     } catch (e) {
       console.error("Error charging chat:", e);
     }
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">Games</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        \n\n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">Start the game</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">Game instructions</p>\n                                        <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>\n                                        <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>\n                                        <p>The space bar can be used to distract your opponent.</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">Who are you playing with? :</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="Type in a name..." required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">Please fill in!</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">Choose your ball :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">Choose your background :</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        Reset color\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            PLAY\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n                        \n\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">Ready, steady, go!</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">End of the game</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        Return to Menu\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n							\n						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					</div>\n				</div>\n			</div> \n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">{{localPage.title}}</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{localPage.p1}}</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{localPage.p2}}</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">{{localPage.start_game}}</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">{{localPage.game_instr}}</p>\n                                        <p>{{localPage.ws}}</p>\n                                        <p>{{localPage.up_down}}</p>\n                                        <p>{{localPage.space_bar}}</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">{{localPage.opp_name}}</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="{{localPage.placeholder_opp}}" required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">{{localPage.err_message}}</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">{{localPage.choose_ball}}</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{localPage.select_ball}}</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">{{localPage.choose_bg}}</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{localPage.select_bg}}</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        {{localPage.reset_color}}\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            {{localPage.play}}\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{localPage.countdown_title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{localPage.summary_modal.title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{localPage.summary_modal.congrat}}</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{localPage.summary_modal.name}}</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{localPage.summary_modal.back_menu}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{localPage.chat.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n                            \n                        <div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n                            <p>{{localPage.chat.info}}</p>\n                        </div>\n\n                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n                        <div class="flex flex-col">\n                            <input id="chat-input" placeholder="{{localPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n                    </div>\n                </div>\n            </div> \n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
@@ -10693,7 +11687,7 @@
 
             <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">
                 <div class="title-bar">
-                    <div class="title-bar-text">Games</div>
+                    <div class="title-bar-text">{{remotePage.title}}</div>
                     <div class="title-bar-controls">
                         <button aria-label="Minimize"></button>
                         <button aria-label="Maximize"></button>
@@ -10704,20 +11698,17 @@
                 <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
     
                     <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>
+                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{remotePage.p1}}</span>
                         <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>
+                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{remotePage.p2}}</span>
                     </div>
 
                     <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
                     
-                    
-                    
-                    
                     <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                         <div class="window w-[600px] shadow-xl">
                             <div class="title-bar">
-                                <div class="title-bar-text">Start the game</div>
+                                <div class="title-bar-text">{{remotePage.start_game}}</div>
                                 <div class="title-bar-controls">
                                     <button aria-label="Close"></button>
                                 </div>
@@ -10725,14 +11716,14 @@
 
                             <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
                                 <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
-                                    <p class="font-semibold mb-2">Game instructions</p>
-                                    <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>
-                                    <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>
-                                    <p>The space bar can be used to distract your opponent.</p>
+                                    <p class="font-semibold mb-2">{{remotePage.game_instr}}</p>
+                                    <p>{{remotePage.ws}}</p>
+                                    <p>{{remotePage.up_down}}</p>
+                                    <p>{{remotePage.space_bar}}</p>
                                 </div>
                                 <fieldset class="border-2 border-gray-300 p-2 mt-2">
                                     <div class="flex flex-row items-center gap-2 mb-3 relative">
-                                        <label class="text-sm font-semibold">Choose your ball :</label>
+                                        <label class="text-sm font-semibold">{{remotePage.choose_ball}}</label>
                                         
                                         <div class="relative">
                                             <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
@@ -10740,7 +11731,7 @@
                                             </button>
 
                                             <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
-                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a ball:</p>
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{remotePage.select_ball}}</p>
                                                 <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
                                                     </div>
                                             </div>
@@ -10750,7 +11741,7 @@
                                     </div>
 
                                     <div class="flex flex-row gap-2">
-                                        <label class="text-sm font-semibold">Choose your background :</label>
+                                        <label class="text-sm font-semibold">{{remotePage.choose_bg}}</label>
                                         
                                         <div class="relative">
                                             <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
@@ -10758,11 +11749,11 @@
                                             </button>
 
                                             <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
-                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>
+                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{remotePage.select_bg}}</p>
                                                 <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
                                                 </div>
                                                 <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
-                                                    Reset color
+                                                    {{remotePage.reset_color}}
                                                 </button>
                                             </div>
                                         </div>
@@ -10774,7 +11765,7 @@
                                 <div class="flex justify-center mt-4">
                                     <button id="start-game-btn"
                                             class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        PLAY (QUEUE)
+                                        {{remotePage.play}}
                                     </button>
                                 </div>
                                 <div class="text-center text-xs text-gray-500" id="queue-status"></div>
@@ -10783,13 +11774,10 @@
                         </div>
                     </div>
 
-
-
-
-					<div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                    <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
                         <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
                             <div class="title-bar bg-yellow-500">
-                                <div class="title-bar-text text-black">Ready, steady, go!</div>
+                                <div class="title-bar-text text-black">{{remotePage.countdown_title}}</div>
                             </div>
                             <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
                                 <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
@@ -10797,135 +11785,81 @@
                         </div>
                     </div>
 
-
-					<div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                    <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
                         <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
                             <div class="title-bar bg-yellow-500">
-                                <div class="title-bar-text text-black">End of the game</div>
+                                <div class="title-bar-text text-black">{{remotePage.summary_modal.title}}</div>
                             </div>
                             <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
-                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">???</div>                                
+                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{remotePage.summary_modal.congrat}}</h1>
+                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{remotePage.summary_modal.name}}</div>                                
                                 <button id="quit-remote-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
                                                         px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
                                                         active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
                                                         transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                    Return to Menu
+                                    {{remotePage.summary_modal.back_menu}}
                                 </button>
                             </div>
                         </div>
                     </div>
 
-
-
-
-
                 </div>
             </div>
 
             <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">
-				<div class="title-bar">
-					<div class="title-bar-text">Game chat</div>
-					<div class="title-bar-controls">
-						<button aria-label="Minimize"></button>
-						<button aria-label="Maximize"></button>
-						<button aria-label="Close"></button>
-					</div>
-				</div>
+                <div class="title-bar">
+                    <div class="title-bar-text">{{remotePage.chat.title}}</div>
+                    <div class="title-bar-controls">
+                        <button aria-label="Minimize"></button>
+                        <button aria-label="Maximize"></button>
+                        <button aria-label="Close"></button>
+                    </div>
+                </div>
 
-				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-					<div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
-						<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-								
-							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
-								<p>Chat room</p>
-							</div>
-	
-							<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
-	
-							<div class="flex flex-col">
-								<input type="text" id="chat-input" placeholder="Type in your message" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-								<div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
-									<button id="select-emoticon" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_emoticon.png" alt="Select Emoticon"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-	
-											<div id="emoticon-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="emoticon-grid"></div>
-											</div>
-										</div>
-									</button>
-	
-									<button id="select-animation" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-											<div class="w-5"><img src="/assets/chat/select_wink.png" alt="Select Animation"></div>
-											<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-	
-											<div id="animation-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-72 p-2 bg-white border border-gray-300 rounded-md shadow-xl">
-												<div class="grid grid-cols-8 gap-1" id="animation-grid"></div>
-											</div>
-										</div>
-									</button>
-	
-									<div class="absolute top-0 left-0 flex w-full h-full justify-center items-center pointer-events-none"><div></div></div>
-									<button id="send-wizz" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300"><div><img src="/assets/chat/wizz.png" alt="Sending wizz"></div></button>
-									<div class="px-2"><img src="/assets/chat/chat_icons_separator.png" alt="Icons separator"></div>
-	
-									<button id="change-font" class="h-6">
-										<div class="relative flex items-center aerobutton p-0.7 h-5 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/change_font.png" alt="Change font"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Select arrow"></div>
-	
-										<div id="font-dropdown" class="absolute z-10 hidden bottom-full left-0 mb-1 w-auto p-1 bg-white border border-gray-300 rounded-md shadow-xl">
-											<div class="grid grid-cols-4 gap-[2px] w-[102px]" id="font-grid"></div>
-										</div>
-	
-										</div>
-									</button>
-	
-									<div class="relative">
-									<button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
-										<div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
-										<div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
-									</button>
-	
-									<div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
-										<p class="text-xs text-gray-500 mb-2 pl-1">Choose a background:</p>
-													
-										<div class="grid grid-cols-3 gap-2">
-															
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/fish_background.jpg')"
-													style="background-image: url('/assets/backgrounds/fish_background.jpg');">
-											</button>
-	
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/heart_background.jpg')"
-													style="background-image: url('/assets/backgrounds/heart_background.jpg');">
-											</button>
-	
-											<button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
-													data-bg="url('/assets/backgrounds/lavender_background.jpg')"
-													style="background-image: url('/assets/backgrounds/lavender_background.jpg');">
-											</button>
-	
-											<button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
-												Default background
-											</button>
-										</div>
-									</div>
-								</div>
-						</div>
-					</div>
-				</div>
-			</div> 
+                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
+                    <div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+                        <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+                                
+                            <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+                                <p>{{remotePage.chat.info}}</p>
+                            </div>
+    
+                            <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+    
+                            <div class="flex flex-col">
+                                <input type="text" id="chat-input" placeholder="Type in your message" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                <div class="flex border-x border-b rounded-b-[4px] border-[#bdd5df] items-center pl-1" style="background-image: url(&quot;/assets/chat/chat_icons_background.png&quot;);">
+                                    <div class="relative">
+                                    <button id="select-background" class="flex items-center aerobutton p-1 h-6 border border-transparent rounded-sm hover:border-gray-300">
+                                        <div class="w-5"><img src="/assets/chat/select_background.png" alt="Background"></div>
+                                        <div><img src="/assets/chat/arrow.png" alt="Arrow"></div>
+                                    </button>
+    
+                                    <div id="background-dropdown" class="absolute hidden bottom-full right-0 mb-1 w-64 p-2 bg-white border border-gray-300 rounded-md shadow-xl z-50">
+                                        <p class="text-xs text-gray-500 mb-2 pl-1">{{remotePage.chat.choose_bg}}</p>
+                                                    
+                                        <div class="grid grid-cols-3 gap-2">
+                                                            
+                                            <button class="bg-option w-full h-12 border border-gray-200 hover:border-blue-400 rounded bg-cover bg-center" 
+                                                    data-bg="url('/assets/backgrounds/fish_background.jpg')"
+                                                    style="background-image: url('/assets/backgrounds/fish_background.jpg');">
+                                            </button>
+                                            <button class="bg-option col-span-3 text-xs text-red-500 hover:underline mt-1" data-bg="none">
+                                                {{remotePage.chat.default_bg}}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div> 
         </div>
     </div>
 </div>`;
 
   // scripts/pages/TournamentPage.html
-  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">Tournament Arena</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">Player 1</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">Player 2</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                        <div class="window w-[600px] bg-white shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament setup</div>\n                            </div>\n                            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                    <p class="font-semibold mb-2">Game instructions</p>\n                                    <p>Player on the left moves the paddle with <img src="/assets/game/direction.png" alt="W key" style="height:28px; display:inline-block;"></p>\n                                    <p>Player on the right uses the \u2B06\uFE0F\u2B07\uFE0F keys.</p>\n                                    <p>The space bar can be used to distract your opponent.</p>\n                                </div>\n                                <div class="flex flex-col gap-1">\n                                    <label class="font-bold text-sm">Tournament name:</label>\n                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="T00urN\xD4\xEE\xEF d33s b0ggggg0\xF4\xF4ssss">\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">Participants</legend>\n                                    <div class="grid grid-cols-2 gap-4">\n                                        <div>\n                                            <label class="text-xs font-bold">Player 1 (You):</label>\n                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 2:</label>\n                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 2">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 3:</label>\n                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 3">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">Player 4:</label>\n                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="Player 4">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800">Choose your ball and background:</legend>\n                                    <div class="flex flex-row items-center gap-8 justify-center">\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Ball :</label>\n                                            <div class="relative">\n                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                </div>\n                                            </div>\n                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                        </div>\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">Background :</label>\n                                            <div class="relative">\n                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">Select a background:</p>\n                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    Reset color\n                                                </button>\n                                            </div>\n                                            </div>\n                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        START TOURNAMENT\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">\n                            <div class="title-bar">\n                                <div class="title-bar-text">Tournament</div>\n                            </div>\n\n                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                    TOURNAMENT IS ABOUT TO START\n                                </h2>\n\n                                <div class="flex flex-col gap-6 w-full items-center">\n\n                                    <!-- SEMI FINALS -->\n                                    <div class="flex flex-row justify-between w-full px-8">\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 1\n                                            </span>\n                                            <span id="bracket-sf1" class="match-display"></span>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                Semi-Final 2\n                                            </span>\n                                            <span id="bracket-sf2" class="match-display"></span>\n                                        </div>\n                                    </div>\n\n                                    <!-- FINAL -->\n                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                            Final\n                                        </span>\n                                        <span id="bracket-final" class="match-display final-match"></span>\n                                    </div>\n\n                                </div>\n\n                                <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                <p id="bracket-status-msg" class="text-gray-600 italic">\n                                    Ready for the next match...\n                                </p>\n\n                                <button\n                                    id="bracket-continue-btn"\n                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    CONTINUE TO MATCH\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n\n                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                            <div class="title-bar bg-blue-800">\n                                <div class="title-bar-text text-white">Next match</div>\n                            </div>\n                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">SEMI-FINAL 1</h2>\n                                \n                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">VS</div>\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                </div>\n\n                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">The game will start as soon as you click Play.</p>\n\n                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    PLAY !\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">End of the tournament</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">NAME</div>                                \n                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    Return to Menu\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n\n\n\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n				<div class="title-bar">\n					<div class="title-bar-text">Notifications</div>\n					<div class="title-bar-controls">\n						<button aria-label="Minimize"></button>\n						<button aria-label="Maximize"></button>\n						<button aria-label="Close"></button>\n					</div>\n				</div>\n\n				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n						<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n							<p>System notification</p>\n						</div>\n						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n						<div class="flex flex-col">\n							<input id="chat-input" placeholder="You cannot speak to the system" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n					    </div>\n				    </div>\n			    </div> \n            </div>\n        </div>\n    </div>\n</div>';
+  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">\n        \n        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{tournamentPage.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                        <div class="window w-[600px] bg-white shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">{{tournamentPage.setup_modal.title_modal}}</div>\n                            </div>\n                            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                    <p class="font-semibold mb-2">{{tournamentPage.setup_modal.game_instr}}</p>\n                                    <p>{{tournamentPage.setup_modal.ws}}</p>\n                                    <p>{{tournamentPage.setup_modal.up_down}}</p>\n                                    <p>{{tournamentPage.setup_modal.space_bar}}</p>\n                                </div>\n                                <div class="flex flex-col gap-1">\n                                    <label class="font-bold text-sm">{{tournamentPage.setup_modal.tournament_name}}</label>\n                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>\n                                    <div class="grid grid-cols-2 gap-4">\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p1}}</label>\n                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p2}}</label>\n                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p2}}">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p3}}</label>\n                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p3}}">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p4}}</label>\n                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p4}}">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>\n                                    <div class="flex flex-row items-center gap-8 justify-center">\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose__ball}}</label>\n                                            <div class="relative">\n                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                </div>\n                                            </div>\n                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                        </div>\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose_bg}}</label>\n                                            <div class="relative">\n                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{tournamentPage.setup_modal.select_bg}}</p>\n                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    {{tournamentPage.setup_modal.reset_color}}\n                                                </button>\n                                            </div>\n                                            </div>\n                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{tournamentPage.setup_modal.play}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">\n                            <div class="title-bar">\n                                <div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>\n                            </div>\n\n                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                    {{tournamentPage.tournament_bracket_modal.heading}}\n                                </h2>\n\n                                <div class="flex flex-col gap-6 w-full items-center">\n\n                                    <div class="flex flex-row justify-between w-full px-8">\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                {{tournamentPage.tournament_bracket_modal.semi_final_1}}\n                                            </span>\n                                            <span id="bracket-sf1" class="match-display"></span>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                {{tournamentPage.tournament_bracket_modal.semi_final_2}}\n                                            </span>\n                                            <span id="bracket-sf2" class="match-display"></span>\n                                        </div>\n                                    </div>\n\n                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                            {{tournamentPage.tournament_bracket_modal.final}}\n                                        </span>\n                                        <span id="bracket-final" class="match-display final-match"></span>\n                                    </div>\n\n                                </div>\n\n                                <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                <p id="bracket-status-msg" class="text-gray-600 italic">\n                                    {{tournamentPage.tournament_bracket_modal.status_ready}}\n                                </p>\n\n                                <button\n                                    id="bracket-continue-btn"\n                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    {{tournamentPage.tournament_bracket_modal.continue_btn}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                            <div class="title-bar bg-blue-800">\n                                <div class="title-bar-text text-white">{{tournamentPage.tournament_next_match_modal.title}}</div>\n                            </div>\n                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.match_title}}</h2>\n                                \n                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">{{tournamentPage.tournament_next_match_modal.player_vs}}</div>\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                </div>\n\n                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.start_info}}</p>\n\n                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    {{tournamentPage.tournament_next_match_modal.play_btn}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                \n                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    {{tournamentPage.tournament_summary_modal.back_menu}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{tournamentPage.chat.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n                        <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n                            <p>{{tournamentPage.chat.info}}</p>\n                        </div>\n                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n                        <div class="flex flex-col">\n                            <input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n                        </div>\n                    </div>\n                </div> \n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/game/Paddle.ts
   var Paddle = class {
@@ -11077,7 +12011,10 @@
         if (this.onGameEnd) {
           this.onGameEnd(data);
         } else {
-          alert(`Game Over! Final Score: ${data.finalScore.player1} - ${data.finalScore.player2}`);
+          alert(i18n_default.t("game.game_over", {
+            score1: data.finalScore.player1,
+            score2: data.finalScore.player2
+          }));
         }
         this.socket.off("gameState");
         this.socket.off("gameEnded");
@@ -11327,7 +12264,7 @@
       winnerText.innerText = winnerName;
       modal.classList.remove("hidden");
       if (gameChat2) {
-        gameChat2.addSystemMessage(`${winnerName} wins the match!`);
+        gameChat2.addSystemMessage(i18n_default.t("gameUI.winner_message", { name: winnerName }));
       }
       launchConfetti(4e3);
     }
@@ -11341,18 +12278,21 @@
     if (document.getElementById("remote-end-modal")) {
       return;
     }
+    const t_gameOver = i18n_default.t("gameUI.game_over");
+    const t_congrat = i18n_default.t("gameUI.congratulations");
+    const t_return = i18n_default.t("gameUI.return_menu");
     const modalHtml = `
         <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
             <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
 
                 <div class="title-bar">
-                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-text text-white" style="text-shadow: none;">${t_gameOver}</div>
                     <div class="title-bar-controls"></div>
                 </div>
 
                 <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
 
-                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">${t_congrat}</h1>
 
                     <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
                         <p class="text-2xl font-bold text-gray-800 text-center">
@@ -11371,7 +12311,7 @@
                                     active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
                                     transition-all duration-200 hover:shadow-md"
                                 style="width: 200px; padding: 4px;">
-                            RETURN TO MENU
+                            ${t_return}
                         </button>
                     </div>
 
@@ -11403,7 +12343,7 @@
       if (count > 0) {
         text.innerText = count.toString();
       } else if (count === 0) {
-        text.innerText = "GO!";
+        text.innerText = i18n_default.t("gameUI.go");
         text.classList.remove("animate-bounce");
         text.classList.add("animate-ping");
       } else {
@@ -11517,7 +12457,7 @@
         });
       }
       if (startButton) {
-        let p1Alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+        let p1Alias = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || i18n_default.t("gamePage.default_guest");
         const newStartBtn = startButton.cloneNode(true);
         startButton.parentNode?.replaceChild(newStartBtn, startButton);
         newStartBtn.addEventListener("click", () => {
@@ -11528,7 +12468,10 @@
             return;
           }
           if (this.context.chat) {
-            this.context.chat.addSystemMessage(`Game is about to start! Match: ${p1Alias} vs ${opponentName}`);
+            this.context.chat.addSystemMessage(i18n_default.t("localPage.chat_start_match", {
+              p1: p1Alias,
+              p2: opponentName
+            }));
           }
           const selectedBall = ballValueInput ? ballValueInput.value : "classic";
           const selectedBg = bgValueInput ? bgValueInput.value : "#E8F4F8";
@@ -11592,7 +12535,7 @@
                   clearInterval(localLoop);
                   const p1Score = activeGame2.score.player1;
                   const p2Score = activeGame2.score.player2;
-                  const p1Alias2 = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+                  const p1Alias2 = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || i18n_default.t("gamePage.default_guest");
                   const p2Alias = opponentName;
                   const p1Wins = p1Score > p2Score;
                   const winnerAlias = p1Wins ? p1Alias2 : p2Alias;
@@ -11771,12 +12714,12 @@
         if (opponentId && myId === opponentId) {
           console.error("Error: cannot play against yourself");
           if (status) {
-            status.innerText = "You cannot play against yourself";
+            status.innerText = i18n_default.t("remoteManager.self_play_error");
             status.style.color = "red";
           }
           if (btn) {
             btn.disabled = false;
-            btn.innerText = "PLAY (QUEUE)";
+            btn.innerText = i18n_default.t("remoteManager.btn_play_queue");
           }
           const socket = SocketService_default.getInstance().getGameSocket();
           if (socket) {
@@ -11788,7 +12731,7 @@
         const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
         let p1Id = data.role === "player1" ? myId : opponentId;
         let p2Id = data.role === "player2" ? myId : opponentId;
-        let opponentAlias = "Opponent";
+        let opponentAlias = i18n_default.t("remoteManager.default_opponent");
         if (data.role === "player1") {
           this.currentP1Alias = myAlias;
           if (remoteP2Alias) {
@@ -11805,8 +12748,9 @@
         const p1Display = document.getElementById("player-1-name");
         const p2Display = document.getElementById("player-2-name");
         if (p1Display && p2Display) {
-          p1Display.innerText = data.role === "player1" ? `${this.currentP1Alias} (Me)` : this.currentP1Alias;
-          p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} (Me)` : this.currentP2Alias;
+          const meSuffix = i18n_default.t("remoteManager.me_suffix");
+          p1Display.innerText = data.role === "player1" ? `${this.currentP1Alias} ${meSuffix}` : this.currentP1Alias;
+          p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} ${meSuffix}` : this.currentP2Alias;
         }
         let gameStartDate = getSqlDate();
         if (data.opponent) {
@@ -11829,10 +12773,10 @@
         }
         if (this.context.chat) {
           this.context.chat.joinChannel(data.roomId);
-          this.context.chat.addSystemMessage(`Match started!`);
+          this.context.chat.addSystemMessage(i18n_default.t("remoteManager.match_started"));
         }
         if (status) {
-          status.innerText = "We found an opponent ! Starting the game...";
+          status.innerText = i18n_default.t("remoteManager.match_found");
         }
         if (modal) {
           modal.style.display = "none";
@@ -11899,13 +12843,13 @@
                   winnerAlias,
                   gameStartDate
                 );
-                showRemoteEndModal(myAlias, "(Opponent forfeit)");
+                showRemoteEndModal(myAlias, i18n_default.t("remoteManager.opponent_forfeit"));
                 this.context.setGame(null);
               }
             });
             newGame.onGameEnd = async (endData) => {
               document.removeEventListener("keydown", spaceHandler);
-              let winnerAlias = "Winner";
+              let winnerAlias = i18n_default.t("remoteManager.default_winner");
               if (endData.winner === "player1") {
                 winnerAlias = this.currentP1Alias;
               } else if (endData.winner === "player2") {
@@ -11959,15 +12903,15 @@
         btn.parentNode?.replaceChild(newBtn, btn);
         newBtn.addEventListener("click", async () => {
           if (!gameSocket) {
-            alert("Error: lost connexion to game server");
+            alert(i18n_default.t("remoteManager.error_connection"));
             return;
           }
           newBtn.disabled = true;
           if (privateRoomId) {
             if (status) {
-              status.innerText = "Waiting for your friend in private room...";
+              status.innerText = i18n_default.t("remoteManager.waiting_private");
             }
-            newBtn.innerText = "WAITING FOR FRIEND...";
+            newBtn.innerText = i18n_default.t("remoteManager.btn_waiting_friend");
             gameSocket.off("matchFound");
             gameSocket.on("matchFound", (data) => {
               sessionStorage.removeItem("privateGameId");
@@ -11980,9 +12924,9 @@
             });
           } else {
             if (status) {
-              status.innerText = "Looking for a rival...";
+              status.innerText = i18n_default.t("remoteManager.looking_rival");
             }
-            newBtn.innerText = "WAITING...";
+            newBtn.innerText = i18n_default.t("remoteManager.btn_waiting");
             gameSocket.off("matchFound");
             gameSocket.on("matchFound", (data) => {
               startGameFromData(data);
@@ -12041,7 +12985,8 @@
       const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
       this.initTournamentSelectors();
-      const username = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || "Guest";
+      const guestText = i18n_default.t("gamePage.default_guest");
+      const username = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias") || guestText;
       const isGuest = sessionStorage.getItem("userRole") === "guest";
       getPlayerAlias().then((alias2) => {
         player1Input.value = alias2;
@@ -12063,7 +13008,7 @@
         ];
         if (!tName || players.some((p) => !p)) {
           if (errorDiv) {
-            errorDiv.innerText = "Please fill all fields.";
+            errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_fields");
             errorDiv.classList.remove("hidden");
           }
           return;
@@ -12071,7 +13016,7 @@
         const uniqueCheck = new Set(players);
         if (uniqueCheck.size !== 4) {
           if (errorDiv) {
-            errorDiv.innerText = "All player aliases must be unique.";
+            errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_unique");
             errorDiv.classList.remove("hidden");
           }
           return;
@@ -12205,7 +13150,10 @@
         settings: { ballSkin, bgSkin }
       };
       if (this.context.chat) {
-        this.context.chat.addSystemMessage(`Tournament "${name}" started! Participants: ${playersAliases.join(", ")}`);
+        this.context.chat.addSystemMessage(i18n_default.t("tournamentManager.chat_start", {
+          name,
+          players: playersAliases.join(", ")
+        }));
       }
       this.showBracketModal();
     }
@@ -12236,9 +13184,9 @@
       }
       const idx = this.tournamentState.currentMatchIdx;
       if (msg) {
-        if (idx === 0) msg.innerText = "Next: Semi-Final 1";
-        else if (idx === 1) msg.innerText = "Next: Semi-Final 2";
-        else if (idx === 2) msg.innerText = "Next: The Grand Finale!";
+        if (idx === 0) msg.innerText = i18n_default.t("tournamentManager.bracket_next_sf1");
+        else if (idx === 1) msg.innerText = i18n_default.t("tournamentManager.bracket_next_sf2");
+        else if (idx === 2) msg.innerText = i18n_default.t("tournamentManager.bracket_next_final");
       }
       bracketModal.classList.remove("hidden");
       const btn = document.getElementById("bracket-continue-btn");
@@ -12261,14 +13209,14 @@
       const p1Alias = match.p1 ? match.p1.alias : "???";
       const p2Alias = match.p2 ? match.p2.alias : "???";
       if (matchIdx === 0) {
-        if (title) title.innerText = "SEMI-FINAL 1";
-        if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+        if (title) title.innerText = i18n_default.t("tournamentManager.match_sf1");
+        if (this.context.chat) this.context.chat.addSystemMessage(i18n_default.t("tournamentManager.chat_next_match", { p1: p1Alias, p2: p2Alias }));
       } else if (matchIdx === 1) {
-        if (title) title.innerText = "SEMI-FINAL 2";
-        if (this.context.chat) this.context.chat.addSystemMessage(`Next up: ${p1Alias} vs ${p2Alias} !`);
+        if (title) title.innerText = i18n_default.t("tournamentManager.match_sf2");
+        if (this.context.chat) this.context.chat.addSystemMessage(i18n_default.t("tournamentManager.chat_next_match", { p1: p1Alias, p2: p2Alias }));
       } else {
-        if (title) title.innerText = "FINALE";
-        if (this.context.chat) this.context.chat.addSystemMessage(`FINAL: ${p1Alias} vs ${p2Alias} !`);
+        if (title) title.innerText = i18n_default.t("tournamentManager.match_final");
+        if (this.context.chat) this.context.chat.addSystemMessage(i18n_default.t("tournamentManager.chat_final_match", { p1: p1Alias, p2: p2Alias }));
       }
       if (player1Text) player1Text.innerText = p1Alias;
       if (player2Text) player2Text.innerText = p2Alias;
@@ -12362,7 +13310,7 @@
         const isWinner = match.p2.alias === winner;
       }
       if (this.context.chat) {
-        this.context.chat.addSystemMessage(`${winner} wins the match!`);
+        this.context.chat.addSystemMessage(i18n_default.t("tournamentManager.chat_winner", { winner }));
       }
       if (idx === 0) {
         const winnerObj = match.p1?.alias === winner ? match.p1 : match.p2;
@@ -12399,7 +13347,7 @@
           tourNameDisplay.innerText = this.tournamentState.name;
         }
         if (this.context.chat) {
-          this.context.chat.addSystemMessage(`${champion} wins the match!`);
+          this.context.chat.addSystemMessage(i18n_default.t("tournamentManager.chat_winner", { winner: champion }));
         }
         const userId = localStorage.getItem("userId");
         if (userId) {
@@ -12448,6 +13396,8 @@
   }
   async function getPlayerAlias() {
     const isGuest = sessionStorage.getItem("userRole") === "guest";
+    const defaultGuest = i18n_default.t("gamePage.default_guest");
+    const defaultPlayer = i18n_default.t("gamePage.default_player");
     if (isGuest) {
       const cachedAlias = sessionStorage.getItem("cachedAlias");
       if (cachedAlias) {
@@ -12456,13 +13406,13 @@
     }
     const userId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
     if (!userId) {
-      return "Player";
+      return defaultPlayer;
     }
     try {
       const response = await fetchWithAuth(`api/user/${userId}`);
       if (response.ok) {
         const userData = await response.json();
-        const alias2 = userData.alias || (isGuest ? "Guest" : "Player");
+        const alias2 = userData.alias || (isGuest ? defaultGuest : defaultPlayer);
         if (isGuest) {
           sessionStorage.setItem("cachedAlias", alias2);
         }
@@ -12471,14 +13421,15 @@
     } catch (err) {
       console.error("Cannot fetch player alias:", err);
     }
-    const result = sessionStorage.getItem("username") || (isGuest ? "Guest" : "Player");
+    const result = sessionStorage.getItem("username") || (isGuest ? defaultGuest : defaultPlayer);
     return result;
   }
   function handleBeforeUnload(e) {
     if (isGameRunning()) {
       e.preventDefault();
-      e.returnValue = "A game is in progress. Are you sure you want to leave?";
-      return e.returnValue;
+      const message = i18n_default.t("gamePage.unload_warning");
+      e.returnValue = message;
+      return message;
     }
   }
   function handlePopState(e) {
@@ -12496,13 +13447,19 @@
     if (activeGame) {
       activeGame.pause();
     }
+    const t_title = i18n_default.t("gamePage.exit_modal.title");
+    const t_heading = i18n_default.t("gamePage.exit_modal.heading");
+    const t_question = i18n_default.t("gamePage.exit_modal.question");
+    const t_warning = i18n_default.t("gamePage.exit_modal.warning");
+    const t_back = i18n_default.t("gamePage.exit_modal.back_btn");
+    const t_leave = i18n_default.t("gamePage.exit_modal.leave_btn");
     const modalHtml = `
         <div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
             
             <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
                 
                 <div class="title-bar">
-                    <div class="title-bar-text text-white" style="text-shadow: none;">Exit Game</div>
+                    <div class="title-bar-text text-white" style="text-shadow: none;">${t_title}</div>
                     <div class="title-bar-controls">
                         <button aria-label="Close" id="modal-close-x"></button>
                     </div>
@@ -12511,12 +13468,12 @@
                 <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8" style="min-height: auto;">
                     
                     <h2 class="text-3xl font-black text-black text-center tracking-wide" style="text-shadow: 1px 1px 0px white;">
-                        WAIT A MINUTE !
+                        ${t_heading}
                     </h2>
                     
                     <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
-                        <p class="text-2xl font-bold text-gray-800 text-center">Are you sure you want to leave?</p>
-                        <p class="text-sm text-red-500 font-semibold italic text-center">All current progress will be lost.</p>
+                        <p class="text-2xl font-bold text-gray-800 text-center">${t_question}</p>
+                        <p class="text-sm text-red-500 font-semibold italic text-center">${t_warning}</p>
                     </div>
 
                     <div class="flex gap-6 w-full justify-center">
@@ -12525,11 +13482,11 @@
                                                                 px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
                                                                 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
                                                                 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                            GO BACK TO GAME
+                            ${t_back}
                         </button>
                         
                         <button id="confirm-exit-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                            LEAVE
+                            ${t_leave}
                         </button>
                     </div>
 
@@ -12596,12 +13553,108 @@
   }
   function render7() {
     const state = window.history.state;
+    let html = "";
     if (state && state.gameMode === "remote") {
-      return RemoteGame_default;
+      html = RemoteGame_default;
     } else if (state && state.gameMode === "tournament") {
-      return TournamentPage_default;
+      html = TournamentPage_default;
+    } else {
+      html = LocalGame_default;
     }
-    return LocalGame_default;
+    if (state && state.gameMode === "remote") {
+      html = html.replace(/\{\{remotePage\.title\}\}/g, i18n_default.t("remotePage.title"));
+      html = html.replace(/\{\{remotePage\.p1\}\}/g, i18n_default.t("remotePage.p1"));
+      html = html.replace(/\{\{remotePage\.p2\}\}/g, i18n_default.t("remotePage.p2"));
+      html = html.replace(/\{\{remotePage\.start_game\}\}/g, i18n_default.t("remotePage.start_game"));
+      html = html.replace(/\{\{remotePage\.game_instr\}\}/g, i18n_default.t("remotePage.game_instr"));
+      html = html.replace(/\{\{remotePage\.ws\}\}/g, i18n_default.t("remotePage.ws"));
+      html = html.replace(/\{\{remotePage\.up_down\}\}/g, i18n_default.t("remotePage.up_down"));
+      html = html.replace(/\{\{remotePage\.space_bar\}\}/g, i18n_default.t("remotePage.space_bar"));
+      html = html.replace(/\{\{remotePage\.choose_ball\}\}/g, i18n_default.t("remotePage.choose_ball"));
+      html = html.replace(/\{\{remotePage\.select_ball\}\}/g, i18n_default.t("remotePage.select_ball"));
+      html = html.replace(/\{\{remotePage\.choose_bg\}\}/g, i18n_default.t("remotePage.choose_bg"));
+      html = html.replace(/\{\{remotePage\.select_bg\}\}/g, i18n_default.t("remotePage.select_bg"));
+      html = html.replace(/\{\{remotePage\.reset_color\}\}/g, i18n_default.t("remotePage.reset_color"));
+      html = html.replace(/\{\{remotePage\.play\}\}/g, i18n_default.t("remotePage.play"));
+      html = html.replace(/\{\{remotePage\.countdown_title\}\}/g, i18n_default.t("remotePage.countdown_title"));
+      html = html.replace(/\{\{remotePage\.summary_modal\.title\}\}/g, i18n_default.t("remotePage.summary_modal.title"));
+      html = html.replace(/\{\{remotePage\.summary_modal\.congrat\}\}/g, i18n_default.t("remotePage.summary_modal.congrat"));
+      html = html.replace(/\{\{remotePage\.summary_modal\.name\}\}/g, i18n_default.t("remotePage.summary_modal.name"));
+      html = html.replace(/\{\{remotePage\.summary_modal\.back_menu\}\}/g, i18n_default.t("remotePage.summary_modal.back_menu"));
+      html = html.replace(/\{\{remotePage\.chat\.title\}\}/g, i18n_default.t("remotePage.chat.title"));
+      html = html.replace(/\{\{remotePage\.chat\.info\}\}/g, i18n_default.t("remotePage.chat.info"));
+      html = html.replace(/\{\{remotePage\.chat\.choose_bg\}\}/g, i18n_default.t("remotePage.chat.choose_bg"));
+      html = html.replace(/\{\{remotePage\.chat\.default_bg\}\}/g, i18n_default.t("remotePage.chat.default_bg"));
+    } else if (state && state.gameMode === "tournament") {
+      html = html.replace(/\{\{tournamentPage\.title\}\}/g, i18n_default.t("tournamentPage.title"));
+      html = html.replace(/\{\{tournamentPage\.p1\}\}/g, i18n_default.t("tournamentPage.p1"));
+      html = html.replace(/\{\{tournamentPage\.p2\}\}/g, i18n_default.t("tournamentPage.p2"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.title_modal\}\}/g, i18n_default.t("tournamentPage.setup_modal.title_modal"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.game_instr\}\}/g, i18n_default.t("tournamentPage.setup_modal.game_instr"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.ws\}\}/g, i18n_default.t("tournamentPage.setup_modal.ws"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.up_down\}\}/g, i18n_default.t("tournamentPage.setup_modal.up_down"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.space_bar\}\}/g, i18n_default.t("tournamentPage.setup_modal.space_bar"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.tournament_name\}\}/g, i18n_default.t("tournamentPage.setup_modal.tournament_name"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.placeholder_trnmt\}\}/g, i18n_default.t("tournamentPage.setup_modal.placeholder_trnmt"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.participant\}\}/g, i18n_default.t("tournamentPage.setup_modal.participant"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.p1\}\}/g, i18n_default.t("tournamentPage.setup_modal.p1"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.p2\}\}/g, i18n_default.t("tournamentPage.setup_modal.p2"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.p3\}\}/g, i18n_default.t("tournamentPage.setup_modal.p3"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.p4\}\}/g, i18n_default.t("tournamentPage.setup_modal.p4"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.choose__ball_bg\}\}/g, i18n_default.t("tournamentPage.setup_modal.choose__ball_bg"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.choose__ball\}\}/g, i18n_default.t("tournamentPage.setup_modal.choose__ball"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.choose_bg\}\}/g, i18n_default.t("tournamentPage.setup_modal.choose_bg"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.select_bg\}\}/g, i18n_default.t("tournamentPage.setup_modal.select_bg"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.reset_color\}\}/g, i18n_default.t("tournamentPage.setup_modal.reset_color"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.play\}\}/g, i18n_default.t("tournamentPage.setup_modal.play"));
+      html = html.replace(/\{\{tournamentPage\.setup_modal\.countdown_title\}\}/g, i18n_default.t("tournamentPage.setup_modal.countdown_title"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.title\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.title"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.heading\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.heading"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.semi_final_1\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.semi_final_1"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.semi_final_2\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.semi_final_2"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.final\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.final"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.status_ready\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.status_ready"));
+      html = html.replace(/\{\{tournamentPage\.tournament_bracket_modal\.continue_btn\}\}/g, i18n_default.t("tournamentPage.tournament_bracket_modal.continue_btn"));
+      html = html.replace(/\{\{tournamentPage\.tournament_next_match_modal\.title\}\}/g, i18n_default.t("tournamentPage.tournament_next_match_modal.title"));
+      html = html.replace(/\{\{tournamentPage\.tournament_next_match_modal\.match_title\}\}/g, i18n_default.t("tournamentPage.tournament_next_match_modal.match_title"));
+      html = html.replace(/\{\{tournamentPage\.tournament_next_match_modal\.player_vs\}\}/g, i18n_default.t("tournamentPage.tournament_next_match_modal.player_vs"));
+      html = html.replace(/\{\{tournamentPage\.tournament_next_match_modal\.start_info\}\}/g, i18n_default.t("tournamentPage.tournament_next_match_modal.start_info"));
+      html = html.replace(/\{\{tournamentPage\.tournament_next_match_modal\.play_btn\}\}/g, i18n_default.t("tournamentPage.tournament_next_match_modal.play_btn"));
+      html = html.replace(/\{\{tournamentPage\.tournament_summary_modal\.title\}\}/g, i18n_default.t("tournamentPage.tournament_summary_modal.title"));
+      html = html.replace(/\{\{tournamentPage\.tournament_summary_modal\.congratulations\}\}/g, i18n_default.t("tournamentPage.tournament_summary_modal.congratulations"));
+      html = html.replace(/\{\{tournamentPage\.tournament_summary_modal\.winner_name\}\}/g, i18n_default.t("tournamentPage.tournament_summary_modal.winner_name"));
+      html = html.replace(/\{\{tournamentPage\.tournament_summary_modal\.back_menu\}\}/g, i18n_default.t("tournamentPage.tournament_summary_modal.back_menu"));
+      html = html.replace(/\{\{tournamentPage\.chat\.title\}\}/g, i18n_default.t("tournamentPage.chat.title"));
+      html = html.replace(/\{\{tournamentPage\.chat\.info\}\}/g, i18n_default.t("tournamentPage.chat.info"));
+      html = html.replace(/\{\{tournamentPage\.chat\.placeholder_input\}\}/g, i18n_default.t("tournamentPage.chat.placeholder_input"));
+    } else {
+      html = html.replace(/\{\{localPage\.title\}\}/g, i18n_default.t("localPage.title"));
+      html = html.replace(/\{\{localPage\.p1\}\}/g, i18n_default.t("localPage.p1"));
+      html = html.replace(/\{\{localPage\.p2\}\}/g, i18n_default.t("localPage.p2"));
+      html = html.replace(/\{\{localPage\.start_game\}\}/g, i18n_default.t("localPage.start_game"));
+      html = html.replace(/\{\{localPage\.game_instr\}\}/g, i18n_default.t("localPage.game_instr"));
+      html = html.replace(/\{\{localPage\.ws\}\}/g, i18n_default.t("localPage.ws"));
+      html = html.replace(/\{\{localPage\.up_down\}\}/g, i18n_default.t("localPage.up_down"));
+      html = html.replace(/\{\{localPage\.space_bar\}\}/g, i18n_default.t("localPage.space_bar"));
+      html = html.replace(/\{\{localPage\.opp_name\}\}/g, i18n_default.t("localPage.opp_name"));
+      html = html.replace(/\{\{localPage\.placeholder_opp\}\}/g, i18n_default.t("localPage.placeholder_opp"));
+      html = html.replace(/\{\{localPage\.err_message\}\}/g, i18n_default.t("localPage.err_message"));
+      html = html.replace(/\{\{localPage\.choose_ball\}\}/g, i18n_default.t("localPage.choose_ball"));
+      html = html.replace(/\{\{localPage\.select_ball\}\}/g, i18n_default.t("localPage.select_ball"));
+      html = html.replace(/\{\{localPage\.choose_bg\}\}/g, i18n_default.t("localPage.choose_bg"));
+      html = html.replace(/\{\{localPage\.select_bg\}\}/g, i18n_default.t("localPage.select_bg"));
+      html = html.replace(/\{\{localPage\.reset_color\}\}/g, i18n_default.t("localPage.reset_color"));
+      html = html.replace(/\{\{localPage\.play\}\}/g, i18n_default.t("localPage.play"));
+      html = html.replace(/\{\{localPage\.countdown_title\}\}/g, i18n_default.t("localPage.countdown_title"));
+      html = html.replace(/\{\{localPage\.summary_modal\.title\}\}/g, i18n_default.t("localPage.summary_modal.title"));
+      html = html.replace(/\{\{localPage\.summary_modal\.congrat\}\}/g, i18n_default.t("localPage.summary_modal.congrat"));
+      html = html.replace(/\{\{localPage\.summary_modal\.name\}\}/g, i18n_default.t("localPage.summary_modal.name"));
+      html = html.replace(/\{\{localPage\.summary_modal\.back_menu\}\}/g, i18n_default.t("localPage.summary_modal.back_menu"));
+      html = html.replace(/\{\{localPage\.chat\.title\}\}/g, i18n_default.t("localPage.chat.title"));
+      html = html.replace(/\{\{localPage\.chat\.info\}\}/g, i18n_default.t("localPage.chat.info"));
+      html = html.replace(/\{\{localPage\.chat\.placeholder_input\}\}/g, i18n_default.t("localPage.chat.placeholder_input"));
+    }
+    return html;
   }
   function initGamePage(mode) {
     const currentTheme = localStorage.getItem("userTheme") || "basic";
@@ -12671,7 +13724,7 @@
   }
 
   // scripts/pages/DashboardPage.html
-  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">\n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;">\n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Dashboard overview</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto">\n                    \n                    <div class="grid grid-cols-3 gap-2">\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Game played</span>\n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Average score</span>\n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Time playing</span>\n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Wins</span>\n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Losses</span>\n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span>\n                        </div>\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm">\n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">Win rate</span>\n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Win and loss evolution</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">Type of games</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                            <div class="w-[220px] h-[120px]">\n                                <canvas id="dashboard-game-chart" class="w-full h-full"></canvas>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white">\n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">My biggest rivals</h3>\n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed">\n                                <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas>\n                        </div>\n                    </div>\n                    \n                </div>\n            </div>\n        </div>\n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white">\n            <div class="window h-full flex flex-col">\n                <div class="title-bar">\n                    <div class="title-bar-text">Match history and analysis</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0">\n                    \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" style="gap: 1rem;">\n                        <label class="theme-label text-xs font-semibold text-gray-600 pr-2" style="margin-right: 8px;">Filter:</label>\n                        <input type="text" id="filter-opponent" placeholder="Rival name" class="text-xs p-1.5 border border-gray-300 rounded-sm w-[120px] text-center" style="margin-right: 8px;">\n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm bg-white p-1" style="margin-right: 8px;">\n                            <option value="all">All Modes</option>\n                            <option value="local">Local</option>\n                            <option value="remote">Remote</option>\n                            <option value="tournament">Tournament</option>\n                        </select>\n                        \n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-bold hover:from-gray-200" style="margin-right: 12px;">Apply</button>\n\n                        <div class="h-4 w-px bg-gray-300 mx-1" style="margin-left: 12px; margin-right: 12px;"></div>\n                        \n                        <label class="theme-label text-xs font-semibold text-gray-600 pl-1" style="margin-right: 8px;">Sort:</label>\n                        <select id="sort-order" class="text-xs border border-gray-300 rounded-sm bg-white p-1 focus:outline-none focus:border-blue-400 cursor-pointer">\n                            <option value="date-descending">Date \u2193 (Newest)</option>\n                            <option value="date-ascending">Date \u2191 (Oldest)</option>\n                            <option value="name-ascending">Rival (A-Z)</option>\n                            <option value="name-descending">Rival (Z-A)</option>\n                        </select>\n                    </div>\n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0 overflow-hidden">\n                        <div class="overflow-y-auto h-full">\n                            <style>\n                                #match-history-list td {\n                                    padding-top: 12px !important;\n                                    padding-bottom: 12px !important;\n                                }\n                                #match-history-list tr {\n                                    height: 48px;\n                                }\n                            </style>\n                            <table class="w-full text-xs text-center border-collapse table-fixed">\n                                <thead class="text-gray-600 font-bold bg-gray-100 sticky top-0 shadow-sm z-10">\n                                    <tr>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Date</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-3/12">Rival</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Score</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Type</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-1/12">Round</th>\n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">Result</th>\n                                    </tr>\n                                </thead>\n                                <tbody id="match-history-list" class="divide-y divide-gray-100">\n                                    <tr class="hover:bg-blue-50 transition-colors">\n                                        <td class="py-2 text-gray-500">Loading...</td>\n                                    </tr>\n                                </tbody>\n                            </table>\n                        </div>\n                    </div>\n\n\n                    <div id="pagination-controls" class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">\n                        <button id="prev-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            &lt; Previous\n                        </button>\n                        <span id="page-info" class="text-xs text-gray-600 font-semibold">Page 1</span>\n                        <button id="next-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">\n                            Next &gt;\n                        </button>\n                    </div>\n\n\n\n                </div>\n            </div>\n        </div>\n\n    </div>\n</div>';
+  var DashboardPage_default = '<div id="dashboard-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden"> \n\n    <div id="dashboard-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat" \n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;"> \n    </div> \n\n    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-row gap-6 px-10 py-2 justify-center" style="bottom: 50px; padding-left: 100px; padding-right: 100px;"> \n\n        <div id="dashboard-overview" class="flex flex-col w-[700px] min-w-[700px] bg-white" style="width: 800px;"> \n            <div class="window h-full flex flex-col"> \n                <div class="title-bar"> \n                    <div class="title-bar-text">{{dashboardPage.title}}</div> \n                    <div class="title-bar-controls"> \n                        <button aria-label="Minimize"></button> \n                        <button aria-label="Maximize"></button> \n                        <button aria-label="Close"></button> \n                    </div> \n                </div> \n\n                <div class="window-body bg-white flex flex-col p-4 gap-4 h-full overflow-y-auto"> \n                     \n                    <div class="grid grid-cols-3 gap-2"> \n\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm"> \n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{dashboardPage.game_played}}</span> \n                            <span id="dashboard-total-games" class="text-2xl font-bold text-gray-800">0</span> \n                        </div> \n\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm"> \n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{dashboardPage.avg_score}}</span> \n                            <span id="dashboard-avg-score" class="text-2xl font-bold text-blue-600">0</span> \n                        </div> \n\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm"> \n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{dashboardPage.time_playing}}</span> \n                            <span id="dashboard-play-time" class="text-2xl font-bold text-gray-800">0h</span> \n                        </div> \n\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm"> \n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{dashboardPage.wins}}</span> \n                            <span id="dashboard-wins" class="text-2xl font-bold text-gray-800">0</span> \n                        </div> \n\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm"> \n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{dashboardPage.losses}}</span> \n                            <span id="dashboard-losses" class="text-2xl font-bold text-blue-600">0</span> \n                        </div> \n\n                        <div class="flex flex-col items-center justify-center p-2 bg-gray-50 border border-gray-300 rounded-sm shadow-sm"> \n                            <span class="theme-label text-[10px] text-gray-500 uppercase font-bold tracking-wider">{{dashboardPage.win_rate}}</span> \n                            <span id="dashboard-win-rate" class="text-2xl font-bold text-gray-800">0%</span> \n                        </div> \n                    </div> \n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white"> \n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">{{dashboardPage.win_loss_evol}}</h3> \n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed"> \n                            <canvas id="dashboard-evolution-graph" class="w-full h-full"></canvas> \n                        </div> \n                    </div> \n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white"> \n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">{{dashboardPage.type_game}}</h3> \n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed"> \n                            <div class="w-[220px] h-[120px]"> \n                                <canvas id="dashboard-game-chart" class="w-full h-full"></canvas> \n                            </div> \n                        </div> \n                    </div> \n\n                    <div class="flex flex-col rounded-sm p-3 shadow-sm bg-white"> \n                        <h3 class="theme-label text-lg font-bold text-gray-600 mb-2 pb-1">{{dashboardPage.bigg_rival}}</h3> \n                        <div class="relative w-full h-[150px] bg-gray-50 flex items-center justify-center border border-gray-200 border-dashed"> \n                                <canvas id="dashboard-rival-podium" class="w-full h-full"></canvas> \n                        </div> \n                    </div> \n                     \n                </div> \n            </div> \n        </div> \n\n        <div id="match-analysis" class="flex flex-col flex-1 min-w-0 bg-white"> \n            <div class="window h-full flex flex-col"> \n                <div class="title-bar"> \n                    <div class="title-bar-text">{{dashboardPage.match_history}}</div> \n                    <div class="title-bar-controls"> \n                        <button aria-label="Minimize"></button> \n                        <button aria-label="Maximize"></button> \n                        <button aria-label="Close"></button> \n                    </div> \n                </div> \n\n                <div class="window-body bg-white flex flex-col flex-1 p-4 min-h-0"> \n                     \n                    <div class="flex flex-row gap-3 mb-4 p-2 bg-gray-100 border border-gray-300 rounded-sm shadow-inner items-center" style="gap: 1rem;"> \n\n                        <label class="theme-label text-xs font-semibold text-gray-600 pr-2" style="margin-right: 8px;">Filter:</label> \n\n                        <input type="text" id="filter-opponent" placeholder="{{dashboardPage.placeholder_rival}}" class="text-xs p-1.5 border border-gray-300 rounded-sm w-[120px] text-center" style="margin-right: 8px;"> \n\n                        <select id="filter-mode" class="text-xs border border-gray-300 rounded-sm bg-white p-1" style="margin-right: 8px;"> \n                            <option value="all">{{dashboardPage.all_modes}}</option> \n                            <option value="local">{{dashboardPage.local}}</option> \n                            <option value="remote">{{dashboardPage.remote}}</option> \n                            <option value="tournament">{{dashboardPage.tournament}}</option> \n                        </select> \n                         \n                        <button id="apply-filters" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1 text-xs font-bold hover:from-gray-200" style="margin-right: 12px;">{{dashboardPage.apply_button}}</button> \n\n                        <div class="h-4 w-px bg-gray-300 mx-1" style="margin-left: 12px; margin-right: 12px;"></div> \n                         \n                        <label class="theme-label text-xs font-semibold text-gray-600 pl-1" style="margin-right: 8px;">{{dashboardPage.sort}}:</label> \n\n                        <select id="sort-order" class="text-xs border border-gray-300 rounded-sm bg-white p-1 focus:outline-none focus:border-blue-400 cursor-pointer"> \n                            <option value="date-descending">{{dashboardPage.date_desc}}</option> \n                            <option value="date-ascending">{{dashboardPage.date_asc}}</option> \n                            <option value="name-ascending">{{dashboardPage.name_a}}</option> \n                            <option value="name-descending">{{dashboardPage.name_z}}</option> \n                        </select> \n                    </div> \n\n                    <div class="flex-1 border border-gray-300 rounded-sm bg-white flex flex-col min-h-0 overflow-hidden"> \n                        <div class="overflow-y-auto h-full"> \n                            <style> \n                                #match-history-list td { \n                                    padding-top: 12px !important; \n                                    padding-bottom: 12px !important; \n                                } \n                                #match-history-list tr { \n                                    height: 48px; \n                                } \n                            </style> \n                            <table class="w-full text-xs text-center border-collapse table-fixed"> \n                                <thead class="text-gray-600 font-bold bg-gray-100 sticky top-0 shadow-sm z-10"> \n                                    <tr> \n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">{{dashboardPage.date}}</th> \n                                        <th class="theme-label py-2 border-b border-gray-300 w-3/12">{{dashboardPage.rival}}</th> \n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">{{dashboardPage.score}}</th> \n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">{{dashboardPage.type}}</th> \n                                        <th class="theme-label py-2 border-b border-gray-300 w-1/12">{{dashboardPage.round}}</th> \n                                        <th class="theme-label py-2 border-b border-gray-300 w-2/12">{{dashboardPage.result}}</th> \n                                    </tr> \n                                </thead> \n                                <tbody id="match-history-list" class="divide-y divide-gray-100"> \n                                    <tr class="hover:bg-blue-50 transition-colors"> \n                                        <td class="py-2 text-gray-500">{{dashboardPage.loading}}</td> \n                                    </tr> \n                                </tbody> \n                            </table> \n                        </div> \n                    </div> \n\n                    <div id="pagination-controls" class="flex justify-between items-center mt-2 pt-2 border-t border-gray-100"> \n                        <button id="prev-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"> \n                            &lt; {{dashboardPage.prev}} \n                        </button> \n                        <span id="page-info" class="text-xs text-gray-600 font-semibold">{{dashboardPage.page}}</span> \n\n                        <button id="next-page" class="px-3 py-1 text-xs font-bold bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"> \n                            {{dashboardPage.next}} &gt; \n                        </button> \n                    </div> \n\n                </div> \n            </div> \n        </div> \n\n    </div> \n</div>';
 
   // node_modules/@kurkle/color/dist/color.esm.js
   function round(v) {
@@ -12773,8 +13826,8 @@
     }
     return [h | 0, s || 0, l];
   }
-  function calln(f, a, b, c) {
-    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c)).map(n2b);
+  function calln(f, a, b, c2) {
+    return (Array.isArray(a) ? f(a[0], a[1], a[2]) : f(a, b, c2)).map(n2b);
   }
   function hsl2rgb(h, s, l) {
     return calln(hsl2rgbn, h, s, l);
@@ -15259,9 +16312,9 @@
     };
     const a = _pointInLine(p1, cp1, t2);
     const b = _pointInLine(cp1, cp2, t2);
-    const c = _pointInLine(cp2, p2, t2);
+    const c2 = _pointInLine(cp2, p2, t2);
     const d = _pointInLine(a, b, t2);
-    const e = _pointInLine(b, c, t2);
+    const e = _pointInLine(b, c2, t2);
     return _pointInLine(d, e, t2);
   }
   var getRightToLeftAdapter = function(rectX, width) {
@@ -21216,7 +22269,7 @@
   var instances = {};
   var getChart = (key) => {
     const canvas = getCanvas(key);
-    return Object.values(instances).filter((c) => c.canvas === canvas).pop();
+    return Object.values(instances).filter((c2) => c2.canvas === canvas).pop();
   };
   function moveNumericKeys(obj, start, move) {
     const keys = Object.keys(obj);
@@ -21595,14 +22648,14 @@
       }
       this._dataChanges = [];
       const datasetCount = this.data.datasets.length;
-      const makeSet = (idx) => new Set(_dataChanges.filter((c) => c[0] === idx).map((c, i) => i + "," + c.splice(1).join(",")));
+      const makeSet = (idx) => new Set(_dataChanges.filter((c2) => c2[0] === idx).map((c2, i) => i + "," + c2.splice(1).join(",")));
       const changeSet = makeSet(0);
       for (let i = 1; i < datasetCount; i++) {
         if (!setsEqual(changeSet, makeSet(i))) {
           return;
         }
       }
-      return Array.from(changeSet).map((c) => c.split(",")).map((a) => ({
+      return Array.from(changeSet).map((c2) => c2.split(",")).map((a) => ({
         method: a[1],
         start: +a[2],
         count: +a[3]
@@ -27153,7 +28206,40 @@
   var currentPage = 1;
   var itemsPerPage = 20;
   function render8() {
-    return DashboardPage_default;
+    let html = DashboardPage_default;
+    html = html.replace(/\{\{dashboardPage\.title\}\}/g, i18n_default.t("dashboardPage.title"));
+    html = html.replace(/\{\{dashboardPage\.game_played\}\}/g, i18n_default.t("dashboardPage.game_played"));
+    html = html.replace(/\{\{dashboardPage\.avg_score\}\}/g, i18n_default.t("dashboardPage.avg_score"));
+    html = html.replace(/\{\{dashboardPage\.time_playing\}\}/g, i18n_default.t("dashboardPage.time_playing"));
+    html = html.replace(/\{\{dashboardPage\.wins\}\}/g, i18n_default.t("dashboardPage.wins"));
+    html = html.replace(/\{\{dashboardPage\.losses\}\}/g, i18n_default.t("dashboardPage.losses"));
+    html = html.replace(/\{\{dashboardPage\.win_rate\}\}/g, i18n_default.t("dashboardPage.win_rate"));
+    html = html.replace(/\{\{dashboardPage\.win_loss_evol\}\}/g, i18n_default.t("dashboardPage.win_loss_evol"));
+    html = html.replace(/\{\{dashboardPage\.type_game\}\}/g, i18n_default.t("dashboardPage.type_game"));
+    html = html.replace(/\{\{dashboardPage\.bigg_rival\}\}/g, i18n_default.t("dashboardPage.bigg_rival"));
+    html = html.replace(/\{\{dashboardPage\.match_history\}\}/g, i18n_default.t("dashboardPage.match_history"));
+    html = html.replace(/\{\{dashboardPage\.placeholder_rival\}\}/g, i18n_default.t("dashboardPage.placeholder_rival"));
+    html = html.replace(/\{\{dashboardPage\.all_modes\}\}/g, i18n_default.t("dashboardPage.all_modes"));
+    html = html.replace(/\{\{dashboardPage\.local\}\}/g, i18n_default.t("dashboardPage.local"));
+    html = html.replace(/\{\{dashboardPage\.remote\}\}/g, i18n_default.t("dashboardPage.remote"));
+    html = html.replace(/\{\{dashboardPage\.tournament\}\}/g, i18n_default.t("dashboardPage.tournament"));
+    html = html.replace(/\{\{dashboardPage\.apply_button\}\}/g, i18n_default.t("dashboardPage.apply_button"));
+    html = html.replace(/\{\{dashboardPage\.sort\}\}/g, i18n_default.t("dashboardPage.sort"));
+    html = html.replace(/\{\{dashboardPage\.date_asc\}\}/g, i18n_default.t("dashboardPage.date_asc"));
+    html = html.replace(/\{\{dashboardPage\.date_desc\}\}/g, i18n_default.t("dashboardPage.date_desc"));
+    html = html.replace(/\{\{dashboardPage\.name_a\}\}/g, i18n_default.t("dashboardPage.name_a"));
+    html = html.replace(/\{\{dashboardPage\.name_z\}\}/g, i18n_default.t("dashboardPage.name_z"));
+    html = html.replace(/\{\{dashboardPage\.date\}\}/g, i18n_default.t("dashboardPage.date"));
+    html = html.replace(/\{\{dashboardPage\.rival\}\}/g, i18n_default.t("dashboardPage.rival"));
+    html = html.replace(/\{\{dashboardPage\.score\}\}/g, i18n_default.t("dashboardPage.score"));
+    html = html.replace(/\{\{dashboardPage\.type\}\}/g, i18n_default.t("dashboardPage.type"));
+    html = html.replace(/\{\{dashboardPage\.round\}\}/g, i18n_default.t("dashboardPage.round"));
+    html = html.replace(/\{\{dashboardPage\.result\}\}/g, i18n_default.t("dashboardPage.result"));
+    html = html.replace(/\{\{dashboardPage\.loading\}\}/g, i18n_default.t("dashboardPage.loading"));
+    html = html.replace(/\{\{dashboardPage\.prev\}\}/g, i18n_default.t("dashboardPage.prev"));
+    html = html.replace(/\{\{dashboardPage\.next\}\}/g, i18n_default.t("dashboardPage.next"));
+    html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18n_default.t("dashboardPage.page"));
+    return html;
   }
   function afterRender4() {
     const totalGame = document.getElementById("dashboard-total-games");
@@ -27191,7 +28277,10 @@
             }
             if (playTime) {
               const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
-              playTime.innerText = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min`;
+              playTime.innerText = i18n_default.t("dashboardPage.time_format", {
+                h: Math.floor(totalMinutes / 60),
+                m: totalMinutes % 60
+              });
             }
           }
         }
@@ -27260,7 +28349,10 @@
         const paginatedData = resultData.slice(start, end);
         renderMatchHistoryList(paginatedData);
         if (pageInfo) {
-          pageInfo.innerText = `Page ${currentPage} of ${totalPages}`;
+          pageInfo.innerText = i18n_default.t("dashboardPage.pagination_info", {
+            current: currentPage,
+            total: totalPages
+          });
         }
         if (prevButton) {
           prevButton.disabled = currentPage === 1;
@@ -27306,27 +28398,29 @@
       }
       listContainer.innerHTML = "";
       if (history.length === 0) {
-        listContainer.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 italic">No matches yet.</td></tr>`;
+        listContainer.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 italic">${i18n_default.t("dashboardPage.no_matches")}</td></tr>`;
         return;
       }
       history.forEach((match) => {
         const date = new Date(match.finished_at);
         const dateString = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
         const isWin = match.is_winner === 1;
-        const resultText = isWin ? "VICTORY" : "DEFEAT";
+        const resultText = isWin ? i18n_default.t("dashboardPage.status_victory") : i18n_default.t("dashboardPage.status_defeat");
         const resultColor = isWin ? "text-green-600" : "text-red-500";
         const scoreString = `${match.my_score} - ${match.opponent_score !== void 0 ? match.opponent_score : 0}`;
-        const roundString = match.round ? match.round : match.game_type === "tournament" ? "Final" : "1v1";
+        const roundString = match.round ? match.round : match.game_type === "tournament" ? i18n_default.t("dashboardPage.round_final") : i18n_default.t("dashboardPage.round_1v1");
+        const translatedType = i18n_default.t(`dashboardPage.chart.${match.game_type || "local"}`);
+        const opponentName = match.opponent_alias || i18n_default.t("dashboardPage.unknown_user");
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `
-				<td class="py-2 text-gray-500">${dateString}</td>
-				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${match.opponent_alias}">${match.opponent_alias || "Unknown"}</td>
-				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-				<td class="py-2 font-mono text-gray-500 capitalize">${match.game_type || "Local"}</td>
-				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
-			`;
+                <td class="py-2 text-gray-500">${dateString}</td>
+                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
+            `;
         listContainer.appendChild(row);
       });
     }
@@ -27346,7 +28440,7 @@
     }
     function calculateEvolutionData(history) {
       if (!history || history.length === 0) {
-        return { labels: ["Start"], data: [0] };
+        return { labels: [i18n_default.t("dashboardPage.chart.start")], data: [0] };
       }
       const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime());
       const labels = [];
@@ -27414,7 +28508,8 @@
         data: {
           labels: chartData.labels,
           datasets: [{
-            label: "Net Score",
+            // MODIFIED: Use i18n for label
+            label: i18n_default.t("dashboardPage.chart.net_score"),
             data: chartData.data,
             borderColor: mainColor,
             backgroundColor: bgColor,
@@ -27441,10 +28536,15 @@
       }
       const total = graph.local + graph.remote + graph.tournament;
       const isEmpty = total === 0;
+      const labels = isEmpty ? [i18n_default.t("dashboardPage.chart.no_data")] : [
+        i18n_default.t("dashboardPage.chart.local"),
+        i18n_default.t("dashboardPage.chart.remote"),
+        i18n_default.t("dashboardPage.chart.tournament")
+      ];
       gameTypeChart = new Chart(canvas, {
         type: "pie",
         data: {
-          labels: isEmpty ? ["No Data"] : ["Local", "Remote", "Tournament"],
+          labels,
           datasets: [{ data: isEmpty ? [1] : [graph.local, graph.remote, graph.tournament], backgroundColor: isEmpty ? ["#ddd"] : ["#3b82f6", "#a855f7", "#f97316"], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right", labels: { boxWidth: 10, font: { size: 10 } } } } }
@@ -27461,17 +28561,29 @@
         type: "bar",
         data: {
           labels: data.labels,
-          datasets: [{ label: "Games Played", data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1, categoryPercentage: 1 }]
+          datasets: [{
+            // MODIFIED: Use i18n for label
+            label: i18n_default.t("dashboardPage.chart.games_played"),
+            data: data.data,
+            backgroundColor: data.colors,
+            borderRadius: 4,
+            borderSkipped: false,
+            barPercentage: 1,
+            categoryPercentage: 1
+          }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Games played: ${data.realCounts[context.dataIndex]}` } } },
+          plugins: { legend: { display: false }, tooltip: { callbacks: {
+            // MODIFIED: Use i18n for tooltip
+            label: (context) => `${i18n_default.t("dashboardPage.chart.games_played")}: ${data.realCounts[context.dataIndex]}`
+          } } },
           scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: "bold" }, callback: function(val, index2) {
             const name = data.labels[index2];
             const count = data.realCounts[index2];
             const displayName = name.length > 10 ? name.substr(0, 8) + ".." : name;
-            return [`${displayName}`, `(${count} games)`];
+            return [`${displayName}`, i18n_default.t("dashboardPage.chart.games_count", { count })];
           } } } }
         }
       });
@@ -27632,6 +28744,11 @@
               }
             }
             handleLocationChange();
+            const display = document.getElementById("current-lang-display");
+            if (display) display.textContent = lang.toUpperCase();
+            const menuContent2 = document.getElementById("lang-menu-content");
+            if (menuContent2)
+              menuContent2.classList.add("hidden");
           }
         });
       });

@@ -2,11 +2,28 @@ import htmlContent from "../pages/LoginPage.html";
 import { fetchWithAuth } from "../services/api";
 import { updateUserStatus } from "../components/Data";
 import { changeLanguage } from "../i18n";
+import i18next from "../i18n";
 
 export function render(): string {
-	return htmlContent;
-};
+    let html = htmlContent;
 
+    // Ces remplacements étaient déjà corrects
+    html = html.replace(/\{\{loginPage\.welcome\}\}/g, i18next.t('loginPage.welcome'));
+    html = html.replace(/\{\{loginPage\.password\}\}/g, i18next.t('loginPage.password'));
+    html = html.replace(/\{\{loginPage\.connect_as\}\}/g, i18next.t('loginPage.connect_as'));
+    html = html.replace(/\{\{loginPage\.status\.available\}\}/g, i18next.t('loginPage.status.available'));
+    html = html.replace(/\{\{loginPage\.status\.busy\}\}/g, i18next.t('loginPage.status.busy'));
+    html = html.replace(/\{\{loginPage\.status\.away\}\}/g, i18next.t('loginPage.status.away'));
+    html = html.replace(/\{\{loginPage\.status\.offline\}\}/g, i18next.t('loginPage.status.offline'));
+    html = html.replace(/\{\{loginPage\.login-button\}\}/g, i18next.t('loginPage.login_button'));
+    html = html.replace(/\{\{loginPage\.back\}\}/g, i18next.t('loginPage.back'));
+    html = html.replace(/\{\{loginPage\.2fa\}\}/g, i18next.t('loginPage.2fa'));
+    html = html.replace(/\{\{loginPage\.security\}\}/g, i18next.t('loginPage.security'));
+    html = html.replace(/\{\{loginPage\.enter_code\}\}/g, i18next.t('loginPage.enter_code'));
+    html = html.replace(/\{\{loginPage\.verify_button\}\}/g, i18next.t('loginPage.verify_button'));
+
+    return html;
+}
 //================================================
 //================ LOGIN WITH 2FA ================
 //================================================
@@ -98,7 +115,8 @@ function handleLogin() {
 
         if (!email || !password) {
             if (errorElement) {
-                errorElement.textContent = "Please fill all inputs";
+                // MODIFICATION : Message erreur champs vides
+                errorElement.textContent = i18next.t('loginPage.error_inputs');
                 errorElement.classList.remove('hidden');
             }
             return;
@@ -131,7 +149,7 @@ function handleLogin() {
 
             if (result.success) {
                 localStorage.setItem('is2faEnabled', 'false');
-				const { accessToken, userId } = result.data;
+                const { accessToken, userId } = result.data;
                 await init2faLogin(accessToken, userId, cachedStatus);
 
                 // Tokens and infos storage
@@ -179,14 +197,16 @@ function handleLogin() {
             } else {
                 console.error("Login error:", result.error);
                 if (errorElement) {
-                    errorElement.textContent = result.error?.message || result.error.error || "Authentication failed";
+                    // MODIFICATION : Traduction du fallback si pas de message serveur
+                    errorElement.textContent = result.error?.message || result.error.error || i18next.t('loginPage.error_auth_default');
                     errorElement.classList.remove('hidden');
                 }
             }
         } catch (error) {
             console.error("Network error:", error);
             if (errorElement) {
-                errorElement.textContent = "Network error, please try again";
+                // MODIFICATION : Message erreur réseau
+                errorElement.textContent = i18next.t('loginPage.error_network');
                 errorElement.classList.remove('hidden');
             }
         }
@@ -230,14 +250,16 @@ function handleLogin() {
                 await init2faLogin(accessToken, userId, cachedStatus);
             } else {
                 if (error2fa) {
-                    error2fa.textContent = "Invalid code.";
+                    // MODIFICATION : Message code 2FA invalide
+                    error2fa.textContent = i18next.t('loginPage.error_2fa_invalid');
                     error2fa.classList.remove('hidden');
                     console.error("2FA Error:", result.error.message);
                 }
             }
         } catch (error) {
             if (error2fa) {
-                error2fa.textContent = "Error during verification.";
+                // MODIFICATION : Message erreur vérification 2FA
+                error2fa.textContent = i18next.t('loginPage.error_2fa_verify');
                 error2fa.classList.remove('hidden');
             }
         }
@@ -276,6 +298,11 @@ export function loginEvents() {
             if (!menuContent.classList.contains('hidden')) menuContent.classList.add('hidden');
         });
     }
+
+    const display = document.getElementById('page-current-lang-display');
+    if (display) {
+        display.textContent = i18next.language.toUpperCase();
+    }
     
     document.querySelectorAll('.page-lang-select').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -283,8 +310,7 @@ export function loginEvents() {
             const lang = target.getAttribute('data-lang');
             if (lang) {
                 await changeLanguage(lang);
-                const display = document.getElementById('page-current-lang-display');
-                if (display) display.textContent = lang.toUpperCase();
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }
         });
     });

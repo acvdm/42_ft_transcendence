@@ -1,5 +1,6 @@
 // srcs/front/scripts/components/profile/TwoFactorManager.ts
 import { fetchWithAuth } from "../services/api";
+import i18next from "../i18n";
 
 export class TwoFactorManager {
     private userId: string | null;
@@ -47,11 +48,13 @@ export class TwoFactorManager {
         if (!btn) return;
         
         if (this.is2faEnabled) {
-            btn.innerText = "Disable 2FA authentication";
+            // TRADUCTION
+            btn.innerText = i18next.t('profilePage.twoFactor.btn_disable');
             btn.classList.remove('bg-green-600');
             btn.classList.add('bg-red-600');
         } else {
-            btn.innerText = "Enable 2FA authentication";
+            // TRADUCTION
+            btn.innerText = i18next.t('profilePage.twoFactor.btn_enable');
             btn.classList.remove('bg-red-600');
             btn.classList.add('bg-green-600');
         }
@@ -69,6 +72,7 @@ export class TwoFactorManager {
         document.querySelector('[data-method="email"]')?.addEventListener('click', () => this.initiateSetup('email'));
         
         document.getElementById('close-2fa-modal')?.addEventListener('click', () => this.closeModal());
+        document.getElementById('cancel-2fa-button')?.addEventListener('click', () => this.closeModal());
         document.getElementById('confirm-2fa-button')?.addEventListener('click', () => 
             this.enable2fa(this.elements.inputQr.value.trim(), 'qr')
         );
@@ -152,7 +156,8 @@ export class TwoFactorManager {
                     this.switchView('email');
                 }
             } else {
-                alert("Error initializing 2FA setup");
+                // TRADUCTION
+                alert(i18next.t('profilePage.alerts.2fa_init_error'));
             }
         } catch (error) {
             console.error(error);
@@ -161,7 +166,8 @@ export class TwoFactorManager {
 
     private async enable2fa(code: string, type: 'qr' | 'email') {
         if (!code || code.length < 6) {
-            alert("Invalid code");
+            // TRADUCTION
+            alert(i18next.t('profilePage.alerts.2fa_invalid_code'));
             return;
         }
         const backendType = type === 'qr' ? 'APP' : 'EMAIL';
@@ -176,23 +182,27 @@ export class TwoFactorManager {
                 localStorage.setItem('is2faEnabled', 'true');
                 this.updateToggleButton();
                 this.closeModal();
-                alert("2FA enabled!");
+                // TRADUCTION
+                alert(i18next.t('profilePage.alerts.2fa_enabled'));
             } else {
                 const res = await response.json();
-                alert(res.message || "Invalid code");
+                // TRADUCTION fallback
+                alert(res.message || i18next.t('profilePage.alerts.2fa_invalid_code'));
             }
         } catch (e) { console.error(e); }
     }
 
     private async disable2fa() {
-        if (!confirm("Disable 2FA?")) return;
+        // TRADUCTION
+        if (!confirm(i18next.t('profilePage.alerts.2fa_disable_confirm'))) return;
         try {
             const response = await fetchWithAuth(`api/auth/2fa`, { method: 'DELETE' });
             if (response.ok) {
                 this.is2faEnabled = false;
                 localStorage.setItem('is2faEnabled', 'false');
                 this.updateToggleButton();
-                alert("2FA disabled");
+                // TRADUCTION
+                alert(i18next.t('profilePage.alerts.2fa_disabled'));
             }
         } catch (e) { console.error(e); }
     }

@@ -1,8 +1,17 @@
 import { fetchWithAuth } from "../services/api";
 import htmlContent from "../pages/LandingPage.html"
+import i18next, { changeLanguage } from "../i18n";
 
 export function render(): string {
-	return htmlContent;
+    let html = htmlContent;
+
+	html = html.replace(/\{\{landing\.welcome\}\}/g, i18next.t('landing.welcome'));
+	html = html.replace(/\{\{landing\.login_button\}\}/g, i18next.t('landing.login_button'));
+	html = html.replace(/\{\{landing\.register_button\}\}/g, i18next.t('landing.register_button'));
+	html = html.replace(/\{\{landing\.guest_button\}\}/g, i18next.t('landing.guest_button'));
+
+	return html;
+
 };
 
 
@@ -14,6 +23,11 @@ function setupPageLangDropdown() {
     const toggleBtn = document.getElementById('page-lang-toggle-btn');
     const menuContent = document.getElementById('page-lang-menu-content');
     
+	const display = document.getElementById('page-current-lang-display');
+    if (display) {
+        display.textContent = i18next.language.toUpperCase();
+    }
+
     if (toggleBtn && menuContent) {
         toggleBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -28,12 +42,12 @@ function setupPageLangDropdown() {
     }
 
     document.querySelectorAll('.page-lang-select').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
             const target = e.currentTarget as HTMLElement;
             const lang = target.getAttribute('data-lang');
             if (lang) {
-                const display = document.getElementById('page-current-lang-display');
-                if (display) display.textContent = lang.toUpperCase();
+                await changeLanguage(lang);
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }
         });
     });
@@ -45,7 +59,7 @@ function setupPageLangDropdown() {
 
 export function initLandingPage() {
 	
-		setupPageLangDropdown();
+	setupPageLangDropdown();
 
 	const loginButton = document.getElementById('login-button');
 	const registerButton = document.getElementById('register-button');
@@ -115,7 +129,7 @@ export function initLandingPage() {
 			console.error("Network error while guest login: ", err);
 			
 			if (guestError) {
-				guestError.textContent = "Network error. Please try again";
+				guestError.textContent = i18next.t('landing.guest_error_network');
 				guestError.classList.remove('hidden');
 			}
 		}
