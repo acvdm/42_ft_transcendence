@@ -28662,6 +28662,17 @@
     sessionStorage.removeItem("userRole");
     sessionStorage.removeItem("isGuest");
   };
+  var translateNavElements = () => {
+    const elements2 = document.querySelectorAll("[data-i18n]");
+    elements2.forEach((el) => {
+      const key = el.getAttribute("data-i18n");
+      if (key) {
+        const translation = i18n_default.t(key);
+        if (translation && translation !== key)
+          el.textContent = translation;
+      }
+    });
+  };
   var handleLocationChange = () => {
     if (!appElement) return;
     let path = window.location.pathname;
@@ -28776,15 +28787,15 @@
     `;
     const navbar = document.getElementById("main-navbar");
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
-        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.home">homepage.nav.home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.profile">homepage.nav.profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.dashboard">homepage.nav.dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.guest_area">homepage.nav.guest_area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
     if (navbar) {
@@ -28798,6 +28809,7 @@
           navbar.innerHTML = targetHTML;
           setupLangDropdown();
         }
+        translateNavElements();
       } else {
         navbar.style.display = "none";
       }
