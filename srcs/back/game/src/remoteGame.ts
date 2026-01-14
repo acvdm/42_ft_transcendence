@@ -269,7 +269,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
         game.ball.y = game.canvasHeight / 2;
         game.ball.vx = 0;
         game.ball.vy = 0;
-        game.serveDirection = 1;
+        game.serveDirection = +1;
     } else if (game.ball.x > game.canvasWidth) {
         game.score.player1++;
         // [FIX] Programmer le lancement 0.5 seconde plus tard (comme un reset)
@@ -278,7 +278,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
         game.ball.y = game.canvasHeight / 2;
         game.ball.vx = 0;
         game.ball.vy = 0;
-        game.serveDirection = -1;
+        game.serveDirection = 1;
     }
 
     // Fin de partie

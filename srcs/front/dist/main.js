@@ -12039,6 +12039,7 @@
       this.roomId = null;
       this.playerRole = null;
       this.socket = null;
+      this.lastBallSpeed = 0;
       this.canvas = canvas;
       this.ctx = ctx;
       this.input = input;

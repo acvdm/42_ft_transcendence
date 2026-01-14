@@ -22,6 +22,7 @@ class Game {
     roomId: string | null = null;
     playerRole: 'player1' | 'player2' | null = null;
     socket: Socket | null = null;
+    lastBallSpeed: number = 0;
     // --------------------
 
     constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
