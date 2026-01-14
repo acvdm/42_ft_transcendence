@@ -7665,11 +7665,11 @@
     }
   };
   var ballEmoticons = {
-    "smile": gamePath + "smiling.png",
+    "smile": gamePath + "smile.png",
     "surprised": gamePath + "surprised.png",
     "confused": gamePath + "confused.png",
     "hot": gamePath + "hot.png",
-    "teeth_smile": gamePath + "teeth_smile.png",
+    "crying": gamePath + "crying.png",
     "tongue": gamePath + "tongue_smile.png",
     "sad": gamePath + "sad.png",
     "disappointed": gamePath + "disappointed.png",
@@ -7678,8 +7678,7 @@
     "nerd": gamePath + "nerd.png",
     "teeth": gamePath + "teeth.png",
     "sarcastic": gamePath + "sarcastic.png",
-    "sick": gamePath + "sick.png",
-    "devil": gamePath + "devil_smile.png"
+    "sick": gamePath + "sick.png"
   };
   var gameBackgrounds = {
     "classic": "#B8E8F9",

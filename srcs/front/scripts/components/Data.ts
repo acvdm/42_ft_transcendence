@@ -141,11 +141,11 @@ export const appThemes: { [key: string]: Theme } = {
 };
 
 export const ballEmoticons: { [key: string]: string } = {
-    "smile": gamePath + "smiling.png",
+    "smile": gamePath + "smile.png",
     "surprised": gamePath + "surprised.png",
     "confused": gamePath + "confused.png",
     "hot": gamePath + "hot.png",
-    "teeth_smile": gamePath + "teeth_smile.png",
+    "crying": gamePath + "crying.png",
     "tongue": gamePath + "tongue_smile.png",
     "sad": gamePath + "sad.png",
     "disappointed": gamePath + "disappointed.png",
@@ -155,7 +155,6 @@ export const ballEmoticons: { [key: string]: string } = {
     "teeth": gamePath + "teeth.png",
     "sarcastic": gamePath + "sarcastic.png",
     "sick": gamePath + "sick.png",
-    "devil": gamePath + "devil_smile.png",
 };
 
 
