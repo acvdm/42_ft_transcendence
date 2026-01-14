@@ -8282,16 +8282,19 @@
 										<img id="add-friend-icon" src="/assets/basic/1441.png" alt="Friends button" class="w-full h-full object-contain">
 									</button>
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
-										<p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
-										<input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
-										<div class="flex gap-2">
-											<button id="send-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{homepage.chat.send_request}}
-											</button>
-											<button id="cancel-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
-												{{homepage.chat.cancel}}
-											</button>
-										</div>
+									    <p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
+																		
+									    <input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+																		
+									    <p id="friend-request-message" class="text-xs text-center mb-2 hidden"></p>
+									    <div class="flex gap-2">
+									        <button id="send-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+									            {{homepage.chat.send_request}}
+									        </button>
+									        <button id="cancel-friend-request" class="flex-1 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400  rounded-sm px-3 py-1.5 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400">
+									            {{homepage.chat.cancel}}
+									        </button>
+									    </div>
 									</div>
 								</div>
 							</div>
