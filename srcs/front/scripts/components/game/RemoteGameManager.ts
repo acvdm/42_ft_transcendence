@@ -283,14 +283,18 @@ export class RemoteGameManager {
                             // cleaning listener space
                             document.removeEventListener('keydown', spaceHandler);
 
-                            const s1 = activeGame.score.player1;
-                            const s2 = activeGame.score.player2;
+                            let s1 = 0;
+                            let s2 = 0;
                             let winnerAlias = "";
 
                             if (data.role === 'player1') {
                                 winnerAlias = this.currentP1Alias;
+                                s1 = 11;
+                                s2 = 0;
                             } else {
                                 winnerAlias = this.currentP2Alias;
+                                s1 = 0;
+                                s2 = 11;
                             }
 
                             await this.saveRemoteGameToApi (
@@ -301,7 +305,7 @@ export class RemoteGameManager {
                             )
 
                             // MODIFICATION : Traduction du message de forfait
-                            showRemoteEndModal(myAlias, i18next.t('remoteManager.opponent_forfeit'));
+                            showRemoteEndModal(winnerAlias, i18next.t('remoteManager.opponent_forfeit'));
                             this.context.setGame(null);
                         }
                     });

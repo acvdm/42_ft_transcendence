@@ -57,7 +57,7 @@ export class LocalGameManager {
         const player2Display = document.getElementById('player-2-name') as HTMLElement;
 
         if (nameInput)
-            nameInput.maxLength = 30;
+            nameInput.maxLength = 20;
 
         if (modal) modal.classList.remove('hidden');
 
@@ -168,7 +168,7 @@ export class LocalGameManager {
                     return;
                 }
 
-                if (opponentName.length > 30)
+                if (opponentName.length > 20)
                 {
                     if (errorMsg)
                     {

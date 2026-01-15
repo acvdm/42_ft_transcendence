@@ -453,8 +453,8 @@ export class FriendList {
         const friendRequestMessage = document.getElementById('friend-request-message');
 
         if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
-            // Bloque la saisie utilisateur à 30 chars
-            friendSearchInput.maxLength = 30;
+            // Bloque la saisie utilisateur à 20 chars
+            friendSearchInput.maxLength = 20;
             
             addFriendButton.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -473,7 +473,7 @@ export class FriendList {
                     return;
                 }
                 // Vérification avant envoi à l'API
-                if (searchValue.length > 30)
+                if (searchValue.length > 20)
                 {
                     this.showFriendMessage(i18next.t('friendList.error_input_too_long'), 'error', friendRequestMessage);
                     return ;

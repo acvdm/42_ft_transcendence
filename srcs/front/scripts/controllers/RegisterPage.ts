@@ -28,7 +28,7 @@ function handleRegister() {
     }
 
     if (aliasInput)
-        aliasInput.maxLength = 30;
+        aliasInput.maxLength = 20;
     if (emailInput)
         emailInput.maxLength = 254;
     if (passwordInput)
@@ -64,7 +64,7 @@ function handleRegister() {
         }
 
         // Vérification avant d'envoyer au back
-        if (alias.length > 30 || email.length > 254 || password.length > 128)
+        if (alias.length > 20 || email.length > 254 || password.length > 128)
         {
             if (errorElement)
             {

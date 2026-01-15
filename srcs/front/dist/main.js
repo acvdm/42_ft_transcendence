@@ -8888,7 +8888,7 @@
       const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
       const friendRequestMessage = document.getElementById("friend-request-message");
       if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
-        friendSearchInput.maxLength = 30;
+        friendSearchInput.maxLength = 20;
         addFriendButton.addEventListener("click", (e) => {
           e.stopPropagation();
           addFriendDropdown.classList.toggle("hidden");
@@ -8903,7 +8903,7 @@
             this.showFriendMessage(i18n_default.t("friendList.search_placeholder_error"), "error", friendRequestMessage);
             return;
           }
-          if (searchValue.length > 30) {
+          if (searchValue.length > 20) {
             this.showFriendMessage(i18n_default.t("friendList.error_input_too_long"), "error", friendRequestMessage);
             return;
           }
@@ -10948,7 +10948,7 @@
     };
     loadUserData();
     const updateUsername = async (newUsername) => {
-      if (!userId || !newUsername.trim() || newUsername.length > 30) {
+      if (!userId || !newUsername.trim() || newUsername.length > 20) {
         alert(i18n_default.t("profilePage.alerts.username_error"));
         return false;
       }
@@ -11079,7 +11079,7 @@
       const MAX_BIO_LENGTH = 70;
       const charCountElement = fieldName === "bio" ? elements2.container.querySelector(".char-count") : null;
       if (fieldName === "alias")
-        input.maxLength = 30;
+        input.maxLength = 20;
       if (fieldName === "bio")
         input.maxLength = 70;
       if (fieldName === "email")
@@ -11528,7 +11528,7 @@
       return;
     }
     if (aliasInput)
-      aliasInput.maxLength = 30;
+      aliasInput.maxLength = 20;
     if (emailInput)
       emailInput.maxLength = 254;
     if (passwordInput)
@@ -11552,7 +11552,7 @@
         }
         return;
       }
-      if (alias2.length > 30 || email.length > 254 || password.length > 128) {
+      if (alias2.length > 20 || email.length > 254 || password.length > 128) {
         if (errorElement) {
           errorElement.textContent = i18n_default("registerPage.error_inputs");
           errorElement.classList.remove.apply("hidden");
@@ -12481,7 +12481,7 @@
       const bgResetButton = document.getElementById("bg-reset-button");
       const player2Display = document.getElementById("player-2-name");
       if (nameInput)
-        nameInput.maxLength = 30;
+        nameInput.maxLength = 20;
       if (modal) modal.classList.remove("hidden");
       if (ballButton && ballDropdown && ballGrid) {
         const uniqueUrls = /* @__PURE__ */ new Set();
@@ -12573,7 +12573,7 @@
             nameInput.classList.add("border-red-500");
             return;
           }
-          if (opponentName.length > 30) {
+          if (opponentName.length > 20) {
             if (errorMsg) {
               errorMsg.innerText = i18n_default.t("localPage.erro_name_length");
               errorMsg.classList.remove("hidden");
@@ -12938,13 +12938,17 @@
                 gameSocket2.off("gameState");
                 gameSocket2.off("gameEnded");
                 document.removeEventListener("keydown", spaceHandler);
-                const s1 = activeGame2.score.player1;
-                const s2 = activeGame2.score.player2;
+                let s1 = 0;
+                let s2 = 0;
                 let winnerAlias = "";
                 if (data.role === "player1") {
                   winnerAlias = this.currentP1Alias;
+                  s1 = 11;
+                  s2 = 0;
                 } else {
                   winnerAlias = this.currentP2Alias;
+                  s1 = 0;
+                  s2 = 11;
                 }
                 await this.saveRemoteGameToApi(
                   this.currentP1Alias,
@@ -12956,7 +12960,7 @@
                   winnerAlias,
                   gameStartDate
                 );
-                showRemoteEndModal(myAlias, i18n_default.t("remoteManager.opponent_forfeit"));
+                showRemoteEndModal(winnerAlias, i18n_default.t("remoteManager.opponent_forfeit"));
                 this.context.setGame(null);
               }
             });
@@ -28438,11 +28442,11 @@
       if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
         return;
       }
-      filterOpponent.maxLength = 30;
+      filterOpponent.maxLength = 20;
       const applyFiltersAndSort = () => {
         let rawVal = filterOpponent.value;
-        if (rawVal.length > 30) {
-          rawVal = rawVal.substring(0, 30);
+        if (rawVal.length > 20) {
+          rawVal = rawVal.substring(0, 20);
         }
         const opponentValue = rawVal.toLowerCase().trim();
         const modeValue = filterMode.value;
@@ -28976,7 +28980,7 @@
         navbar.classList.add("justify-between", "items-center", "px-8");
         const currentHTML = navbar.innerHTML;
         const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
-        const isCurrentGuest = currentHTML.includes("Guest Area");
+        const isCurrentGuest = currentHTML.includes('href="/guest"');
         if (isGuest && !isCurrentGuest || !isGuest && isCurrentGuest || !currentHTML.includes("lang-dropdown")) {
           navbar.innerHTML = targetHTML;
           setupLangDropdown();

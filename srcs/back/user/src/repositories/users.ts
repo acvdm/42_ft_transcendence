@@ -118,6 +118,9 @@ export async function isAliasUsed (
     alias: string
 ): Promise<boolean>
 {
+    if (alias.length > 20)
+        return true;
+
     const checkAlias = await db.get(`
         SELECT id FROM USERS WHERE alias = ?`,
         [alias]
@@ -197,8 +200,8 @@ export async function updateAlias (
     if (!user?.id)
         throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
-    if (alias.length > 30)
-        throw new ValidationError(`Error: alias too long. Max 30 characters`);
+    if (alias.length > 20)
+        throw new ValidationError(`Error: alias too long. Max 20 characters`);
 
     const existingUser = await db.get(`
         SELECT id FROM USERS WHERE alias = ? AND id != ?`,

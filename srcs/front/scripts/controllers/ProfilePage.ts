@@ -537,7 +537,7 @@ export function afterRender(): void {
     // Updating username
     const updateUsername = async (newUsername: string) => {
         
-        if (!userId || !newUsername.trim() || newUsername.length > 30) {
+        if (!userId || !newUsername.trim() || newUsername.length > 20) {
             alert(i18next.t('profilePage.alerts.username_error'));
             return false;
         }
@@ -708,7 +708,7 @@ export function afterRender(): void {
         const charCountElement = fieldName === 'bio' ? elements.container.querySelector('.char-count') as HTMLSpanElement : null;
 
         if (fieldName === 'alias')
-            input.maxLength = 30;
+            input.maxLength = 20;
         if (fieldName === 'bio')
             input.maxLength = 70;
         if (fieldName === 'email')
