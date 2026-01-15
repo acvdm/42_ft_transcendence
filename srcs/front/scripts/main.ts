@@ -23,7 +23,7 @@ interface Page {
 	//==================== ROUTES ====================
 	//================================================
 
-const publicRoutes = ['/', '/login', '/register', '/404', '/guest'];
+const publicRoutes = ['/', '/login', '/register', '/guest'];
 
 const routes: { [key: string]: Page } = {
 	'/': {
@@ -61,12 +61,8 @@ const routes: { [key: string]: Page } = {
 			const mode = state && state.gameMode ? state.gameMode : 'local';
 			initGamePage(mode);
 		}
-	},
-	'/404': {
-		render: NotFoundPage // faustine: a retirer
 	}
 };
-
 
 	//================================================
 	//==================== LOGOUT ====================
@@ -199,15 +195,28 @@ const handleLocationChange = async () => {
 		return ;
 	}
 
+	if (path === '/logout') {
+		handleLogout();
+		return;
+	}
+
+	if (!routes[path]) {
+		if (isGuest) {
+			window.history.replaceState(null, '', '/guest');
+		} else if (accessToken) {
+			window.history.replaceState(null, '', '/home');
+		} else {
+			window.history.replaceState(null, '', '/');
+		}
+		handleLocationChange();
+		return;
+	}
+
 	if (accessToken && !isGuest) {
 		await loadUserLanguageFromDB();
 	}
 	if (isGameRunning() && path !== '/game') {
 		cleanup();
-	}
-	if (path === '/logout') {
-		handleLogout();
-		return; 
 	}
 
 	//================================================

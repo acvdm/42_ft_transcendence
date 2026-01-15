@@ -11248,23 +11248,6 @@
     });
   }
 
-  // scripts/pages/NotFound.ts
-  function NotFoundPage() {
-    return `
-		<div class="p-8 text-center">
-			<h1 class="text-6xl font-bold text-red-500 mb-4">
-				Not found, try again
-			</h1>
-			<p class="text-2xl text-gray-300">
-				404 not found that's it
-			</p>
-			<a href="/" class="mt-4 inline-block text-blue-400 hover:underline">
-				Go back to the main page
-			</a>
-			</div>
-	`;
-  }
-
   // scripts/pages/LandingPage.html
   var LandingPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
 	<div class="relative">
@@ -28485,7 +28468,7 @@
 
   // scripts/main.ts
   var appElement = document.getElementById("app");
-  var publicRoutes = ["/", "/login", "/register", "/404", "/guest"];
+  var publicRoutes = ["/", "/login", "/register", "/guest"];
   var routes = {
     "/": {
       render: render4,
@@ -28522,10 +28505,6 @@
         const mode = state && state.gameMode ? state.gameMode : "local";
         initGamePage(mode);
       }
-    },
-    "/404": {
-      render: NotFoundPage
-      // faustine: a retirer
     }
   };
   var handleLogout = async () => {
@@ -28622,15 +28601,26 @@
       handleLocationChange();
       return;
     }
+    if (path === "/logout") {
+      handleLogout();
+      return;
+    }
+    if (!routes[path]) {
+      if (isGuest) {
+        window.history.replaceState(null, "", "/guest");
+      } else if (accessToken) {
+        window.history.replaceState(null, "", "/home");
+      } else {
+        window.history.replaceState(null, "", "/");
+      }
+      handleLocationChange();
+      return;
+    }
     if (accessToken && !isGuest) {
       await loadUserLanguageFromDB();
     }
     if (isGameRunning() && path !== "/game") {
       cleanup();
-    }
-    if (path === "/logout") {
-      handleLogout();
-      return;
     }
     const setupLangDropdown = () => {
       const toggleBtn = document.getElementById("lang-toggle-btn");
