@@ -8574,16 +8574,10 @@
       console.log("[FriendList] Initializing...");
       SocketService_default.getInstance().connectChat();
       SocketService_default.getInstance().connectGame();
-<<<<<<< HEAD
-      this.destroy();
-      this.listenToUpdates();
-      this.loadFriends();
-=======
       await this.registerSocketUser();
       this.listenToUpdates();
       await this.loadFriends();
       await this.loadUnreadMessages();
->>>>>>> frontend-pages
       this.setupFriendRequests();
       this.setupNotifications();
       this.checkNotifications();
@@ -8695,29 +8689,6 @@
                 </div>
                 `;
           contactsList.appendChild(friendItem);
-<<<<<<< HEAD
-          this.checkUnreadMessagesForFriend(selectedFriend.id);
-          const chatSocket = SocketService_default.getInstance().getChatSocket();
-          if (chatSocket) {
-            const myId = Number(this.userId);
-            const id1 = Math.min(myId, selectedFriend.id);
-            const id2 = Math.max(myId, selectedFriend.id);
-            const channelKey = `${id1}_${id2}`;
-            console.log(`channelK`);
-            const check = () => {
-              chatSocket.emit("checkUnread", {
-                channelKey,
-                friendId: selectedFriend.id
-              });
-            };
-            if (chatSocket.connected) {
-              check();
-            } else {
-              chatSocket.once("connect", check);
-            }
-          }
-=======
->>>>>>> frontend-pages
           friendItem.addEventListener("click", (e) => {
             if (e.target.closest(".invite-btn")) return;
             this.clearNotifications(selectedFriend.id);
@@ -8792,24 +8763,6 @@
       const socketService = SocketService_default.getInstance();
       const chatSocket = socketService.getChatSocket();
       const gameSocket = socketService.getGameSocket();
-<<<<<<< HEAD
-      if (!chatSocket) return;
-      chatSocket.on("chatMessage", (data) => {
-        console.log(`[FriendList] \u{1F4E8} Received chatMessage event from ${data.sender_id}`);
-        this.handleMessageNotification(data.sender_id);
-      });
-      chatSocket.on("unreadStatus", (data) => {
-        console.log("[FriendList] \u{1F4E5} Debug unreadStatus data:", data);
-        const idToNotify = data.friendId || data.senderId;
-        if (data.hasUnread && idToNotify) {
-          console.log("hadUnread");
-          this.handleMessageNotification(idToNotify);
-        }
-      });
-      chatSocket.on("unreadNotification", (data) => {
-        console.log("[FriendList] \u{1F514} Event 'unreadNotification' received", data);
-        this.handleMessageNotification(data.senderId);
-=======
       if (!chatSocket) {
         return;
       }
@@ -8828,7 +8781,6 @@
         } else {
           console.warn(`[FriendList] \u26A0\uFE0F Badge badge-${data.senderId} not found in DOM`);
         }
->>>>>>> frontend-pages
       });
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
@@ -9623,7 +9575,7 @@
         this.addSystemMessage(data.content);
       });
       this.chatSocket.on("receivedWizz", (data) => {
-        if (data.channelKey && data.channelKey !== this.currentChannel) {
+        if (data.channel_key && data.channel_key !== this.currentChannel) {
           return;
         }
         const currentUser = localStorage.getItem("username");
@@ -9682,7 +9634,7 @@
           this.chatSocket.emit("chatMessage", {
             sender_id,
             sender_alias,
-            channelKey: this.currentChannel,
+            channel_key: this.currentChannel,
             msg_content
           });
           this.messageInput.value = "";
@@ -9696,13 +9648,8 @@
       const wizzButton = document.getElementById("send-wizz");
       if (wizzButton) {
         wizzButton.addEventListener("click", () => {
-<<<<<<< HEAD
-          const currentUsername = localStorage.getItem("username");
-          this.chatSocket.emit("sendWizz", { author: currentUsername, channelKey: this.currentChannel });
-=======
           const currentUsername = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
           this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
->>>>>>> frontend-pages
           this.shakeElement(this.wizzContainer, 500);
         });
       }
@@ -9711,13 +9658,8 @@
       if (!this.chatSocket) {
         return;
       }
-<<<<<<< HEAD
-      const currentUsername = localStorage.getItem("username");
-      this.chatSocket.emit("sendWizz", { author: currentUsername, channelKey: this.currentChannel });
-=======
       const currentUsername = localStorage.getItem("username") || sessionStorage.getItem("cachedAlias");
       this.chatSocket.emit("sendWizz", { author: currentUsername, channel_key: this.currentChannel });
->>>>>>> frontend-pages
     }
     shakeElement(element, duration = 500) {
       if (!element) {
@@ -9749,7 +9691,7 @@
     sendSystemNotification(message) {
       if (this.chatSocket) {
         this.chatSocket.emit("sendSystemMessage", {
-          channelKey: this.currentChannel,
+          channel_key: this.currentChannel,
           content: message
         });
       } else {
@@ -9873,7 +9815,7 @@
             this.chatSocket.emit("sendAnimation", {
               animationKey: key,
               author: currentUsername,
-              channelKey: this.currentChannel
+              channel_key: this.currentChannel
             });
             animationDropdown.classList.add("hidden");
           });
@@ -9990,7 +9932,7 @@
               this.chatSocket.emit("chatMessage", {
                 sender_id,
                 sender_alias: myName,
-                channelKey: this.currentChannel,
+                channel_key: this.currentChannel,
                 msg_content: inviteCode
                 // ici au lieu du message on "envois" le code d'invitation
               });
