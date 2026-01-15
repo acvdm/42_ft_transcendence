@@ -293,6 +293,7 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
     });
 
     socket.on('leaveGame', (data: { roomId: string }) => {
+        console.log("*******leaveGame******");
         const game = activeGames.get(data.roomId);
 
         // Vérifier que le socket fait bien partie du jeu

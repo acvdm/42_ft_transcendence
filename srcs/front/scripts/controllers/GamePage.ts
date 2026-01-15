@@ -178,16 +178,15 @@ export function showExitConfirmationModal() {
 function confirmExit() {
     isNavigationBlocked = true;
     
+    
     if (activeGame) {
         const wasRemote = activeGame.isRemote;
         const roomId = activeGame.roomId;
         const playerRole = activeGame.playerRole;
-        //const currentScore = { ...activeGame.score };
 
-        activeGame.isRunning = false;
-        activeGame.stop();
-
+        console.log(`WasRemote = ${wasRemote}, roomId = ${roomId}`);
         if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
+            console.log(`***CLIENT: Tentative d'envoi de leaveGame`);
             SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
             
             const userIdStr = localStorage.getItem('userId');
@@ -195,6 +194,10 @@ function confirmExit() {
                 // Pour la sauvegarde stats, on pourrait appeler une fonction dans remoteManager, mais c'est ok de laisser la déconnexion "brutale" ici
             }
         }
+        //const currentScore = { ...activeGame.score };
+
+        activeGame.isRunning = false;
+        activeGame.stop();
         activeGame = null;
     }
     

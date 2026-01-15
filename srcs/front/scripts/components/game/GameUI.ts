@@ -8,10 +8,15 @@ import i18next from "../../i18n"; // Assurez-vous que le chemin vers i18n est co
 export function getSqlDate(): string {
 
     const now = new Date();
-    
-    // 2. Astuce rapide : on prend l'ISO, on coupe les ms, et on remplace T par espace
-    // .slice(0, 19) garde "YYYY-MM-DDTHH:mm:ss"
-    return now.toISOString().slice(0, 19).replace('T', ' ');
+
+    const yyyy = now.getFullYear();
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const hh = now.getHours().toString().padStart(2, '0');
+    const min = now.getMinutes().toString().padStart(2, '0');
+    const ss = now.getSeconds().toString().padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
 }
 
 //================================================

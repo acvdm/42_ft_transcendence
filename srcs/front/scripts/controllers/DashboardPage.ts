@@ -327,7 +327,21 @@ export function afterRender(): void {
         // Sort has already been made before. Only iterating here.
         history.forEach(match => {
             const date = new Date(match.finished_at);
-            const dateString = `${date.getDate().toString().padStart(2,'0')}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getFullYear()}`;
+            const dateString = date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                timeZone: 'Europe/Paris'
+            }).replace(/\//g, '-');
+            
+            const timeString = date.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Europe/Paris' 
+            });
+
+            // const dateString = `${date.getDate().toString().padStart(2,'0')}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getFullYear()}`;
+            // const timeString = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
             const isWin = match.is_winner === 1;
             
             // MODIFIED: Use i18n for status
@@ -350,7 +364,9 @@ export function afterRender(): void {
             row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
 
             row.innerHTML = `
-                <td class="py-2 text-gray-500">${dateString}</td>
+                <td class="py-2 text-gray-500 whitespace-nowrap">
+                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+                    </td>
                 <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
                 <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
                 <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>

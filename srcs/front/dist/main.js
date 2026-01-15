@@ -12288,7 +12288,13 @@
   // scripts/components/game/GameUI.ts
   function getSqlDate() {
     const now = /* @__PURE__ */ new Date();
-    return now.toISOString().slice(0, 19).replace("T", " ");
+    const yyyy = now.getFullYear();
+    const mm = (now.getMonth() + 1).toString().padStart(2, "0");
+    const dd = now.getDate().toString().padStart(2, "0");
+    const hh = now.getHours().toString().padStart(2, "0");
+    const min = now.getMinutes().toString().padStart(2, "0");
+    const ss = now.getSeconds().toString().padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
   }
   function launchConfetti(duration = 3e3) {
     const colors2 = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
@@ -12931,6 +12937,7 @@
             document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
+              console.log("opponent left");
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
                 activeGame2.isRunning = false;
@@ -12974,9 +12981,18 @@
               }
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
-                const s1 = activeGame2.score.player1;
-                const s2 = activeGame2.score.player2;
-                if (data.role === "player1") {
+                let s1 = activeGame2.score.player1;
+                let s2 = activeGame2.score.player2;
+                if (data.role === "player1" && s1 != 11) {
+                  s1 = 11;
+                  s2 = 0;
+                  winnerAlias = this.currentP1Alias;
+                } else if (data.role === "player2" && s2 != 11) {
+                  s1 = 0;
+                  s2 = 11;
+                  winnerAlias = this.currentP2Alias;
+                }
+                if (data.role === "player1" || data.role === "player2") {
                   await this.saveRemoteGameToApi(
                     this.currentP1Alias,
                     s1,
@@ -13646,14 +13662,16 @@
       const wasRemote = activeGame.isRemote;
       const roomId = activeGame.roomId;
       const playerRole = activeGame.playerRole;
-      activeGame.isRunning = false;
-      activeGame.stop();
+      console.log(`WasRemote = ${wasRemote}, roomId = ${roomId}`);
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
+        console.log(`***CLIENT: Tentative d'envoi de leaveGame`);
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
         const userIdStr = localStorage.getItem("userId");
         if (userIdStr && playerRole) {
         }
       }
+      activeGame.isRunning = false;
+      activeGame.stop();
       activeGame = null;
     }
     cleanup();
@@ -28543,7 +28561,17 @@
       }
       history.forEach((match) => {
         const date = new Date(match.finished_at);
-        const dateString = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
+        const dateString = date.toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "Europe/Paris"
+        }).replace(/\//g, "-");
+        const timeString = date.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Paris"
+        });
         const isWin = match.is_winner === 1;
         const resultText = isWin ? i18n_default.t("dashboardPage.status_victory") : i18n_default.t("dashboardPage.status_defeat");
         const resultColor = isWin ? "text-green-600" : "text-red-500";
@@ -28555,7 +28583,9 @@
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `
-                <td class="py-2 text-gray-500">${dateString}</td>
+                <td class="py-2 text-gray-500 whitespace-nowrap">
+                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+                    </td>
                 <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
                 <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
                 <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>

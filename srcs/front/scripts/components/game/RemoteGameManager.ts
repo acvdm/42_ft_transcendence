@@ -273,6 +273,7 @@ export class RemoteGameManager {
                     // Rival is leaving the game
                     gameSocket.off('opponentLeft');
                     gameSocket.on('opponentLeft', async (eventData: any) => {
+                        console.log('opponent left');
                         const activeGame = this.context.getGame();
                         if (activeGame) {
                             activeGame.isRunning = false;
@@ -313,7 +314,6 @@ export class RemoteGameManager {
                     newGame.onGameEnd = async (endData) => {
                         // cleaning listener space
                         document.removeEventListener('keydown', spaceHandler);
-
                         // MODIFICATION : Traduction fallback
                         let winnerAlias = i18next.t('remoteManager.default_winner');
                         
@@ -324,11 +324,26 @@ export class RemoteGameManager {
                         }
 
                         const activeGame = this.context.getGame();
-                        if (activeGame) {
-                            const s1 = activeGame.score.player1;
-                            const s2 = activeGame.score.player2;
 
-                            if (data.role === 'player1') {
+                        if (activeGame) {
+                            let s1 = activeGame.score.player1;
+                            let s2 = activeGame.score.player2;
+
+                            // Cas de forfait
+                            if (data.role === 'player1' && s1 != 11)
+                            {
+                                s1 = 11;
+                                s2 = 0;
+                                winnerAlias = this.currentP1Alias;
+                            }
+                            else if (data.role === 'player2' && s2 != 11)
+                            {
+                                s1 = 0;
+                                s2 = 11;
+                                winnerAlias = this.currentP2Alias;
+                            }  
+
+                            if (data.role === 'player1' || data.role === 'player2') {
                                 await this.saveRemoteGameToApi(
                                     this.currentP1Alias, s1, p1Id,
                                     this.currentP2Alias, s2, p2Id,
