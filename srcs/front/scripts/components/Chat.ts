@@ -249,7 +249,8 @@ export class Chat {
     private addMessage(message: string, author: string) {
         if (!this.messagesContainer) return;
         const msgElement = document.createElement('div'); // changement par div pour mettre un bouton
-        msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition";
+        msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition break-words";
+        msgElement.style.overflowWrap = 'anywhere';
 
         ///// DÉTECTION DE L'INVITATION
         const inviteRegex = /\[GAME_INVITE\|(\d+)\]/;
