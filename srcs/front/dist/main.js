@@ -8566,10 +8566,10 @@
   var FriendList = class {
     constructor() {
       this.notificationInterval = null;
-      this.container = document.getElementById("contacts-list");
       this.userId = localStorage.getItem("userId");
     }
     init() {
+      this.container = document.getElementById("contacts-list");
       SocketService_default.getInstance().connectChat();
       SocketService_default.getInstance().connectGame();
       this.loadFriends();
@@ -8598,6 +8598,10 @@
       }
     }
     async loadFriends() {
+      const currentContainer = document.getElementById("contacts-list");
+      if (currentContainer) {
+        this.container = currentContainer;
+      }
       const contactsList = this.container;
       if (!this.userId || !contactsList) return;
       try {
@@ -9001,7 +9005,9 @@
           setTimeout(() => {
             itemDiv.remove();
             if (action === "validated") {
-              this.loadFriends();
+              setTimeout(() => {
+                this.loadFriends();
+              }, 500);
               const socket = SocketService_default.getInstance().getChatSocket();
               if (socket) {
                 socket.emit("acceptFriendRequest", {

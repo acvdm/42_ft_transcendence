@@ -10,11 +10,12 @@ export class FriendList {
     private notificationInterval: any = null;
 
     constructor() {
-        this.container = document.getElementById('contacts-list');
+        //this.container = document.getElementById('contacts-list');
         this.userId = localStorage.getItem('userId');
     }
 
     public init() {
+        this.container = document.getElementById('contacts-list');
         SocketService.getInstance().connectChat();
         SocketService.getInstance().connectGame();
         this.loadFriends();
@@ -50,6 +51,10 @@ export class FriendList {
     }
 
     private async loadFriends(): Promise<void> {
+        const currentContainer = document.getElementById('contacts-list');
+        if (currentContainer) {
+            this.container = currentContainer;
+        }
         const contactsList = this.container;
         if (!this.userId || !contactsList) return;
 
@@ -543,8 +548,11 @@ export class FriendList {
                 itemDiv.style.opacity = '0'; 
                 setTimeout(() => {
                     itemDiv.remove();
+                    
                     if (action === 'validated') {
-                        this.loadFriends(); 
+                        setTimeout(() => {
+                            this.loadFriends(); 
+                        }, 500);
                         
                         const socket = SocketService.getInstance().getChatSocket();
                         if (socket) {
