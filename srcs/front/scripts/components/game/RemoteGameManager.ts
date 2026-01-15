@@ -24,9 +24,9 @@ export class RemoteGameManager {
         this.context = context;
     }
 
-    public init() {
+    public async init() {
         const socketService = SocketService.getInstance();
-        socketService.connectGame();
+        await socketService.connectGame();
         const gameSocket = socketService.getGameSocket();
 
         if (!gameSocket) {

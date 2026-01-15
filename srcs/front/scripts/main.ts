@@ -62,6 +62,11 @@ const routes: { [key: string]: Page } = {
         afterRender: () => {
 			const state = window.history.state;
 			const mode = state && state.gameMode ? state.gameMode : 'local';
+            // AJOUT sauvegarde du gameMode
+            if (mode === 'remote')
+                sessionStorage.setItem('activeGameMode', 'remote');
+            else if (mode === 'local')
+                sessionStorage.setItem('activeGameMode', 'local');
 			initGamePage(mode);
 		}
     },

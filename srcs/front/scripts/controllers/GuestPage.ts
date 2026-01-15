@@ -40,6 +40,7 @@ export function afterRender(): void {
     if (remoteButton) {
         remoteButton.addEventListener('click', () => {
             console.log("Remote game starting");
+            sessionStorage.setItem('activeGameMode', 'remote');
             handleNavigation('/game', { gameMode: 'remote' });
         });
     } else {

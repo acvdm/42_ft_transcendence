@@ -30,11 +30,11 @@ export class Chat {
         }
     }
 
-    public init() {
+    public async init() {
         const socketService = SocketService.getInstance();
 
         socketService.connectChat();
-        socketService.connectGame()
+        await socketService.connectGame()
 
         this.chatSocket = socketService.getChatSocket();
         this.gameSocket = socketService.getGameSocket();

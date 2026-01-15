@@ -16,18 +16,54 @@ export class SocketService {
         return SocketService.instance;
     }
 
-    private createSocketConnection(path: string): Socket | null {
-        const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    /* MODIFICATIONS NE ASYNC */
+    private async createSocketConnection(path: string): Promise <Socket | null> {
+        // Modification ordre de priorite -> DABORD recuperer sessionStorage PUIS regarder localStorage
+        let token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+        console.log('** (sessionStorage) accessToken: ', sessionStorage.getItem('accessToken'));
+        console.log('** (localStorage) accessToken: ', localStorage.getItem('accessToken'));
 
         if (!token) {
             console.error(`SocketService: No token found, cannot connect to ${path}`);
             return null;
         }
 
+        let finalToken = token as string;
+
+        // VERIFIER SI LE TOKEN EST EXPIRE:
+        try {
+            const payload = JSON.parse(atob(finalToken.split('.')[1]));
+            const now = Math.floor(Date.now() / 1000);
+
+            // si le token expire dans moins de 30s on le refresh
+            if (payload.exp - now < 30)
+            {
+                console.log('Token sur le point dexpirer, refresh...');
+                const response = await fetch('/api/auth/token', {
+                    method: 'POST',
+                    credentials: 'include' // pour envoyer le cookie refresh
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    finalToken = data.accessToken;
+
+                    if (sessionStorage.getItem('isGuest') === 'true')
+                        sessionStorage.setItem('accessToken', finalToken);
+                    else
+                        localStorage.setItem('accessToken', finalToken);
+                }
+            }
+        } catch (e) {
+            console.error('Error during validation of token');
+        }
+
         const socket = io("/", {
             path: path,
             auth: {
-                token: `Bearer ${token}`
+                // MODIFICATION: le service socket.io verifie toute la chaine de caractere 'token' 
+                // 'Bearer' cree une erreur donc il faut juste transmettre token
+                token: finalToken
             },
             reconnection: true,
             reconnectionAttempts: 5, // Correction typo: reconnectionAttemps -> reconnectionAttempts
@@ -48,11 +84,11 @@ export class SocketService {
     // ---------------------
     // -- GESTION DU CHAT --
     // ---------------------
-    public connectChat() {
+    public async connectChat() {
         if (this.chatSocket) return;
 
         console.log("SocketService: Connecting to Chat...");
-        this.chatSocket = this.createSocketConnection("/socket-chat/");
+        this.chatSocket = await this.createSocketConnection("/socket-chat/");
 
         // --- CORRECTION MAJEURE ICI ---
         if (this.chatSocket) {
@@ -91,10 +127,11 @@ export class SocketService {
     // ---------------------
     // -- GESTION DU GAME --
     // ---------------------
-    public connectGame() {
+    /* Modifs en async */
+    public async connectGame() {
         if (this.gameSocket) return;
         console.log("SocketService: Connecting to Game...");
-        this.gameSocket = this.createSocketConnection("/socket-game/");
+        this.gameSocket = await this.createSocketConnection("/socket-game/");
     }
 
     public disconnectGame() {

@@ -22,10 +22,10 @@ export class FriendList {
         this.userId = localStorage.getItem('userId');
     }
 
-    public init() {
+    public async init() {
         console.log("[FriendList] Initializing..."); // LOG AJOUTÉ
-        SocketService.getInstance().connectChat();
-        SocketService.getInstance().connectGame();
+        await SocketService.getInstance().connectChat();
+        await SocketService.getInstance().connectGame();
         this.loadFriends();
         this.setupFriendRequests();
         this.setupNotifications(); 

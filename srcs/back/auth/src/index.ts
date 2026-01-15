@@ -68,6 +68,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 		});
 
 		console.log(`✅ Credentials created & auto-login for user ${body.userId}`);
+		
 
 		// 4. Répondre
 		return reply.status(201).send({
@@ -109,6 +110,7 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 		});
 
 		console.log(`✅ Credentials created & auto-login for user ${body.userId}`);
+		console.log('✅ AccessToken: ', authResponse.accessToken);
 
 		// 4. Répondre
 		return reply.status(200).send({

@@ -113,10 +113,10 @@ export function cleanup() {
     }
 }
 
-export function afterRender(): void {
+export async  function afterRender(): Promise <void> {
 
     const socketService = SocketService.getInstance();
-    socketService.connectChat();
+    await socketService.connectChat();
     friendListInstance = new FriendList();
     friendListInstance.init();
 

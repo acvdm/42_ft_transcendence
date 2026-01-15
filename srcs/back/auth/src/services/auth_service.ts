@@ -55,7 +55,7 @@ async function generateTokens (
 {
     const accessToken = generateAccessToken(userId, credentialId);
     const refreshToken = generateRefreshToken(userId);
-    const expiresAt = getExpirationDate(30);
+    const expiresAt = getExpirationDate(7);
 
     return { accessToken, refreshToken, expiresAt}
 }

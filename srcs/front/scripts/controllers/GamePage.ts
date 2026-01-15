@@ -197,6 +197,9 @@ function confirmExit() {
         }
         activeGame = null;
     }
+
+    // AJOUT ici pour le probleme de refresh du remote game refresh qui redirige vers local game
+    sessionStorage.removeItem('activeGameMode');
     
     cleanup();
     document.getElementById('exit-confirm-modal')?.remove();
@@ -212,7 +215,7 @@ function confirmExit() {
 //================================================
 
 export function cleanup() {
-    
+
     if (gameChat) {
         gameChat.destroy();
         gameChat = null;
@@ -236,20 +239,24 @@ export function cleanup() {
 }
 
 export function render(): string {
-    const state = window.history.state;
+    // modif state -> gameMode : on essaie de recuperer le mode depuis l'historiaue OU le sessionStorage
+    let gameMode = window.history.state?.gameMode;
+    if (!gameMode)
+        gameMode = sessionStorage.getItem('activeGameMode');
+
     let html = "";
 
     // 1. SÉLECTION DU TEMPLATE SELON LE MODE
-    if (state && state.gameMode === 'remote') {
+    if (gameMode === 'remote') {
         html = htmlContentRemote;
-    } else if (state && state.gameMode === 'tournament') {
+    } else if (gameMode === 'tournament') {
         html = htmlContentTournament;
     } else {
         html = htmlContentLocal;
     }
 
     // 2. REPLACEMENTS POUR LE MODE REMOTE
-    if (state && state.gameMode === 'remote') {
+    if (gameMode === 'remote') {
         html = html.replace(/\{\{remotePage\.title\}\}/g, i18next.t('remotePage.title'));
         html = html.replace(/\{\{remotePage\.p1\}\}/g, i18next.t('remotePage.p1'));
         html = html.replace(/\{\{remotePage\.p2\}\}/g, i18next.t('remotePage.p2'));
@@ -278,7 +285,7 @@ export function render(): string {
     } 
 
     // 3. REPLACEMENTS POUR LE MODE TOURNAMENT
-    else if (state && state.gameMode === 'tournament') {
+    else if (gameMode === 'tournament') {
         html = html.replace(/\{\{tournamentPage\.title\}\}/g, i18next.t('tournamentPage.title'));
         html = html.replace(/\{\{tournamentPage\.p1\}\}/g, i18next.t('tournamentPage.p1'));
         html = html.replace(/\{\{tournamentPage\.p2\}\}/g, i18next.t('tournamentPage.p2'));
@@ -368,6 +375,9 @@ export function render(): string {
 
 export function initGamePage(mode: string): void {
 
+    // sauvegarder le mode pour la persistance
+    sessionStorage.setItem('activeGameMode', mode);
+    
     const currentTheme = localStorage.getItem('userTheme') || 'basic';
     applyTheme(currentTheme);
     window.addEventListener('beforeunload', handleBeforeUnload);

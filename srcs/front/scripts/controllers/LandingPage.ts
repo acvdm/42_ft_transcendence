@@ -81,6 +81,12 @@ export function initLandingPage() {
     
     guestButton?.addEventListener('click', async () => {
 		try {
+			// ajout : nettoyage preventif pour eviter d'avoir un accesstoken dun ancien user dans le local storage
+			localStorage.removeItem('accessToken');
+			localStorage.removeItem('userId');
+			sessionStorage.clear();
+			localStorage.clear();
+
 			const response = await fetch('/api/user/guest', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -89,7 +95,7 @@ export function initLandingPage() {
 
 			if (response.ok) {
 				const data = await response.json();
-
+				
 				if (data.accessToken) {
 					sessionStorage.setItem('accessToken', data.accessToken);
 				}

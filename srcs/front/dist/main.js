@@ -3608,16 +3608,44 @@
       }
       return _SocketService.instance;
     }
-    createSocketConnection(path) {
-      const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    /* MODIFICATIONS NE ASYNC */
+    async createSocketConnection(path) {
+      let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+      console.log("** (sessionStorage) accessToken: ", sessionStorage.getItem("accessToken"));
+      console.log("** (localStorage) accessToken: ", localStorage.getItem("accessToken"));
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
         return null;
       }
+      let finalToken = token;
+      try {
+        const payload = JSON.parse(atob(finalToken.split(".")[1]));
+        const now = Math.floor(Date.now() / 1e3);
+        if (payload.exp - now < 30) {
+          console.log("Token sur le point dexpirer, refresh...");
+          const response = await fetch("/api/auth/token", {
+            method: "POST",
+            credentials: "include"
+            // pour envoyer le cookie refresh
+          });
+          if (response.ok) {
+            const data = await response.json();
+            finalToken = data.accessToken;
+            if (sessionStorage.getItem("isGuest") === "true")
+              sessionStorage.setItem("accessToken", finalToken);
+            else
+              localStorage.setItem("accessToken", finalToken);
+          }
+        }
+      } catch (e) {
+        console.error("Error during validation of token");
+      }
       const socket = lookup2("/", {
         path,
         auth: {
-          token: `Bearer ${token}`
+          // MODIFICATION: le service socket.io verifie toute la chaine de caractere 'token' 
+          // 'Bearer' cree une erreur donc il faut juste transmettre token
+          token: finalToken
         },
         reconnection: true,
         reconnectionAttempts: 5,
@@ -3635,10 +3663,10 @@
     // ---------------------
     // -- GESTION DU CHAT --
     // ---------------------
-    connectChat() {
+    async connectChat() {
       if (this.chatSocket) return;
       console.log("SocketService: Connecting to Chat...");
-      this.chatSocket = this.createSocketConnection("/socket-chat/");
+      this.chatSocket = await this.createSocketConnection("/socket-chat/");
       if (this.chatSocket) {
         this.chatSocket.on("unreadNotification", (payload) => {
           console.log("SocketService: Notification re\xE7ue (Global):", payload);
@@ -3667,10 +3695,11 @@
     // ---------------------
     // -- GESTION DU GAME --
     // ---------------------
-    connectGame() {
+    /* Modifs en async */
+    async connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
-      this.gameSocket = this.createSocketConnection("/socket-game/");
+      this.gameSocket = await this.createSocketConnection("/socket-game/");
     }
     disconnectGame() {
       if (this.gameSocket) {
@@ -8581,10 +8610,10 @@
       this.container = document.getElementById("contacts-list");
       this.userId = localStorage.getItem("userId");
     }
-    init() {
+    async init() {
       console.log("[FriendList] Initializing...");
-      SocketService_default.getInstance().connectChat();
-      SocketService_default.getInstance().connectGame();
+      await SocketService_default.getInstance().connectChat();
+      await SocketService_default.getInstance().connectGame();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -9464,10 +9493,10 @@
         this.messageInput.maxLength = 5e3;
       }
     }
-    init() {
+    async init() {
       const socketService = SocketService_default.getInstance();
       socketService.connectChat();
-      socketService.connectGame();
+      await socketService.connectGame();
       this.chatSocket = socketService.getChatSocket();
       this.gameSocket = socketService.getGameSocket();
       if (!this.gameSocket) {
@@ -10177,9 +10206,9 @@
     html = html.replace(/\{\{homepage.modal\.cancel\}\}/g, i18n_default.t("homepage.modal.cancel"));
     return html;
   }
-  function afterRender() {
+  async function afterRender() {
     const socketService = SocketService_default.getInstance();
-    socketService.connectChat();
+    await socketService.connectChat();
     friendListInstance = new FriendList();
     friendListInstance.init();
     if (Data.hasUnreadMessage) {
@@ -11472,6 +11501,10 @@
     });
     guestButton?.addEventListener("click", async () => {
       try {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
+        sessionStorage.clear();
+        localStorage.clear();
         const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -11693,6 +11726,7 @@
     if (remoteButton) {
       remoteButton.addEventListener("click", () => {
         console.log("Remote game starting");
+        sessionStorage.setItem("activeGameMode", "remote");
         handleNavigation("/game", { gameMode: "remote" });
       });
     } else {
@@ -12719,9 +12753,9 @@
       this.currentP2Alias = "Player 2";
       this.context = context;
     }
-    init() {
+    async init() {
       const socketService = SocketService_default.getInstance();
-      socketService.connectGame();
+      await socketService.connectGame();
       const gameSocket = socketService.getGameSocket();
       if (!gameSocket) {
         console.error("Cannot connect to server");
@@ -13652,6 +13686,7 @@
       }
       activeGame = null;
     }
+    sessionStorage.removeItem("activeGameMode");
     cleanup();
     document.getElementById("exit-confirm-modal")?.remove();
     setTimeout(() => {
@@ -13679,16 +13714,18 @@
     isNavigationBlocked = false;
   }
   function render7() {
-    const state = window.history.state;
+    let gameMode = window.history.state?.gameMode;
+    if (!gameMode)
+      gameMode = sessionStorage.getItem("activeGameMode");
     let html = "";
-    if (state && state.gameMode === "remote") {
+    if (gameMode === "remote") {
       html = RemoteGame_default;
-    } else if (state && state.gameMode === "tournament") {
+    } else if (gameMode === "tournament") {
       html = TournamentPage_default;
     } else {
       html = LocalGame_default;
     }
-    if (state && state.gameMode === "remote") {
+    if (gameMode === "remote") {
       html = html.replace(/\{\{remotePage\.title\}\}/g, i18n_default.t("remotePage.title"));
       html = html.replace(/\{\{remotePage\.p1\}\}/g, i18n_default.t("remotePage.p1"));
       html = html.replace(/\{\{remotePage\.p2\}\}/g, i18n_default.t("remotePage.p2"));
@@ -13712,7 +13749,7 @@
       html = html.replace(/\{\{remotePage\.chat\.info\}\}/g, i18n_default.t("remotePage.chat.info"));
       html = html.replace(/\{\{remotePage\.chat\.choose_bg\}\}/g, i18n_default.t("remotePage.chat.choose_bg"));
       html = html.replace(/\{\{remotePage\.chat\.default_bg\}\}/g, i18n_default.t("remotePage.chat.default_bg"));
-    } else if (state && state.gameMode === "tournament") {
+    } else if (gameMode === "tournament") {
       html = html.replace(/\{\{tournamentPage\.title\}\}/g, i18n_default.t("tournamentPage.title"));
       html = html.replace(/\{\{tournamentPage\.p1\}\}/g, i18n_default.t("tournamentPage.p1"));
       html = html.replace(/\{\{tournamentPage\.p2\}\}/g, i18n_default.t("tournamentPage.p2"));
@@ -13784,6 +13821,7 @@
     return html;
   }
   function initGamePage(mode) {
+    sessionStorage.setItem("activeGameMode", mode);
     const currentTheme = localStorage.getItem("userTheme") || "basic";
     applyTheme(currentTheme);
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -28764,6 +28802,10 @@
       afterRender: () => {
         const state = window.history.state;
         const mode = state && state.gameMode ? state.gameMode : "local";
+        if (mode === "remote")
+          sessionStorage.setItem("activeGameMode", "remote");
+        else if (mode === "local")
+          sessionStorage.setItem("activeGameMode", "local");
         initGamePage(mode);
       }
     },
