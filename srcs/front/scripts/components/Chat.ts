@@ -16,7 +16,6 @@ export class Chat {
     private currentFriendshipId: number | null = null;
     private currentFriendId: number | null = null;
     private shakeTimeout: number | undefined;
-    private unreadChannels: Set<string> = new Set();
 
     constructor() {
         this.messagesContainer = document.getElementById('chat-messages');
@@ -24,8 +23,7 @@ export class Chat {
         this.wizzContainer = document.getElementById('wizz-container');
 
         // Bloque la saisie des message à 5000 chars
-        if (this.messageInput)
-        {
+        if (this.messageInput) {
             this.messageInput.maxLength = 5000;
         }
     }
@@ -55,48 +53,16 @@ export class Chat {
     
 
     public joinChannel(channelKey: string, friendshipId?: number, friendId?: number) {
-        if (this.currentChannel && this.currentChannel !==channelKey) {
-            if (this.chatSocket)
-            {
-                console.log(`Leaving channel: ${this.currentChannel}`);
-                this.chatSocket.emit("leaveChannel", this.currentChannel);
-            }
-        }
-        
         this.currentChannel = channelKey;
-        this.currentFriendshipId = friendshipId || null;
-        this.currentFriendId = friendId || null;
+		this.currentFriendshipId = friendshipId || null;
+		this.currentFriendId = friendId || null;
 
-        if (this.chatSocket) {
-            this.chatSocket.emit("joinChannel", channelKey);
-        }
-        if (this.messagesContainer) {
-            this.messagesContainer.innerHTML = '';
-        }
-
-        if (friendId) {
-            const badge = document.getElementById(`badge-${friendId}`);
-            if (badge) {
-                badge.classList.add('hidden');
-                badge.innerText = '0';
-                console.log(`[Chat] Cleared badge for friend ${friendId}`);
-            }
-        }
-
-        if (this.unreadChannels.has(channelKey)) {
-            this.unreadChannels.delete(channelKey);
-
-            const friendElement = document.getElementById(`friend-item-${channelKey}`);
-            if (friendElement) {
-                const notifIcon = friendElement.querySelector('.status-icon') as HTMLImageElement;
-                // Remettre l'icône de statut par défaut (il faudra passer le vrai statut ici idéalement)
-                if (notifIcon) notifIcon.src = '/assets/basic/status_online_small.png'; 
-                friendElement.classList.remove('font-bold', 'text-white');
-            }
-        }
-        if (this.chatSocket) {
-            this.chatSocket.emit("markRead", channelKey)
-        }
+		if (this.chatSocket) {
+			this.chatSocket.emit("joinChannel", channelKey);
+		}
+		if (this.messagesContainer) {
+			this.messagesContainer.innerHTML = '';
+		}
     }
 
     // ---------------------------------------------------
@@ -110,18 +76,7 @@ export class Chat {
         });
 
         this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string, sender_id: number }) => {
-            if (data.channelKey === this.currentChannel) {
                 this.addMessage(data.msg_content, data.sender_alias);
-                this.chatSocket.emit("markRead", data.channelKey);
-            } else {
-                const myId = Number(localStorage.getItem('userId') || sessionStorage.getItem('userId'));
-                const ids = data.channelKey.split('-').map(Number);
-                const friendId = ids.find(id => id !== myId);
-                
-                if (friendId) {
-                    this.handleUnreadMessage(friendId);
-                }
-            }
         });
 
         this.chatSocket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
@@ -186,18 +141,6 @@ export class Chat {
 
 
     //================================================
-    //============= READ/UNREAD MESSAGES =============
-    //================================================
-
-    private handleUnreadMessage(friendId: number | string) {
-        const badge = document.getElementById(`badge-${friendId}`);
-        if (badge) {
-            badge.classList.remove('hidden');
-        }
-    }
-
-
-    //================================================
     //=============== INPUT MANAGEMENT ===============
     //================================================
 
@@ -211,8 +154,7 @@ export class Chat {
                 
                 const msg_content = this.messageInput.value;
 
-                if (msg_content.length > 5000)
-                {
+                if (msg_content.length > 5000) {
                     this.addSystemMessage(i18next.t('chatComponent.error_message_too_long'));
                     return ;
                 }

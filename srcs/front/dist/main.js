@@ -8566,89 +8566,36 @@
   var FriendList = class {
     constructor() {
       this.notificationInterval = null;
-      this.unreadCheckInterval = null;
       this.container = document.getElementById("contacts-list");
       this.userId = localStorage.getItem("userId");
     }
-    async init() {
-      console.log("[FriendList] Initializing...");
+    init() {
       SocketService_default.getInstance().connectChat();
       SocketService_default.getInstance().connectGame();
-      const loadFriendsPromise = this.loadFriends();
-      const registerPromise = this.registerSocketUser();
-      await Promise.all([loadFriendsPromise, registerPromise]);
-      this.listenToUpdates();
-      await this.loadUnreadMessages();
+      this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
       this.checkNotifications();
+      this.listenToUpdates();
       this.setupBlockListener();
+      this.registerSocketUser();
       if (this.notificationInterval) {
         clearInterval(this.notificationInterval);
       }
       this.notificationInterval = setInterval(() => this.checkNotifications(), 3e4);
-      if (this.unreadCheckInterval) {
-        clearInterval(this.unreadCheckInterval);
-      }
-      this.unreadCheckInterval = setInterval(() => {
-        console.log("[FriendList] \u{1F504} Checking for unread messages...");
-        this.loadUnreadMessages();
-      }, 1e4);
-      window.addEventListener("notificationUpdate", () => {
-        console.log("Friend received notification");
-        this.checkNotifications();
-      });
     }
-    // AJOUT
     destroy() {
-      if (this.unreadCheckInterval) {
-        clearInterval(this.unreadCheckInterval);
-        this.unreadCheckInterval = null;
-      }
       if (this.notificationInterval) {
         clearInterval(this.notificationInterval);
         this.notificationInterval = null;
       }
-      const chatSocket = SocketService_default.getInstance().getChatSocket();
-      if (chatSocket) {
-        chatSocket.off("chatMessage");
-        chatSocket.off("unreadNotification");
-        chatSocket.off("friendStatusUpdate");
-        chatSocket.off("unreadStatus");
-      }
     }
     registerSocketUser() {
-      return new Promise((resolve2, reject) => {
-        const socketService = SocketService_default.getInstance();
-        const chatSocket = socketService.getChatSocket();
-        const userId = this.userId;
-        if (!userId) {
-          console.error("[FriendList] No userId found");
-          return reject("No userId");
-        }
-        if (!chatSocket) {
-          console.error("[FriendList] No chat socket available");
-          return reject("No chat socket");
-        }
-        const registerChat = () => {
-          console.log(`[FriendList] \u2705 Registering user ${userId} on Chat Socket`);
-          chatSocket.emit("registerUser", Number(userId));
-          chatSocket.once("userRegistered", () => {
-            console.log(`[FriendList] \u2705 User ${userId} successfully registered`);
-            resolve2();
-          });
-          setTimeout(() => {
-            console.warn("[FriendList] \u26A0\uFE0F User registration timeout");
-            resolve2();
-          }, 1e3);
-        };
-        if (chatSocket.connected) {
-          registerChat();
-        } else {
-          console.log("[FriendList] \u23F3 Waiting for socket connection...");
-          chatSocket.once("connect", registerChat);
-        }
-      });
+      const gameSocket = SocketService_default.getInstance().getGameSocket();
+      const userId = this.userId;
+      if (gameSocket && gameSocket.connected) {
+        gameSocket.emit("registerGameSocket", userId);
+      }
     }
     async loadFriends() {
       const contactsList = this.container;
@@ -8666,7 +8613,9 @@
         friendList.forEach((friendship) => {
           const user = friendship.user;
           const friend = friendship.friend;
-          if (!user || !friend) return;
+          if (!user || !friend) {
+            return;
+          }
           const currentUserId = Number(this.userId);
           const selectedFriend = user.id === currentUserId ? friend : user;
           let rawStatus = selectedFriend.status || "offline";
@@ -8702,7 +8651,9 @@
                 `;
           contactsList.appendChild(friendItem);
           friendItem.addEventListener("click", (e) => {
-            if (e.target.closest(".invite-btn")) return;
+            if (e.target.closest(".invite-btn")) {
+              return;
+            }
             this.clearNotifications(selectedFriend.id);
             const event = new CustomEvent("friendSelected", {
               detail: { friend: selectedFriend, friendshipId: friendship.id }
@@ -8725,15 +8676,6 @@
       if (badge) {
         badge.classList.add("hidden");
         badge.innerText = "0";
-      }
-    }
-    handleMessageNotification(senderId) {
-      console.log(`[FriendList] \u{1F534} Displaying badge for user ${senderId}`);
-      const badge = document.getElementById(`badge-${senderId}`);
-      if (badge) {
-        badge.classList.remove("hidden");
-      } else {
-        console.warn(`[FriendList] Badge element badge-${senderId} not found in DOM`);
       }
     }
     // AJOUT: Fonction pour envoyer une invitation depuis la liste
@@ -8759,22 +8701,6 @@
       if (!chatSocket) {
         return;
       }
-      chatSocket.off("unreadNotification");
-      chatSocket.on("unreadNotification", (data) => {
-        console.log(`[FriendList] \u{1F514} Unread notification from user ${data.senderId}`);
-        const badge = document.getElementById(`badge-${data.senderId}`);
-        if (badge) {
-          if (badge.classList.contains("hidden")) {
-            badge.classList.remove("hidden");
-            badge.innerText = "1";
-          } else {
-            const currentCount = parseInt(badge.innerText) || 0;
-            badge.innerText = (currentCount + 1).toString();
-          }
-        } else {
-          console.warn(`[FriendList] \u26A0\uFE0F Badge badge-${data.senderId} not found in DOM`);
-        }
-      });
       chatSocket.on("friendStatusUpdate", (data) => {
         console.log(`[FriendList] Status update for ${data.username}: ${data.status}`);
         this.updateFriendUI(data.username, data.status);
@@ -8798,7 +8724,6 @@
         return;
       }
       const attachGameListeners = () => {
-        console.log(`[CLIENT] Ma GameSocket ID est ${gameSocket.id}`);
         gameSocket.emit("registerGameSocket");
         gameSocket.off("receiveGameInvite");
         gameSocket.on("receiveGameInvite", (data) => {
@@ -8809,13 +8734,11 @@
       if (gameSocket.connected) {
         attachGameListeners();
       } else {
-        console.log("\u23F3 [CLIENT] GameSocket en cours de connexion...");
         gameSocket.once("connect", () => {
           attachGameListeners();
         });
       }
     }
-    ///// pour la notification de l'invitation
     showGameInviteNotification(senderId, senderName) {
       console.log("showGameInvite");
       const notifIcon = document.getElementById("notification-icon");
@@ -8842,9 +8765,7 @@
           toast.remove();
           return;
         }
-        console.log("Accepting game invite from", senderName);
         gameSocket.once("matchFound", (data) => {
-          console.log("\u2705 Match found from invitation:", data);
           sessionStorage.setItem("pendingMatch", JSON.stringify(data));
           window.history.pushState({ gameMode: "remote" }, "", "/game");
           const event = new PopStateEvent("popstate");
@@ -9001,102 +8922,69 @@
       const notifList = document.getElementById("notification-list");
       if (!userId || !notifList) return;
       try {
-        const friendsRes = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
-        let pendingList = [];
-        if (friendsRes.ok) {
-          const data = await friendsRes.json();
-          pendingList = data.data || [];
-        }
+        const response = await fetchWithAuth(`/api/user/${userId}/friendships/pendings`);
+        if (!response.ok) throw new Error("Failed to fetch pendings");
+        const requests = await response.json();
+        const pendingList = requests.data;
         const notifIcon = document.getElementById("notification-icon");
-        const totalNotifs = pendingList.length;
-        if (totalNotifs > 0) {
+        if (pendingList.length > 0) {
           if (notifIcon) notifIcon.src = "/assets/basic/notification.png";
         } else {
           if (notifIcon) notifIcon.src = "/assets/basic/no_notification.png";
         }
         notifList.innerHTML = "";
         if (pendingList.length === 0) {
-          notifList.innerHTML = `<div class="p-4 text-center text-xs text-gray-500">${i18n_default.t("friendList.no_notifications")}</div>`;
-        } else {
-          pendingList.forEach((req) => {
-            const item = document.createElement("div");
-            item.dataset.friendshipId = req.id.toString();
-            item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
-            const reqMessage = i18n_default.t("friendList.wants_to_be_friend", { name: req.user?.alias });
-            const t_accept = i18n_default.t("friendList.actions.accept");
-            const t_decline = i18n_default.t("friendList.actions.decline");
-            const t_block = i18n_default.t("friendList.actions.block");
-            item.innerHTML = `
-                        <div class="relative w-8 h-8 flex-shrink-0 mr-4">
-                            <img src="/assets/basic/logo.png" class="w-full h-full object-cover rounded" alt="avatar">
-                        </div>
-                        <div class="flex-1 min-w-0 pr-4">
-                            <p class="text-sm text-gray-800">${reqMessage}</p>
-                        </div>
-                        <div class="flex gap-2 flex-shrink-0">
-                            <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="${t_accept}">
-                                <span class="text-green-600 font-bold text-sm">\u2713</span>
-                            </button>
-                            <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="${t_decline}">
-                                <span class="text-red-600 font-bold text-sm">\u2715</span>
-                            </button>
-                            <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="${t_block}">
-                                <span class="text-gray-600 text-xs">\u{1F6AB}</span>
-                            </button>
-                        </div>
-                    `;
-            const buttonAccept = item.querySelector(".btn-accept");
-            const buttonReject = item.querySelector(".btn-reject");
-            const buttonBlock = item.querySelector(".btn-block");
-            if (req.user && req.user.id) {
-              buttonAccept?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.handleRequest(req.user.id, "validated", item);
-              });
-              buttonReject?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.handleRequest(req.user.id, "rejected", item);
-              });
-              buttonBlock?.addEventListener("click", (e) => {
-                e.stopPropagation();
-                this.handleRequest(req.user.id, "blocked", item);
-              });
-            }
-            notifList.appendChild(item);
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-      }
-    }
-    async loadUnreadMessages() {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        console.warn("[FriendList] No userId for loading unread messages");
-        return;
-      }
-      try {
-        console.log("[FriendList] \u{1F4E5} Fetching unread messages...");
-        const response = await fetchWithAuth(`/api/chat/unread`);
-        if (!response.ok) {
-          console.error(`[FriendList] \u274C Failed to fetch unread messages: ${response.status}`);
+          notifList.innerHTML = '<div class="p-4 text-center text-xs text-gray-500">No new notifications</div>';
           return;
         }
-        const data = await response.json();
-        const unreadMessages = data.data || [];
-        console.log(`[FriendList] \u2705 Loaded ${unreadMessages.length} unread conversations`);
-        unreadMessages.forEach((msg) => {
-          const badge = document.getElementById(`badge-${msg.sender_id}`);
-          if (badge) {
-            badge.classList.remove("hidden");
-            badge.innerText = msg.unread_count.toString();
-            console.log(`[FriendList] \u{1F534} Badge set for user ${msg.sender_id}: ${msg.unread_count}`);
-          } else {
-            console.warn(`[FriendList] \u26A0\uFE0F Badge badge-${msg.sender_id} not found in DOM`);
+        pendingList.forEach((req) => {
+          const item = document.createElement("div");
+          item.dataset.friendshipId = req.id.toString();
+          item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+          item.innerHTML = `
+                    <div class="relative w-8 h-8 flex-shrink-0 mr-4">
+                        <img src="/assets/basic/logo.png" 
+                            class="w-full h-full object-cover rounded"
+                            alt="avatar">
+                    </div>
+                    <div class="flex-1 min-w-0 pr-4">
+                        <p class="text-sm text-gray-800">
+                            <span class="font-semibold">${req.user?.alias}</span> wants to be your friend
+                        </p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button class="btn-accept w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-green-100 hover:border-green-500 transition-colors" title="Accept">
+                            <span class="text-green-600 font-bold text-sm">\u2713</span>
+                        </button>
+                        <button class="btn-reject w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-red-100 hover:border-red-500 transition-colors" title="Decline">
+                            <span class="text-red-600 font-bold text-sm">\u2715</span>
+                        </button>
+                        <button class="btn-block w-7 h-7 flex items-center justify-center bg-white border border-gray-400 rounded hover:bg-gray-200 hover:border-gray-600 transition-colors" title="Block">
+                            <span class="text-gray-600 text-xs">\u{1F6AB}</span>
+                        </button>
+                    </div>
+                `;
+          const buttonAccept = item.querySelector(".btn-accept");
+          const buttonReject = item.querySelector(".btn-reject");
+          const buttonBlock = item.querySelector(".btn-block");
+          if (req.user && req.user.id) {
+            buttonAccept?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "validated", item);
+            });
+            buttonReject?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "rejected", item);
+            });
+            buttonBlock?.addEventListener("click", (e) => {
+              e.stopPropagation();
+              this.handleRequest(req.user.id, "blocked", item);
+            });
           }
+          notifList.appendChild(item);
         });
       } catch (error) {
-        console.error("[FriendList] \u274C Error loading unread messages:", error);
+        console.error("Error fetching notifications:", error);
       }
     }
     async handleRequest(requesterId, action, itemDiv) {
@@ -9469,7 +9357,6 @@
       this.currentChannel = "general";
       this.currentFriendshipId = null;
       this.currentFriendId = null;
-      this.unreadChannels = /* @__PURE__ */ new Set();
       this.messagesContainer = document.getElementById("chat-messages");
       this.messageInput = document.getElementById("chat-input");
       this.wizzContainer = document.getElementById("wizz-container");
@@ -9496,12 +9383,6 @@
       this.setupTools();
     }
     joinChannel(channelKey, friendshipId, friendId) {
-      if (this.currentChannel && this.currentChannel !== channelKey) {
-        if (this.chatSocket) {
-          console.log(`Leaving channel: ${this.currentChannel}`);
-          this.chatSocket.emit("leaveChannel", this.currentChannel);
-        }
-      }
       this.currentChannel = channelKey;
       this.currentFriendshipId = friendshipId || null;
       this.currentFriendId = friendId || null;
@@ -9510,26 +9391,6 @@
       }
       if (this.messagesContainer) {
         this.messagesContainer.innerHTML = "";
-      }
-      if (friendId) {
-        const badge = document.getElementById(`badge-${friendId}`);
-        if (badge) {
-          badge.classList.add("hidden");
-          badge.innerText = "0";
-          console.log(`[Chat] Cleared badge for friend ${friendId}`);
-        }
-      }
-      if (this.unreadChannels.has(channelKey)) {
-        this.unreadChannels.delete(channelKey);
-        const friendElement = document.getElementById(`friend-item-${channelKey}`);
-        if (friendElement) {
-          const notifIcon = friendElement.querySelector(".status-icon");
-          if (notifIcon) notifIcon.src = "/assets/basic/status_online_small.png";
-          friendElement.classList.remove("font-bold", "text-white");
-        }
-      }
-      if (this.chatSocket) {
-        this.chatSocket.emit("markRead", channelKey);
       }
     }
     // ---------------------------------------------------
@@ -9540,17 +9401,7 @@
         this.addMessage(i18n_default.t("chatComponent.connected"), i18n_default.t("chatComponent.system"));
       });
       this.chatSocket.on("chatMessage", (data) => {
-        if (data.channelKey === this.currentChannel) {
-          this.addMessage(data.msg_content, data.sender_alias);
-          this.chatSocket.emit("markRead", data.channelKey);
-        } else {
-          const myId = Number(localStorage.getItem("userId") || sessionStorage.getItem("userId"));
-          const ids = data.channelKey.split("-").map(Number);
-          const friendId = ids.find((id) => id !== myId);
-          if (friendId) {
-            this.handleUnreadMessage(friendId);
-          }
-        }
+        this.addMessage(data.msg_content, data.sender_alias);
       });
       this.chatSocket.on("msg_history", (data) => {
         if (this.messagesContainer) {
@@ -9598,15 +9449,6 @@
       this.chatSocket.on("disconnected", () => {
         this.addMessage(i18n_default.t("chatComponent.disconnected"), i18n_default.t("chatComponent.system"));
       });
-    }
-    //================================================
-    //============= READ/UNREAD MESSAGES =============
-    //================================================
-    handleUnreadMessage(friendId) {
-      const badge = document.getElementById(`badge-${friendId}`);
-      if (badge) {
-        badge.classList.remove("hidden");
-      }
     }
     //================================================
     //=============== INPUT MANAGEMENT ===============
@@ -11736,7 +11578,7 @@
   }
 
   // scripts/pages/LocalGame.html
-  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-auto flex flex-col">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">\n        \n        <div class="flex gap-6 min-h-0 flex-1" style="min-width: 1460px; min-height: 600px;">\n\n            <div class="flex flex-col gap-4">\n                \n                <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">{{localPage.title}}</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{localPage.p1}}</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{localPage.p2}}</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">{{localPage.start_game}}</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">{{localPage.game_instr}}</p>\n                                        <p>{{localPage.ws}}</p>\n                                        <p>{{localPage.up_down}}</p>\n                                        <p>{{localPage.space_bar}}</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">{{localPage.opp_name}}</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="{{localPage.placeholder_opp}}" required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">{{localPage.err_message}}</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">{{localPage.choose_ball}}</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{localPage.select_ball}}</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">{{localPage.choose_bg}}</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{localPage.select_bg}}</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        {{localPage.reset_color}}\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            {{localPage.play}}\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{localPage.countdown_title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{localPage.summary_modal.title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{localPage.summary_modal.congrat}}</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{localPage.summary_modal.name}}</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{localPage.summary_modal.back_menu}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{localPage.chat.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n                            \n                        <div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n                            <p>{{localPage.chat.info}}</p>\n                        </div>\n\n                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n                        <div class="flex flex-col">\n                            <input id="chat-input" placeholder="{{localPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n                        </div>\n                    </div>\n                </div> \n            </div>\n        </div>\n    </div>\n</div>';
+  var LocalGame_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-auto flex flex-col">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2 items-center" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">\n        \n        <div class="flex flex-row justify-center gap-6 min-h-0 flex-1 w-full" style="max-width: 1460px; min-height: 600px;">\n\n            <div class="flex flex-col gap-4 flex-1 min-w-0" style="max-width: 1000px;">\n                \n                <div class="window flex flex-col w-full" style="height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">{{localPage.title}}</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{localPage.p1}}</span>\n                            <span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{localPage.p2}}</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n\n                            <div class="window w-[600px] shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">{{localPage.start_game}}</div>\n                                    <div class="title-bar-controls">\n                                        <button aria-label="Close"></button>\n                                    </div>\n                                </div>\n\n                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">{{localPage.game_instr}}</p>\n                                        <p>{{localPage.ws}}</p>\n                                        <p>{{localPage.up_down}}</p>\n                                        <p>{{localPage.space_bar}}</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label for="opponent-name" class="font-bold">{{localPage.opp_name}}</label>\n                                        <input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="{{localPage.placeholder_opp}}" required>\n                                        <span id="error-message" class="text-red-500 text-xs hidden">{{localPage.err_message}}</span>\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">\n                                        <div class="flex flex-row items-center gap-2 mb-3 relative">\n                                            <label class="text-sm font-semibold">{{localPage.choose_ball}}</label>\n                                            \n                                            <div class="relative">\n                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n\n                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{localPage.select_ball}}</p>\n                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">\n                                                        </div>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">\n                                        </div>\n\n                                        <div class="flex flex-row gap-2">\n                                            <label class="text-sm font-semibold">{{localPage.choose_bg}}</label>\n                                            \n                                            <div class="relative">\n                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">\n                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n\n                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{localPage.select_bg}}</p>\n                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        {{localPage.reset_color}}\n                                                    </button>\n                                                </div>\n                                            </div>\n\n                                            <input type="hidden" id="bg-value" value="#E8F4F8">\n                                        </div>\n                                    </fieldset>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-game-btn"\n                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">\n                                            {{localPage.play}}\n                                        </button>\n                                    </div>\n\n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{localPage.countdown_title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                \n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{localPage.summary_modal.title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{localPage.summary_modal.congrat}}</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{localPage.summary_modal.name}}</div>                                \n                                    <button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{localPage.summary_modal.back_menu}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                        \n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[400px] shrink-0" style="height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{localPage.chat.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n                            \n                        <div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n                            <p>{{localPage.chat.info}}</p>\n                        </div>\n\n                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n\n                        <div class="flex flex-col">\n                            <input id="chat-input" placeholder="{{localPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n                        </div>\n                    </div>\n                </div> \n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/pages/RemoteGame.html
   var RemoteGame_default = `<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-auto flex flex-col">
@@ -11745,132 +11587,134 @@
          style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
     </div>
 
-    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">
+    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2 items-center" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">
         
-        <div class="flex gap-6 min-h-0 flex-1" style="min-width: 1460px; min-height: 600px;">
+        <div class="flex flex-row justify-center gap-6 min-h-0 flex-1 w-full" style="max-width: 1460px; min-height: 600px;">
 
-            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">
-                <div class="title-bar">
-                    <div class="title-bar-text">{{remotePage.title}}</div>
-                    <div class="title-bar-controls">
-                        <button aria-label="Minimize"></button>
-                        <button aria-label="Maximize"></button>
-                        <button aria-label="Close"></button>
-                    </div>
-                </div>
-
-                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
-    
-                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{remotePage.p1}}</span>
-                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{remotePage.p2}}</span>
+            <div class="flex flex-col flex-1 min-w-0" style="max-width: 1000px;">
+                <div class="window flex flex-col w-full" style="height: 600px;">
+                    <div class="title-bar">
+                        <div class="title-bar-text">{{remotePage.title}}</div>
+                        <div class="title-bar-controls">
+                            <button aria-label="Minimize"></button>
+                            <button aria-label="Maximize"></button>
+                            <button aria-label="Close"></button>
+                        </div>
                     </div>
 
-                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
-                    
-                    <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                        <div class="window w-[600px] shadow-xl">
-                            <div class="title-bar">
-                                <div class="title-bar-text">{{remotePage.start_game}}</div>
-                                <div class="title-bar-controls">
-                                    <button aria-label="Close"></button>
+                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
+        
+                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
+                            <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{remotePage.p1}}</span>
+                            <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
+                            <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{remotePage.p2}}</span>
+                        </div>
+
+                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
+                        
+                        <div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                            <div class="window w-[600px] shadow-xl">
+                                <div class="title-bar">
+                                    <div class="title-bar-text">{{remotePage.start_game}}</div>
+                                    <div class="title-bar-controls">
+                                        <button aria-label="Close"></button>
+                                    </div>
+                                </div>
+
+                                <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
+                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
+                                        <p class="font-semibold mb-2">{{remotePage.game_instr}}</p>
+                                        <p>{{remotePage.ws}}</p>
+                                        <p>{{remotePage.up_down}}</p>
+                                        <p>{{remotePage.space_bar}}</p>
+                                    </div>
+                                    <fieldset class="border-2 border-gray-300 p-2 mt-2">
+                                        <div class="flex flex-row items-center gap-2 mb-3 relative">
+                                            <label class="text-sm font-semibold">{{remotePage.choose_ball}}</label>
+                                            
+                                            <div class="relative">
+                                                <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                                    <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
+                                                </button>
+
+                                                <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
+                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{remotePage.select_ball}}</p>
+                                                    <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
+                                                        </div>
+                                                </div>
+                                            </div>
+
+                                            <input type="hidden" id="ball-value" value="/assets/game/smile.png">
+                                        </div>
+
+                                        <div class="flex flex-row gap-2">
+                                            <label class="text-sm font-semibold">{{remotePage.choose_bg}}</label>
+                                            
+                                            <div class="relative">
+                                                <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
+                                                    <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
+                                                </button>
+
+                                                <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
+                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{remotePage.select_bg}}</p>
+                                                    <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                                                    </div>
+                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
+                                                        {{remotePage.reset_color}}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <input type="hidden" id="bg-value" value="#E8F4F8">
+                                        </div>
+                                    </fieldset>
+
+                                    <div class="flex justify-center mt-4">
+                                        <button id="start-game-btn"
+                                                class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
+                                            {{remotePage.play}}
+                                        </button>
+                                    </div>
+                                    <div class="text-center text-xs text-gray-500" id="queue-status"></div>
+
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
-                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
-                                    <p class="font-semibold mb-2">{{remotePage.game_instr}}</p>
-                                    <p>{{remotePage.ws}}</p>
-                                    <p>{{remotePage.up_down}}</p>
-                                    <p>{{remotePage.space_bar}}</p>
+                        <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                                <div class="title-bar bg-yellow-500">
+                                    <div class="title-bar-text text-black">{{remotePage.countdown_title}}</div>
                                 </div>
-                                <fieldset class="border-2 border-gray-300 p-2 mt-2">
-                                    <div class="flex flex-row items-center gap-2 mb-3 relative">
-                                        <label class="text-sm font-semibold">{{remotePage.choose_ball}}</label>
-                                        
-                                        <div class="relative">
-                                            <button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
-                                                <img id="selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
-                                            </button>
+                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                    <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
+                                </div>
+                            </div>
+                        </div>
 
-                                            <div id="ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 220px; padding: 8px;">
-                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{remotePage.select_ball}}</p>
-                                                <div id="ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;">
-                                                    </div>
-                                            </div>
-                                        </div>
-
-                                        <input type="hidden" id="ball-value" value="/assets/game/smile.png">
-                                    </div>
-
-                                    <div class="flex flex-row gap-2">
-                                        <label class="text-sm font-semibold">{{remotePage.choose_bg}}</label>
-                                        
-                                        <div class="relative">
-                                            <button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
-                                                <div id="selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
-                                            </button>
-
-                                            <div id="bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
-                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{remotePage.select_bg}}</p>
-                                                <div id="bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                                                </div>
-                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
-                                                    {{remotePage.reset_color}}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <input type="hidden" id="bg-value" value="#E8F4F8">
-                                    </div>
-                                </fieldset>
-
-                                <div class="flex justify-center mt-4">
-                                    <button id="start-game-btn"
-                                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
-                                        {{remotePage.play}}
+                        <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+                                <div class="title-bar bg-yellow-500">
+                                    <div class="title-bar-text text-black">{{remotePage.summary_modal.title}}</div>
+                                </div>
+                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{remotePage.summary_modal.congrat}}</h1>
+                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{remotePage.summary_modal.name}}</div>                                
+                                    <button id="quit-remote-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+                                        {{remotePage.summary_modal.back_menu}}
                                     </button>
                                 </div>
-                                <div class="text-center text-xs text-gray-500" id="queue-status"></div>
-
                             </div>
                         </div>
-                    </div>
 
-                    <div id="countdown-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
-                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-                            <div class="title-bar bg-yellow-500">
-                                <div class="title-bar-text text-black">{{remotePage.countdown_title}}</div>
-                            </div>
-                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-                                <div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
-                            </div>
-                        </div>
                     </div>
-
-                    <div id="local-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
-                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-                            <div class="title-bar bg-yellow-500">
-                                <div class="title-bar-text text-black">{{remotePage.summary_modal.title}}</div>
-                            </div>
-                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{remotePage.summary_modal.congrat}}</h1>
-                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{remotePage.summary_modal.name}}</div>                                
-                                <button id="quit-remote-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                    {{remotePage.summary_modal.back_menu}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
-            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">
+            <div class="window flex flex-col w-[400px] shrink-0" style="height: 600px;">
                 <div class="title-bar">
                     <div class="title-bar-text">{{remotePage.chat.title}}</div>
                     <div class="title-bar-controls">
@@ -11973,7 +11817,7 @@
 </div>`;
 
   // scripts/pages/TournamentPage.html
-  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-auto flex flex-col">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">\n        \n        <div class="flex gap-6 min-h-0 flex-1" style="min-width: 1460px; min-height: 600px;">\n\n            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{tournamentPage.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n    \n                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>\n                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>\n                    </div>\n\n                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                    \n\n                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                        <div class="window w-[600px] bg-white shadow-xl">\n                            <div class="title-bar">\n                                <div class="title-bar-text">{{tournamentPage.setup_modal.title_modal}}</div>\n                            </div>\n                            <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                    <p class="font-semibold mb-2">{{tournamentPage.setup_modal.game_instr}}</p>\n                                    <p>{{tournamentPage.setup_modal.ws}}</p>\n                                    <p>{{tournamentPage.setup_modal.up_down}}</p>\n                                    <p>{{tournamentPage.setup_modal.space_bar}}</p>\n                                </div>\n                                <div class="flex flex-col gap-1">\n                                    <label class="font-bold text-sm">{{tournamentPage.setup_modal.tournament_name}}</label>\n                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">\n                                </div>\n\n                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>\n                                    <div class="grid grid-cols-2 gap-4">\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p1}}</label>\n                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p2}}</label>\n                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p2}}">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p3}}</label>\n                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p3}}">\n                                        </div>\n                                        <div>\n                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p4}}</label>\n                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p4}}">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                    <legend class="text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>\n                                    <div class="flex flex-row items-center gap-8 justify-center">\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose__ball}}</label>\n                                            <div class="relative">\n                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                </button>\n                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                </div>\n                                            </div>\n                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                        </div>\n                                        <div class="flex flex-row items-center gap-2 relative">\n                                            <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose_bg}}</label>\n                                            <div class="relative">\n                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                </button>\n                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{tournamentPage.setup_modal.select_bg}}</p>\n                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                </div>\n                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                    {{tournamentPage.setup_modal.reset_color}}\n                                                </button>\n                                            </div>\n                                            </div>\n                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                        </div>\n                                    </div>\n                                </fieldset>\n\n                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                <div class="flex justify-center mt-4">\n                                    <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{tournamentPage.setup_modal.play}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                        <div class="window bg-white shadow-2xl" style="width: 500px;">\n                            <div class="title-bar">\n                                <div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>\n                            </div>\n\n                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                    {{tournamentPage.tournament_bracket_modal.heading}}\n                                </h2>\n\n                                <div class="flex flex-col gap-6 w-full items-center">\n\n                                    <div class="flex flex-row justify-between w-full px-8">\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                {{tournamentPage.tournament_bracket_modal.semi_final_1}}\n                                            </span>\n                                            <span id="bracket-sf1" class="match-display"></span>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                {{tournamentPage.tournament_bracket_modal.semi_final_2}}\n                                            </span>\n                                            <span id="bracket-sf2" class="match-display"></span>\n                                        </div>\n                                    </div>\n\n                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                            {{tournamentPage.tournament_bracket_modal.final}}\n                                        </span>\n                                        <span id="bracket-final" class="match-display final-match"></span>\n                                    </div>\n\n                                </div>\n\n                                <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                <p id="bracket-status-msg" class="text-gray-600 italic">\n                                    {{tournamentPage.tournament_bracket_modal.status_ready}}\n                                </p>\n\n                                <button\n                                    id="bracket-continue-btn"\n                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    {{tournamentPage.tournament_bracket_modal.continue_btn}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                            <div class="title-bar bg-blue-800">\n                                <div class="title-bar-text text-white">{{tournamentPage.tournament_next_match_modal.title}}</div>\n                            </div>\n                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.match_title}}</h2>\n                                \n                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">{{tournamentPage.tournament_next_match_modal.player_vs}}</div>\n                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                </div>\n\n                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.start_info}}</p>\n\n                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    {{tournamentPage.tournament_next_match_modal.play_btn}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                            <div class="title-bar bg-yellow-500">\n                                <div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>\n                            </div>\n                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>\n                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                \n                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                    {{tournamentPage.tournament_summary_modal.back_menu}}\n                                </button>\n                            </div>\n                        </div>\n                    </div>\n\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{tournamentPage.chat.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n                        <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n                            <p>{{tournamentPage.chat.info}}</p>\n                        </div>\n                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n                        <div class="flex flex-col">\n                            <input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n                        </div>\n                    </div>\n                </div> \n            </div>\n        </div>\n    </div>\n</div>';
+  var TournamentPage_default = '<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-auto flex flex-col">\n\n    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"\n         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">\n    </div>\n\n    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2 items-center" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">\n        \n        <div class="flex flex-row justify-center gap-6 min-h-0 flex-1 w-full" style="max-width: 1460px; min-height: 600px;">\n\n            <div class="flex flex-col flex-1 min-w-0" style="max-width: 1000px;">\n                <div class="window flex flex-col w-full" style="height: 600px;">\n                    <div class="title-bar">\n                        <div class="title-bar-text">{{tournamentPage.title}}</div>\n                        <div class="title-bar-controls">\n                            <button aria-label="Minimize"></button>\n                            <button aria-label="Maximize"></button>\n                            <button aria-label="Close"></button>\n                        </div>\n                    </div>\n\n                    <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">\n        \n                        <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> \n                            <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>\n                            <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>\n                            <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>\n                        </div>\n\n                        <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>\n                        \n\n                        <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">\n                            <div class="window w-[600px] bg-white shadow-xl">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">{{tournamentPage.setup_modal.title_modal}}</div>\n                                </div>\n                                <div class="window-body flex flex-col gap-4 p-6 bg-white">\n                                    <div class="text-center border-b pb-3" style="padding-bottom: 15px;">\n                                        <p class="font-semibold mb-2">{{tournamentPage.setup_modal.game_instr}}</p>\n                                        <p>{{tournamentPage.setup_modal.ws}}</p>\n                                        <p>{{tournamentPage.setup_modal.up_down}}</p>\n                                        <p>{{tournamentPage.setup_modal.space_bar}}</p>\n                                    </div>\n                                    <div class="flex flex-col gap-1">\n                                        <label class="font-bold text-sm">{{tournamentPage.setup_modal.tournament_name}}</label>\n                                        <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">\n                                    </div>\n\n                                    <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">\n                                        <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>\n                                        <div class="grid grid-cols-2 gap-4">\n                                            <div>\n                                                <label class="text-xs font-bold">{{tournamentPage.setup_modal.p1}}</label>\n                                                <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>\n                                            </div>\n                                            <div>\n                                                <label class="text-xs font-bold">{{tournamentPage.setup_modal.p2}}</label>\n                                                <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p2}}">\n                                            </div>\n                                            <div>\n                                                <label class="text-xs font-bold">{{tournamentPage.setup_modal.p3}}</label>\n                                                <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p3}}">\n                                            </div>\n                                            <div>\n                                                <label class="text-xs font-bold">{{tournamentPage.setup_modal.p4}}</label>\n                                                <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p4}}">\n                                            </div>\n                                        </div>\n                                    </fieldset>\n\n                                    <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">\n                                        <legend class="text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>\n                                        <div class="flex flex-row items-center gap-8 justify-center">\n                                            <div class="flex flex-row items-center gap-2 relative">\n                                                <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose__ball}}</label>\n                                                <div class="relative">\n                                                    <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                        <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">\n                                                    </button>\n                                                    <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">\n                                                        <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>\n                                                    </div>\n                                                </div>\n                                                <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">\n                                            </div>\n                                            <div class="flex flex-row items-center gap-2 relative">\n                                                <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose_bg}}</label>\n                                                <div class="relative">\n                                                    <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">\n                                                        <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>\n                                                    </button>\n                                                    <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">\n                                                    <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{tournamentPage.setup_modal.select_bg}}</p>\n                                                    <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">\n                                                    </div>\n                                                    <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">\n                                                        {{tournamentPage.setup_modal.reset_color}}\n                                                    </button>\n                                                </div>\n                                                </div>\n                                                <input type="hidden" id="tour-bg-value" value="#E8F4F8">\n                                            </div>\n                                        </div>\n                                    </fieldset>\n\n                                    <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>\n\n                                    <div class="flex justify-center mt-4">\n                                        <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                                px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                                transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                            {{tournamentPage.setup_modal.play}}\n                                        </button>\n                                    </div>\n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">\n                            <div class="window bg-white shadow-2xl" style="width: 500px;">\n                                <div class="title-bar">\n                                    <div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>\n                                </div>\n\n                                <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">\n                                    <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">\n                                        {{tournamentPage.tournament_bracket_modal.heading}}\n                                    </h2>\n\n                                    <div class="flex flex-col gap-6 w-full items-center">\n\n                                        <div class="flex flex-row justify-between w-full px-8">\n                                            <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                    {{tournamentPage.tournament_bracket_modal.semi_final_1}}\n                                                </span>\n                                                <span id="bracket-sf1" class="match-display"></span>\n                                            </div>\n\n                                            <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">\n                                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">\n                                                    {{tournamentPage.tournament_bracket_modal.semi_final_2}}\n                                                </span>\n                                                <span id="bracket-sf2" class="match-display"></span>\n                                            </div>\n                                        </div>\n\n                                        <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">\n                                            <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">\n                                                {{tournamentPage.tournament_bracket_modal.final}}\n                                            </span>\n                                            <span id="bracket-final" class="match-display final-match"></span>\n                                        </div>\n\n                                    </div>\n\n                                    <div class="w-full border-t border-gray-300 my-2"></div>\n\n                                    <p id="bracket-status-msg" class="text-gray-600 italic">\n                                        {{tournamentPage.tournament_bracket_modal.status_ready}}\n                                    </p>\n\n                                    <button\n                                        id="bracket-continue-btn"\n                                        class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{tournamentPage.tournament_bracket_modal.continue_btn}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">\n                            <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">\n                                <div class="title-bar bg-blue-800">\n                                    <div class="title-bar-text text-white">{{tournamentPage.tournament_next_match_modal.title}}</div>\n                                </div>\n                                <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">\n                                    <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.match_title}}</h2>\n                                    \n                                    <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">\n                                        <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>\n                                        <div class="text-3xl font-black text-red-600 italic leading-relaxed">{{tournamentPage.tournament_next_match_modal.player_vs}}</div>\n                                        <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>\n                                    </div>\n\n                                    <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.start_info}}</p>\n\n                                    <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{tournamentPage.tournament_next_match_modal.play_btn}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n\n                        <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">\n                            <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">\n                                <div class="title-bar bg-yellow-500">\n                                    <div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>\n                                </div>\n                                <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">\n                                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>\n                                    <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                \n                                    <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm \n                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 \n                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400\n                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">\n                                        {{tournamentPage.tournament_summary_modal.back_menu}}\n                                    </button>\n                                </div>\n                            </div>\n                        </div>\n\n                    </div>\n                </div>\n            </div>\n\n            <div class="window flex flex-col w-[400px] shrink-0" style="height: 600px;">\n                <div class="title-bar">\n                    <div class="title-bar-text">{{tournamentPage.chat.title}}</div>\n                    <div class="title-bar-controls">\n                        <button aria-label="Minimize"></button>\n                        <button aria-label="Maximize"></button>\n                        <button aria-label="Close"></button>\n                    </div>\n                </div>\n\n                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">\n                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">\n                        <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">\n                            <p>{{tournamentPage.chat.info}}</p>\n                        </div>\n                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>\n                        <div class="flex flex-col">\n                            <input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>\n                        </div>\n                    </div>\n                </div> \n            </div>\n        </div>\n    </div>\n</div>';
 
   // scripts/game/Paddle.ts
   var Paddle = class {
