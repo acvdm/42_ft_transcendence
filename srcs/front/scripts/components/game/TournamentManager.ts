@@ -390,7 +390,6 @@ export class TournamentManager {
 
         const scoreBoard = document.getElementById('score-board');
             if (scoreBoard) {
-                console.log("TournamentManager.ts, line 349");
                 scoreBoard.innerText = "0 - 0";
             }
 
@@ -438,7 +437,7 @@ export class TournamentManager {
                         return;
                     }
 
-                    if (activeGame.score.player1 >= 5 || activeGame.score.player2 >= 5) {
+                    if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
                         activeGame.isRunning = false;
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;

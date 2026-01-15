@@ -186,7 +186,6 @@ function confirmExit() {
 
         console.log(`WasRemote = ${wasRemote}, roomId = ${roomId}`);
         if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
-            console.log(`***CLIENT: Tentative d'envoi de leaveGame`);
             SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
             
             const userIdStr = localStorage.getItem('userId');

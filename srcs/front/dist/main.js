@@ -12974,36 +12974,37 @@
             newGame.onGameEnd = async (endData) => {
               document.removeEventListener("keydown", spaceHandler);
               let winnerAlias = i18n_default.t("remoteManager.default_winner");
-              if (endData.winner === "player1") {
-                winnerAlias = this.currentP1Alias;
-              } else if (endData.winner === "player2") {
-                winnerAlias = this.currentP2Alias;
-              }
               const activeGame2 = this.context.getGame();
-              if (activeGame2) {
-                let s1 = activeGame2.score.player1;
-                let s2 = activeGame2.score.player2;
-                if (data.role === "player1" && s1 != 11) {
+              let s1 = activeGame2 ? activeGame2.score.player1 : 0;
+              let s2 = activeGame2 ? activeGame2.score.player2 : 0;
+              const isNormalEndGame = s1 == 11 || s2 == 11;
+              if (isNormalEndGame) {
+                if (s1 > s2)
+                  winnerAlias = this.currentP1Alias;
+                else
+                  winnerAlias = this.currentP2Alias;
+              } else {
+                if (data.role === "player1") {
                   s1 = 11;
                   s2 = 0;
                   winnerAlias = this.currentP1Alias;
-                } else if (data.role === "player2" && s2 != 11) {
+                } else {
                   s1 = 0;
                   s2 = 11;
                   winnerAlias = this.currentP2Alias;
                 }
-                if (data.role === "player1" || data.role === "player2") {
-                  await this.saveRemoteGameToApi(
-                    this.currentP1Alias,
-                    s1,
-                    p1Id,
-                    this.currentP2Alias,
-                    s2,
-                    p2Id,
-                    winnerAlias,
-                    gameStartDate
-                  );
-                }
+              }
+              if (winnerAlias === myAlias) {
+                await this.saveRemoteGameToApi(
+                  this.currentP1Alias,
+                  s1,
+                  p1Id,
+                  this.currentP2Alias,
+                  s2,
+                  p2Id,
+                  winnerAlias,
+                  gameStartDate
+                );
               }
               showVictoryModal(winnerAlias, this.context.chat);
               this.context.setGame(null);
@@ -13385,7 +13386,6 @@
       if (p2Name) p2Name.innerText = p2.alias;
       const scoreBoard = document.getElementById("score-board");
       if (scoreBoard) {
-        console.log("TournamentManager.ts, line 349");
         scoreBoard.innerText = "0 - 0";
       }
       const container = document.getElementById("left");
@@ -13425,7 +13425,7 @@
               clearInterval(checkInterval);
               return;
             }
-            if (activeGame2.score.player1 >= 5 || activeGame2.score.player2 >= 5) {
+            if (activeGame2.score.player1 >= 11 || activeGame2.score.player2 >= 11) {
               activeGame2.isRunning = false;
               clearInterval(checkInterval);
               const winnerAlias = activeGame2.score.player1 > activeGame2.score.player2 ? p1.alias : p2.alias;
@@ -13664,7 +13664,6 @@
       const playerRole = activeGame.playerRole;
       console.log(`WasRemote = ${wasRemote}, roomId = ${roomId}`);
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
-        console.log(`***CLIENT: Tentative d'envoi de leaveGame`);
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
         const userIdStr = localStorage.getItem("userId");
         if (userIdStr && playerRole) {

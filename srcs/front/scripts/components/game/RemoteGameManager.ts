@@ -316,43 +316,47 @@ export class RemoteGameManager {
                         document.removeEventListener('keydown', spaceHandler);
                         // MODIFICATION : Traduction fallback
                         let winnerAlias = i18next.t('remoteManager.default_winner');
-                        
-                        if (endData.winner === 'player1') {
-                            winnerAlias = this.currentP1Alias;
-                        } else if (endData.winner === 'player2') {
-                            winnerAlias = this.currentP2Alias;
-                        }
 
                         const activeGame = this.context.getGame();
+                        let s1 = activeGame ? activeGame.score.player1 : 0;
+                        let s2 = activeGame ? activeGame.score.player2 : 0;
 
-                        if (activeGame) {
-                            let s1 = activeGame.score.player1;
-                            let s2 = activeGame.score.player2;
+                        const isNormalEndGame = (s1 == 11 || s2 == 11);
 
-                            // Cas de forfait
-                            if (data.role === 'player1' && s1 != 11)
+                        if (isNormalEndGame)
+                        {
+                            if (s1 > s2)
+                                winnerAlias = this.currentP1Alias;
+                            
+                            else
+                                winnerAlias = this.currentP2Alias;
+                        }
+                        else
+                        {
+                            if (data.role === 'player1')
                             {
                                 s1 = 11;
                                 s2 = 0;
                                 winnerAlias = this.currentP1Alias;
                             }
-                            else if (data.role === 'player2' && s2 != 11)
+                            else
                             {
                                 s1 = 0;
                                 s2 = 11;
                                 winnerAlias = this.currentP2Alias;
-                            }  
+                            }
+                        }
 
-                            if (data.role === 'player1' || data.role === 'player2') {
+                        if (winnerAlias === myAlias)
+                        {
                                 await this.saveRemoteGameToApi(
                                     this.currentP1Alias, s1, p1Id,
                                     this.currentP2Alias, s2, p2Id,
                                     winnerAlias,
                                     gameStartDate
-                                )
-                            }
+                                )  
                         }
-                        
+
                         showVictoryModal(winnerAlias, this.context.chat);
                         this.context.setGame(null);
                     };
