@@ -71,7 +71,10 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
                 try {
                     const refreshRes = await fetch('/api/auth/token', { 
                         method: 'POST', 
-                        credentials: 'include' 
+                        credentials: 'include',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        } // enlever headers?
                     });
                     if (refreshRes.ok) {
                         const data = await refreshRes.json();

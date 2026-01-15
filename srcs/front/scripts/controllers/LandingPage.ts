@@ -90,6 +90,7 @@ export function initLandingPage() {
 			const response = await fetch('/api/user/guest', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include', // AJOUT INMPORTANT SANS CA LE COOKIE NE SENREGISTRE PAS
 				body: JSON.stringify({})
 			});
 
@@ -107,7 +108,7 @@ export function initLandingPage() {
 				sessionStorage.setItem('userRole', 'guest');
 
 				try {
-                    const userResponse = await fetch(`/api/users/${data.userId}`, {
+                    const userResponse = await fetch(`/api/user/${data.userId}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${data.accessToken}`,

@@ -109,8 +109,10 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 			signed: true
 		});
 
+		console.log('✅ Route credentials/guest atteinte');
 		console.log(`✅ Credentials created & auto-login for user ${body.userId}`);
 		console.log('✅ AccessToken: ', authResponse.accessToken);
+		console.log(`result: `, authResponse);
 
 		// 4. Répondre
 		return reply.status(200).send({

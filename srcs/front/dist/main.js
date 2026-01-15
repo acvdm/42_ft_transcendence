@@ -175,7 +175,11 @@
           try {
             const refreshRes = await fetch("/api/auth/token", {
               method: "POST",
-              credentials: "include"
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json"
+              }
+              // enlever headers?
             });
             if (refreshRes.ok) {
               const data = await refreshRes.json();
@@ -3601,6 +3605,8 @@
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
+      // Promesse partagée pour le refresh (Singleton pour éviter les appels simultanés)
+      this.refreshPromise = null;
     }
     static getInstance() {
       if (!_SocketService.instance) {
@@ -3608,11 +3614,8 @@
       }
       return _SocketService.instance;
     }
-    /* MODIFICATIONS NE ASYNC */
     async createSocketConnection(path) {
       let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
-      console.log("** (sessionStorage) accessToken: ", sessionStorage.getItem("accessToken"));
-      console.log("** (localStorage) accessToken: ", localStorage.getItem("accessToken"));
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
         return null;
@@ -3621,42 +3624,67 @@
       try {
         const payload = JSON.parse(atob(finalToken.split(".")[1]));
         const now = Math.floor(Date.now() / 1e3);
-        if (payload.exp - now < 30) {
-          console.log("Token sur le point dexpirer, refresh...");
-          const response = await fetch("/api/auth/token", {
-            method: "POST",
-            credentials: "include"
-            // pour envoyer le cookie refresh
-          });
-          if (response.ok) {
-            const data = await response.json();
-            finalToken = data.accessToken;
-            if (sessionStorage.getItem("isGuest") === "true")
-              sessionStorage.setItem("accessToken", finalToken);
-            else
-              localStorage.setItem("accessToken", finalToken);
+        const timeLeft = payload.exp - now;
+        if (timeLeft < 30) {
+          console.log(`Token expirant (reste ${timeLeft}s), lancement proc\xE9dure refresh...`);
+          if (!this.refreshPromise) {
+            this.refreshPromise = (async () => {
+              try {
+                const response = await fetch("/api/auth/token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  // Important pour le cookie
+                  body: JSON.stringify({})
+                  // Important pour Fastify
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const newToken2 = data.accessToken;
+                  if (sessionStorage.getItem("isGuest") === "true")
+                    sessionStorage.setItem("accessToken", newToken2);
+                  else
+                    localStorage.setItem("accessToken", newToken2);
+                  console.log("Refresh r\xE9ussi !");
+                  return newToken2;
+                } else {
+                  console.error("Echec du refresh API:", response.status);
+                  return null;
+                }
+              } catch (err) {
+                console.error("Erreur r\xE9seau pendant le refresh:", err);
+                return null;
+              } finally {
+              }
+            })();
+          }
+          const newToken = await this.refreshPromise;
+          this.refreshPromise = null;
+          if (newToken) {
+            finalToken = newToken;
+          } else {
+            console.error("Impossible d'obtenir un nouveau token. Connexion socket annul\xE9e.");
+            return null;
           }
         }
       } catch (e) {
-        console.error("Error during validation of token");
+        console.error("Erreur lors de la validation du token:", e);
+        return null;
       }
       const socket = lookup2("/", {
         path,
         auth: {
-          // MODIFICATION: le service socket.io verifie toute la chaine de caractere 'token' 
-          // 'Bearer' cree une erreur donc il faut juste transmettre token
           token: finalToken
         },
         reconnection: true,
         reconnectionAttempts: 5,
-        // Correction typo: reconnectionAttemps -> reconnectionAttempts
         transports: ["websocket", "polling"]
       });
       socket.on("connect", () => {
-        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
+        console.log(`SocketService: Connect\xE9 \xE0 ${path} avec ID: ${socket.id}`);
       });
       socket.on("connect_error", (err) => {
-        console.error(`SocketService: Connection error on ${path}`, err.message);
+        console.error(`SocketService: Erreur de connexion sur ${path}:`, err.message);
       });
       return socket;
     }
@@ -3695,7 +3723,6 @@
     // ---------------------
     // -- GESTION DU GAME --
     // ---------------------
-    /* Modifs en async */
     async connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
@@ -3714,7 +3741,6 @@
     // ---------------------
     // -- UTILITAIRES    --
     // ---------------------
-    // Méthode privée pour manipuler le DOM direct
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
@@ -11508,6 +11534,8 @@
         const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          // AJOUT INMPORTANT SANS CA LE COOKIE NE SENREGISTRE PAS
           body: JSON.stringify({})
         });
         if (response.ok) {
@@ -11521,7 +11549,7 @@
           sessionStorage.setItem("isGuest", "true");
           sessionStorage.setItem("userRole", "guest");
           try {
-            const userResponse = await fetch(`/api/users/${data.userId}`, {
+            const userResponse = await fetch(`/api/user/${data.userId}`, {
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${data.accessToken}`,
@@ -11718,6 +11746,7 @@
     if (localButton) {
       localButton.addEventListener("click", () => {
         console.log("Local game starting");
+        sessionStorage.setItem("activeGameMode", "local");
         handleNavigation("/game", { gameMode: "local" });
       });
     } else {
@@ -11735,6 +11764,7 @@
     if (tournamentButton) {
       tournamentButton.addEventListener("click", () => {
         console.log("Tournament game starting");
+        sessionStorage.setItem("activeGameMode", "tournament");
         handleNavigation("/game", { gameMode: "tournament" });
       });
     } else {

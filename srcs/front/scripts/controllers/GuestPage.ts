@@ -31,6 +31,7 @@ export function afterRender(): void {
     if (localButton) {
         localButton.addEventListener('click', () => {
             console.log("Local game starting");
+            sessionStorage.setItem('activeGameMode', 'local');
             handleNavigation('/game', { gameMode: 'local' });
         });
     } else {
@@ -51,6 +52,7 @@ export function afterRender(): void {
     if (tournamentButton) {
         tournamentButton.addEventListener('click', () => {
             console.log("Tournament game starting");
+            sessionStorage.setItem('activeGameMode', 'tournament');
             handleNavigation('/game', { gameMode: 'tournament' });
         });
     } else {

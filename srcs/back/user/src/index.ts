@@ -269,7 +269,7 @@ fastify.post('/users/guest', async (request, reply) => {
     		reply.setCookie('refreshToken', refreshToken, {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
-    		  secure: true, // acces au cookie uniquement via https
+    		  secure: true, // acces au cookie uniquement via https MODIFICATION AVANT A TRUE -> PASSE A FALSE
     		  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
     		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
     		  signed: true
