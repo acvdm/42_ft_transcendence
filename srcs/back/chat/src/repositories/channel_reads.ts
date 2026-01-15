@@ -31,9 +31,6 @@ export async function hasUnreadMessages(
     const channel = await findChannelByKey(db, channelKey);
     if (!channel?.id)
         return ;
- 
-    // Avec un LEFT JOIN, la requête prend tous les messages et met
-    // NULL dans les colonnes de CHANNEL_READS si pas de correspondance
 
     const result = await db.get(`
         SELECT COUNT(*) AS count
