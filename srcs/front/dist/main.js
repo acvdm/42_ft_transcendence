@@ -157,7 +157,6 @@
     let response = await fetch(url2, getConfigWithAuth(token, options));
     const userId = localStorage.getItem("userId");
     if (response.status === 404 && userId && url2.includes(userId) && !url2.includes("friendships")) {
-      console.warn("Cannot find user. Launching immediat deconnection");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("userId");
       localStorage.removeItem("username");
@@ -11753,6 +11752,10 @@
       });
       this.socket.on("gameEnded", (data) => {
         this.isRunning = false;
+        if (data.finalScore) {
+          this.score = data.finalScore;
+          this.notifyScoreUpdate();
+        }
         if (this.onGameEnd) {
           this.onGameEnd(data);
         } else {

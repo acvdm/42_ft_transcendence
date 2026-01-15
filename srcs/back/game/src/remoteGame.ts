@@ -150,6 +150,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
     // Fin de partie
     if (game.score.player1 >= 4 || game.score.player2 >= 4) {
         stopGame(game.roomId, io);
+        return ;
     }
 
     // Envoi de l'état

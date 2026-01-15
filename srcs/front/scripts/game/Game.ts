@@ -92,6 +92,10 @@ class Game {
 
         this.socket.on('gameEnded', (data: any) => {
             this.isRunning = false;
+            if (data.finalScore) {
+                this.score = data.finalScore;
+                this.notifyScoreUpdate();
+            }
             if (this.onGameEnd) {
                 this.onGameEnd(data);
             } else {
