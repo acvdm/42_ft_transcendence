@@ -339,7 +339,8 @@
       "title": "Game chat",
       "info": "Chat room",
       "choose_bg": "Choose a background:",
-      "default_bg": "Default background"
+      "default_bg": "Default background",
+      "input_placeholder": "Type in your message"
     }
   },
 

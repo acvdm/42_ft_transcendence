@@ -280,6 +280,7 @@ export function render(): string {
         html = html.replace(/\{\{remotePage\.chat\.info\}\}/g, i18next.t('remotePage.chat.info'));
         html = html.replace(/\{\{remotePage\.chat\.choose_bg\}\}/g, i18next.t('remotePage.chat.choose_bg'));
         html = html.replace(/\{\{remotePage\.chat\.default_bg\}\}/g, i18next.t('remotePage.chat.default_bg'));
+        html = html.replace(/\{\{remotePage\.chat\.input_placeholder\}\}/g, i18next.t('remotePage.chat.input_placeholder'));
     } 
 
     // 3. REPLACEMENTS POUR LE MODE TOURNAMENT

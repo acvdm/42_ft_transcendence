@@ -321,7 +321,8 @@
       "title": "Chat de juego",
       "info": "Sala de chat",
       "choose_bg": "Elegir fondo:",
-      "default_bg": "Fondo por defecto"
+      "default_bg": "Fondo por defecto",
+      "input_placeholder": "Escriba su mensaje"
     }
   },
   "tournamentPage": {

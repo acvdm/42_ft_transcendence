@@ -527,6 +527,36 @@ export function afterRender(): void {
     //============ RENDERING RIVAL PODIUM ============
     //================================================
 
+    const podiumNumbersPlugin = {
+        id: 'podiumNumbers',
+        afterDatasetsDraw(chart: any) {
+            const { ctx } = chart;
+            const meta = chart.getDatasetMeta(0);
+
+            // Ordre visuel → rang réel
+            const podiumOrder = [2, 1, 3];
+
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillStyle = '#ffffff';
+
+            meta.data.forEach((bar: any, index: number) => {
+                if (index > 2) return;
+
+                const rank = podiumOrder[index];
+                const x = bar.x;
+                const y = bar.y + bar.height / 2;
+
+                ctx.fillText(`${rank}`, x, y);
+            });
+
+            ctx.restore();
+        }
+    };
+
+
     function renderRivalChart(canvas: HTMLCanvasElement, data: any) {
         if (!canvas) {
             return;
@@ -557,7 +587,8 @@ export function afterRender(): void {
                     // MODIFIED: Use i18n for games count (with interpolation)
                     return [`${displayName}`, i18next.t('dashboardPage.chart.games_count', { count: count })]; 
                 } } } }
-            }
+            },
+            plugins: [podiumNumbersPlugin]
         });
     }
 }
