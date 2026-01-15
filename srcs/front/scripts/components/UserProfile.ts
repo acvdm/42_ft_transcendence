@@ -2,8 +2,7 @@ import { fetchWithAuth } from "../services/api";
 import { statusImages, statusLabels } from "./Data";
 import { parseMessage } from "./ChatUtils";
 import SocketService from "../services/SocketService";
-
-import i18next from "../i18n"; // Import ok
+import i18next from "../i18n";
 
 export class UserProfile {
 	private bioText: HTMLElement | null;
@@ -15,7 +14,6 @@ export class UserProfile {
 	private statusSelector: HTMLElement | null;
 	private statusDropdown: HTMLElement | null;
 	private charCountElement: HTMLSpanElement | null;
-
 	private pictureModal: HTMLElement | null;
 	private modalPreviewAvatar: HTMLImageElement | null;
 	private selectedImageSrc: string = "";
@@ -30,7 +28,6 @@ export class UserProfile {
 		this.statusSelector = document.getElementById('status-selector');
 		this.statusDropdown = document.getElementById('status-dropdown');
 		this.charCountElement = document.querySelector<HTMLSpanElement>('#bio-wrapper .char-count');
-
 		this.pictureModal = document.getElementById('picture-modal');
 		this.modalPreviewAvatar = document.getElementById('modal-preview-avatar') as HTMLImageElement;
 	}
@@ -43,7 +40,7 @@ export class UserProfile {
 		this.setupAvatarEdit();
 	}
 
-	// CHARGEMENT DE LA BIO
+	// Loading bio
 	private async loadUserData() {
 		const userId = localStorage.getItem('userId');
 		if (!userId) {
@@ -54,7 +51,9 @@ export class UserProfile {
 		try {
 			const response = await fetchWithAuth(`/api/user/${userId}`);
 			
-			if (!response.ok) throw new Error('Failed to fetch user profile');
+			if (!response.ok) {
+				throw new Error('Failed to fetch user profile');
+			}
 
 			const userData = await response.json();
 
@@ -80,15 +79,15 @@ export class UserProfile {
 		}
 	}
 
-	// LOGIQUE DE LA BIO et de la PHOTO
+	// Updating bio and picture
 	private setupBioEdit() {
-		if (!this.bioText || !this.bioWrapper) return;
+		if (!this.bioText || !this.bioWrapper) {
+			return;
+		}
 
-		// on mets a jour le compteur
 		const updateCharCount = (currentLength: number) => {
 			if (this.charCountElement) {
 				this.charCountElement.innerText = `${currentLength}/70`;
-				// rouge si la limite est depaassse
 				if (currentLength > 70) {
 					this.charCountElement.classList.remove('text-gray-500');
 					this.charCountElement.classList.add('text-red-500');
@@ -106,23 +105,17 @@ export class UserProfile {
 			
 			input.type = "text";
 			input.value = currentText;
-			// Blocage natif du navigateur à 70 chars
 			input.maxLength = 70;
 			input.className = "text-sm text-gray-700 italic border border-gray-300 rounded px-2 py-1 w-full bg-white focus:outline-none focus:ring focus:ring-blue-300";
 
-
-
 			this.bioWrapper!.replaceChild(input, this.bioText!);
 			
-			// affichage du compteur et initialiastion a la longueuyr actuelle de mon texte
 			if (this.charCountElement) {
 				this.charCountElement.classList.remove('hidden');
 				updateCharCount(currentText.length);
 			}
 			
 			input.focus();
-
-			// on ecoute l'input pour connaitre le nombre de caracteres
 			input.addEventListener('input', () => {
 				const currentLength = input.value.length;
 				updateCharCount(currentLength);
@@ -130,27 +123,23 @@ export class UserProfile {
 
 
 			const finalize = async (text: string) => {
-				if (!this.bioWrapper || !this.bioText) return;
+				if (!this.bioWrapper || !this.bioText) {
+					return;
+				}
 				
-				// on cache le compteur quand on en a plus bexoin
 				if (this.charCountElement) {
 					this.charCountElement.classList.add('hidden');
 				}
 
-				// TRADUCTION default bio
 				const defaultBio = i18next.t('userProfile.default_bio');
 				const newBio = text.trim() || defaultBio;
 				const userId = localStorage.getItem('userId');
-				
 				const trimmedBio = newBio.trim(); 
 
-				// check de lal ongueyr
 				if (trimmedBio.length > 70) {
 					console.error("Error: Cannot exceed 70 characters.");
-					// TRADUCTION alert
 					alert(i18next.t('userProfile.bio_length_error'));
 					
-					// on revient a l'ancienne biuo
 					this.bioWrapper!.replaceChild(this.bioText!, input);
 					this.bioText!.innerHTML = parseMessage(this.bioText!.dataset.raw || defaultBio);
 					
@@ -204,7 +193,6 @@ export class UserProfile {
 				if (input.value.trim().length <= 70) {
 					finalize(input.value);
 				} else {
-					// TRADUCTION alert
 					alert(i18next.t('userProfile.bio_length_error'));
 					
 					if (this.charCountElement) {
@@ -216,13 +204,12 @@ export class UserProfile {
 		});
 	}
 
-	// LOGIQUE DES STATUS DYNAMIQUES
+	// Dynamic status
 	private setupStatusSelector() {
 		if (this.statusSelector && this.statusDropdown) {
 			this.statusSelector.addEventListener('click', (e) => {
 				e.stopPropagation();
 				this.statusDropdown!.classList.toggle('hidden');
-				// fermeture des autres menus
 				document.getElementById('emoticon-dropdown')?.classList.add('hidden');
 				document.getElementById('add-friend-dropdown')?.classList.add('hidden');
 			});
@@ -277,7 +264,7 @@ export class UserProfile {
 	private loadSavedStatus() {
 		const rawStatus = localStorage.getItem('userStatus') || 'available';
 		const savedStatus = rawStatus.toLowerCase();
-		// Ligne supprimée car inutile (la mise à jour se fait via updateStatusDisplay)
+
 		this.updateStatusDisplay(savedStatus);
 		
 		window.addEventListener('storage', (e) => {
@@ -292,7 +279,6 @@ export class UserProfile {
 			console.log("Status:", this.statusFrame);
 			this.statusFrame.src = statusImages[status];
 		}
-		// statusLabels est importé de Data.ts et utilise désormais des getters avec i18next
 		if (this.statusText && statusLabels[status]) {
 			this.statusText.textContent = statusLabels[status];
 		}
@@ -315,7 +301,9 @@ export class UserProfile {
 			this.pictureModal?.classList.add('flex');
 
 			this.selectedImageSrc = this.userProfileImg?.src || "";
-			if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+			if (this.modalPreviewAvatar) {
+				this.modalPreviewAvatar.src = this.selectedImageSrc;
+			}
 		});
 
 		const closeModal = () => {
@@ -332,7 +320,9 @@ export class UserProfile {
 			gridImages.forEach(img => {
 				img.addEventListener('click', () => {
 					this.selectedImageSrc = img.src;
-					if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+					if (this.modalPreviewAvatar) {
+						this.modalPreviewAvatar.src = this.selectedImageSrc;
+					}
 					
 					gridImages.forEach(i => i.classList.remove('border-[#0078D7]'));
 					img.classList.add('border-[#0078D7]'); 
@@ -340,16 +330,14 @@ export class UserProfile {
 			});
 		}
 
-		// fichiers perso
+		// Upload personal files 
 		const fileInput = document.getElementById('file-input') as HTMLInputElement;
 		document.getElementById('browse-button')?.addEventListener('click', () => fileInput?.click());
 		
 		fileInput?.addEventListener('change', (event) => {
 			const file = (event.target as HTMLInputElement).files?.[0];
 			if (file) {
-				// Taille max 2Mo
-				if (file.size > 2 * 1024 * 1024)
-				{
+				if (file.size > 2 * 1024 * 1024) {
 					alert(i18next.t('userProfile.avatar_size_error'));
 					return;
 				}
@@ -358,7 +346,9 @@ export class UserProfile {
 				reader.onload = (e) => {
 					if (e.target?.result) {
 						this.selectedImageSrc = e.target.result as string;
-						if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = this.selectedImageSrc;
+						if (this.modalPreviewAvatar) {
+							this.modalPreviewAvatar.src = this.selectedImageSrc;
+						}
 					}
 				};
 				reader.readAsDataURL(file);
@@ -368,12 +358,16 @@ export class UserProfile {
 		document.getElementById('delete-button')?.addEventListener('click', () => {
 			const defaultAvatar = "/assets/basic/default.png";
 			this.selectedImageSrc = defaultAvatar;
-			if (this.modalPreviewAvatar) this.modalPreviewAvatar.src = defaultAvatar;
+			if (this.modalPreviewAvatar) {
+				this.modalPreviewAvatar.src = defaultAvatar;
+			}
 		});
 
 		document.getElementById('validation-button')?.addEventListener('click', async () => {
 			const userId = localStorage.getItem('userId');
-			if (!userId) return;
+			if (!userId) {
+				return;
+			}
 
 			try {
 
@@ -388,7 +382,9 @@ export class UserProfile {
 				if (response.ok) {
 					const cleanAvatarUrl = result.data.avatar;
 
-					if (this.userProfileImg) this.userProfileImg.src = cleanAvatarUrl;
+					if (this.userProfileImg) {
+						this.userProfileImg.src = cleanAvatarUrl;
+					}
 
 					const socket = SocketService.getInstance().getChatSocket();
 					const username = localStorage.getItem('username');
