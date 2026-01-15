@@ -48,7 +48,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 
     const userId = localStorage.getItem('userId');
 
-    if (response.status === 404 && userId && url.includes(userId)) {
+    if (response.status === 404 && userId && url.includes(userId) && !url.includes('friendships')) {
         console.warn("Cannot find user. Launching immediat deconnection");
         localStorage.removeItem('accessToken');
         localStorage.removeItem('userId');
