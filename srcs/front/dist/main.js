@@ -9,7 +9,7 @@
   // scripts/pages/LoginPage.html
   var LoginPage_default = `<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
     <div class="relative">
-        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
+        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(255, 255, 255)">
             <span class="text-lg">\u{1F310}</span>
             <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
             <span class="text-[10px] opacity-70">\u25BC</span>
@@ -8139,7 +8139,7 @@
          style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
     </div>
 
-    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">
+    <div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2 items-center" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">
         
         <div class="flex gap-6 min-h-0 flex-1" style="min-width: 1180px; min-height: 600px;">
 
@@ -8221,7 +8221,7 @@
                     </div>
                 </div>
 
-                <div class="window flex flex-col flex-1 min-h-0" style="min-height: 400px;">
+                <div class="window flex flex-col flex-1 mb-6" style="max-height: 725px;">
                     <div class="title-bar">
                         <div class="title-bar-text">{{homepage.games.title}}</div>
                         <div class="title-bar-controls">
@@ -8279,7 +8279,7 @@
             </div>
 
 
-            <div class="window flex flex-col flex-1 min-w-0" style="flex: 1; height: 100%; min-height: 600px;">
+            <div class="window flex flex-col mb-6" style="width: 1050px; max-width: 1050px; height: 80%; min-height: 600px;">
                 <div class="title-bar">
                     <div class="title-bar-text">{{homepage.chat.title}}</div>
                     <div class="title-bar-controls">
@@ -8290,7 +8290,7 @@
                 </div>
 
                 <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-                    <div id="chat-frame" class="relative flex-1 p-10 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0">
+                    <div id="chat-frame" class="relative flex-1 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
                         <div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[400px] min-w-[400px] h-full" style="width: 400px; min-width: 400px;">
                             <div class="flex flex-row items-center justify-between">
                                 <p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
@@ -11392,7 +11392,7 @@
   }
 
   // scripts/pages/RegisterPage.html
-  var RegisterPage_default = '<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">\n    <div class="relative">\n        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">\n            <span class="text-lg">\u{1F310}</span>\n            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>\n            <span class="text-[10px] opacity-70">\u25BC</span>\n        </button>\n        \n        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">\n                <span>\u{1F1EC}\u{1F1E7}</span> English\n            </button>\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">\n                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais\n            </button>\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">\n                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol\n            </button>\n        </div>\n    </div>\n</div>\n<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>\n        <div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">\n        <div class="relative w-[170px] h-[170px] mb-4">\n            <img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">\n            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">\n        </div>\n        <h1 class="font-sans text-xl font-normal text-blue-950">\n            {{registerPage.welcome}}\n        </h1>\n        <div class="flex flex-col justify-center items-center gap-6">\n            <div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">\n                <input type="alias" placeholder="faufaudu49" id="alias-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n\n                <input type="email" placeholder="Example555@hotmail.com" id="email-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n        \n                <input type="password" placeholder="{{registerPage.password}}" id="password-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n                <div class="flex flex-col items-center justify-center">\n                    <p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>\n                </div>\n            </div>\n            <div class="flex flex-col gap-2 w-48">\n                <button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{registerPage.register_button}}</button>\n            </div>\n\n            <div>\n                <button id="back-button" class="text-sm text-gray-400" style="color: grey;">{{registerPage.back}}</button>\n            </div>\n    </div>\n</div>';
+  var RegisterPage_default = '<div class="absolute z-50" style="top: 1.5rem; right: 2rem;">\n    <div class="relative">\n        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-grey hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(255, 255, 255)">\n            <span class="text-lg">\u{1F310}</span>\n            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>\n            <span class="text-[10px] opacity-70">\u25BC</span>\n        </button>\n        \n        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">\n                <span>\u{1F1EC}\u{1F1E7}</span> English\n            </button>\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">\n                <span>\u{1F1EB}\u{1F1F7}</span> Fran\xE7ais\n            </button>\n            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">\n                <span>\u{1F1EA}\u{1F1F8}</span> Espa\xF1ol\n            </button>\n        </div>\n    </div>\n</div>\n<div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>\n        <div class="flex flex-col justify-center items-center gap-6 mt-[-50px]">\n        <div class="relative w-[170px] h-[170px] mb-4">\n            <img class="absolute inset-0 w-full h-full object-cover" src="/assets/basic/status_frame_offline_large.png">\n            <img class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">\n        </div>\n        <h1 class="font-sans text-xl font-normal text-blue-950">\n            {{registerPage.welcome}}\n        </h1>\n        <div class="flex flex-col justify-center items-center gap-6">\n            <div class="border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm bg-white w-80 p-4 shadow-sm">\n                <input type="alias" placeholder="faufaudu49" id="alias-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n\n                <input type="email" placeholder="Example555@hotmail.com" id="email-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n        \n                <input type="password" placeholder="{{registerPage.password}}" id="password-input"\n                    class="w-full border border-gray-300 appearance-none [border-color:rgb(209,213,219)] rounded-sm p-2 text-sm mb-3 focus:outline-none focus:ring-1 focus:ring-blue-400"/>\n                <div class="flex flex-col items-center justify-center">\n                    <p id="error-message" class="text-red-600 text-sm mb-2 hidden"></p>\n                </div>\n            </div>\n            <div class="flex flex-col gap-2 w-48">\n                <button id="register-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 appearance-none [border-color:rgb(209,213,219)] rounded-sm px-4 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">{{registerPage.register_button}}</button>\n            </div>\n\n            <div>\n                <button id="back-button" class="text-sm text-gray-400" style="color: grey;">{{registerPage.back}}</button>\n            </div>\n    </div>\n</div>';
 
   // scripts/controllers/RegisterPage.ts
   function render5() {
@@ -11537,7 +11537,7 @@
   // scripts/controllers/GuestPage.ts
   function render6() {
     let html = GuestPage_default;
-    html = html.replace(/\{\{guestPage\.title_window\}\}/g, i18n_default.t("guestPage.title"));
+    html = html.replace(/\{\{guestPage\.title\}\}/g, i18n_default.t("guestPage.title"));
     html = html.replace(/\{\{guestPage\.welcome\}\}/g, i18n_default.t("guestPage.welcome"));
     html = html.replace(/\{\{guestPage\.description\}\}/g, i18n_default.t("guestPage.description"));
     html = html.replace(/\{\{guestPage\.select_mode\}\}/g, i18n_default.t("guestPage.select_mode"));

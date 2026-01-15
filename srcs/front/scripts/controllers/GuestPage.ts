@@ -5,7 +5,7 @@ import i18next from "../i18n";
 export function render(): string {
     let html = htmlContent;
 
-    html = html.replace(/\{\{guestPage\.title_window\}\}/g, i18next.t('guestPage.title'));
+    html = html.replace(/\{\{guestPage\.title\}\}/g, i18next.t('guestPage.title'));
     html = html.replace(/\{\{guestPage\.welcome\}\}/g, i18next.t('guestPage.welcome'));
     html = html.replace(/\{\{guestPage\.description\}\}/g, i18next.t('guestPage.description'));
     html = html.replace(/\{\{guestPage\.select_mode\}\}/g, i18next.t('guestPage.select_mode'));
