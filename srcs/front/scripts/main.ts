@@ -10,6 +10,11 @@ import { render as GamePage, initGamePage, isGameRunning, cleanup, showExitConfi
 import { render as DashboardPage, afterRender as DashboardPageAfterRender } from "./controllers/DashboardPage";
 import SocketService from "./services/SocketService";
 
+/* translations */
+import { initI18n, changeLanguage } from "./i18n";
+import i18next from "./i18n";
+import { access } from "fs";
+
 const appElement = document.getElementById('app');
 
 interface Page {
@@ -122,11 +127,72 @@ const clearGuestSession = () => {
 };
 
 
+    //================================================
+	//============= NAV BAR TRANSLATION ==============
+	//================================================
+
+const translateNavElements = () => {
+    const elements = document.querySelectorAll('[data-i18n]');
+    elements.forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (key) {
+            const translation = i18next.t(key);
+            if (translation && translation !== key)
+                el.textContent = translation;
+        }
+    });
+};
+
+
+/* RECUPERATION DE LA LANGUE EN DB */
+/* deplacement de la fonciton en haut du fichier pour pouvoir l'appeler dans handleLocationChange
+pour permettre a lutilisateur de retrouver sa langue sauvegardee a la prochaine connexion */
+const loadUserLanguageFromDB = async () => {
+    const userId = localStorage.getItem('userId');
+    const accessToken = localStorage.getItem('accessToken');
+
+    if (userId)
+    {
+        try {
+            const response = await fetch(`/api/user/${userId}/language`, {
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            if (response.ok)
+            {
+                const data = await response.json();
+                if (data.success && data.language)
+                {
+                    const dbLang = data.language;
+                    const currentLang = i18next.language;
+
+                    if (dbLang && dbLang !== currentLang)
+                    {
+                        console.log(`Langue en BDD trouvee (${dbLang})`);
+                        await changeLanguage(dbLang);
+
+                        translateNavElements();
+                    }
+                }
+            }
+
+
+        } 
+        catch (error) {
+            console.error("Impossible de charger la langue utilisateur");
+        }
+    }
+}
+
 	//================================================
 	//================ CHANGING PAGE =================
 	//================================================
 
-const handleLocationChange = () => {
+// Cass : je rend la fonction asynchrone pour pouvoir recup en db la langue sauvegardee par l'utilisateur
+const handleLocationChange = async () => {
     if (!appElement) return;
 
     let path = window.location.pathname;
@@ -146,6 +212,16 @@ const handleLocationChange = () => {
     
     const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     const isGuest = sessionStorage.getItem('isGuest') === 'true';
+
+    if (!publicRoutes.includes(path) && !accessToken && !isGuest) {
+        window.history.replaceState(null, '', '/');
+        handleLocationChange();
+        return ;
+    }
+
+    /* AJOUT */
+    if (accessToken && !isGuest)
+        await loadUserLanguageFromDB();
 
     if (isGameRunning() && path !== '/game') {
 		cleanup();
@@ -174,37 +250,97 @@ const handleLocationChange = () => {
                 menuContent.classList.toggle('hidden');
             });
 
-            window.addEventListener('click', () => {
-                if (!menuContent.classList.contains('hidden')) {
-                    menuContent.classList.add('hidden');
-                }
-            });
-        }
+            // window.addEventListener('click', () => {
+            //     if (!menuContent.classList.contains('hidden')) {
+            //         menuContent.classList.add('hidden');
+            //     }
+            // });
 
+            // /* Rajout cassandre */
+            const closeMenu = () => {
+                if (!menuContent.classList.contains('hidden'))
+                    menuContent.classList.add('hidden');
+            };
+
+            document.addEventListener('click', closeMenu);
+        }
+        
+        const currentLangDisplay = document.getElementById('current-lang-display');
+        if (currentLangDisplay)
+            currentLangDisplay.textContent = i18next.language.toUpperCase();
+        
         // Choose langage
-        document.querySelectorAll('.lang-select').forEach(btn => {
-            const newBtn = btn.cloneNode(true); 
+        const langButtons = document.querySelectorAll('.lang-select');
+
+        langButtons.forEach(btn => {
+            const newBtn = btn.cloneNode(true) as HTMLElement;
             btn.parentNode?.replaceChild(newBtn, btn);
-            
-            newBtn.addEventListener('click', (e) => {
-                const target = e.target as HTMLElement;
-                const lang = target.getAttribute('data-lang');
-                if (lang) {
+
+            newBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation(); //pourquoi?
+
+                const lang = (e.currentTarget as HTMLElement).getAttribute('data-lang');
+                const currentLang = i18next.language;
+
+                if (lang && lang !== currentLang) 
+                {
                     console.log("Langue changée vers :", lang);
+                    await changeLanguage(lang);
+
+                    const userId = localStorage.getItem('userId');
+                    const accessToken = localStorage.getItem('accessToken');
                     
+                    if (userId && accessToken)
+                    {
+                        try {
+		                    const response = await fetch(`/api/user/${userId}/language`, {
+		                    	method: 'PATCH',
+		                    	headers: {
+		                    		'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${accessToken}`
+		                    	},
+		                    	credentials: 'include',
+		                    	body: JSON.stringify({ language: lang })
+		                    });
+                            if (!response.ok)
+                                console.error("Error during the modification of the language");
+                        } catch (error) {
+                            console.error("Error during update of preffered language");
+                        }
+                    }
+
+                    handleLocationChange();
+
                     const display = document.getElementById('current-lang-display');
                     if (display) display.textContent = lang.toUpperCase();
+                    //fermer le menu
+                    const menuContent = document.getElementById('lang-menu-content');
+                    if (menuContent)
+                        menuContent.classList.add('hidden');
                 }
-            });
+                    
+                    
+	        });    
+                   
+            
         });
+        // handleLocationChange();
     };
     
+    const currentStatus = localStorage.getItem('userStatus') || 'available';
+    const statusText = document.getElementById('current-status-text');
+    if (statusText)
+        statusText.textContent = `(${i18next.t(`profile.status.${currentStatus}`)})`;
+
+
+
     // Dropdown HTML
     const langDropdownHtml = `
         <div class="relative" id="lang-dropdown">
             <button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
                 <span class="text-lg">🌐</span>
-                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+                <span id="current-lang-display" class="uppercase text-xs font-bold tracking-wider">${i18next.language.toUpperCase()}</span>
                 <span class="text-[10px] opacity-70">▼</span>
             </button>
             
@@ -222,19 +358,20 @@ const handleLocationChange = () => {
         </div>
     `;
 
+
     const navbar = document.getElementById('main-navbar');
 
     const userMenuHtml = `
-        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_home">Home</a>
-        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_profile">Profile</a>
-        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_dashboard">Dashboard</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/home" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.home">homepage.nav.home</a>
+        <a href="/profile" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.profile">homepage.nav.profile</a>
+        <a href="/dashboard" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.dashboard">homepage.nav.dashboard</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
-
+	
     const guestMenuHtml = `
-        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_guest">Guest Area</a>
-        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="nav_logout">Log out</a>
+        <a href="/guest" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.guest_area">homepage.nav.guest_area</a>
+        <a href="/logout" class="text-white hover:underline hover:text-blue-100 transition-colors font-medium" data-i18n="homepage.nav.logout">homepage.nav.logout</a>
         ${langDropdownHtml}
     `;
 
@@ -252,6 +389,7 @@ const handleLocationChange = () => {
                 navbar.innerHTML = targetHTML;
                 setupLangDropdown();
             }
+            translateNavElements(); // TRADUIT ELEMENTS DE LA NAVBAR
         } 
         else {
             navbar.style.display = 'none';
@@ -299,6 +437,9 @@ const handleLocationChange = () => {
 // 	handleLocationChange(); // on charge le contenu de la nouvelle page avec la fonction faite plus haut
 // };
 
+
+
+
 	//================================================
 	//============ ROUTEUR INITIALISATION ============
 	//================================================
@@ -314,7 +455,8 @@ window.addEventListener('click', (event) => {
         event.preventDefault();
 		if (isGameRunning()) {
 			event.stopImmediatePropagation();
-			showExitConfirmationModal();
+            const destinationPath = new URL(anchor.href).pathname;
+			showExitConfirmationModal(destinationPath);
 			return ;
 		}
 
@@ -336,6 +478,14 @@ window.addEventListener('popstate', () => {
 	handleLocationChange();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+// initialiser i18next avant le premier rendu
+document.addEventListener('DOMContentLoaded', async () => {
+    // init de base
+    await initI18n();
+    // recuperation de la langue en DB
+    await loadUserLanguageFromDB();
+
+    console.log("i18n initialise, langue:", i18next.language);
+
 	handleLocationChange();
 });

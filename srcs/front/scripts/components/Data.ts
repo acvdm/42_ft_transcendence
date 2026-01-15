@@ -1,5 +1,6 @@
 import { fetchWithAuth } from "../services/api";
 import SocketService from "../services/SocketService";
+import i18next from "../i18n";
 
 export class Data {
     static get hasUnreadMessage(): boolean {
@@ -24,25 +25,27 @@ export interface Theme {
     textColor: string;
 }
 
-
+// MODIFICATION : Transformation en accesseur dynamique pour la traduction des noms
+// Note : Si vous avez besoin de l'objet statique pour l'itération, utilisez Object.keys(appThemes) comme avant,
+// mais accédez à .name via cette structure.
 export const appThemes: { [key: string]: Theme } = {
     'basic': {
-        name: 'Classic Blue',
+        get name() { return i18next.t('data.themes.basic', 'Classic Blue'); }, // Getter dynamique
         headerUrl: '/assets/basic/background.jpg',
         navColor: 'linear-gradient(to bottom, #5DBFED 0%, #3CB1E8 50%, #3db6ec 50%, #3db6ec 100%)',
         bgColor: 'linear-gradient(to bottom, #ffffff 0%, #ffffff 50%, #7ED5F4 100%)',
         textColor: '#3E73B0'
     },
     'bamboo': {
-    name: 'Zen Bamboo',
-    headerUrl: '/assets/headers/bamboo_header.jpg',
-    navColor: 'linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)',
-    bgColor: 'linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)',
-    textColor: '#33691E'
+        get name() { return i18next.t('data.themes.bamboo', 'Zen Bamboo'); },
+        headerUrl: '/assets/headers/bamboo_header.jpg',
+        navColor: 'linear-gradient(to bottom, #7CB342 0%, #558B2F 50%, #33691E 100%)',
+        bgColor: 'linear-gradient(to bottom, #93CD17 0%, #ffffff 50%, #93CD17 100%)',
+        textColor: '#33691E'
     },
 
     'cherry': {
-        name: 'Cherry Blossom',
+        get name() { return i18next.t('data.themes.cherry', 'Cherry Blossom'); },
         headerUrl: '/assets/headers/blossoms_header.jpg',
         navColor: 'linear-gradient(to bottom, #F48FB1 0%, #EC407A 50%, #C2185B 100%)',
         bgColor: 'linear-gradient(to bottom, #FFBBB4 0%, #ffffff 50%, #FFBBB4 100%)',
@@ -50,7 +53,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'mountain': {
-        name: 'Misty Mountains',
+        get name() { return i18next.t('data.themes.mountain', 'Misty Mountains'); },
         headerUrl: '/assets/headers/dawn_header.png',
         navColor: 'linear-gradient(to bottom, #5C6BC0 0%, #3949AB 50%, #283593 100%)',
         bgColor: 'linear-gradient(to bottom, #6F94BF 0%, #ffffff 50%, #6F94BF 100%)',
@@ -58,7 +61,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'punk': {
-        name: 'Cyber Punk',
+        get name() { return i18next.t('data.themes.punk', 'Cyber Punk'); },
         headerUrl: '/assets/headers/punk_header.jpg',
         navColor: 'linear-gradient(to bottom, #340547 0%, #631C6E 50%, #340547 100%)',
         bgColor: 'linear-gradient(to bottom, #7B51B3 0%, #d8b4fe 50%, #7B51B3 100%)',
@@ -66,7 +69,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'dotted': {
-        name: 'Spring Dots',
+        get name() { return i18next.t('data.themes.dotted', 'Spring Dots'); },
         headerUrl: '/assets/headers/dott_header.png',
         navColor: 'linear-gradient(to bottom, #9CCC65 0%, #7CB342 50%, #558B2F 100%)',
         bgColor: 'linear-gradient(to bottom, #8BC72C 0%, #ffffff 50%, #8BC72C 100%)',
@@ -74,7 +77,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'sunset': {
-        name: 'Golden Sunset',
+        get name() { return i18next.t('data.themes.sunset', 'Golden Sunset'); },
         headerUrl: '/assets/headers/field_header.png',
         navColor: 'linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)',
         bgColor: 'linear-gradient(to bottom, #F7A624 0%, #ffffff 50%, #F7A624 100%)',
@@ -82,7 +85,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'football': {
-        name: 'Stadium',
+        get name() { return i18next.t('data.themes.football', 'Stadium'); },
         headerUrl: '/assets/headers/football_header.png',
         navColor: 'linear-gradient(to bottom, #66BB6A 0%, #43A047 50%, #2E7D32 100%)',
         bgColor: 'linear-gradient(to bottom, #73AD4E 0%, #ffffff 50%, #73AD4E 100%)',
@@ -90,7 +93,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'spring': {
-        name: 'Spring Garden',
+        get name() { return i18next.t('data.themes.spring', 'Spring Garden'); },
         headerUrl: '/assets/headers/hill_header.png',
         navColor: 'linear-gradient(to bottom, #B7E51E 0%, #91D42F 50%, #80C432 100%)',
         bgColor: 'linear-gradient(to bottom, #73D4E5 0%, #ffffff 50%, #73D4E5 100%)',
@@ -98,14 +101,14 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'love': {
-        name: 'Lovely Heart',
+        get name() { return i18next.t('data.themes.love', 'Lovely Heart'); },
         headerUrl: '/assets/headers/love_header.jpg',
         navColor: 'linear-gradient(to bottom, #973D3D 0%, #7E2223 50%, #5A0908 100%)',
         bgColor: 'linear-gradient(to bottom, #832525 0%, #ffffff 50%, #832525 100%)',
         textColor: '#7E2223'
     },
     'diary': {
-        name: 'Dear Diary',
+        get name() { return i18next.t('data.themes.diary', 'Dear Diary'); },
         headerUrl: '/assets/headers/diary_header.jpg',
         navColor: 'linear-gradient(to bottom, #D658A4 0%, #BA3083 50%, #D90082 100%)',
         bgColor: 'linear-gradient(to bottom, #E297B6 0%, #ffffff 50%, #E297B6 100%)',
@@ -113,7 +116,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'branches': {
-        name: 'Winter Branches',
+        get name() { return i18next.t('data.themes.branches', 'Winter Branches'); },
         headerUrl: '/assets/headers/silhouette_header.jpg',
         navColor: 'linear-gradient(to bottom, #FF9800 0%, #F57C00 50%, #E65100 100%)',
         bgColor: 'linear-gradient(to bottom, #F79B34 0%, #ffffff 50%, #F79B34 100%)',
@@ -121,7 +124,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'purple': {
-        name: 'Purple Dreams',
+        get name() { return i18next.t('data.themes.purple', 'Purple Dreams'); },
         headerUrl: '/assets/headers/spring_header.png',
         navColor: 'linear-gradient(to bottom, #9C27B0 0%, #7B1FA2 50%, #6A1B9A 100%)',
         bgColor: 'linear-gradient(to bottom, #663A92 0%, #ffffff 50%, #663A92 100%)',
@@ -129,7 +132,7 @@ export const appThemes: { [key: string]: Theme } = {
     },
 
     'abstract': {
-        name: 'Abstract Flow',
+        get name() { return i18next.t('data.themes.abstract', 'Abstract Flow'); },
         headerUrl: '/assets/headers/weird_header.jpg',
         navColor: 'linear-gradient(to bottom, #FF6B9D 0%, #FF1744 50%, #D50000 100%)',
         bgColor: 'linear-gradient(to bottom, #F38AB3 0%, #ffcdd2 50%, #F38AB3 100%)',
@@ -138,11 +141,11 @@ export const appThemes: { [key: string]: Theme } = {
 };
 
 export const ballEmoticons: { [key: string]: string } = {
-    "smile": gamePath + "smiling.png",
+    "smile": gamePath + "smile.png",
     "surprised": gamePath + "surprised.png",
     "confused": gamePath + "confused.png",
     "hot": gamePath + "hot.png",
-    "teeth_smile": gamePath + "teeth_smile.png",
+    "crying": gamePath + "crying.png",
     "tongue": gamePath + "tongue_smile.png",
     "sad": gamePath + "sad.png",
     "disappointed": gamePath + "disappointed.png",
@@ -152,7 +155,6 @@ export const ballEmoticons: { [key: string]: string } = {
     "teeth": gamePath + "teeth.png",
     "sarcastic": gamePath + "sarcastic.png",
     "sick": gamePath + "sick.png",
-    "devil": gamePath + "devil_smile.png",
 };
 
 
@@ -181,11 +183,12 @@ export const statusImages: { [key: string]: string } = {
     'offline':   '/assets/basic/status_offline_small.png'
 };
 
+// MODIFICATION : Utilisation de getters pour la traduction dynamique
 export const statusLabels: { [key: string]: string } = {
-    'available': '(Available)',
-    'busy':      '(Busy)',
-    'away':      '(Away)',
-    'invisible': '(Appear offline)'
+    get 'available'() { return i18next.t('data.status.available', '(Available)'); },
+    get 'busy'() { return i18next.t('data.status.busy', '(Busy)'); },
+    get 'away'() { return i18next.t('data.status.away', '(Away)'); },
+    get 'invisible'() { return i18next.t('data.status.invisible', '(Appear offline)'); }
 };
 
 export const getStatusDot = (status: string) => {

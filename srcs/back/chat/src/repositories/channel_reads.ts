@@ -48,3 +48,41 @@ export async function hasUnreadMessages(
 
     return result.count > 0;
 }
+
+export async function getUnreadConversations(
+    db: Database,
+    userId: number,
+) {
+    
+    const query = `
+        SELECT 
+            c.channel_key,
+            COUNT(m.msg_id) as unread_count,
+            MAX(m.sent_at) as last_msg_date,
+            
+            -- Alias de l'envoyeur
+            (SELECT sender_alias FROM MESSAGES m2 
+             WHERE m2.channel_id = c.id 
+             AND m2.sender_id != ? 
+             ORDER BY m2.sent_at DESC LIMIT 1) as sender_alias,
+
+             -- ID de l'envoyeur
+            (SELECT sender_id FROM MESSAGES m2 
+             WHERE m2.channel_id = c.id 
+             AND m2.sender_id != ? 
+             ORDER BY m2.sent_at DESC LIMIT 1) as sender_id
+
+        FROM MESSAGES m
+        JOIN CHANNELS c ON m.channel_id = c.id
+        LEFT JOIN CHANNEL_READS r ON m.channel_id = r.channel_id AND r.user_id = ?
+        
+        WHERE 
+            m.sender_id != ? -- On ignore ses propres messages
+            AND (r.last_read_at IS NULL OR m.sent_at > r.last_read_at)
+            
+        GROUP BY c.id
+    `;
+
+    const rows = await db.all(query, [userId, userId, userId, userId]);
+    return rows || [];
+}

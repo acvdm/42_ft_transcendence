@@ -24,9 +24,12 @@ class Ball {
         this.x += this.velocityX; // Update ball's position based on velocity
         this.y += this.velocityY;
 
-        // Check for collision with top and bottom walls
-        if (this.y + this.radius > canvas.height || this.y - this.radius < 0) {
-            this.velocityY = -this.velocityY; // Reverse vertical direction
+        if (this.y - this.radius < 0) {
+            this.y = this.radius; // Replace la balle juste au bord
+            this.velocityY = -this.velocityY;
+        } else if (this.y + this.radius > canvas.height) {
+            this.y = canvas.height - this.radius; // Replace la balle juste au bord
+            this.velocityY = -this.velocityY;
         }
     }
 

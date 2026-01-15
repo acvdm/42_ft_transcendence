@@ -21,6 +21,7 @@ export async function initDatabase(): Promise<Database> {
         theme TEXT DEFAULT 'Blue', 
         status TEXT DEFAULT 'Available',
         is_guest INTEGER DEFAULT 0,
+        preferred_language TEXT NOT NULL DEFAULT 'en' CHECK(preferred_language IN ('en', 'fr', 'es')),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         ) 
     `);

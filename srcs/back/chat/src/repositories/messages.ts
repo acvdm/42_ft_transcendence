@@ -37,9 +37,10 @@ export async function saveNewMessageinDB(
     }
     const channel_id = await channel.id;
 
+    // faustine: ajout de sent at
     const result = await db.run (`
-        INSERT INTO MESSAGES (sender_id, sender_alias, msg_content, channel_id)
-        VALUES (?, ?, ?, ?)`,
+        INSERT INTO MESSAGES (sender_id, sender_alias, msg_content, channel_id, sent_at) 
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
         [sender_id, sender_alias, msg_content, channel_id]
     );
 

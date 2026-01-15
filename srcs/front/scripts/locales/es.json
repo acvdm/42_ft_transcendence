@@ -1,0 +1,544 @@
+{
+  "homepage": {
+    "nav": {
+      "home": "Inicio",
+      "profile": "Perfil",
+      "dashboard": "Panel de control",
+      "logout": "Desconexión",
+      "guest_area": "Espacio para invitados"
+    },
+    "profile": {
+      "title": "Perfil",
+      "username": "Nombre de usuario",
+      "bio": "Comparte un mensaje rápido",
+      "status": {
+        "available": "Disponible",
+        "busy": "Ocupado",
+        "away": "Ausente",
+        "offline": "Desconectado"
+      }
+    },
+    "games": {
+      "title": "Juegos",
+      "choose_mode": "Selecciona cómo te gustaría iniciar una nueva partida.",
+      "title_mode": "ELIGE TU MODO DE JUEGO",
+      "local": "JUEGO LOCAL",
+      "remote": "JUEGO REMOTO",
+      "tournament": "TORNEOS",
+      "local_describe": "Juega contra otro jugador en este ordenador.",
+      "remote_describe": "Conéctate y juega con amigos y mucho más en línea.",
+      "tournament_describe": "Compite en un torneo multijugador para 4 jugadores en este ordenador."
+    },
+    "chat": {
+      "title": "Messenger",
+      "friends": "MIS AMIGOS",
+      "add_friend": "Añadir un amigo",
+      "send_request": "Enviar solicitud",
+      "cancel": "Cancelar",
+      "contact": "⭐ Contactos",
+      "placeholder": "Selecciona un amigo para empezar a chatear",
+      "input_placeholder": "Escribe un mensaje...",
+      "view_profile": "Ver perfil",
+      "invite_game": "Invitación a jugar",
+      "block_user": "Bloquear usuario"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "no_notification": "Sin notificación"
+    },
+    "modal": {
+      "user_profile": "Perfil de Usuario",
+      "statistics": "Estadísticas",
+      "games_played": "Partidas jugadas:",
+      "wins": "Victorias:",
+      "losses": "Derrotas:",
+      "winning_streak": "Racha de victorias:",
+      "close": "Cerrar",
+      "change_picture": "Cambiar imagen",
+      "select_picture": "Seleccionar una imagen",
+      "picture_description": "Elige cómo quieres aparecer en transcendence.",
+      "browse": "BUSCAR",
+      "delete": "ELIMINAR",
+      "ok": "OK",
+      "cancel": "CANCELAR"
+    }
+  },
+
+  "landing": {
+    "welcome": "Bienvenido a Transcendence",
+    "login_button": "Entrar",
+    "register_button": "Registrarse",
+    "guest_button": "Jugar como invitado",
+    "guest_error_network": "Error de red. Por favor, inténtelo de nuevo."
+  },
+
+  "loginPage": {
+    "welcome": "Iniciar sesión en Transcendence",
+    "password": "Introduce tu contraseña",
+    "connect_as": "Conectarse como",
+    "status": {
+      "available": "Disponible",
+      "busy": "Ocupado",
+      "away": "Ausente",
+      "offline": "Desconectato"
+    },
+    "login_button": "Entrar",
+    "back": "Volver al inicio",
+    "2fa": "Autenticación de dos factores",
+    "security": "Control de seguridad",
+    "enter_code": "Por favor, introduce el código de seguridad.",
+    "verify_button": "VERIFICAR",
+    "error_inputs": "Por favor complete todos los campos",
+    "error_auth_default": "Autenticación fallida",
+    "error_network": "Error de red, inténtelo de nuevo",
+    "error_2fa_invalid": "Código inválido.",
+    "error_2fa_verify": "Error durante la verificación."
+  },
+  "registerPage": {
+    "welcome": "Registrarse en Transcendence",
+    "password": "Introduce tu contraseña",
+    "register_button": "Registrarse",
+    "back": "Volver al inicio",
+    "error_inputs": "Por favor complete todos los campos",
+    "error_auth_default": "Fallo de autenticación",
+    "error_network": "Error de red, inténtelo de nuevo"
+  },
+  "profilePage": {
+    "window_profile": "Perfil",
+    "my_profile": "Mi perfil",
+    "my_status": "Estado:",
+    "status": {
+      "available": "Disponible",
+      "busy": "Ocupado",
+      "away": "Ausente",
+      "offline": "Desconectado"
+    },
+    "fallback_username": "Espera...",
+    "fallback_bio": "Cargando biografía...",
+    "username": "Usuario:",
+    "placeholder_username": "Nombre de usuario",
+    "change_button": "Cambiar",
+    "confirm_button": "Confirmar",
+    "back": "Volver al inicio",
+    "bio": "Mensaje rápido:",
+    "placeholder_bio": "Comparte un mensaje rápido",
+    "password": "Contraseña:",
+    "placeholder_password": "Nueva contraseña",
+    "2fa_button": "Activar 2FA",
+    "download_button": "Descargar datos",
+    "delete_button": "Eliminar mi cuenta",
+    "game_stats": "Mis estadísticas",
+    "game_played": "Partidas jugadas",
+    "wins": "Victorias",
+    "losses": "Derrotas",
+    "winning_streak": "Racha de victorias actual",
+    "2fa_modal": {
+      "title": "Autenticación de dos factores",
+      "choose_method": "Elegir método",
+      "message_method": "Selecciona cómo configurar el 2FA",
+      "authenticator": "App de Autenticación",
+      "message_authenticator": "Usa Google Authenticator o similar",
+      "email_verif": "Verificación por email",
+      "message_email_verif": "Recibe códigos por email",
+      "qr_code": "Escanear código QR",
+      "message_qr_code": "Abre Google Authenticator y escanea este código",
+      "6_digit": "Introduce el código de 6 dígitos:",
+      "validate": "VALIDAR",
+      "cancel": "CANCELAR",
+      "verif_email": "Enviaremos un código a tu email.",
+      "message_verif_email": "El código se enviará a:",
+      "code_send": "ENVIAR CÓDIGO",
+      "code_received": "Introduce el código recibido:"
+    },
+    "twoFactor": {
+      "btn_enable": "Activar autenticación 2FA",
+      "btn_disable": "Desactivar autenticación 2FA"
+    },
+    "picture_modal": {
+      "title": "Cambiar imagen",
+      "select_pic": "Selecciona una imagen",
+      "message_select": "Elige tu avatar para Transcendence.",
+      "browse": "BUSCAR",
+      "delete": "ELIMINAR",
+      "ok": "OK",
+      "cancel": "CANCELAR"
+    },
+    "theme_modal": {
+      "title": "Seleccionar tema"
+    },
+    "password_modal": {
+      "title": "Cambiar contraseña",
+      "current_pwd": "Contraseña actual:",
+      "new_pwd": "Nueva contraseña:",
+      "confirm_pwd": "Confirmar contraseña:",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "delete_modal": {
+      "title": "Eliminar cuenta",
+      "confirm_delete": "¿Seguro que quieres eliminar tu cuenta?",
+      "confirm_message": "Esta acción será irreversible.",
+      "yes": "Sí, eliminar mi cuenta",
+      "cancel": "Cancelar"
+    },
+    "field_empty": "Vacío",
+    "email_empty": "Sin correo electrónico",
+    "game_local": "Local",
+    "alerts": {
+      "delete_confirm": "Esta acción es irreversible. ¿Estás realmente seguro?",
+      "delete_success": "Tu cuenta ha sido eliminada. Serás redirigido.",
+      "delete_error": "Error al eliminar la cuenta",
+      "network_error": "Error de red. Por favor, inténtelo de nuevo.",
+      "username_success": "¡Nombre de usuario actualizado con éxito!",
+      "username_error": "Error al guardar el nombre de usuario",
+      "bio_limit": "La biografía no puede tener más de {{count}} caracteres.",
+      "bio_error": "Error al actualizar la biografía",
+      "email_success": "¡Correo electrónico actualizado con éxito!",
+      "email_error": "Error al guardar el correo electrónico",
+      "status_error": "Error al actualizar el estado",
+      "pwd_inputs": "Todos los campos son obligatorios.",
+      "pwd_mismatch": "No coinciden. Inténtalo de nuevo.",
+      "pwd_length": "La contraseña debe tener al menos 8 caracteres.",
+      "pwd_success": "¡Contraseña actualizada con éxito!",
+      "pwd_error": "Error al actualizar la contraseña",
+      "2fa_init_error": "Error al inicializar la configuración 2FA",
+      "2fa_invalid_code": "Código inválido",
+      "2fa_enabled": "¡2FA activada!",
+      "2fa_disable_confirm": "¿Desactivar 2FA?",
+      "2fa_disabled": "2FA desactivada"
+    },
+    "bio_placeholder": "Comparte un mensaje breve",
+    "avatar_save_error": "Error al guardar el avatar"
+  },
+  "dashboardPage": {
+    "title": "Resumen del panel",
+    "game_played": "Partidas jugadas",
+    "avg_score": "Puntuación media",
+    "time_playing": "Tiempo de juego",
+    "wins": "Victorias",
+    "losses": "Derrotas",
+    "win_rate": "Tasa de victorias",
+    "win_loss_evol": "Evolución victorias/derrotas",
+    "type_game": "Tipos de juego",
+    "bigg_rival": "Mis mayores rivales",
+    "match_history": "Historial y análisis",
+    "placeholder_rival": "Nombre del rival",
+    "all_modes": "Todos los modos",
+    "local": "Local",
+    "remote": "Remoto",
+    "tournament": "Torneo",
+    "apply_button": "Aplicar",
+    "sort": "Ordenar",
+    "date_asc": "Fecha ↑ (Antiguo)",
+    "date_desc": "Fecha ↓ (Reciente)",
+    "name_a": "Rival (A-Z)",
+    "name_z": "Rival (Z-A)",
+    "date": "Fecha",
+    "rival": "Rival",
+    "score": "Puntos",
+    "type": "Tipo",
+    "round": "Ronda",
+    "result": "Resultado",
+    "loading": "Cargando...",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "page": "Página 1",
+    "time_format": "{{h}}h {{m}}min",
+    "pagination_info": "Página {{current}} de {{total}}",
+    "no_matches": "Aún no hay partidos.",
+    "status_victory": "VICTORIA",
+    "status_defeat": "DERROTA",
+    "unknown_user": "Desconocido",
+    "round_final": "Final",
+    "round_1v1": "1v1",
+    "chart": {
+      "start": "Inicio",
+      "net_score": "Puntuación neta",
+      "no_data": "Sin datos",
+      "games_played": "Partidos jugados",
+      "games_count": "({{count}} partidos)",
+      "local": "Local",
+      "remote": "Remoto",
+      "tournament": "Torneo"
+    }
+  },
+  "localPage": {
+    "title": "Juegos",
+    "p1": "Jugador 1",
+    "p2": "Jugador 2",
+    "start_game": "Empezar partida",
+    "game_instr": "Instrucciones",
+    "ws": "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "El jugador de la derecha usa las teclas ⬆️⬇️.",
+    "space_bar": "La barra espaciadora sirve para distraer al oponente",
+    "opp_name": "¿Con quién juegas? :",
+    "placeholder_opp": "Escribe un nombre...",
+    "err_message": "¡Por favor, rellena esto!",
+    "choose_ball": "Elige tu bola:",
+    "select_ball": "Seleccionar bola:",
+    "choose_bg": "Elige tu fondo:",
+    "select_bg": "Seleccionar fondo:",
+    "reset_color": "Restablecer color",
+    "play": "JUGAR",
+    "countdown_title": "¡Listos, preparados, ya!",
+    "summary_modal": {
+      "title": "Fin de la partida",
+      "congrat": "¡FELICIDADES!",
+      "name": "NOMBRE",
+      "back_menu": "Volver al menú"
+    },
+    "chat": {
+      "title": "Notificaciones",
+      "info": "Notificación del sistema",
+      "placeholder_input": "No puedes hablar con el sistema"
+    },
+    "chat_start_match": "¡El juego está por comenzar! Partido: {{p1}} vs {{p2}}"
+  },
+
+  "remotePage": {
+    "title": "Juegos",
+    "p1": "Jugador 1",
+    "p2": "Jugador 2",
+    "start_game": "Empezar partida",
+    "game_instr": "Instrucciones",
+    "ws": "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+    "up_down": "El jugador de la derecha usa las teclas ⬆️⬇️.",
+    "space_bar": "La barra espaciadora sirve para distraer al oponente",
+    "choose_ball": "Elige tu bola:",
+    "select_ball": "Seleccionar bola:",
+    "choose_bg": "Elige tu fondo:",
+    "select_bg": "Seleccionar fondo:",
+    "reset_color": "Restablecer color",
+    "play": "JUGAR (COLA)",
+    "countdown_title": "¡Listos, preparados, ya!",
+    "summary_modal": {
+      "title": "Fin de la partida",
+      "congrat": "¡FELICIDADES!",
+      "name": "???",
+      "back_menu": "Volver al menú"
+    },
+    "chat": {
+      "title": "Chat de juego",
+      "info": "Sala de chat",
+      "choose_bg": "Elegir fondo:",
+      "default_bg": "Fondo por defecto"
+    }
+  },
+  "tournamentPage": {
+    "title": "Arena de Torneo",
+    "p1": "Jugador 1",
+    "p2": "Jugador 2",
+    "setup_modal": {
+      "title_modal": "Configuración del torneo",
+      "game_instr": "Instrucciones",
+      "ws": "El jugador de la izquierda se mueve con <img src='/assets/game/direction.png' class='inline-block w-20 h-6'>",
+      "up_down": "El jugador de la derecha usa las teclas ⬆️⬇️.",
+      "space_bar": "La barra espaciadora sirve para distraer al oponente",
+      "tournament_name": "Nombre del torneo:",
+      "placeholder_trnmt": "Mi gran torneo",
+      "participant": "Participantes",
+      "p1": "Jugador 1 (Tú):",
+      "p2": "Jugador 2:",
+      "p3": "Jugador 3:",
+      "p4": "Jugador 4:",
+      "choose__ball_bg": "Elige tu bola y fondo:",
+      "choose__ball": "Bola:",
+      "choose_bg": "Fondo:",
+      "select_bg": "Seleccionar fondo:",
+      "reset_color": "Restablecer color",
+      "play": "EMPEZAR TORNEO",
+      "countdown_title": "¡Listos, preparados, ya!"
+    },
+    "tournament_bracket_modal": {
+      "title": "Torneo",
+      "heading": "EL TORNEO ESTÁ POR EMPEZAR",
+      "semi_final_1": "Semi-Final 1",
+      "semi_final_2": "Semi-Final 2",
+      "final": "Final",
+      "status_ready": "Listo para el siguiente partido...",
+      "continue_btn": "CONTINUAR AL PARTIDO"
+    },
+    "tournament_next_match_modal": {
+      "title": "Siguiente partido",
+      "match_title": "SEMI-FINAL 1",
+      "player_vs": "VS",
+      "start_info": "El juego empezará en cuanto pulses Jugar.",
+      "play_btn": "¡JUGAR!"
+    },
+    "tournament_summary_modal": {
+      "title": "Fin del torneo",
+      "congratulations": "¡FELICIDADES!",
+      "winner_name": "NOMBRE",
+      "back_menu": "Volver al menú"
+    },
+    "chat": {
+      "title": "Notificaciones",
+      "info": "Notificación del sistema",
+      "placeholder_input": "No puedes hablar con el sistema"
+    }
+  },
+
+  "guestPage": {
+    "title": "Modo Invitado",
+    "welcome": "Bienvenido a Transcendence",
+    "description": "Actualmente estás jugando como invitado. ¡Si quieres acceder a todas las funciones del juego, debes registrarte!",
+    "select_mode": "Selecciona un modo para empezar a jugar",
+    "local": "JUEGO LOCAL",
+    "remote": "JUEGO REMOTO",
+    "tournament": "TORNEO",
+    "chat_welcome": "Bienvenido al modo invitado. Selecciona un modo de juego para chatear con tus oponentes."
+  },
+
+  "gamePage": {
+    "default_player": "Jugador",
+    "default_guest": "Invitado",
+    "unload_warning": "Hay una partida en curso. ¿Estás seguro de que quieres salir?",
+    "exit_modal": {
+      "title": "Salir del juego",
+      "heading": "¡ESPERA UN MOMENTO!",
+      "question": "¿Estás seguro de que quieres irte?",
+      "warning": "Se perderá todo el progreso actual.",
+      "back_btn": "VOLVER AL JUEGO",
+      "leave_btn": "SALIR"
+    }
+  },
+
+  "game": {
+    "game_over": "¡Juego terminado! Puntuación final: {{score1}} - {{score2}}"
+  },
+
+  "gameUI": {
+    "winner_message": "¡{{name}} gana el partido!",
+    "game_over": "Juego terminado",
+    "congratulations": "FELICIDADES",
+    "return_menu": "VOLVER AL MENÚ",
+    "go": "¡VAMOS!"
+  },
+
+  "remoteManager": {
+    "self_play_error": "No puedes jugar contra ti mismo",
+    "btn_play_queue": "JUGAR (COLA)",
+    "default_opponent": "Oponente",
+    "me_suffix": "(Yo)",
+    "match_started": "¡El partido ha comenzado!",
+    "match_found": "¡Oponente encontrado! Iniciando juego...",
+    "opponent_forfeit": "(Abandono del oponente)",
+    "default_winner": "Ganador",
+    "error_connection": "Error: conexión perdida con el servidor de juego",
+    "waiting_private": "Esperando a tu amigo en la sala privada...",
+    "btn_waiting_friend": "ESPERANDO AMIGO...",
+    "looking_rival": "Buscando un rival...",
+    "btn_waiting": "ESPERANDO..."
+  },
+
+  "tournamentManager": {
+    "setup_error_fields": "Por favor complete todos los campos.",
+    "setup_error_unique": "Todos los alias deben ser únicos.",
+    "chat_start": "¡Torneo \"{{name}}\" iniciado! Participantes: {{players}}",
+    "bracket_next_sf1": "Siguiente: Semifinal 1",
+    "bracket_next_sf2": "Siguiente: Semifinal 2",
+    "bracket_next_final": "Siguiente: ¡La Gran Final!",
+    "match_sf1": "SEMIFINAL 1",
+    "match_sf2": "SEMIFINAL 2",
+    "match_final": "FINAL",
+    "chat_next_match": "Siguiente: {{p1}} vs {{p2}} !",
+    "chat_final_match": "FINAL: {{p1}} vs {{p2}} !",
+    "chat_winner": "¡{{winner}} gana el partido!"
+  },
+
+  "chatComponent": {
+    "system": "Sistema",
+    "connected": "¡Ahora puedes chatear con tu amigo!",
+    "disconnected": "¡Desconectado del servidor de chat!",
+    "nudge_sent": "[b]{{author}} envió un zumbido[/b]",
+    "animation_unknown": "Animación desconocida ({{key}}) recibida de {{author}}.",
+    "game_invite": "¡{{author}} quiere jugar al Pong contigo!",
+    "join_waitroom": "Unirse a mi sala de espera",
+    "accept_match": "Aceptar el partido",
+    "game_unreachable": "Error: Servidor de juego inalcanzable.",
+    "block_confirm": "¿Estás seguro de que quieres bloquear a {{name}}?",
+    "block_success": "Conversación eliminada (Usuario bloqueado).",
+    "block_error": "Error al bloquear",
+    "error_length_exceeded": "Mensaje demasiado largo.",
+    "input_blocked": "Has bloqueado a este usuario.",
+    "tools": {
+      "bold": "Negrita",
+      "italic": "Cursiva",
+      "underline": "Subrayado",
+      "strikethrough": "Tachado"
+    }
+  },
+
+  "data": {
+    "status": {
+      "available": "(Disponible)",
+      "busy": "(Ocupado)",
+      "away": "(Ausente)",
+      "invisible": "(Desconectado)"
+    },
+    "themes": {
+      "basic": "Azul Clásico",
+      "bamboo": "Bambú Zen",
+      "cherry": "Flor de Cerezo",
+      "mountain": "Montañas Brumosas",
+      "punk": "Cyber Punk",
+      "dotted": "Puntos de Primavera",
+      "sunset": "Puesta de Sol",
+      "football": "Estadio",
+      "spring": "Jardín de Primavera",
+      "love": "Corazón Encantador",
+      "diary": "Querido Diario",
+      "branches": "Ramas de Invierno",
+      "purple": "Sueños Púrpuras",
+      "abstract": "Flujo Abstracto"
+    }
+  },
+
+  "friendList": {
+    "no_friends": "Aún no hay amigos",
+    "error_loading": "Error al cargar contactos",
+    "default_bio": "Comparte un mensaje rápido",
+    "game_disconnected": "El juego está desconectado, actualiza",
+    "invite_sent": "Invitación enviada a {{name}}",
+    "invite_toast": {
+      "title": "🎮 Invitación de juego",
+      "message": "¡{{name}} quiere jugar al Pong!",
+      "accept": "Aceptar",
+      "decline": "Rechazar",
+      "error_lost": "Error: conexión con el servidor perdida"
+    },
+    "search_placeholder_error": "Introduce un nombre de usuario o correo",
+    "request_sent": "¡Solicitud de amistad enviada!",
+    "request_error": "Error al enviar la solicitud",
+    "network_error": "Error de red",
+    "no_notifications": "No hay notificaciones nuevas",
+    "wants_to_be_friend": "<span class=\"font-semibold\">{{name}}</span> quiere ser tu amigo",
+    "actions": {
+      "accept": "Aceptar",
+      "decline": "Rechazar",
+      "block": "Bloquear"
+    }
+  },
+
+  "friendProfileModal": {
+    "loading": "Cargando...",
+    "no_bio": "Sin biografía.",
+    "default_game": "Local"
+  },
+
+  "userProfile": {
+    "default_bio": "Comparte un mensaje rápido",
+    "bio_length_error": "Tu mensaje no puede exceder los 70 caracteres. ¡Deja de hablar!",
+    "avatar_error": "Error al guardar el avatar"
+  },
+
+  "friendship_error": {
+    "already_friend": "Este usuario ya es tu amigo.",
+    "already_send": "Ya has enviado una solicitud a este usuario. Espera a que la acepte.",
+    "sending": "Error al enviar la solicitud de amistad.",
+    "cannot_find": "No se puede encontrar a este usuario.",
+    "guest": "No puedes añadir a un invitado como amigo.",
+    "yourself": "No puedes añadirte a ti mismo como amigo. Perdedor."
+  }
+
+}

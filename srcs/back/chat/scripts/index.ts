@@ -4,6 +4,7 @@ import { Database } from 'sqlite';
 import { Server } from 'socket.io';
 import fs from 'fs';
 
+
 const httpsOptions = {
     key: fs.readFileSync('/app/server.key'),
     cert: fs.readFileSync('/app/server.crt')

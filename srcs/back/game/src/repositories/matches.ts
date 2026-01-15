@@ -1,4 +1,5 @@
 import { Database } from 'sqlite'
+import { NotFoundError } from '../utils/error.js';
 
 export interface Match {
     matchId: number,
@@ -87,7 +88,7 @@ export async function rollbackDeleteGame (
 {
     const match = await findMatchById(db, matchId);
     if (!match) {
-        throw new Error(`Error matchId: ${matchId} does not exist`);
+        throw new NotFoundError(`Error matchId: ${matchId} does not exist`);
     }
 
     await db.run(`

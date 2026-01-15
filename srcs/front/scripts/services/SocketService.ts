@@ -67,6 +67,10 @@ export class SocketService {
                     console.log("-> Activation de la notif persistante");
                     Data.hasUnreadMessage = true; // Sauvegarde dans localStorage via ton setter
                     this.showNotificationIcon();  // Affichage visuel immédiat
+                    const event = new CustomEvent('notificationUpdate', {
+                        detail: { type: 'chat', payload }
+                    });
+                    window.dispatchEvent(event);
                 }
             });
         }
@@ -91,7 +95,6 @@ export class SocketService {
         if (this.gameSocket) return;
         console.log("SocketService: Connecting to Game...");
         this.gameSocket = this.createSocketConnection("/socket-game/");
-        // J'ai retiré le code du chat qui était ici par erreur
     }
 
     public disconnectGame() {

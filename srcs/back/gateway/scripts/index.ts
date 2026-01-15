@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import fastifyProxy from '@fastify/http-proxy';
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from './utils/error.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET){
@@ -51,7 +52,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 	try {
 		const authHeader = request.headers['authorization'];
 		if (!authHeader) {
-			throw new Error('No token provided');
+			throw new UnauthorizedError('No token provided');
 		}
 
 		const token = authHeader.split(' ')[1];
@@ -65,7 +66,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		if (decoded.scope == '2fa_login'){
 			// on autorise seulement la route de verification du 2FA
 			if (!url.includes('/2fa/challenge'))
-				throw new Error("2FA verification pending");
+				throw new UnauthorizedError("2FA verification pending");
 			console.log(`2FA Token user for verification endpoint -> Allowed`);
 		}
 
@@ -97,6 +98,15 @@ fastify.register(fastifyProxy,
 	prefix: '/socket-chat', // toutes les requetes api/chat iront au service chat
 	websocket: true,
 	rewritePrefix: '/socket.io' // on retire le prefixe avant de l'envoyer un service
+});
+
+fastify.register(fastifyProxy, {
+    upstream: 'http://chat:3002',
+    prefix: '/api/chat', // Nouveau préfixe pour les requêtes HTTP
+    websocket: false,    // Pas de websocket ici
+    rewritePrefix: ''    // On enlève '/api/chat' ou on le garde selon comment votre back est fait
+    // NOTE : Si dans votre chat/src/index.ts vous avez 'fastify.get('/unread')', 
+    // alors il faut rewritePrefix: '' pour que le back reçoive juste '/unread'.
 });
 
 fastify.register(fastifyProxy, {

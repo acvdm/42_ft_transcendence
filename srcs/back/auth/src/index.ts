@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
 import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword, deleteAuthData } from './services/auth_service.js';
-import { NotFoundError, UnauthorizedError, ValidationError } from './utils/error.js';
+import { NotFoundError, UnauthorizedError, ValidationError, ForbiddenError } from './utils/error.js';
 
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -217,7 +217,7 @@ fastify.post('/sessions', async (request, reply) =>
 	try 
 	{
 		if (!body.password)
-			throw new Error('Password is required');
+			throw new ValidationError('Password is required');
 		const result = await loginUser(db, body.email, body.password);
 		console.log("✅ route /sessions atteinte");	
 		console.log(`result: `, result);
@@ -232,7 +232,7 @@ fastify.post('/sessions', async (request, reply) =>
 		}
 
 		if (!result.refreshToken || !result.accessToken || !result.userId) {
-			throw new Error("Login failed: missing tokens from login response");
+			throw new Error("Authentication failed");
 		}
 
 		// Cas ou Login reussi direct

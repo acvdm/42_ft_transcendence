@@ -164,7 +164,6 @@ export async function updateBio (
     if (bio.length > 75)
         throw new ValidationError(`Error: bio too long. Max 75 characters`);
 
-    // console.log("update bio dans users.ts");
     await db.run(`
         UPDATE USERS SET bio = ? WHERE id = ?`,
         [bio, user_id]
@@ -187,78 +186,6 @@ export async function updateTheme (
     );
 }
 
-// export async function updateEmail (
-//     db: Database,
-//     user_id: number,
-//     email: string
-// )
-// {
-//     const user = await findUserByID(db, user_id);
-//     if (!user?.id)
-//         throw new Error(`Error id: ${user_id} does not exist`);
-
-//     const emailAlreadyUsed = await db.get(`
-//         SELECT * FROM USERS WHERE email = ?`,
-//         [email]
-//     )
-//     if (emailAlreadyUsed)
-//         throw new Error(`This email is already taken`)
-
-//     await db.run(`
-//         UPDATE USERS SET email = ? WHERE id = ?`,
-//         [email, user_id]
-//     );
-// }
-
-// export async function rollbackChangeEmail (
-//     db: Database,
-//     user_id: number,
-//     email: string
-// )
-// {
-//     await db.run(`
-//         UPDATE USERS SET email = ? WHERE id = ?`,
-//         [email, user_id]
-//     );
-// }
-
-
-//-------- DELETE / DELETE
-export async function rollbackDeleteUser (
-    db: Database,
-    user_id: number
-)
-{
-    const user = await findUserByID(db, user_id);
-    if (!user.id) {
-        throw new Error(`Error id: ${user_id} does not exist`);
-    }
-
-    await db.run(`
-        DELETE FROM USERS WHERE id = ?`, 
-        [user_id]
-    );
-}
-
-
-// update de l'avatar
-
-export async function updateAvatar(
-    db: Database,
-    user_id: number,
-    avatar_url?: string
-) {
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new Error(`Error id: ${user_id} does not exist`);
-
-    await db.run(
-        `UPDATE USERS SET avatar_url = ? WHERE id = ?`,
-        [avatar_url, user_id]
-    );
-}
-
-// update de l'username
 
 export async function updateAlias (
     db: Database,
@@ -288,6 +215,43 @@ export async function updateAlias (
     );
 }
 
+
+//-------- DELETE / DELETE
+export async function rollbackDeleteUser (
+    db: Database,
+    user_id: number
+)
+{
+    const user = await findUserByID(db, user_id);
+    if (!user.id) {
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
+    }
+
+    await db.run(`
+        DELETE FROM USERS WHERE id = ?`, 
+        [user_id]
+    );
+}
+
+
+// update de l'avatar
+
+export async function updateAvatar(
+    db: Database,
+    user_id: number,
+    avatar_url?: string
+) {
+    const user = await findUserByID(db, user_id);
+    if (!user?.id)
+        throw new NotFoundError(`Error id: ${user_id} does not exist`);
+
+    await db.run(
+        `UPDATE USERS SET avatar_url = ? WHERE id = ?`,
+        [avatar_url, user_id]
+    );
+}
+
+
 export async function anonymizeUser(
     db: Database,
     userId: number
@@ -306,5 +270,36 @@ export async function anonymizeUser(
             theme = 'Blue'
         WHERE id = ?`,
     [anonymousAlias, userId]
+    );
+}
+
+
+/* REPRENDRE */
+export async function getPreferredLanguage(
+    db: Database,
+    userId: number
+) : Promise<string>
+{
+    const row = await db.get(`
+        SELECT preferred_language 
+        FROM USERS 
+        WHERE id = ?`,
+        [userId]
+    );
+    return row?.preferred_language || null;
+}
+
+
+export async function updatePreferredLanguage(
+    db: Database,
+    userId: number,
+    preferredLanguage: string
+) : Promise<void>
+{
+    await db.run(`
+        UPDATE USERS
+        SET preferred_language = ? 
+        WHERE id = ?`,
+        [preferredLanguage, userId]
     );
 }

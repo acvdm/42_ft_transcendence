@@ -1,4 +1,5 @@
 import { Chat } from "../Chat";
+import i18next from "../../i18n"; // Assurez-vous que le chemin vers i18n est correct
 
 //================================================
 //=================== GET DATE ===================
@@ -19,12 +20,12 @@ export function getSqlDate(): string {
 
 export function launchConfetti(duration: number = 3000) {
     
-	const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
     const confettiCount = 150;
     const container = document.body;
     const confettiContainer = document.createElement('div');
     
-	confettiContainer.id = 'confetti-container';
+    confettiContainer.id = 'confetti-container';
     confettiContainer.style.cssText = `
         position: fixed;
         top: 0;
@@ -56,7 +57,7 @@ function createConfetti(container: HTMLElement, colors: string[]) {
     const duration = Math.random() * 2 + 2;
     const delay = Math.random() * 0.5;
     
-	confetti.style.cssText = `
+    confetti.style.cssText = `
         position: absolute;
         width: ${size}px;
         height: ${size}px;
@@ -100,13 +101,14 @@ export function showVictoryModal(winnerName: string, gameChat: Chat | null) {
     const quitLocalBtn = document.getElementById('quit-local-btn');
     const quitRemoteBtn = document.getElementById('quit-remote-btn');
     
-	if (modal && winnerText) {
+    if (modal && winnerText) {
         winnerText.innerText = winnerName;
         modal.classList.remove('hidden');
         
         if (gameChat) {
-			gameChat.addSystemMessage(`${winnerName} wins the match!`);
-		}
+            // MODIFICATION : Traduction du message système
+            gameChat.addSystemMessage(i18next.t('gameUI.winner_message', { name: winnerName }));
+        }
         launchConfetti(4000);
     }
     const backAction = () => {
@@ -119,21 +121,26 @@ export function showVictoryModal(winnerName: string, gameChat: Chat | null) {
 
 export function showRemoteEndModal(winnerName: string, message: string) {
     if (document.getElementById('remote-end-modal')) {
-		return;
-	}
+        return;
+    }
+
+    // MODIFICATION : Récupération des traductions pour le HTML
+    const t_gameOver = i18next.t('gameUI.game_over');
+    const t_congrat = i18next.t('gameUI.congratulations');
+    const t_return = i18next.t('gameUI.return_menu');
 
     const modalHtml = `
         <div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
             <div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
 
                 <div class="title-bar">
-                    <div class="title-bar-text text-white" style="text-shadow: none;">Game Over</div>
+                    <div class="title-bar-text text-white" style="text-shadow: none;">${t_gameOver}</div>
                     <div class="title-bar-controls"></div>
                 </div>
 
                 <div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
 
-                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">CONGRATULATIONS</h1>
+                    <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">${t_congrat}</h1>
 
                     <div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
                         <p class="text-2xl font-bold text-gray-800 text-center">
@@ -152,7 +159,7 @@ export function showRemoteEndModal(winnerName: string, message: string) {
                                     active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
                                     transition-all duration-200 hover:shadow-md"
                                 style="width: 200px; padding: 4px;">
-                            RETURN TO MENU
+                            ${t_return}
                         </button>
                     </div>
 
@@ -195,7 +202,8 @@ export function launchCountdown(onComplete: () => void) {
         if (count > 0) {
             text.innerText = count.toString();
         } else if (count === 0) {
-            text.innerText = "GO!";
+            // MODIFICATION : Traduction du "GO!"
+            text.innerText = i18next.t('gameUI.go');
             text.classList.remove('animate-bounce');
             text.classList.add('animate-ping');
         } else {
