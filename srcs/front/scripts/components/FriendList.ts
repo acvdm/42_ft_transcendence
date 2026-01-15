@@ -15,6 +15,7 @@ export class FriendList {
     private container: HTMLElement | null;
     private userId: string | null;
     private notificationInterval: any = null;
+    private unreadCheckInterval: any = null; 
 
     constructor() {
         this.container = document.getElementById('contacts-list');
@@ -27,25 +28,37 @@ export class FriendList {
         SocketService.getInstance().connectChat();
         SocketService.getInstance().connectGame();
         
-        // ✅ ATTENDRE que l'utilisateur soit enregistré dans sa room AVANT de charger les amis
-        await this.registerSocketUser();
+        // ✅ CORRECTION PROBLÈME 2 : Charger les amis en parallèle
+        const loadFriendsPromise = this.loadFriends();
+        const registerPromise = this.registerSocketUser();
+        
+        // Attendre les deux en parallèle
+        await Promise.all([loadFriendsPromise, registerPromise]);
 
         this.listenToUpdates();
         
-        // ✅ Maintenant on peut charger les amis et les messages non lus
-        await this.loadFriends();
-        await this.loadUnreadMessages(); // Plus besoin de setTimeout !
+        // ✅ Les amis sont déjà chargés, on peut charger les messages non lus
+        await this.loadUnreadMessages();
         
         this.setupFriendRequests();
         this.setupNotifications(); 
         this.checkNotifications(); 
         this.setupBlockListener();
 
-        // ✅ Polling toutes les 30s pour les demandes d'amis uniquement
+        // ✅ Polling toutes les 30s pour les demandes d'amis
         if (this.notificationInterval) {
             clearInterval(this.notificationInterval);
         }
         this.notificationInterval = setInterval(() => this.checkNotifications(), 30000);
+
+        // ✅ CORRECTION PROBLÈME 1 : Polling pour les messages non lus toutes les 10s
+        if (this.unreadCheckInterval) {
+            clearInterval(this.unreadCheckInterval);
+        }
+        this.unreadCheckInterval = setInterval(() => {
+            console.log("[FriendList] 🔄 Checking for unread messages...");
+            this.loadUnreadMessages();
+        }, 10000); // Toutes les 10 secondes
 
         window.addEventListener('notificationUpdate', () => {
             console.log("Friend received notification");
@@ -55,6 +68,11 @@ export class FriendList {
 
     // AJOUT
     public destroy() {
+
+        if (this.unreadCheckInterval) {
+            clearInterval(this.unreadCheckInterval);
+            this.unreadCheckInterval = null;
+        }
         if (this.notificationInterval) {
             clearInterval(this.notificationInterval);
             this.notificationInterval = null;
@@ -99,7 +117,7 @@ export class FriendList {
                 setTimeout(() => {
                     console.warn('[FriendList] ⚠️ User registration timeout');
                     resolve(); // On continue quand même
-                }, 2000);
+                }, 1000);
             };
 
             if (chatSocket.connected) {
