@@ -383,7 +383,7 @@ const handleLocationChange = async () => {
             const currentHTML = navbar.innerHTML;
             const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
             //const isTargetGuest = targetHTML.includes('Guest Area');
-            const isCurrentGuest = currentHTML.includes('Guest Area');
+            const isCurrentGuest = currentHTML.includes('href="/guest"');
 
             if ((isGuest && !isCurrentGuest) || (!isGuest && isCurrentGuest) || !currentHTML.includes('lang-dropdown')) {
                 navbar.innerHTML = targetHTML;

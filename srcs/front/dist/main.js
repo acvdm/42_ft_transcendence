@@ -29016,7 +29016,7 @@
         navbar.classList.add("justify-between", "items-center", "px-8");
         const currentHTML = navbar.innerHTML;
         const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
-        const isCurrentGuest = currentHTML.includes("Guest Area");
+        const isCurrentGuest = currentHTML.includes('href="/guest"');
         if (isGuest && !isCurrentGuest || !isGuest && isCurrentGuest || !currentHTML.includes("lang-dropdown")) {
           navbar.innerHTML = targetHTML;
           setupLangDropdown();
