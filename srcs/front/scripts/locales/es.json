@@ -92,7 +92,10 @@
     "error_auth_default": "Autenticación fallida",
     "error_network": "Error de red, inténtelo de nuevo",
     "error_2fa_invalid": "Código inválido.",
-    "error_2fa_verify": "Error durante la verificación."
+    "error_2fa_verify": "Error durante la verificación.",
+    "error_no_user": "Ningún usuario coincide con el correo electrónico.",
+    "error_invalid_pwd": "Contraseña no válida",
+    "error_text_default": "Error de autenticación"
   },
   "registerPage": {
     "welcome": "Registrarse en Transcendence",

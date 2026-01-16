@@ -117,7 +117,7 @@ fastify.post('/users', async (request, reply) => {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
     		  secure: true, // acces au cookie uniquement via https
-    		  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+    		  sameSite: 'lax', // protection CSRF (cookie envoye que si la requete part de notre site)
     		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
     		  signed: true
     		});
@@ -266,7 +266,7 @@ fastify.post('/users/guest', async (request, reply) => {
     		  path: '/',
     		  httpOnly: true, // invisible au JS (protection XSS)
     		  secure: true, // acces au cookie uniquement via https
-    		  sameSite: 'strict', // protection CSRF (cookie envoye que si la requete part de notre site)
+    		  sameSite: 'lax', // protection CSRF (cookie envoye que si la requete part de notre site)
     		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
     		  signed: true
     		});

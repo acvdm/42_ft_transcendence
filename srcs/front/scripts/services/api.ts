@@ -67,14 +67,26 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 					});
 					if (refreshRes.ok) {
 						const data = await refreshRes.json();
-						console.log("Refresh successful, data:", data);
 
 						const newToken = data.accessToken;
 						if (!newToken) {
 							throw new Error("No accessToken in refresh response");
 						}
+    					console.log("Token changed?", getAuthToken() !== newToken);
 
-						localStorage.setItem('accessToken', newToken);
+						const isGuest = sessionStorage.getItem('isGuest') === 'true';
+
+						if (isGuest)
+						{
+							sessionStorage.setItem('accessToken', newToken);
+							console.log("Token stored in sessionStorage (Guest)")
+						}
+						else
+						{
+							localStorage.setItem('accessToken', newToken);
+							console.log("Token stored in localStorage (User)")
+						}
+
 						onRefreshed(newToken);
 						return newToken;
 					} 

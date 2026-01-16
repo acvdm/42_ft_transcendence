@@ -103,6 +103,7 @@ fastify.ready().then(() => {
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
 {	
+	console.log("PAYLOAD REÇU:", JSON.stringify(request.body, null, 2)); // Ajoutez ceci
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;
@@ -143,7 +144,7 @@ fastify.post('/games', async (request, reply) =>
 		if (!gameId)
 			throw new ServiceUnavailableError(`Error could not create game`);
 
-		if (body.p1.userId)
+		if (body.p1 && body.p1.userId)
 		{
 			const p1IsWinner = body.winner == body.p1.alias
 			p1Match = await addPlayerMatch(
@@ -160,7 +161,7 @@ fastify.post('/games', async (request, reply) =>
 			);
 		}
 
-		if (body.p2.userId)
+		if (body.p2 && body.p2.userId)
 		{
 			const p2IsWinner = body.winner == body.p2.alias
 			p2Match = await addPlayerMatch(

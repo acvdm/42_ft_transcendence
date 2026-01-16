@@ -174,12 +174,19 @@
             });
             if (refreshRes.ok) {
               const data = await refreshRes.json();
-              console.log("Refresh successful, data:", data);
               const newToken = data.accessToken;
               if (!newToken) {
                 throw new Error("No accessToken in refresh response");
               }
-              localStorage.setItem("accessToken", newToken);
+              console.log("Token changed?", getAuthToken() !== newToken);
+              const isGuest = sessionStorage.getItem("isGuest") === "true";
+              if (isGuest) {
+                sessionStorage.setItem("accessToken", newToken);
+                console.log("Token stored in sessionStorage (Guest)");
+              } else {
+                localStorage.setItem("accessToken", newToken);
+                console.log("Token stored in localStorage (User)");
+              }
               onRefreshed(newToken);
               return newToken;
             } else {
@@ -3596,6 +3603,8 @@
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
+      // Promesse partagée pour le refresh ( pour éviter les appels simultanés)
+      this.refreshPromise = null;
     }
     static getInstance() {
       if (!_SocketService.instance) {
@@ -3603,38 +3612,90 @@
       }
       return _SocketService.instance;
     }
-    createSocketConnection(path) {
-      const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    async createSocketConnection(path) {
+      let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
+        return null;
+      }
+      let finalToken = token;
+      try {
+        const payload = JSON.parse(atob(finalToken.split(".")[1]));
+        const now = Math.floor(Date.now() / 1e3);
+        const timeLeft = payload.exp - now;
+        if (timeLeft < 30) {
+          console.log(`Token expirant (reste ${timeLeft}s), lancement proc\xE9dure refresh...`);
+          if (!this.refreshPromise) {
+            this.refreshPromise = (async () => {
+              try {
+                const response = await fetch("/api/auth/token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  // Important pour le cookie
+                  body: JSON.stringify({})
+                  // Important pour Fastify
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const newToken2 = data.accessToken;
+                  if (sessionStorage.getItem("isGuest") === "true")
+                    sessionStorage.setItem("accessToken", newToken2);
+                  else
+                    localStorage.setItem("accessToken", newToken2);
+                  console.log("Refresh r\xE9ussi !");
+                  return newToken2;
+                } else {
+                  console.error("Echec du refresh API:", response.status);
+                  return null;
+                }
+              } catch (err) {
+                console.error("Erreur r\xE9seau pendant le refresh:", err);
+                return null;
+              } finally {
+              }
+            })();
+          }
+          const newToken = await this.refreshPromise;
+          this.refreshPromise = null;
+          if (newToken) {
+            finalToken = newToken;
+          } else {
+            console.error("Impossible d'obtenir un nouveau token. Connexion socket annul\xE9e.");
+            return null;
+          }
+        }
+      } catch (e) {
+        console.error("Erreur lors de la validation du token:", e);
         return null;
       }
       const socket = lookup2("/", {
         path,
         auth: {
-          token: `Bearer ${token}`
+          token: finalToken
         },
         reconnection: true,
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"]
       });
       socket.on("connect", () => {
-        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
+        console.log(`SocketService: Connect\xE9 \xE0 ${path} avec ID: ${socket.id}`);
       });
       socket.on("connect_error", (err) => {
-        console.error(`SocketService: Connection error on ${path}`, err.message);
+        console.error(`SocketService: Erreur de connexion sur ${path}:`, err.message);
       });
       return socket;
     }
-    //================================================
-    //================ CHAT MANAGEMENT ===============
-    //================================================
-    connectChat() {
+    // ---------------------
+    // -- GESTION DU CHAT --
+    // ---------------------
+    async connectChat() {
       if (this.chatSocket) return;
       console.log("SocketService: Connecting to Chat...");
-      this.chatSocket = this.createSocketConnection("/socket-chat/");
+      this.chatSocket = await this.createSocketConnection("/socket-chat/");
       if (this.chatSocket) {
         this.chatSocket.on("unreadNotification", (payload) => {
+          console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
             console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
@@ -3657,13 +3718,13 @@
     getChatSocket() {
       return this.chatSocket;
     }
-    //================================================
-    //=============== GAME MANAGEMENT ================
-    //================================================
-    connectGame() {
+    // ---------------------
+    // -- GESTION DU GAME --
+    // ---------------------
+    async connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
-      this.gameSocket = this.createSocketConnection("/socket-game/");
+      this.gameSocket = await this.createSocketConnection("/socket-game/");
     }
     disconnectGame() {
       if (this.gameSocket) {
@@ -3675,9 +3736,9 @@
     getGameSocket() {
       return this.gameSocket;
     }
-    //================================================
-    //==================== TOOLS =====================
-    //================================================
+    // ---------------------
+    // -- UTILITAIRES	--
+    // ---------------------
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
@@ -5993,7 +6054,10 @@
       error_auth_default: "\xC9chec de l'authentification",
       error_network: "Erreur r\xE9seau, veuillez r\xE9essayer",
       error_2fa_invalid: "Code invalide.",
-      error_2fa_verify: "Erreur lors de la v\xE9rification."
+      error_2fa_verify: "Erreur lors de la v\xE9rification.",
+      error_no_user: "Aucun utilisateur ne correspond \xE0 cet email.",
+      error_invalid_pwd: "Mauvais mot de passe.",
+      error_text_default: "Erreur d'authentification"
     },
     registerPage: {
       welcome: "S'inscrire sur Transcendence",
@@ -6526,7 +6590,10 @@
       error_auth_default: "Authentication failed",
       error_network: "Network error, please try again",
       error_2fa_invalid: "Invalid code.",
-      error_2fa_verify: "Error during verification."
+      error_2fa_verify: "Error during verification.",
+      error_no_user: "No user matches the email",
+      error_invalid_pwd: "Invalid password",
+      error_text_default: "Authentication error"
     },
     registerPage: {
       welcome: "Sign up to Transcendence",
@@ -7059,7 +7126,10 @@
       error_auth_default: "Autenticaci\xF3n fallida",
       error_network: "Error de red, int\xE9ntelo de nuevo",
       error_2fa_invalid: "C\xF3digo inv\xE1lido.",
-      error_2fa_verify: "Error durante la verificaci\xF3n."
+      error_2fa_verify: "Error durante la verificaci\xF3n.",
+      error_no_user: "Ning\xFAn usuario coincide con el correo electr\xF3nico.",
+      error_invalid_pwd: "Contrase\xF1a no v\xE1lida",
+      error_text_default: "Error de autenticaci\xF3n"
     },
     registerPage: {
       welcome: "Registrarse en Transcendence",
@@ -8022,7 +8092,11 @@
         } else {
           console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = result.error?.message || result.error.error || i18n_default.t("loginPage.error_auth_default");
+            const backendErrorkey = result.error?.message;
+            if (backendErrorkey)
+              errorElement.textContent = i18n_default.t(backendErrorkey);
+            else
+              errorElement.textContent = i18n_default.t("loginPage.error_text_default");
             errorElement.classList.remove("hidden");
           }
         }
@@ -8132,7 +8206,7 @@
 
 			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]" style="min-height: 600px;">
 				
-				<div class="window flex flex-col" style="height: 190px; min-height: 190px;">
+				<div class="window flex flex-col relative z-40" style="height: 190px; min-height: 190px;position: relative; z-index: 1000 !important;">
 					<div class="title-bar">
 						<div class="title-bar-text">{{homepage.profile.title}}</div>
 						<div class="title-bar-controls">
@@ -8187,12 +8261,12 @@
 									</div>
 								</div>
 		
-								<div class="ml-auto flex items-start relative">
+								<div class="ml-auto flex items-start relative z-50">
 									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
 										<img id="notification-icon" src="/assets/basic/no_notification.png" alt="Notifications" class="w-full h-full object-contain">
 											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 									</button>
-									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-[100] overflow-hidden" style="width: 550px; margin-top: 4px;">
 										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
 											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
 												{{homepage.notifications.title}}
@@ -8306,7 +8380,7 @@
 
 							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
 								<div class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-									{{homepage.chat.contact}}
+										{{homepage.chat.contact}}
 								</div>
 								<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2"></div>
 							</div>
@@ -11232,7 +11306,11 @@
         } else {
           if (pwdError) {
             console.log("pwdError");
-            pwdError.innerText = result.error?.message || i18n_default.t("profilePage.alerts.pwd_error");
+            const backendErrorKey = result.error?.message;
+            if (backendErrorKey)
+              pwdError.innerText = i18n_default.t(backendErrorKey);
+            else
+              pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_error");
             pwdError.classList.remove("hidden");
           }
         }
@@ -11351,6 +11429,8 @@
         const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          // AJOUT important pour enregistrer le cookie transmis par le back
           body: JSON.stringify({})
         });
         if (response.ok) {
@@ -11358,13 +11438,17 @@
           if (data.accessToken) {
             sessionStorage.setItem("accessToken", data.accessToken);
           }
+          if (data.refreshToken) {
+            console.log("Guest refreshToken received:", data.refreshToken);
+          }
           if (data.userId) {
             sessionStorage.setItem("userId", data.userId.toString());
           }
           sessionStorage.setItem("isGuest", "true");
           sessionStorage.setItem("userRole", "guest");
           try {
-            const userResponse = await fetch(`/api/users/${data.userId}`, {
+            const userResponse = await fetch(`/api/user/${data.userId}`, {
+              // MODIFICATION en /user/
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${data.accessToken}`,
@@ -12515,7 +12599,10 @@
           scoreBoard.innerText = "0 - 0";
         }
         const myAlias = await getPlayerAlias();
-        const myId = Number(localStorage.getItem("userId"));
+        const storedId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
+        const myId = storedId ? Number(storedId) : null;
+        if (!myId)
+          console.error("No ID found");
         let opponentId = data.opponent ? Number(data.opponent) : null;
         if (opponentId && myId === opponentId) {
           console.error("Error: cannot play against yourself");
@@ -12647,10 +12734,10 @@
                 await this.saveRemoteGameToApi(
                   this.currentP1Alias,
                   s1,
-                  p1Id,
+                  p1Id || 0,
                   this.currentP2Alias,
                   s2,
-                  p2Id,
+                  p2Id || 0,
                   winnerAlias,
                   gameStartDate
                 );

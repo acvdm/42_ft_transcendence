@@ -986,24 +986,33 @@ export function afterRender(): void {
 
 			const result = await response.json();
 
-			if (response.ok) {
-				alert(i18next.t('profilePage.alerts.pwd_success'));
-				closePwdModal();
-			} else {
-				if (pwdError) {
-					console.log("pwdError");
-					pwdError.innerText = result.error?.message || i18next.t('profilePage.alerts.pwd_error');
-					pwdError.classList.remove('hidden');
-				}
-			}
-		} catch (error) {
-			console.error("Catched error:", error);
-			if (pwdError) {
-				pwdError.innerText = i18next.t('profilePage.alerts.network_error');
-				pwdError.classList.remove('hidden');
-			}
-		}
-	});
+            if (response.ok) {
+                // MODIFICATION: Translation
+                alert(i18next.t('profilePage.alerts.pwd_success'));
+                closePwdModal();
+            } else {
+                if (pwdError) {
+                    console.log("pwdError");
+                    // MODIFICATION: Translation fallback
+                    const backendErrorKey = result.error?.message;
+                    if (backendErrorKey)
+                        pwdError.innerText = i18next.t(backendErrorKey);
+                    else
+                        pwdError.innerText = i18next.t('profilePage.alerts.pwd_error');
+
+                    // pwdError.innerText = result.error?.message || i18next.t('profilePage.alerts.pwd_error');
+                    pwdError.classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error("Catched error:", error);
+            if (pwdError) {
+                // MODIFICATION: Translation
+                pwdError.innerText = i18next.t('profilePage.alerts.network_error');
+                pwdError.classList.remove('hidden');
+            }
+        }
+    });
 
 	pwdModal?.addEventListener('click', (e) => {
 		if (e.target === pwdModal) closePwdModal();
