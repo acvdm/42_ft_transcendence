@@ -1,5 +1,6 @@
 import { Database } from 'sqlite';
 import { verifyPassword } from '../utils/crypto.js';
+import { ServiceUnavailableError } from '../utils/error.js';
 
 //-------- TYPE
 export interface Credential {
@@ -39,7 +40,7 @@ export async function createCredentials(
     );
 
     if (!result.lastID) {
-        throw new Error('Failed to create credential');
+        throw new ServiceUnavailableError('Failed to create credential');
     }
 
     return result.lastID;

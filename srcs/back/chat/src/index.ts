@@ -6,7 +6,7 @@ import { Database } from 'sqlite';
 import { Socket, Server } from 'socket.io'; // <--- AJOUT DE 'Server' ICI
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
-import { UnauthorizedError } from './utils/error.js';
+import { ServiceUnavailableError, UnauthorizedError } from './utils/error.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -41,7 +41,7 @@ const userSockets = new Map<number, string>();
 const authMiddleware = (socket: any, next: any) => {
     const token = socket.handshake.auth.token?.replace('Bearer ', '');
     if (!token)
-        return next(new Error("No token"));
+        return next(new ServiceUnavailableError("No token"));
 
     try
     {

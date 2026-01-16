@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
 import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword, deleteAuthData } from './services/auth_service.js';
-import { NotFoundError, UnauthorizedError, ValidationError, ForbiddenError } from './utils/error.js';
+import { NotFoundError, UnauthorizedError, ValidationError, ForbiddenError, ServiceUnavailableError } from './utils/error.js';
 
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -232,7 +232,7 @@ fastify.post('/sessions', async (request, reply) =>
 		}
 
 		if (!result.refreshToken || !result.accessToken || !result.userId) {
-			throw new Error("Authentication failed");
+			throw new ServiceUnavailableError("Authentication failed");
 		}
 
 		// Cas ou Login reussi direct

@@ -5,6 +5,7 @@ import { Secret, TOTP } from 'otpauth'; // 2FA
 import * as QRCode from 'qrcode';
 import * as tokenRepo from '../repositories/token.js';
 import * as credRepo from '../repositories/credentials.js';
+import { ServiceUnavailableError } from './error.js';
 
 // usine de fabrication --> ne touche pas a la bdd mais genere des chaines de caracteres, etc
 
@@ -26,7 +27,7 @@ export async function hashPassword(password: string): Promise<string> {
         const hash = await argon2.hash(password);
         return (hash);
     } catch (err) {
-        throw new Error('Password hashing failed');
+        throw new ServiceUnavailableError('Password hashing failed');
     }    
 }
 

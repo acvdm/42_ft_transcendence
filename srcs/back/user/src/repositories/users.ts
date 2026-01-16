@@ -1,6 +1,6 @@
 import { Database } from 'sqlite';
 import { generateRandomAlias, generateRandomAvatar } from "../utils/guest.js"
-import { NotFoundError, ValidationError } from '../utils/error.js';
+import { NotFoundError, ServiceUnavailableError, ValidationError } from '../utils/error.js';
 
 export interface CreateUser {
     alias: string,
@@ -42,7 +42,7 @@ export async function createUserInDB (
 
     if (!result.lastID) 
     {
-        throw new Error('Failed to create new user');
+        throw new ServiceUnavailableError('Failed to create new user');
     }
 
     console.log("createUserinDB fonctionne");
@@ -65,7 +65,7 @@ export async function createGuestInDB (
 
     if (!result.lastID) 
     {
-        throw new Error('Failed to create new user');
+        throw new ServiceUnavailableError('Failed to create new user');
     }
 
     console.log("createGuestinDB fonctionne");

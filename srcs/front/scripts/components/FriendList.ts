@@ -3,6 +3,7 @@ import { getStatusDot, statusImages } from "./Data";
 import { fetchWithAuth } from "../services/api";
 import { Friendship } from '../../../back/user/src/repositories/friendships';
 import i18next from "../i18n";
+import { ServiceUnavailableError } from "../../../back/user/src/utils/error";
 
 export class FriendList {
 	private container: HTMLElement | null;

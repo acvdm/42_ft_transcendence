@@ -1,4 +1,5 @@
 import { Database } from 'sqlite';
+import { ServiceUnavailableError } from '../utils/error.js';
 
 export interface Channel {
     id: number,
@@ -39,7 +40,7 @@ export async function createChannel (
     );
 
     if (!result.lastID)
-        throw new Error('Failed to create new channel');
+        throw new ServiceUnavailableError('Failed to create new channel');
 
     console.log(`channel : ${channelKey} créé avec ID: ${result.lastID}`);
 

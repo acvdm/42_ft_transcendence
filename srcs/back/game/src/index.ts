@@ -11,7 +11,7 @@ import { addPlayerMatch, rollbackDeletePlayerFromMatch } from './repositories/pl
 import { createStatLineforOneUser, findStatsByUserId, getUserMatchHistory, updateUserStats } from './repositories/stats.js';
 import { saveLocalTournament } from './repositories/tournaments.js';
 import { localMatchResult, localTournament } from './repositories/tournament_interfaces.js';
-import { NotFoundError, UnauthorizedError } from './utils/error.js';
+import { NotFoundError, ServiceUnavailableError, UnauthorizedError } from './utils/error.js';
 import { initGameState, registerRemoteGameEvents, updateGamePhysics } from './remoteGame.js';
 
 declare module 'fastify' {
@@ -46,7 +46,7 @@ const userSockets = new Map<number, string>();
 const authMiddleware = (socket: any, next: any) => {
     const token = socket.handshake.auth.token?.replace('Bearer ', '');
     if (!token)
-        return next(new Error("No token"));
+        return next(new ServiceUnavailableError("No token"));
 
     try
     {
@@ -141,7 +141,7 @@ fastify.post('/games', async (request, reply) =>
 
 
 		if (!gameId)
-			throw new Error(`Error could not create game`);
+			throw new ServiceUnavailableError(`Error could not create game`);
 
 		if (body.p1.userId)
 		{

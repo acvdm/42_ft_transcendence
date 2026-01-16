@@ -28139,6 +28139,15 @@
       if (!userId) {
         return;
       }
+      const setServiceUnavailable = () => {
+        if (totalGame) totalGame.innerText = "-";
+        if (wins) wins.innerText = "-";
+        if (losses) losses.innerText = "-";
+        if (avgScore) avgScore.innerText = "-";
+        if (winRateCalcul) winRateCalcul.innerText = "-";
+        if (playTime) playTime.innerText = "-";
+        console.warn("Game service is currently unreachable.");
+      };
       try {
         const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
         if (statResponse.ok) {
@@ -28159,6 +28168,10 @@
                 m: totalMinutes % 60
               });
             }
+          } else {
+            if (statResponse.status >= 500) {
+              setServiceUnavailable();
+            }
           }
         }
         const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`);
@@ -28170,9 +28183,12 @@
           renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
           renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
           setupFilters();
+        } else {
+          const emptyData = { labels: [], data: [] };
         }
       } catch (error) {
         console.error("Error on dashboard:", error);
+        setServiceUnavailable();
       }
     };
     loadUserData();
