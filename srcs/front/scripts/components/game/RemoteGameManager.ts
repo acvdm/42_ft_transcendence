@@ -130,7 +130,13 @@ export class RemoteGameManager {
 			}
 
 			const myAlias = await getPlayerAlias();
-			const myId = Number(localStorage.getItem('userId'));
+
+			// pour fix erreur 500 on cherche dabord dans localStorage sinon sessionStorage
+			const storedId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+			const myId = storedId ? Number(storedId) : null;
+			if (!myId)
+				console.error("No ID found");
+
 			let opponentId = data.opponent ? Number(data.opponent) : null;
 
 			if (opponentId && myId === opponentId) {

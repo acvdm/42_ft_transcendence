@@ -174,7 +174,6 @@
             });
             if (refreshRes.ok) {
               const data = await refreshRes.json();
-              console.log("Refresh successful, data:", data);
               const newToken = data.accessToken;
               if (!newToken) {
                 throw new Error("No accessToken in refresh response");
@@ -182,8 +181,14 @@
               console.log("\u{1F50D} OLD TOKEN:", getAuthToken());
               console.log("\u{1F195} NEW TOKEN:", newToken);
               console.log("\u{1F4C5} Token changed?", getAuthToken() !== newToken);
-              localStorage.setItem("accessToken", newToken);
-              console.log("\u2705 Token stored in localStorage");
+              const isGuest = sessionStorage.getItem("isGuest") === "true";
+              if (isGuest) {
+                sessionStorage.setItem("accessToken", newToken);
+                console.log("Token stored in sessionStorage (Guest)");
+              } else {
+                localStorage.setItem("accessToken", newToken);
+                console.log("Token stored in localStorage (User)");
+              }
               onRefreshed(newToken);
               return newToken;
             } else {
@@ -3600,6 +3605,8 @@
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
+      // Promesse partagée pour le refresh ( pour éviter les appels simultanés)
+      this.refreshPromise = null;
     }
     static getInstance() {
       if (!_SocketService.instance) {
@@ -3607,38 +3614,90 @@
       }
       return _SocketService.instance;
     }
-    createSocketConnection(path) {
-      const token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+    async createSocketConnection(path) {
+      let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
+        return null;
+      }
+      let finalToken = token;
+      try {
+        const payload = JSON.parse(atob(finalToken.split(".")[1]));
+        const now = Math.floor(Date.now() / 1e3);
+        const timeLeft = payload.exp - now;
+        if (timeLeft < 30) {
+          console.log(`Token expirant (reste ${timeLeft}s), lancement proc\xE9dure refresh...`);
+          if (!this.refreshPromise) {
+            this.refreshPromise = (async () => {
+              try {
+                const response = await fetch("/api/auth/token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  // Important pour le cookie
+                  body: JSON.stringify({})
+                  // Important pour Fastify
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const newToken2 = data.accessToken;
+                  if (sessionStorage.getItem("isGuest") === "true")
+                    sessionStorage.setItem("accessToken", newToken2);
+                  else
+                    localStorage.setItem("accessToken", newToken2);
+                  console.log("Refresh r\xE9ussi !");
+                  return newToken2;
+                } else {
+                  console.error("Echec du refresh API:", response.status);
+                  return null;
+                }
+              } catch (err) {
+                console.error("Erreur r\xE9seau pendant le refresh:", err);
+                return null;
+              } finally {
+              }
+            })();
+          }
+          const newToken = await this.refreshPromise;
+          this.refreshPromise = null;
+          if (newToken) {
+            finalToken = newToken;
+          } else {
+            console.error("Impossible d'obtenir un nouveau token. Connexion socket annul\xE9e.");
+            return null;
+          }
+        }
+      } catch (e) {
+        console.error("Erreur lors de la validation du token:", e);
         return null;
       }
       const socket = lookup2("/", {
         path,
         auth: {
-          token
+          token: finalToken
         },
         reconnection: true,
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"]
       });
       socket.on("connect", () => {
-        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
+        console.log(`SocketService: Connect\xE9 \xE0 ${path} avec ID: ${socket.id}`);
       });
       socket.on("connect_error", (err) => {
-        console.error(`SocketService: Connection error on ${path}`, err.message);
+        console.error(`SocketService: Erreur de connexion sur ${path}:`, err.message);
       });
       return socket;
     }
-    //================================================
-    //================ CHAT MANAGEMENT ===============
-    //================================================
-    connectChat() {
+    // ---------------------
+    // -- GESTION DU CHAT --
+    // ---------------------
+    async connectChat() {
       if (this.chatSocket) return;
       console.log("SocketService: Connecting to Chat...");
-      this.chatSocket = this.createSocketConnection("/socket-chat/");
+      this.chatSocket = await this.createSocketConnection("/socket-chat/");
       if (this.chatSocket) {
         this.chatSocket.on("unreadNotification", (payload) => {
+          console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
             console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
@@ -3661,13 +3720,13 @@
     getChatSocket() {
       return this.chatSocket;
     }
-    //================================================
-    //=============== GAME MANAGEMENT ================
-    //================================================
-    connectGame() {
+    // ---------------------
+    // -- GESTION DU GAME --
+    // ---------------------
+    async connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
-      this.gameSocket = this.createSocketConnection("/socket-game/");
+      this.gameSocket = await this.createSocketConnection("/socket-game/");
     }
     disconnectGame() {
       if (this.gameSocket) {
@@ -3679,9 +3738,9 @@
     getGameSocket() {
       return this.gameSocket;
     }
-    //================================================
-    //==================== TOOLS =====================
-    //================================================
+    // ---------------------
+    // -- UTILITAIRES	--
+    // ---------------------
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
@@ -12538,7 +12597,10 @@
           scoreBoard.innerText = "0 - 0";
         }
         const myAlias = await getPlayerAlias();
-        const myId = Number(localStorage.getItem("userId"));
+        const storedId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
+        const myId = storedId ? Number(storedId) : null;
+        if (!myId)
+          console.error("No ID found");
         let opponentId = data.opponent ? Number(data.opponent) : null;
         if (opponentId && myId === opponentId) {
           console.error("Error: cannot play against yourself");
