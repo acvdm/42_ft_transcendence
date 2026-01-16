@@ -22,16 +22,11 @@ export function afterRender(): void {
 	const remoteButton = document.getElementById('remote-game');
 	const tournamentButton = document.getElementById('tournament-game');
 
-	const handleNavigation = (path: string, state: any = {}) => {
-		window.history.pushState(state, '', path);
-		const navEvent = new PopStateEvent('popstate', { state: state });
-		window.dispatchEvent(navEvent);
-	};
-
 	if (localButton) {
 		localButton.addEventListener('click', () => {
-			console.log("Local game starting");
-			handleNavigation('/game', { gameMode: 'local' });
+			window.history.pushState({ gameMode: 'local' }, '', '/game?mode=local');
+			const navEvent = new PopStateEvent('popstate');
+			window.dispatchEvent(navEvent);
 		});
 	} else {
 		console.log("Error: Button local-game cannot be found in the DOM");
@@ -39,8 +34,9 @@ export function afterRender(): void {
 
 	if (remoteButton) {
 		remoteButton.addEventListener('click', () => {
-			console.log("Remote game starting");
-			handleNavigation('/game', { gameMode: 'remote' });
+			window.history.pushState({ gameMode: 'remote' }, '', '/game?mode=remote');
+			const navEvent = new PopStateEvent('popstate');
+			window.dispatchEvent(navEvent);
 		});
 	} else {
 		console.log("Error: Button remote-game cannot be found in the DOM");
@@ -49,8 +45,9 @@ export function afterRender(): void {
 
 	if (tournamentButton) {
 		tournamentButton.addEventListener('click', () => {
-			console.log("Tournament game starting");
-			handleNavigation('/game', { gameMode: 'tournament' });
+			window.history.pushState({ gameMode: 'tournament' }, '', '/game?mode=tournament');
+			const navEvent = new PopStateEvent('popstate');
+			window.dispatchEvent(navEvent);
 		});
 	} else {
 		console.log("Error: Button tournament-game cannot be found in the DOM");

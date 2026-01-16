@@ -49,6 +49,7 @@ export function render(): string {
 	html = html.replace(/\{\{dashboardPage\.bigg_rival\}\}/g, i18next.t('dashboardPage.bigg_rival'));
 	html = html.replace(/\{\{dashboardPage\.match_history\}\}/g, i18next.t('dashboardPage.match_history'));
 	html = html.replace(/\{\{dashboardPage\.placeholder_rival\}\}/g, i18next.t('dashboardPage.placeholder_rival'));
+	html = html.replace(/\{\{dashboardPage\.filter\}\}/g, i18next.t('dashboardPage.filter'));
 	html = html.replace(/\{\{dashboardPage\.all_modes\}\}/g, i18next.t('dashboardPage.all_modes'));
 	html = html.replace(/\{\{dashboardPage\.local\}\}/g, i18next.t('dashboardPage.local'));
 	html = html.replace(/\{\{dashboardPage\.remote\}\}/g, i18next.t('dashboardPage.remote'));
