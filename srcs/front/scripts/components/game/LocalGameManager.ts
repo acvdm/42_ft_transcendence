@@ -30,6 +30,7 @@ function escapeHtml(text: string): string {
 
 export class LocalGameManager {
     private context: GameContext;
+    private MAX_GAME_SCORE: number = 11;
 
     constructor(context: GameContext) {
         this.context = context;
@@ -254,7 +255,7 @@ export class LocalGameManager {
                                 return;
                             }                    
                         
-                            if (activeGame.score.player1 >= 11 || activeGame.score.player2 >= 11) {
+                            if (activeGame.score.player1 >= this.MAX_GAME_SCORE || activeGame.score.player2 >= this.MAX_GAME_SCORE) {
                                 activeGame.isRunning = false;
                                 clearInterval(localLoop); 
 

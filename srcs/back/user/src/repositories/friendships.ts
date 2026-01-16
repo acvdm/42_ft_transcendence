@@ -175,7 +175,6 @@ export async function listRequests(
     user_id: number
 ): Promise<Friendship[]> 
 {
-    console.log("arrivée dans Listrequests");
     const rows = await db.all(`
         SELECT 
             f.id AS friendship_id,
