@@ -462,7 +462,7 @@ export class FriendList {
 			pendingList.forEach((req: Friendship) => {
 				const item = document.createElement('div');
 				item.dataset.friendshipId = req.id.toString();
-				item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition";
+				item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition pl-4";
 
 				item.innerHTML = `
 					<div class="relative w-8 h-8 flex-shrink-0 mr-4">
