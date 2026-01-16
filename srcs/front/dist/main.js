@@ -8132,7 +8132,7 @@
 
 			<div class="flex flex-col gap-6 w-[700px] min-w-[700px]" style="min-height: 600px;">
 				
-				<div class="window flex flex-col" style="height: 190px; min-height: 190px;">
+				<div class="window flex flex-col relative z-40" style="height: 190px; min-height: 190px;position: relative; z-index: 1000 !important;">
 					<div class="title-bar">
 						<div class="title-bar-text">{{homepage.profile.title}}</div>
 						<div class="title-bar-controls">
@@ -8187,12 +8187,12 @@
 									</div>
 								</div>
 		
-								<div class="ml-auto flex items-start relative">
+								<div class="ml-auto flex items-start relative z-50">
 									<button id="notification-button" class="relative w-10 h-10 cursor-pointer">
 										<img id="notification-icon" src="/assets/basic/no_notification.png" alt="Notifications" class="w-full h-full object-contain">
 											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 									</button>
-									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-50 overflow-hidden" style="width: 550px; margin-top: 4px;">
+									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-[100] overflow-hidden" style="width: 550px; margin-top: 4px;">
 										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
 											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
 												{{homepage.notifications.title}}
@@ -8306,7 +8306,7 @@
 
 							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
 								<div class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
-									{{homepage.chat.contact}}
+										{{homepage.chat.contact}}
 								</div>
 								<div id="contacts-list" class="mt-2 ml-4 flex flex-col gap-2"></div>
 							</div>
