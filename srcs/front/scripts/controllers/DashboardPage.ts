@@ -49,6 +49,7 @@ export function render(): string {
 	html = html.replace(/\{\{dashboardPage\.bigg_rival\}\}/g, i18next.t('dashboardPage.bigg_rival'));
 	html = html.replace(/\{\{dashboardPage\.match_history\}\}/g, i18next.t('dashboardPage.match_history'));
 	html = html.replace(/\{\{dashboardPage\.placeholder_rival\}\}/g, i18next.t('dashboardPage.placeholder_rival'));
+	html = html.replace(/\{\{dashboardPage\.filter\}\}/g, i18next.t('dashboardPage.filter'));
 	html = html.replace(/\{\{dashboardPage\.all_modes\}\}/g, i18next.t('dashboardPage.all_modes'));
 	html = html.replace(/\{\{dashboardPage\.local\}\}/g, i18next.t('dashboardPage.local'));
 	html = html.replace(/\{\{dashboardPage\.remote\}\}/g, i18next.t('dashboardPage.remote'));
@@ -183,12 +184,12 @@ export function afterRender(): void {
 			return;
 		}
 
-		filterOpponent.maxLength = 30;
+		filterOpponent.maxLength = 20;
 
 		const applyFiltersAndSort = () => {
 			let rawVal = filterOpponent.value;
-			if (rawVal.length > 30) {
-				rawVal = rawVal.substring(0, 30);
+			if (rawVal.length > 20) {
+				rawVal = rawVal.substring(0, 20);
 			}
 
 			const opponentValue = rawVal.toLowerCase().trim();

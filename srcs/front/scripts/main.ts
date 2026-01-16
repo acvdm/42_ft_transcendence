@@ -57,8 +57,9 @@ const routes: { [key: string]: Page } = {
 	'/game': {
 		render: GamePage,
 		afterRender: () => {
+			const urlParams = new URLSearchParams(window.location.search);
 			const state = window.history.state;
-			const mode = state && state.gameMode ? state.gameMode : 'local';
+			const mode = urlParams.get('mode') || (state && state.gameMode ? state.gameMode : 'local');
 			initGamePage(mode);
 		}
 	}
@@ -189,6 +190,12 @@ const handleLocationChange = async () => {
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
+	if (isGuest && path !== '/guest' && path !== '/game') {
+		window.history.replaceState(null, '', 'guest');
+		handleLocationChange();
+		return;
+	}
+	
 	if (!publicRoutes.includes(path) && !accessToken && !isGuest) {
 		window.history.replaceState(null, '', '/');
 		handleLocationChange();

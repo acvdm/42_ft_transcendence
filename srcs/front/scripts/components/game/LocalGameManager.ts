@@ -55,7 +55,7 @@ export class LocalGameManager {
 		const player2Display = document.getElementById('player-2-name') as HTMLElement;
 
 		if (nameInput) {
-			nameInput.maxLength = 30;
+			nameInput.maxLength = 20;
 		}
 
 		if (modal) {

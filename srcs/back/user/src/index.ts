@@ -50,9 +50,9 @@ fastify.post('/users', async (request, reply) => {
 
 	try 
 	{
-		if (body.alias.length > 30) 
+		if (body.alias.length > 20) 
 		{
-		  throw new ValidationError('Error: Alias is too long, max 30 characters');
+		  throw new ValidationError('Error: Alias is too long, max 20 characters');
 		}
 		if (body.email.length > 254)
 		{

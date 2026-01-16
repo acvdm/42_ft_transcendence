@@ -73,7 +73,7 @@ export class TournamentManager {
 		const pInputs = [player1Input, player2Input, player3Input, player4Input];
 		pInputs.forEach(input => {
 			if (input) {
-				input.maxLength = 15;
+				input.maxLength = 20;
 			}
 		});
 
@@ -110,7 +110,7 @@ export class TournamentManager {
 				return;
 			}
 
-			if (tName.length > 45 || players.some(p => p.length > 15)) {
+			if (tName.length > 45 || players.some(p => p.length > 20)) {
 				if (errorDiv) {
 					errorDiv.innerText = i18next.t('tournamentManager.setup_error_length');
 					errorDiv.classList.remove('hidden');

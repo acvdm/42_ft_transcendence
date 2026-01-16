@@ -15,7 +15,7 @@ export async function initDatabase(): Promise<Database> {
     await db.exec(`
        CREATE TABLE IF NOT EXISTS USERS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        alias TEXT UNIQUE NOT NULL CHECK (length(alias) <= 30),
+        alias TEXT UNIQUE NOT NULL CHECK (length(alias) <= 20),
         bio TEXT CHECK (length(bio) <= 75),
         avatar_url TEXT DEFAULT '/assets/basic/default.png',
         theme TEXT DEFAULT 'Blue', 

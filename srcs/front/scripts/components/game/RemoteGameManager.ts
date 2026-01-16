@@ -293,8 +293,8 @@ export class RemoteGameManager {
 							}
 
 							await this.saveRemoteGameToApi (
-								this.currentP1Alias, s1, p1Id,
-								this.currentP2Alias, s2, p2Id,
+								this.currentP1Alias, s1, p1Id || 0,
+								this.currentP2Alias, s2, p2Id || 0,
 								winnerAlias,
 								gameStartDate
 							)
@@ -362,6 +362,9 @@ export class RemoteGameManager {
 		}
 		
 		const privateRoomId = sessionStorage.getItem('privateGameId');
+		if (privateRoomId) {
+			sessionStorage.removeItem('privateGameId');
+		}
 
 		if (btn) {
 
