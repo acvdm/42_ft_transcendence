@@ -12603,13 +12603,11 @@
           scoreBoard.innerText = "0 - 0";
         }
         const myAlias = await getPlayerAlias();
-        const storedId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
-        const myId = storedId ? Number(storedId) : null;
-        if (!myId)
-          console.error("No ID found");
+        const myId = Number(localStorage.getItem("userId") || sessionStorage.getItem("userId"));
         let opponentId = data.opponent ? Number(data.opponent) : null;
+        console.log("myid, opponent id:", myId, opponentId);
         if (opponentId && myId === opponentId) {
-          console.error("Error: cannot play against yourself");
+          console.error("Error: cannot play against yourself, you idiot");
           if (status) {
             status.innerText = i18n_default.t("remoteManager.self_play_error");
             status.style.color = "red";
@@ -12629,6 +12627,7 @@
         let p1Id = data.role === "player1" ? myId : opponentId;
         let p2Id = data.role === "player2" ? myId : opponentId;
         let opponentAlias = i18n_default.t("remoteManager.default_opponent");
+        console.log("p1, p2:", p1Id, p2Id);
         if (data.role === "player1") {
           this.currentP1Alias = myAlias;
           if (remoteP2Alias) {
@@ -12738,10 +12737,10 @@
                 await this.saveRemoteGameToApi(
                   this.currentP1Alias,
                   s1,
-                  p1Id || 0,
+                  p1Id,
                   this.currentP2Alias,
                   s2,
-                  p2Id || 0,
+                  p2Id,
                   winnerAlias,
                   gameStartDate
                 );
@@ -12852,6 +12851,7 @@
       }
     }
     async saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
+      console.log("p1, p2 save api:", p1Id, p2Id);
       try {
         const endDate = getSqlDate();
         const response = await fetchWithAuth("api/game", {
@@ -28657,8 +28657,7 @@
       localStorage.removeItem("userStatus");
       sessionStorage.clear();
       window.history.pushState({}, "", "/");
-      const popStateEvent = new PopStateEvent("popstate");
-      window.dispatchEvent(popStateEvent);
+      handleLocationChange();
     }
   };
   var clearGuestSession = () => {
@@ -28726,8 +28725,8 @@
     }
     const accessToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
     const isGuest = sessionStorage.getItem("isGuest") === "true";
-    if (isGuest && path !== "/guest" && path !== "/game") {
-      window.history.replaceState(null, "", "guest");
+    if (isGuest && path !== "/guest" && path !== "/game" && path !== "/logout") {
+      window.history.replaceState(null, "", "/guest");
       handleLocationChange();
       return;
     }

@@ -91,9 +91,9 @@ const handleLogout = async () => {
 		localStorage.removeItem('username');
 		localStorage.removeItem('userStatus');
 		sessionStorage.clear();
+
 		window.history.pushState({}, '', '/');
-		const popStateEvent = new PopStateEvent('popstate');
-		window.dispatchEvent(popStateEvent);
+		handleLocationChange();
 	}
 }
 
@@ -190,8 +190,8 @@ const handleLocationChange = async () => {
 	const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 	const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
-	if (isGuest && path !== '/guest' && path !== '/game') {
-		window.history.replaceState(null, '', 'guest');
+	if (isGuest && path !== '/guest' && path !== '/game' && path !== '/logout') {
+		window.history.replaceState(null, '', '/guest');
 		handleLocationChange();
 		return;
 	}

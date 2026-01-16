@@ -103,7 +103,6 @@ fastify.ready().then(() => {
 /* -- CREATE A GAME --*/
 fastify.post('/games', async (request, reply) =>
 {	
-	console.log("PAYLOAD REÇU:", JSON.stringify(request.body, null, 2)); // Ajoutez ceci
 	let gameId = null;
 	let p1Match = null;
 	let p2Match = null;
@@ -115,12 +114,12 @@ fastify.post('/games', async (request, reply) =>
 
 	try
 	{
-		console.log(`Body: ${body.type}, ${body.p1.alias}, ${body.p1.userId}, ${body.p2.userId}`);
-
 		const gameId = await createMatch(
 			db, body.type,
-			body.p1.alias, body.p2.alias,
-			body.p1.score, body.p2.score,
+			body.p1.alias || "Unknown",
+			body.p2.alias || "Unknown",
+			body.p1.score || 0,
+			body.p2.score || 0,
 			body.winner, 
 			"finished", // status
 			"1v1", // round
