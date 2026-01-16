@@ -11865,8 +11865,8 @@
     update(canvas) {
       const inputState = this.input.getInput();
       if (this.isRemote && this.socket && this.roomId) {
-        const up = inputState.player1.up;
-        const down = inputState.player1.down;
+        const up = this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up;
+        const down = this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down;
         this.socket.emit("gameInput", {
           roomId: this.roomId,
           up,
@@ -11918,13 +11918,17 @@
       const currentBallSpeed = Math.abs(data.ball.vx) + Math.abs(data.ball.vy);
       const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
       this.lastBallSpeed = currentBallSpeed;
+      const distanceMoved = Math.sqrt(
+        Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2)
+      );
+      const ballTeleported = distanceMoved > 200;
       const paddle1Right = data.paddle1.x + data.paddle1.width;
       const paddle2Left = data.paddle2.x;
       const distanceToPaddle1 = Math.abs(data.ball.x - paddle1Right);
       const distanceToPaddle2 = Math.abs(data.ball.x - paddle2Left);
       const minDistance = Math.min(distanceToPaddle1, distanceToPaddle2);
       const nearPaddle = minDistance < 50;
-      if (ballJustLaunched) {
+      if (ballJustLaunched || ballTeleported) {
         this.ball.x = newBallX;
         this.ball.y = newBallY;
       } else if (nearPaddle) {
