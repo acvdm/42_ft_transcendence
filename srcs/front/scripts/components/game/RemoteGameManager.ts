@@ -20,7 +20,7 @@ export class RemoteGameManager {
     private context: GameContext;
     private currentP1Alias: string = "Player 1";
     private currentP2Alias: string = "Player 2";
-    private MAX_GAME_SCORE: number = 11;
+    private WINNING_SCORE: number = 11;
 
     constructor(context: GameContext) {
         this.context = context;
@@ -292,12 +292,12 @@ export class RemoteGameManager {
 
                             if (data.role === 'player1') {
                                 winnerAlias = this.currentP1Alias;
-                                s1 = this.MAX_GAME_SCORE;
+                                s1 = this.WINNING_SCORE;
                                 s2 = 0;
                             } else {
                                 winnerAlias = this.currentP2Alias;
                                 s1 = 0;
-                                s2 = this.MAX_GAME_SCORE;
+                                s2 = this.WINNING_SCORE;
                             }
 
                             await this.saveRemoteGameToApi (
@@ -323,7 +323,7 @@ export class RemoteGameManager {
                         let s1 = activeGame ? activeGame.score.player1 : 0;
                         let s2 = activeGame ? activeGame.score.player2 : 0;
 
-                        const isNormalEndGame = (s1 == this.MAX_GAME_SCORE || s2 == this.MAX_GAME_SCORE);
+                        const isNormalEndGame = (s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE);
 
                         if (isNormalEndGame)
                         {
@@ -337,14 +337,14 @@ export class RemoteGameManager {
                         {
                             if (data.role === 'player1')
                             {
-                                s1 = this.MAX_GAME_SCORE;
+                                s1 = this.WINNING_SCORE;
                                 s2 = 0;
                                 winnerAlias = this.currentP1Alias;
                             }
                             else
                             {
                                 s1 = 0;
-                                s2 = this.MAX_GAME_SCORE;
+                                s2 = this.WINNING_SCORE;
                                 winnerAlias = this.currentP2Alias;
                             }
                         }

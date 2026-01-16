@@ -60,7 +60,7 @@ function escapeHtml(text: string): string
 export class TournamentManager {
     private context: GameContext;
     private tournamentState: TournamentData | null = null;
-    private MAX_GAME_SCORE: number = 11;
+    private WINNING_SCORE: number = 11;
 
     constructor(context: GameContext) {
         this.context = context;
@@ -438,7 +438,7 @@ export class TournamentManager {
                         return;
                     }
 
-                    if (activeGame.score.player1 >= this.MAX_GAME_SCORE || activeGame.score.player2 >= this.MAX_GAME_SCORE) {
+                    if (activeGame.score.player1 >= this.WINNING_SCORE || activeGame.score.player2 >= this.WINNING_SCORE) {
                         activeGame.isRunning = false;
                         clearInterval(checkInterval);
                         const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;

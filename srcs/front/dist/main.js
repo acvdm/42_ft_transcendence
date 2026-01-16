@@ -12466,7 +12466,7 @@
   }
   var LocalGameManager = class {
     constructor(context) {
-      this.MAX_GAME_SCORE = 11;
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12650,7 +12650,7 @@
                   clearInterval(localLoop);
                   return;
                 }
-                if (activeGame2.score.player1 >= this.MAX_GAME_SCORE || activeGame2.score.player2 >= this.MAX_GAME_SCORE) {
+                if (activeGame2.score.player1 >= this.WINNING_SCORE || activeGame2.score.player2 >= this.WINNING_SCORE) {
                   activeGame2.isRunning = false;
                   clearInterval(localLoop);
                   const p1Score = activeGame2.score.player1;
@@ -12724,7 +12724,7 @@
     constructor(context) {
       this.currentP1Alias = "Player 1";
       this.currentP2Alias = "Player 2";
-      this.MAX_GAME_SCORE = 11;
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12952,12 +12952,12 @@
                 let winnerAlias = "";
                 if (data.role === "player1") {
                   winnerAlias = this.currentP1Alias;
-                  s1 = this.MAX_GAME_SCORE;
+                  s1 = this.WINNING_SCORE;
                   s2 = 0;
                 } else {
                   winnerAlias = this.currentP2Alias;
                   s1 = 0;
-                  s2 = this.MAX_GAME_SCORE;
+                  s2 = this.WINNING_SCORE;
                 }
                 await this.saveRemoteGameToApi(
                   this.currentP1Alias,
@@ -12979,7 +12979,7 @@
               const activeGame2 = this.context.getGame();
               let s1 = activeGame2 ? activeGame2.score.player1 : 0;
               let s2 = activeGame2 ? activeGame2.score.player2 : 0;
-              const isNormalEndGame = s1 == this.MAX_GAME_SCORE || s2 == this.MAX_GAME_SCORE;
+              const isNormalEndGame = s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE;
               if (isNormalEndGame) {
                 if (s1 > s2)
                   winnerAlias = this.currentP1Alias;
@@ -12987,12 +12987,12 @@
                   winnerAlias = this.currentP2Alias;
               } else {
                 if (data.role === "player1") {
-                  s1 = this.MAX_GAME_SCORE;
+                  s1 = this.WINNING_SCORE;
                   s2 = 0;
                   winnerAlias = this.currentP1Alias;
                 } else {
                   s1 = 0;
-                  s2 = this.MAX_GAME_SCORE;
+                  s2 = this.WINNING_SCORE;
                   winnerAlias = this.currentP2Alias;
                 }
               }
@@ -13106,7 +13106,7 @@
   var TournamentManager = class {
     constructor(context) {
       this.tournamentState = null;
-      this.MAX_GAME_SCORE = 11;
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -13428,7 +13428,7 @@
               clearInterval(checkInterval);
               return;
             }
-            if (activeGame2.score.player1 >= this.MAX_GAME_SCORE || activeGame2.score.player2 >= this.MAX_GAME_SCORE) {
+            if (activeGame2.score.player1 >= this.WINNING_SCORE || activeGame2.score.player2 >= this.WINNING_SCORE) {
               activeGame2.isRunning = false;
               clearInterval(checkInterval);
               const winnerAlias = activeGame2.score.player1 > activeGame2.score.player2 ? p1.alias : p2.alias;
