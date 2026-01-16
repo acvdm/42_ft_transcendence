@@ -12637,10 +12637,10 @@
                 await this.saveRemoteGameToApi(
                   this.currentP1Alias,
                   s1,
-                  p1Id,
+                  p1Id || 0,
                   this.currentP2Alias,
                   s2,
-                  p2Id,
+                  p2Id || 0,
                   winnerAlias,
                   gameStartDate
                 );
