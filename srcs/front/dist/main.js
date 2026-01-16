@@ -11765,8 +11765,10 @@
     reset(canvas, direction = 1) {
       this.x = canvas.width / 2;
       this.y = canvas.height / 2;
-      this.velocityX = 5 * direction;
-      this.velocityY = 5;
+      const angle = Math.random() * Math.PI / 3 - Math.PI / 6;
+      const speed = 7;
+      this.velocityX = direction * speed * Math.cos(angle);
+      this.velocityY = speed * Math.sin(angle);
     }
   };
   var Ball_default = Ball;
@@ -12034,9 +12036,15 @@
     }
     addEventListeners() {
       window.addEventListener("keydown", (event) => {
+        if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
+          event.preventDefault();
+        }
         this.keys[event.key] = true;
       });
       window.addEventListener("keyup", (event) => {
+        if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
+          event.preventDefault();
+        }
         this.keys[event.key] = false;
       });
     }

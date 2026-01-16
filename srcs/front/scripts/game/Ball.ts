@@ -54,8 +54,13 @@ class Ball {
 	reset(canvas: HTMLCanvasElement, direction: number = 1) {
 		this.x = canvas.width / 2;
 		this.y = canvas.height / 2;
-		this.velocityX = 5 * direction;
-		this.velocityY = 5;
+		
+		// Même logique qu'en remote : angle aléatoire entre -30° et +30°
+		const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
+		const speed = 7;
+		
+		this.velocityX = direction * speed * Math.cos(angle);
+		this.velocityY = speed * Math.sin(angle);
 	}
 }
 
