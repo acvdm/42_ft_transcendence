@@ -13411,7 +13411,7 @@
     } else {
       html = LocalGame_default;
     }
-    if (state && state.gameMode === "remote") {
+    if (mode === "remote") {
       html = html.replace(/\{\{remotePage\.title\}\}/g, i18n_default.t("remotePage.title"));
       html = html.replace(/\{\{remotePage\.p1\}\}/g, i18n_default.t("remotePage.p1"));
       html = html.replace(/\{\{remotePage\.p2\}\}/g, i18n_default.t("remotePage.p2"));
@@ -13436,7 +13436,7 @@
       html = html.replace(/\{\{remotePage\.chat\.choose_bg\}\}/g, i18n_default.t("remotePage.chat.choose_bg"));
       html = html.replace(/\{\{remotePage\.chat\.default_bg\}\}/g, i18n_default.t("remotePage.chat.default_bg"));
       html = html.replace(/\{\{remotePage\.chat\.input_placeholder\}\}/g, i18n_default.t("remotePage.chat.input_placeholder"));
-    } else if (state && state.gameMode === "tournament") {
+    } else if (mode === "tournament") {
       html = html.replace(/\{\{tournamentPage\.title\}\}/g, i18n_default.t("tournamentPage.title"));
       html = html.replace(/\{\{tournamentPage\.p1\}\}/g, i18n_default.t("tournamentPage.p1"));
       html = html.replace(/\{\{tournamentPage\.p2\}\}/g, i18n_default.t("tournamentPage.p2"));

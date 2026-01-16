@@ -251,7 +251,7 @@ export function render(): string {
 		html = htmlContentLocal;
 	}
 
-	if (state && state.gameMode === 'remote') {
+	if (mode === 'remote') {
 		html = html.replace(/\{\{remotePage\.title\}\}/g, i18next.t('remotePage.title'));
 		html = html.replace(/\{\{remotePage\.p1\}\}/g, i18next.t('remotePage.p1'));
 		html = html.replace(/\{\{remotePage\.p2\}\}/g, i18next.t('remotePage.p2'));
@@ -280,7 +280,7 @@ export function render(): string {
 		html = html.replace(/\{\{remotePage\.chat\.input_placeholder\}\}/g, i18next.t('remotePage.chat.input_placeholder'));
 	} 
 
-	else if (state && state.gameMode === 'tournament') {
+	else if (mode === 'tournament') {
 		html = html.replace(/\{\{tournamentPage\.title\}\}/g, i18next.t('tournamentPage.title'));
 		html = html.replace(/\{\{tournamentPage\.p1\}\}/g, i18next.t('tournamentPage.p1'));
 		html = html.replace(/\{\{tournamentPage\.p2\}\}/g, i18next.t('tournamentPage.p2'));
