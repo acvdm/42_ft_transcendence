@@ -11501,15 +11501,12 @@
       console.error("Can't find register button in DOM");
       return;
     }
-    if (aliasInput) {
+    if (aliasInput)
       aliasInput.maxLength = 20;
-    }
-    if (emailInput) {
+    if (emailInput)
       emailInput.maxLength = 254;
-    }
-    if (passwordInput) {
+    if (passwordInput)
       passwordInput.maxLength = 128;
-    }
     backButton?.addEventListener("click", () => {
       window.history.pushState({}, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -12057,7 +12054,13 @@
   // scripts/components/game/GameUI.ts
   function getSqlDate() {
     const now = /* @__PURE__ */ new Date();
-    return now.toISOString().slice(0, 19).replace("T", " ");
+    const yyyy = now.getFullYear();
+    const mm = (now.getMonth() + 1).toString().padStart(2, "0");
+    const dd = now.getDate().toString().padStart(2, "0");
+    const hh = now.getHours().toString().padStart(2, "0");
+    const min = now.getMinutes().toString().padStart(2, "0");
+    const ss = now.getSeconds().toString().padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
   }
   function launchConfetti(duration = 3e3) {
     const colors2 = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
@@ -12229,6 +12232,7 @@
   }
   var LocalGameManager = class {
     constructor(context) {
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12345,7 +12349,7 @@
             nameInput.classList.add("border-red-500");
             return;
           }
-          if (opponentName.length > 30) {
+          if (opponentName.length > 20) {
             if (errorMsg) {
               errorMsg.innerText = i18n_default.t("localPage.erro_name_length");
               errorMsg.classList.remove("hidden");
@@ -12415,7 +12419,7 @@
                   clearInterval(localLoop);
                   return;
                 }
-                if (activeGame2.score.player1 >= 11 || activeGame2.score.player2 >= 11) {
+                if (activeGame2.score.player1 >= this.WINNING_SCORE || activeGame2.score.player2 >= this.WINNING_SCORE) {
                   activeGame2.isRunning = false;
                   clearInterval(localLoop);
                   const p1Score = activeGame2.score.player1;
@@ -12489,6 +12493,7 @@
     constructor(context) {
       this.currentP1Alias = "Player 1";
       this.currentP2Alias = "Player 2";
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12706,6 +12711,7 @@
             document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
+              console.log("opponent left");
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
                 activeGame2.isRunning = false;
@@ -12713,13 +12719,17 @@
                 gameSocket2.off("gameState");
                 gameSocket2.off("gameEnded");
                 document.removeEventListener("keydown", spaceHandler);
-                const s1 = activeGame2.score.player1;
-                const s2 = activeGame2.score.player2;
+                let s1 = 0;
+                let s2 = 0;
                 let winnerAlias = "";
                 if (data.role === "player1") {
                   winnerAlias = this.currentP1Alias;
+                  s1 = this.WINNING_SCORE;
+                  s2 = 0;
                 } else {
                   winnerAlias = this.currentP2Alias;
+                  s1 = 0;
+                  s2 = this.WINNING_SCORE;
                 }
                 await this.saveRemoteGameToApi(
                   this.currentP1Alias,
@@ -12731,34 +12741,44 @@
                   winnerAlias,
                   gameStartDate
                 );
-                showRemoteEndModal(myAlias, i18n_default.t("remoteManager.opponent_forfeit"));
+                showRemoteEndModal(winnerAlias, i18n_default.t("remoteManager.opponent_forfeit"));
                 this.context.setGame(null);
               }
             });
             newGame.onGameEnd = async (endData) => {
               document.removeEventListener("keydown", spaceHandler);
               let winnerAlias = i18n_default.t("remoteManager.default_winner");
-              if (endData.winner === "player1") {
-                winnerAlias = this.currentP1Alias;
-              } else if (endData.winner === "player2") {
-                winnerAlias = this.currentP2Alias;
-              }
               const activeGame2 = this.context.getGame();
-              if (activeGame2) {
-                const s1 = activeGame2.score.player1;
-                const s2 = activeGame2.score.player2;
+              let s1 = activeGame2 ? activeGame2.score.player1 : 0;
+              let s2 = activeGame2 ? activeGame2.score.player2 : 0;
+              const isNormalEndGame = s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE;
+              if (isNormalEndGame) {
+                if (s1 > s2)
+                  winnerAlias = this.currentP1Alias;
+                else
+                  winnerAlias = this.currentP2Alias;
+              } else {
                 if (data.role === "player1") {
-                  await this.saveRemoteGameToApi(
-                    this.currentP1Alias,
-                    s1,
-                    p1Id,
-                    this.currentP2Alias,
-                    s2,
-                    p2Id,
-                    winnerAlias,
-                    gameStartDate
-                  );
+                  s1 = this.WINNING_SCORE;
+                  s2 = 0;
+                  winnerAlias = this.currentP1Alias;
+                } else {
+                  s1 = 0;
+                  s2 = this.WINNING_SCORE;
+                  winnerAlias = this.currentP2Alias;
                 }
+              }
+              if (winnerAlias === myAlias) {
+                await this.saveRemoteGameToApi(
+                  this.currentP1Alias,
+                  s1,
+                  p1Id,
+                  this.currentP2Alias,
+                  s2,
+                  p2Id,
+                  winnerAlias,
+                  gameStartDate
+                );
               }
               showVictoryModal(winnerAlias, this.context.chat);
               this.context.setGame(null);
@@ -12861,6 +12881,7 @@
   var TournamentManager = class {
     constructor(context) {
       this.tournamentState = null;
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12875,14 +12896,12 @@
       const player4Input = document.getElementById("player4-input");
       const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
-      if (nameInput) {
+      if (nameInput)
         nameInput.maxLength = 45;
-      }
       const pInputs = [player1Input, player2Input, player3Input, player4Input];
       pInputs.forEach((input) => {
-        if (input) {
+        if (input)
           input.maxLength = 20;
-        }
       });
       this.initTournamentSelectors();
       const isGuest = sessionStorage.getItem("userRole") === "guest";
@@ -13169,7 +13188,6 @@
       }
       const scoreBoard = document.getElementById("score-board");
       if (scoreBoard) {
-        console.log("TournamentManager.ts, line 349");
         scoreBoard.innerText = "0 - 0";
       }
       const container = document.getElementById("left");
@@ -13448,11 +13466,11 @@
       const wasRemote = activeGame.isRemote;
       const roomId = activeGame.roomId;
       const playerRole = activeGame.playerRole;
-      activeGame.isRunning = false;
-      activeGame.stop();
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
       }
+      activeGame.isRunning = false;
+      activeGame.stop();
       activeGame = null;
     }
     cleanup();
@@ -13487,7 +13505,6 @@
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("popstate", handlePopState);
     isNavigationBlocked = false;
-    sessionStorage.removeItem("privateGameId");
   }
   function render7() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -28355,7 +28372,17 @@
       }
       history.forEach((match) => {
         const date = new Date(match.finished_at);
-        const dateString = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
+        const dateString = date.toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "Europe/Paris"
+        }).replace(/\//g, "-");
+        const timeString = date.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Paris"
+        });
         const isWin = match.is_winner === 1;
         const resultText = isWin ? i18n_default.t("dashboardPage.status_victory") : i18n_default.t("dashboardPage.status_defeat");
         const resultColor = isWin ? "text-green-600" : "text-red-500";
@@ -28367,13 +28394,15 @@
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `
-				<td class="py-2 text-gray-500">${dateString}</td>
-				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
-			`;
+                <td class="py-2 text-gray-500 whitespace-nowrap">
+                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+                    </td>
+                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
+            `;
         listContainer.appendChild(row);
       });
     }

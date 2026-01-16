@@ -118,6 +118,9 @@ export async function isAliasUsed (
     alias: string
 ): Promise<boolean>
 {
+    if (alias.length > 20)
+        return true;
+
     const checkAlias = await db.get(`
         SELECT id FROM USERS WHERE alias = ?`,
         [alias]

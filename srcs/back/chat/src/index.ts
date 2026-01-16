@@ -189,7 +189,6 @@ async function joinChannel(socket: Socket, io: Server, channelKey: string) {
 async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
     const { channel_key, sender_alias, msg_content } = data;
     const sender_id = Number(data.sender_id);
-    console.log("Back: chatMessage ligne 654")
 
     try {
         const saveMessageID = await messRepo.saveNewMessageinDB(db, channel_key, sender_id, sender_alias, msg_content);
@@ -235,38 +234,6 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
         console.error("Critical error in chatMessage :", err);
     }   
 }
-
-// fastify.get('/unread', async (request, reply) => {
-//     const authHeader = request.headers.authorization;
-    
-//     console.log('[/unread] Headers:', request.headers); // ✅ LOG
-    
-//     if (!authHeader) {
-//         console.error('[/unread] No Authorization header'); // ✅ LOG
-//         return reply.code(401).send({ success: false, error: "No token provided" });
-//     }
-
-//     try {
-//         const token = authHeader.replace('Bearer ', '');
-//         const decoded: any = jwt.verify(token, JWT_SECRET);
-//         const userId = decoded.sub;
-
-//         console.log(`[/unread] ✅ User authenticated: ${userId}`); // ✅ LOG
-        
-//         const unreadConvs = await getUnreadConversations(db, userId);
-        
-//         console.log(`[/unread] Found ${unreadConvs.length} unread conversations`); // ✅ LOG
-
-//         return reply.send({
-//             success: true,
-//             data: unreadConvs
-//         });
-
-//     } catch (err) {
-//         console.error("[/unread] Error:", err); // ✅ LOG
-//         return reply.code(401).send({ success: false, error: "Invalid token" });
-//     }
-// });
 
 // 3. Route Health Check
 fastify.get('/health', async () => {

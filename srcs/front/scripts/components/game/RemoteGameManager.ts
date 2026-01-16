@@ -8,6 +8,7 @@ import { Chat } from "../Chat";
 import { getPlayerAlias } from "../../controllers/GamePage";
 import i18next from "../../i18n";
 
+
 interface GameContext {
 	setGame: (game: Game | null) => void;
 	getGame: () => Game | null;
@@ -15,9 +16,10 @@ interface GameContext {
 }
 
 export class RemoteGameManager {
-	private context: GameContext;
-	private currentP1Alias: string = "Player 1";
-	private currentP2Alias: string = "Player 2";
+    private context: GameContext;
+    private currentP1Alias: string = "Player 1";
+    private currentP2Alias: string = "Player 2";
+    private WINNING_SCORE: number = 11;
 
 	constructor(context: GameContext) {
 		this.context = context;
@@ -270,27 +272,33 @@ export class RemoteGameManager {
 					};
 					document.addEventListener('keydown', spaceHandler);
 
-					// Rival is leaving the game
-					gameSocket.off('opponentLeft');
-					gameSocket.on('opponentLeft', async (eventData: any) => {
-						const activeGame = this.context.getGame();
-						if (activeGame) {
-							activeGame.isRunning = false;
-							activeGame.stop();
-							gameSocket.off('gameState');
-							gameSocket.off('gameEnded');
-							
-							document.removeEventListener('keydown', spaceHandler);
+                    // Rival is leaving the game
+                    gameSocket.off('opponentLeft');
+                    gameSocket.on('opponentLeft', async (eventData: any) => {
+                        console.log('opponent left');
+                        const activeGame = this.context.getGame();
+                        if (activeGame) {
+                            activeGame.isRunning = false;
+                            activeGame.stop();
+                            gameSocket.off('gameState');
+                            gameSocket.off('gameEnded');
+                            
+                            // cleaning listener space
+                            document.removeEventListener('keydown', spaceHandler);
 
-							const s1 = activeGame.score.player1;
-							const s2 = activeGame.score.player2;
-							let winnerAlias = "";
+                            let s1 = 0;
+                            let s2 = 0;
+                            let winnerAlias = "";
 
-							if (data.role === 'player1') {
-								winnerAlias = this.currentP1Alias;
-							} else {
-								winnerAlias = this.currentP2Alias;
-							}
+                            if (data.role === 'player1') {
+                                winnerAlias = this.currentP1Alias;
+                                s1 = this.WINNING_SCORE;
+                                s2 = 0;
+                            } else {
+                                winnerAlias = this.currentP2Alias;
+                                s1 = 0;
+                                s2 = this.WINNING_SCORE;
+                            }
 
 							await this.saveRemoteGameToApi (
 								this.currentP1Alias, s1, p1Id || 0,
@@ -299,40 +307,61 @@ export class RemoteGameManager {
 								gameStartDate
 							)
 
-							showRemoteEndModal(myAlias, i18next.t('remoteManager.opponent_forfeit'));
-							this.context.setGame(null);
-						}
-					});
+                            // MODIFICATION : Traduction du message de forfait
+                            showRemoteEndModal(winnerAlias, i18next.t('remoteManager.opponent_forfeit'));
+                            this.context.setGame(null);
+                        }
+                    });
 
-					newGame.onGameEnd = async (endData) => {
-						document.removeEventListener('keydown', spaceHandler);
+                    newGame.onGameEnd = async (endData) => {
+                        // cleaning listener space
+                        document.removeEventListener('keydown', spaceHandler);
+                        // MODIFICATION : Traduction fallback
+                        let winnerAlias = i18next.t('remoteManager.default_winner');
 
-						let winnerAlias = i18next.t('remoteManager.default_winner');
-						
-						if (endData.winner === 'player1') {
-							winnerAlias = this.currentP1Alias;
-						} else if (endData.winner === 'player2') {
-							winnerAlias = this.currentP2Alias;
-						}
+                        const activeGame = this.context.getGame();
+                        let s1 = activeGame ? activeGame.score.player1 : 0;
+                        let s2 = activeGame ? activeGame.score.player2 : 0;
 
-						const activeGame = this.context.getGame();
-						if (activeGame) {
-							const s1 = activeGame.score.player1;
-							const s2 = activeGame.score.player2;
+                        const isNormalEndGame = (s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE);
 
-							if (data.role === 'player1') {
-								await this.saveRemoteGameToApi(
-									this.currentP1Alias, s1, p1Id,
-									this.currentP2Alias, s2, p2Id,
-									winnerAlias,
-									gameStartDate
-								)
-							}
-						}
-						
-						showVictoryModal(winnerAlias, this.context.chat);
-						this.context.setGame(null);
-					};
+                        if (isNormalEndGame)
+                        {
+                            if (s1 > s2)
+                                winnerAlias = this.currentP1Alias;
+                            
+                            else
+                                winnerAlias = this.currentP2Alias;
+                        }
+                        else
+                        {
+                            if (data.role === 'player1')
+                            {
+                                s1 = this.WINNING_SCORE;
+                                s2 = 0;
+                                winnerAlias = this.currentP1Alias;
+                            }
+                            else
+                            {
+                                s1 = 0;
+                                s2 = this.WINNING_SCORE;
+                                winnerAlias = this.currentP2Alias;
+                            }
+                        }
+
+                        if (winnerAlias === myAlias)
+                        {
+                                await this.saveRemoteGameToApi(
+                                    this.currentP1Alias, s1, p1Id,
+                                    this.currentP2Alias, s2, p2Id,
+                                    winnerAlias,
+                                    gameStartDate
+                                )  
+                        }
+
+                        showVictoryModal(winnerAlias, this.context.chat);
+                        this.context.setGame(null);
+                    };
 
 					newGame.onScoreChange = (score) => {
 						const sb = document.getElementById('score-board');

@@ -523,13 +523,13 @@ export function afterRender(): void {
 	};
 	loadUserData();
 
-	// Updating username
-	const updateUsername = async (newUsername: string) => {
-		
-		if (!userId || !newUsername.trim() || newUsername.length > 20) {
-			alert(i18next.t('profilePage.alerts.username_error'));
-			return false;
-		}
+    // Updating username
+    const updateUsername = async (newUsername: string) => {
+        
+        if (!userId || !newUsername.trim() || newUsername.length > 20) {
+            alert(i18next.t('profilePage.alerts.username_error'));
+            return false;
+        }
 
 		try {
 			const response = await fetchWithAuth(`api/user/${userId}/alias`, {
@@ -687,25 +687,25 @@ export function afterRender(): void {
 		const MAX_BIO_LENGTH = 70;
 		const charCountElement = fieldName === 'bio' ? elements.container.querySelector('.char-count') as HTMLSpanElement : null;
 
-		if (fieldName === 'alias')
-			input.maxLength = 20;
-		if (fieldName === 'bio')
-			input.maxLength = 70;
-		if (fieldName === 'email')
-			input.maxLength = 254;
-		
-		const updateCharCount = (currentLength: number) => {
-			if (charCountElement) {
-				charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
-				if (currentLength > MAX_BIO_LENGTH) {
-					charCountElement.classList.add('text-red-500');
-					charCountElement.classList.remove('text-gray-500');
-				} else {
-					charCountElement.classList.remove('text-red-500');
-					charCountElement.classList.add('text-gray-500');
-				}
-			}
-		};
+        if (fieldName === 'alias')
+            input.maxLength = 20;
+        if (fieldName === 'bio')
+            input.maxLength = 70;
+        if (fieldName === 'email')
+            input.maxLength = 254;
+        
+        const updateCharCount = (currentLength: number) => {
+            if (charCountElement) {
+                charCountElement.innerText = `${currentLength}/${MAX_BIO_LENGTH}`;
+                if (currentLength > MAX_BIO_LENGTH) {
+                    charCountElement.classList.add('text-red-500');
+                    charCountElement.classList.remove('text-gray-500');
+                } else {
+                    charCountElement.classList.remove('text-red-500');
+                    charCountElement.classList.add('text-gray-500');
+                }
+            }
+        };
 
 		// Editiong concerned input
 		const enableEditMode = () => {

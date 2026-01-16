@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 function getRandomInt()
 {
     const min = Math.ceil(1);
-    const max = Math.floor(100);
+    const max = Math.floor(99);
 
     return Math.floor(Math.random() * (max - min) + min);
 }

@@ -318,35 +318,51 @@ export function afterRender(): void {
 			return;
 		}
 
-		// Sort has already been made before. Only iterating here.
 		history.forEach(match => {
-			const date = new Date(match.finished_at);
-			const dateString = `${date.getDate().toString().padStart(2,'0')}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getFullYear()}`;
-			const isWin = match.is_winner === 1;
-			const resultText = isWin ? i18next.t('dashboardPage.status_victory') : i18next.t('dashboardPage.status_defeat');
-			const resultColor = isWin ? "text-green-600" : "text-red-500";
-			const scoreString = `${match.my_score} - ${match.opponent_score !== undefined ? match.opponent_score : 0}`;
-			const roundString = match.round 
-				? match.round 
-				: (match.game_type === 'tournament' ? i18next.t('dashboardPage.round_final') : i18next.t('dashboardPage.round_1v1'));
+            const date = new Date(match.finished_at);
+            const dateString = date.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                timeZone: 'Europe/Paris'
+            }).replace(/\//g, '-');
+            
+            const timeString = date.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'Europe/Paris' 
+            });
 
-			const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
-			const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
-			const opponentName = escapeHtml(rawName);
-			const row = document.createElement('tr');
-			row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
+            const isWin = match.is_winner === 1;
+            
+            const resultText = isWin ? i18next.t('dashboardPage.status_victory') : i18next.t('dashboardPage.status_defeat');
+            const resultColor = isWin ? "text-green-600" : "text-red-500";
+            const scoreString = `${match.my_score} - ${match.opponent_score !== undefined ? match.opponent_score : 0}`;
+            
+            const roundString = match.round 
+                ? match.round 
+                : (match.game_type === 'tournament' ? i18next.t('dashboardPage.round_final') : i18next.t('dashboardPage.round_1v1'));
 
-			row.innerHTML = `
-				<td class="py-2 text-gray-500">${dateString}</td>
-				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
-			`;
+            const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
+            const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
+            const opponentName = escapeHtml(rawName);
 
-			listContainer.appendChild(row);
-		});
+            const row = document.createElement('tr');
+            row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
+
+            row.innerHTML = `
+                <td class="py-2 text-gray-500 whitespace-nowrap">
+                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+                    </td>
+                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
+            `;
+
+            listContainer.appendChild(row);
+        });
 	}
 
 
