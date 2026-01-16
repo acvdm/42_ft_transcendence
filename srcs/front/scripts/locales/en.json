@@ -343,7 +343,8 @@
       "title": "Game chat",
       "info": "Chat room",
       "choose_bg": "Choose a background:",
-      "default_bg": "Default background"
+      "default_bg": "Default background",
+      "input_placeholder": "Type in your message"
     }
   },
 
@@ -490,6 +491,7 @@
     "block_success": "Conversation deleted (User blocked).",
     "block_error": "Error while blocking",
     "input_blocked": "You blocked this user.",
+    "error_length_exceeded": "Message too long",
     "tools": {
       "bold": "Bold",
       "italic": "Italic",

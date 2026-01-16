@@ -7,7 +7,6 @@ import { Socket, Server } from 'socket.io'; // <--- AJOUT DE 'Server' ICI
 import * as messRepo from "./repositories/messages.js";
 import * as chanRepo from "./repositories/channels.js"; 
 import { UnauthorizedError } from './utils/error.js';
-import { updateLastRead, hasUnreadMessages, getUnreadConversations } from './repositories/channel_reads.js'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -73,7 +72,6 @@ fastify.ready().then(() => {
 
         socket.on('registerUser', (userId: string) => {
             const id = Number(userId);
-
             if (id !== Number(userId)) console.warn(`[Back] Warning: Socket ${socket.id} registering for user ${id} but token is ${userId}`);
             userSockets.set(id, socket.id); // AJOUT: on stocke le socket id
             const roomName = `user_${id}`;
@@ -93,44 +91,8 @@ fastify.ready().then(() => {
 
         socket.on("joinChannel", async (channelKey: string) => { 
             await joinChannel(socket, fastify.io, channelKey);
-
-            await updateLastRead(db, channelKey, userId); 
-
-            socket.data.currentChannel = channelKey;
-
         });
 
-        socket.on("leaveChannel", async (channelKey: string) => {
-            console.log(`User ${userId} leaving channel ${channelKey}`);
-            socket.leave(channelKey);
-
-            await updateLastRead(db, channelKey, userId);
-            delete socket.data.currentChannel;
-        });
-
-        socket.on("disconnected", async () => {
-            if (socket.data.currentChannel)
-            {
-                await updateLastRead(db, socket.data.currentChannel, userId);
-            }
-        });
-
-        socket.on('checkUnread', async (data: { channelKey: string, friendId: number }) => {
-             // userId est défini via le token (socket.user.sub)
-            try {
-                const hasUnread = await hasUnreadMessages(db, data.channelKey, userId);
-                // On répond uniquement à ce socket pour mettre à jour l'UI
-                socket.emit('unreadStatus', { 
-                    friendId: data.friendId, 
-                    hasUnread 
-                });
-            } catch (err) {
-                console.error("Erreur checkUnread:", err);
-            }
-        });
-
-        
-        
         socket.on('chatMessage', async (data: any) => { 
             await chatMessage(fastify.io, data, db); 
         });  
@@ -274,34 +236,37 @@ async function chatMessage(io: Server, data: messRepo.Message, db: Database) {
     }   
 }
 
-fastify.get('/unread', async (request, reply) => {
-    // 1. On récupère le token dans le header "Authorization"
-    const authHeader = request.headers.authorization;
-    if (!authHeader) {
-        return reply.code(401).send({ success: false, error: "No token provided" });
-    }
+// fastify.get('/unread', async (request, reply) => {
+//     const authHeader = request.headers.authorization;
+    
+//     console.log('[/unread] Headers:', request.headers); // ✅ LOG
+    
+//     if (!authHeader) {
+//         console.error('[/unread] No Authorization header'); // ✅ LOG
+//         return reply.code(401).send({ success: false, error: "No token provided" });
+//     }
 
-    try {
-        // 2. On nettoie le token (enlève "Bearer ") et on le vérifie
-        const token = authHeader.replace('Bearer ', '');
-        const decoded: any = jwt.verify(token, JWT_SECRET);
-        const userId = decoded.sub; // On a l'ID de l'utilisateur !
+//     try {
+//         const token = authHeader.replace('Bearer ', '');
+//         const decoded: any = jwt.verify(token, JWT_SECRET);
+//         const userId = decoded.sub;
 
-        console.log(`[API] Fetching unread for UserID: ${userId}`); // <--- LOG
-        // 3. On demande à la DB les conversations non lues
-        const unreadConvs = await getUnreadConversations(db, userId);
+//         console.log(`[/unread] ✅ User authenticated: ${userId}`); // ✅ LOG
+        
+//         const unreadConvs = await getUnreadConversations(db, userId);
+        
+//         console.log(`[/unread] Found ${unreadConvs.length} unread conversations`); // ✅ LOG
 
-        // 4. On renvoie la liste au front
-        return reply.send({
-            success: true,
-            data: unreadConvs
-        });
+//         return reply.send({
+//             success: true,
+//             data: unreadConvs
+//         });
 
-    } catch (err) {
-        console.error("Error fetching unread:", err);
-        return reply.code(401).send({ success: false, error: "Invalid token" });
-    }
-});
+//     } catch (err) {
+//         console.error("[/unread] Error:", err); // ✅ LOG
+//         return reply.code(401).send({ success: false, error: "Invalid token" });
+//     }
+// });
 
 // 3. Route Health Check
 fastify.get('/health', async () => {

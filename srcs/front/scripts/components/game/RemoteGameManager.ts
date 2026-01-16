@@ -1,4 +1,3 @@
-// srcs/front/scripts/components/game/RemoteGameManager.ts
 import { fetchWithAuth } from "../../services/api";
 import SocketService from '../../services/SocketService';
 import { ballEmoticons, gameBackgrounds } from "../Data";
@@ -7,454 +6,436 @@ import Input from "../../game/Input";
 import { getSqlDate, launchCountdown, showVictoryModal, showRemoteEndModal } from "./GameUI";
 import { Chat } from "../Chat";
 import { getPlayerAlias } from "../../controllers/GamePage";
-import i18next from "../../i18n"; // AJOUT IMPORT
+import i18next from "../../i18n";
 
 interface GameContext {
-    setGame: (game: Game | null) => void;
-    getGame: () => Game | null;
-    chat: Chat | null;
+	setGame: (game: Game | null) => void;
+	getGame: () => Game | null;
+	chat: Chat | null;
 }
 
 export class RemoteGameManager {
-    private context: GameContext;
-    private currentP1Alias: string = "Player 1";
-    private currentP2Alias: string = "Player 2";
+	private context: GameContext;
+	private currentP1Alias: string = "Player 1";
+	private currentP2Alias: string = "Player 2";
 
-    constructor(context: GameContext) {
-        this.context = context;
-    }
+	constructor(context: GameContext) {
+		this.context = context;
+	}
 
-    public init() {
-        const socketService = SocketService.getInstance();
-        socketService.connectGame();
-        const gameSocket = socketService.getGameSocket();
+	public init() {
+		const socketService = SocketService.getInstance();
+		socketService.connectGame();
+		const gameSocket = socketService.getGameSocket();
 
-        if (!gameSocket) {
-            console.error("Cannot connect to server");
-            return ;
-        }
+		if (!gameSocket) {
+			console.error("Cannot connect to server");
+			return ;
+		}
 
-        const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
-        const status = document.getElementById('queue-status');
-        const modal = document.getElementById('game-setup-modal');
-        const container = document.getElementById('game-canvas-container');
-        const ballBtn = document.getElementById('ball-selector-button');
-        const ballDrop = document.getElementById('ball-selector-dropdown');
-        const ballGrid = document.getElementById('ball-grid');
-        const ballImg = document.getElementById('selected-ball-img') as HTMLImageElement;
-        const ballInput = document.getElementById('ball-value') as HTMLInputElement;
-        const bgBtn = document.getElementById('bg-selector-button');
-        const bgDrop = document.getElementById('bg-selector-dropdown');
-        const bgGrid = document.getElementById('bg-grid');
-        const bgPrev = document.getElementById('selected-bg-preview');
-        const bgInput = document.getElementById('bg-value') as HTMLInputElement;
-        const bgResetBtn = document.getElementById('bg-reset-button');
-        const gameContainer = document.getElementById('left');
+		const btn = document.getElementById('start-game-btn') as HTMLButtonElement;
+		const status = document.getElementById('queue-status');
+		const modal = document.getElementById('game-setup-modal');
+		const container = document.getElementById('game-canvas-container');
+		const ballBtn = document.getElementById('ball-selector-button');
+		const ballDrop = document.getElementById('ball-selector-dropdown');
+		const ballGrid = document.getElementById('ball-grid');
+		const ballImg = document.getElementById('selected-ball-img') as HTMLImageElement;
+		const ballInput = document.getElementById('ball-value') as HTMLInputElement;
+		const bgBtn = document.getElementById('bg-selector-button');
+		const bgDrop = document.getElementById('bg-selector-dropdown');
+		const bgGrid = document.getElementById('bg-grid');
+		const bgPrev = document.getElementById('selected-bg-preview');
+		const bgInput = document.getElementById('bg-value') as HTMLInputElement;
+		const bgResetBtn = document.getElementById('bg-reset-button');
+		const gameContainer = document.getElementById('left');
 
-        if (ballBtn && ballDrop && ballGrid) {
-            const uniqueUrls = new Set<string>();
-            ballGrid.innerHTML = '';
-            Object.keys(ballEmoticons).forEach(key => {
-                const imgUrl = ballEmoticons[key];
-                if (!uniqueUrls.has(imgUrl)) {
-                    uniqueUrls.add(imgUrl);
-                    const div = document.createElement('div');
-                    div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
-                    div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
-                    div.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if(ballImg) ballImg.src = imgUrl;
-                        if(ballInput) ballInput.value = imgUrl;
-                        ballDrop.classList.add('hidden');
-                    });
-                    ballGrid.appendChild(div);
-                }
-            });
-            ballBtn.addEventListener('click', (e) => { e.stopPropagation(); ballDrop.classList.toggle('hidden'); });
-            document.addEventListener('click', (e) => { if (!ballDrop.contains(e.target as Node) && !ballBtn.contains(e.target as Node)) ballDrop.classList.add('hidden'); });
-        }
+		if (ballBtn && ballDrop && ballGrid) {
+			const uniqueUrls = new Set<string>();
+			ballGrid.innerHTML = '';
+			Object.keys(ballEmoticons).forEach(key => {
+				const imgUrl = ballEmoticons[key];
+				if (!uniqueUrls.has(imgUrl)) {
+					uniqueUrls.add(imgUrl);
+					const div = document.createElement('div');
+					div.className = "cursor-pointer p-1 hover:bg-blue-100 rounded flex justify-center items-center";
+					div.innerHTML = `<img src="${imgUrl}" class="w-6 h-6 object-contain pointer-events-none">`;
+					div.addEventListener('click', (e) => {
+						e.stopPropagation();
+						if(ballImg) ballImg.src = imgUrl;
+						if(ballInput) ballInput.value = imgUrl;
+						ballDrop.classList.add('hidden');
+					});
+					ballGrid.appendChild(div);
+				}
+			});
+			ballBtn.addEventListener('click', (e) => { e.stopPropagation(); ballDrop.classList.toggle('hidden'); });
+			document.addEventListener('click', (e) => { if (!ballDrop.contains(e.target as Node) && !ballBtn.contains(e.target as Node)) ballDrop.classList.add('hidden'); });
+		}
 
-        if (bgBtn && bgDrop && bgGrid) {
-            bgGrid.innerHTML = '';
-            Object.keys(gameBackgrounds).forEach(key => {
-                const color = gameBackgrounds[key];
-                const div = document.createElement('div');
-                div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
-                div.style.width = "35px";
-                div.style.height = "35px";
-                div.style.padding = "2px";
-                
-                const circle = document.createElement('div');
-                circle.className = "w-full h-full rounded-full border border-gray-300";
-                circle.style.backgroundColor = color;
-                div.appendChild(circle);
-                div.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if(bgPrev) bgPrev.style.backgroundColor = color;
-                    if(bgInput) bgInput.value = color;
-                    if(gameContainer) gameContainer.style.backgroundColor = color; 
-                    bgDrop.classList.add('hidden');
-                });
-                bgGrid.appendChild(div);
-            });
+		// Background selection
+		if (bgBtn && bgDrop && bgGrid) {
+			bgGrid.innerHTML = '';
+			Object.keys(gameBackgrounds).forEach(key => {
+				const color = gameBackgrounds[key];
+				const div = document.createElement('div');
+				div.className = "cursor-pointer hover:ring-2 hover:ring-blue-400 rounded-full flex justify-center items-center";
+				div.style.width = "35px";
+				div.style.height = "35px";
+				div.style.padding = "2px";
+				
+				const circle = document.createElement('div');
+				circle.className = "w-full h-full rounded-full border border-gray-300";
+				circle.style.backgroundColor = color;
+				div.appendChild(circle);
+				div.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if(bgPrev) bgPrev.style.backgroundColor = color;
+					if(bgInput) bgInput.value = color;
+					if(gameContainer) gameContainer.style.backgroundColor = color; 
+					bgDrop.classList.add('hidden');
+				});
+				bgGrid.appendChild(div);
+			});
 
-            if (bgResetBtn) {
-                bgResetBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const resetColor = '#E8F4F8';
-                    if (bgPrev) bgPrev.style.backgroundColor = resetColor;
-                    if (bgInput) bgInput.value = resetColor;
-                    if (gameContainer) gameContainer.style.backgroundColor = resetColor;
-                    bgDrop.classList.add('hidden');
-                });
-            }
+			if (bgResetBtn) {
+				bgResetBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					const resetColor = '#E8F4F8';
+					if (bgPrev) bgPrev.style.backgroundColor = resetColor;
+					if (bgInput) bgInput.value = resetColor;
+					if (gameContainer) gameContainer.style.backgroundColor = resetColor;
+					bgDrop.classList.add('hidden');
+				});
+			}
 
-            bgBtn.addEventListener('click', (e) => { e.stopPropagation(); bgDrop.classList.toggle('hidden'); });
-            document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
-        }
-
-
-        const startGameFromData = async (data: any, p1Alias?: string, p2Alias?: string) => {
-
-            const gameSocket = SocketService.getInstance().getGameSocket();
-            if (gameSocket)
-            {
-                gameSocket.off('gameState');
-                gameSocket.off('gameEnded');
-                gameSocket.off('opponentLeft');
-            }
-
-            const scoreBoard = document.getElementById('score-board');
-            if (scoreBoard) {
-                scoreBoard.innerText = "0 - 0";
-            }
-
-            const myAlias = await getPlayerAlias();
-            const myId = Number(localStorage.getItem('userId'));
-            let opponentId = data.opponent ? Number(data.opponent) : null;
-
-            if (opponentId && myId === opponentId) {
-                console.error("Error: cannot play against yourself");
-                if (status) {
-                    // MODIFICATION : Traduction
-                    status.innerText = i18next.t('remoteManager.self_play_error');
-                    status.style.color = "red";
-                }
-
-                if (btn) {
-                    btn.disabled = false;
-                    // MODIFICATION : Traduction
-                    btn.innerText = i18next.t('remoteManager.btn_play_queue');
-                }
-
-                const socket = SocketService.getInstance().getGameSocket();
-                if (socket) {
-                    socket.emit('leaveQueue');
-                }
-                return ;
-            }
+			bgBtn.addEventListener('click', (e) => { e.stopPropagation(); bgDrop.classList.toggle('hidden'); });
+			document.addEventListener('click', (e) => { if (!bgDrop.contains(e.target as Node) && !bgBtn.contains(e.target as Node)) bgDrop.classList.add('hidden'); });
+		}
 
 
-            const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
-            const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
-            let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
-            let p2Id: number | null = (data.role === 'player2') ? myId : opponentId;
-            // MODIFICATION : Traduction
-            let opponentAlias = i18next.t('remoteManager.default_opponent');
+		const startGameFromData = async (data: any, p1Alias?: string, p2Alias?: string) => {
 
-            if (data.role === 'player1') 
-            {
-                this.currentP1Alias = myAlias;
-                if (remoteP2Alias) {
-                    opponentAlias = remoteP2Alias;
-                }
-                this.currentP2Alias = opponentAlias;
-            } 
-            else 
-            {
-                if (remoteP1Alias) {
-                    opponentAlias = remoteP1Alias;
-                }
-                this.currentP1Alias = opponentAlias;
-                this.currentP2Alias = myAlias;
-            }
+			const gameSocket = SocketService.getInstance().getGameSocket();
+			if (gameSocket)
+			{
+				gameSocket.off('gameState');
+				gameSocket.off('gameEnded');
+				gameSocket.off('opponentLeft');
+			}
 
-            const p1Display = document.getElementById('player-1-name');
-            const p2Display = document.getElementById('player-2-name');
+			const scoreBoard = document.getElementById('score-board');
+			if (scoreBoard) {
+				scoreBoard.innerText = "0 - 0";
+			}
 
-            if (p1Display && p2Display) 
-            {
-                // MODIFICATION : Traduction du suffixe (Me)
-                const meSuffix = i18next.t('remoteManager.me_suffix');
-                p1Display.innerText = (data.role === 'player1') ? `${this.currentP1Alias} ${meSuffix}` : this.currentP1Alias;
-                p2Display.innerText = (data.role === 'player2') ? `${this.currentP2Alias} ${meSuffix}` : this.currentP2Alias;
-            }
+			const myAlias = await getPlayerAlias();
+			const myId = Number(localStorage.getItem('userId'));
+			let opponentId = data.opponent ? Number(data.opponent) : null;
 
-            let gameStartDate = getSqlDate();
+			if (opponentId && myId === opponentId) {
+				console.error("Error: cannot play against yourself");
+				if (status) {
+					status.innerText = i18next.t('remoteManager.self_play_error');
+					status.style.color = "red";
+				}
 
-            if (data.opponent) {
-                fetchWithAuth(`api/user/${data.opponent}`)
-                    .then(res => res.ok ? res.json() : null)
-                    .then(userData => {
-                        if (userData && userData.alias) {
-                            const realOpponentName = userData.alias;
-    
-                            if (data.role === 'player1') {
-                                this.currentP2Alias = realOpponentName;
-                                if (p2Display) {
-                                    p2Display.innerText = realOpponentName;
-                                }
-                            } else {
-                                this.currentP1Alias = realOpponentName;
-                                if (p1Display) {
-                                    p1Display.innerText = realOpponentName;
-                                }
-                            }
-                        }
-                    })
-                    .catch(e => console.error("Error retrieving opponent alias:", e));
-            }
+				if (btn) {
+					btn.disabled = false;
+					btn.innerText = i18next.t('remoteManager.btn_play_queue');
+				}
 
-            if (this.context.chat) {
-                this.context.chat.joinChannel(data.roomId);
-                // MODIFICATION : Traduction
-                this.context.chat.addSystemMessage(i18next.t('remoteManager.match_started'));
-            }
+				const socket = SocketService.getInstance().getGameSocket();
+				if (socket) {
+					socket.emit('leaveQueue');
+				}
+				return ;
+			}
 
-            if (status) {
-                // MODIFICATION : Traduction
-                status.innerText = i18next.t('remoteManager.match_found');
-            }
-            if (modal) {
-                modal.style.display = 'none';
-            }
 
-            if (container) {
-                container.innerHTML = '';
-                const canvas = document.createElement('canvas');
-                canvas.width = container.clientWidth;
-                canvas.height = container.clientHeight;
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                container.appendChild(canvas);
+			const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
+			const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
+			let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
+			let p2Id: number | null = (data.role === 'player2') ? myId : opponentId;
+			let opponentAlias = i18next.t('remoteManager.default_opponent');
 
-                if (canvas.width === 0) {
-                    canvas.width = 800;
-                }
-                if (canvas.height === 0) {
-                    canvas.height = 600;
-                }
+			if (data.role === 'player1') 
+			{
+				this.currentP1Alias = myAlias;
+				if (remoteP2Alias) {
+					opponentAlias = remoteP2Alias;
+				}
+				this.currentP2Alias = opponentAlias;
+			} 
+			else 
+			{
+				if (remoteP1Alias) {
+					opponentAlias = remoteP1Alias;
+				}
+				this.currentP1Alias = opponentAlias;
+				this.currentP2Alias = myAlias;
+			}
 
-                const ctx = canvas.getContext('2d');
-                const input = new Input();
-                const selectedBallSkin = ballInput ? ballInput.value : 'classic';
+			const p1Display = document.getElementById('player-1-name');
+			const p2Display = document.getElementById('player-2-name');
 
-                if (ctx) {
-                    if (this.context.getGame()) {
-                        this.context.getGame()!.stop();
-                        this.context.setGame(null);
-                    }
+			if (p1Display && p2Display) 
+			{
+				const meSuffix = i18next.t('remoteManager.me_suffix');
+				p1Display.innerText = (data.role === 'player1') ? `${this.currentP1Alias} ${meSuffix}` : this.currentP1Alias;
+				p2Display.innerText = (data.role === 'player2') ? `${this.currentP2Alias} ${meSuffix}` : this.currentP2Alias;
+			}
 
-                    const newGame = new Game(canvas, ctx, input, selectedBallSkin);
-                    newGame.resetScore();
-                    this.context.setGame(newGame);
+			let gameStartDate = getSqlDate();
 
-                    const spaceHandler = (e: KeyboardEvent) => {
-                        if (e.code === 'Space') {
-                            const game = this.context.getGame();
-                            if (game && game.isRunning) {
-                                e.preventDefault();
-                                this.context.chat?.emitWizzOnly();
-                            }
-                        }
-                    };
-                    document.addEventListener('keydown', spaceHandler);
+			if (data.opponent) {
+				fetchWithAuth(`api/user/${data.opponent}`)
+					.then(res => res.ok ? res.json() : null)
+					.then(userData => {
+						if (userData && userData.alias) {
+							const realOpponentName = userData.alias;
+	
+							if (data.role === 'player1') {
+								this.currentP2Alias = realOpponentName;
+								if (p2Display) {
+									p2Display.innerText = realOpponentName;
+								}
+							} else {
+								this.currentP1Alias = realOpponentName;
+								if (p1Display) {
+									p1Display.innerText = realOpponentName;
+								}
+							}
+						}
+					})
+					.catch(e => console.error("Error retrieving opponent alias:", e));
+			}
 
-                    // Rival is leaving the game
-                    gameSocket.off('opponentLeft');
-                    gameSocket.on('opponentLeft', async (eventData: any) => {
-                        const activeGame = this.context.getGame();
-                        if (activeGame) {
-                            activeGame.isRunning = false;
-                            activeGame.stop();
-                            gameSocket.off('gameState');
-                            gameSocket.off('gameEnded');
-                            
-                            // cleaning listener space
-                            document.removeEventListener('keydown', spaceHandler);
+			if (this.context.chat) {
+				this.context.chat.joinChannel(data.roomId);
+				this.context.chat.addSystemMessage(i18next.t('remoteManager.match_started'));
+			}
 
-                            const s1 = activeGame.score.player1;
-                            const s2 = activeGame.score.player2;
-                            let winnerAlias = "";
+			if (status) {
+				status.innerText = i18next.t('remoteManager.match_found');
+			}
+			if (modal) {
+				modal.style.display = 'none';
+			}
 
-                            if (data.role === 'player1') {
-                                winnerAlias = this.currentP1Alias;
-                            } else {
-                                winnerAlias = this.currentP2Alias;
-                            }
+			if (container) {
+				container.innerHTML = '';
+				const canvas = document.createElement('canvas');
+				canvas.width = container.clientWidth;
+				canvas.height = container.clientHeight;
+				canvas.style.width = '100%';
+				canvas.style.height = '100%';
+				container.appendChild(canvas);
 
-                            await this.saveRemoteGameToApi (
-                                this.currentP1Alias, s1, p1Id,
-                                this.currentP2Alias, s2, p2Id,
-                                winnerAlias,
-                                gameStartDate
-                            )
+				if (canvas.width === 0) {
+					canvas.width = 800;
+				}
+				if (canvas.height === 0) {
+					canvas.height = 600;
+				}
 
-                            // MODIFICATION : Traduction du message de forfait
-                            showRemoteEndModal(myAlias, i18next.t('remoteManager.opponent_forfeit'));
-                            this.context.setGame(null);
-                        }
-                    });
+				const ctx = canvas.getContext('2d');
+				const input = new Input();
+				const selectedBallSkin = ballInput ? ballInput.value : 'classic';
 
-                    newGame.onGameEnd = async (endData) => {
-                        // cleaning listener space
-                        document.removeEventListener('keydown', spaceHandler);
+				if (ctx) {
+					if (this.context.getGame()) {
+						this.context.getGame()!.stop();
+						this.context.setGame(null);
+					}
 
-                        // MODIFICATION : Traduction fallback
-                        let winnerAlias = i18next.t('remoteManager.default_winner');
-                        
-                        if (endData.winner === 'player1') {
-                            winnerAlias = this.currentP1Alias;
-                        } else if (endData.winner === 'player2') {
-                            winnerAlias = this.currentP2Alias;
-                        }
+					const newGame = new Game(canvas, ctx, input, selectedBallSkin);
+					newGame.resetScore();
+					this.context.setGame(newGame);
 
-                        const activeGame = this.context.getGame();
-                        if (activeGame) {
-                            const s1 = activeGame.score.player1;
-                            const s2 = activeGame.score.player2;
+					const spaceHandler = (e: KeyboardEvent) => {
+						if (e.code === 'Space') {
+							const game = this.context.getGame();
+							if (game && game.isRunning) {
+								e.preventDefault();
+								this.context.chat?.emitWizzOnly();
+							}
+						}
+					};
+					document.addEventListener('keydown', spaceHandler);
 
-                            if (data.role === 'player1') {
-                                await this.saveRemoteGameToApi(
-                                    this.currentP1Alias, s1, p1Id,
-                                    this.currentP2Alias, s2, p2Id,
-                                    winnerAlias,
-                                    gameStartDate
-                                )
-                            }
-                        }
-                        
-                        showVictoryModal(winnerAlias, this.context.chat);
-                        this.context.setGame(null);
-                    };
+					// Rival is leaving the game
+					gameSocket.off('opponentLeft');
+					gameSocket.on('opponentLeft', async (eventData: any) => {
+						const activeGame = this.context.getGame();
+						if (activeGame) {
+							activeGame.isRunning = false;
+							activeGame.stop();
+							gameSocket.off('gameState');
+							gameSocket.off('gameEnded');
+							
+							document.removeEventListener('keydown', spaceHandler);
 
-                    newGame.onScoreChange = (score) => {
-                        const sb = document.getElementById('score-board');
-                        if (sb) {
-                            sb.innerText = `${score.player1} - ${score.player2}`;
-                        }
-                            
-                    };
+							const s1 = activeGame.score.player1;
+							const s2 = activeGame.score.player2;
+							let winnerAlias = "";
 
-                    launchCountdown(() => {
-                        const activeGame = this.context.getGame();
-                        if (activeGame) {
-                            gameStartDate = getSqlDate();
-                            activeGame.startRemote(data.roomId, data.role);
-                        }
-                    });
-                }
+							if (data.role === 'player1') {
+								winnerAlias = this.currentP1Alias;
+							} else {
+								winnerAlias = this.currentP2Alias;
+							}
 
-            }
-        };
+							await this.saveRemoteGameToApi (
+								this.currentP1Alias, s1, p1Id,
+								this.currentP2Alias, s2, p2Id,
+								winnerAlias,
+								gameStartDate
+							)
 
-        const pendingMatch = sessionStorage.getItem('pendingMatch');
-        if (pendingMatch) {
-            const data = JSON.parse(pendingMatch);
-            sessionStorage.removeItem('pendingMatch');
-            startGameFromData(data);
-        }
-        
-        const privateRoomId = sessionStorage.getItem('privateGameId');
+							showRemoteEndModal(myAlias, i18next.t('remoteManager.opponent_forfeit'));
+							this.context.setGame(null);
+						}
+					});
 
-        if (btn) {
+					newGame.onGameEnd = async (endData) => {
+						document.removeEventListener('keydown', spaceHandler);
 
-            // on va cloner le bouton pour supprimer les anciens listeners et commencer avec un truc propre
-            const newBtn = btn.cloneNode(true) as HTMLButtonElement;
-            btn.parentNode?.replaceChild(newBtn, btn);
-            newBtn.addEventListener('click', async () => {
-                if (!gameSocket) {
-                    // MODIFICATION : Traduction
-                    alert(i18next.t('remoteManager.error_connection'));
-                    return;
-                }
+						let winnerAlias = i18next.t('remoteManager.default_winner');
+						
+						if (endData.winner === 'player1') {
+							winnerAlias = this.currentP1Alias;
+						} else if (endData.winner === 'player2') {
+							winnerAlias = this.currentP2Alias;
+						}
 
-                newBtn.disabled = true;
+						const activeGame = this.context.getGame();
+						if (activeGame) {
+							const s1 = activeGame.score.player1;
+							const s2 = activeGame.score.player2;
 
-                if (privateRoomId) {
-                    if (status) {
-                        // MODIFICATION : Traduction
-                        status.innerText = i18next.t('remoteManager.waiting_private');
-                    }
+							if (data.role === 'player1') {
+								await this.saveRemoteGameToApi(
+									this.currentP1Alias, s1, p1Id,
+									this.currentP2Alias, s2, p2Id,
+									winnerAlias,
+									gameStartDate
+								)
+							}
+						}
+						
+						showVictoryModal(winnerAlias, this.context.chat);
+						this.context.setGame(null);
+					};
 
-                    // MODIFICATION : Traduction
-                    newBtn.innerText = i18next.t('remoteManager.btn_waiting_friend');
-                    gameSocket.off('matchFound');
-                    gameSocket.on('matchFound', (data: any) => {
-                        sessionStorage.removeItem('privateGameId'); 
-                        startGameFromData(data);
-                    });
+					newGame.onScoreChange = (score) => {
+						const sb = document.getElementById('score-board');
+						if (sb) {
+							sb.innerText = `${score.player1} - ${score.player2}`;
+						}
+							
+					};
 
-                    const selectedBall = ballInput ? ballInput.value : 'classic';
-                    gameSocket.emit('joinPrivateGame', { 
-                        roomId: privateRoomId,
-                        skin: selectedBall 
-                    });
-                } else {
-                    if (status) {
-                        // MODIFICATION : Traduction
-                        status.innerText = i18next.t('remoteManager.looking_rival');
-                    }
-                    // MODIFICATION : Traduction
-                    newBtn.innerText = i18next.t('remoteManager.btn_waiting');
-                    gameSocket.off('matchFound');
-                    gameSocket.on('matchFound', (data: any) => {
-                        startGameFromData(data);
-                    });
+					launchCountdown(() => {
+						const activeGame = this.context.getGame();
+						if (activeGame) {
+							gameStartDate = getSqlDate();
+							activeGame.startRemote(data.roomId, data.role);
+						}
+					});
+				}
 
-                    gameSocket.emit('joinQueue');
-                }
-            });
-        }
-    }
+			}
+		};
 
-    private async saveRemoteGameToApi(
-        p1Alias: string, p1Score: number, p1Id: number | null,
-        p2Alias: string, p2Score: number, p2Id: number | null,
-        winnerAlias: string,
-        startDate: string,
-    ) {
-    
-        try 
-        {
-            const endDate = getSqlDate()
-            const response = await fetchWithAuth('api/game', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    type: "remote",
-                    winner: winnerAlias,
-                    status: "finished",
-                    round: "1v1",
-                    startDate: startDate,
-                    endDate: endDate,
-                    p1: { alias: p1Alias, score: p1Score, userId: p1Id },
-                    p2: { alias: p2Alias, score: p2Score, userId: p2Id}
-                })
-            });
+		const pendingMatch = sessionStorage.getItem('pendingMatch');
+		if (pendingMatch) {
+			const data = JSON.parse(pendingMatch);
+			sessionStorage.removeItem('pendingMatch');
+			startGameFromData(data);
+		}
+		
+		const privateRoomId = sessionStorage.getItem('privateGameId');
 
-            if (!response.ok) {
-                console.error("Error while saving remote game");
-            }
-            else {
-                console.log("remote game successfully saved");
-            }
-        } 
-        catch (e) 
-        { 
-            console.error(e); 
-        }
-    }
+		if (btn) {
+
+			const newBtn = btn.cloneNode(true) as HTMLButtonElement;
+			btn.parentNode?.replaceChild(newBtn, btn);
+			newBtn.addEventListener('click', async () => {
+				if (!gameSocket) {
+					alert(i18next.t('remoteManager.error_connection'));
+					return;
+				}
+
+				newBtn.disabled = true;
+
+				if (privateRoomId) {
+					if (status) {
+						status.innerText = i18next.t('remoteManager.waiting_private');
+					}
+
+					newBtn.innerText = i18next.t('remoteManager.btn_waiting_friend');
+					gameSocket.off('matchFound');
+					gameSocket.on('matchFound', (data: any) => {
+						sessionStorage.removeItem('privateGameId'); 
+						startGameFromData(data);
+					});
+
+					const selectedBall = ballInput ? ballInput.value : 'classic';
+					gameSocket.emit('joinPrivateGame', { 
+						roomId: privateRoomId,
+						skin: selectedBall 
+					});
+				} else {
+					if (status) {
+						status.innerText = i18next.t('remoteManager.looking_rival');
+					}
+					newBtn.innerText = i18next.t('remoteManager.btn_waiting');
+					gameSocket.off('matchFound');
+					gameSocket.on('matchFound', (data: any) => {
+						startGameFromData(data);
+					});
+
+					gameSocket.emit('joinQueue');
+				}
+			});
+		}
+	}
+
+	private async saveRemoteGameToApi(
+		p1Alias: string, p1Score: number, p1Id: number | null,
+		p2Alias: string, p2Score: number, p2Id: number | null,
+		winnerAlias: string,
+		startDate: string,
+	) {
+	
+		try 
+		{
+			const endDate = getSqlDate()
+			const response = await fetchWithAuth('api/game', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					type: "remote",
+					winner: winnerAlias,
+					status: "finished",
+					round: "1v1",
+					startDate: startDate,
+					endDate: endDate,
+					p1: { alias: p1Alias, score: p1Score, userId: p1Id },
+					p2: { alias: p2Alias, score: p2Score, userId: p2Id}
+				})
+			});
+
+			if (!response.ok) {
+				console.error("Error while saving remote game");
+			} else {
+				console.log("remote game successfully saved");
+			}
+		} catch (e) { 
+			console.error(e); 
+		}
+	}
 }

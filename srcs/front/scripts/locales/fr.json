@@ -327,7 +327,8 @@
       "title": "Chat de jeu",
       "info": "Salon de discussion",
       "choose_bg": "Choisir un fond :",
-      "default_bg": "Fond par défaut"
+      "default_bg": "Fond par défaut",
+      "input_placeholder": "Saisissez votre message"
     }
   },
   "tournamentPage": {
@@ -464,6 +465,7 @@
     "block_confirm": "Êtes-vous sûr de vouloir bloquer {{name}} ?",
     "block_success": "Conversation supprimée (Utilisateur bloqué).",
     "block_error": "Erreur lors du blocage",
+    "error_length_exceeded": "Message trop long",
     "input_blocked": "Vous avez bloqué cet utilisateur.",
     "tools": {
       "bold": "Gras",

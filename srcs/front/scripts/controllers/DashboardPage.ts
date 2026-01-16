@@ -6,24 +6,24 @@ import i18next from "../i18n";
 
 // Match's info interface
 interface MatchHistoryElement {
-    match_id: number;
-    game_type: string;
-    finished_at: string;
-    is_winner: number;
-    my_score: number;
-    opponent_score: number;
-    opponent_alias: string;
-    round: string;
+	match_id: number;
+	game_type: string;
+	finished_at: string;
+	is_winner: number;
+	my_score: number;
+	opponent_score: number;
+	opponent_alias: string;
+	round: string;
 }
 
 // User's stat interface
 interface UserStats {
-    wins: number;
-    losses: number;
-    total_games: number;
-    averageScore?: number;
-    total_play_time_minutes?: number;
-    totalPlayTime: number;
+	wins: number;
+	losses: number;
+	total_games: number;
+	averageScore?: number;
+	total_play_time_minutes?: number;
+	totalPlayTime: number;
 }
 
 // Global variable for each canvas
@@ -35,529 +35,537 @@ let currentPage = 1;
 const itemsPerPage = 20;
 
 export function render(): string {
-    let html = htmlContent;
+	let html = htmlContent;
 
-    html = html.replace(/\{\{dashboardPage\.title\}\}/g, i18next.t('dashboardPage.title'));
-    html = html.replace(/\{\{dashboardPage\.game_played\}\}/g, i18next.t('dashboardPage.game_played'));
-    html = html.replace(/\{\{dashboardPage\.avg_score\}\}/g, i18next.t('dashboardPage.avg_score'));
-    html = html.replace(/\{\{dashboardPage\.time_playing\}\}/g, i18next.t('dashboardPage.time_playing'));
-    html = html.replace(/\{\{dashboardPage\.wins\}\}/g, i18next.t('dashboardPage.wins'));
-    html = html.replace(/\{\{dashboardPage\.losses\}\}/g, i18next.t('dashboardPage.losses'));
-    html = html.replace(/\{\{dashboardPage\.win_rate\}\}/g, i18next.t('dashboardPage.win_rate'));
-    html = html.replace(/\{\{dashboardPage\.win_loss_evol\}\}/g, i18next.t('dashboardPage.win_loss_evol'));
-    html = html.replace(/\{\{dashboardPage\.type_game\}\}/g, i18next.t('dashboardPage.type_game'));
-    html = html.replace(/\{\{dashboardPage\.bigg_rival\}\}/g, i18next.t('dashboardPage.bigg_rival'));
-    html = html.replace(/\{\{dashboardPage\.match_history\}\}/g, i18next.t('dashboardPage.match_history'));
-    html = html.replace(/\{\{dashboardPage\.placeholder_rival\}\}/g, i18next.t('dashboardPage.placeholder_rival'));
-    html = html.replace(/\{\{dashboardPage\.all_modes\}\}/g, i18next.t('dashboardPage.all_modes'));
-    html = html.replace(/\{\{dashboardPage\.local\}\}/g, i18next.t('dashboardPage.local'));
-    html = html.replace(/\{\{dashboardPage\.remote\}\}/g, i18next.t('dashboardPage.remote'));
-    html = html.replace(/\{\{dashboardPage\.tournament\}\}/g, i18next.t('dashboardPage.tournament'));
-    html = html.replace(/\{\{dashboardPage\.apply_button\}\}/g, i18next.t('dashboardPage.apply_button'));
-    html = html.replace(/\{\{dashboardPage\.sort\}\}/g, i18next.t('dashboardPage.sort'));
-    html = html.replace(/\{\{dashboardPage\.date_asc\}\}/g, i18next.t('dashboardPage.date_asc'));
-    html = html.replace(/\{\{dashboardPage\.date_desc\}\}/g, i18next.t('dashboardPage.date_desc'));
-    html = html.replace(/\{\{dashboardPage\.name_a\}\}/g, i18next.t('dashboardPage.name_a'));
-    html = html.replace(/\{\{dashboardPage\.name_z\}\}/g, i18next.t('dashboardPage.name_z'));
-    html = html.replace(/\{\{dashboardPage\.date\}\}/g, i18next.t('dashboardPage.date'));
-    html = html.replace(/\{\{dashboardPage\.rival\}\}/g, i18next.t('dashboardPage.rival'));
-    html = html.replace(/\{\{dashboardPage\.score\}\}/g, i18next.t('dashboardPage.score'));
-    html = html.replace(/\{\{dashboardPage\.type\}\}/g, i18next.t('dashboardPage.type'));
-    html = html.replace(/\{\{dashboardPage\.round\}\}/g, i18next.t('dashboardPage.round'));
-    html = html.replace(/\{\{dashboardPage\.result\}\}/g, i18next.t('dashboardPage.result'));
-    html = html.replace(/\{\{dashboardPage\.loading\}\}/g, i18next.t('dashboardPage.loading'));
-    html = html.replace(/\{\{dashboardPage\.prev\}\}/g, i18next.t('dashboardPage.prev'));
-    html = html.replace(/\{\{dashboardPage\.next\}\}/g, i18next.t('dashboardPage.next'));
-    html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18next.t('dashboardPage.page'));
+	html = html.replace(/\{\{dashboardPage\.title\}\}/g, i18next.t('dashboardPage.title'));
+	html = html.replace(/\{\{dashboardPage\.game_played\}\}/g, i18next.t('dashboardPage.game_played'));
+	html = html.replace(/\{\{dashboardPage\.avg_score\}\}/g, i18next.t('dashboardPage.avg_score'));
+	html = html.replace(/\{\{dashboardPage\.time_playing\}\}/g, i18next.t('dashboardPage.time_playing'));
+	html = html.replace(/\{\{dashboardPage\.wins\}\}/g, i18next.t('dashboardPage.wins'));
+	html = html.replace(/\{\{dashboardPage\.losses\}\}/g, i18next.t('dashboardPage.losses'));
+	html = html.replace(/\{\{dashboardPage\.win_rate\}\}/g, i18next.t('dashboardPage.win_rate'));
+	html = html.replace(/\{\{dashboardPage\.win_loss_evol\}\}/g, i18next.t('dashboardPage.win_loss_evol'));
+	html = html.replace(/\{\{dashboardPage\.type_game\}\}/g, i18next.t('dashboardPage.type_game'));
+	html = html.replace(/\{\{dashboardPage\.bigg_rival\}\}/g, i18next.t('dashboardPage.bigg_rival'));
+	html = html.replace(/\{\{dashboardPage\.match_history\}\}/g, i18next.t('dashboardPage.match_history'));
+	html = html.replace(/\{\{dashboardPage\.placeholder_rival\}\}/g, i18next.t('dashboardPage.placeholder_rival'));
+	html = html.replace(/\{\{dashboardPage\.all_modes\}\}/g, i18next.t('dashboardPage.all_modes'));
+	html = html.replace(/\{\{dashboardPage\.local\}\}/g, i18next.t('dashboardPage.local'));
+	html = html.replace(/\{\{dashboardPage\.remote\}\}/g, i18next.t('dashboardPage.remote'));
+	html = html.replace(/\{\{dashboardPage\.tournament\}\}/g, i18next.t('dashboardPage.tournament'));
+	html = html.replace(/\{\{dashboardPage\.apply_button\}\}/g, i18next.t('dashboardPage.apply_button'));
+	html = html.replace(/\{\{dashboardPage\.sort\}\}/g, i18next.t('dashboardPage.sort'));
+	html = html.replace(/\{\{dashboardPage\.date_asc\}\}/g, i18next.t('dashboardPage.date_asc'));
+	html = html.replace(/\{\{dashboardPage\.date_desc\}\}/g, i18next.t('dashboardPage.date_desc'));
+	html = html.replace(/\{\{dashboardPage\.name_a\}\}/g, i18next.t('dashboardPage.name_a'));
+	html = html.replace(/\{\{dashboardPage\.name_z\}\}/g, i18next.t('dashboardPage.name_z'));
+	html = html.replace(/\{\{dashboardPage\.date\}\}/g, i18next.t('dashboardPage.date'));
+	html = html.replace(/\{\{dashboardPage\.rival\}\}/g, i18next.t('dashboardPage.rival'));
+	html = html.replace(/\{\{dashboardPage\.score\}\}/g, i18next.t('dashboardPage.score'));
+	html = html.replace(/\{\{dashboardPage\.type\}\}/g, i18next.t('dashboardPage.type'));
+	html = html.replace(/\{\{dashboardPage\.round\}\}/g, i18next.t('dashboardPage.round'));
+	html = html.replace(/\{\{dashboardPage\.result\}\}/g, i18next.t('dashboardPage.result'));
+	html = html.replace(/\{\{dashboardPage\.loading\}\}/g, i18next.t('dashboardPage.loading'));
+	html = html.replace(/\{\{dashboardPage\.prev\}\}/g, i18next.t('dashboardPage.prev'));
+	html = html.replace(/\{\{dashboardPage\.next\}\}/g, i18next.t('dashboardPage.next'));
+	html = html.replace(/\{\{dashboardPage\.page\}\}/g, i18next.t('dashboardPage.page'));
 
-    return html;
+	return html;
 };
 
-// Fonction utilitaire pour neutraliser le code HTML malveillant
+
 function escapeHtml(text: string): string {
-    if (!text) return text;
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+	if (!text) return text;
+	return text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#039;");
 }
 
 export function afterRender(): void {
-    
-    // Statistics
-    const totalGame = document.getElementById('dashboard-total-games');
-    const avgScore = document.getElementById('dashboard-avg-score');
-    const playTime = document.getElementById('dashboard-play-time');
-    const wins = document.getElementById('dashboard-wins');
-    const losses = document.getElementById('dashboard-losses');
-    const winRateCalcul = document.getElementById('dashboard-win-rate');
-
-    // Canvas
-    const evolutionCanvas = document.getElementById('dashboard-evolution-graph') as HTMLCanvasElement;
-    const gameTypeCanvas = document.getElementById('dashboard-game-chart') as HTMLCanvasElement;
-    const rivalCanvas = document.getElementById('dashboard-rival-podium') as HTMLCanvasElement;
-    
-    // Match analysis
-    const filterOpponent = document.getElementById('filter-opponent') as HTMLInputElement;
-    const filterMode = document.getElementById('filter-mode') as HTMLSelectElement;
-    const sortOrder = document.getElementById('sort-order') as HTMLSelectElement;
-    const applyFilterButton = document.getElementById('apply-filters');
-
-    // Current theme for header
-    const currentTheme = localStorage.getItem('userTheme') || 'basic';
-    applyTheme(currentTheme);
-
-
-    //================================================
-    //============ RETRIEVING USER'S DATA ============
-    //================================================
-
-    const loadUserData = async () => {
-        
-        const userId = localStorage.getItem('userId');
-        if (!userId) {
-            return;
-        }
-
-        try {
-
-            // User's statistic
-            const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
-            if (statResponse.ok) {
-                const jsonResponse = await statResponse.json();
-                const statsData: UserStats = jsonResponse.data || jsonResponse;
-
-                if (statsData) {
-                    if (totalGame) totalGame.innerText = statsData.total_games.toString();
-                    if (wins) wins.innerText = statsData.wins.toString();
-                    if (losses) losses.innerText = statsData.losses.toString();
-                    if (avgScore) avgScore.innerText = statsData.averageScore?.toString() || "0";
-                    if (winRateCalcul && statsData.total_games > 0) {
-                        winRateCalcul.innerText = `${Math.round((statsData.wins / statsData.total_games) * 100)}%`;
-                    }
-                    if (playTime) {
-                        const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
-                        // MODIFIED: Use i18n for time formatting
-                        playTime.innerText = i18next.t('dashboardPage.time_format', { 
-                            h: Math.floor(totalMinutes / 60), 
-                            m: totalMinutes % 60 
-                        });
-                    }
-                }
-            }
-
-            // Match analysis
-            const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`); // Est-ce qu'on augmente la limite?
-            if (historyResponse.ok) {
-                const historyJson = await historyResponse.json();
-                const historyData: MatchHistoryElement[] = historyJson.data || [];
-                globalMatchHistory = historyData;
-
-                renderGameTypeChart(gameTypeCanvas, calculateGameDistribution(historyData));
-                renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
-                renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
-
-                // Calling sort function now to show the full list
-                setupFilters();
-            }
-        } catch (error) {
-            console.error("Error on dashboard:", error);
-        }
-    };
-
-    // Loading the data anytime with update the page or when there are new stats
-    loadUserData();
-
-
-    //================================================
-    //========== FILTER AND SORT MANAGEMENT ==========
-    //================================================
-
-    function setupFilters() {
-        
-        const prevButton = document.getElementById('prev-page') as HTMLButtonElement;
-        const nextButton = document.getElementById('next-page') as HTMLButtonElement;
-        const pageInfo = document.getElementById('page-info');
-
-        let totalPages = 1;
-
-        if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
-            return;
-        }
-
-        filterOpponent.maxLength = 30;
-
-        const applyFiltersAndSort = () => {
-            let rawVal = filterOpponent.value;
-            if (rawVal.length > 30)
-            {
-                rawVal = rawVal.substring(0, 30);
-            }
-            const opponentValue = rawVal.toLowerCase().trim();
-            
-            const modeValue = filterMode.value;
-            const sortValue = sortOrder.value;
-
-            // Filtering
-            let resultData = globalMatchHistory.filter(match => {
-                const matchOpponent = (match.opponent_alias || "").toLowerCase();
-                const matchType = (match.game_type || "").toLowerCase();
-                const matchName = opponentValue === "" || matchOpponent.includes(opponentValue);
-                const matchMode = modeValue === "all" || matchType.includes(modeValue);
-                return matchName && matchMode;
-            });
-
-            // Sorting
-            resultData.sort((a, b) => {
-                const dateA = new Date(a.finished_at).getTime();
-                const dateB = new Date(b.finished_at).getTime();
-                const nameA = (a.opponent_alias || "").toLowerCase();
-                const nameB = (b.opponent_alias || "").toLowerCase();
-
-                switch (sortValue) {
-                    case 'date-ascending':
-                        return dateA - dateB;
-                    case 'date-descending':
-                        return dateB - dateA;
-                    case 'name-ascending':
-                        return nameA.localeCompare(nameB);
-                    case 'name-descending':
-                        return nameB.localeCompare(nameA);;
-                    default:
-                        return dateB - dateA;
-                }
-            });
-
-            // Pagination
-            totalPages = Math.ceil(resultData.length / itemsPerPage) || 1;
-
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-            if (currentPage < 1) {
-                currentPage = 1;
-            }
-
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const paginatedData = resultData.slice(start, end);
-
-            // Showing sorted list updated
-            renderMatchHistoryList(paginatedData);
-
-            if (pageInfo) {
-                // MODIFIED: Use i18n for pagination info
-                pageInfo.innerText = i18next.t('dashboardPage.pagination_info', {
-                    current: currentPage,
-                    total: totalPages
-                });
-            }
-            if (prevButton) {
-                prevButton.disabled = currentPage === 1;
-                prevButton.classList.toggle('opacity-50', currentPage === 1); // Ajout visuel
-                prevButton.classList.toggle('cursor-not-allowed', currentPage === 1);
-            }
-            if (nextButton) {
-                nextButton.disabled = currentPage === totalPages;
-                nextButton.classList.toggle('opacity-50', currentPage === totalPages);
-                nextButton.classList.toggle('cursor-not-allowed', currentPage === totalPages);
-            }
-        };
-
-        // Reset at page 1
-        const resetPageAndApply = () => {
-            currentPage = 1;
-            applyFiltersAndSort();
-        };
-
-        // Listening events
-        applyFilterButton.addEventListener('click', resetPageAndApply);
-        filterOpponent.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') {
-                resetPageAndApply();
-            }
-        });
-
-        // Immediat filter/sort
-        filterMode.addEventListener('change', resetPageAndApply);
-        sortOrder.addEventListener('change', resetPageAndApply);
-
-        // Previous button
-        prevButton.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                applyFiltersAndSort();
-            }
-        });
-
-        // Next button
-        nextButton.addEventListener('click', () => {
-            if (currentPage < totalPages) {
-                currentPage++;
-                applyFiltersAndSort();
-            }
-        });
-
-        // Default list
-        applyFiltersAndSort();
-    }
-
-
-    //================================================
-    //=========== RENDERING MATCH ANALYSIS ===========
-    //================================================
-
-    function renderMatchHistoryList(history: MatchHistoryElement[]) {
-        
-        const listContainer = document.getElementById('match-history-list');
-        if (!listContainer) {
-            return;
-        }
-
-        listContainer.innerHTML = '';
-
-        if (history.length === 0) {
-            // MODIFIED: Use i18n for no matches message
-            listContainer.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 italic">${i18next.t('dashboardPage.no_matches')}</td></tr>`;
-            return;
-        }
-
-        // Sort has already been made before. Only iterating here.
-        history.forEach(match => {
-            const date = new Date(match.finished_at);
-            const dateString = `${date.getDate().toString().padStart(2,'0')}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getFullYear()}`;
-            const isWin = match.is_winner === 1;
-            
-            // MODIFIED: Use i18n for status
-            const resultText = isWin ? i18next.t('dashboardPage.status_victory') : i18next.t('dashboardPage.status_defeat');
-            const resultColor = isWin ? "text-green-600" : "text-red-500";
-            const scoreString = `${match.my_score} - ${match.opponent_score !== undefined ? match.opponent_score : 0}`;
-            
-            // MODIFIED: Use i18n for round name
-            const roundString = match.round 
-                ? match.round 
-                : (match.game_type === 'tournament' ? i18next.t('dashboardPage.round_final') : i18next.t('dashboardPage.round_1v1'));
-
-            // MODIFIED: Use i18n for game type and unknown user
-            const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
-            const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
-            const opponentName = escapeHtml(rawName);
-
-            // Adding a new row for each new match
-            const row = document.createElement('tr');
-            row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
-
-            row.innerHTML = `
-                <td class="py-2 text-gray-500">${dateString}</td>
-                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
-            `;
-
-            listContainer.appendChild(row);
-        });
-    }
-
-
-    //================================================
-    //=========== CALCULATE GAME TYPE GRAPH ==========
-    //================================================
-
-    function calculateGameDistribution(history: MatchHistoryElement[]) {
-        
-        const graph = { local: 0, remote: 0, tournament: 0 };
-
-        history.forEach(match => {
-            const type = (match.game_type || "").toLowerCase();
-
-            if (type.includes('tournament')) {
-                graph.tournament++;
-            } else if (type.includes('remote')) {
-                graph.remote++;
-            } else {
-                graph.local++;
-            }
-        });
-        return graph;
-    }
-
-
-    //================================================
-    //=========== CALCULATE EVOLUTION GRAPH ==========
-    //================================================
-
-    function calculateEvolutionData(history: MatchHistoryElement[]) {
-        
-        if (!history || history.length === 0) {
-            // MODIFIED: Use i18n for 'Start' label
-            return { labels: [i18next.t('dashboardPage.chart.start')], data: [0] };
-        }
-
-        // Cloning tab with [...] to not change original one
-        const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime()); // besoin d'explication ici
-        const labels: string[] = [];
-        const netScoreData: number[] = [];
-
-        let currentNetScore = 0;
-
-        sorted.forEach(match => {
-            const date = new Date(match.finished_at);
-            const dateLabel = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            
-            if (match.is_winner === 1) {
-                currentNetScore++;
-            } else {
-                currentNetScore--;
-            }
-
-            labels.push(dateLabel);
-            netScoreData.push(currentNetScore);
-        });
-        return { labels, data: netScoreData };
-    }
-
-
-    //================================================
-    //============= CALCULATE RIVAL PODIUM ===========
-    //================================================
-
-    function calculateRivalsPodium(history: MatchHistoryElement[]) {
-
-        const rivalsMap: { [key: string]: number } = {};
-        history.forEach(match => {
-
-            if (match.opponent_alias && match.opponent_alias !== 'Unknown') {
-                rivalsMap[match.opponent_alias] = (rivalsMap[match.opponent_alias] || 0) + 1;
-            }
-        });
-
-        const sortedRivals = Object.entries(rivalsMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
-        if (sortedRivals.length === 0) {
-            return { labels: [], data: [], colors: [], realCounts: [] };
-        }
-
-        const podiumLabels = []; const podiumHeights = []; const podiumRealCounts = []; const podiumColors = [];
-        if (sortedRivals.length >= 2) {
-            podiumLabels.push(sortedRivals[1][0]); podiumHeights.push(2); podiumRealCounts.push(sortedRivals[1][1]); podiumColors.push('rgba(192, 192, 192, 0.8)');
-        }
-        if (sortedRivals.length >= 1) {
-            podiumLabels.push(sortedRivals[0][0]); podiumHeights.push(3); podiumRealCounts.push(sortedRivals[0][1]); podiumColors.push('rgba(255, 215, 0, 0.8)');
-        }
-        if (sortedRivals.length >= 3) {
-            podiumLabels.push(sortedRivals[2][0]); podiumHeights.push(1); podiumRealCounts.push(sortedRivals[2][1]); podiumColors.push('rgba(205, 127, 50, 0.8)');
-        }
-        return { labels: podiumLabels, data: podiumHeights, realCounts: podiumRealCounts, colors: podiumColors };
-    }
-
-
-    //================================================
-    //=========== RENDERING EVOLUTION CHART ==========
-    //================================================
-
-    function renderEvolutionChart(canvas: HTMLCanvasElement, chartData: any) {
-
-        if (!canvas) {
-            return;
-        }
-        if (evolutionChart) {
-            evolutionChart.destroy();
-        }
-
-        const mainColor = 'rgba(59, 130, 246, 1)';
-        const bgColor = 'rgba(59, 130, 246, 0.1)';
-        evolutionChart = new Chart(canvas, {
-            type: 'line',
-            data: {
-                labels: chartData.labels,
-                datasets: [{
-                    // MODIFIED: Use i18n for label
-                    label: i18next.t('dashboardPage.chart.net_score'), 
-                    data: chartData.data, borderColor: mainColor, backgroundColor: bgColor, fill:true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, callback: (value) => Number(value).toString() }, display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? '#666' : '#eee', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
-            }
-        });
-    }
-
-
-    //================================================
-    //============== RENDERING GAME TYPE =============
-    //================================================
-
-    function renderGameTypeChart(canvas: HTMLCanvasElement, graph: { local: number, remote: number, tournament: number }) {
-
-        if (!canvas) {
-            return ;
-        }
-        if (gameTypeChart) {
-            gameTypeChart.destroy();
-        }
-
-        const total = graph.local + graph. remote + graph.tournament;
-        const isEmpty = total === 0;
-
-        // MODIFIED: Use i18n for labels
-        const labels = isEmpty 
-            ? [i18next.t('dashboardPage.chart.no_data')] 
-            : [
-                i18next.t('dashboardPage.chart.local'), 
-                i18next.t('dashboardPage.chart.remote'), 
-                i18next.t('dashboardPage.chart.tournament')
-              ];
-
-        gameTypeChart = new Chart(canvas, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{ data: isEmpty ? [1] : [graph.local, graph.remote, graph.tournament], backgroundColor: isEmpty ? ['#ddd'] : ['#3b82f6', '#a855f7', '#f97316'], borderWidth: 0 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
-        });
-    }
-
-
-    //================================================
-    //============ RENDERING RIVAL PODIUM ============
-    //================================================
-
-    function renderRivalChart(canvas: HTMLCanvasElement, data: any) {
-        if (!canvas) {
-            return;
-        }
-        if (rivalChart) {
-            rivalChart.destroy();
-        }
-
-        rivalChart = new Chart(canvas, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{ 
-                    // MODIFIED: Use i18n for label
-                    label: i18next.t('dashboardPage.chart.games_played'), 
-                    data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1.0, categoryPercentage: 1.0 
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { 
-                    // MODIFIED: Use i18n for tooltip
-                    label: (context) => `${i18next.t('dashboardPage.chart.games_played')}: ${data.realCounts[context.dataIndex]}` 
-                } } },
-                scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, callback: function(val, index) { 
-                    const name = data.labels[index]; 
-                    const count = data.realCounts[index]; 
-                    const displayName = name.length > 10 ? name.substr(0, 8) + '..' : name; 
-                    // MODIFIED: Use i18n for games count (with interpolation)
-                    return [`${displayName}`, i18next.t('dashboardPage.chart.games_count', { count: count })]; 
-                } } } }
-            }
-        });
-    }
+	
+	// Statistics
+	const totalGame = document.getElementById('dashboard-total-games');
+	const avgScore = document.getElementById('dashboard-avg-score');
+	const playTime = document.getElementById('dashboard-play-time');
+	const wins = document.getElementById('dashboard-wins');
+	const losses = document.getElementById('dashboard-losses');
+	const winRateCalcul = document.getElementById('dashboard-win-rate');
+
+	// Canvas
+	const evolutionCanvas = document.getElementById('dashboard-evolution-graph') as HTMLCanvasElement;
+	const gameTypeCanvas = document.getElementById('dashboard-game-chart') as HTMLCanvasElement;
+	const rivalCanvas = document.getElementById('dashboard-rival-podium') as HTMLCanvasElement;
+	
+	// Match analysis
+	const filterOpponent = document.getElementById('filter-opponent') as HTMLInputElement;
+	const filterMode = document.getElementById('filter-mode') as HTMLSelectElement;
+	const sortOrder = document.getElementById('sort-order') as HTMLSelectElement;
+	const applyFilterButton = document.getElementById('apply-filters');
+
+	// Current theme for header
+	const currentTheme = localStorage.getItem('userTheme') || 'basic';
+	applyTheme(currentTheme);
+
+
+	//================================================
+	//============ RETRIEVING USER'S DATA ============
+	//================================================
+
+	const loadUserData = async () => {
+		
+		const userId = localStorage.getItem('userId');
+		if (!userId) {
+			return;
+		}
+
+		try {
+
+			// User's statistic
+			const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
+			if (statResponse.ok) {
+				const jsonResponse = await statResponse.json();
+				const statsData: UserStats = jsonResponse.data || jsonResponse;
+
+				if (statsData) {
+					if (totalGame) totalGame.innerText = statsData.total_games.toString();
+					if (wins) wins.innerText = statsData.wins.toString();
+					if (losses) losses.innerText = statsData.losses.toString();
+					if (avgScore) avgScore.innerText = statsData.averageScore?.toString() || "0";
+					if (winRateCalcul && statsData.total_games > 0) {
+						winRateCalcul.innerText = `${Math.round((statsData.wins / statsData.total_games) * 100)}%`;
+					}
+					if (playTime) {
+						const totalMinutes = statsData.total_play_time_minutes || statsData.totalPlayTime || 0;
+						playTime.innerText = i18next.t('dashboardPage.time_format', { 
+							h: Math.floor(totalMinutes / 60), 
+							m: totalMinutes % 60 
+						});
+					}
+				}
+			}
+
+			// Match analysis
+			const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`); // Est-ce qu'on augmente la limite?
+			if (historyResponse.ok) {
+				const historyJson = await historyResponse.json();
+				const historyData: MatchHistoryElement[] = historyJson.data || [];
+				globalMatchHistory = historyData;
+
+				renderGameTypeChart(gameTypeCanvas, calculateGameDistribution(historyData));
+				renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
+				renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
+				setupFilters();
+			}
+		} catch (error) {
+			console.error("Error on dashboard:", error);
+		}
+	};
+
+	loadUserData();
+
+
+	//================================================
+	//========== FILTER AND SORT MANAGEMENT ==========
+	//================================================
+
+	function setupFilters() {
+		
+		const prevButton = document.getElementById('prev-page') as HTMLButtonElement;
+		const nextButton = document.getElementById('next-page') as HTMLButtonElement;
+		const pageInfo = document.getElementById('page-info');
+
+		let totalPages = 1;
+
+		if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
+			return;
+		}
+
+		filterOpponent.maxLength = 30;
+
+		const applyFiltersAndSort = () => {
+			let rawVal = filterOpponent.value;
+			if (rawVal.length > 30) {
+				rawVal = rawVal.substring(0, 30);
+			}
+
+			const opponentValue = rawVal.toLowerCase().trim();
+			const modeValue = filterMode.value;
+			const sortValue = sortOrder.value;
+
+			// Filtering
+			let resultData = globalMatchHistory.filter(match => {
+				const matchOpponent = (match.opponent_alias || "").toLowerCase();
+				const matchType = (match.game_type || "").toLowerCase();
+				const matchName = opponentValue === "" || matchOpponent.includes(opponentValue);
+				const matchMode = modeValue === "all" || matchType.includes(modeValue);
+				return matchName && matchMode;
+			});
+
+			// Sorting
+			resultData.sort((a, b) => {
+				const dateA = new Date(a.finished_at).getTime();
+				const dateB = new Date(b.finished_at).getTime();
+				const nameA = (a.opponent_alias || "").toLowerCase();
+				const nameB = (b.opponent_alias || "").toLowerCase();
+
+				switch (sortValue) {
+					case 'date-ascending':
+						return dateA - dateB;
+					case 'date-descending':
+						return dateB - dateA;
+					case 'name-ascending':
+						return nameA.localeCompare(nameB);
+					case 'name-descending':
+						return nameB.localeCompare(nameA);;
+					default:
+						return dateB - dateA;
+				}
+			});
+
+			// Pagination
+			totalPages = Math.ceil(resultData.length / itemsPerPage) || 1;
+
+			if (currentPage > totalPages) {
+				currentPage = totalPages;
+			}
+			if (currentPage < 1) {
+				currentPage = 1;
+			}
+
+			const start = (currentPage - 1) * itemsPerPage;
+			const end = start + itemsPerPage;
+			const paginatedData = resultData.slice(start, end);
+
+			// Showing sorted list updated
+			renderMatchHistoryList(paginatedData);
+
+			if (pageInfo) {
+				pageInfo.innerText = i18next.t('dashboardPage.pagination_info', {
+					current: currentPage,
+					total: totalPages
+				});
+			}
+			if (prevButton) {
+				prevButton.disabled = currentPage === 1;
+				prevButton.classList.toggle('opacity-50', currentPage === 1); // Ajout visuel
+				prevButton.classList.toggle('cursor-not-allowed', currentPage === 1);
+			}
+			if (nextButton) {
+				nextButton.disabled = currentPage === totalPages;
+				nextButton.classList.toggle('opacity-50', currentPage === totalPages);
+				nextButton.classList.toggle('cursor-not-allowed', currentPage === totalPages);
+			}
+		};
+
+		// Reset at page 1
+		const resetPageAndApply = () => {
+			currentPage = 1;
+			applyFiltersAndSort();
+		};
+
+		// Listening events
+		applyFilterButton.addEventListener('click', resetPageAndApply);
+		filterOpponent.addEventListener('keyup', (e) => {
+			if (e.key === 'Enter') {
+				resetPageAndApply();
+			}
+		});
+
+		// Immediat filter/sort
+		filterMode.addEventListener('change', resetPageAndApply);
+		sortOrder.addEventListener('change', resetPageAndApply);
+
+		// Previous button
+		prevButton.addEventListener('click', () => {
+			if (currentPage > 1) {
+				currentPage--;
+				applyFiltersAndSort();
+			}
+		});
+
+		// Next button
+		nextButton.addEventListener('click', () => {
+			if (currentPage < totalPages) {
+				currentPage++;
+				applyFiltersAndSort();
+			}
+		});
+
+		// Default list
+		applyFiltersAndSort();
+	}
+
+
+	//================================================
+	//=========== RENDERING MATCH ANALYSIS ===========
+	//================================================
+
+	function renderMatchHistoryList(history: MatchHistoryElement[]) {
+		
+		const listContainer = document.getElementById('match-history-list');
+		if (!listContainer) {
+			return;
+		}
+
+		listContainer.innerHTML = '';
+
+		if (history.length === 0) {
+			listContainer.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 italic">${i18next.t('dashboardPage.no_matches')}</td></tr>`;
+			return;
+		}
+
+		// Sort has already been made before. Only iterating here.
+		history.forEach(match => {
+			const date = new Date(match.finished_at);
+			const dateString = `${date.getDate().toString().padStart(2,'0')}-${(date.getMonth()+1).toString().padStart(2,'0')}-${date.getFullYear()}`;
+			const isWin = match.is_winner === 1;
+			const resultText = isWin ? i18next.t('dashboardPage.status_victory') : i18next.t('dashboardPage.status_defeat');
+			const resultColor = isWin ? "text-green-600" : "text-red-500";
+			const scoreString = `${match.my_score} - ${match.opponent_score !== undefined ? match.opponent_score : 0}`;
+			const roundString = match.round 
+				? match.round 
+				: (match.game_type === 'tournament' ? i18next.t('dashboardPage.round_final') : i18next.t('dashboardPage.round_1v1'));
+
+			const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
+			const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
+			const opponentName = escapeHtml(rawName);
+			const row = document.createElement('tr');
+			row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
+
+			row.innerHTML = `
+				<td class="py-2 text-gray-500">${dateString}</td>
+				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
+			`;
+
+			listContainer.appendChild(row);
+		});
+	}
+
+
+	//================================================
+	//=========== CALCULATE GAME TYPE GRAPH ==========
+	//================================================
+
+	function calculateGameDistribution(history: MatchHistoryElement[]) {
+		
+		const graph = { local: 0, remote: 0, tournament: 0 };
+
+		history.forEach(match => {
+			const type = (match.game_type || "").toLowerCase();
+
+			if (type.includes('tournament')) {
+				graph.tournament++;
+			} else if (type.includes('remote')) {
+				graph.remote++;
+			} else {
+				graph.local++;
+			}
+		});
+		return graph;
+	}
+
+
+	//================================================
+	//=========== CALCULATE EVOLUTION GRAPH ==========
+	//================================================
+
+	function calculateEvolutionData(history: MatchHistoryElement[]) {
+		
+		if (!history || history.length === 0) {
+			return { labels: [i18next.t('dashboardPage.chart.start')], data: [0] };
+		}
+
+		// Cloning tab with [...] to not change original one
+		const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime()); // besoin d'explication ici
+		const labels: string[] = [];
+		const netScoreData: number[] = [];
+
+		let currentNetScore = 0;
+
+		sorted.forEach(match => {
+			const date = new Date(match.finished_at);
+			const dateLabel = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+			
+			if (match.is_winner === 1) {
+				currentNetScore++;
+			} else {
+				currentNetScore--;
+			}
+
+			labels.push(dateLabel);
+			netScoreData.push(currentNetScore);
+		});
+		return { labels, data: netScoreData };
+	}
+
+
+	//================================================
+	//============= CALCULATE RIVAL PODIUM ===========
+	//================================================
+
+	function calculateRivalsPodium(history: MatchHistoryElement[]) {
+
+		const rivalsMap: { [key: string]: number } = {};
+		history.forEach(match => {
+
+			if (match.opponent_alias && match.opponent_alias !== 'Unknown') {
+				rivalsMap[match.opponent_alias] = (rivalsMap[match.opponent_alias] || 0) + 1;
+			}
+		});
+
+		const sortedRivals = Object.entries(rivalsMap).sort((a, b) => b[1] - a[1]).slice(0, 3);
+		if (sortedRivals.length === 0) {
+			return { labels: [], data: [], colors: [], realCounts: [] };
+		}
+
+		const podiumLabels = []; const podiumHeights = []; const podiumRealCounts = []; const podiumColors = [];
+		if (sortedRivals.length >= 2) {
+			podiumLabels.push(sortedRivals[1][0]); podiumHeights.push(2); podiumRealCounts.push(sortedRivals[1][1]); podiumColors.push('rgba(192, 192, 192, 0.8)');
+		}
+		if (sortedRivals.length >= 1) {
+			podiumLabels.push(sortedRivals[0][0]); podiumHeights.push(3); podiumRealCounts.push(sortedRivals[0][1]); podiumColors.push('rgba(255, 215, 0, 0.8)');
+		}
+		if (sortedRivals.length >= 3) {
+			podiumLabels.push(sortedRivals[2][0]); podiumHeights.push(1); podiumRealCounts.push(sortedRivals[2][1]); podiumColors.push('rgba(205, 127, 50, 0.8)');
+		}
+		return { labels: podiumLabels, data: podiumHeights, realCounts: podiumRealCounts, colors: podiumColors };
+	}
+
+
+	//================================================
+	//=========== RENDERING EVOLUTION CHART ==========
+	//================================================
+
+	function renderEvolutionChart(canvas: HTMLCanvasElement, chartData: any) {
+
+		if (!canvas) {
+			return;
+		}
+		if (evolutionChart) {
+			evolutionChart.destroy();
+		}
+
+		const mainColor = 'rgba(59, 130, 246, 1)';
+		const bgColor = 'rgba(59, 130, 246, 0.1)';
+		evolutionChart = new Chart(canvas, {
+			type: 'line',
+			data: {
+				labels: chartData.labels,
+				datasets: [{
+					label: i18next.t('dashboardPage.chart.net_score'), 
+					data: chartData.data, borderColor: mainColor, backgroundColor: bgColor, fill:true, tension: 0.3, pointRadius: 2, pointHoverRadius: 5
+				}]
+			},
+			options: {
+				responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+				scales: { x: { display: true, grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, callback: (value) => Number(value).toString() }, display: true, grid: { color: (ctx) => ctx.tick.value === 0 ? '#666' : '#eee', lineWidth: (ctx) => ctx.tick.value === 0 ? 2 : 1 } } }
+			}
+		});
+	}
+
+
+	//================================================
+	//============== RENDERING GAME TYPE =============
+	//================================================
+
+	function renderGameTypeChart(canvas: HTMLCanvasElement, graph: { local: number, remote: number, tournament: number }) {
+
+		if (!canvas) {
+			return ;
+		}
+		if (gameTypeChart) {
+			gameTypeChart.destroy();
+		}
+
+		const total = graph.local + graph. remote + graph.tournament;
+		const isEmpty = total === 0;
+		const labels = isEmpty 
+			? [i18next.t('dashboardPage.chart.no_data')] 
+			: [
+				i18next.t('dashboardPage.chart.local'), 
+				i18next.t('dashboardPage.chart.remote'), 
+				i18next.t('dashboardPage.chart.tournament')
+			  ];
+
+		gameTypeChart = new Chart(canvas, {
+			type: 'pie',
+			data: {
+				labels: labels,
+				datasets: [{ data: isEmpty ? [1] : [graph.local, graph.remote, graph.tournament], backgroundColor: isEmpty ? ['#ddd'] : ['#3b82f6', '#a855f7', '#f97316'], borderWidth: 0 }]
+			},
+			options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+		});
+	}
+
+
+	//================================================
+	//============ RENDERING RIVAL PODIUM ============
+	//================================================
+
+	const podiumNumbersPlugin = {
+		id: 'podiumNumbers',
+		afterDatasetsDraw(chart: any) {
+			const { ctx } = chart;
+			const meta = chart.getDatasetMeta(0);
+			const podiumOrder = [2, 1, 3];
+
+			ctx.save();
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			ctx.font = 'bold 18px sans-serif';
+			ctx.fillStyle = '#ffffff';
+
+			meta.data.forEach((bar: any, index: number) => {
+				if (index > 2) return;
+
+				const rank = podiumOrder[index];
+				const x = bar.x;
+				const y = bar.y + bar.height / 2;
+
+				ctx.fillText(`${rank}`, x, y);
+			});
+
+			ctx.restore();
+		}
+	};
+
+
+	function renderRivalChart(canvas: HTMLCanvasElement, data: any) {
+		if (!canvas) {
+			return;
+		}
+		if (rivalChart) {
+			rivalChart.destroy();
+		}
+
+		rivalChart = new Chart(canvas, {
+			type: 'bar',
+			data: {
+				labels: data.labels,
+				datasets: [{ 
+					label: i18next.t('dashboardPage.chart.games_played'), 
+					data: data.data, backgroundColor: data.colors, borderRadius: 4, borderSkipped: false, barPercentage: 1.0, categoryPercentage: 1.0 
+				}]
+			},
+			options: {
+				responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { 
+					label: (context) => `${i18next.t('dashboardPage.chart.games_played')}: ${data.realCounts[context.dataIndex]}` 
+				} } },
+				scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, callback: function(val, index) { 
+					const name = data.labels[index]; 
+					const count = data.realCounts[index]; 
+					const displayName = name.length > 10 ? name.substr(0, 8) + '..' : name; 
+					return [`${displayName}`, i18next.t('dashboardPage.chart.games_count', { count: count })]; 
+				} } } }
+			},
+			plugins: [podiumNumbersPlugin]
+		});
+	}
 }

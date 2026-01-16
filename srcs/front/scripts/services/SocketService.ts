@@ -1,130 +1,125 @@
 import { io, Socket } from "socket.io-client";
-import { Data } from '../components/Data'; // Assure-toi que ce chemin est bon
+import { Data } from '../components/Data';
 
 export class SocketService {
-    private static instance: SocketService;
+	private static instance: SocketService;
 
-    public chatSocket: Socket | null = null;
-    public gameSocket: Socket | null = null;
+	public chatSocket: Socket | null = null;
+	public gameSocket: Socket | null = null;
 
-    private constructor() {}
+	private constructor() {}
 
-    public static getInstance(): SocketService {
-        if (!SocketService.instance) {
-            SocketService.instance = new SocketService();
-        }
-        return SocketService.instance;
-    }
+	public static getInstance(): SocketService {
+		if (!SocketService.instance) {
+			SocketService.instance = new SocketService();
+		}
+		return SocketService.instance;
+	}
 
-    private createSocketConnection(path: string): Socket | null {
-        const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+	private createSocketConnection(path: string): Socket | null {
+		const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
 
-        if (!token) {
-            console.error(`SocketService: No token found, cannot connect to ${path}`);
-            return null;
-        }
+		if (!token) {
+			console.error(`SocketService: No token found, cannot connect to ${path}`);
+			return null;
+		}
 
-        const socket = io("/", {
-            path: path,
-            auth: {
-                token: `Bearer ${token}`
-            },
-            reconnection: true,
-            reconnectionAttempts: 5, // Correction typo: reconnectionAttemps -> reconnectionAttempts
-            transports: ['websocket', 'polling']            
-        });
+		const socket = io("/", {
+			path: path,
+			auth: {
+				token: `Bearer ${token}`
+			},
+			reconnection: true,
+			reconnectionAttempts: 5,
+			transports: ['websocket', 'polling']            
+		});
 
-        socket.on("connect", () => {
-            console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
-        });
+		socket.on("connect", () => {
+			console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
+		});
 
-        socket.on("connect_error", (err) => {
-            console.error(`SocketService: Connection error on ${path}`, err.message);
-        })
+		socket.on("connect_error", (err) => {
+			console.error(`SocketService: Connection error on ${path}`, err.message);
+		})
 
-        return socket;
-    }
+		return socket;
+	}
 
-    // ---------------------
-    // -- GESTION DU CHAT --
-    // ---------------------
-    public connectChat() {
-        if (this.chatSocket) return;
+//================================================
+//================ CHAT MANAGEMENT ===============
+//================================================
 
-        console.log("SocketService: Connecting to Chat...");
-        this.chatSocket = this.createSocketConnection("/socket-chat/");
+	public connectChat() {
+		if (this.chatSocket) return;
 
-        // --- CORRECTION MAJEURE ICI ---
-        if (this.chatSocket) {
-            // 1. On écoute le BON événement envoyé par le back (unreadNotification)
-            // 2. On le place ICI, pas dans connectGame
-            this.chatSocket.on('unreadNotification', (payload: any) => {
-                console.log("SocketService: Notification reçue (Global):", payload);
+		console.log("SocketService: Connecting to Chat...");
+		this.chatSocket = this.createSocketConnection("/socket-chat/");
 
-                // Si l'URL ne contient pas 'chat', on considère que c'est non lu
-                // (Tu peux affiner cette condition si tu veux)
-                if (!window.location.href.includes('/chat')) { 
-                    console.log("-> Activation de la notif persistante");
-                    Data.hasUnreadMessage = true; // Sauvegarde dans localStorage via ton setter
-                    this.showNotificationIcon();  // Affichage visuel immédiat
-                    const event = new CustomEvent('notificationUpdate', {
-                        detail: { type: 'chat', payload }
-                    });
-                    window.dispatchEvent(event);
-                }
-            });
-        }
-    }
+		if (this.chatSocket) {
+			this.chatSocket.on('unreadNotification', (payload: any) => {
 
-    public disconnectChat() {
-        if (this.chatSocket) {
-            this.chatSocket.disconnect();
-            this.chatSocket = null;
-            console.log("SocketService: Chat disconnected");
-        }
-    }
+				if (!window.location.href.includes('/chat')) { 
+					console.log("-> Activation de la notif persistante");
+					Data.hasUnreadMessage = true;
+					this.showNotificationIcon();
+					const event = new CustomEvent('notificationUpdate', {
+						detail: { type: 'chat', payload }
+					});
+					window.dispatchEvent(event);
+				}
+			});
+		}
+	}
 
-    public getChatSocket(): Socket | null {
-        return this.chatSocket;
-    }
+	public disconnectChat() {
+		if (this.chatSocket) {
+			this.chatSocket.disconnect();
+			this.chatSocket = null;
+			console.log("SocketService: Chat disconnected");
+		}
+	}
 
-    // ---------------------
-    // -- GESTION DU GAME --
-    // ---------------------
-    public connectGame() {
-        if (this.gameSocket) return;
-        console.log("SocketService: Connecting to Game...");
-        this.gameSocket = this.createSocketConnection("/socket-game/");
-    }
+	public getChatSocket(): Socket | null {
+		return this.chatSocket;
+	}
 
-    public disconnectGame() {
-        if (this.gameSocket) {
-            this.gameSocket.disconnect();
-            this.gameSocket = null;
-            console.log("SocketService: Game disconnected");
-        }
-    }
+//================================================
+//=============== GAME MANAGEMENT ================
+//================================================
 
-    public getGameSocket(): Socket | null {
-        return this.gameSocket;
-    }
+	public connectGame() {
+		if (this.gameSocket) return;
+		console.log("SocketService: Connecting to Game...");
+		this.gameSocket = this.createSocketConnection("/socket-game/");
+	}
 
-    // ---------------------
-    // -- UTILITAIRES    --
-    // ---------------------
+	public disconnectGame() {
+		if (this.gameSocket) {
+			this.gameSocket.disconnect();
+			this.gameSocket = null;
+			console.log("SocketService: Game disconnected");
+		}
+	}
 
-    // Méthode privée pour manipuler le DOM direct
-    private showNotificationIcon() {
-        const notifElement = document.getElementById('message-notification'); 
-        if (notifElement) {
-            notifElement.style.display = 'block';
-        }
-    }
+	public getGameSocket(): Socket | null {
+		return this.gameSocket;
+	}
 
-    public disconnectAll() {
-        this.disconnectChat();
-        this.disconnectGame();
-    }
+//================================================
+//==================== TOOLS =====================
+//================================================
+
+	private showNotificationIcon() {
+		const notifElement = document.getElementById('message-notification'); 
+		if (notifElement) {
+			notifElement.style.display = 'block';
+		}
+	}
+
+	public disconnectAll() {
+		this.disconnectChat();
+		this.disconnectGame();
+	}
 }
 
 export default SocketService;
