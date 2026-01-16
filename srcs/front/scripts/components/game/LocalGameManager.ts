@@ -150,6 +150,7 @@ export class LocalGameManager {
 			});
 		}
 
+
 		// Starting the game
 		if (startButton) 
 		{

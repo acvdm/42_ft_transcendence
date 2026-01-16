@@ -28,7 +28,9 @@
 							<span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{localPage.p2}}</span>
 						</div>
 
-						<div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
+						<div id="game-canvas-container" 
+							class="w-full flex-1 flex items-center justify-center bg-transparent relative" 
+							style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
 						
 						<div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
 
@@ -42,20 +44,20 @@
 
 								<div class="window-body flex flex-col gap-4 p-4" style="background-color: white">
 									<div class="text-center border-b pb-3" style="padding-bottom: 15px;">
-										<p class="font-semibold mb-2">{{localPage.game_instr}}</p>
+										<p class="theme-label font-semibold mb-2">{{localPage.game_instr}}</p>
 										<p>{{localPage.ws}}</p>
 										<p>{{localPage.up_down}}</p>
 										<p>{{localPage.space_bar}}</p>
 									</div>
 									<div class="flex flex-col gap-1">
-										<label for="opponent-name" class="font-bold">{{localPage.opp_name}}</label>
+										<label for="opponent-name" class="theme-label font-bold">{{localPage.opp_name}}</label>
 										<input type="text" id="opponent-name" class="border-2 border-gray-400 px-2 py-1 focus:outline-none focus:border-blue-800" placeholder="{{localPage.placeholder_opp}}" required>
 										<span id="error-message" class="text-red-500 text-xs hidden">{{localPage.err_message}}</span>
 									</div>
 
 									<fieldset class="border-2 border-gray-300 p-2 mt-2">
 										<div class="flex flex-row items-center gap-2 mb-3 relative">
-											<label class="text-sm font-semibold">{{localPage.choose_ball}}</label>
+											<label class="theme-label text-sm font-semibold">{{localPage.choose_ball}}</label>
 											
 											<div class="relative">
 												<button id="ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
@@ -73,7 +75,7 @@
 										</div>
 
 										<div class="flex flex-row gap-2">
-											<label class="text-sm font-semibold">{{localPage.choose_bg}}</label>
+											<label class="theme-label text-sm font-semibold">{{localPage.choose_bg}}</label>
 											
 											<div class="relative">
 												<button id="bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]active:border-blue-500 transition-colors">
@@ -111,7 +113,7 @@
 									<div class="title-bar-text text-black">{{localPage.countdown_title}}</div>
 								</div>
 								<div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-									<div class="text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
+									<div class="theme-label text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
 								</div>
 							</div>
 						</div>
@@ -122,7 +124,7 @@
 									<div class="title-bar-text text-black">{{localPage.summary_modal.title}}</div>
 								</div>
 								<div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-									<h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{localPage.summary_modal.congrat}}</h1>
+									<h1 class="theme-label text-4xl font-black text-yellow-600 uppercase tracking-widest">{{localPage.summary_modal.congrat}}</h1>
 									<div class="text-2xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{localPage.summary_modal.name}}</div>                                
 									<button id="quit-local-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
