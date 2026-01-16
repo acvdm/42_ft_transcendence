@@ -16,6 +16,8 @@ let activeGame: Game | null = null;
 let spaceKeyListener: ((e: KeyboardEvent) => void) | null = null;
 let isNavigationBlocked = false;
 let exitDestination:string | null = null;
+//faustine
+let currentMode = 'local';
 
 export function isGameRunning(): boolean {
 	return activeGame !== null && activeGame.isRunning;
@@ -77,7 +79,8 @@ function handlePopState(e: PopStateEvent) {
 	if (isGameRunning() && !isNavigationBlocked) {
 		e.preventDefault();
 		e.stopImmediatePropagation();
-		window.history.pushState({ gameMode: window.history.state?.gameMode || 'local' }, '', '/game');
+		const params = currentMode !== 'local' ? `?mode=${currentMode}` : '';
+		window.history.pushState({ gameMode: currentMode }, '', '/game${params}');
 		showExitConfirmationModal();
 	}
 }
@@ -235,12 +238,14 @@ export function cleanup() {
 }
 
 export function render(): string {
+	const urlParams = new URLSearchParams(window.location.search);
 	const state = window.history.state;
+	const mode = urlParams.get('mode') || (state && state.gameMode) || 'local';
 	let html = "";
 
-	if (state && state.gameMode === 'remote') {
+	if (mode === 'remote') {
 		html = htmlContentRemote;
-	} else if (state && state.gameMode === 'tournament') {
+	} else if (mode === 'tournament') {
 		html = htmlContentTournament;
 	} else {
 		html = htmlContentLocal;
@@ -364,6 +369,7 @@ export function render(): string {
 
 export function initGamePage(mode: string): void {
 
+	currentMode = mode;
 	const currentTheme = localStorage.getItem('userTheme') || 'basic';
 	applyTheme(currentTheme);
 	window.addEventListener('beforeunload', handleBeforeUnload);

@@ -231,7 +231,7 @@ export function afterRender(): void {
 	const localGameButton = document.getElementById('local-game');
 	if (localGameButton) {
 		localGameButton.addEventListener('click', () => {
-			window.history.pushState({ gameMode: 'local' }, '', '/game');
+			window.history.pushState({ gameMode: 'local' }, '', '/game?mode=local');
 			const navEvent = new PopStateEvent('popstate');
 			window.dispatchEvent(navEvent);
 		});
@@ -240,7 +240,7 @@ export function afterRender(): void {
 	const remoteGameButton = document.getElementById('remote-game');
 	if (remoteGameButton) {
 		remoteGameButton.addEventListener('click', () => {
-			window.history.pushState({ gameMode: 'remote' }, '', '/game');
+			window.history.pushState({ gameMode: 'remote' }, '', '/game?mode=remote');
 			const navEvent = new PopStateEvent('popstate');
 			window.dispatchEvent(navEvent);
 		});
@@ -249,7 +249,7 @@ export function afterRender(): void {
 	const tournamentGameButton = document.getElementById('tournament-game');
 	if (tournamentGameButton) {
 		tournamentGameButton.addEventListener('click', () => {
-			window.history.pushState({ gameMode: 'tournament' }, '', '/game');
+			window.history.pushState({ gameMode: 'tournament' }, '', '/game?mode=tournament');
 			const navEvent = new PopStateEvent('popstate');
 			window.dispatchEvent(navEvent);
 		});

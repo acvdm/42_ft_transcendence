@@ -10161,7 +10161,7 @@
     const localGameButton = document.getElementById("local-game");
     if (localGameButton) {
       localGameButton.addEventListener("click", () => {
-        window.history.pushState({ gameMode: "local" }, "", "/game");
+        window.history.pushState({ gameMode: "local" }, "", "/game?mode=local");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
       });
@@ -10169,7 +10169,7 @@
     const remoteGameButton = document.getElementById("remote-game");
     if (remoteGameButton) {
       remoteGameButton.addEventListener("click", () => {
-        window.history.pushState({ gameMode: "remote" }, "", "/game");
+        window.history.pushState({ gameMode: "remote" }, "", "/game?mode=remote");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
       });
@@ -10177,7 +10177,7 @@
     const tournamentGameButton = document.getElementById("tournament-game");
     if (tournamentGameButton) {
       tournamentGameButton.addEventListener("click", () => {
-        window.history.pushState({ gameMode: "tournament" }, "", "/game");
+        window.history.pushState({ gameMode: "tournament" }, "", "/game?mode=tournament");
         const navEvent = new PopStateEvent("popstate");
         window.dispatchEvent(navEvent);
       });
@@ -13231,6 +13231,7 @@
   var spaceKeyListener = null;
   var isNavigationBlocked = false;
   var exitDestination = null;
+  var currentMode = "local";
   function isGameRunning() {
     return activeGame !== null && activeGame.isRunning;
   }
@@ -13276,7 +13277,8 @@
     if (isGameRunning() && !isNavigationBlocked) {
       e.preventDefault();
       e.stopImmediatePropagation();
-      window.history.pushState({ gameMode: window.history.state?.gameMode || "local" }, "", "/game");
+      const params = currentMode !== "local" ? `?mode=${currentMode}` : "";
+      window.history.pushState({ gameMode: currentMode }, "", "/game${params}");
       showExitConfirmationModal();
     }
   }
@@ -13398,11 +13400,13 @@
     isNavigationBlocked = false;
   }
   function render7() {
+    const urlParams = new URLSearchParams(window.location.search);
     const state = window.history.state;
+    const mode = urlParams.get("mode") || state && state.gameMode || "local";
     let html = "";
-    if (state && state.gameMode === "remote") {
+    if (mode === "remote") {
       html = RemoteGame_default;
-    } else if (state && state.gameMode === "tournament") {
+    } else if (mode === "tournament") {
       html = TournamentPage_default;
     } else {
       html = LocalGame_default;
@@ -13504,6 +13508,7 @@
     return html;
   }
   function initGamePage(mode) {
+    currentMode = mode;
     const currentTheme = localStorage.getItem("userTheme") || "basic";
     applyTheme(currentTheme);
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -28501,8 +28506,9 @@
     "/game": {
       render: render7,
       afterRender: () => {
+        const urlParams = new URLSearchParams(window.location.search);
         const state = window.history.state;
-        const mode = state && state.gameMode ? state.gameMode : "local";
+        const mode = urlParams.get("mode") || (state && state.gameMode ? state.gameMode : "local");
         initGamePage(mode);
       }
     }

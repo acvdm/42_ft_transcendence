@@ -57,8 +57,9 @@ const routes: { [key: string]: Page } = {
 	'/game': {
 		render: GamePage,
 		afterRender: () => {
+			const urlParams = new URLSearchParams(window.location.search);
 			const state = window.history.state;
-			const mode = state && state.gameMode ? state.gameMode : 'local';
+			const mode = urlParams.get('mode') || (state && state.gameMode ? state.gameMode : 'local');
 			initGamePage(mode);
 		}
 	}
