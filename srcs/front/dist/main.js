@@ -178,9 +178,7 @@
               if (!newToken) {
                 throw new Error("No accessToken in refresh response");
               }
-              console.log("\u{1F50D} OLD TOKEN:", getAuthToken());
-              console.log("\u{1F195} NEW TOKEN:", newToken);
-              console.log("\u{1F4C5} Token changed?", getAuthToken() !== newToken);
+              console.log("Token changed?", getAuthToken() !== newToken);
               const isGuest = sessionStorage.getItem("isGuest") === "true";
               if (isGuest) {
                 sessionStorage.setItem("accessToken", newToken);

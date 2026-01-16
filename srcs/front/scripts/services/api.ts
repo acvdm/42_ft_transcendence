@@ -67,19 +67,13 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 					});
 					if (refreshRes.ok) {
 						const data = await refreshRes.json();
-						// console.log("Refresh successful, data:", data);
 
 						const newToken = data.accessToken;
 						if (!newToken) {
 							throw new Error("No accessToken in refresh response");
 						}
+    					console.log("Token changed?", getAuthToken() !== newToken);
 
-						/* LOGS A ENLEVER POUR LA PROD */
-						console.log("🔍 OLD TOKEN:", getAuthToken());
-    					console.log("🆕 NEW TOKEN:", newToken);
-    					console.log("📅 Token changed?", getAuthToken() !== newToken);
-
-						// AJOUT IMPORTANT
 						const isGuest = sessionStorage.getItem('isGuest') === 'true';
 
 						if (isGuest)
@@ -91,7 +85,6 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 						{
 							localStorage.setItem('accessToken', newToken);
 							console.log("Token stored in localStorage (User)")
-
 						}
 
 						onRefreshed(newToken);

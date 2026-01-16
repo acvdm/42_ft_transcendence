@@ -45,7 +45,7 @@ export function generateAccessToken(userId: number, credential_id: number): stri
         sub: userId,
         cred_id: credential_id
     };
-    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '3m'}); //MODFIER A 15min?
+    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '15m'}); //MODFIER A 15min?
 }
 
 // Refresh Token : comme un pointeur vers la bdd (conserve en securite au niveau du cookie)
@@ -54,7 +54,6 @@ export function generateRefreshToken(user_id: number): string {
     return (randomBytes(32).toString('hex'));
  }
 
-// verification du token
 export function verifyAccessToken(token: string): any {
     try {
         return jwt.verify(token, JWT_SECRET!);
