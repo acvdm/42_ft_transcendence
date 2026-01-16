@@ -74,7 +74,15 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 							throw new Error("No accessToken in refresh response");
 						}
 
-						localStorage.setItem('accessToken', newToken);
+						/* LOGS A ENLEVER POUR LA PROD */
+						console.log("🔍 OLD TOKEN:", getAuthToken());
+    					console.log("🆕 NEW TOKEN:", newToken);
+    					console.log("📅 Token changed?", getAuthToken() !== newToken);
+
+    					localStorage.setItem('accessToken', newToken);
+
+    					console.log("✅ Token stored in localStorage");
+
 						onRefreshed(newToken);
 						return newToken;
 					} 

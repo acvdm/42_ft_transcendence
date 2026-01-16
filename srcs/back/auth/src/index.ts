@@ -62,7 +62,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -103,7 +103,7 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -240,7 +240,7 @@ fastify.post('/sessions', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -295,7 +295,7 @@ fastify.post('/token', async (request, reply) => {
       path: '/',
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7* 24 * 3600,
       signed: true
     });
@@ -609,7 +609,7 @@ fastify.post('/2fa/challenge', async (request, reply) => {
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});

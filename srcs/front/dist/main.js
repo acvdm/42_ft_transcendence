@@ -179,7 +179,11 @@
               if (!newToken) {
                 throw new Error("No accessToken in refresh response");
               }
+              console.log("\u{1F50D} OLD TOKEN:", getAuthToken());
+              console.log("\u{1F195} NEW TOKEN:", newToken);
+              console.log("\u{1F4C5} Token changed?", getAuthToken() !== newToken);
               localStorage.setItem("accessToken", newToken);
+              console.log("\u2705 Token stored in localStorage");
               onRefreshed(newToken);
               return newToken;
             } else {
@@ -3604,7 +3608,7 @@
       return _SocketService.instance;
     }
     createSocketConnection(path) {
-      const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+      const token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
         return null;
@@ -3612,7 +3616,7 @@
       const socket = lookup2("/", {
         path,
         auth: {
-          token: `Bearer ${token}`
+          token
         },
         reconnection: true,
         reconnectionAttempts: 5,
@@ -11367,6 +11371,8 @@
         const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          // AJOUT important pour enregistrer le cookie transmis par le back
           body: JSON.stringify({})
         });
         if (response.ok) {
@@ -11374,13 +11380,17 @@
           if (data.accessToken) {
             sessionStorage.setItem("accessToken", data.accessToken);
           }
+          if (data.refreshToken) {
+            console.log("Guest refreshToken received:", data.refreshToken);
+          }
           if (data.userId) {
             sessionStorage.setItem("userId", data.userId.toString());
           }
           sessionStorage.setItem("isGuest", "true");
           sessionStorage.setItem("userRole", "guest");
           try {
-            const userResponse = await fetch(`/api/users/${data.userId}`, {
+            const userResponse = await fetch(`/api/user/${data.userId}`, {
+              // MODIFICATION en /user/
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${data.accessToken}`,

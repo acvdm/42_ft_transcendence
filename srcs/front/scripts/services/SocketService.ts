@@ -6,6 +6,7 @@ export class SocketService {
 
 	public chatSocket: Socket | null = null;
 	public gameSocket: Socket | null = null;
+	
 
 	private constructor() {}
 
@@ -17,7 +18,7 @@ export class SocketService {
 	}
 
 	private createSocketConnection(path: string): Socket | null {
-		const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+		const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
 
 		if (!token) {
 			console.error(`SocketService: No token found, cannot connect to ${path}`);
@@ -27,7 +28,7 @@ export class SocketService {
 		const socket = io("/", {
 			path: path,
 			auth: {
-				token: `Bearer ${token}`
+				token: token
 			},
 			reconnection: true,
 			reconnectionAttempts: 5,
