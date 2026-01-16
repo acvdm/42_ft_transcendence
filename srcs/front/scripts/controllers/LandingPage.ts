@@ -1,9 +1,8 @@
-import { fetchWithAuth } from "../services/api";
 import htmlContent from "../pages/LandingPage.html"
 import i18next, { changeLanguage } from "../i18n";
 
 export function render(): string {
-    let html = htmlContent;
+	let html = htmlContent;
 
 	html = html.replace(/\{\{landing\.welcome\}\}/g, i18next.t('landing.welcome'));
 	html = html.replace(/\{\{landing\.login_button\}\}/g, i18next.t('landing.login_button'));
@@ -14,43 +13,41 @@ export function render(): string {
 
 };
 
-
 	//================================================
 	//============= LANGUAGE MANAGEMENT ==============
 	//================================================
 
 function setupPageLangDropdown() {
-    const toggleBtn = document.getElementById('page-lang-toggle-btn');
-    const menuContent = document.getElementById('page-lang-menu-content');
-    
+	const toggleBtn = document.getElementById('page-lang-toggle-btn');
+	const menuContent = document.getElementById('page-lang-menu-content');
 	const display = document.getElementById('page-current-lang-display');
-    if (display) {
-        display.textContent = i18next.language.toUpperCase();
-    }
 
-    if (toggleBtn && menuContent) {
-        toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            menuContent.classList.toggle('hidden');
-        });
+	if (display) {
+		display.textContent = i18next.language.toUpperCase();
+	}
+	if (toggleBtn && menuContent) {
+		toggleBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			menuContent.classList.toggle('hidden');
+		});
 
-        window.addEventListener('click', () => {
-            if (!menuContent.classList.contains('hidden')) {
-                menuContent.classList.add('hidden');
-            }
-        });
-    }
+		window.addEventListener('click', () => {
+			if (!menuContent.classList.contains('hidden')) {
+				menuContent.classList.add('hidden');
+			}
+		});
+	}
 
-    document.querySelectorAll('.page-lang-select').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const target = e.currentTarget as HTMLElement;
-            const lang = target.getAttribute('data-lang');
-            if (lang) {
-                await changeLanguage(lang);
-                window.dispatchEvent(new PopStateEvent('popstate'));
-            }
-        });
-    });
+	document.querySelectorAll('.page-lang-select').forEach(btn => {
+		btn.addEventListener('click', async (e) => {
+			const target = e.currentTarget as HTMLElement;
+			const lang = target.getAttribute('data-lang');
+			if (lang) {
+				await changeLanguage(lang);
+				window.dispatchEvent(new PopStateEvent('popstate'));
+			}
+		});
+	});
 }
 
 	//================================================
@@ -78,8 +75,8 @@ export function initLandingPage() {
 	registerButton?.addEventListener('click', () => {
 		handleNavigation('/register');
 	});
-    
-    guestButton?.addEventListener('click', async () => {
+	
+	guestButton?.addEventListener('click', async () => {
 		try {
 			const response = await fetch('/api/user/guest', {
 				method: 'POST',
@@ -101,23 +98,23 @@ export function initLandingPage() {
 				sessionStorage.setItem('userRole', 'guest');
 
 				try {
-                    const userResponse = await fetch(`/api/users/${data.userId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${data.accessToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
+					const userResponse = await fetch(`/api/users/${data.userId}`, {
+						method: 'GET',
+						headers: {
+							'Authorization': `Bearer ${data.accessToken}`,
+							'Content-Type': 'application/json'
+						}
+					});
 
-                    if (userResponse.ok) {
-                        const userData = await userResponse.json();
-                        if (userData.alias) {
-                            sessionStorage.setItem('username', userData.alias);
-                        }
-                    }
-                } catch (fetchErr) {
-                    console.error("Cannot retrieve guest username", fetchErr);
-                }
+					if (userResponse.ok) {
+						const userData = await userResponse.json();
+						if (userData.alias) {
+							sessionStorage.setItem('username', userData.alias);
+						}
+					}
+				} catch (fetchErr) {
+					console.error("Cannot retrieve guest username", fetchErr);
+				}
 
 				handleNavigation('/guest');
 
@@ -135,4 +132,3 @@ export function initLandingPage() {
 		}
 	});
 }
-

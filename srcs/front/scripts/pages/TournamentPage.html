@@ -1,247 +1,251 @@
-<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-hidden">
+<div id="wizz-container" class="relative w-full h-[calc(100vh-50px)] overflow-auto flex flex-col">
 
-    <div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
-         style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
-    </div>
+	<div id="home-header" class="absolute top-0 left-0 w-full h-[200px] bg-cover bg-center bg-no-repeat"
+		 style="background-image: url(/assets/basic/background.jpg); background-size: cover;">
+	</div>
 
-    <div class="absolute top-[20px] bottom-0 left-0 right-0 flex flex-col px-10 py-2 gap-2 items-center" style="padding-left: 50px; padding-right: 50px; bottom: 100px; top: 110px;">
-        
-        <div class="flex gap-6 flex-1 min-h-0" style="gap: 60px;">
+	<div class="absolute top-[20px] left-0 right-0 flex flex-col py-2 gap-2 items-center" style="padding-left: 5%; padding-right: 5%; bottom: 50px; min-height: 800px;">
+		
+		<div class="flex flex-row justify-center gap-6 min-h-0 flex-1 w-full" style="max-width: 1460px; min-height: 600px;">
 
-            <div class="window flex flex-col min-w-0" style="width: 1000px; height: 600px;">
-                <div class="title-bar">
-                    <div class="title-bar-text">{{tournamentPage.title}}</div>
-                    <div class="title-bar-controls">
-                        <button aria-label="Minimize"></button>
-                        <button aria-label="Maximize"></button>
-                        <button aria-label="Close"></button>
-                    </div>
-                </div>
+			<div class="flex flex-col flex-1 min-w-0" style="max-width: 1000px;">
+				<div class="window flex flex-col w-full" style="height: 600px;">
+					<div class="title-bar">
+						<div class="title-bar-text">{{tournamentPage.title}}</div>
+						<div class="title-bar-controls">
+							<button aria-label="Minimize"></button>
+							<button aria-label="Maximize"></button>
+							<button aria-label="Close"></button>
+						</div>
+					</div>
 
-                <div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
-    
-                    <div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-                        <span id="player-1-name" class="text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>
-                        <span id="score-board" class="text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-                        <span id="player-2-name" class="text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>
-                    </div>
+					<div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
+		
+						<div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
+							<span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>
+							<span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
+							<span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>
+						</div>
 
-                    <div id="game-canvas-container" class="w-full flex-1 flex items-center justify-center bg-transparent relative" style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
-                    
+						<div id="game-canvas-container" 
+							class="w-full flex-1 flex items-center justify-center bg-transparent relative" 
+							style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
+						
 
-                    <div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                        <div class="window w-[600px] bg-white shadow-xl">
-                            <div class="title-bar">
-                                <div class="title-bar-text">{{tournamentPage.setup_modal.title_modal}}</div>
-                            </div>
-                            <div class="window-body flex flex-col gap-4 p-6 bg-white">
-                                <div class="text-center border-b pb-3" style="padding-bottom: 15px;">
-                                    <p class="font-semibold mb-2">{{tournamentPage.setup_modal.game_instr}}</p>
-                                    <p>{{tournamentPage.setup_modal.ws}}</p>
-                                    <p>{{tournamentPage.setup_modal.up_down}}</p>
-                                    <p>{{tournamentPage.setup_modal.space_bar}}</p>
-                                </div>
-                                <div class="flex flex-col gap-1">
-                                    <label class="font-bold text-sm">{{tournamentPage.setup_modal.tournament_name}}</label>
-                                    <input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">
-                                </div>
+						<div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" style="padding-top: 100px;">
+							<div class="window w-[600px] bg-white shadow-xl">
+								<div class="title-bar">
+									<div class="title-bar-text">{{tournamentPage.setup_modal.title_modal}}</div>
+								</div>
+								<div class="window-body flex flex-col gap-4 p-6 bg-white">
+									<div class="text-center border-b pb-3" style="padding-bottom: 15px;">
+										<p class="theme-label font-semibold mb-2">{{tournamentPage.setup_modal.game_instr}}</p>
+										<p>{{tournamentPage.setup_modal.ws}}</p>
+										<p>{{tournamentPage.setup_modal.up_down}}</p>
+										<p>{{tournamentPage.setup_modal.space_bar}}</p>
+									</div>
+									<div class="flex flex-col gap-1">
+										<label class="theme-label font-bold text-sm">{{tournamentPage.setup_modal.tournament_name}}</label>
+										<input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">
+									</div>
 
-                                <fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">
-                                    <legend class="text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p1}}</label>
-                                            <input id="player1-input" class="w-full border p-1 bg-gray-200 cursor-not-allowed" readonly>
-                                        </div>
-                                        <div>
-                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p2}}</label>
-                                            <input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p2}}">
-                                        </div>
-                                        <div>
-                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p3}}</label>
-                                            <input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p3}}">
-                                        </div>
-                                        <div>
-                                            <label class="text-xs font-bold">{{tournamentPage.setup_modal.p4}}</label>
-                                            <input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p4}}">
-                                        </div>
-                                    </div>
-                                </fieldset>
+									<fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">
+										<legend class="theme-label text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>
+										<div class="grid grid-cols-2 gap-4">
+											<div>
+												<label class="text-xs font-bold">{{tournamentPage.setup_modal.p1}}</label>
+												<input type="text" id="player1-input" class="placeholder-gray-500 field-input w-full border p-1 bg-gray-200 cursor-not-allowed" style="background-color: #EDEDED;" disabled>
+											</div>
+											<div>
+												<label class="text-xs font-bold">{{tournamentPage.setup_modal.p2}}</label>
+												<input type="text" id="player2-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p2}}">
+											</div>
+											<div>
+												<label class="text-xs font-bold">{{tournamentPage.setup_modal.p3}}</label>
+												<input type="text" id="player3-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p3}}">
+											</div>
+											<div>
+												<label class="text-xs font-bold">{{tournamentPage.setup_modal.p4}}</label>
+												<input type="text" id="player4-input" class="w-full border p-1 focus:border-blue-500 outline-none" placeholder="{{tournamentPage.setup_modal.p4}}">
+											</div>
+										</div>
+									</fieldset>
 
-                                <fieldset class="border-2 border-gray-300 p-2 bg-gray-50">
-                                    <legend class="text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>
-                                    <div class="flex flex-row items-center gap-8 justify-center">
-                                        <div class="flex flex-row items-center gap-2 relative">
-                                            <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose__ball}}</label>
-                                            <div class="relative">
-                                                <button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
-                                                    <img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
-                                                </button>
-                                                <div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">
-                                                    <div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>
-                                                </div>
-                                            </div>
-                                            <input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">
-                                        </div>
-                                        <div class="flex flex-row items-center gap-2 relative">
-                                            <label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose_bg}}</label>
-                                            <div class="relative">
-                                                <button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
-                                                    <div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
-                                                </button>
-                                                <div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
-                                                <p class="text-xs text-gray-500 mb-2 border-b pb-1">{{tournamentPage.setup_modal.select_bg}}</p>
-                                                <div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
-                                                </div>
-                                                <button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
-                                                    {{tournamentPage.setup_modal.reset_color}}
-                                                </button>
-                                            </div>
-                                            </div>
-                                            <input type="hidden" id="tour-bg-value" value="#E8F4F8">
-                                        </div>
-                                    </div>
-                                </fieldset>
+									<fieldset class="border-2 border-gray-300 p-2 bg-gray-50">
+										<legend class="theme-label text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>
+										<div class="flex flex-row items-center gap-8 justify-center">
+											<div class="flex flex-row items-center gap-2 relative">
+												<label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose__ball}}</label>
+												<div class="relative">
+													<button id="tour-ball-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
+														<img id="tour-selected-ball-img" src="/assets/emoticons/smile.gif" class="w-6 h-6 object-contain">
+													</button>
+													<div id="tour-ball-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto w-[250px] p-2" style="width: 200px;">
+														<div id="tour-ball-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;"></div>
+													</div>
+												</div>
+												<input type="hidden" id="tour-ball-value" value="/assets/game/smile.png">
+											</div>
+											<div class="flex flex-row items-center gap-2 relative">
+												<label class="text-sm font-semibold">{{tournamentPage.setup_modal.choose_bg}}</label>
+												<div class="relative">
+													<button id="tour-bg-selector-button" class="px-2 py-1 bg-white hover:bg-gray-100 flex items-center justify-center w-[50px] h-[35px]">
+														<div id="tour-selected-bg-preview" class="w-6 h-6 rounded-full border border-gray-300" style="background-color: #E8F4F8;"></div>
+													</button>
+													<div id="tour-bg-selector-dropdown" class="hidden absolute top-full left-0 mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 overflow-y-auto" style="width: 240px; padding: 8px;">
+													<p class="text-xs text-gray-500 mb-2 border-b pb-1">{{tournamentPage.setup_modal.select_bg}}</p>
+													<div id="tour-bg-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+													</div>
+													<button id="bg-reset-button" class="w-full text-center text-xs hover:underline mt-2 pt-1 border-t border-gray-100">
+														{{tournamentPage.setup_modal.reset_color}}
+													</button>
+												</div>
+												</div>
+												<input type="hidden" id="tour-bg-value" value="#E8F4F8">
+											</div>
+										</div>
+									</fieldset>
 
-                                <div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>
+									<div id="setup-error" class="text-red-500 text-sm font-bold text-center hidden"></div>
 
-                                <div class="flex justify-center mt-4">
-                                    <button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                            px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                            active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                            transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                        {{tournamentPage.setup_modal.play}}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+									<div class="flex justify-center mt-4">
+										<button id="start-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+																px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+																active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+																transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+											{{tournamentPage.setup_modal.play}}
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
 
-                    <div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-                        <div class="window w-[1000px] bg-white shadow-2xl" style="width: 500px;">
-                            <div class="title-bar">
-                                <div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>
-                            </div>
+						<div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+							<div class="window bg-white shadow-2xl" style="width: 500px;">
+								<div class="title-bar">
+									<div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>
+								</div>
 
-                            <div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">
-                                <h2 class="text-2xl font-semibold font-black text-blue-900 tracking-wide">
-                                    {{tournamentPage.tournament_bracket_modal.heading}}
-                                </h2>
+								<div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">
+									<h2 class="theme-label text-2xl font-semibold font-black text-blue-900 tracking-wide">
+										{{tournamentPage.tournament_bracket_modal.heading}}
+									</h2>
 
-                                <div class="flex flex-col gap-6 w-full items-center">
+									<div class="flex flex-col gap-6 w-full items-center">
 
-                                    <div class="flex flex-row justify-between w-full px-8">
-                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
-                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                {{tournamentPage.tournament_bracket_modal.semi_final_1}}
-                                            </span>
-                                            <span id="bracket-sf1" class="match-display"></span>
-                                        </div>
+										<div class="flex flex-row justify-between w-full px-8">
+											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
+												<span class="theme-label text-xs font-bold text-gray-500 uppercase tracking-wider">
+													{{tournamentPage.tournament_bracket_modal.semi_final_1}}
+												</span>
+												<span id="bracket-sf1" class="match-display"></span>
+											</div>
 
-                                        <div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
-                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                                {{tournamentPage.tournament_bracket_modal.semi_final_2}}
-                                            </span>
-                                            <span id="bracket-sf2" class="match-display"></span>
-                                        </div>
-                                    </div>
+											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
+												<span class="theme-label text-xs font-bold text-gray-500 uppercase tracking-wider">
+													{{tournamentPage.tournament_bracket_modal.semi_final_2}}
+												</span>
+												<span id="bracket-sf2" class="match-display"></span>
+											</div>
+										</div>
 
-                                    <div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">
-                                        <span class="text-xs font-bold text-yellow-600 uppercase tracking-widest">
-                                            {{tournamentPage.tournament_bracket_modal.final}}
-                                        </span>
-                                        <span id="bracket-final" class="match-display final-match"></span>
-                                    </div>
+										<div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">
+											<span class="theme-label text-xs font-bold text-yellow-600 uppercase tracking-widest">
+												{{tournamentPage.tournament_bracket_modal.final}}
+											</span>
+											<span id="bracket-final" class="match-display final-match"></span>
+										</div>
 
-                                </div>
+									</div>
 
-                                <div class="w-full border-t border-gray-300 my-2"></div>
+									<div class="w-full border-t border-gray-300 my-2"></div>
 
-                                <p id="bracket-status-msg" class="text-gray-600 italic">
-                                    {{tournamentPage.tournament_bracket_modal.status_ready}}
-                                </p>
+									<p id="bracket-status-msg" class="text-gray-600 italic">
+										{{tournamentPage.tournament_bracket_modal.status_ready}}
+									</p>
 
-                                <button
-                                    id="bracket-continue-btn"
-                                    class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                    {{tournamentPage.tournament_bracket_modal.continue_btn}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+									<button
+										id="bracket-continue-btn"
+										class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+															active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+															transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+										{{tournamentPage.tournament_bracket_modal.continue_btn}}
+									</button>
+								</div>
+							</div>
+						</div>
 
-                    <div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
-                        <div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">
-                            <div class="title-bar bg-blue-800">
-                                <div class="title-bar-text text-white">{{tournamentPage.tournament_next_match_modal.title}}</div>
-                            </div>
-                            <div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">
-                                <h2 class="text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.match_title}}</h2>
-                                
-                                <div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">
-                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>
-                                    <div class="text-3xl font-black text-red-600 italic leading-relaxed">{{tournamentPage.tournament_next_match_modal.player_vs}}</div>
-                                    <div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>
-                                </div>
+						<div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-lg">
+							<div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">
+								<div class="title-bar bg-blue-800">
+									<div class="title-bar-text text-white">{{tournamentPage.tournament_next_match_modal.title}}</div>
+								</div>
+								<div class="window-body bg-gray-100 p-10 flex flex-col items-center gap-12">
+									<h2 class="theme-label text-3xl font-black text-blue-900 text-center" id="match-title" style="padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.match_title}}</h2>
+									
+									<div class="flex flex-col items-center justify-center gap-6 bg-white p-6 rounded-lg shadow-inner border border-gray-300 w-full">
+										<div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p1">Player A</div>
+										<div class="theme-label text-3xl font-black text-red-600 italic leading-relaxed">{{tournamentPage.tournament_next_match_modal.player_vs}}</div>
+										<div class="text-4xl font-bold text-gray-800 text-center truncate w-full leading-relaxed" id="next-p2">Player B</div>
+									</div>
 
-                                <p class="text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.start_info}}</p>
+									<p class="theme-label text-gray-500 text-sm text-center" style="padding-top: 20px; padding-bottom: 20px;">{{tournamentPage.tournament_next_match_modal.start_info}}</p>
 
-                                <button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                    {{tournamentPage.tournament_next_match_modal.play_btn}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+									<button id="launch-match-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+															active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+															transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+										{{tournamentPage.tournament_next_match_modal.play_btn}}
+									</button>
+								</div>
+							</div>
+						</div>
 
-                    <div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
-                        <div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-                            <div class="title-bar bg-yellow-500">
-                                <div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>
-                            </div>
-                            <div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-                                <h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>
-                                <div class="text-6xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                
-                                <button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                                        px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                                        active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-                                                        transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
-                                    {{tournamentPage.tournament_summary_modal.back_menu}}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+						<div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
+								<div class="title-bar bg-yellow-500">
+									<div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>
+								</div>
+								<div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
+									<h1 class="theme-label text-4xl font-black text-yellow-600 uppercase tracking-widest">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>
+									<div class="text-2xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                
+									<button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+															active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+															transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+										{{tournamentPage.tournament_summary_modal.back_menu}}
+									</button>
+								</div>
+							</div>
+						</div>
 
-                </div>
-            </div>
+					</div>
+				</div>
+			</div>
 
-            <div class="window flex flex-col w-[300px] min-w-[300px]" style="width: 400px; height: 600px;">
-                <div class="title-bar">
-                    <div class="title-bar-text">{{tournamentPage.chat.title}}</div>
-                    <div class="title-bar-controls">
-                        <button aria-label="Minimize"></button>
-                        <button aria-label="Maximize"></button>
-                        <button aria-label="Close"></button>
-                    </div>
-                </div>
+			<div class="window flex flex-col w-[400px] shrink-0" style="height: 600px;">
+				<div class="title-bar">
+					<div class="title-bar-text">{{tournamentPage.chat.title}}</div>
+					<div class="title-bar-controls">
+						<button aria-label="Minimize"></button>
+						<button aria-label="Maximize"></button>
+						<button aria-label="Close"></button>
+					</div>
+				</div>
 
-                <div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-                    <div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
-                        <div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
-                            <p>{{tournamentPage.chat.info}}</p>
-                        </div>
-                        <div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
-                        <div class="flex flex-col">
-                            <input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>
-                        </div>
-                    </div>
-                </div> 
-            </div>
-        </div>
-    </div>
+				<div id="right" class="window-body flex flex-row gap-4 min-w-0" style="width: 300px; height: 600px;">
+					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
+							<p>{{tournamentPage.chat.info}}</p>
+						</div>
+						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
+						<div class="flex flex-col">
+							<input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>
+						</div>
+					</div>
+				</div> 
+			</div>
+		</div>
+	</div>
 </div>

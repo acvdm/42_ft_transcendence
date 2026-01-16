@@ -29,7 +29,16 @@ export async function generateRandomAlias(
         "Cat",
         "Koala",
         "Capybara",
-        "Paul"
+        "Paul",
+        "Alan",
+        "AnneChat",
+        "Cassou",
+        "Faust",
+        "Natsuw",
+        "Amandjin",
+        "Antoning",
+        "Yann",
+        "Thomas"
     ];
 
     const adjectives =

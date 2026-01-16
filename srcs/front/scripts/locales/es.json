@@ -223,6 +223,7 @@
     "bigg_rival": "Mis mayores rivales",
     "match_history": "Historial y análisis",
     "placeholder_rival": "Nombre del rival",
+    "filter": "Filtrar:",
     "all_modes": "Todos los modos",
     "local": "Local",
     "remote": "Remoto",
@@ -321,7 +322,8 @@
       "title": "Chat de juego",
       "info": "Sala de chat",
       "choose_bg": "Elegir fondo:",
-      "default_bg": "Fondo por defecto"
+      "default_bg": "Fondo por defecto",
+      "input_placeholder": "Escriba su mensaje"
     }
   },
   "tournamentPage": {

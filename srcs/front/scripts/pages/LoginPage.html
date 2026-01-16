@@ -1,23 +1,23 @@
 <div class="absolute z-50" style="top: 1.5rem; right: 2rem;">
-    <div class="relative">
-        <button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(20, 29, 78)">
-            <span class="text-lg">🌐</span>
-            <span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
-            <span class="text-[10px] opacity-70">▼</span>
-        </button>
-        
-        <div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
-            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
-                <span>🇬🇧</span> English
-            </button>
-            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
-                <span>🇫🇷</span> Français
-            </button>
-            <button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
-                <span>🇪🇸</span> Español
-            </button>
-        </div>
-    </div>
+	<div class="relative">
+		<button id="page-lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm shadow-lg" style="color: rgb(255, 255, 255)">
+			<span class="text-lg">🌐</span>
+			<span id="page-current-lang-display" class="uppercase text-xs font-bold tracking-wider">EN</span>
+			<span class="text-[10px] opacity-70">▼</span>
+		</button>
+		
+		<div id="page-lang-menu-content" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5 animate-in fade-in zoom-in duration-200 origin-top-right">
+			<button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="en">
+				<span>🇬🇧</span> English
+			</button>
+			<button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="fr">
+				<span>🇫🇷</span> Français
+			</button>
+			<button class="page-lang-select flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-blue-600 gap-2" data-lang="es">
+				<span>🇪🇸</span> Español
+			</button>
+		</div>
+	</div>
 </div>
 <div class="w-screen h-[200px] bg-cover bg-center bg-no-repeat" style="background-image: url(/assets/basic/background.jpg); background-size: cover;"></div>
 		<!-- Main div -->
@@ -74,41 +74,37 @@
 
 
 	<div id="2fa-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
-        <div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
-            <div class="title-bar">
-                <div class="title-bar-text">{{loginPage.2fa}}</div>
-                <div class="title-bar-controls">
-                    <button id="close-2fa-modal" aria-label="Close"></button>
-                </div>
-            </div>
-            <div class="window-body p-6 flex flex-col items-center gap-4">
-                <div class="text-center">
-                    <h2 class="text-lg font-bold mb-2">{{loginPage.security}}</h2>
-                    <p class="text-xs text-gray-600 mb-4">{{loginPage.enter_code}}</p>
-                </div>
+		<div class="window bg-white" style="width: 400px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
+			<div class="title-bar">
+				<div class="title-bar-text">{{loginPage.2fa}}</div>
+				<div class="title-bar-controls">
+					<button id="close-2fa-modal" aria-label="Close"></button>
+				</div>
+			</div>
+			<div class="window-body p-6 flex flex-col items-center gap-4">
+				<div class="text-center">
+					<h2 class="text-lg font-bold mb-2">{{loginPage.security}}</h2>
+					<p class="text-xs text-gray-600 mb-4">{{loginPage.enter_code}}</p>
+				</div>
 
-                <div class="w-full flex flex-col gap-2 mt-2">
-                    <input type="text" id="2fa-input-code" placeholder="------" maxlength="6" 
-                           class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
-                </div>
+				<div class="w-full flex flex-col gap-2 mt-2">
+					<input type="text" id="2fa-input-code" placeholder="------" maxlength="6" 
+						   class="w-full border border-gray-300 rounded-sm p-2 text-center text-lg tracking-widest font-mono shadow-inner focus:outline-none focus:border-blue-400">
+				</div>
 
-                <div class="flex flex-col items-center justify-center">
-                    <p id="2fa-error-message" class="text-red-600 text-sm mb-2 hidden"></p>
-                </div>
+				<div class="flex flex-col items-center justify-center">
+					<p id="2fa-error-message" class="text-red-600 text-sm mb-2 hidden"></p>
+				</div>
 
-                <div class="flex justify-center gap-4 mt-4 w-full">
-                    <button id="confirm-2fa-button" 
-                            class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-                                px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
-                                active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
-                        {{loginPage.verify_button}}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-
+				<div class="flex justify-center gap-4 mt-4 w-full">
+					<button id="confirm-2fa-button" 
+							class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
+								px-6 py-1 text-sm shadow-sm hover:from-gray-200 hover:to-gray-400 
+								active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 font-bold">
+						{{loginPage.verify_button}}
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
