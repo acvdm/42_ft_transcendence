@@ -104,7 +104,10 @@
     "back": "Volver al inicio",
     "error_inputs": "Por favor complete todos los campos",
     "error_auth_default": "Fallo de autenticación",
-    "error_network": "Error de red, inténtelo de nuevo"
+    "error_network": "Error de red, inténtelo de nuevo",
+    "error_email": "Dirección de correo electrónico no compatible",
+    "error_email_too_long": "Dirección de correo electrónico no válida. Demasiado larga.",
+    "error_password": "La contraseña debe contener al menos 8 caracteres, una minúscula, una mayúscula, un dígito y un carácter especial."
   },
   "profilePage": {
     "window_profile": "Perfil",

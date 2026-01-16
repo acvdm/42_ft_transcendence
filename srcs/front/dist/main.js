@@ -6065,8 +6065,11 @@
       register_button: "S'inscrire",
       back: "Retour \xE0 l'accueil",
       error_inputs: "Veuillez remplir tous les champs",
-      error_auth_default: "\xC9chec de l'authentification",
-      error_network: "Erreur r\xE9seau, veuillez r\xE9essayer"
+      error_auth_default: "\xC9chec de l'authentification.",
+      error_network: "Erreur r\xE9seau, veuillez r\xE9essayer.",
+      error_email: "Adresse mail non suport\xE9e.",
+      error_email_too_long: "Adresse mail trop longue.",
+      error_password: "Le mot de passe doit contenir au moins 8 caract\xE8res, dont une minuscule, une majuscule, un chiffre et un caract\xE8re sp\xE9cial."
     },
     profilePage: {
       window_profile: "Profil",
@@ -6602,7 +6605,10 @@
       back: "Back to landing page",
       error_inputs: "Please fill all inputs",
       error_auth_default: "Authentication failed",
-      error_network: "Network error, please try again"
+      error_network: "Network error, please try again",
+      error_email: "Email address not supported",
+      error_email_too_long: "Email address not supported. Too long",
+      error_password: "Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character"
     },
     profilePage: {
       window_profile: "Profile",
@@ -7138,7 +7144,10 @@
       back: "Volver al inicio",
       error_inputs: "Por favor complete todos los campos",
       error_auth_default: "Fallo de autenticaci\xF3n",
-      error_network: "Error de red, int\xE9ntelo de nuevo"
+      error_network: "Error de red, int\xE9ntelo de nuevo",
+      error_email: "Direcci\xF3n de correo electr\xF3nico no compatible",
+      error_email_too_long: "Direcci\xF3n de correo electr\xF3nico no v\xE1lida. Demasiado larga.",
+      error_password: "La contrase\xF1a debe contener al menos 8 caracteres, una min\xFAscula, una may\xFAscula, un d\xEDgito y un car\xE1cter especial."
     },
     profilePage: {
       window_profile: "Perfil",

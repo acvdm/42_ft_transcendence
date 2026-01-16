@@ -27,10 +27,10 @@ export function validateRegisterInput(body: any)
         throw new ValidationError('Missing required fields');
 
     if (!validator.isEmail(body.email))
-        throw new ValidationError('Email address not supported');
+        throw new ValidationError('registerPage.error_email');
 
     if (!isValidPassword(body.password))
-        throw new ValidationError('Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character');
+        throw new ValidationError('registerPage.error_password');
 }
 
 export function validateNewEmail(body: any) 
@@ -48,7 +48,7 @@ export function validateNewEmail(body: any)
     
     if (body.email.length > 254)
     {
-        throw new ValidationError('Email address not supported. Too long');
+        throw new ValidationError('registerPage.error_email_too_long');
     }
     if (!validator.isEmail(body.email))
     {
