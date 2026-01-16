@@ -356,6 +356,9 @@ export class RemoteGameManager {
 		}
 		
 		const privateRoomId = sessionStorage.getItem('privateGameId');
+		if (privateRoomId) {
+			sessionStorage.removeItem('privateGameId');
+		}
 
 		if (btn) {
 

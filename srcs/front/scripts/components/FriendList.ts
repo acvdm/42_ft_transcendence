@@ -328,7 +328,7 @@ export class FriendList {
 		const friendRequestMessage = document.getElementById('friend-request-message');
 
 		if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
-			friendSearchInput.maxLength = 30;
+			friendSearchInput.maxLength = 20;
 			addFriendButton.addEventListener('click', (e) => {
 				e.stopPropagation();
 				addFriendDropdown.classList.toggle('hidden');
@@ -344,7 +344,7 @@ export class FriendList {
 					this.showFriendMessage(i18next.t('friendList.search_placeholder_error'), 'error', friendRequestMessage);
 					return;
 				}
-				if (searchValue.length > 30) {
+				if (searchValue.length > 20) {
 					this.showFriendMessage(i18next.t('friendList.error_input_too_long'), 'error', friendRequestMessage);
 					return ;
 				}

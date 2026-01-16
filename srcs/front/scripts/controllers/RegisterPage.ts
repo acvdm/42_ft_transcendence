@@ -27,7 +27,7 @@ function handleRegister() {
 	}
 
 	if (aliasInput) {
-		aliasInput.maxLength = 30;
+		aliasInput.maxLength = 20;
 	}
 	if (emailInput) {
 		emailInput.maxLength = 254;
@@ -60,7 +60,7 @@ function handleRegister() {
 			return ;
 		}
 
-		if (alias.length > 30 || email.length > 254 || password.length > 128) {
+		if (alias.length > 20 || email.length > 254 || password.length > 128) {
 			if (errorElement) {
 				errorElement.textContent = i18next('registerPage.error_inputs');
 				errorElement.classList.remove.apply('hidden');

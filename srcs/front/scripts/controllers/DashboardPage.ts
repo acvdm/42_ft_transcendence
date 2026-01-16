@@ -184,12 +184,12 @@ export function afterRender(): void {
 			return;
 		}
 
-		filterOpponent.maxLength = 30;
+		filterOpponent.maxLength = 20;
 
 		const applyFiltersAndSort = () => {
 			let rawVal = filterOpponent.value;
-			if (rawVal.length > 30) {
-				rawVal = rawVal.substring(0, 30);
+			if (rawVal.length > 20) {
+				rawVal = rawVal.substring(0, 20);
 			}
 
 			const opponentValue = rawVal.toLowerCase().trim();

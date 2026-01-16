@@ -8809,7 +8809,7 @@
       const cancelFriendRequestButton = document.getElementById("cancel-friend-request");
       const friendRequestMessage = document.getElementById("friend-request-message");
       if (addFriendButton && addFriendDropdown && friendSearchInput && sendFriendRequestButton && cancelFriendRequestButton) {
-        friendSearchInput.maxLength = 30;
+        friendSearchInput.maxLength = 20;
         addFriendButton.addEventListener("click", (e) => {
           e.stopPropagation();
           addFriendDropdown.classList.toggle("hidden");
@@ -8824,7 +8824,7 @@
             this.showFriendMessage(i18n_default.t("friendList.search_placeholder_error"), "error", friendRequestMessage);
             return;
           }
-          if (searchValue.length > 30) {
+          if (searchValue.length > 20) {
             this.showFriendMessage(i18n_default.t("friendList.error_input_too_long"), "error", friendRequestMessage);
             return;
           }
@@ -10855,7 +10855,7 @@
     };
     loadUserData();
     const updateUsername = async (newUsername) => {
-      if (!userId || !newUsername.trim() || newUsername.length > 30) {
+      if (!userId || !newUsername.trim() || newUsername.length > 20) {
         alert(i18n_default.t("profilePage.alerts.username_error"));
         return false;
       }
@@ -10986,7 +10986,7 @@
       const MAX_BIO_LENGTH = 70;
       const charCountElement = fieldName === "bio" ? elements2.container.querySelector(".char-count") : null;
       if (fieldName === "alias")
-        input.maxLength = 30;
+        input.maxLength = 20;
       if (fieldName === "bio")
         input.maxLength = 70;
       if (fieldName === "email")
@@ -11418,7 +11418,7 @@
       return;
     }
     if (aliasInput) {
-      aliasInput.maxLength = 30;
+      aliasInput.maxLength = 20;
     }
     if (emailInput) {
       emailInput.maxLength = 254;
@@ -11445,7 +11445,7 @@
         }
         return;
       }
-      if (alias2.length > 30 || email.length > 254 || password.length > 128) {
+      if (alias2.length > 20 || email.length > 254 || password.length > 128) {
         if (errorElement) {
           errorElement.textContent = i18n_default("registerPage.error_inputs");
           errorElement.classList.remove.apply("hidden");
@@ -12166,7 +12166,7 @@
       const bgResetButton = document.getElementById("bg-reset-button");
       const player2Display = document.getElementById("player-2-name");
       if (nameInput) {
-        nameInput.maxLength = 30;
+        nameInput.maxLength = 20;
       }
       if (modal) {
         modal.classList.remove("hidden");
@@ -12699,6 +12699,9 @@
         startGameFromData(data);
       }
       const privateRoomId = sessionStorage.getItem("privateGameId");
+      if (privateRoomId) {
+        sessionStorage.removeItem("privateGameId");
+      }
       if (btn) {
         const newBtn = btn.cloneNode(true);
         btn.parentNode?.replaceChild(newBtn, btn);
@@ -12791,7 +12794,7 @@
       const pInputs = [player1Input, player2Input, player3Input, player4Input];
       pInputs.forEach((input) => {
         if (input) {
-          input.maxLength = 15;
+          input.maxLength = 20;
         }
       });
       this.initTournamentSelectors();
@@ -12821,7 +12824,7 @@
           }
           return;
         }
-        if (tName.length > 45 || players.some((p) => p.length > 15)) {
+        if (tName.length > 45 || players.some((p) => p.length > 20)) {
           if (errorDiv) {
             errorDiv.innerText = i18n_default.t("tournamentManager.setup_error_length");
             errorDiv.classList.remove("hidden");
@@ -13397,6 +13400,7 @@
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("popstate", handlePopState);
     isNavigationBlocked = false;
+    sessionStorage.removeItem("privateGameId");
   }
   function render7() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -28163,11 +28167,11 @@
       if (!applyFilterButton || !filterOpponent || !filterMode || !sortOrder || !prevButton || !nextButton || !pageInfo) {
         return;
       }
-      filterOpponent.maxLength = 30;
+      filterOpponent.maxLength = 20;
       const applyFiltersAndSort = () => {
         let rawVal = filterOpponent.value;
-        if (rawVal.length > 30) {
-          rawVal = rawVal.substring(0, 30);
+        if (rawVal.length > 20) {
+          rawVal = rawVal.substring(0, 20);
         }
         const opponentValue = rawVal.toLowerCase().trim();
         const modeValue = filterMode.value;

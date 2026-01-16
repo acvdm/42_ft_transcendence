@@ -235,6 +235,8 @@ export function cleanup() {
 	window.removeEventListener('beforeunload', handleBeforeUnload);
 	window.removeEventListener('popstate', handlePopState);
 	isNavigationBlocked = false;
+
+	sessionStorage.removeItem('privateGameId');
 }
 
 export function render(): string {
