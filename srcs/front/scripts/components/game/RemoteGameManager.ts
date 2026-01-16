@@ -130,11 +130,12 @@ export class RemoteGameManager {
 			}
 
 			const myAlias = await getPlayerAlias();
-			const myId = Number(localStorage.getItem('userId'));
+			const myId = Number(localStorage.getItem('userId') || sessionStorage.getItem('userId'));
 			let opponentId = data.opponent ? Number(data.opponent) : null;
 
+			console.log("myid, opponent id:", myId, opponentId);
 			if (opponentId && myId === opponentId) {
-				console.error("Error: cannot play against yourself");
+				console.error("Error: cannot play against yourself, you idiot");
 				if (status) {
 					status.innerText = i18next.t('remoteManager.self_play_error');
 					status.style.color = "red";
@@ -159,6 +160,7 @@ export class RemoteGameManager {
 			let p2Id: number | null = (data.role === 'player2') ? myId : opponentId;
 			let opponentAlias = i18next.t('remoteManager.default_opponent');
 
+			console.log("p1, p2:", p1Id, p2Id);
 			if (data.role === 'player1') 
 			{
 				this.currentP1Alias = myAlias;
@@ -287,8 +289,8 @@ export class RemoteGameManager {
 							}
 
 							await this.saveRemoteGameToApi (
-								this.currentP1Alias, s1, p1Id || 0,
-								this.currentP2Alias, s2, p2Id || 0,
+								this.currentP1Alias, s1, p1Id,
+								this.currentP2Alias, s2, p2Id,
 								winnerAlias,
 								gameStartDate
 							)
@@ -411,6 +413,8 @@ export class RemoteGameManager {
 		winnerAlias: string,
 		startDate: string,
 	) {
+
+		console.log("p1, p2 save api:", p1Id, p2Id);
 	
 		try 
 		{
