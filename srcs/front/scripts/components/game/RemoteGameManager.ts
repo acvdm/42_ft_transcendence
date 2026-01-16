@@ -16,16 +16,10 @@ interface GameContext {
 }
 
 export class RemoteGameManager {
-<<<<<<< HEAD
     private context: GameContext;
     private currentP1Alias: string = "Player 1";
     private currentP2Alias: string = "Player 2";
     private WINNING_SCORE: number = 11;
-=======
-	private context: GameContext;
-	private currentP1Alias: string = "Player 1";
-	private currentP2Alias: string = "Player 2";
->>>>>>> origin/frontend-pages
 
 	constructor(context: GameContext) {
 		this.context = context;

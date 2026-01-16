@@ -45,14 +45,9 @@ export interface TournamentData
 }
 
 export class TournamentManager {
-<<<<<<< HEAD
     private context: GameContext;
     private tournamentState: TournamentData | null = null;
     private WINNING_SCORE: number = 11;
-=======
-	private context: GameContext;
-	private tournamentState: TournamentData | null = null;
->>>>>>> origin/frontend-pages
 
 	constructor(context: GameContext) {
 		this.context = context;
@@ -73,7 +68,6 @@ export class TournamentManager {
 		const startButton = document.getElementById('start-tournament-btn'); 
 		const errorDiv = document.getElementById('setup-error');
 
-<<<<<<< HEAD
         // Blocage natif de la taille des inputs
         if (nameInput)
             nameInput.maxLength = 45;
@@ -82,17 +76,6 @@ export class TournamentManager {
             if (input)
                 input.maxLength = 20;
         });
-=======
-		if (nameInput) {
-			nameInput.maxLength = 45;
-		}
-		const pInputs = [player1Input, player2Input, player3Input, player4Input];
-		pInputs.forEach(input => {
-			if (input) {
-				input.maxLength = 20;
-			}
-		});
->>>>>>> origin/frontend-pages
 
 		this.initTournamentSelectors();
 
@@ -467,23 +450,10 @@ export class TournamentManager {
 		}
 	}
 
-<<<<<<< HEAD
-                    if (activeGame.score.player1 >= this.WINNING_SCORE || activeGame.score.player2 >= this.WINNING_SCORE) {
-                        activeGame.isRunning = false;
-                        clearInterval(checkInterval);
-                        const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;
-                        this.endMatch(winnerAlias, activeGame.score.player1, activeGame.score.player2, gameStartDate);
-                    }
-                }, 500);
-            }
-        }
-    }
-=======
 	private endMatch(winner: string, scoreP1: number, scoreP2: number, gameStartDate: string) {
 		if (!this.tournamentState) {
 			return;
 		}
->>>>>>> origin/frontend-pages
 
 		const idx = this.tournamentState.currentMatchIdx;
 		const match = this.tournamentState.matches[idx];
