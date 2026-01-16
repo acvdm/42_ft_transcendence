@@ -317,17 +317,6 @@ const handleLocationChange = async () => {
 		statusText.textContent = `(${i18next.t(`profile.status.${currentStatus}`)})`;
 	}
 
-<<<<<<< HEAD
-    if (navbar) {
-        if (isGuest || accessToken) {
-            navbar.style.display = 'flex';
-            navbar.classList.add('justify-between', 'items-center', 'px-8'); 
-            
-            const currentHTML = navbar.innerHTML;
-            const targetHTML = isGuest ? guestMenuHtml : userMenuHtml;
-            //const isTargetGuest = targetHTML.includes('Guest Area');
-            const isCurrentGuest = currentHTML.includes('href="/guest"');
-=======
 	const langDropdownHtml = `
 		<div class="relative" id="lang-dropdown">
 			<button id="lang-toggle-btn" class="flex items-center gap-2 text-white hover:text-blue-100 transition-colors focus:outline-none rounded-full px-3 py-1 bg-white/10 backdrop-blur-sm">
@@ -349,7 +338,6 @@ const handleLocationChange = async () => {
 			</div>
 		</div>
 	`;
->>>>>>> origin/frontend-pages
 
 
 	const navbar = document.getElementById('main-navbar');
