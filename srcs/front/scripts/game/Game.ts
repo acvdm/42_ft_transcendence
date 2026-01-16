@@ -22,6 +22,7 @@ class Game {
 	playerRole: 'player1' | 'player2' | null = null;
 	socket: Socket | null = null;
 	lastBallSpeed: number = 0;
+	ballLaunchAt: number | null = null; // Pour le délai avant lancement en mode local
 
 
 	constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
@@ -113,6 +114,7 @@ class Game {
 	start() {
 		this.isRunning = true;
 		this.notifyScoreUpdate();
+		this.ball.reset(this.canvas, 1);
 		this.gameLoop();
 	}
 
@@ -169,6 +171,19 @@ class Game {
 		if (this.paddle1.y + this.paddle1.height > canvas.height) this.paddle1.y = canvas.height - this.paddle1.height;
 		if (this.paddle2.y < 0) this.paddle2.y = 0;
 		if (this.paddle2.y + this.paddle2.height > canvas.height) this.paddle2.y = canvas.height - this.paddle2.height;
+
+		// Vérifier si on doit attendre avant de lancer la balle
+		if (this.ballLaunchAt !== null) {
+			if (Date.now() < this.ballLaunchAt) {
+				// Attendre, ne pas bouger la balle
+				return;
+			} else {
+				// Temps écoulé, lancer la balle
+				const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
+				this.ball.reset(canvas, direction);
+				this.ballLaunchAt = null;
+			}
+		}
 
 		this.ball.update(canvas);
 		this.checkCollisions();
@@ -307,11 +322,21 @@ class Game {
 		if (this.ball.x < 0) {
 			this.score.player2++;
 			this.notifyScoreUpdate();
-			this.reset(-1);
+			// Mettre la balle au centre et programmer le lancement dans 0.5s
+			this.ball.x = this.canvas.width / 2;
+			this.ball.y = this.canvas.height / 2;
+			this.ball.velocityX = 0;
+			this.ball.velocityY = 0;
+			this.ballLaunchAt = Date.now() + 500;
 		} else if (this.ball.x > this.canvas.width) {
 			this.score.player1++;
 			this.notifyScoreUpdate();
-			this.reset(1);
+			// Mettre la balle au centre et programmer le lancement dans 0.5s
+			this.ball.x = this.canvas.width / 2;
+			this.ball.y = this.canvas.height / 2;
+			this.ball.velocityX = 0;
+			this.ball.velocityY = 0;
+			this.ballLaunchAt = Date.now() + 500;
 		}
 	}
 

@@ -11775,12 +11775,14 @@
 
   // scripts/game/Game.ts
   var Game = class {
+    // Pour le délai avant lancement en mode local
     constructor(canvas, ctx, input, ballImageSrc) {
       this.isRemote = false;
       this.roomId = null;
       this.playerRole = null;
       this.socket = null;
       this.lastBallSpeed = 0;
+      this.ballLaunchAt = null;
       this.canvas = canvas;
       this.ctx = ctx;
       this.input = input;
@@ -11855,6 +11857,7 @@
     start() {
       this.isRunning = true;
       this.notifyScoreUpdate();
+      this.ball.reset(this.canvas, 1);
       this.gameLoop();
     }
     gameLoop() {
@@ -11902,6 +11905,15 @@
       if (this.paddle1.y + this.paddle1.height > canvas.height) this.paddle1.y = canvas.height - this.paddle1.height;
       if (this.paddle2.y < 0) this.paddle2.y = 0;
       if (this.paddle2.y + this.paddle2.height > canvas.height) this.paddle2.y = canvas.height - this.paddle2.height;
+      if (this.ballLaunchAt !== null) {
+        if (Date.now() < this.ballLaunchAt) {
+          return;
+        } else {
+          const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
+          this.ball.reset(canvas, direction);
+          this.ballLaunchAt = null;
+        }
+      }
       this.ball.update(canvas);
       this.checkCollisions();
     }
@@ -12008,11 +12020,19 @@
       if (this.ball.x < 0) {
         this.score.player2++;
         this.notifyScoreUpdate();
-        this.reset(-1);
+        this.ball.x = this.canvas.width / 2;
+        this.ball.y = this.canvas.height / 2;
+        this.ball.velocityX = 0;
+        this.ball.velocityY = 0;
+        this.ballLaunchAt = Date.now() + 500;
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
         this.notifyScoreUpdate();
-        this.reset(1);
+        this.ball.x = this.canvas.width / 2;
+        this.ball.y = this.canvas.height / 2;
+        this.ball.velocityX = 0;
+        this.ball.velocityY = 0;
+        this.ballLaunchAt = Date.now() + 500;
       }
     }
     reset(direction = 1) {
