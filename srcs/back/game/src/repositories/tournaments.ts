@@ -70,7 +70,8 @@ export async function saveLocalTournament (
         const matchId = await createMatch(
             db, "tournament", 
             match.p1.alias, match.p2.alias, 
-            match.p1.score, match.p2.score, match.winner,
+            match.p1.score, match.p2.score, match.p1.isGuest, 
+            match.p2.isGuest, match.winner,
             "finished", match.round, tournamentId, 
             match.startDate, match.endDate
         );

@@ -120,6 +120,8 @@ fastify.post('/games', async (request, reply) =>
 			body.p2.alias || "Unknown",
 			body.p1.score || 0,
 			body.p2.score || 0,
+			body.p1.isGuest,
+			body.p2.isGuest,
 			body.winner, 
 			"finished", // status
 			"1v1", // round
@@ -127,7 +129,8 @@ fastify.post('/games', async (request, reply) =>
 			body.startDate,
 			body.endDate
 		);
-
+		console.log(`***body.p1.isGuest = ${body.p1.isGuest}, body.p1.userId = ${body.p1.userId}`)
+		console.log(`***body.p2.isGuest = ${body.p2.isGuest}, body.p2.userId = ${body.p2.userId}`)
 		if (body.startDate && body.endDate)
 		{
 			start = new Date(body.startDate).getTime();
@@ -152,12 +155,17 @@ fastify.post('/games', async (request, reply) =>
 				body.p1.score, body.p2.score,
 				p1IsWinner ? 1 : 0
 			);
-
-			await updateUserStats(
-				db, body.p1.userId,
-				body.p1.score, p1IsWinner ? 1 : 0,
-				finalDuration
-			);
+			console.log("add player to match");
+			console.log(`body.p1.isGuest = ${body.p1.isGuest}`);
+			if (!body.p1.isGuest)
+			{
+				await updateUserStats(
+					db, body.p1.userId,
+					body.p1.score, p1IsWinner ? 1 : 0,
+					finalDuration
+				);
+			}
+			console.log(`stats ajoutee pour player ${body.p1.userId}`);
 		}
 
 		if (body.p2 && body.p2.userId)
@@ -170,11 +178,17 @@ fastify.post('/games', async (request, reply) =>
 				p2IsWinner ? 1 : 0
 			);
 
-			await updateUserStats(
-				db, body.p2.userId,
-				body.p2.score, p2IsWinner ? 1 : 0,
-				finalDuration
-			);
+			console.log("add player to match");
+			console.log(`body.p2.isGuest = ${body.p2.isGuest}`);
+			if (!body.p2.isGuest)
+			{
+				await updateUserStats(
+					db, body.p2.userId,
+					body.p2.score, p2IsWinner ? 1 : 0,
+					finalDuration
+				);
+			}
+			console.log(`stats ajoutee pour player ${body.p2.userId}`);
 		}
 		return reply.status(201).send({
 			success: true,
@@ -195,6 +209,7 @@ fastify.post('/games', async (request, reply) =>
 			await rollbackDeleteGame(db, gameId);
 		
 		const statusCode = err.statusCode || 500;
+		console.log("error catched");
 
 		return reply.status(statusCode).send({
 			success: false,

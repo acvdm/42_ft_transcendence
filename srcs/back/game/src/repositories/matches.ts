@@ -34,6 +34,8 @@ export async function createMatch (
     p2Alias: string,
     p1Score: number,
     p2Score: number,
+    isP1Guest: boolean,
+    isP2Guest: boolean,
     winnerAlias: string,
     status: string,
     round: string,

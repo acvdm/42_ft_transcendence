@@ -1,4 +1,5 @@
 import { Database } from 'sqlite'
+import { UnauthorizedError } from '../utils/error.js';
 
 export interface Stat {
     userId: number,
@@ -40,7 +41,7 @@ export async function createStatLineforOneUser (
 export async function findStatsByUserId (
     db: Database,
     userId: number
-): Promise<Stat>
+): Promise<Stat | null>
 {
     const stats = await db.get(`
         SELECT * FROM STATS WHERE user_id = ?`,
@@ -49,6 +50,7 @@ export async function findStatsByUserId (
     console.log(`stats = ${stats.userId}, ${stats.total_duration_in_minutes}`);
 
     if (!stats) {
+        console.log(`0 stats trouve`);
         return {
             userId: userId,
             wins: 0,
@@ -172,9 +174,17 @@ export async function updateUserStats (
     userScore: number,
     isWinner: number,
     finalDuration: number
-): Promise<Stat>
+): Promise<Stat | null>
 {
-    console.log(`final_duration = ${finalDuration}`);
+    console.log(`update user stats for ${userId}`);
+
+    const isStatLineCreated = await findStatsByUserId(db, userId);
+    if (!isStatLineCreated)
+    {
+        console.log(`catched ici`);
+        throw new UnauthorizedError(`Cannot add stats for guests`);
+    }
+
     const stats = await db.run(`
         UPDATE STATS SET 
             wins = wins + ?,

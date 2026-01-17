@@ -155,7 +155,7 @@ export class RemoteGameManager {
 				return ;
 			}
 
-
+			// console.log(`is guest : ${data.player1.is_guest}`);
 			const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
 			const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
 			let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
@@ -192,24 +192,43 @@ export class RemoteGameManager {
 
 			let gameStartDate = getSqlDate();
 
+			let isP1Guest = false;
+			let isP2Guest = false;
+
+			const amIGuest = sessionStorage.getItem('isGuest') === 'true';
+			console.log(`amIGuest = ${amIGuest}`);
+
 			if (data.opponent) {
+				console.log(`if data.opponent id = ${data.opponent}`);
 				fetchWithAuth(`api/user/${data.opponent}`)
 					.then(res => res.ok ? res.json() : null)
 					.then(userData => {
+						console.log(`userData = ${userData.is_guest}`)
 						if (userData && userData.alias) {
 							const realOpponentName = userData.alias;
-	
+							const opponentIsGuest = !!userData.is_guest;
+							
 							if (data.role === 'player1') {
 								this.currentP2Alias = realOpponentName;
-								if (p2Display) {
-									p2Display.innerText = realOpponentName;
-								}
-							} else {
+								if (amIGuest)
+									isP1Guest = true;
+								if (opponentIsGuest)
+									isP2Guest = true;
+								
+								if (p2Display) p2Display.innerText = realOpponentName;
+								
+							} 
+							else 
+							{
 								this.currentP1Alias = realOpponentName;
-								if (p1Display) {
-									p1Display.innerText = realOpponentName;
-								}
+								if (amIGuest)
+									isP2Guest = true;
+								if (opponentIsGuest)								
+									isP1Guest = true;								
+								
+								if (p1Display) p1Display.innerText = realOpponentName;
 							}
+							console.log(`amIguest = ${amIGuest}, opponentisGuest = ${opponentIsGuest}, p1Guest = ${isP1Guest}, p2Guest = ${isP2Guest}`)
 						}
 					})
 					.catch(e => console.error("Error retrieving opponent alias:", e));
@@ -296,12 +315,14 @@ export class RemoteGameManager {
                                 s2 = this.WINNING_SCORE;
                             }
 
-							await this.saveRemoteGameToApi (
-								this.currentP1Alias, s1, p1Id,
-								this.currentP2Alias, s2, p2Id,
-								winnerAlias,
-								gameStartDate
-							)
+							if (myAlias == winnerAlias)
+							{
+								await this.saveRemoteGameToApi (
+									this.currentP1Alias, s1, p1Id, isP1Guest,
+									this.currentP2Alias, s2, p2Id, isP2Guest,
+									winnerAlias, gameStartDate
+								)
+							}
 
                             // MODIFICATION : Traduction du message de forfait
                             showRemoteEndModal(winnerAlias, i18next.t('remoteManager.opponent_forfeit'));
@@ -348,8 +369,8 @@ export class RemoteGameManager {
                         if (winnerAlias === myAlias)
                         {
                                 await this.saveRemoteGameToApi(
-                                    this.currentP1Alias, s1, p1Id,
-                                    this.currentP2Alias, s2, p2Id,
+                                    this.currentP1Alias, s1, p1Id, isP1Guest,
+                                    this.currentP2Alias, s2, p2Id, isP2Guest,
                                     winnerAlias,
                                     gameStartDate
                                 )  
@@ -437,8 +458,8 @@ export class RemoteGameManager {
 	}
 
 	private async saveRemoteGameToApi(
-		p1Alias: string, p1Score: number, p1Id: number | null,
-		p2Alias: string, p2Score: number, p2Id: number | null,
+		p1Alias: string, p1Score: number, p1Id: number | null, isP1Guest: boolean,
+		p2Alias: string, p2Score: number, p2Id: number | null, isP2Guest: boolean,
 		winnerAlias: string,
 		startDate: string,
 	) {
@@ -460,8 +481,8 @@ export class RemoteGameManager {
 					round: "1v1",
 					startDate: startDate,
 					endDate: endDate,
-					p1: { alias: p1Alias, score: p1Score, userId: p1Id },
-					p2: { alias: p2Alias, score: p2Score, userId: p2Id}
+					p1: { alias: p1Alias, score: p1Score, userId: p1Id, isGuest: isP1Guest },
+					p2: { alias: p2Alias, score: p2Score, userId: p2Id, isGuest: isP2Guest}
 				})
 			});
 
