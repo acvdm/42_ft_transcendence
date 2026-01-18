@@ -104,16 +104,13 @@ fastify.post('/users', async (request, reply) => {
 
 		const authJson = await authResponse.json();
 
-		console.log("Objet Response brut:", authResponse);
-		console.log("Reponse de l'Auth:", authJson);
-
 		if (authJson.success)
 		{
 
     		const { refreshToken, accessToken, userId } = authJson;//.data?
 
 			if (!accessToken || !userId) {
-				throw new Error("Tokens manquants dans la reponse de l'Auth")
+				throw new ServiceUnavailableError("Tokens manquants dans la reponse de l'Auth")
 			}
     		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
     		reply.setCookie('refreshToken', refreshToken, {
@@ -124,7 +121,6 @@ fastify.post('/users', async (request, reply) => {
     		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
     		  signed: true
     		});
-			console.log("user_id dans user = ", userId)
 			const statsURL = `http://game:3003/games/users/${userId}/stats`;
 			const statResponse = await fetch(statsURL, {
 				method: "POST",
@@ -158,7 +154,7 @@ fastify.post('/users', async (request, reply) => {
         
         	if (!statJson.success) 
 			{
-            	throw new Error(statJson.error?.message || 'Stats creation failed');
+            	throw new ServiceUnavailableError(statJson.error?.message || 'Stats creation failed');
         	}
 
     		return reply.status(201).send({
@@ -263,7 +259,7 @@ fastify.post('/users/guest', async (request, reply) => {
     		const { refreshToken, accessToken, userId } = authJson;//.data?
 
 			if (!accessToken || !userId) {
-				throw new Error("Tokens manquants dans la reponse de l'Auth")
+				throw new ServiceUnavailableError("Tokens manquants dans la reponse de l'Auth")
 			}
     		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
     		reply.setCookie('refreshToken', refreshToken, {
@@ -288,7 +284,7 @@ fastify.post('/users/guest', async (request, reply) => {
     		});
 		}
 		else {
-			throw new Error(`Auth error: ${authJson.error.message}`); 
+			throw new ServiceUnavailableError(`Auth error: ${authJson.error.message}`); 
 		}
 
 	} 
@@ -534,18 +530,6 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 			const error: any = new Error(errorMessage);
 			error.statusCode = authResponse.status;
 			throw error;
-
-			// Propoager le code d'erreur du service auth
-			// if (authResponse.status >= 400 && authResponse.status < 500)
-			// {
-			// 	const error: any = new Error(
-			// 		authJson.error?.message || `Auth service error: ${authResponse.status}`
-			// 	);
-			// 	error.statusCode = authResponse.status;
-			// 	throw error;
-			// }
-
-			// throw new ServiceUnavailableError(`Auth service is unavailable`);
 		}
 
 		const authJson = await authResponse.json();

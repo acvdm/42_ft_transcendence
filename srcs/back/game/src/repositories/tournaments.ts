@@ -3,7 +3,7 @@ import { updateUserStats } from './stats.js'
 import { localTournament } from "./tournament_interfaces.js";
 import { addPlayerMatch } from './player_match.js';
 import { createMatch } from './matches.js';
-import { NotFoundError } from '../utils/error.js';
+import { NotFoundError, ServiceUnavailableError } from '../utils/error.js';
 
 
 export interface Tournament {
@@ -47,7 +47,7 @@ export async function saveLocalTournament (
     // permet de lier le tournois a une table match
     const tournamentId = tournamentRes.lastID;
     if (!tournamentId)
-        throw new Error("Failed to save tournament");
+        throw new ServiceUnavailableError("Failed to save tournament");
 
     // 2. on boucle sur la liste des 3 match dans la table MATCHES
     // for of --> permet d'iterer sur chaque element de la liste data.matchList
@@ -70,7 +70,8 @@ export async function saveLocalTournament (
         const matchId = await createMatch(
             db, "tournament", 
             match.p1.alias, match.p2.alias, 
-            match.p1.score, match.p2.score, match.winner,
+            match.p1.score, match.p2.score, match.p1.isGuest, 
+            match.p2.isGuest, match.winner,
             "finished", match.round, tournamentId, 
             match.startDate, match.endDate
         );
@@ -85,7 +86,7 @@ export async function saveLocalTournament (
 		}
 
         if (!matchId) {
-            throw new Error("Failed to save match: ID is missing");
+            throw new ServiceUnavailableError("Failed to save match: ID is missing");
         }
 
         // -- JOUEUR 1 --

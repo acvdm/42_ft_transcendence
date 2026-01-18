@@ -1,4 +1,5 @@
 import { Database } from 'sqlite';
+import { ServiceUnavailableError } from '../utils/error.js';
 
 //-------- TYPE
 export interface Token {
@@ -29,7 +30,7 @@ export async function createToken(
     );
 
     if (!result.lastID) {
-        throw new Error('Failed to create a token');
+        throw new ServiceUnavailableError('Failed to create a token');
     }
 
     return ;

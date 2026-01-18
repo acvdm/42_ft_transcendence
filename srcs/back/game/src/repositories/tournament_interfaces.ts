@@ -6,7 +6,8 @@ export interface playerGameStats
 {
     userId?: number,
     alias: string,
-    score: number
+    score: number,
+    isGuest: boolean
 }
 
 export interface localMatchResult 

@@ -12608,13 +12608,11 @@
           scoreBoard.innerText = "0 - 0";
         }
         const myAlias = await getPlayerAlias();
-        const storedId = localStorage.getItem("userId") || sessionStorage.getItem("userId");
-        const myId = storedId ? Number(storedId) : null;
-        if (!myId)
-          console.error("No ID found");
+        const myId = Number(localStorage.getItem("userId") || sessionStorage.getItem("userId"));
         let opponentId = data.opponent ? Number(data.opponent) : null;
+        console.log("myid, opponent id:", myId, opponentId);
         if (opponentId && myId === opponentId) {
-          console.error("Error: cannot play against yourself");
+          console.error("Error: cannot play against yourself, you idiot");
           if (status) {
             status.innerText = i18n_default.t("remoteManager.self_play_error");
             status.style.color = "red";
@@ -12634,6 +12632,7 @@
         let p1Id = data.role === "player1" ? myId : opponentId;
         let p2Id = data.role === "player2" ? myId : opponentId;
         let opponentAlias = i18n_default.t("remoteManager.default_opponent");
+        console.log("p1, p2:", p1Id, p2Id);
         if (data.role === "player1") {
           this.currentP1Alias = myAlias;
           if (remoteP2Alias) {
@@ -12655,21 +12654,33 @@
           p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} ${meSuffix}` : this.currentP2Alias;
         }
         let gameStartDate = getSqlDate();
+        let isP1Guest = false;
+        let isP2Guest = false;
+        const amIGuest = sessionStorage.getItem("isGuest") === "true";
+        console.log(`amIGuest = ${amIGuest}`);
         if (data.opponent) {
+          console.log(`if data.opponent id = ${data.opponent}`);
           fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            console.log(`userData = ${userData.is_guest}`);
             if (userData && userData.alias) {
               const realOpponentName = userData.alias;
+              const opponentIsGuest = !!userData.is_guest;
               if (data.role === "player1") {
                 this.currentP2Alias = realOpponentName;
-                if (p2Display) {
-                  p2Display.innerText = realOpponentName;
-                }
+                if (amIGuest)
+                  isP1Guest = true;
+                if (opponentIsGuest)
+                  isP2Guest = true;
+                if (p2Display) p2Display.innerText = realOpponentName;
               } else {
                 this.currentP1Alias = realOpponentName;
-                if (p1Display) {
-                  p1Display.innerText = realOpponentName;
-                }
+                if (amIGuest)
+                  isP2Guest = true;
+                if (opponentIsGuest)
+                  isP1Guest = true;
+                if (p1Display) p1Display.innerText = realOpponentName;
               }
+              console.log(`amIguest = ${amIGuest}, opponentisGuest = ${opponentIsGuest}, p1Guest = ${isP1Guest}, p2Guest = ${isP2Guest}`);
             }
           }).catch((e) => console.error("Error retrieving opponent alias:", e));
         }
@@ -12740,16 +12751,20 @@
                   s1 = 0;
                   s2 = this.WINNING_SCORE;
                 }
-                await this.saveRemoteGameToApi(
-                  this.currentP1Alias,
-                  s1,
-                  p1Id || 0,
-                  this.currentP2Alias,
-                  s2,
-                  p2Id || 0,
-                  winnerAlias,
-                  gameStartDate
-                );
+                if (myAlias == winnerAlias) {
+                  await this.saveRemoteGameToApi(
+                    this.currentP1Alias,
+                    s1,
+                    p1Id,
+                    isP1Guest,
+                    this.currentP2Alias,
+                    s2,
+                    p2Id,
+                    isP2Guest,
+                    winnerAlias,
+                    gameStartDate
+                  );
+                }
                 showRemoteEndModal(winnerAlias, i18n_default.t("remoteManager.opponent_forfeit"));
                 this.context.setGame(null);
               }
@@ -12782,9 +12797,11 @@
                   this.currentP1Alias,
                   s1,
                   p1Id,
+                  isP1Guest,
                   this.currentP2Alias,
                   s2,
                   p2Id,
+                  isP2Guest,
                   winnerAlias,
                   gameStartDate
                 );
@@ -12856,7 +12873,8 @@
         });
       }
     }
-    async saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
+    async saveRemoteGameToApi(p1Alias, p1Score, p1Id, isP1Guest, p2Alias, p2Score, p2Id, isP2Guest, winnerAlias, startDate) {
+      console.log("p1, p2 save api:", p1Id, p2Id);
       try {
         const endDate = getSqlDate();
         const response = await fetchWithAuth("api/game", {
@@ -12871,8 +12889,8 @@
             round: "1v1",
             startDate,
             endDate,
-            p1: { alias: p1Alias, score: p1Score, userId: p1Id },
-            p2: { alias: p2Alias, score: p2Score, userId: p2Id }
+            p1: { alias: p1Alias, score: p1Score, userId: p1Id, isGuest: isP1Guest },
+            p2: { alias: p2Alias, score: p2Score, userId: p2Id, isGuest: isP2Guest }
           })
         });
         if (!response.ok) {
@@ -28235,6 +28253,15 @@
       if (!userId) {
         return;
       }
+      const setServiceUnavailable = () => {
+        if (totalGame) totalGame.innerText = "-";
+        if (wins) wins.innerText = "-";
+        if (losses) losses.innerText = "-";
+        if (avgScore) avgScore.innerText = "-";
+        if (winRateCalcul) winRateCalcul.innerText = "-";
+        if (playTime) playTime.innerText = "-";
+        console.warn("Game service is currently unreachable.");
+      };
       try {
         const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
         if (statResponse.ok) {
@@ -28255,6 +28282,10 @@
                 m: totalMinutes % 60
               });
             }
+          } else {
+            if (statResponse.status >= 500) {
+              setServiceUnavailable();
+            }
           }
         }
         const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`);
@@ -28266,9 +28297,12 @@
           renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
           renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
           setupFilters();
+        } else {
+          const emptyData = { labels: [], data: [] };
         }
       } catch (error) {
         console.error("Error on dashboard:", error);
+        setServiceUnavailable();
       }
     };
     loadUserData();
