@@ -105,7 +105,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 			console.error("Refresh impossible. Deconnection.");
 			localStorage.removeItem('accessToken');
 			localStorage.removeItem('userId');
-			window.history.pushState({}, '', '/login');
+			window.history.pushState({}, '', '/');
 			window.dispatchEvent(new PopStateEvent('popstate'));
 			throw error;
 		}
