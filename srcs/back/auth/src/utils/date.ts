@@ -1,9 +1,8 @@
-// A revoir avec JWT
 
 export function getExpirationDate(dayFromNow: number): string {
     const date = new Date();
     date.setDate(date.getDate() + dayFromNow);
-    return date.toISOString(); // consvertir en ISO string pour SQLite
+    return date.toISOString(); // convertir en ISO string pour SQLite
 }
 
 export function isExpired(expiresAt: string): boolean {

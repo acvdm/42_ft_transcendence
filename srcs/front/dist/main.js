@@ -11583,9 +11583,11 @@
           window.history.pushState({}, "", "/home");
           window.dispatchEvent(new PopStateEvent("popstate"));
         } else {
-          console.error("Login error:", result.error.message);
+          const result2 = await response.json();
+          console.error("Login error:", result2.error.message);
           if (errorElement) {
-            errorElement.textContent = result.error.message || i18n_default.t("registerPage.error_auth_default");
+            const errorKey = result2.error?.message || "registerPage.error_auth_default";
+            errorElement.textContent = i18n_default.t(errorKey);
             errorElement.classList.remove("hidden");
           }
         }
