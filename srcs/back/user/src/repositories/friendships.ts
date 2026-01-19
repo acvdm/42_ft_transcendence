@@ -58,8 +58,15 @@ export async function makeFriendshipRequest (
 		throw new ConflictError('friendship_error.already_friend');
 
 	const request_already_sent = await db.get(`
-	   SELECT * FROM FRIENDSHIPS WHERE user_id = ? AND friend_id = ? AND status = 'pending'`,
-	   [user_id, friend.id]
+	   SELECT * FROM FRIENDSHIPS 
+	   WHERE 
+			status = 'pending'
+			AND (
+				(user_id = ? AND friend_id = ?)
+				OR
+				(user_id = ? AND friend_id = ?)
+			)`,
+	   [user_id, friend.id, friend.id, user_id]
 	);
 	if (request_already_sent)
 		throw new ConflictError('friendship_error.already_send');

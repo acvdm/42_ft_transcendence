@@ -437,7 +437,7 @@ export class TournamentManager {
 						return;
 					}
 
-					if (activeGame.score.player1 >= 5 || activeGame.score.player2 >= 5) {
+					if (activeGame.score.player1 >= this.WINNING_SCORE || activeGame.score.player2 >= this.WINNING_SCORE) {
 						activeGame.isRunning = false;
 						clearInterval(checkInterval);
 						const winnerAlias = activeGame.score.player1 > activeGame.score.player2 ? p1.alias : p2.alias;

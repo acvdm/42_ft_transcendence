@@ -78,13 +78,10 @@ export async function getUserMatchHistory(
     userId: number,
     filters: HistoryFilters
 ) {
-
-    // 1. Paramètres par défaut
     const page = filters.page || 1;
     const limit = filters.limit || 10;
     const offset = (page - 1) * limit;
 
-    // 2. Base de la requête
     let sql = 
     `SELECT
         pm.score as my_score,
@@ -103,10 +100,8 @@ export async function getUserMatchHistory(
     WHERE pm.user_id = ?
     `;
 
-    // 3. Tableau des valeurs à injecter
     const params: any[] = [userId];
 
-    // 4. Ajout dynamique des filtres
     if (filters.onlyWins)
     {
         sql += ` AND pm.is_winner = 1`;
@@ -124,7 +119,6 @@ export async function getUserMatchHistory(
         params.push(filters.opponent);
     }
 
-    // 5. Ajout des tris de sorting
     if (filters.sortBy === 'date_asc')
     {
         sql += ` ORDER BY m.finished_at ASC`;
@@ -134,36 +128,13 @@ export async function getUserMatchHistory(
         sql += ` ORDER BY m.finished_at DESC `;
     }
 
-    // 6. Pagination
     sql += ` LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
-    // 7. Execution
     const history = await db.all(sql, params);
-
-    // // 8. Compter le total pour la pagination front
-    // const countSql = `
-    //     SELECT COUNT(*) as total
-    //     FROM PLAYER_MATCH pm
-    //     JOIN MATCHES m ON pm.match_id = m.match_id
-    //     WHERE pm.user_id = ?
-    //     ${filters.onlyWins ? 'AND pm.is_winner = 1' : ''}
-    //     ${filters.gameType ? 'AND m.game_tyoe = ?' : ''}
-    // `;
-
-    // const countParams = [userId];
-    // if (filters.gameType) countParams.push(filters.gameType);
-
-    // const countRes = await db.get(countSql, countParams);
 
     return {
         data: history,
-        // meta: {
-        //     totalItems: countRes.total,
-        //     currentPage: page,
-        //     itemsPerPage: limit,
-        //     totalPages: Math.ceil(countRes.total / limit)
-        // }
     };
 }   
 

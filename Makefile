@@ -34,5 +34,5 @@ add_stats:
 
 re: clean up
 
-prune:	clean
+fclean:	clean
 	@docker system prune -a --volumes -f
