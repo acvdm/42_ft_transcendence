@@ -16,7 +16,7 @@ fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: Fa
 		request.log.error(`Upstream service unavailable: ${error.message}`);
 		return reply.status(503).send({
 			error: "Service Unavailable",
-			message: "Le service demandé est momentanément indisponible.",
+			message: "Service temporarily unavailable",
 			statusCode: 503
 		});
 	}
