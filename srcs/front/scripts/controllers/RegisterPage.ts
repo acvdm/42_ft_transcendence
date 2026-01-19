@@ -89,6 +89,27 @@ function handleRegister() {
 				if (userId) {
 					localStorage.setItem('userId', userId.toString());
 				}
+
+				let currentLang = i18next.language;
+				if (currentLang.includes('-')) {
+					currentLang = currentLang.split('-')[0];
+				}
+
+				if (userId && accessToken && currentLang) {
+					try {
+						await fetch(`/api/user/${userId}/language`, {
+							method: 'PATCH',
+							headers: {
+								'Content-Type': 'application/json',
+								'Authorization': `Bearer ${accessToken}`
+							},
+							body: JSON.stringify({ language: currentLang })
+						});
+					} catch (langErr) {
+						console.error("Failed to save preferred language", langErr);
+					}
+				}
+
 				if (userId) {
 					try {
 						const userRes = await fetch(`/api/user/${userId}`, {
@@ -165,7 +186,14 @@ export function registerEvents() {
 			const lang = target.getAttribute('data-lang');
 			if (lang) {
 				await changeLanguage(lang);
-				window.dispatchEvent(new PopStateEvent('popstate'));
+				if (display) {
+					display.textContent = lang.toUpperCase();
+				}
+				const appElement = document.getElementById('app');
+				if (appElement) {
+					appElement.innerHTML = render();
+					registerEvents();
+				}
 			}
 		});
 	});

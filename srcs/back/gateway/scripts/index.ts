@@ -1,4 +1,4 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply, FastifyError} from 'fastify';
 import fastifyProxy from '@fastify/http-proxy';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from './utils/error.js';
@@ -10,6 +10,17 @@ if (!JWT_SECRET){
 }
 
 const fastify = Fastify({ logger: true });
+
+fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
+	if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEOUT' || error.statusCode === 504) {
+		request.log.error(`Upstream service unavailable: ${error.message}`);
+		return reply.status(503).send({
+			error: "Service Unavailable",
+			message: "Service temporarily unavailable",
+			statusCode: 503
+		});
+	}
+});
 
 /*
 SECURITY -> addHook 'onRequest'
@@ -84,7 +95,12 @@ fastify.register(fastifyProxy,
 {
 	upstream: 'http://auth:3001',
 	prefix: '/api/auth',
-	rewritePrefix: ''
+	rewritePrefix: '',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 fastify.register(fastifyProxy, 
@@ -92,28 +108,49 @@ fastify.register(fastifyProxy,
 	upstream: 'http://chat:3002',
 	prefix: '/socket-chat',
 	websocket: true,
-	rewritePrefix: '/socket.io'
+	rewritePrefix: '/socket.io',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
+
 
 fastify.register(fastifyProxy, {
 	upstream: 'http://game:3003',
 	prefix: '/socket-game',
 	websocket: true,
-	rewritePrefix: '/socket.io'
+	rewritePrefix: '/socket.io',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://game:3003',
 	prefix: '/api/game',
-	rewritePrefix: '/games'
+	rewritePrefix: '/games',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 fastify.register(fastifyProxy, 
 {
 	upstream: 'http://user:3004',
 	prefix: '/api/user',
-	rewritePrefix: '/users'
+	rewritePrefix: '/users',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 

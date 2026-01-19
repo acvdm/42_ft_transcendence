@@ -7272,7 +7272,7 @@
     dashboardPage: {
       title: "Resumen del panel",
       game_played: "Partidas jugadas",
-      avg_score: "Puntuaci\xF3n media",
+      avg_score: "Punto media",
       time_playing: "Tiempo de juego",
       wins: "Victorias",
       losses: "Derrotas",
@@ -7313,7 +7313,7 @@
       round_1v1: "1v1",
       chart: {
         start: "Inicio",
-        net_score: "Puntuaci\xF3n neta",
+        net_score: "Puntos neta",
         no_data: "Sin datos",
         games_played: "Partidos jugados",
         games_count: "({{count}} partidos)",
@@ -7461,7 +7461,7 @@
       }
     },
     game: {
-      game_over: "\xA1Juego terminado! Puntuaci\xF3n final: {{score1}} - {{score2}}"
+      game_over: "\xA1Juego terminado! Puntos final: {{score1}} - {{score2}}"
     },
     gameUI: {
       winner_message: "\xA1{{name}} gana el partido!",
@@ -8318,7 +8318,7 @@
 					<div class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1">
 						<div class="bg-white p-6 flex flex-col flex-1">
 							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-300" style="padding-bottom: 25px;">{{homepage.games.title_mode}}</h1>
-							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 25px;">
+							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 20px;">
 								<p>{{homepage.games.choose_mode}}</p>
 							</div>
 							<div class="flex flex-col flex-1 items-center justify-center gap-6 py-8" style="gap: 65px;">
@@ -8337,7 +8337,7 @@
 								<!-- Remote Game -->
 								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.remote_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 20px;">{{homepage.games.remote_describe}}</p>
 										<button id="remote-game" 
 											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.remote}}
@@ -8348,7 +8348,7 @@
 								<!-- Tournament Game -->
 								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.tournament_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 20px;">{{homepage.games.tournament_describe}}</p>
 										<button id="tournament-game" 
 											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.tournament}}
@@ -8380,7 +8380,7 @@
 				</div>
 
 				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-					<div id="chat-frame" class="relative flex-1 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
+					<div id="chat-frame" class="relative flex-1 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[400px] min-w-[400px] h-full" style="width: 400px; min-width: 400px;">
 							<div class="flex flex-row items-center justify-between">
 								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
@@ -8420,7 +8420,7 @@
 							<p class="text-gray-400 text-lg font-semibold">{{homepage.chat.placeholder}}</p>
 						</div>
 
-						<div id="channel-chat" class="hidden flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
@@ -9520,6 +9520,8 @@
         this.addMessage(i18n_default.t("chatComponent.connected"), i18n_default.t("chatComponent.system"));
       });
       this.chatSocket.on("chatMessage", (data) => {
+        if (data.channelKey && data.channelKey !== this.currentChannel)
+          return;
         this.addMessage(data.msg_content, data.sender_alias);
       });
       this.chatSocket.on("msg_history", (data) => {
@@ -9538,7 +9540,7 @@
         this.addSystemMessage(data.content);
       });
       this.chatSocket.on("receivedWizz", (data) => {
-        if (data.channel_key && data.channel_key !== this.currentChannel) {
+        if (data.channelKey && data.channelKey !== this.currentChannel) {
           return;
         }
         const currentUser = localStorage.getItem("username");
@@ -9548,6 +9550,8 @@
         }
       });
       this.chatSocket.on("receivedAnimation", (data) => {
+        if (data.channelKey && data.channelKey !== this.currentChannel)
+          return;
         const { animationKey, author } = data;
         const imgUrl = animations[animationKey];
         if (imgUrl) {
@@ -11574,6 +11578,24 @@
           if (userId) {
             localStorage.setItem("userId", userId.toString());
           }
+          let currentLang = i18n_default.language;
+          if (currentLang.includes("-")) {
+            currentLang = currentLang.split("-")[0];
+          }
+          if (userId && accessToken && currentLang) {
+            try {
+              await fetch(`/api/user/${userId}/language`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({ language: currentLang })
+              });
+            } catch (langErr) {
+              console.error("Failed to save preferred language", langErr);
+            }
+          }
           if (userId) {
             try {
               const userRes = await fetch(`/api/user/${userId}`, {
@@ -11635,7 +11657,14 @@
         const lang = target.getAttribute("data-lang");
         if (lang) {
           await changeLanguage2(lang);
-          window.dispatchEvent(new PopStateEvent("popstate"));
+          if (display) {
+            display.textContent = lang.toUpperCase();
+          }
+          const appElement2 = document.getElementById("app");
+          if (appElement2) {
+            appElement2.innerHTML = render5();
+            registerEvents();
+          }
         }
       });
     });

@@ -77,7 +77,9 @@ export class Chat {
 		});
 
 		this.chatSocket.on("chatMessage", (data: { channelKey: string, msg_content: string, sender_alias: string, sender_id: number }) => {
-				this.addMessage(data.msg_content, data.sender_alias);
+			if (data.channelKey && data.channelKey !== this.currentChannel)
+				return;	
+			this.addMessage(data.msg_content, data.sender_alias);
 		});
 
 		this.chatSocket.on("msg_history", (data: { channelKey: string, msg_history: any[] }) => {
@@ -97,9 +99,9 @@ export class Chat {
 			this.addSystemMessage(data.content);
 		})
 
-		this.chatSocket.on("receivedWizz", (data: { author: string, channel_key: string }) => {
+		this.chatSocket.on("receivedWizz", (data: { author: string, channelKey: string }) => {
 			
-			if (data.channel_key && data.channel_key !== this.currentChannel) {
+			if (data.channelKey && data.channelKey !== this.currentChannel) {
 				return;
 			}
 			
@@ -111,8 +113,11 @@ export class Chat {
 			}
 		});
 
-		this.chatSocket.on("receivedAnimation", (data: { animationKey: string, author: string }) => {
+		this.chatSocket.on("receivedAnimation", (data: { animationKey: string, author: string, channelKey: string }) => {
 			
+			if (data.channelKey && data.channelKey !== this.currentChannel)
+				return;	
+
 			const { animationKey, author } = data;
 			const imgUrl = animations[animationKey];
 			

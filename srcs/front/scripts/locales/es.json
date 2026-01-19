@@ -221,7 +221,7 @@
   "dashboardPage": {
     "title": "Resumen del panel",
     "game_played": "Partidas jugadas",
-    "avg_score": "Puntuación media",
+    "avg_score": "Punto media",
     "time_playing": "Tiempo de juego",
     "wins": "Victorias",
     "losses": "Derrotas",
@@ -262,7 +262,7 @@
     "round_1v1": "1v1",
     "chart": {
       "start": "Inicio",
-      "net_score": "Puntuación neta",
+      "net_score": "Puntos neta",
       "no_data": "Sin datos",
       "games_played": "Partidos jugados",
       "games_count": "({{count}} partidos)",
@@ -414,7 +414,7 @@
   },
 
   "game": {
-    "game_over": "¡Juego terminado! Puntuación final: {{score1}} - {{score2}}"
+    "game_over": "¡Juego terminado! Puntos final: {{score1}} - {{score2}}"
   },
 
   "gameUI": {
