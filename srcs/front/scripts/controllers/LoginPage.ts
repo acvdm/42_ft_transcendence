@@ -199,7 +199,6 @@ function handleLogin() {
 							method: 'PATCH',
 							body: JSON.stringify({ status: selectedStatus })
 						});
-						console.log("Status updated to database:", selectedStatus);
 					} catch (err) {
 						console.error("Failed to update status on login", err);
 					}
@@ -209,25 +208,25 @@ function handleLogin() {
 				window.history.pushState({}, '', '/home');
 				window.dispatchEvent(new PopStateEvent('popstate'));
 
-            } else {
-                console.error("Login error:", result.error);
-                if (errorElement) {
-                    const backendErrorkey = result.error?.message;
-                    if (backendErrorkey)
-                        errorElement.textContent = i18next.t(backendErrorkey);
-                    else
-                        errorElement.textContent = i18next.t('loginPage.error_text_default');
-                    errorElement.classList.remove('hidden');
-                }
-            }
-        } catch (error) {
-            console.error("Network error:", error);
-            if (errorElement) {
-                errorElement.textContent = i18next.t('loginPage.error_network');
-                errorElement.classList.remove('hidden');
-            }
-        }
-    });
+			} else {
+				console.error("Login error:", result.error);
+				if (errorElement) {
+					const backendErrorkey = result.error?.message;
+					if (backendErrorkey)
+						errorElement.textContent = i18next.t(backendErrorkey);
+					else
+						errorElement.textContent = i18next.t('loginPage.error_text_default');
+					errorElement.classList.remove('hidden');
+				}
+			}
+		} catch (error) {
+			console.error("Network error:", error);
+			if (errorElement) {
+				errorElement.textContent = i18next.t('loginPage.error_network');
+				errorElement.classList.remove('hidden');
+			}
+		}
+	});
 
 
 	confirm2fa?.addEventListener('click', async () => {

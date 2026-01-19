@@ -45,9 +45,9 @@ export interface TournamentData
 }
 
 export class TournamentManager {
-    private context: GameContext;
-    private tournamentState: TournamentData | null = null;
-    private WINNING_SCORE: number = 11;
+	private context: GameContext;
+	private tournamentState: TournamentData | null = null;
+	private WINNING_SCORE: number = 11;
 
 	constructor(context: GameContext) {
 		this.context = context;
@@ -68,14 +68,13 @@ export class TournamentManager {
 		const startButton = document.getElementById('start-tournament-btn'); 
 		const errorDiv = document.getElementById('setup-error');
 
-        // Blocage natif de la taille des inputs
-        if (nameInput)
-            nameInput.maxLength = 45;
-        const pInputs = [player1Input, player2Input, player3Input, player4Input];
-        pInputs.forEach(input => {
-            if (input)
-                input.maxLength = 20;
-        });
+		if (nameInput)
+			nameInput.maxLength = 45;
+		const pInputs = [player1Input, player2Input, player3Input, player4Input];
+		pInputs.forEach(input => {
+			if (input)
+				input.maxLength = 20;
+		});
 
 		this.initTournamentSelectors();
 
@@ -110,15 +109,15 @@ export class TournamentManager {
 				return;
 			}
 
-            if (tName.length > 45 || players.some(p => p.length > 20))
-            {
-                if (errorDiv)
-                {
-                    errorDiv.innerText = i18next.t('tournamentManager.setup_error_length');
-                    errorDiv.classList.remove('hidden');
-                }
-                return ;
-            }
+			if (tName.length > 45 || players.some(p => p.length > 20))
+			{
+				if (errorDiv)
+				{
+					errorDiv.innerText = i18next.t('tournamentManager.setup_error_length');
+					errorDiv.classList.remove('hidden');
+				}
+				return ;
+			}
 
 			const uniqueCheck = new Set(players);
 			if (uniqueCheck.size !== 4) {
@@ -408,8 +407,7 @@ export class TournamentManager {
 			canvas.id = 'pong-canvas-tournament';
 			canvas.width = canvasContainer.clientWidth;
 			canvas.height = canvasContainer.clientHeight;
-			console.log("heigh:", canvasContainer.clientHeight);
-			console.log("width:", canvasContainer.clientWidth);
+
 			canvas.style.width = '100%';
 			canvas.style.height = '100%';
 			canvasContainer.appendChild(canvas);

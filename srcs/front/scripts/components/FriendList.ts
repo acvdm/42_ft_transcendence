@@ -195,12 +195,12 @@ export class FriendList {
 		});
 
 		chatSocket.on('receiveFriendRequestNotif', () => {
-			console.log("New friend request received!");
+			console.log("[Friendlist] New friend request received!");
 			this.checkNotifications(); 
 		});
 
 		chatSocket.on('friendRequestAccepted', () => {
-			console.log("Friend request accepted by other user!");
+			console.log("[Friendlist] Friend request accepted by other user!");
 			this.loadFriends();
 		});
 
@@ -213,7 +213,7 @@ export class FriendList {
 			gameSocket.emit('registerGameSocket');
 			gameSocket.off('receiveGameInvite');
 			gameSocket.on('receiveGameInvite', (data: { senderId: string, senderName: string }) => {
-				console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+				console.log(`[Game] Game invite received from ${data.senderName} on ${gameSocket.id}`);
 				this.showGameInviteNotification(data.senderId, data.senderName);
 			});
 		}

@@ -9,7 +9,6 @@ import Game from "../game/Game";
 import { LocalGameManager } from "../components/game/LocalGameManager";
 import { RemoteGameManager } from "../components/game/RemoteGameManager";
 import { TournamentManager } from "../components/game/TournamentManager";
-import { showVictoryModal, launchConfetti } from "../components/game/GameUI";
 import i18next from "../i18n";
 
 let gameChat: Chat | null = null;
@@ -20,7 +19,7 @@ let exitDestination:string | null = null;
 let currentMode = 'local';
 
 export function isGameRunning(): boolean {
-    return activeGame !== null && activeGame.isRunning;
+	return activeGame !== null && activeGame.isRunning;
 }
 
 //================================================
@@ -29,40 +28,40 @@ export function isGameRunning(): boolean {
 
 export async function getPlayerAlias(): Promise<string> {
 
-    const isGuest = sessionStorage.getItem('userRole') === 'guest';
-    const defaultGuest = i18next.t('gamePage.default_guest'); // TRADUCTION
-    const defaultPlayer = i18next.t('gamePage.default_player'); // TRADUCTION
+	const isGuest = sessionStorage.getItem('userRole') === 'guest';
+	const defaultGuest = i18next.t('gamePage.default_guest');
+	const defaultPlayer = i18next.t('gamePage.default_player');
 
-    if (isGuest) {
-        const cachedAlias = sessionStorage.getItem('cachedAlias');
-        if (cachedAlias) {
-            return cachedAlias;
-        }
-    }
+	if (isGuest) {
+		const cachedAlias = sessionStorage.getItem('cachedAlias');
+		if (cachedAlias) {
+			return cachedAlias;
+		}
+	}
 
-    const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
-    
-    if (!userId) {
-        return defaultPlayer;
-    }
-    
-    try {
-        const response = await fetchWithAuth(`api/user/${userId}`);
-        if (response.ok) {
-            const userData = await response.json();
-            const alias = userData.alias || (isGuest ? defaultGuest : defaultPlayer);
-            
-            if (isGuest) {
-                sessionStorage.setItem('cachedAlias', alias);
-            }
-            return alias;
-        }
-    } catch (err) {
-        console.error('Cannot fetch player alias:', err);
-    }
+	const userId = localStorage.getItem('userId') || sessionStorage.getItem('userId');
+	
+	if (!userId) {
+		return defaultPlayer;
+	}
+	
+	try {
+		const response = await fetchWithAuth(`api/user/${userId}`);
+		if (response.ok) {
+			const userData = await response.json();
+			const alias = userData.alias || (isGuest ? defaultGuest : defaultPlayer);
+			
+			if (isGuest) {
+				sessionStorage.setItem('cachedAlias', alias);
+			}
+			return alias;
+		}
+	} catch (err) {
+		console.error('Cannot fetch player alias:', err);
+	}
 
-    const result = sessionStorage.getItem('username') || (isGuest ? defaultGuest : defaultPlayer);
-    return (result);
+	const result = sessionStorage.getItem('username') || (isGuest ? defaultGuest : defaultPlayer);
+	return (result);
 }
 
 
@@ -109,7 +108,7 @@ export function showExitConfirmationModal(destination = null) {
 	const t_leave = i18next.t('gamePage.exit_modal.leave_btn');
 
 	const modalHtml = `
-		<div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+		<div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
 			
 			<div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
 				
@@ -182,9 +181,8 @@ function confirmExit() {
 	if (activeGame) {
 		const wasRemote = activeGame.isRemote;
 		const roomId = activeGame.roomId;
-		const playerRole = activeGame.playerRole;
 
-        if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
+		if (wasRemote && roomId && SocketService.getInstance().getGameSocket()) {
 			SocketService.getInstance().getGameSocket()?.emit('leaveGame', { roomId: roomId });
 		}
 
@@ -215,27 +213,27 @@ function confirmExit() {
 //================================================
 
 export function cleanup() {
-    
-    if (gameChat) {
-        gameChat.destroy();
-        gameChat = null;
-    }
+	
+	if (gameChat) {
+		gameChat.destroy();
+		gameChat = null;
+	}
 
-    if (activeGame) {
-        activeGame.isRunning = false;
-        activeGame.stop();
-        activeGame = null;
-    }
+	if (activeGame) {
+		activeGame.isRunning = false;
+		activeGame.stop();
+		activeGame = null;
+	}
 
-    if (spaceKeyListener) {
-        document.removeEventListener('keydown', spaceKeyListener);
-        spaceKeyListener = null;
-    }
+	if (spaceKeyListener) {
+		document.removeEventListener('keydown', spaceKeyListener);
+		spaceKeyListener = null;
+	}
 
-    document.getElementById('countdown-modal')?.remove();
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-    window.removeEventListener('popstate', handlePopState);
-    isNavigationBlocked = false;
+	document.getElementById('countdown-modal')?.remove();
+	window.removeEventListener('beforeunload', handleBeforeUnload);
+	window.removeEventListener('popstate', handlePopState);
+	isNavigationBlocked = false;
 }
 
 export function render(): string {

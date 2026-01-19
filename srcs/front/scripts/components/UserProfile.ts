@@ -157,7 +157,6 @@ export class UserProfile {
 						this.bioText!.dataset.raw = trimmedBio;
 						this.bioText!.innerHTML = parseMessage(trimmedBio) || defaultBio;
 						this.bioWrapper!.replaceChild(this.bioText!, input);
-						console.log("Message updated");
 
 						const socket = SocketService.getInstance().socket;
 						if (socket) {
@@ -276,7 +275,6 @@ export class UserProfile {
 
 	public updateStatusDisplay(status: string) {
 		if (this.statusFrame && statusImages[status]) {
-			console.log("Status:", this.statusFrame);
 			this.statusFrame.src = statusImages[status];
 		}
 		if (this.statusText && statusLabels[status]) {
