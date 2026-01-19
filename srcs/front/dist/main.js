@@ -6069,7 +6069,9 @@
       error_network: "Erreur r\xE9seau, veuillez r\xE9essayer.",
       error_email: "Adresse mail non suport\xE9e.",
       error_email_too_long: "Adresse mail trop longue.",
-      error_password: "Le mot de passe doit contenir au moins 8 caract\xE8res, dont une minuscule, une majuscule, un chiffre et un caract\xE8re sp\xE9cial."
+      error_password: "Le mot de passe doit contenir au moins 8 caract\xE8res, dont une minuscule, une majuscule, un chiffre et un caract\xE8re sp\xE9cial.",
+      error_alias_already_taken: "Pseudo d\xE9j\xE0 utilis\xE9, veuillez en choisir un autre.",
+      error_email_already_taken: "Email d\xE9j\xE0 utilis\xE9, veuillez en choisir un autre."
     },
     profilePage: {
       window_profile: "Profil",
@@ -6608,7 +6610,9 @@
       error_network: "Network error, please try again",
       error_email: "Email address not supported",
       error_email_too_long: "Email address not supported. Too long",
-      error_password: "Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character"
+      error_password: "Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character",
+      error_alias_already_taken: "Alias already taken, find another one",
+      error_email_already_taken: "Email already in use, find another one."
     },
     profilePage: {
       window_profile: "Profile",
@@ -7147,7 +7151,9 @@
       error_network: "Error de red, int\xE9ntelo de nuevo",
       error_email: "Direcci\xF3n de correo electr\xF3nico no compatible",
       error_email_too_long: "Direcci\xF3n de correo electr\xF3nico no v\xE1lida. Demasiado larga.",
-      error_password: "La contrase\xF1a debe contener al menos 8 caracteres, una min\xFAscula, una may\xFAscula, un d\xEDgito y un car\xE1cter especial."
+      error_password: "La contrase\xF1a debe contener al menos 8 caracteres, una min\xFAscula, una may\xFAscula, un d\xEDgito y un car\xE1cter especial.",
+      error_alias_already_taken: "Nombre de usuario ya utilizado, elija otro.",
+      error_email_already_taken: "El correo electr\xF3nico ya est\xE1 en uso, busca otro."
     },
     profilePage: {
       window_profile: "Perfil",
@@ -11537,8 +11543,8 @@
       }
       if (alias2.length > 20 || email.length > 254 || password.length > 128) {
         if (errorElement) {
-          errorElement.textContent = i18n_default("registerPage.error_inputs");
-          errorElement.classList.remove.apply("hidden");
+          errorElement.textContent = i18n_default.t("registerPage.error_inputs");
+          errorElement.classList.remove("hidden");
         }
         return;
       }
@@ -11585,7 +11591,8 @@
         } else {
           console.error("Login error:", result.error.message);
           if (errorElement) {
-            errorElement.textContent = result.error.message || i18n_default.t("registerPage.error_auth_default");
+            const errorKey = result.error?.message || "registerPage.error_auth_default";
+            errorElement.textContent = i18n_default.t(errorKey);
             errorElement.classList.remove("hidden");
           }
         }

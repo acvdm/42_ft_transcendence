@@ -108,7 +108,9 @@
 	"error_network": "Network error, please try again",
 	"error_email": "Email address not supported",
 	"error_email_too_long": "Email address not supported. Too long",
-	"error_password": "Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character"
+	"error_password": "Password must contain at least 8 characters, one lowercase, one uppercase, one digit and one special character",
+	"error_alias_already_taken": "Alias already taken, find another one",
+	"error_email_already_taken": "Email already in use, find another one."
   },
   "profilePage": {
 	"window_profile": "Profile",

@@ -62,8 +62,8 @@ function handleRegister() {
         {
             if (errorElement)
             {
-                errorElement.textContent = i18next('registerPage.error_inputs');
-                errorElement.classList.remove.apply('hidden');
+                errorElement.textContent = i18next.t('registerPage.error_inputs');
+                errorElement.classList.remove('hidden');
             }
             return ;
         }
@@ -115,9 +115,13 @@ function handleRegister() {
 				window.dispatchEvent(new PopStateEvent('popstate'));
 
 			} else {
+				// const result = await response.json();
+
 				console.error("Login error:", result.error.message);
+
 				if (errorElement) {
-					errorElement.textContent = result.error.message || i18next.t('registerPage.error_auth_default');
+					const errorKey = result.error?.message || 'registerPage.error_auth_default';
+					errorElement.textContent = i18next.t(errorKey);
 					errorElement.classList.remove('hidden');
 				}
 			}

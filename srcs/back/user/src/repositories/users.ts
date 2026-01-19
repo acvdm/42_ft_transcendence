@@ -30,7 +30,7 @@ export async function createUserInDB (
 
     const checkAlias = await isAliasUsed(db, data.alias)
     if (checkAlias)
-        throw new ConflictError('Alias already taken, find another one');
+        throw new ConflictError('registerPage.error_alias_already_taken');
     
     const avatarDefault = data.avatar_url || '/assets/basic/default.png'; // je rajoute ca pour avoir une image par default
 

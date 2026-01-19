@@ -72,7 +72,7 @@ export async function registerUser(
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
-        throw new ConflictError('Email already in use');
+        throw new ConflictError('registerPage.error_email_already_taken');
 
     // 2. Hashage, génération 2fa
     const pwdHashed = await hashPassword(password);
@@ -115,7 +115,7 @@ export async function registerGuest (
     // 1. Vérification que l'email n'est pas déjà pris
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
-        throw new ConflictError('Email already in use');
+        throw new ConflictError('registerPage.error_email_already_taken');
 
     // Faustine: on doit générer un mdp aléatoire pour le guest car il aime pas ne rien avoir 
     const uniqueGuestPwd = `guestPwd${userId}_${Date.now()}_${Math.random()}`;
@@ -159,7 +159,7 @@ export async function changeEmailInCredential (
 {
     const existing = await credRepo.findByEmail(db, email);
     if (existing)
-        throw new ConflictError('Email already in use');
+        throw new ConflictError('registerPage.error_email_already_taken');
 
     await credRepo.changeEmail(db, userId, email);
 }
