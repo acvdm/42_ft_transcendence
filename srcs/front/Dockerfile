@@ -10,14 +10,15 @@ WORKDIR /app/front
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
 COPY ./package*.json ./
 
-#-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
-RUN npm ci
+RUN npm install
+
 
 #-----------------------COPY SOURCE CODE
 COPY . .
 
 #-----------------------BUILD STATIC FILES
-RUN npm run build
+RUN npm run build:js
+RUN npm run build:css
 
 #-------------------------------------
 # STEP 2: STATIC SERVER WITH NGINX
