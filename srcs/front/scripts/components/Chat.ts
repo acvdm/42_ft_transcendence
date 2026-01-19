@@ -27,14 +27,23 @@ export class Chat {
 	}
 
 	public init() {
+		const token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+		if (!token)
+		{
+			console.log("Chat: No token found, stopping initialization.");
+			return;
+		}
+
 		const socketService = SocketService.getInstance();
 
-		socketService.connectChat();
-		socketService.connectGame()
-
-		this.chatSocket = socketService.getChatSocket();
-		this.gameSocket = socketService.getGameSocket();
+		if (!socketService.getChatSocket())
+			socketService.connectChat();
+		if (!socketService.getGameSocket())
+			socketService.connectGame();
 		
+		this.chatSocket = socketService.getChatSocket();
+		this.gameSocket = socketService.getGameSocket()
+
 		if (!this.chatSocket) {
 			console.log("Chat: Connection in progress...");
 			setTimeout(() => {

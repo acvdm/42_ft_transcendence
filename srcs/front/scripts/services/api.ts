@@ -54,6 +54,9 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 		return response;
 	}
 
+	if (url.includes('/api/auth/token'))
+		return response;
+
 	if (response.status === 401) {
 		console.warn(`401 detected for ${url}`);
 		
@@ -92,6 +95,11 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 				} 
 				catch (error) {
 					console.error("Refresh error:", error);
+					localStorage.clear();
+					sessionStorage.clear();
+					window.history.pushState({}, '', '/');
+					window.dispatchEvent(new PopStateEvent('popstate'));
+
 					throw error;
 				} finally {
 					isRefreshing = false;

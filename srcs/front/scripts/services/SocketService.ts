@@ -18,14 +18,13 @@ export class SocketService {
 		return SocketService.instance;
 	}
 
-
 	//================================================
 	//================ SOCKET MANAGER ================
 	//================================================
 
 
 	private async createSocketConnection(path: string): Promise<Socket | null> {
-		let token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+		let token = this.getToken();
 
 		if (!token) {
 			console.error(`SocketService: No token found, cannot connect to ${path}`);
@@ -66,6 +65,13 @@ export class SocketService {
 								return newToken;
 							} else {
 								console.error("Refresh API failed:", response.status);
+								this.disconnectAll();
+								sessionStorage.clear();
+								localStorage.clear();
+
+								window.history.pushState({}, '', '/');
+								window.dispatchEvent(new PopStateEvent('popState'));
+
 								return null;
 							}
 						} catch (err) {
@@ -188,6 +194,10 @@ export class SocketService {
 	//================================================
 	//===================== TOOLS ====================
 	//================================================
+
+	private getToken(): string | null {
+		return sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
+	}
 
 	private showNotificationIcon() {
 		const notifElement = document.getElementById('message-notification'); 

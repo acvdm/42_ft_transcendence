@@ -162,6 +162,8 @@
       window.dispatchEvent(new PopStateEvent("popstate"));
       return response;
     }
+    if (url2.includes("/api/auth/token"))
+      return response;
     if (response.status === 401) {
       console.warn(`401 detected for ${url2}`);
       if (!isRefreshing) {
@@ -193,6 +195,10 @@
             }
           } catch (error) {
             console.error("Refresh error:", error);
+            localStorage.clear();
+            sessionStorage.clear();
+            window.history.pushState({}, "", "/");
+            window.dispatchEvent(new PopStateEvent("popstate"));
             throw error;
           } finally {
             isRefreshing = false;
@@ -3612,7 +3618,7 @@
     //================ SOCKET MANAGER ================
     //================================================
     async createSocketConnection(path) {
-      let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+      let token = this.getToken();
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
         return null;
@@ -3644,6 +3650,11 @@
                   return newToken2;
                 } else {
                   console.error("Refresh API failed:", response.status);
+                  this.disconnectAll();
+                  sessionStorage.clear();
+                  localStorage.clear();
+                  window.history.pushState({}, "", "/");
+                  window.dispatchEvent(new PopStateEvent("popState"));
                   return null;
                 }
               } catch (err) {
@@ -3746,6 +3757,9 @@
     //================================================
     //===================== TOOLS ====================
     //================================================
+    getToken() {
+      return sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+    }
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
@@ -8658,8 +8672,11 @@
     }
     init() {
       this.container = document.getElementById("contacts-list");
-      SocketService_default.getInstance().connectChat();
-      SocketService_default.getInstance().connectGame();
+      const socketService = SocketService_default.getInstance();
+      if (!socketService.getChatSocket())
+        socketService.connectChat();
+      if (!socketService.getGameSocket())
+        socketService.connectGame();
       this.loadFriends();
       this.setupFriendRequests();
       this.setupNotifications();
@@ -9481,9 +9498,16 @@
       }
     }
     init() {
+      const token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+      if (!token) {
+        console.log("Chat: No token found, stopping initialization.");
+        return;
+      }
       const socketService = SocketService_default.getInstance();
-      socketService.connectChat();
-      socketService.connectGame();
+      if (!socketService.getChatSocket())
+        socketService.connectChat();
+      if (!socketService.getGameSocket())
+        socketService.connectGame();
       this.chatSocket = socketService.getChatSocket();
       this.gameSocket = socketService.getGameSocket();
       if (!this.chatSocket) {

@@ -16,8 +16,15 @@ export class FriendList {
 
 	public init() {
 		this.container = document.getElementById('contacts-list');
-		SocketService.getInstance().connectChat();
-		SocketService.getInstance().connectGame();
+
+		const socketService = SocketService.getInstance();
+		if (!socketService.getChatSocket())
+			socketService.connectChat();
+		if (!socketService.getGameSocket())
+			socketService.connectGame();
+
+		// SocketService.getInstance().connectChat();
+		// SocketService.getInstance().connectGame();
 		this.loadFriends();
 		this.setupFriendRequests();
 		this.setupNotifications(); 
