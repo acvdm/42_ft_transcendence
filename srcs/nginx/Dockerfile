@@ -3,10 +3,6 @@ FROM nginx:alpine-slim
 #-----------------------INSTALL OPENSSL
 RUN apk add --no-cache openssl
 
-#-----------------------DOMAIN FOR SSL CERTIFICATE
-# ARG DOMAIN=localhost
-# ENV DOMAIN=${DOMAIN}
-
 # #-----------------------GENERERATE AUTO-SIGNED CERTIFICATE 
 RUN mkdir -p /etc/nginx/ssl && \
     openssl req -x509 -nodes -days 365 \

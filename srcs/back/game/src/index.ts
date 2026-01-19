@@ -129,8 +129,7 @@ fastify.post('/games', async (request, reply) =>
 			body.startDate,
 			body.endDate
 		);
-		console.log(`***body.p1.isGuest = ${body.p1.isGuest}, body.p1.userId = ${body.p1.userId}`)
-		console.log(`***body.p2.isGuest = ${body.p2.isGuest}, body.p2.userId = ${body.p2.userId}`)
+
 		if (body.startDate && body.endDate)
 		{
 			start = new Date(body.startDate).getTime();
@@ -139,9 +138,6 @@ fastify.post('/games', async (request, reply) =>
 			const durationMinutes = Math.round(diffInMins / 60000);
 			finalDuration = durationMinutes > 0 ? durationMinutes : 1;
 		}
-
-		console.log(`DEBUG DATES REÇUES -> Start: ${body.startDate} | End: ${body.endDate}`);
-
 
 		if (!gameId)
 			throw new ServiceUnavailableError(`Error could not create game`);
@@ -155,8 +151,6 @@ fastify.post('/games', async (request, reply) =>
 				body.p1.score, body.p2.score,
 				p1IsWinner ? 1 : 0
 			);
-			console.log("add player to match");
-			console.log(`body.p1.isGuest = ${body.p1.isGuest}`);
 			if (!body.p1.isGuest)
 			{
 				await updateUserStats(
@@ -165,7 +159,6 @@ fastify.post('/games', async (request, reply) =>
 					finalDuration
 				);
 			}
-			console.log(`stats ajoutee pour player ${body.p1.userId}`);
 		}
 
 		if (body.p2 && body.p2.userId)
@@ -177,9 +170,6 @@ fastify.post('/games', async (request, reply) =>
 				body.p2.score, body.p1.score,
 				p2IsWinner ? 1 : 0
 			);
-
-			console.log("add player to match");
-			console.log(`body.p2.isGuest = ${body.p2.isGuest}`);
 			if (!body.p2.isGuest)
 			{
 				await updateUserStats(
@@ -188,7 +178,6 @@ fastify.post('/games', async (request, reply) =>
 					finalDuration
 				);
 			}
-			console.log(`stats ajoutee pour player ${body.p2.userId}`);
 		}
 		return reply.status(201).send({
 			success: true,
@@ -209,7 +198,6 @@ fastify.post('/games', async (request, reply) =>
 			await rollbackDeleteGame(db, gameId);
 		
 		const statusCode = err.statusCode || 500;
-		console.log("error catched");
 
 		return reply.status(statusCode).send({
 			success: false,

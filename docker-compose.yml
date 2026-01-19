@@ -2,7 +2,7 @@ services:
 
     nginx:
       container_name: nginx
-      build: ./nginx
+      build: ./srcs/nginx
       ports:
         - "8443:443"        # Point d'entrée HTTPS public
       depends_on:
@@ -14,7 +14,7 @@ services:
 
     gateway:
       container_name: gateway
-      build: ./back/gateway
+      build: ./srcs/back/gateway
       expose:
         - "8080"            # Port interne uniquement, accessible depuis nginx  
       depends_on:
@@ -33,7 +33,7 @@ services:
 
     front:
       container_name: front
-      build: ./front
+      build: ./srcs/front
       expose:
         - "80"
       depends_on:
@@ -42,19 +42,19 @@ services:
         - frontend
       # a retirer seulement pour le dev
       volumes:
-        - ./front/dist:/usr/share/nginx/html/dist
-        - ./front/public/index.html:/usr/share/nginx/html/index.html
-        - ./front/public/assets:/usr/share/nginx/html/assets
+        - ./srcs/front/dist:/usr/share/nginx/html/dist
+        - ./srcs/front/public/index.html:/usr/share/nginx/html/index.html
+        - ./srcs/front/public/assets:/usr/share/nginx/html/assets
         
         # AJOUTEZ CES LIGNES POUR LE DEVELOPPEMENT :
-        - ./front/scripts:/usr/share/nginx/html/scripts
-        - ./front/styles:/usr/share/nginx/html/styles  # ou /styles selon votre structure
-        - ./front/tsconfig.json:/usr/share/nginx/html/tsconfig.json
-        - ./front/tailwind.config.js:/usr/share/nginx/html/tailwind.config.js
+        - ./srcs/front/scripts:/usr/share/nginx/html/scripts
+        - ./srcs/front/styles:/usr/share/nginx/html/styles  # ou /styles selon votre structure
+        - ./srcs/front/tsconfig.json:/usr/share/nginx/html/tsconfig.json
+        - ./srcs/front/tailwind.config.js:/usr/share/nginx/html/tailwind.config.js
 
     auth:
       container_name: auth
-      build: ./back/auth
+      build: ./srcs/back/auth
       expose:
         - "3001"
       env_file: 
@@ -73,7 +73,7 @@ services:
 
     chat:
       container_name: chat
-      build: ./back/chat
+      build: ./srcs/back/chat
       expose:
         - "3002"
       env_file: 
@@ -89,7 +89,7 @@ services:
 
     game:
       container_name: game
-      build: ./back/game
+      build: ./srcs/back/game
       expose:
         - "3003"
       env_file: 
@@ -105,7 +105,7 @@ services:
 
     user:
       container_name: user
-      build: ./back/user
+      build: ./srcs/back/user
       expose:
         - "3004"
       env_file: 

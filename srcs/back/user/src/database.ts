@@ -1,7 +1,6 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
 
-// Fonction qui initialise la DB et renvoie la connexion
 export async function initDatabase(): Promise<Database> {
     const db = await open({ filename: 
         '/app/data/user.sqlite', 
@@ -11,7 +10,6 @@ export async function initDatabase(): Promise<Database> {
     await db.exec('PRAGMA foreign_keys = ON;');
 
     // Table USERS
-    // j'ajoute un avatar par default ici!
     await db.exec(`
        CREATE TABLE IF NOT EXISTS USERS (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

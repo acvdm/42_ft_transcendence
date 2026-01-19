@@ -12601,7 +12601,6 @@
         const myAlias = await getPlayerAlias();
         const myId = Number(localStorage.getItem("userId") || sessionStorage.getItem("userId"));
         let opponentId = data.opponent ? Number(data.opponent) : null;
-        console.log("myid, opponent id:", myId, opponentId);
         if (opponentId && myId === opponentId) {
           console.error("Error: cannot play against yourself, you idiot");
           if (status) {
@@ -12623,7 +12622,6 @@
         let p1Id = data.role === "player1" ? myId : opponentId;
         let p2Id = data.role === "player2" ? myId : opponentId;
         let opponentAlias = i18n_default.t("remoteManager.default_opponent");
-        console.log("p1, p2:", p1Id, p2Id);
         if (data.role === "player1") {
           this.currentP1Alias = myAlias;
           if (remoteP2Alias) {
@@ -12648,7 +12646,6 @@
         let isP1Guest = false;
         let isP2Guest = false;
         const amIGuest = sessionStorage.getItem("isGuest") === "true";
-        console.log(`amIGuest = ${amIGuest}`);
         if (data.opponent) {
           console.log(`if data.opponent id = ${data.opponent}`);
           fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
@@ -12671,7 +12668,6 @@
                   isP1Guest = true;
                 if (p1Display) p1Display.innerText = realOpponentName;
               }
-              console.log(`amIguest = ${amIGuest}, opponentisGuest = ${opponentIsGuest}, p1Guest = ${isP1Guest}, p2Guest = ${isP2Guest}`);
             }
           }).catch((e) => console.error("Error retrieving opponent alias:", e));
         }
@@ -12722,7 +12718,6 @@
             document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
-              console.log("opponent left");
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
                 activeGame2.isRunning = false;
@@ -12865,7 +12860,6 @@
       }
     }
     async saveRemoteGameToApi(p1Alias, p1Score, p1Id, isP1Guest, p2Alias, p2Score, p2Id, isP2Guest, winnerAlias, startDate) {
-      console.log("p1, p2 save api:", p1Id, p2Id);
       try {
         const endDate = getSqlDate();
         const response = await fetchWithAuth("api/game", {

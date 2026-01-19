@@ -135,7 +135,6 @@ export class RemoteGameManager {
 			const myId = Number(localStorage.getItem('userId') || sessionStorage.getItem('userId'));
 			let opponentId = data.opponent ? Number(data.opponent) : null;
 
-			console.log("myid, opponent id:", myId, opponentId);
 			if (opponentId && myId === opponentId) {
 				console.error("Error: cannot play against yourself, you idiot");
 				if (status) {
@@ -155,14 +154,12 @@ export class RemoteGameManager {
 				return ;
 			}
 
-			// console.log(`is guest : ${data.player1.is_guest}`);
 			const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
 			const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
 			let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
 			let p2Id: number | null = (data.role === 'player2') ? myId : opponentId;
 			let opponentAlias = i18next.t('remoteManager.default_opponent');
 
-			console.log("p1, p2:", p1Id, p2Id);
 			if (data.role === 'player1') 
 			{
 				this.currentP1Alias = myAlias;
@@ -196,7 +193,6 @@ export class RemoteGameManager {
 			let isP2Guest = false;
 
 			const amIGuest = sessionStorage.getItem('isGuest') === 'true';
-			console.log(`amIGuest = ${amIGuest}`);
 
 			if (data.opponent) {
 				console.log(`if data.opponent id = ${data.opponent}`);
@@ -228,7 +224,6 @@ export class RemoteGameManager {
 								
 								if (p1Display) p1Display.innerText = realOpponentName;
 							}
-							console.log(`amIguest = ${amIGuest}, opponentisGuest = ${opponentIsGuest}, p1Guest = ${isP1Guest}, p2Guest = ${isP2Guest}`)
 						}
 					})
 					.catch(e => console.error("Error retrieving opponent alias:", e));
@@ -290,7 +285,6 @@ export class RemoteGameManager {
                     // Rival is leaving the game
                     gameSocket.off('opponentLeft');
                     gameSocket.on('opponentLeft', async (eventData: any) => {
-                        console.log('opponent left');
                         const activeGame = this.context.getGame();
                         if (activeGame) {
                             activeGame.isRunning = false;
@@ -462,10 +456,7 @@ export class RemoteGameManager {
 		p2Alias: string, p2Score: number, p2Id: number | null, isP2Guest: boolean,
 		winnerAlias: string,
 		startDate: string,
-	) {
-
-		console.log("p1, p2 save api:", p1Id, p2Id);
-	
+	) {	
 		try 
 		{
 			const endDate = getSqlDate()

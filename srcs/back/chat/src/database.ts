@@ -22,6 +22,7 @@ export async function initDatabase(): Promise<Database> {
     `);
     console.log('MESSAGES table created');
 
+	// Table CHANNELS
     await db.exec(`
 		CREATE TABLE IF NOT EXISTS CHANNELS (
         	id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,7 +1,6 @@
 #----------------------------
 # STEP 1: BUILD APP
-#----------------------------
-        
+#----------------------------     
 FROM node:20-alpine AS build
 
 #-----------------------INSTALL BUILD DEPENDENCIES FOR ARGON2
@@ -31,18 +30,13 @@ RUN npm run build
 #----------------------------
 # STEP 2: FINAL IMAGE
 #----------------------------
-
 FROM node:20-alpine
 
 
 #-----------------------INSTALL RUNTIME DEPENDENCIES FOR ARGON2
 RUN apk add --no-cache \
     libstdc++ \
-    sqlite \
-    su-exec
-
-# COPY entrypoint.sh /app/entrypoint.sh
-# RUN chmod +x /app/entrypoint.sh
+    sqlite
 
 WORKDIR /app/auth
 
@@ -57,5 +51,4 @@ RUN mkdir -p /app/data
 EXPOSE 3001
 
 #-----------------------START PRODUCTION MODE
-# ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["node", "dist/index.js"]
