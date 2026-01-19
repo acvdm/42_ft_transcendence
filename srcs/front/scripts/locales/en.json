@@ -34,6 +34,7 @@
 	  "title": "Messenger",
 	  "friends": "MY FRIENDS",
 	  "add_friend": "Add a friend",
+	  "placeholder_button": "Type in username",
 	  "send_request": "Send request",
 	  "cancel": "Cancel",
 	  "contact": "⭐ Contacts",

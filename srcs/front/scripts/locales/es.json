@@ -33,6 +33,7 @@
       "title": "Messenger",
       "friends": "MIS AMIGOS",
       "add_friend": "Añadir un amigo",
+      "placeholder_button": "Escribe el nombre de usuario",
       "send_request": "Enviar solicitud",
       "cancel": "Cancelar",
       "contact": "⭐ Contactos",

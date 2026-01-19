@@ -6005,6 +6005,7 @@
         friends: "MES AMIS",
         add_friend: "Ajouter un ami",
         send_request: "Envoyer une demande d'ami",
+        placeholder_button: "Entrez le nom d\u2019utilisateur",
         cancel: "Annuler",
         contact: "\u2B50 Contacts",
         placeholder: "S\xE9lectionnez un ami pour commencer \xE0 discuter",
@@ -6545,6 +6546,7 @@
         title: "Messenger",
         friends: "MY FRIENDS",
         add_friend: "Add a friend",
+        placeholder_button: "Type in username",
         send_request: "Send request",
         cancel: "Cancel",
         contact: "\u2B50 Contacts",
@@ -7086,6 +7088,7 @@
         title: "Messenger",
         friends: "MIS AMIGOS",
         add_friend: "A\xF1adir un amigo",
+        placeholder_button: "Escribe el nombre de usuario",
         send_request: "Enviar solicitud",
         cancel: "Cancelar",
         contact: "\u2B50 Contactos",
@@ -8392,7 +8395,7 @@
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
 										<p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
 																		
-										<input type="text" id="friend-search-input" placeholder="Type in username or email" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
+										<input type="text" id="friend-search-input" placeholder="{{homepage.chat.placeholder_button}}" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3">
 																		
 										<p id="friend-request-message" class="text-xs text-center mb-2 hidden"></p>
 										<div class="flex gap-2">
@@ -10146,6 +10149,7 @@
     html = html.replace(/\{\{homepage.chat\.cancel\}\}/g, i18n_default.t("homepage.chat.cancel"));
     html = html.replace(/\{\{homepage.chat\.contact\}\}/g, i18n_default.t("homepage.chat.contact"));
     html = html.replace(/\{\{homepage.chat\.placeholder\}\}/g, i18n_default.t("homepage.chat.placeholder"));
+    html = html.replace(/\{\{homepage.chat\.placeholder_button\}\}/g, i18n_default.t("homepage.chat.placeholder_button"));
     html = html.replace(/\{\{homepage.chat\.input_placeholder\}\}/g, i18n_default.t("homepage.chat.input_placeholder"));
     html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18n_default.t("homepage.chat.view_profile"));
     html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18n_default.t("homepage.chat.invite_game"));

@@ -40,6 +40,7 @@ export function render(): string {
 	html = html.replace(/\{\{homepage.chat\.cancel\}\}/g, i18next.t('homepage.chat.cancel'));
 	html = html.replace(/\{\{homepage.chat\.contact\}\}/g, i18next.t('homepage.chat.contact'));
 	html = html.replace(/\{\{homepage.chat\.placeholder\}\}/g, i18next.t('homepage.chat.placeholder'));
+	html = html.replace(/\{\{homepage.chat\.placeholder_button\}\}/g, i18next.t('homepage.chat.placeholder_button'));
 	html = html.replace(/\{\{homepage.chat\.input_placeholder\}\}/g, i18next.t('homepage.chat.input_placeholder'));
 	html = html.replace(/\{\{homepage.chat\.view_profile\}\}/g, i18next.t('homepage.chat.view_profile'));
 	html = html.replace(/\{\{homepage.chat\.invite_game\}\}/g, i18next.t('homepage.chat.invite_game'));
