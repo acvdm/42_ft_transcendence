@@ -602,12 +602,10 @@ fastify.delete('/users/:id', async (request, reply) =>
 			method: "DELETE",
 		});
 	
-		// Gérer les erreurs du service auth
 		if (!authResponse.ok)
 		{
 			const authJson = await authResponse.json().catch(() => ({}));
 
-			// Propager le code d'erreur du service auth
 			const error: any = new Error(
 				authJson.error?.message || `Auth service error: ${authResponse.status}`
 			);
@@ -616,10 +614,8 @@ fastify.delete('/users/:id', async (request, reply) =>
 		}
 
 		console.log("- Anonymising user profile...");
-		// remplace le pseudo par Deleted_User_XXX et l'avatar par defaut
 		await userRepo.anonymizeUser(db, userId);
 
-		// deconnection -> suppression du cookie pour que le navigateur sache quil nest plus connecte
 		reply.clearCookie('refreshToken', { path: '/' });
 
 		return reply.status(200).send({
