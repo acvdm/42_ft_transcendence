@@ -214,13 +214,10 @@ export class LocalGameManager {
 					}
 	
 					const scoreBoard = document.getElementById('score-board');
-					console.log("localGameManager line 184");
 					const canvas = document.createElement('canvas');
 					canvas.id = 'pong-canvas';
 					canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
 					canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
-					console.log("heigh:", canvasContainer?.clientHeight);
-					console.log("width:", canvasContainer?.clientWidth);
 					canvas.style.width = '100%';
 					canvas.style.height = '100%';
 					canvas.style.backgroundColor = selectedBg;

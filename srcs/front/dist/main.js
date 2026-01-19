@@ -178,14 +178,11 @@
               if (!newToken) {
                 throw new Error("No accessToken in refresh response");
               }
-              console.log("Token changed?", getAuthToken() !== newToken);
               const isGuest = sessionStorage.getItem("isGuest") === "true";
               if (isGuest) {
                 sessionStorage.setItem("accessToken", newToken);
-                console.log("Token stored in sessionStorage (Guest)");
               } else {
                 localStorage.setItem("accessToken", newToken);
-                console.log("Token stored in localStorage (User)");
               }
               onRefreshed(newToken);
               return newToken;
@@ -7579,7 +7576,6 @@
         es: { translation: es_default }
       }
     });
-    console.log("i18n initialized with language:", instance.language);
   }
   async function changeLanguage2(lang) {
     await instance.changeLanguage(lang);
@@ -8079,7 +8075,6 @@
                 method: "PATCH",
                 body: JSON.stringify({ status: selectedStatus })
               });
-              console.log("Status updated to database:", selectedStatus);
             } catch (err) {
               console.error("Failed to update status on login", err);
             }
@@ -8780,11 +8775,11 @@
         }
       });
       chatSocket.on("receiveFriendRequestNotif", () => {
-        console.log("New friend request received!");
+        console.log("[Friendlist] New friend request received!");
         this.checkNotifications();
       });
       chatSocket.on("friendRequestAccepted", () => {
-        console.log("Friend request accepted by other user!");
+        console.log("[Friendlist] Friend request accepted by other user!");
         this.loadFriends();
       });
       if (!gameSocket) {
@@ -8795,7 +8790,7 @@
         gameSocket.emit("registerGameSocket");
         gameSocket.off("receiveGameInvite");
         gameSocket.on("receiveGameInvite", (data) => {
-          console.log(`Game invite received from ${data.senderName} on ${gameSocket.id}`);
+          console.log(`[Game] Game invite received from ${data.senderName} on ${gameSocket.id}`);
           this.showGameInviteNotification(data.senderId, data.senderName);
         });
       };
@@ -9233,7 +9228,6 @@
               this.bioText.dataset.raw = trimmedBio;
               this.bioText.innerHTML = parseMessage(trimmedBio) || defaultBio;
               this.bioWrapper.replaceChild(this.bioText, input);
-              console.log("Message updated");
               const socket = SocketService_default.getInstance().socket;
               if (socket) {
                 socket.emit("notifyProfileUpdate", {
@@ -9335,7 +9329,6 @@
     }
     updateStatusDisplay(status) {
       if (this.statusFrame && statusImages[status]) {
-        console.log("Status:", this.statusFrame);
         this.statusFrame.src = statusImages[status];
       }
       if (this.statusText && statusLabels[status]) {
@@ -9880,7 +9873,6 @@
         });
         document.getElementById("button-block-user")?.addEventListener("click", async (e) => {
           e.stopPropagation();
-          console.log("friendhsop id:", this.currentFriendshipId);
           if (!this.currentFriendshipId) {
             console.error("Cannot block: no friendship id associated to this conv");
             chatOptionsDropdown.classList.add("hidden");
@@ -11289,7 +11281,6 @@
         return;
       }
       if (newPass !== confirmPass) {
-        console.log("newpass: , confirmpass:", newPass, confirmPass);
         if (pwdError) {
           pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_mismatch");
           pwdError.classList.remove("hidden");
@@ -11315,7 +11306,6 @@
           closePwdModal();
         } else {
           if (pwdError) {
-            console.log("pwdError");
             const backendErrorKey = result.error?.message;
             if (backendErrorKey)
               pwdError.innerText = i18n_default.t(backendErrorKey);
@@ -11807,7 +11797,6 @@
     resume() {
       if (!this.isRunning) {
         this.isRunning = true;
-        console.log("gameloop");
         this.gameLoop();
       }
     }
@@ -11816,7 +11805,6 @@
       this.notifyScoreUpdate();
     }
     startRemote(roomId, role) {
-      console.log("startRemote Initial score:", this.score);
       this.isRemote = true;
       this.roomId = roomId;
       this.playerRole = role;
@@ -12391,13 +12379,10 @@
               canvasContainer.innerHTML = "";
             }
             const scoreBoard = document.getElementById("score-board");
-            console.log("localGameManager line 184");
             const canvas = document.createElement("canvas");
             canvas.id = "pong-canvas";
             canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
             canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
-            console.log("heigh:", canvasContainer?.clientHeight);
-            console.log("width:", canvasContainer?.clientWidth);
             canvas.style.width = "100%";
             canvas.style.height = "100%";
             canvas.style.backgroundColor = selectedBg;
@@ -12609,7 +12594,6 @@
         const myAlias = await getPlayerAlias();
         const myId = Number(localStorage.getItem("userId") || sessionStorage.getItem("userId"));
         let opponentId = data.opponent ? Number(data.opponent) : null;
-        console.log("myid, opponent id:", myId, opponentId);
         if (opponentId && myId === opponentId) {
           console.error("Error: cannot play against yourself, you idiot");
           if (status) {
@@ -12631,7 +12615,6 @@
         let p1Id = data.role === "player1" ? myId : opponentId;
         let p2Id = data.role === "player2" ? myId : opponentId;
         let opponentAlias = i18n_default.t("remoteManager.default_opponent");
-        console.log("p1, p2:", p1Id, p2Id);
         if (data.role === "player1") {
           this.currentP1Alias = myAlias;
           if (remoteP2Alias) {
@@ -12656,11 +12639,8 @@
         let isP1Guest = false;
         let isP2Guest = false;
         const amIGuest = sessionStorage.getItem("isGuest") === "true";
-        console.log(`amIGuest = ${amIGuest}`);
         if (data.opponent) {
-          console.log(`if data.opponent id = ${data.opponent}`);
           fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
-            console.log(`userData = ${userData.is_guest}`);
             if (userData && userData.alias) {
               const realOpponentName = userData.alias;
               const opponentIsGuest = !!userData.is_guest;
@@ -12679,7 +12659,6 @@
                   isP1Guest = true;
                 if (p1Display) p1Display.innerText = realOpponentName;
               }
-              console.log(`amIguest = ${amIGuest}, opponentisGuest = ${opponentIsGuest}, p1Guest = ${isP1Guest}, p2Guest = ${isP2Guest}`);
             }
           }).catch((e) => console.error("Error retrieving opponent alias:", e));
         }
@@ -12730,7 +12709,6 @@
             document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
-              console.log("opponent left");
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
                 activeGame2.isRunning = false;
@@ -12873,7 +12851,6 @@
       }
     }
     async saveRemoteGameToApi(p1Alias, p1Score, p1Id, isP1Guest, p2Alias, p2Score, p2Id, isP2Guest, winnerAlias, startDate) {
-      console.log("p1, p2 save api:", p1Id, p2Id);
       try {
         const endDate = getSqlDate();
         const response = await fetchWithAuth("api/game", {
@@ -12895,7 +12872,7 @@
         if (!response.ok) {
           console.error("Error while saving remote game");
         } else {
-          console.log("remote game successfully saved");
+          console.log("Remote game successfully saved");
         }
       } catch (e) {
         console.error(e);
@@ -13227,8 +13204,6 @@
         canvas.id = "pong-canvas-tournament";
         canvas.width = canvasContainer.clientWidth;
         canvas.height = canvasContainer.clientHeight;
-        console.log("heigh:", canvasContainer.clientHeight);
-        console.log("width:", canvasContainer.clientWidth);
         canvas.style.width = "100%";
         canvas.style.height = "100%";
         canvasContainer.appendChild(canvas);

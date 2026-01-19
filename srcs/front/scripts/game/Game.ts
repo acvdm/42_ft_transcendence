@@ -51,7 +51,6 @@ class Game {
 	resume() {
 		if (!this.isRunning) {
 			this.isRunning = true;
-			console.log("gameloop");
 			this.gameLoop();
 		}
 	}
@@ -62,7 +61,6 @@ class Game {
 	}
 
 	startRemote(roomId: string, role: 'player1' | 'player2') {
-		console.log("startRemote Initial score:", this.score);
 		this.isRemote = true;
 		this.roomId = roomId;
 		this.playerRole = role;

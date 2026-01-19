@@ -951,7 +951,6 @@ export function afterRender(): void {
 		}
 
 		if (newPass !== confirmPass) {
-			console.log("newpass: , confirmpass:", newPass, confirmPass);
 			if (pwdError) {
 				pwdError.innerText = i18next.t('profilePage.alerts.pwd_mismatch');
 				pwdError.classList.remove('hidden');
@@ -981,7 +980,6 @@ export function afterRender(): void {
 				closePwdModal();
 			} else {
 				if (pwdError) {
-					console.log("pwdError");
 					const backendErrorKey = result.error?.message;
 					if (backendErrorKey)
 						pwdError.innerText = i18next.t(backendErrorKey);

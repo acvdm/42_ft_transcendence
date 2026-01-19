@@ -407,8 +407,7 @@ export class TournamentManager {
 			canvas.id = 'pong-canvas-tournament';
 			canvas.width = canvasContainer.clientWidth;
 			canvas.height = canvasContainer.clientHeight;
-			console.log("heigh:", canvasContainer.clientHeight);
-			console.log("width:", canvasContainer.clientWidth);
+
 			canvas.style.width = '100%';
 			canvas.style.height = '100%';
 			canvasContainer.appendChild(canvas);

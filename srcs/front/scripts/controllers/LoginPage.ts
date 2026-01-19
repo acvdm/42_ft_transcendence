@@ -199,7 +199,6 @@ function handleLogin() {
 							method: 'PATCH',
 							body: JSON.stringify({ status: selectedStatus })
 						});
-						console.log("Status updated to database:", selectedStatus);
 					} catch (err) {
 						console.error("Failed to update status on login", err);
 					}
