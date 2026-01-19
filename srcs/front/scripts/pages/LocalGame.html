@@ -8,7 +8,7 @@
 		
 		<div class="flex flex-row justify-center gap-6 min-h-0 flex-1 w-full" style="max-width: 1460px; min-height: 600px;">
 
-			<div class="flex flex-col gap-4 flex-1 min-w-0" style="max-width: 1000px;">
+			<div class="flex flex-col gap-4" style="width: 1000px; min-width: 1000px;">
 				
 				<div class="window flex flex-col w-full" style="height: 600px;">
 					<div class="title-bar">
@@ -107,7 +107,7 @@
 							</div>
 						</div>
 
-						<div id="countdown-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
+						<div id="countdown-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
 							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
 								<div class="title-bar bg-yellow-500">
 									<div class="title-bar-text text-black">{{localPage.countdown_title}}</div>
@@ -118,7 +118,7 @@
 							</div>
 						</div>
 
-						<div id="local-summary-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
+						<div id="local-summary-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
 							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
 								<div class="title-bar bg-yellow-500">
 									<div class="title-bar-text text-black">{{localPage.summary_modal.title}}</div>
@@ -160,7 +160,7 @@
 						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 
 						<div class="flex flex-col">
-							<input id="chat-input" placeholder="{{localPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>
+							<input id="chat-input" placeholder="{{localPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" disabled>
 						</div>
 					</div>
 				</div> 

@@ -166,7 +166,7 @@ export function afterRender(): void {
 			}
 
 			// Match analysis
-			const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`); // Est-ce qu'on augmente la limite?
+			const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`);
 			
 			if (historyResponse.ok) {
 				const historyJson = await historyResponse.json();
@@ -274,7 +274,7 @@ export function afterRender(): void {
 			}
 			if (prevButton) {
 				prevButton.disabled = currentPage === 1;
-				prevButton.classList.toggle('opacity-50', currentPage === 1); // Ajout visuel
+				prevButton.classList.toggle('opacity-50', currentPage === 1);
 				prevButton.classList.toggle('cursor-not-allowed', currentPage === 1);
 			}
 			if (nextButton) {
@@ -342,50 +342,50 @@ export function afterRender(): void {
 		}
 
 		history.forEach(match => {
-            const date = new Date(match.finished_at);
-            const dateString = date.toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                timeZone: 'Europe/Paris'
-            }).replace(/\//g, '-');
-            
-            const timeString = date.toLocaleTimeString('fr-FR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                timeZone: 'Europe/Paris' 
-            });
+			const date = new Date(match.finished_at);
+			const dateString = date.toLocaleDateString('fr-FR', {
+				day: '2-digit',
+				month: '2-digit',
+				year: 'numeric',
+				timeZone: 'Europe/Paris'
+			}).replace(/\//g, '-');
+			
+			const timeString = date.toLocaleTimeString('fr-FR', {
+				hour: '2-digit',
+				minute: '2-digit',
+				timeZone: 'Europe/Paris' 
+			});
 
-            const isWin = match.is_winner === 1;
-            
-            const resultText = isWin ? i18next.t('dashboardPage.status_victory') : i18next.t('dashboardPage.status_defeat');
-            const resultColor = isWin ? "text-green-600" : "text-red-500";
-            const scoreString = `${match.my_score} - ${match.opponent_score !== undefined ? match.opponent_score : 0}`;
-            
-            const roundString = match.round 
-                ? match.round 
-                : (match.game_type === 'tournament' ? i18next.t('dashboardPage.round_final') : i18next.t('dashboardPage.round_1v1'));
+			const isWin = match.is_winner === 1;
+			
+			const resultText = isWin ? i18next.t('dashboardPage.status_victory') : i18next.t('dashboardPage.status_defeat');
+			const resultColor = isWin ? "text-green-600" : "text-red-500";
+			const scoreString = `${match.my_score} - ${match.opponent_score !== undefined ? match.opponent_score : 0}`;
+			
+			const roundString = match.round 
+				? match.round 
+				: (match.game_type === 'tournament' ? i18next.t('dashboardPage.round_final') : i18next.t('dashboardPage.round_1v1'));
 
-            const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
-            const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
-            const opponentName = escapeHtml(rawName);
+			const translatedType = i18next.t(`dashboardPage.chart.${match.game_type || 'local'}`); 
+			const rawName = match.opponent_alias || i18next.t('dashboardPage.unknown_user');
+			const opponentName = escapeHtml(rawName);
 
-            const row = document.createElement('tr');
-            row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
+			const row = document.createElement('tr');
+			row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
 
-            row.innerHTML = `
-                <td class="py-2 text-gray-500 whitespace-nowrap">
-                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
-                    </td>
-                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
-            `;
+			row.innerHTML = `
+				<td class="py-2 text-gray-500 whitespace-nowrap">
+					${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+					</td>
+				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
+			`;
 
-            listContainer.appendChild(row);
-        });
+			listContainer.appendChild(row);
+		});
 	}
 
 
@@ -423,7 +423,7 @@ export function afterRender(): void {
 		}
 
 		// Cloning tab with [...] to not change original one
-		const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime()); // besoin d'explication ici
+		const sorted = [...history].sort((a, b) => new Date(a.finished_at).getTime() - new Date(b.finished_at).getTime());
 		const labels: string[] = [];
 		const netScoreData: number[] = [];
 

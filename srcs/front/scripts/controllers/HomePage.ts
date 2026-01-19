@@ -16,11 +16,6 @@ let friendSelectedHandler: ((e: any) => void) | null = null;
 export function render(): string {
 	let html = htmlContent;
 
-	// html = html.replace(/\{\{nav\.home\}\}/g, i18next.t('nav.home'));
-	// html = html.replace(/\{\{nav\.profile\}\}/g, i18next.t('nav.profile'));
-	// html = html.replace(/\{\{nav\.dashboard\}\}/g, i18next.t('nav.dashboard'));
-	// html = html.replace(/\{\{nav\.logout\}\}/g, i18next.t('nav.logout'));
-
 	html = html.replace(/\{\{homepage.profile\.title\}\}/g, i18next.t('homepage.profile.title'));
 	html = html.replace(/\{\{homepage.profile\.bio\}\}/g, i18next.t('homepage.profile.bio'));
 	html = html.replace(/\{\{homepage.profile\.username\}\}/g, i18next.t('homepage.profile.username'));
@@ -28,7 +23,6 @@ export function render(): string {
 	html = html.replace(/\{\{homepage.profile\.status.busy\}\}/g, i18next.t('homepage.profile.status.busy'));
 	html = html.replace(/\{\{homepage.profile\.status.away\}\}/g, i18next.t('homepage.profile.status.away'));
 	html = html.replace(/\{\{homepage.profile\.status.offline\}\}/g, i18next.t('homepage.profile.status.offline'));
-
 	html = html.replace(/\{\{homepage.games\.title\}\}/g, i18next.t('homepage.games.title'));
 	html = html.replace(/\{\{homepage.games\.mode\}\}/g, i18next.t('homepage.games.mode'));
 	html = html.replace(/\{\{homepage.games\.choose_mode\}\}/g, i18next.t('homepage.games.choose_mode'));

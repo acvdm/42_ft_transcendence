@@ -539,7 +539,6 @@ export class Chat {
 			// Blocking someone
 			document.getElementById('button-block-user')?.addEventListener('click', async (e) => {
 				e.stopPropagation();
-				console.log("friendhsop id:", this.currentFriendshipId);
 				if (!this.currentFriendshipId) {
 					console.error("Cannot block: no friendship id associated to this conv");
 					chatOptionsDropdown.classList.add('hidden');

@@ -19,8 +19,6 @@ export async function initI18n() {
 			es: { translation: es }
 		},
 	});
-
-	console.log("i18n initialized with language:", i18next.language);
 }
 
 export async function changeLanguage(lang: string) {
