@@ -8227,45 +8227,36 @@
 							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 25px;">
 								<p>{{homepage.games.choose_mode}}</p>
 							</div>
-							<div class="flex flex-col flex-1 items-center justify-center gap-6 py-8">
+							<div class="flex flex-col flex-1 items-center justify-center gap-6 py-8" style="gap: 65px;">
 								
 								<!-- Local Game -->
-								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white border border-gray-300 rounded-sm shadow-sm p-5 hover:shadow-md transition-shadow duration-200">
+								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-xs text-gray-600 text-center px-4" style="min-height: 32px;">{{homepage.games.local_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.local_describe}}</p>
 										<button id="local-game" 
-											class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-												px-6 py-2 text-sm font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-												active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-												transition-all duration-200 hover:shadow-md">
+											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.local}}
 										</button>
 									</div>
 								</div>
 
 								<!-- Remote Game -->
-								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white border border-gray-300 rounded-sm shadow-sm p-5 hover:shadow-md transition-shadow duration-200">
+								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-xs text-gray-600 text-center px-4" style="min-height: 32px;">{{homepage.games.remote_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.remote_describe}}</p>
 										<button id="remote-game" 
-											class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-												px-6 py-2 text-sm font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-												active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-												transition-all duration-200 hover:shadow-md">
+											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.remote}}
 										</button>
 									</div>
 								</div>
 
 								<!-- Tournament Game -->
-								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white border border-gray-300 rounded-sm shadow-sm p-5 hover:shadow-md transition-shadow duration-200">
+								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-xs text-gray-600 text-center px-4" style="min-height: 32px;">{{homepage.games.tournament_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.tournament_describe}}</p>
 										<button id="tournament-game" 
-											class="w-40 bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-												px-6 py-2 text-sm font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-												active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-												transition-all duration-200 hover:shadow-md">
+											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.tournament}}
 										</button>
 									</div>
@@ -8335,7 +8326,7 @@
 							<p class="text-gray-400 text-lg font-semibold">{{homepage.chat.placeholder}}</p>
 						</div>
 
-						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+						<div id="channel-chat" class="hidden flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
