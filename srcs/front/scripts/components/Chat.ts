@@ -34,13 +34,17 @@ export class Chat {
 
 		this.chatSocket = socketService.getChatSocket();
 		this.gameSocket = socketService.getGameSocket();
+		
+		if (!this.chatSocket) {
+			console.log("Chat: Connection in progress...");
+			setTimeout(() => {
+				this.init();
+			}, 200);
+			return;
+		}
 
 		if (!this.gameSocket) {
 			console.log("Gamesocket does not exist");
-		}
-		if (!this.chatSocket) {
-			console.error("Chat: Impossible to retrieve chat socket (not connected).");
-			return;
 		}
 
 		this.setupSocketEvents();
