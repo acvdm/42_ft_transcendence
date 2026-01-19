@@ -22,6 +22,7 @@ interface GameState {
 let waitingQueue: string[] = []; // ID des sockets en attente
 const activeGames = new Map<string, GameState>();
 const GAMESPEED = 1000 / 60; // 60 FPS
+const WINNING_SCORE = 11;
 
 export function initGameState(roomId: string, p1: string, p2: string): GameState {
     console.log("initRemotGameState");
@@ -282,7 +283,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
     }
 
     // Fin de partie
-    if (game.score.player1 >= 4 || game.score.player2 >= 4){
+    if (game.score.player1 >= WINNING_SCORE || game.score.player2 >= WINNING_SCORE) {
         stopGame(game.roomId, io);
         return ;
     }

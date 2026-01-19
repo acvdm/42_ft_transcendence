@@ -81,6 +81,7 @@ export function initLandingPage() {
 			const response = await fetch('/api/user/guest', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include', // AJOUT important pour enregistrer le cookie transmis par le back
 				body: JSON.stringify({})
 			});
 
@@ -90,6 +91,10 @@ export function initLandingPage() {
 				if (data.accessToken) {
 					sessionStorage.setItem('accessToken', data.accessToken);
 				}
+				if (data.refreshToken) {
+					console.log("Guest refreshToken received:", data.refreshToken); // LOG a enlever en prod
+				}
+
 				if (data.userId) {
 					sessionStorage.setItem('userId', data.userId.toString());
 				}
@@ -98,7 +103,7 @@ export function initLandingPage() {
 				sessionStorage.setItem('userRole', 'guest');
 
 				try {
-					const userResponse = await fetch(`/api/users/${data.userId}`, {
+					const userResponse = await fetch(`/api/user/${data.userId}`, { // MODIFICATION en /user/
 						method: 'GET',
 						headers: {
 							'Authorization': `Bearer ${data.accessToken}`,

@@ -5,6 +5,7 @@ import { Secret, TOTP } from 'otpauth'; // 2FA
 import * as QRCode from 'qrcode';
 import * as tokenRepo from '../repositories/token.js';
 import * as credRepo from '../repositories/credentials.js';
+import { ServiceUnavailableError } from './error.js';
 
 // usine de fabrication --> ne touche pas a la bdd mais genere des chaines de caracteres, etc
 
@@ -26,7 +27,7 @@ export async function hashPassword(password: string): Promise<string> {
         const hash = await argon2.hash(password);
         return (hash);
     } catch (err) {
-        throw new Error('Password hashing failed');
+        throw new ServiceUnavailableError('Password hashing failed');
     }    
 }
 
@@ -45,7 +46,7 @@ export function generateAccessToken(userId: number, credential_id: number): stri
         sub: userId,
         cred_id: credential_id
     };
-    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '1m'});
+    return jwt.sign(payload, JWT_SECRET!, { expiresIn: '15m'});
 }
 
 // Refresh Token : comme un pointeur vers la bdd (conserve en securite au niveau du cookie)
@@ -54,7 +55,6 @@ export function generateRefreshToken(user_id: number): string {
     return (randomBytes(32).toString('hex'));
  }
 
-// verification du token
 export function verifyAccessToken(token: string): any {
     try {
         return jwt.verify(token, JWT_SECRET!);

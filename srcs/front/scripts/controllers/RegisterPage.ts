@@ -26,15 +26,12 @@ function handleRegister() {
 		return;
 	}
 
-	if (aliasInput) {
-		aliasInput.maxLength = 20;
-	}
-	if (emailInput) {
-		emailInput.maxLength = 254;
-	}
-	if (passwordInput) {
-		passwordInput.maxLength = 128;
-	}
+    if (aliasInput)
+        aliasInput.maxLength = 20;
+    if (emailInput)
+        emailInput.maxLength = 254;
+    if (passwordInput)
+        passwordInput.maxLength = 128;
 
 	backButton?.addEventListener('click', () => {
 		window.history.pushState({}, '', '/');
@@ -60,13 +57,16 @@ function handleRegister() {
 			return ;
 		}
 
-		if (alias.length > 20 || email.length > 254 || password.length > 128) {
-			if (errorElement) {
-				errorElement.textContent = i18next('registerPage.error_inputs');
-				errorElement.classList.remove.apply('hidden');
-			}
-			return ;
-		}
+        // Vérification avant d'envoyer au back
+        if (alias.length > 20 || email.length > 254 || password.length > 128)
+        {
+            if (errorElement)
+            {
+                errorElement.textContent = i18next('registerPage.error_inputs');
+                errorElement.classList.remove.apply('hidden');
+            }
+            return ;
+        }
 
 		try {
 			const response = await fetch('/api/user', {

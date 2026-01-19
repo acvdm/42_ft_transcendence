@@ -3,6 +3,7 @@ import * as tokenRepo from '../repositories/token.js';
 import * as crypt from '../utils/crypto.js';
 import { Secret, TOTP } from 'otpauth'; // Time-based One-Time Password
 import * as QRCode from 'qrcode';
+import jwt from 'jsonwebtoken';
 import { send2FAEmail } from "../utils/mailer.js";
 import { ConflictError, NotFoundError, ServiceUnavailableError, UnauthorizedError, ValidationError } from "../utils/error.js";
 
@@ -55,7 +56,7 @@ async function generateTokens (
 {
     const accessToken = generateAccessToken(userId, credentialId);
     const refreshToken = generateRefreshToken(userId);
-    const expiresAt = getExpirationDate(30);
+    const expiresAt = getExpirationDate(7); // modif ici on passe a 7
 
     return { accessToken, refreshToken, expiresAt}
 }
@@ -186,7 +187,7 @@ export async function loginUser(
     
     const userId = await credRepo.findUserIdByEmail(db, email);
     if (!userId)
-        throw new NotFoundError('No user matches the email');
+        throw new NotFoundError('loginPage.error_no_user');
 
     const credentialId = await credRepo.findByEmail(db, email);
     if (!credentialId)
@@ -194,7 +195,7 @@ export async function loginUser(
 
     const isPasswordValid = await authenticatePassword(db, credentialId, password);
     if (!isPasswordValid)
-        throw new UnauthorizedError ('Invalid password');
+        throw new UnauthorizedError ('loginPage.error_invalid_pwd');
 
     // QUELLE EST LA METHODE 2FA ACTIVE
 
@@ -321,6 +322,9 @@ export async function refreshUser(
     const newAccessToken = generateAccessToken(tokenRecord.userId, tokenRecord.credentialId);
     const newRefreshToken = generateRefreshToken(tokenRecord.userId);
     const newExpiresAt = getExpirationDate(7);
+
+    console.log("✅ NEW Access Token generated:", newAccessToken);
+    console.log("Token payload:", jwt.decode(newAccessToken));
 
     // mise a jour de la DB
     console.log("Updating token in DB...");

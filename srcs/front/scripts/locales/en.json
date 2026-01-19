@@ -92,7 +92,11 @@
     "error_auth_default": "Authentication failed",
     "error_network": "Network error, please try again",
     "error_2fa_invalid": "Invalid code.",
-    "error_2fa_verify": "Error during verification."
+    "error_2fa_verify": "Error during verification.",
+    "error_no_user": "No user matches the email",
+    "error_invalid_pwd": "Invalid password",
+    "error_text_default": "Authentication error"
+
   },
 
   "registerPage": {

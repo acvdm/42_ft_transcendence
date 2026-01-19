@@ -174,12 +174,19 @@
             });
             if (refreshRes.ok) {
               const data = await refreshRes.json();
-              console.log("Refresh successful, data:", data);
               const newToken = data.accessToken;
               if (!newToken) {
                 throw new Error("No accessToken in refresh response");
               }
-              localStorage.setItem("accessToken", newToken);
+              console.log("Token changed?", getAuthToken() !== newToken);
+              const isGuest = sessionStorage.getItem("isGuest") === "true";
+              if (isGuest) {
+                sessionStorage.setItem("accessToken", newToken);
+                console.log("Token stored in sessionStorage (Guest)");
+              } else {
+                localStorage.setItem("accessToken", newToken);
+                console.log("Token stored in localStorage (User)");
+              }
               onRefreshed(newToken);
               return newToken;
             } else {
@@ -3596,6 +3603,8 @@
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
+      // Promesse partagée pour le refresh ( pour éviter les appels simultanés)
+      this.refreshPromise = null;
     }
     static getInstance() {
       if (!_SocketService.instance) {
@@ -3603,38 +3612,90 @@
       }
       return _SocketService.instance;
     }
-    createSocketConnection(path) {
-      const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    async createSocketConnection(path) {
+      let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
       if (!token) {
         console.error(`SocketService: No token found, cannot connect to ${path}`);
+        return null;
+      }
+      let finalToken = token;
+      try {
+        const payload = JSON.parse(atob(finalToken.split(".")[1]));
+        const now = Math.floor(Date.now() / 1e3);
+        const timeLeft = payload.exp - now;
+        if (timeLeft < 30) {
+          console.log(`Token expirant (reste ${timeLeft}s), lancement proc\xE9dure refresh...`);
+          if (!this.refreshPromise) {
+            this.refreshPromise = (async () => {
+              try {
+                const response = await fetch("/api/auth/token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  // Important pour le cookie
+                  body: JSON.stringify({})
+                  // Important pour Fastify
+                });
+                if (response.ok) {
+                  const data = await response.json();
+                  const newToken2 = data.accessToken;
+                  if (sessionStorage.getItem("isGuest") === "true")
+                    sessionStorage.setItem("accessToken", newToken2);
+                  else
+                    localStorage.setItem("accessToken", newToken2);
+                  console.log("Refresh r\xE9ussi !");
+                  return newToken2;
+                } else {
+                  console.error("Echec du refresh API:", response.status);
+                  return null;
+                }
+              } catch (err) {
+                console.error("Erreur r\xE9seau pendant le refresh:", err);
+                return null;
+              } finally {
+              }
+            })();
+          }
+          const newToken = await this.refreshPromise;
+          this.refreshPromise = null;
+          if (newToken) {
+            finalToken = newToken;
+          } else {
+            console.error("Impossible d'obtenir un nouveau token. Connexion socket annul\xE9e.");
+            return null;
+          }
+        }
+      } catch (e) {
+        console.error("Erreur lors de la validation du token:", e);
         return null;
       }
       const socket = lookup2("/", {
         path,
         auth: {
-          token: `Bearer ${token}`
+          token: finalToken
         },
         reconnection: true,
         reconnectionAttempts: 5,
         transports: ["websocket", "polling"]
       });
       socket.on("connect", () => {
-        console.log(`SocketService: Connect to ${path} with ID: ${socket.id}`);
+        console.log(`SocketService: Connect\xE9 \xE0 ${path} avec ID: ${socket.id}`);
       });
       socket.on("connect_error", (err) => {
-        console.error(`SocketService: Connection error on ${path}`, err.message);
+        console.error(`SocketService: Erreur de connexion sur ${path}:`, err.message);
       });
       return socket;
     }
-    //================================================
-    //================ CHAT MANAGEMENT ===============
-    //================================================
-    connectChat() {
+    // ---------------------
+    // -- GESTION DU CHAT --
+    // ---------------------
+    async connectChat() {
       if (this.chatSocket) return;
       console.log("SocketService: Connecting to Chat...");
-      this.chatSocket = this.createSocketConnection("/socket-chat/");
+      this.chatSocket = await this.createSocketConnection("/socket-chat/");
       if (this.chatSocket) {
         this.chatSocket.on("unreadNotification", (payload) => {
+          console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
             console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
@@ -3657,13 +3718,13 @@
     getChatSocket() {
       return this.chatSocket;
     }
-    //================================================
-    //=============== GAME MANAGEMENT ================
-    //================================================
-    connectGame() {
+    // ---------------------
+    // -- GESTION DU GAME --
+    // ---------------------
+    async connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
-      this.gameSocket = this.createSocketConnection("/socket-game/");
+      this.gameSocket = await this.createSocketConnection("/socket-game/");
     }
     disconnectGame() {
       if (this.gameSocket) {
@@ -3675,9 +3736,9 @@
     getGameSocket() {
       return this.gameSocket;
     }
-    //================================================
-    //==================== TOOLS =====================
-    //================================================
+    // ---------------------
+    // -- UTILITAIRES	--
+    // ---------------------
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
@@ -5993,7 +6054,10 @@
       error_auth_default: "\xC9chec de l'authentification",
       error_network: "Erreur r\xE9seau, veuillez r\xE9essayer",
       error_2fa_invalid: "Code invalide.",
-      error_2fa_verify: "Erreur lors de la v\xE9rification."
+      error_2fa_verify: "Erreur lors de la v\xE9rification.",
+      error_no_user: "Aucun utilisateur ne correspond \xE0 cet email.",
+      error_invalid_pwd: "Mauvais mot de passe.",
+      error_text_default: "Erreur d'authentification"
     },
     registerPage: {
       welcome: "S'inscrire sur Transcendence",
@@ -6526,7 +6590,10 @@
       error_auth_default: "Authentication failed",
       error_network: "Network error, please try again",
       error_2fa_invalid: "Invalid code.",
-      error_2fa_verify: "Error during verification."
+      error_2fa_verify: "Error during verification.",
+      error_no_user: "No user matches the email",
+      error_invalid_pwd: "Invalid password",
+      error_text_default: "Authentication error"
     },
     registerPage: {
       welcome: "Sign up to Transcendence",
@@ -7059,7 +7126,10 @@
       error_auth_default: "Autenticaci\xF3n fallida",
       error_network: "Error de red, int\xE9ntelo de nuevo",
       error_2fa_invalid: "C\xF3digo inv\xE1lido.",
-      error_2fa_verify: "Error durante la verificaci\xF3n."
+      error_2fa_verify: "Error durante la verificaci\xF3n.",
+      error_no_user: "Ning\xFAn usuario coincide con el correo electr\xF3nico.",
+      error_invalid_pwd: "Contrase\xF1a no v\xE1lida",
+      error_text_default: "Error de autenticaci\xF3n"
     },
     registerPage: {
       welcome: "Registrarse en Transcendence",
@@ -8022,7 +8092,11 @@
         } else {
           console.error("Login error:", result.error);
           if (errorElement) {
-            errorElement.textContent = result.error?.message || result.error.error || i18n_default.t("loginPage.error_auth_default");
+            const backendErrorkey = result.error?.message;
+            if (backendErrorkey)
+              errorElement.textContent = i18n_default.t(backendErrorkey);
+            else
+              errorElement.textContent = i18n_default.t("loginPage.error_text_default");
             errorElement.classList.remove("hidden");
           }
         }
@@ -11244,7 +11318,11 @@
         } else {
           if (pwdError) {
             console.log("pwdError");
-            pwdError.innerText = result.error?.message || i18n_default.t("profilePage.alerts.pwd_error");
+            const backendErrorKey = result.error?.message;
+            if (backendErrorKey)
+              pwdError.innerText = i18n_default.t(backendErrorKey);
+            else
+              pwdError.innerText = i18n_default.t("profilePage.alerts.pwd_error");
             pwdError.classList.remove("hidden");
           }
         }
@@ -11363,6 +11441,8 @@
         const response = await fetch("/api/user/guest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          // AJOUT important pour enregistrer le cookie transmis par le back
           body: JSON.stringify({})
         });
         if (response.ok) {
@@ -11370,13 +11450,17 @@
           if (data.accessToken) {
             sessionStorage.setItem("accessToken", data.accessToken);
           }
+          if (data.refreshToken) {
+            console.log("Guest refreshToken received:", data.refreshToken);
+          }
           if (data.userId) {
             sessionStorage.setItem("userId", data.userId.toString());
           }
           sessionStorage.setItem("isGuest", "true");
           sessionStorage.setItem("userRole", "guest");
           try {
-            const userResponse = await fetch(`/api/users/${data.userId}`, {
+            const userResponse = await fetch(`/api/user/${data.userId}`, {
+              // MODIFICATION en /user/
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${data.accessToken}`,
@@ -11429,15 +11513,12 @@
       console.error("Can't find register button in DOM");
       return;
     }
-    if (aliasInput) {
+    if (aliasInput)
       aliasInput.maxLength = 20;
-    }
-    if (emailInput) {
+    if (emailInput)
       emailInput.maxLength = 254;
-    }
-    if (passwordInput) {
+    if (passwordInput)
       passwordInput.maxLength = 128;
-    }
     backButton?.addEventListener("click", () => {
       window.history.pushState({}, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -11985,7 +12066,13 @@
   // scripts/components/game/GameUI.ts
   function getSqlDate() {
     const now = /* @__PURE__ */ new Date();
-    return now.toISOString().slice(0, 19).replace("T", " ");
+    const yyyy = now.getFullYear();
+    const mm = (now.getMonth() + 1).toString().padStart(2, "0");
+    const dd = now.getDate().toString().padStart(2, "0");
+    const hh = now.getHours().toString().padStart(2, "0");
+    const min = now.getMinutes().toString().padStart(2, "0");
+    const ss = now.getSeconds().toString().padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
   }
   function launchConfetti(duration = 3e3) {
     const colors2 = ["#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff00ff", "#00ffff", "#ffa500", "#ff69b4"];
@@ -12157,6 +12244,7 @@
   }
   var LocalGameManager = class {
     constructor(context) {
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12273,7 +12361,7 @@
             nameInput.classList.add("border-red-500");
             return;
           }
-          if (opponentName.length > 30) {
+          if (opponentName.length > 20) {
             if (errorMsg) {
               errorMsg.innerText = i18n_default.t("localPage.erro_name_length");
               errorMsg.classList.remove("hidden");
@@ -12343,7 +12431,7 @@
                   clearInterval(localLoop);
                   return;
                 }
-                if (activeGame2.score.player1 >= 11 || activeGame2.score.player2 >= 11) {
+                if (activeGame2.score.player1 >= this.WINNING_SCORE || activeGame2.score.player2 >= this.WINNING_SCORE) {
                   activeGame2.isRunning = false;
                   clearInterval(localLoop);
                   const p1Score = activeGame2.score.player1;
@@ -12417,6 +12505,7 @@
     constructor(context) {
       this.currentP1Alias = "Player 1";
       this.currentP2Alias = "Player 2";
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12571,21 +12660,33 @@
           p2Display.innerText = data.role === "player2" ? `${this.currentP2Alias} ${meSuffix}` : this.currentP2Alias;
         }
         let gameStartDate = getSqlDate();
+        let isP1Guest = false;
+        let isP2Guest = false;
+        const amIGuest = sessionStorage.getItem("isGuest") === "true";
+        console.log(`amIGuest = ${amIGuest}`);
         if (data.opponent) {
+          console.log(`if data.opponent id = ${data.opponent}`);
           fetchWithAuth(`api/user/${data.opponent}`).then((res) => res.ok ? res.json() : null).then((userData) => {
+            console.log(`userData = ${userData.is_guest}`);
             if (userData && userData.alias) {
               const realOpponentName = userData.alias;
+              const opponentIsGuest = !!userData.is_guest;
               if (data.role === "player1") {
                 this.currentP2Alias = realOpponentName;
-                if (p2Display) {
-                  p2Display.innerText = realOpponentName;
-                }
+                if (amIGuest)
+                  isP1Guest = true;
+                if (opponentIsGuest)
+                  isP2Guest = true;
+                if (p2Display) p2Display.innerText = realOpponentName;
               } else {
                 this.currentP1Alias = realOpponentName;
-                if (p1Display) {
-                  p1Display.innerText = realOpponentName;
-                }
+                if (amIGuest)
+                  isP2Guest = true;
+                if (opponentIsGuest)
+                  isP1Guest = true;
+                if (p1Display) p1Display.innerText = realOpponentName;
               }
+              console.log(`amIguest = ${amIGuest}, opponentisGuest = ${opponentIsGuest}, p1Guest = ${isP1Guest}, p2Guest = ${isP2Guest}`);
             }
           }).catch((e) => console.error("Error retrieving opponent alias:", e));
         }
@@ -12636,6 +12737,7 @@
             document.addEventListener("keydown", spaceHandler);
             gameSocket2.off("opponentLeft");
             gameSocket2.on("opponentLeft", async (eventData) => {
+              console.log("opponent left");
               const activeGame2 = this.context.getGame();
               if (activeGame2) {
                 activeGame2.isRunning = false;
@@ -12643,52 +12745,72 @@
                 gameSocket2.off("gameState");
                 gameSocket2.off("gameEnded");
                 document.removeEventListener("keydown", spaceHandler);
-                const s1 = activeGame2.score.player1;
-                const s2 = activeGame2.score.player2;
+                let s1 = 0;
+                let s2 = 0;
                 let winnerAlias = "";
                 if (data.role === "player1") {
                   winnerAlias = this.currentP1Alias;
+                  s1 = this.WINNING_SCORE;
+                  s2 = 0;
                 } else {
                   winnerAlias = this.currentP2Alias;
+                  s1 = 0;
+                  s2 = this.WINNING_SCORE;
                 }
-                await this.saveRemoteGameToApi(
-                  this.currentP1Alias,
-                  s1,
-                  p1Id,
-                  this.currentP2Alias,
-                  s2,
-                  p2Id,
-                  winnerAlias,
-                  gameStartDate
-                );
-                showRemoteEndModal(myAlias, i18n_default.t("remoteManager.opponent_forfeit"));
+                if (myAlias == winnerAlias) {
+                  await this.saveRemoteGameToApi(
+                    this.currentP1Alias,
+                    s1,
+                    p1Id,
+                    isP1Guest,
+                    this.currentP2Alias,
+                    s2,
+                    p2Id,
+                    isP2Guest,
+                    winnerAlias,
+                    gameStartDate
+                  );
+                }
+                showRemoteEndModal(winnerAlias, i18n_default.t("remoteManager.opponent_forfeit"));
                 this.context.setGame(null);
               }
             });
             newGame.onGameEnd = async (endData) => {
               document.removeEventListener("keydown", spaceHandler);
               let winnerAlias = i18n_default.t("remoteManager.default_winner");
-              if (endData.winner === "player1") {
-                winnerAlias = this.currentP1Alias;
-              } else if (endData.winner === "player2") {
-                winnerAlias = this.currentP2Alias;
-              }
               const activeGame2 = this.context.getGame();
-              if (activeGame2) {
-                const s1 = activeGame2.score.player1;
-                const s2 = activeGame2.score.player2;
+              let s1 = activeGame2 ? activeGame2.score.player1 : 0;
+              let s2 = activeGame2 ? activeGame2.score.player2 : 0;
+              const isNormalEndGame = s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE;
+              if (isNormalEndGame) {
+                if (s1 > s2)
+                  winnerAlias = this.currentP1Alias;
+                else
+                  winnerAlias = this.currentP2Alias;
+              } else {
                 if (data.role === "player1") {
-                  await this.saveRemoteGameToApi(
-                    this.currentP1Alias,
-                    s1,
-                    p1Id,
-                    this.currentP2Alias,
-                    s2,
-                    p2Id,
-                    winnerAlias,
-                    gameStartDate
-                  );
+                  s1 = this.WINNING_SCORE;
+                  s2 = 0;
+                  winnerAlias = this.currentP1Alias;
+                } else {
+                  s1 = 0;
+                  s2 = this.WINNING_SCORE;
+                  winnerAlias = this.currentP2Alias;
                 }
+              }
+              if (winnerAlias === myAlias) {
+                await this.saveRemoteGameToApi(
+                  this.currentP1Alias,
+                  s1,
+                  p1Id,
+                  isP1Guest,
+                  this.currentP2Alias,
+                  s2,
+                  p2Id,
+                  isP2Guest,
+                  winnerAlias,
+                  gameStartDate
+                );
               }
               showVictoryModal(winnerAlias, this.context.chat);
               this.context.setGame(null);
@@ -12757,7 +12879,7 @@
         });
       }
     }
-    async saveRemoteGameToApi(p1Alias, p1Score, p1Id, p2Alias, p2Score, p2Id, winnerAlias, startDate) {
+    async saveRemoteGameToApi(p1Alias, p1Score, p1Id, isP1Guest, p2Alias, p2Score, p2Id, isP2Guest, winnerAlias, startDate) {
       console.log("p1, p2 save api:", p1Id, p2Id);
       try {
         const endDate = getSqlDate();
@@ -12773,8 +12895,8 @@
             round: "1v1",
             startDate,
             endDate,
-            p1: { alias: p1Alias, score: p1Score, userId: p1Id },
-            p2: { alias: p2Alias, score: p2Score, userId: p2Id }
+            p1: { alias: p1Alias, score: p1Score, userId: p1Id, isGuest: isP1Guest },
+            p2: { alias: p2Alias, score: p2Score, userId: p2Id, isGuest: isP2Guest }
           })
         });
         if (!response.ok) {
@@ -12792,6 +12914,7 @@
   var TournamentManager = class {
     constructor(context) {
       this.tournamentState = null;
+      this.WINNING_SCORE = 11;
       this.context = context;
     }
     init() {
@@ -12806,14 +12929,12 @@
       const player4Input = document.getElementById("player4-input");
       const startButton = document.getElementById("start-tournament-btn");
       const errorDiv = document.getElementById("setup-error");
-      if (nameInput) {
+      if (nameInput)
         nameInput.maxLength = 45;
-      }
       const pInputs = [player1Input, player2Input, player3Input, player4Input];
       pInputs.forEach((input) => {
-        if (input) {
+        if (input)
           input.maxLength = 20;
-        }
       });
       this.initTournamentSelectors();
       const isGuest = sessionStorage.getItem("userRole") === "guest";
@@ -13100,7 +13221,6 @@
       }
       const scoreBoard = document.getElementById("score-board");
       if (scoreBoard) {
-        console.log("TournamentManager.ts, line 349");
         scoreBoard.innerText = "0 - 0";
       }
       const container = document.getElementById("left");
@@ -13375,11 +13495,11 @@
       const wasRemote = activeGame.isRemote;
       const roomId = activeGame.roomId;
       const playerRole = activeGame.playerRole;
-      activeGame.isRunning = false;
-      activeGame.stop();
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
       }
+      activeGame.isRunning = false;
+      activeGame.stop();
       activeGame = null;
     }
     cleanup();
@@ -13414,7 +13534,6 @@
     window.removeEventListener("beforeunload", handleBeforeUnload);
     window.removeEventListener("popstate", handlePopState);
     isNavigationBlocked = false;
-    sessionStorage.removeItem("privateGameId");
   }
   function render7() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -28136,6 +28255,15 @@
       if (!userId) {
         return;
       }
+      const setServiceUnavailable = () => {
+        if (totalGame) totalGame.innerText = "-";
+        if (wins) wins.innerText = "-";
+        if (losses) losses.innerText = "-";
+        if (avgScore) avgScore.innerText = "-";
+        if (winRateCalcul) winRateCalcul.innerText = "-";
+        if (playTime) playTime.innerText = "-";
+        console.warn("Game service is currently unreachable.");
+      };
       try {
         const statResponse = await fetchWithAuth(`/api/game/users/${userId}/stats`);
         if (statResponse.ok) {
@@ -28156,6 +28284,10 @@
                 m: totalMinutes % 60
               });
             }
+          } else {
+            if (statResponse.status >= 500) {
+              setServiceUnavailable();
+            }
           }
         }
         const historyResponse = await fetchWithAuth(`/api/game/users/${userId}/history?userId=${userId}&limit=250`);
@@ -28167,9 +28299,12 @@
           renderEvolutionChart(evolutionCanvas, calculateEvolutionData(historyData));
           renderRivalChart(rivalCanvas, calculateRivalsPodium(historyData));
           setupFilters();
+        } else {
+          const emptyData = { labels: [], data: [] };
         }
       } catch (error) {
         console.error("Error on dashboard:", error);
+        setServiceUnavailable();
       }
     };
     loadUserData();
@@ -28282,7 +28417,17 @@
       }
       history.forEach((match) => {
         const date = new Date(match.finished_at);
-        const dateString = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
+        const dateString = date.toLocaleDateString("fr-FR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "Europe/Paris"
+        }).replace(/\//g, "-");
+        const timeString = date.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Paris"
+        });
         const isWin = match.is_winner === 1;
         const resultText = isWin ? i18n_default.t("dashboardPage.status_victory") : i18n_default.t("dashboardPage.status_defeat");
         const resultColor = isWin ? "text-green-600" : "text-red-500";
@@ -28294,13 +28439,15 @@
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `
-				<td class="py-2 text-gray-500">${dateString}</td>
-				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
-			`;
+                <td class="py-2 text-gray-500 whitespace-nowrap">
+                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+                    </td>
+                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
+            `;
         listContainer.appendChild(row);
       });
     }

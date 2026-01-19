@@ -5,7 +5,7 @@ import { Database } from 'sqlite';
 import * as credRepo from "./repositories/credentials.js";
 import { validateNewEmail, validateRegisterInput, isValidPassword } from './validators/auth_validators.js';
 import { loginUser, registerUser, registerGuest, changeEmailInCredential,changePasswordInCredential, refreshUser, logoutUser, verifyAndEnable2FA, finalizeLogin2FA, generateTwoFA, authenticatePassword, deleteAuthData } from './services/auth_service.js';
-import { NotFoundError, UnauthorizedError, ValidationError, ForbiddenError } from './utils/error.js';
+import { NotFoundError, UnauthorizedError, ValidationError, ForbiddenError, ServiceUnavailableError } from './utils/error.js';
 
 
 /* IMPORTANT -> revoir la gestion du JWT en fonction du 2FA quand il sera active ou non (modifie la gestion du cookie?)*/
@@ -62,7 +62,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -103,7 +103,7 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -181,7 +181,7 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
 
 		const isOldPwdValid = await authenticatePassword(db, credentialId, body.oldPass);
 		if (! isOldPwdValid)
-			throw new UnauthorizedError('Invalid Password');
+			throw new UnauthorizedError('loginPage.error_invalid_pwd');
 
 		const isvalidNewPass = await isValidPassword(body.newPass);
 		if (!isvalidNewPass)
@@ -232,7 +232,7 @@ fastify.post('/sessions', async (request, reply) =>
 		}
 
 		if (!result.refreshToken || !result.accessToken || !result.userId) {
-			throw new Error("Authentication failed");
+			throw new ServiceUnavailableError("Authentication failed");
 		}
 
 		// Cas ou Login reussi direct
@@ -240,7 +240,7 @@ fastify.post('/sessions', async (request, reply) =>
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});
@@ -295,7 +295,7 @@ fastify.post('/token', async (request, reply) => {
       path: '/',
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7* 24 * 3600,
       signed: true
     });
@@ -609,7 +609,7 @@ fastify.post('/2fa/challenge', async (request, reply) => {
 			path: '/',
 			httpOnly: true,
 			secure: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 			maxAge: 7 * 24 * 3600,
 			signed: true
 		});

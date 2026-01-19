@@ -1,5 +1,6 @@
 import { Database } from 'sqlite';
 import { findChannelByKey } from './channels.js';
+import { ServiceUnavailableError } from '../utils/error.js';
 
 //-------- TYPE
 export interface Message {
@@ -45,7 +46,7 @@ export async function saveNewMessageinDB(
     );
 
     if (!result?.lastID)
-        throw new Error("Table MESSAGES [chat.sqlite]: Could not save message");
+        throw new ServiceUnavailableError("Table MESSAGES [chat.sqlite]: Could not save message");
 
     console.log(`message ${result.lastID} saved in ${channel_key}`);
     return result.lastID;
@@ -64,7 +65,7 @@ export async function createChannel(
     );
 
     if (!result?.lastID)
-        throw new Error("Tables CHANNELS [chat.sqlite]: could not create new channel");
+        throw new ServiceUnavailableError("Tables CHANNELS [chat.sqlite]: could not create new channel");
 
     return result.lastID;
 }
