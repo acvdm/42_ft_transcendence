@@ -302,7 +302,7 @@
     "chat": {
       "title": "Notifications",
       "info": "Notification système",
-      "placeholder_input": "Vous ne pouvez pas répondre au système"
+      "placeholder_input": "Vous ne pouvez pas parler ici"
     },
 
     "chat_start_match": "La partie va commencer ! Match : {{p1}} contre {{p2}}"
@@ -387,7 +387,7 @@
     "chat": {
       "title": "Notifications",
       "info": "Notification système",
-      "placeholder_input": "Vous ne pouvez pas répondre au système"
+      "placeholder_input": "Vous ne pouvez pas parler ici"
     }
   },
 

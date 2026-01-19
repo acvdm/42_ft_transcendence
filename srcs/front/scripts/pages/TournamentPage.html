@@ -54,7 +54,7 @@
 										<div class="grid grid-cols-2 gap-4">
 											<div>
 												<label class="text-xs font-bold">{{tournamentPage.setup_modal.p1}}</label>
-												<input type="text" id="player1-input" class="placeholder-gray-500 field-input w-full border p-1 bg-gray-200 cursor-not-allowed" style="background-color: #EDEDED;" disabled>
+												<input type="text" id="player1-input" class="placeholder-[#F3F4F6] field-input w-full border p-1 bg-gray-200 cursor-not-allowed" style="background-color: #F3F4F6; color: #9CA3AF;" disabled>
 											</div>
 											<div>
 												<label class="text-xs font-bold">{{tournamentPage.setup_modal.p2}}</label>
@@ -202,7 +202,7 @@
 							</div>
 						</div>
 
-						<div id="tournament-summary-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
+						<div id="tournament-summary-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
 							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
 								<div class="title-bar bg-yellow-500">
 									<div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>
@@ -241,7 +241,7 @@
 						</div>
 						<div id="chat-messages" class="flex-1 h-0 overflow-y-auto min-h-0 pt-2 space-y-2 text-sm"></div>
 						<div class="flex flex-col">
-							<input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" readonly>
+							<input id="chat-input" placeholder="{{tournamentPage.chat.placeholder_input}}" class="mt-3 bg-gray-100 rounded-sm p-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm" disabled>
 						</div>
 					</div>
 				</div> 
