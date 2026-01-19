@@ -9520,6 +9520,8 @@
         this.addMessage(i18n_default.t("chatComponent.connected"), i18n_default.t("chatComponent.system"));
       });
       this.chatSocket.on("chatMessage", (data) => {
+        if (data.channelKey && data.channelKey !== this.currentChannel)
+          return;
         this.addMessage(data.msg_content, data.sender_alias);
       });
       this.chatSocket.on("msg_history", (data) => {
@@ -9538,7 +9540,7 @@
         this.addSystemMessage(data.content);
       });
       this.chatSocket.on("receivedWizz", (data) => {
-        if (data.channel_key && data.channel_key !== this.currentChannel) {
+        if (data.channelKey && data.channelKey !== this.currentChannel) {
           return;
         }
         const currentUser = localStorage.getItem("username");
@@ -9548,6 +9550,8 @@
         }
       });
       this.chatSocket.on("receivedAnimation", (data) => {
+        if (data.channelKey && data.channelKey !== this.currentChannel)
+          return;
         const { animationKey, author } = data;
         const imgUrl = animations[animationKey];
         if (imgUrl) {

@@ -83,12 +83,17 @@ fastify.ready().then(() => {
 			await joinChannel(socket, fastify.io, channelKey);
 		});
 
+		socket.on("leavingChannel", (channelKey: string) => {
+			socket.leave(channelKey);
+			console.log(`Socket ${socket.id} left room ${channelKey}`);
+		})
+
 		socket.on('chatMessage', async (data: any) => { 
 			await chatMessage(fastify.io, data, db); 
 		});  
 
 		socket.on('sendWizz', (data: any) => { 
-			fastify.io.to(data.channel_key).emit('receivedWizz', { author: data.author }); 
+			fastify.io.to(data.channel_key).emit('receivedWizz', { author: data.author , channelKey: data.channel_key}); 
 		});
 
 		socket.on('sendAnimation', (data: any) => {
