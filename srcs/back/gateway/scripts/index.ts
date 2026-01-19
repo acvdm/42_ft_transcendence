@@ -11,11 +11,13 @@ if (!JWT_SECRET){
 
 const fastify = Fastify({ logger: true });
 
-// SECURITE
-// code qui s'execute avant chaque requete
-// verifie si premiere authentification -> laisser passer dans auth
-// verifie l'authenticite du JWT -> si ok laisse passer dans laisse passer dans microservices
-// et modifie le header transmis (ne passe pas le JWT aux micro services qui ne le connaisse pas) mais l'id du user
+/*
+SECURITY -> addHook 'onRequest'
+Code that runs before each request
+Checks if first authentication. Let it pass through auth
+Checks the authenticity of the JWT. if ok, let it pass through microservices
+and modifies the transmitted header (does not pass the JWT to microservices that do not know it) but the user ID
+*/
 
 fastify.addHook('onRequest', async (request, reply) => {
 	const url = request.url;
@@ -23,7 +25,6 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 	console.log(`Incoming request: ${url}`);
 
-	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
 	const publicRoutes = [
 		"/api/users/login",
 		"/api/users/token",
@@ -48,7 +49,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		console.log(`Public route allowed: ${method} ${url}`);
 		return;
 	}
-	// verification de l'acces token
+
 	try {
 		const authHeader = request.headers['authorization'];
 		if (!authHeader) {
@@ -62,20 +63,14 @@ fastify.addHook('onRequest', async (request, reply) => {
 			scope?: string 
 		};
 
-		// si cest un token 2fa on verifie ou il veut aller
-		if (decoded.scope == '2fa_login'){
-			// on autorise seulement la route de verification du 2FA
+		if (decoded.scope == '2fa_login')
+		{
 			if (!url.includes('/2fa/challenge'))
 				throw new UnauthorizedError("2FA verification pending");
-			console.log(`2FA Token user for verification endpoint -> Allowed`);
 		}
 
-		// request.user = decoded;
-
-		// injection d'identite -> le gateway valide lid et previent les microservices
 		request.headers['x-user-id'] = decoded.sub.toString();
 
-		console.log(`User ${decoded.sub} authorized for ${url}`);
 	} catch (err) {
 		request.log.warn(`Auth failed: ${err}`);
 		return reply.status(401).send({ error: "Unauthorized", message: "Invalid or expired token"});
@@ -83,31 +78,22 @@ fastify.addHook('onRequest', async (request, reply) => {
 })
 
 
-// 1. On va redirigé vers les bons services quand nécéssaire
+/* Redirections */ 
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://auth:3001', // adresse interne du réseau du docker
-	prefix: '/api/auth', // toutes les requetes api/auth iront au service auth
-	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
+	upstream: 'http://auth:3001',
+	prefix: '/api/auth',
+	rewritePrefix: ''
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://chat:3002', // adresse interne du réseau du docker
-	prefix: '/socket-chat', // toutes les requetes api/chat iront au service chat
+	upstream: 'http://chat:3002',
+	prefix: '/socket-chat',
 	websocket: true,
-	rewritePrefix: '/socket.io' // on retire le prefixe avant de l'envoyer un service
+	rewritePrefix: '/socket.io'
 });
-
-// fastify.register(fastifyProxy, {
-//     upstream: 'http://chat:3002',
-//     prefix: '/api/chat', // Nouveau préfixe pour les requêtes HTTP
-//     websocket: false,    // Pas de websocket ici
-//     rewritePrefix: ''    // On enlève '/api/chat' ou on le garde selon comment votre back est fait
-//     // NOTE : Si dans votre chat/src/index.ts vous avez 'fastify.get('/unread')', 
-//     // alors il faut rewritePrefix: '' pour que le back reçoive juste '/unread'.
-// });
 
 fastify.register(fastifyProxy, {
 	upstream: 'http://game:3003',
@@ -118,19 +104,19 @@ fastify.register(fastifyProxy, {
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://game:3003', // adresse interne du réseau du docker
-	prefix: '/api/game', // toutes les requetes api/game iront au service game
-	rewritePrefix: '/games' // on retire le prefixe avant de l'envoyer un service
+	upstream: 'http://game:3003',
+	prefix: '/api/game',
+	rewritePrefix: '/games'
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://user:3004', // adresse interne du réseau du docker
-	prefix: '/api/user', // toutes les requetes api/user iront au service user
-	rewritePrefix: '/users' // on retire le prefixe avant de l'envoyer un service
+	upstream: 'http://user:3004',
+	prefix: '/api/user',
+	rewritePrefix: '/users'
 });
 
-// route de test
+
 fastify.get('/health', async () => ({ service: 'gateway', status:'ready' }));
 
 const start = async () => 

@@ -3,306 +3,298 @@ import { generateRandomAlias, generateRandomAvatar } from "../utils/guest.js"
 import { NotFoundError, ServiceUnavailableError, ValidationError } from '../utils/error.js';
 
 export interface CreateUser {
-    alias: string,
-    avatar_url?: string
+	alias: string,
+	avatar_url?: string
 }
 
 export interface User {
-    id: number,
-    alias: string,
-    avatar_url?: string,
-    bio: string,
-    status: string,
-    theme: string,
-    created_at?: string
+	id: number,
+	alias: string,
+	avatar_url?: string,
+	bio: string,
+	status: string,
+	theme: string,
+	created_at?: string
 }
 
 
 export class ConflictError extends Error {
-    statusCode = 409;
+	statusCode = 409;
 }
 
 //-------- POST / CREATE
+
 export async function createUserInDB (
-    db: Database,
-    data: CreateUser
+	db: Database,
+	data: CreateUser
 ): Promise<number> {
+	
+	const checkAlias = await isAliasUsed(db, data.alias)
+	if (checkAlias)
+		throw new ConflictError('registerPage.error_alias_already_taken');
+	
+	const avatarDefault = data.avatar_url || '/assets/basic/default.png';
 
-    const checkAlias = await isAliasUsed(db, data.alias)
-    if (checkAlias)
-        throw new ConflictError('registerPage.error_alias_already_taken');
-    
-    const avatarDefault = data.avatar_url || '/assets/basic/default.png'; // je rajoute ca pour avoir une image par default
+	const result = await db.run(`
+		INSERT INTO USERS (alias, avatar_url)
+		VALUES (?, ?)`,
+		[data.alias, avatarDefault]
+	);
 
-    const result = await db.run(`
-        INSERT INTO USERS (alias, avatar_url)
-        VALUES (?, ?)`,
-        [data.alias, avatarDefault]
-    );
+	if (!result.lastID) 
+	{
+		throw new ServiceUnavailableError('Failed to create new user');
+	}
 
-    if (!result.lastID) 
-    {
-        throw new ServiceUnavailableError('Failed to create new user');
-    }
-
-    console.log("createUserinDB fonctionne");
-    return result.lastID;
+	console.log("createUserinDB fonctionne");
+	return result.lastID;
 }
 
 export async function createGuestInDB (
-    db: Database,
+	db: Database,
 ): Promise<number> {
 
-    const alias = await generateRandomAlias(db); // FAUSTINE: je rajoute await ici
-    const avatar = await generateRandomAvatar(db);
-    console.log("Generated alias:", alias);
+	const alias = await generateRandomAlias(db);
+	const avatar = await generateRandomAvatar(db);
 
-    const result = await db.run(`
-        INSERT INTO USERS (alias, is_guest, avatar_url)
-        VALUES (?, ?, ?)`,
-        [alias, 1, avatar]
-    );
+	const result = await db.run(`
+		INSERT INTO USERS (alias, is_guest, avatar_url)
+		VALUES (?, ?, ?)`,
+		[alias, 1, avatar]
+	);
 
-    if (!result.lastID) 
-    {
-        throw new ServiceUnavailableError('Failed to create new user');
-    }
+	if (!result.lastID) 
+	{
+		throw new ServiceUnavailableError('Failed to create new user');
+	}
 
-    console.log("createGuestinDB fonctionne");
-    return result.lastID;
+	return result.lastID;
 }
 
 
 //-------- GET / READ
+
 export async function findUserByID (
-    db: Database,
-    user_id: number
+	db: Database,
+	user_id: number
 ): Promise<User>
 {
-    const user = await db.get(`
-        SELECT * FROM USERS WHERE id = ?`,
-        [user_id]
-    );
+	const user = await db.get(`
+		SELECT * FROM USERS WHERE id = ?`,
+		[user_id]
+	);
 
-    return user;
+	return user;
 }
 
 export async function findUserByAlias (
-    db: Database,
-    alias: string
+	db: Database,
+	alias: string
 ): Promise<User>
 {
-    const user = await db.get(`
-        SELECT * FROM USERS WHERE alias = ?`,
-        [alias]
-    );
+	const user = await db.get(`
+		SELECT * FROM USERS WHERE alias = ?`,
+		[alias]
+	);
 
-    return user;
+	return user;
 }
 
 export async function findEmailById (
-    db: Database,
-    user_id: number
+	db: Database,
+	user_id: number
 ): Promise<string>
 {
-    const email = await db.get(`
-        SELECT email FROM USERS WHERE id = ?`,
-        [user_id]
-    );
+	const email = await db.get(`
+		SELECT email FROM USERS WHERE id = ?`,
+		[user_id]
+	);
 
-    return email.email;
+	return email.email;
 }
 
 export async function isAliasUsed (
-    db: Database,
-    alias: string
+	db: Database,
+	alias: string
 ): Promise<boolean>
 {
-    if (alias.length > 20)
-        return true;
+	if (alias.length > 20)
+		return true;
 
-    const checkAlias = await db.get(`
-        SELECT id FROM USERS WHERE alias = ?`,
-        [alias]
-    );
+	const checkAlias = await db.get(`
+		SELECT id FROM USERS WHERE alias = ?`,
+		[alias]
+	);
 
-    if (checkAlias?.id)
-        return true;
+	if (checkAlias?.id)
+		return true;
 
-    return false;
+	return false;
 }
 
 
+export async function getPreferredLanguage(
+	db: Database,
+	userId: number
+) : Promise<string>
+{
+	const row = await db.get(`
+		SELECT preferred_language 
+		FROM USERS 
+		WHERE id = ?`,
+		[userId]
+	);
+	return row?.preferred_language || null;
+}
 
 //-------- PUT / UPDATE
+
 export async function updateStatus (
-    db: Database,
-    user_id: number,
-    status: string
+	db: Database,
+	user_id: number,
+	status: string
 )
 {
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new NotFoundError(`Error id: ${user_id} does not exist`);
+	const user = await findUserByID(db, user_id);
+	if (!user?.id)
+		throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
-    await db.run(`
-        UPDATE USERS SET status = ? WHERE id = ?`,
-        [status, user_id]
-    );
+	await db.run(`
+		UPDATE USERS SET status = ? WHERE id = ?`,
+		[status, user_id]
+	);
 
 }
 
 
 export async function updateBio (
-    db: Database,
-    user_id: number,
-    bio: string
+	db: Database,
+	user_id: number,
+	bio: string
 )
 {
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new NotFoundError(`Error id: ${user_id} does not exist`);
+	const user = await findUserByID(db, user_id);
+	if (!user?.id)
+		throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
-    console.log(`bio length = ${bio.length}`);
-    if (bio.length > 75)
-        throw new ValidationError(`Error: bio too long. Max 75 characters`);
+	console.log(`bio length = ${bio.length}`);
+	if (bio.length > 75)
+		throw new ValidationError(`Error: bio too long. Max 75 characters`);
 
-    await db.run(`
-        UPDATE USERS SET bio = ? WHERE id = ?`,
-        [bio, user_id]
-    );
+	await db.run(`
+		UPDATE USERS SET bio = ? WHERE id = ?`,
+		[bio, user_id]
+	);
 }
 
 export async function updateTheme (
-    db: Database,
-    userId: number,
-    theme: string
+	db: Database,
+	userId: number,
+	theme: string
 )
 {
-    const user = await findUserByID(db, userId);
-    if (!user?.id)
-        throw new NotFoundError(`Error id: ${userId} does not exist`);
+	const user = await findUserByID(db, userId);
+	if (!user?.id)
+		throw new NotFoundError(`Error id: ${userId} does not exist`);
 
-    await db.run(`
-        UPDATE USERS SET theme = ? WHERE id = ?`,
-        [theme, userId]
-    );
+	await db.run(`
+		UPDATE USERS SET theme = ? WHERE id = ?`,
+		[theme, userId]
+	);
 }
 
 
 export async function updateAlias (
-    db: Database,
-    user_id: number,
-    alias: string
+	db: Database,
+	user_id: number,
+	alias: string
 )
 {
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new NotFoundError(`Error id: ${user_id} does not exist`);
+	const user = await findUserByID(db, user_id);
+	if (!user?.id)
+		throw new NotFoundError(`Error id: ${user_id} does not exist`);
 
-    if (alias.length > 20)
-        throw new ValidationError(`Error: alias too long. Max 20 characters`);
+	if (alias.length > 20)
+		throw new ValidationError(`Error: alias too long. Max 20 characters`);
 
-    const existingUser = await db.get(`
-        SELECT id FROM USERS WHERE alias = ? AND id != ?`,
-        [alias, user_id]
-    );
+	const existingUser = await db.get(`
+		SELECT id FROM USERS WHERE alias = ? AND id != ?`,
+		[alias, user_id]
+	);
 
-    if (existingUser)
-        throw new ConflictError('Alias already taken, be original.');
+	if (existingUser)
+		throw new ConflictError('Alias already taken, be original.');
 
-    console.log("update username dans users.ts");
-    await db.run(`
-        UPDATE USERS SET alias = ? WHERE id = ?`,
-        [alias, user_id]
-    );
+	await db.run(`
+		UPDATE USERS SET alias = ? WHERE id = ?`,
+		[alias, user_id]
+	);
 }
-
-
-//-------- DELETE / DELETE
-export async function rollbackDeleteUser (
-    db: Database,
-    user_id: number
-)
-{
-    const user = await findUserByID(db, user_id);
-    if (!user.id) {
-        throw new NotFoundError(`Error id: ${user_id} does not exist`);
-    }
-
-    await db.run(`
-        DELETE FROM USERS WHERE id = ?`, 
-        [user_id]
-    );
-}
-
-
-// update de l'avatar
-
-export async function updateAvatar(
-    db: Database,
-    user_id: number,
-    avatar_url?: string
-) {
-    const user = await findUserByID(db, user_id);
-    if (!user?.id)
-        throw new NotFoundError(`Error id: ${user_id} does not exist`);
-
-    await db.run(
-        `UPDATE USERS SET avatar_url = ? WHERE id = ?`,
-        [avatar_url, user_id]
-    );
-}
-
-
-export async function anonymizeUser(
-    db: Database,
-    userId: number
-): Promise<void>
-{
-    // generer un alias anonyme unique -> slice(-4) permet de recuperer les 4 derniers caracteres de la chaine
-    const anonymousAlias = `Deleted_User_${userId}_${Date.now().toString().slice(-4)}`;
-
-    await db.run(`
-        UPDATE USERS 
-        SET
-            alias = ?,
-            avatar_url = '/assets/basic/default.png',
-            bio = 'This user has been deleted.',
-            status = 'offline',
-            theme = 'Blue'
-        WHERE id = ?`,
-    [anonymousAlias, userId]
-    );
-}
-
-
-/* REPRENDRE */
-export async function getPreferredLanguage(
-    db: Database,
-    userId: number
-) : Promise<string>
-{
-    const row = await db.get(`
-        SELECT preferred_language 
-        FROM USERS 
-        WHERE id = ?`,
-        [userId]
-    );
-    return row?.preferred_language || null;
-}
-
 
 export async function updatePreferredLanguage(
-    db: Database,
-    userId: number,
-    preferredLanguage: string
+	db: Database,
+	userId: number,
+	preferredLanguage: string
 ) : Promise<void>
 {
-    await db.run(`
-        UPDATE USERS
-        SET preferred_language = ? 
-        WHERE id = ?`,
-        [preferredLanguage, userId]
-    );
+	await db.run(`
+		UPDATE USERS
+		SET preferred_language = ? 
+		WHERE id = ?`,
+		[preferredLanguage, userId]
+	);
+}
+
+
+//-------- DELETE / ANONYMIZE
+
+export async function rollbackDeleteUser (
+	db: Database,
+	user_id: number
+)
+{
+	const user = await findUserByID(db, user_id);
+	if (!user.id) {
+		throw new NotFoundError(`Error id: ${user_id} does not exist`);
+	}
+
+	await db.run(`
+		DELETE FROM USERS WHERE id = ?`, 
+		[user_id]
+	);
+}
+
+export async function updateAvatar(
+	db: Database,
+	user_id: number,
+	avatar_url?: string
+) {
+	const user = await findUserByID(db, user_id);
+	if (!user?.id)
+		throw new NotFoundError(`Error id: ${user_id} does not exist`);
+
+	await db.run(
+		`UPDATE USERS SET avatar_url = ? WHERE id = ?`,
+		[avatar_url, user_id]
+	);
+}
+
+export async function anonymizeUser(
+	db: Database,
+	userId: number
+): Promise<void>
+{
+	const anonymousAlias = `Deleted_User_${userId}_${Date.now().toString().slice(-4)}`;
+
+	await db.run(`
+		UPDATE USERS 
+		SET
+			alias = ?,
+			avatar_url = '/assets/basic/default.png',
+			bio = 'This user has been deleted.',
+			status = 'offline',
+			theme = 'Blue'
+		WHERE id = ?`,
+	[anonymousAlias, userId]
+	);
 }

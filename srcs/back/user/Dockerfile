@@ -1,12 +1,12 @@
 #----------------------------
 # STEP 1: BUILD APP
 #----------------------------
-        
+		
 FROM node:20-alpine AS build
 
 # Build tools required for sqlite3 (node-gyp) ///////////// j'ai modifie ici
 RUN apk add --no-cache python3 make g++ \
-    && ln -sf /usr/bin/python3 /usr/bin/python
+	&& ln -sf /usr/bin/python3 /usr/bin/python
 
 
 #-----------------------DEFINE WORKING DIRECTORY
@@ -31,8 +31,8 @@ RUN npm run build
 FROM node:20-alpine
 
 RUN apk add --no-cache \
-    sqlite \
-    su-exec 
+	sqlite \
+	su-exec 
 
 # COPY entrypoint.sh /app/entrypoint.sh
 # RUN chmod +x /app/entrypoint.sh

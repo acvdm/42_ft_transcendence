@@ -16,83 +16,79 @@ import { initGameState, registerRemoteGameEvents, updateGamePhysics } from './re
 
 declare module 'fastify' {
   interface FastifyInstance {
-    io: Server;
+	io: Server;
   }
 }
 
 declare module 'socket.io' {
-    interface Socket {
-        user: any; // On ajoute la propriété user (type any ou { sub: number, ... })
-    }
+	interface Socket {
+		user: any; //
+	}
 }
 
 const fastify = Fastify({ logger: true });
 
-// On enregistre le plugin socket io
 fastify.register(FastifyIO as any, {
-    cors: {
-        origin: "*", // Pense à mettre l'URL du front en prod
-        methods: ["GET", "POST"]
-    },
-    path: '/socket.io/',
-    transports: ['websocket', 'polling']
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"]
+	},
+	path: '/socket.io/',
+	transports: ['websocket', 'polling']
 });
 
 let db: Database;
 const JWT_SECRET = process.env.JWT_SECRET!;
 const userSockets = new Map<number, string>();
 
-// Middleware de sécurité
 const authMiddleware = (socket: any, next: any) => {
-    const token = socket.handshake.auth.token?.replace('Bearer ', '');
-    if (!token)
-        return next(new ServiceUnavailableError("No token"));
+	const token = socket.handshake.auth.token?.replace('Bearer ', '');
+	if (!token)
+		return next(new ServiceUnavailableError("No token"));
 
-    try
-    {
-        socket.user = jwt.verify(token, JWT_SECRET);
-        next();
-    }
-    catch (e)
-    {
-        next(new UnauthorizedError("Invalid token"));
-    }
+	try
+	{
+		socket.user = jwt.verify(token, JWT_SECRET);
+		next();
+	}
+	catch (e)
+	{
+		next(new UnauthorizedError("Invalid token"));
+	}
 }
 
 
 
 
 // ------------------------------------
-// --- EVENTS DU JEU REMOTE (AJOUT) ---
+// --- EVENTS REMOTE GAME -------------
 // ------------------------------------
 
 fastify.ready().then(() => {
-    // Application de sécurité
-    fastify.io.use(authMiddleware);
-    
-    // Toute la logique Socket se passe ICI
-    fastify.io.on('connection', (socket: Socket) => {
-        console.log(`Client connected (Fastify): ${socket.id}`);
+	fastify.io.use(authMiddleware);
+	
+	fastify.io.on('connection', (socket: Socket) => {
+		console.log(`Client connected (Fastify): ${socket.id}`);
 
-        if (socket.user && socket.user.sub) {
-            userSockets.set(socket.user.sub, socket.id);
-        }
+		if (socket.user && socket.user.sub) {
+			userSockets.set(socket.user.sub, socket.id);
+		}
 
-        registerRemoteGameEvents(fastify.io, socket, userSockets);
+		registerRemoteGameEvents(fastify.io, socket, userSockets);
 
 		
-        socket.on('disconnect', () => {
-            console.log(`Client disconnected: ${socket.id}`);
-            // Nettoyage map userSockets
-            for (const [uid, sid] of userSockets.entries()) {
-                if (sid === socket.id) {
-                    userSockets.delete(uid);
-                    break;
-                }
-            }
+		socket.on('disconnect', () => {
+			console.log(`Client disconnected: ${socket.id}`);
+			// Nettoyage map userSockets
+			for (const [uid, sid] of userSockets.entries()) {
+				if (sid === socket.id) {
+					userSockets.delete(uid);
+					break;
+				}
+			}
 
-        });
-    });
+		});
+	});
 });
 
 
@@ -123,8 +119,8 @@ fastify.post('/games', async (request, reply) =>
 			body.p1.isGuest,
 			body.p2.isGuest,
 			body.winner, 
-			"finished", // status
-			"1v1", // round
+			"finished",
+			"1v1",
 			null, // tournamentId
 			body.startDate,
 			body.endDate
@@ -139,8 +135,6 @@ fastify.post('/games', async (request, reply) =>
 			const durationMinutes = Math.round(diffInMins / 60000);
 			finalDuration = durationMinutes > 0 ? durationMinutes : 1;
 		}
-
-		console.log(`DEBUG DATES REÇUES -> Start: ${body.startDate} | End: ${body.endDate}`);
 
 
 		if (!gameId)
@@ -221,17 +215,11 @@ fastify.post('/games', async (request, reply) =>
 
 
 /** -- TOURNAMENT -- */
-/* Le seul appel API pour le tournois (seul moment ou le front parle au back)
-Il a lieux a la fin du match (page de victoire/fin) 
-Sinon tout se passe dans la memoire du navigateur
-*/
-
-// changer pour que ce soi restfull /game/tournament
 fastify.post('/games/tournaments', async (request, reply) => 
 {
 	try
 	{
-		const body = request.body as localTournament; // === interface dans tournament_interfaces
+		const body = request.body as localTournament;
 		
 		if (!body.matchList || body.matchList.length !== 3)
 		{
@@ -396,9 +384,6 @@ fastify.get('/users/:id/export', async (request, reply) =>
 })
 
 
-// on défini une route = un chemin URL + ce qu'on fait quand qqun y accède
-//on commence par repondre aux requetes http get
-// async = fonction qui s'execute quand on accede a cette route -> request = info de la requete, reply = objet pour envouer reponse
 fastify.get('/health', async (request, reply) => 
 {
 	return { service: 'game', status: 'ready', port: 3003 };
@@ -410,12 +395,10 @@ async function main()
 	console.log('game database initialised');
 }
 
-// on demarre le serveur
 const start = async () => 
 {
 	try 
 	{
-		// on attend que le serveur demaarre avant de continuer sur port 8080
 		await fastify.listen({ port: 3003, host: '0.0.0.0' });
 		console.log('Auth service listening on port 3003');
 	} 
@@ -426,7 +409,6 @@ const start = async () =>
 	}
 };
 
-// On initialise la DB puis on démarre le serveur
 main().then(start).catch(err => 
 {
 	console.error("Startup error:", err);

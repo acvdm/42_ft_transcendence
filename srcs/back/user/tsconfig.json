@@ -1,17 +1,17 @@
 {
 	"compilerOptions": {
-		"target": "ES2020", // version de javascript modern (pour avoir async/await)
-		"module": "ESNext", // système d'import
+		"target": "ES2020", // modern JavaScript version (to have async/await)
+		"module": "ESNext", // import system
 		"moduleResolution": "node",
-		"outDir": "./dist", // où mettre le code compilé -> .ts devient .js dans ce dossier
-		"rootDir": "./src", // où est le code source -> le typescript doit être dans src
-		"strict": true, // mode strict activé -> ts devient exigeant pour éviter les bugs
-		"esModuleInterop": true, // compatibilité -> 
-		"skipLibCheck": true, // ignore les erreurs dans les bibliothèques
-		"forceConsistentCasingInFileNames": true, // cohérence des noms de fichiers
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
 
 		"types": ["node"]
 	},
-	"include": ["scripts/**/*", "src/database.ts", "src/index.ts"], // compile tous les fichiers dans src et ses sous-dossiers
-	"exclude": ["node_modules"] // ne pas compiler les bibliothèques externes
+	"include": ["scripts/**/*", "src/database.ts", "src/index.ts"],
+	"exclude": ["node_modules"]
 }

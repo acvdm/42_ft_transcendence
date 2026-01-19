@@ -1,7 +1,7 @@
 #----------------------------
 # STEP 1: BUILD APP
 #----------------------------
-        
+		
 FROM node:20-alpine AS build
 
 RUN apk add --no-cache sqlite
@@ -29,9 +29,9 @@ RUN npm run build
 FROM node:20-alpine
 
 RUN apk add --no-cache \
-    openssl \
-    sqlite \
-    su-exec
+	openssl \
+	sqlite \
+	su-exec
 
 # COPY entrypoint.sh /app/entrypoint.sh
 # RUN chmod +x /app/entrypoint.sh
