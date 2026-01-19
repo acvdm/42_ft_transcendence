@@ -11825,7 +11825,7 @@
 
   // scripts/game/Game.ts
   var Game = class {
-    // Pour le délai avant lancement en mode local
+    // Direction du prochain service (-1 = vers player1, 1 = vers player2)
     constructor(canvas, ctx, input, ballImageSrc) {
       this.isRemote = false;
       this.roomId = null;
@@ -11833,6 +11833,8 @@
       this.socket = null;
       this.lastBallSpeed = 0;
       this.ballLaunchAt = null;
+      // Pour le délai avant lancement en mode local
+      this.nextServeDirection = 1;
       this.canvas = canvas;
       this.ctx = ctx;
       this.input = input;
@@ -11957,8 +11959,7 @@
         if (Date.now() < this.ballLaunchAt) {
           return;
         } else {
-          const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
-          this.ball.reset(canvas, direction);
+          this.ball.reset(canvas, this.nextServeDirection);
           this.ballLaunchAt = null;
         }
       }
@@ -12070,6 +12071,7 @@
         this.ball.y = this.canvas.height / 2;
         this.ball.velocityX = 0;
         this.ball.velocityY = 0;
+        this.nextServeDirection = -1;
         this.ballLaunchAt = Date.now() + 500;
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
@@ -12078,6 +12080,7 @@
         this.ball.y = this.canvas.height / 2;
         this.ball.velocityX = 0;
         this.ball.velocityY = 0;
+        this.nextServeDirection = 1;
         this.ballLaunchAt = Date.now() + 500;
       }
     }
@@ -12102,12 +12105,20 @@
     }
     addEventListeners() {
       window.addEventListener("keydown", (event) => {
+        const target = event.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+          return;
+        }
         if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
           event.preventDefault();
         }
         this.keys[event.key] = true;
       });
       window.addEventListener("keyup", (event) => {
+        const target = event.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+          return;
+        }
         if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
           event.preventDefault();
         }
