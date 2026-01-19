@@ -11760,20 +11760,24 @@
     reset(canvas, direction = 1) {
       this.x = canvas.width / 2;
       this.y = canvas.height / 2;
-      this.velocityX = 5 * direction;
-      this.velocityY = 5;
+      const angle = Math.random() * Math.PI / 3 - Math.PI / 6;
+      const speed = 7;
+      this.velocityX = direction * speed * Math.cos(angle);
+      this.velocityY = speed * Math.sin(angle);
     }
   };
   var Ball_default = Ball;
 
   // scripts/game/Game.ts
   var Game = class {
+    // Pour le délai avant lancement en mode local
     constructor(canvas, ctx, input, ballImageSrc) {
       this.isRemote = false;
       this.roomId = null;
       this.playerRole = null;
       this.socket = null;
       this.lastBallSpeed = 0;
+      this.ballLaunchAt = null;
       this.canvas = canvas;
       this.ctx = ctx;
       this.input = input;
@@ -11846,6 +11850,7 @@
     start() {
       this.isRunning = true;
       this.notifyScoreUpdate();
+      this.ball.reset(this.canvas, 1);
       this.gameLoop();
     }
     gameLoop() {
@@ -11858,8 +11863,8 @@
     update(canvas) {
       const inputState = this.input.getInput();
       if (this.isRemote && this.socket && this.roomId) {
-        const up = inputState.player1.up;
-        const down = inputState.player1.down;
+        const up = this.playerRole === "player1" ? inputState.player1.up : inputState.player2.up;
+        const down = this.playerRole === "player1" ? inputState.player1.down : inputState.player2.down;
         this.socket.emit("gameInput", {
           roomId: this.roomId,
           up,
@@ -11893,6 +11898,15 @@
       if (this.paddle1.y + this.paddle1.height > canvas.height) this.paddle1.y = canvas.height - this.paddle1.height;
       if (this.paddle2.y < 0) this.paddle2.y = 0;
       if (this.paddle2.y + this.paddle2.height > canvas.height) this.paddle2.y = canvas.height - this.paddle2.height;
+      if (this.ballLaunchAt !== null) {
+        if (Date.now() < this.ballLaunchAt) {
+          return;
+        } else {
+          const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
+          this.ball.reset(canvas, direction);
+          this.ballLaunchAt = null;
+        }
+      }
       this.ball.update(canvas);
       this.checkCollisions();
     }
@@ -11911,13 +11925,17 @@
       const currentBallSpeed = Math.abs(data.ball.vx) + Math.abs(data.ball.vy);
       const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
       this.lastBallSpeed = currentBallSpeed;
+      const distanceMoved = Math.sqrt(
+        Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2)
+      );
+      const ballTeleported = distanceMoved > 200;
       const paddle1Right = data.paddle1.x + data.paddle1.width;
       const paddle2Left = data.paddle2.x;
       const distanceToPaddle1 = Math.abs(data.ball.x - paddle1Right);
       const distanceToPaddle2 = Math.abs(data.ball.x - paddle2Left);
       const minDistance = Math.min(distanceToPaddle1, distanceToPaddle2);
       const nearPaddle = minDistance < 50;
-      if (ballJustLaunched) {
+      if (ballJustLaunched || ballTeleported) {
         this.ball.x = newBallX;
         this.ball.y = newBallY;
       } else if (nearPaddle) {
@@ -11995,11 +12013,19 @@
       if (this.ball.x < 0) {
         this.score.player2++;
         this.notifyScoreUpdate();
-        this.reset(-1);
+        this.ball.x = this.canvas.width / 2;
+        this.ball.y = this.canvas.height / 2;
+        this.ball.velocityX = 0;
+        this.ball.velocityY = 0;
+        this.ballLaunchAt = Date.now() + 500;
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
         this.notifyScoreUpdate();
-        this.reset(1);
+        this.ball.x = this.canvas.width / 2;
+        this.ball.y = this.canvas.height / 2;
+        this.ball.velocityX = 0;
+        this.ball.velocityY = 0;
+        this.ballLaunchAt = Date.now() + 500;
       }
     }
     reset(direction = 1) {
@@ -12023,9 +12049,15 @@
     }
     addEventListeners() {
       window.addEventListener("keydown", (event) => {
+        if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
+          event.preventDefault();
+        }
         this.keys[event.key] = true;
       });
       window.addEventListener("keyup", (event) => {
+        if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
+          event.preventDefault();
+        }
         this.keys[event.key] = false;
       });
     }

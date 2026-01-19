@@ -22,6 +22,7 @@ class Game {
 	playerRole: 'player1' | 'player2' | null = null;
 	socket: Socket | null = null;
 	lastBallSpeed: number = 0;
+	ballLaunchAt: number | null = null; // Pour le délai avant lancement en mode local
 
 
 	constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
@@ -111,6 +112,7 @@ class Game {
 	start() {
 		this.isRunning = true;
 		this.notifyScoreUpdate();
+		this.ball.reset(this.canvas, 1);
 		this.gameLoop();
 	}
 
@@ -127,8 +129,8 @@ class Game {
 
 		if (this.isRemote && this.socket && this.roomId) {
 
-			const up = inputState.player1.up;
-			const down = inputState.player1.down;
+			const up = this.playerRole === 'player1' ? inputState.player1.up : inputState.player2.up;
+			const down = this.playerRole === 'player1' ? inputState.player1.down : inputState.player2.down;
 
 			this.socket.emit('gameInput', {
 				roomId: this.roomId,
@@ -168,6 +170,19 @@ class Game {
 		if (this.paddle2.y < 0) this.paddle2.y = 0;
 		if (this.paddle2.y + this.paddle2.height > canvas.height) this.paddle2.y = canvas.height - this.paddle2.height;
 
+		// Vérifier si on doit attendre avant de lancer la balle
+		if (this.ballLaunchAt !== null) {
+			if (Date.now() < this.ballLaunchAt) {
+				// Attendre, ne pas bouger la balle
+				return;
+			} else {
+				// Temps écoulé, lancer la balle
+				const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
+				this.ball.reset(canvas, direction);
+				this.ballLaunchAt = null;
+			}
+		}
+
 		this.ball.update(canvas);
 		this.checkCollisions();
 	}
@@ -188,6 +203,12 @@ class Game {
 		const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
 		this.lastBallSpeed = currentBallSpeed;
 
+		// Détecter si la balle a été téléportée (grand déplacement)
+		const distanceMoved = Math.sqrt(
+			Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2)
+		);
+		const ballTeleported = distanceMoved > 200; // Si la balle se déplace de plus de 200px, c'est une téléportation
+
 		const paddle1Right = data.paddle1.x + data.paddle1.width;
 		const paddle2Left = data.paddle2.x;
 		const distanceToPaddle1 = Math.abs(data.ball.x - paddle1Right);
@@ -195,7 +216,7 @@ class Game {
 		const minDistance = Math.min(distanceToPaddle1, distanceToPaddle2);
 		const nearPaddle = minDistance < 50;
 
-		if (ballJustLaunched) {
+		if (ballJustLaunched || ballTeleported) {
 			this.ball.x = newBallX;
 			this.ball.y = newBallY;
 		} else if (nearPaddle) {
@@ -299,11 +320,21 @@ class Game {
 		if (this.ball.x < 0) {
 			this.score.player2++;
 			this.notifyScoreUpdate();
-			this.reset(-1);
+			// Mettre la balle au centre et programmer le lancement dans 0.5s
+			this.ball.x = this.canvas.width / 2;
+			this.ball.y = this.canvas.height / 2;
+			this.ball.velocityX = 0;
+			this.ball.velocityY = 0;
+			this.ballLaunchAt = Date.now() + 500;
 		} else if (this.ball.x > this.canvas.width) {
 			this.score.player1++;
 			this.notifyScoreUpdate();
-			this.reset(1);
+			// Mettre la balle au centre et programmer le lancement dans 0.5s
+			this.ball.x = this.canvas.width / 2;
+			this.ball.y = this.canvas.height / 2;
+			this.ball.velocityX = 0;
+			this.ball.velocityY = 0;
+			this.ballLaunchAt = Date.now() + 500;
 		}
 	}
 

@@ -7,10 +7,17 @@ class Input {
 
 	addEventListeners() {
 		window.addEventListener('keydown', (event) => {
+			// Empêcher le comportement par défaut pour les touches du jeu
+			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+				event.preventDefault();
+			}
 			this.keys[event.key] = true;
 		});
 
 		window.addEventListener('keyup', (event) => {
+			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+				event.preventDefault();
+			}
 			this.keys[event.key] = false;
 		});
 	}
