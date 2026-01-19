@@ -21,6 +21,20 @@ fi
 
 OPPONENTS=("AnneChat" "BadBunny13" "Faustoche" "Cassou" "Natsuw" "NaughtyCat2")
 
+#----- Calcul de la date (Hiver/été)
+CURRENT_MONTH=$(date +%-m)
+CURRENT_DAY=$(date +%d)
+
+TIME_OFFSET="+0 hour"
+
+# Condition du 21 décembre au 20 juin
+if [[ ($CURRENT_MONTH -eq 12 && $CURRENT_DAY -ge 21) 
+    || ($CURRENT_MONTH -ge 1 &&  $CURRENT_MONTH -le 5)
+    || ($CURRENT_MONTH -eq 6 && $CURRENT_DAY -le 20) ]]; then
+    TIME_OFFSET="+1 hour"
+fi
+
+
 for OPPONENT in "${OPPONENTS[@]}"; do
     if [ $((RANDOM % 2)) -eq 1 ]; then
         GAME_TYPE='remote'
@@ -45,7 +59,7 @@ for OPPONENT in "${OPPONENTS[@]}"; do
 
     MATCH_ID=$(docker exec -i game sqlite3 /app/data/game.sqlite <<EOF
     INSERT INTO "MATCHES" (game_type, player1_alias, player2_alias, score_p1, score_p2, winner_alias, status, started_at, finished_at, total_duration_in_minutes, round)
-    VALUES('$GAME_TYPE', '$TARGET_USER', '$OPPONENT', $SCORE_USER, $SCORE_OPP, '$WINNER', 'finished', datetime('now'), datetime('now', '+1 minute'), 1, '1v1')
+    VALUES('$GAME_TYPE', '$TARGET_USER', '$OPPONENT', $SCORE_USER, $SCORE_OPP, '$WINNER', 'finished', datetime('now', '$TIME_OFFSET'), datetime('now', '$TIME_OFFSET', '+1 minute'),1, '1v1')
     RETURNING match_id
 EOF
     )
@@ -79,5 +93,5 @@ EOF
 
 done
 
-echo "Done"
+echo "Matches successfully added to '$TARGET_USER'"
 

@@ -1,19 +1,19 @@
 all: up
 
 up:	build
-	docker compose -f ./srcs/docker-compose.yml up -d
+	docker compose -f ./docker-compose.yml up -d
 
 down:
-	docker compose -f ./srcs/docker-compose.yml down
+	docker compose -f ./docker-compose.yml down
 
 stop:
-	docker compose -f ./srcs/docker-compose.yml stop
+	docker compose -f ./docker-compose.yml stop
 
 start:
-	docker compose -f ./srcs/docker-compose.yml start
+	docker compose -f ./docker-compose.yml start
 
 build:
-	docker compose -f ./srcs/docker-compose.yml build
+	docker compose -f ./docker-compose.yml build
 
 clean:
 	@docker stop $$(docker ps -aq) || true
@@ -35,5 +35,4 @@ add_stats:
 re: clean up
 
 prune:	clean
-	rm -r ./srcs/back/datadev/
 	@docker system prune -a --volumes -f

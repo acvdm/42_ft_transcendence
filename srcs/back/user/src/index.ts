@@ -62,7 +62,7 @@ fastify.post('/users', async (request, reply) => {
 		userId = await userRepo.createUserInDB(db, body)		
 		if (!userId)
 		{
-			return reply.status(500).send({
+			return reply.status(503).send({
 				success: false,
 				data: null,
 				error: { message: 'Error during profile creation'}
@@ -300,7 +300,7 @@ fastify.post('/users/guest', async (request, reply) => {
 		  console.log(`User ID ${userId} successfully deleted`);
 		}	
 
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -367,7 +367,7 @@ fastify.patch('/users/:id/status', async (request, reply) =>
  	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -396,7 +396,7 @@ fastify.patch('/users/:id/bio', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -425,7 +425,7 @@ fastify.patch('/users/:id/alias', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -486,7 +486,7 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -544,7 +544,7 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -580,7 +580,7 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
     } 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -613,7 +613,7 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
     } 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -683,7 +683,7 @@ fastify.delete('/users/:id', async (request, reply) =>
 	catch (err: any)
 	{
 		console.error("Error during account deletion:", err);
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -789,7 +789,7 @@ fastify.get('/users/:id/export', async (request, reply) =>
 	catch (err: any)
 	{
 		console.error("Error during download data:", err);
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -821,7 +821,7 @@ fastify.post('/users/:id/friendships', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -852,7 +852,7 @@ fastify.patch('/users/:id/friendships/:friendshipId', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -880,7 +880,7 @@ fastify.get('/users/:id/friends', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -908,7 +908,7 @@ fastify.get('/users/:id/friendships/pendings', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		reply.status(statusCode).send({			  
 			success: false,			  
@@ -944,7 +944,7 @@ fastify.get('/users/:id/language', async (request, reply) =>
 	catch (err: any) 
 	{
 		console.error("Export Auth Error:", err);
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -976,7 +976,7 @@ fastify.patch('/users/:id/language', async (request, reply) =>
 	catch (err: any) 
 	{
 		console.error("Export Auth Error:", err);
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,

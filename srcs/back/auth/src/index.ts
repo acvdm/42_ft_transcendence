@@ -80,7 +80,7 @@ fastify.post('/users/:id/credentials', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 		return reply.status(statusCode).send({
 			success: false, 
 			data: null,
@@ -121,7 +121,7 @@ fastify.post('/users/:id/credentials/guest', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -152,7 +152,7 @@ fastify.patch('/users/:id/credentials/email', async (request, reply) =>
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 		return reply.status(statusCode).send({
 			success: false, 
 			data: null,
@@ -198,7 +198,7 @@ fastify.patch('/users/:id/credentials/password', async (request, reply) =>
     }
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -253,7 +253,7 @@ fastify.post('/sessions', async (request, reply) =>
 	} 
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -382,7 +382,7 @@ fastify.delete('/users/:id/', async (request, reply) => {
 	catch (err: any) 
 	{
 		console.error("Deleted Auth Error:", err);
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -415,7 +415,7 @@ fastify.get('/users/:id/export', async (request, reply) => {
 	catch (err: any) 
 	{
 		console.error("Export Auth Error:", err);
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -466,7 +466,7 @@ fastify.post('/2fa/secret', async (request, reply) => {
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -521,7 +521,7 @@ fastify.post('/2fa', async (request, reply) => {
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -559,7 +559,7 @@ fastify.delete('/2fa', async (request, reply) => {
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 
@@ -623,7 +623,7 @@ fastify.post('/2fa/challenge', async (request, reply) => {
 	} 
 	catch (err: any) 
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false, 

@@ -1,10 +1,8 @@
 #----------------------------
 # STEP 1: BUILD APP
-#----------------------------
-        
+#----------------------------       
 FROM node:20-alpine AS build
 
-# Build tools required for sqlite3 (node-gyp) ///////////// j'ai modifie ici
 RUN apk add --no-cache python3 make g++ \
     && ln -sf /usr/bin/python3 /usr/bin/python
 
@@ -27,15 +25,10 @@ RUN npm run build
 #----------------------------
 # STEP 2: FINAL IMAGE
 #----------------------------
-
 FROM node:20-alpine
 
 RUN apk add --no-cache \
-    sqlite \
-    su-exec 
-
-# COPY entrypoint.sh /app/entrypoint.sh
-# RUN chmod +x /app/entrypoint.sh
+    sqlite
 
 WORKDIR /app/user
 
@@ -45,7 +38,6 @@ COPY --from=build /app/user/node_modules ./node_modules
 COPY --from=build /app/user/dist ./dist
 
 #-----------------------CREATE A DIRECTORY TO UPLAOD AVATARS
-# RUN mkdir -p /app/user/avatars
 RUN mkdir -p /app/data
 
 
@@ -53,5 +45,4 @@ RUN mkdir -p /app/data
 EXPOSE 3004
 
 #-----------------------START PRODUCTION MODE
-# ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["node", "dist/index.js"]

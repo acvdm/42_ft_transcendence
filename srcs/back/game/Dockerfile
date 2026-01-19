@@ -28,11 +28,7 @@ RUN npm run build
 FROM node:20-alpine
 
 RUN apk add --no-cache \
-    sqlite \
-    su-exec 
-
-# COPY entrypoint.sh /app/entrypoint.sh
-# RUN chmod +x /app/entrypoint.sh
+    sqlite 
 
 WORKDIR /app/game
 
@@ -47,5 +43,4 @@ RUN mkdir -p /app/data
 EXPOSE 3003
 
 #-----------------------START PRODUCTION MODE
-# ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
 CMD ["node", "dist/index.js"]
