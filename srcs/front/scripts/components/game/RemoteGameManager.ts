@@ -30,8 +30,12 @@ export class RemoteGameManager {
 		socketService.connectGame();
 		const gameSocket = socketService.getGameSocket();
 
-		if (!gameSocket) {
-			console.error("Cannot connect to server");
+		if (!gameSocket || !gameSocket.connect) {
+			console.log("Trying to connect...");
+			
+			setTimeout(() => {
+				this.init();
+			}, 200);
 			return ;
 		}
 
