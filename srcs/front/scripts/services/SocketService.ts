@@ -1,6 +1,7 @@
 
 import { io, Socket } from "socket.io-client";
 import { Data } from '../components/Data';
+import { fetchWithAuth } from "./api";
 
 export class SocketService {
 	private static instance: SocketService;
@@ -102,6 +103,18 @@ export class SocketService {
 
 		socket.on("connect", () => {
 			console.log(`SocketService: Connected to ${path} with ID: ${socket.id}`);
+			const userId = localStorage.getItem('userId');
+			if (userId) {
+				fetchWithAuth(`/api/user/${userId}`).then(response => {
+					if (response.status === 404) {
+						console.warn("User not found in DB (server restarted?), logging out...");
+						this.disconnectAll();
+						localStorage.clear();
+						sessionStorage.clear();
+						window.location.href = '/';
+					}
+				});
+			}
 		});
 
 		socket.on("connect_error", (err) => {
