@@ -7,10 +7,7 @@ export class SocketService {
 
 	public chatSocket: Socket | null = null;
 	public gameSocket: Socket | null = null;
-
-	// Promesse partagée pour le refresh ( pour éviter les appels simultanés)
 	private refreshPromise: Promise<string | null> | null = null;
-
 	private constructor() {}
 
 	public static getInstance(): SocketService {
@@ -19,6 +16,12 @@ export class SocketService {
 		}
 		return SocketService.instance;
 	}
+
+
+	//================================================
+	//================ SOCKET MANAGER ================
+	//================================================
+
 
 	private async createSocketConnection(path: string): Promise<Socket | null> {
 		let token = sessionStorage.getItem('accessToken') || localStorage.getItem('accessToken');
@@ -30,72 +33,63 @@ export class SocketService {
 
 		let finalToken = token as string;
 
-		// bloc pour gerer les appels simultanes
 		try {
-			// Décodage du token pour vérifier l'expiration
 			const payload = JSON.parse(atob(finalToken.split('.')[1]));
 			const now = Math.floor(Date.now() / 1000);
 			const timeLeft = payload.exp - now;
 
-			// Si le token expire dans moins de 30s (ou est déjà expiré)
 			if (timeLeft < 30) {
-				console.log(`Token expirant (reste ${timeLeft}s), lancement procédure refresh...`);
+				console.log(`Token expiring (${timeLeft}s left), launching refresh procedure...`);
 
-				// Si aucun refresh n'est en cours, on en lance un
 				if (!this.refreshPromise) {
 					this.refreshPromise = (async () => {
 						try {
 							const response = await fetch('/api/auth/token', {
 								method: 'POST',
 								headers: { 'Content-Type': 'application/json' },
-								credentials: 'include', // Important pour le cookie
-								body: JSON.stringify({}) // Important pour Fastify
+								credentials: 'include',
+								body: JSON.stringify({})
 							});
 
 							if (response.ok) {
 								const data = await response.json();
 								const newToken = data.accessToken;
 
-								// Mise à jour du stockage
+								// Updating storage
 								if (sessionStorage.getItem('isGuest') === 'true')
 									sessionStorage.setItem('accessToken', newToken);
 								else
 									localStorage.setItem('accessToken', newToken);
 
-								console.log("Refresh réussi !");
+								console.log("Refresh done !");
 								return newToken;
 							} else {
-								console.error("Echec du refresh API:", response.status);
+								console.error("Refresh API failed:", response.status);
 								return null;
 							}
 						} catch (err) {
-							console.error("Erreur réseau pendant le refresh:", err);
+							console.error("Network error refreshing:", err);
 							return null;
 						} finally {
-							// On laisse la promesse se résoudre pour tous les appelants
 						}
 					})();
 				}
 
-				// Tout le monde attend le résultat de la promesse unique
 				const newToken = await this.refreshPromise;
-				
-				// Une fois fini, on nettoie la promesse
 				this.refreshPromise = null;
 
 				if (newToken) {
 					finalToken = newToken;
 				} else {
-					console.error("Impossible d'obtenir un nouveau token. Connexion socket annulée.");
-					return null; // STOP : On ne connecte pas le socket avec un token mort
+					console.error("Cannot retrieve new token. Socket connection cancelled.");
+					return null;
 				}
 			}
 		} catch (e) {
-			console.error('Erreur lors de la validation du token:', e);
+			console.error('Error validating token:', e);
 			return null;
 		}
 
-		// Connexion Socket avec le token valide
 		const socket = io("/", {
 			path: path,
 			auth: {
@@ -107,19 +101,21 @@ export class SocketService {
 		});
 
 		socket.on("connect", () => {
-			console.log(`SocketService: Connecté à ${path} avec ID: ${socket.id}`);
+			console.log(`SocketService: Connected to ${path} with ID: ${socket.id}`);
 		});
 
 		socket.on("connect_error", (err) => {
-			console.error(`SocketService: Erreur de connexion sur ${path}:`, err.message);
+			console.error(`SocketService: Network error on ${path}:`, err.message);
 		});
 
 		return socket;
 	}
 
-	// ---------------------
-	// -- GESTION DU CHAT --
-	// ---------------------
+
+	//================================================
+	//================= CHAT MANAGER =================
+	//================================================
+
 	public async connectChat() {
 		if (this.chatSocket) return;
 
@@ -128,10 +124,8 @@ export class SocketService {
 
 		if (this.chatSocket) {
 			this.chatSocket.on('unreadNotification', (payload: any) => {
-				console.log("SocketService: Notification reçue (Global):", payload);
 
 				if (!window.location.href.includes('/chat')) { 
-					console.log("-> Activation de la notif persistante");
 					Data.hasUnreadMessage = true; 
 					this.showNotificationIcon();
 					const event = new CustomEvent('notificationUpdate', {
@@ -155,9 +149,11 @@ export class SocketService {
 		return this.chatSocket;
 	}
 
-	// ---------------------
-	// -- GESTION DU GAME --
-	// ---------------------
+	//================================================
+	//================= GAME MANAGER =================
+	//================================================
+
+
 	public async connectGame() {
 		if (this.gameSocket) return;
 		console.log("SocketService: Connecting to Game...");
@@ -176,9 +172,9 @@ export class SocketService {
 		return this.gameSocket;
 	}
 
-	// ---------------------
-	// -- UTILITAIRES	--
-	// ---------------------
+	//================================================
+	//===================== TOOLS ====================
+	//================================================
 
 	private showNotificationIcon() {
 		const notifElement = document.getElementById('message-notification'); 

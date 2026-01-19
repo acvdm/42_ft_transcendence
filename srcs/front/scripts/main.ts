@@ -1,7 +1,6 @@
 import { render as LoginPage, loginEvents } from "./controllers/LoginPage"; 
 import { render as HomePage, afterRender as HomePageAfterRender } from "./controllers/HomePage";
 import { render as ProfilePage, afterRender as ProfilePageAfterRender } from "./controllers/ProfilePage";
-import { NotFoundPage } from "./pages/NotFound";
 import { render as LandingPage, initLandingPage } from "./controllers/LandingPage";
 import { render as RegisterPage, registerEvents } from "./controllers/RegisterPage";
 import { render as GuestPage, afterRender as GuestAfterRender } from "./controllers/GuestPage";
@@ -149,7 +148,6 @@ const loadUserLanguageFromDB = async () => {
 					const currentLang = i18next.language;
 
 					if (dbLang && dbLang !== currentLang) {
-						console.log(`Langue en BDD trouvee (${dbLang})`);
 						await changeLanguage(dbLang);
 
 						translateNavElements();
@@ -159,7 +157,7 @@ const loadUserLanguageFromDB = async () => {
 
 
 		} catch (error) {
-			console.error("Impossible de charger la langue utilisateur");
+			console.error("Cannot retrieve user language");
 		}
 	}
 }
@@ -270,7 +268,6 @@ const handleLocationChange = async () => {
 				const currentLang = i18next.language;
 
 				if (lang && lang !== currentLang) {
-					console.log("Langue changée vers :", lang);
 					await changeLanguage(lang);
 
 					const userId = localStorage.getItem('userId');
@@ -290,7 +287,7 @@ const handleLocationChange = async () => {
 							if (!response.ok)
 								console.error("Error during the modification of the language");
 						} catch (error) {
-							console.error("Error during update of preffered language");
+							console.error("Error during update of prefered language");
 						}
 					}
 

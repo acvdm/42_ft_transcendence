@@ -72,7 +72,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
 						if (!newToken) {
 							throw new Error("No accessToken in refresh response");
 						}
-    					console.log("Token changed?", getAuthToken() !== newToken);
+						console.log("Token changed?", getAuthToken() !== newToken);
 
 						const isGuest = sessionStorage.getItem('isGuest') === 'true';
 

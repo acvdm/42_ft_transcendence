@@ -209,28 +209,25 @@ function handleLogin() {
 				window.history.pushState({}, '', '/home');
 				window.dispatchEvent(new PopStateEvent('popstate'));
 
-            } else {
-                console.error("Login error:", result.error);
-                if (errorElement) {
-                    const backendErrorkey = result.error?.message;
-                    if (backendErrorkey)
-                        errorElement.textContent = i18next.t(backendErrorkey);
-                    else
-                        errorElement.textContent = i18next.t('loginPage.error_text_default');
-                    // MODIFICATION : Traduction du fallback si pas de message serveur
-                    // errorElement.textContent = result.error?.message || result.error.error || i18next.t('loginPage.error_auth_default');
-                    errorElement.classList.remove('hidden');
-                }
-            }
-        } catch (error) {
-            console.error("Network error:", error);
-            if (errorElement) {
-                // MODIFICATION : Message erreur réseau
-                errorElement.textContent = i18next.t('loginPage.error_network');
-                errorElement.classList.remove('hidden');
-            }
-        }
-    });
+			} else {
+				console.error("Login error:", result.error);
+				if (errorElement) {
+					const backendErrorkey = result.error?.message;
+					if (backendErrorkey)
+						errorElement.textContent = i18next.t(backendErrorkey);
+					else
+						errorElement.textContent = i18next.t('loginPage.error_text_default');
+					errorElement.classList.remove('hidden');
+				}
+			}
+		} catch (error) {
+			console.error("Network error:", error);
+			if (errorElement) {
+				errorElement.textContent = i18next.t('loginPage.error_network');
+				errorElement.classList.remove('hidden');
+			}
+		}
+	});
 
 
 	confirm2fa?.addEventListener('click', async () => {

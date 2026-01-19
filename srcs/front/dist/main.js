@@ -3603,7 +3603,6 @@
     constructor() {
       this.chatSocket = null;
       this.gameSocket = null;
-      // Promesse partagée pour le refresh ( pour éviter les appels simultanés)
       this.refreshPromise = null;
     }
     static getInstance() {
@@ -3612,6 +3611,9 @@
       }
       return _SocketService.instance;
     }
+    //================================================
+    //================ SOCKET MANAGER ================
+    //================================================
     async createSocketConnection(path) {
       let token = sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
       if (!token) {
@@ -3624,7 +3626,7 @@
         const now = Math.floor(Date.now() / 1e3);
         const timeLeft = payload.exp - now;
         if (timeLeft < 30) {
-          console.log(`Token expirant (reste ${timeLeft}s), lancement proc\xE9dure refresh...`);
+          console.log(`Token expiring (${timeLeft}s left), launching refresh procedure...`);
           if (!this.refreshPromise) {
             this.refreshPromise = (async () => {
               try {
@@ -3632,9 +3634,7 @@
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   credentials: "include",
-                  // Important pour le cookie
                   body: JSON.stringify({})
-                  // Important pour Fastify
                 });
                 if (response.ok) {
                   const data = await response.json();
@@ -3643,14 +3643,14 @@
                     sessionStorage.setItem("accessToken", newToken2);
                   else
                     localStorage.setItem("accessToken", newToken2);
-                  console.log("Refresh r\xE9ussi !");
+                  console.log("Refresh done !");
                   return newToken2;
                 } else {
-                  console.error("Echec du refresh API:", response.status);
+                  console.error("Refresh API failed:", response.status);
                   return null;
                 }
               } catch (err) {
-                console.error("Erreur r\xE9seau pendant le refresh:", err);
+                console.error("Network error refreshing:", err);
                 return null;
               } finally {
               }
@@ -3661,12 +3661,12 @@
           if (newToken) {
             finalToken = newToken;
           } else {
-            console.error("Impossible d'obtenir un nouveau token. Connexion socket annul\xE9e.");
+            console.error("Cannot retrieve new token. Socket connection cancelled.");
             return null;
           }
         }
       } catch (e) {
-        console.error("Erreur lors de la validation du token:", e);
+        console.error("Error validating token:", e);
         return null;
       }
       const socket = lookup2("/", {
@@ -3679,25 +3679,23 @@
         transports: ["websocket", "polling"]
       });
       socket.on("connect", () => {
-        console.log(`SocketService: Connect\xE9 \xE0 ${path} avec ID: ${socket.id}`);
+        console.log(`SocketService: Connected to ${path} with ID: ${socket.id}`);
       });
       socket.on("connect_error", (err) => {
-        console.error(`SocketService: Erreur de connexion sur ${path}:`, err.message);
+        console.error(`SocketService: Network error on ${path}:`, err.message);
       });
       return socket;
     }
-    // ---------------------
-    // -- GESTION DU CHAT --
-    // ---------------------
+    //================================================
+    //================= CHAT MANAGER =================
+    //================================================
     async connectChat() {
       if (this.chatSocket) return;
       console.log("SocketService: Connecting to Chat...");
       this.chatSocket = await this.createSocketConnection("/socket-chat/");
       if (this.chatSocket) {
         this.chatSocket.on("unreadNotification", (payload) => {
-          console.log("SocketService: Notification re\xE7ue (Global):", payload);
           if (!window.location.href.includes("/chat")) {
-            console.log("-> Activation de la notif persistante");
             Data.hasUnreadMessage = true;
             this.showNotificationIcon();
             const event = new CustomEvent("notificationUpdate", {
@@ -3718,9 +3716,9 @@
     getChatSocket() {
       return this.chatSocket;
     }
-    // ---------------------
-    // -- GESTION DU GAME --
-    // ---------------------
+    //================================================
+    //================= GAME MANAGER =================
+    //================================================
     async connectGame() {
       if (this.gameSocket) return;
       console.log("SocketService: Connecting to Game...");
@@ -3736,9 +3734,9 @@
     getGameSocket() {
       return this.gameSocket;
     }
-    // ---------------------
-    // -- UTILITAIRES	--
-    // ---------------------
+    //================================================
+    //===================== TOOLS ====================
+    //================================================
     showNotificationIcon() {
       const notifElement = document.getElementById("message-notification");
       if (notifElement) {
@@ -11442,16 +11440,12 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          // AJOUT important pour enregistrer le cookie transmis par le back
           body: JSON.stringify({})
         });
         if (response.ok) {
           const data = await response.json();
           if (data.accessToken) {
             sessionStorage.setItem("accessToken", data.accessToken);
-          }
-          if (data.refreshToken) {
-            console.log("Guest refreshToken received:", data.refreshToken);
           }
           if (data.userId) {
             sessionStorage.setItem("userId", data.userId.toString());
@@ -11460,7 +11454,6 @@
           sessionStorage.setItem("userRole", "guest");
           try {
             const userResponse = await fetch(`/api/user/${data.userId}`, {
-              // MODIFICATION en /user/
               method: "GET",
               headers: {
                 "Authorization": `Bearer ${data.accessToken}`,
@@ -13433,7 +13426,7 @@
     const t_back = i18n_default.t("gamePage.exit_modal.back_btn");
     const t_leave = i18n_default.t("gamePage.exit_modal.leave_btn");
     const modalHtml = `
-		<div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+		<div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
 			
 			<div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
 				
@@ -13494,7 +13487,6 @@
     if (activeGame) {
       const wasRemote = activeGame.isRemote;
       const roomId = activeGame.roomId;
-      const playerRole = activeGame.playerRole;
       if (wasRemote && roomId && SocketService_default.getInstance().getGameSocket()) {
         SocketService_default.getInstance().getGameSocket()?.emit("leaveGame", { roomId });
       }
@@ -28439,15 +28431,15 @@
         const row = document.createElement("tr");
         row.className = "hover:bg-blue-50 transition-colors border-b border-gray-100 group";
         row.innerHTML = `
-                <td class="py-2 text-gray-500 whitespace-nowrap">
-                    ${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
-                    </td>
-                <td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-                <td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-                <td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-                <td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
-                <td class="py-2 font-bold ${resultColor}">${resultText}</td>
-            `;
+				<td class="py-2 text-gray-500 whitespace-nowrap">
+					${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
+					</td>
+				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
+				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
+				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
+				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
+			`;
         listContainer.appendChild(row);
       });
     }
@@ -28738,14 +28730,13 @@
             const dbLang = data.language;
             const currentLang = i18n_default.language;
             if (dbLang && dbLang !== currentLang) {
-              console.log(`Langue en BDD trouvee (${dbLang})`);
               await changeLanguage2(dbLang);
               translateNavElements();
             }
           }
         }
       } catch (error) {
-        console.error("Impossible de charger la langue utilisateur");
+        console.error("Cannot retrieve user language");
       }
     }
   };
@@ -28827,7 +28818,6 @@
           const lang = e.currentTarget.getAttribute("data-lang");
           const currentLang = i18n_default.language;
           if (lang && lang !== currentLang) {
-            console.log("Langue chang\xE9e vers :", lang);
             await changeLanguage2(lang);
             const userId = localStorage.getItem("userId");
             const accessToken2 = localStorage.getItem("accessToken");
@@ -28845,7 +28835,7 @@
                 if (!response.ok)
                   console.error("Error during the modification of the language");
               } catch (error) {
-                console.error("Error during update of preffered language");
+                console.error("Error during update of prefered language");
               }
             }
             handleLocationChange();

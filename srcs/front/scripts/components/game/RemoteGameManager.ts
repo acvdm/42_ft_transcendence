@@ -16,10 +16,10 @@ interface GameContext {
 }
 
 export class RemoteGameManager {
-    private context: GameContext;
-    private currentP1Alias: string = "Player 1";
-    private currentP2Alias: string = "Player 2";
-    private WINNING_SCORE: number = 11;
+	private context: GameContext;
+	private currentP1Alias: string = "Player 1";
+	private currentP2Alias: string = "Player 2";
+	private WINNING_SCORE: number = 11;
 
 	constructor(context: GameContext) {
 		this.context = context;
@@ -159,7 +159,6 @@ export class RemoteGameManager {
 				return ;
 			}
 
-			// console.log(`is guest : ${data.player1.is_guest}`);
 			const remoteP1Alias = data.p1?.alias || data.player1?.alias || p1Alias;
 			const remoteP2Alias = data.p2?.alias || data.player2?.alias || p2Alias;
 			let p1Id: number | null = (data.role === 'player1') ? myId : opponentId;
@@ -292,33 +291,32 @@ export class RemoteGameManager {
 					};
 					document.addEventListener('keydown', spaceHandler);
 
-                    // Rival is leaving the game
-                    gameSocket.off('opponentLeft');
-                    gameSocket.on('opponentLeft', async (eventData: any) => {
-                        console.log('opponent left');
-                        const activeGame = this.context.getGame();
-                        if (activeGame) {
-                            activeGame.isRunning = false;
-                            activeGame.stop();
-                            gameSocket.off('gameState');
-                            gameSocket.off('gameEnded');
-                            
-                            // cleaning listener space
-                            document.removeEventListener('keydown', spaceHandler);
+					// Rival is leaving the game
+					gameSocket.off('opponentLeft');
+					gameSocket.on('opponentLeft', async (eventData: any) => {
+						console.log('opponent left');
+						const activeGame = this.context.getGame();
+						if (activeGame) {
+							activeGame.isRunning = false;
+							activeGame.stop();
+							gameSocket.off('gameState');
+							gameSocket.off('gameEnded');
+							
+							document.removeEventListener('keydown', spaceHandler);
 
-                            let s1 = 0;
-                            let s2 = 0;
-                            let winnerAlias = "";
+							let s1 = 0;
+							let s2 = 0;
+							let winnerAlias = "";
 
-                            if (data.role === 'player1') {
-                                winnerAlias = this.currentP1Alias;
-                                s1 = this.WINNING_SCORE;
-                                s2 = 0;
-                            } else {
-                                winnerAlias = this.currentP2Alias;
-                                s1 = 0;
-                                s2 = this.WINNING_SCORE;
-                            }
+							if (data.role === 'player1') {
+								winnerAlias = this.currentP1Alias;
+								s1 = this.WINNING_SCORE;
+								s2 = 0;
+							} else {
+								winnerAlias = this.currentP2Alias;
+								s1 = 0;
+								s2 = this.WINNING_SCORE;
+							}
 
 							if (myAlias == winnerAlias)
 							{
@@ -329,68 +327,56 @@ export class RemoteGameManager {
 								)
 							}
 
-                            // MODIFICATION : Traduction du message de forfait
-                            showRemoteEndModal(winnerAlias, i18next.t('remoteManager.opponent_forfeit'));
-                            this.context.setGame(null);
-                        }
-                    });
+							showRemoteEndModal(winnerAlias, i18next.t('remoteManager.opponent_forfeit'));
+							this.context.setGame(null);
+						}
+					});
 
-                    newGame.onGameEnd = async (endData) => {
-                        // cleaning listener space
-                        document.removeEventListener('keydown', spaceHandler);
-                        // MODIFICATION : Traduction fallback
-                        let winnerAlias = i18next.t('remoteManager.default_winner');
+					newGame.onGameEnd = async (endData) => {
+						document.removeEventListener('keydown', spaceHandler);
+						let winnerAlias = i18next.t('remoteManager.default_winner');
 
-                        const activeGame = this.context.getGame();
-                        let s1 = activeGame ? activeGame.score.player1 : 0;
-                        let s2 = activeGame ? activeGame.score.player2 : 0;
+						const activeGame = this.context.getGame();
+						let s1 = activeGame ? activeGame.score.player1 : 0;
+						let s2 = activeGame ? activeGame.score.player2 : 0;
 
-                        const isNormalEndGame = (s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE);
+						const isNormalEndGame = (s1 == this.WINNING_SCORE || s2 == this.WINNING_SCORE);
 
-                        if (isNormalEndGame)
-                        {
-                            if (s1 > s2)
-                                winnerAlias = this.currentP1Alias;
-                            
-                            else
-                                winnerAlias = this.currentP2Alias;
-                        }
-                        else
-                        {
-                            if (data.role === 'player1')
-                            {
-                                s1 = this.WINNING_SCORE;
-                                s2 = 0;
-                                winnerAlias = this.currentP1Alias;
-                            }
-                            else
-                            {
-                                s1 = 0;
-                                s2 = this.WINNING_SCORE;
-                                winnerAlias = this.currentP2Alias;
-                            }
-                        }
+						if (isNormalEndGame) {
+							if (s1 > s2)
+								winnerAlias = this.currentP1Alias;
+							else
+								winnerAlias = this.currentP2Alias;
+						} else {
+							if (data.role === 'player1') {
+								s1 = this.WINNING_SCORE;
+								s2 = 0;
+								winnerAlias = this.currentP1Alias;
+							} else {
+								s1 = 0;
+								s2 = this.WINNING_SCORE;
+								winnerAlias = this.currentP2Alias;
+							}
+						}
 
-                        if (winnerAlias === myAlias)
-                        {
-                                await this.saveRemoteGameToApi(
-                                    this.currentP1Alias, s1, p1Id, isP1Guest,
-                                    this.currentP2Alias, s2, p2Id, isP2Guest,
-                                    winnerAlias,
-                                    gameStartDate
-                                )  
-                        }
+						if (winnerAlias === myAlias) {
+							await this.saveRemoteGameToApi(
+								this.currentP1Alias, s1, p1Id, isP1Guest,
+								this.currentP2Alias, s2, p2Id, isP2Guest,
+								winnerAlias,
+								gameStartDate
+							)  
+						}
 
-                        showVictoryModal(winnerAlias, this.context.chat);
-                        this.context.setGame(null);
-                    };
+						showVictoryModal(winnerAlias, this.context.chat);
+						this.context.setGame(null);
+					};
 
 					newGame.onScoreChange = (score) => {
 						const sb = document.getElementById('score-board');
 						if (sb) {
 							sb.innerText = `${score.player1} - ${score.player2}`;
 						}
-							
 					};
 
 					launchCountdown(() => {
@@ -401,7 +387,6 @@ export class RemoteGameManager {
 						}
 					});
 				}
-
 			}
 		};
 

@@ -28,8 +28,8 @@ function escapeHtml(text: string): string {
 //================================================
 
 export class LocalGameManager {
-    private context: GameContext;
-    private WINNING_SCORE: number = 11;
+	private context: GameContext;
+	private WINNING_SCORE: number = 11;
 
 	constructor(context: GameContext) {
 		this.context = context;
@@ -168,15 +168,15 @@ export class LocalGameManager {
 					return;
 				}
 
-                if (opponentName.length > 20)
-                {
-                    if (errorMsg)
-                    {
-                        errorMsg.innerText = i18next.t('localPage.erro_name_length');
-                        errorMsg.classList.remove('hidden');
-                    }
-                    return ;
-                }
+				if (opponentName.length > 20)
+				{
+					if (errorMsg)
+					{
+						errorMsg.innerText = i18next.t('localPage.erro_name_length');
+						errorMsg.classList.remove('hidden');
+					}
+					return ;
+				}
 
 				if (this.context.chat) {
 					this.context.chat.addSystemMessage(i18next.t('localPage.chat_start_match', {
@@ -235,27 +235,27 @@ export class LocalGameManager {
 							this.context.getGame()!.isRunning = false;
 						}
 
-                        const newGame = new Game(canvas, ctx, input, selectedBall);
-                        this.context.setGame(newGame);
-                        
-                        newGame.onScoreChange = (score) => {
-                            if (scoreBoard) {
-                                scoreBoard.innerText = `${score.player1} - ${score.player2}`;
-                            }
-                        }
-    
-                        newGame.start();
-                        const startDate = getSqlDate();
-                        const localLoop = setInterval(async () => {
-                            const activeGame = this.context.getGame();
-                            if (!activeGame || !activeGame.isRunning) {
-                                clearInterval(localLoop);
-                                return;
-                            }                    
-                        
-                            if (activeGame.score.player1 >= this.WINNING_SCORE || activeGame.score.player2 >= this.WINNING_SCORE) {
-                                activeGame.isRunning = false;
-                                clearInterval(localLoop); 
+						const newGame = new Game(canvas, ctx, input, selectedBall);
+						this.context.setGame(newGame);
+						
+						newGame.onScoreChange = (score) => {
+							if (scoreBoard) {
+								scoreBoard.innerText = `${score.player1} - ${score.player2}`;
+							}
+						}
+	
+						newGame.start();
+						const startDate = getSqlDate();
+						const localLoop = setInterval(async () => {
+							const activeGame = this.context.getGame();
+							if (!activeGame || !activeGame.isRunning) {
+								clearInterval(localLoop);
+								return;
+							}                    
+						
+							if (activeGame.score.player1 >= this.WINNING_SCORE || activeGame.score.player2 >= this.WINNING_SCORE) {
+								activeGame.isRunning = false;
+								clearInterval(localLoop); 
 
 								const p1Score = activeGame.score.player1;
 								const p2Score = activeGame.score.player2;
