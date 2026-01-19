@@ -4188,7 +4188,7 @@
       return value2;
     }
   };
-  var PATH_KEY = /* @__PURE__ */ Symbol("i18next/PATH_KEY");
+  var PATH_KEY = Symbol("i18next/PATH_KEY");
   function createProxy() {
     const state = [];
     const handler = /* @__PURE__ */ Object.create(null);
