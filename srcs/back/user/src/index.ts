@@ -9,10 +9,8 @@ import fs from 'fs';
 import * as userRepo from './repositories/users.js';
 import { ServiceUnavailableError, ValidationError } from './utils/error.js';
 
-// Creation of Fastify server
 const fastify = Fastify({ logger: true });
 
-// NOUVEAY on enregistre le plugin cookie 
 fastify.register(fastifyCookie, {
   secret: process.env.COOKIE_SECRET || 'un-secret-par-defaut',
 });
@@ -41,10 +39,9 @@ fastify.post('/users', async (request, reply) => {
 		avatar?: string;
 	};
 
-
 	if (body.avatar && body.avatar.includes('/assets/')) {
-        body.avatar = body.avatar.substring(body.avatar.indexOf('/assets/'));
-    }
+		body.avatar = body.avatar.substring(body.avatar.indexOf('/assets/'));
+	}
 
 	let userId = null; 
 
@@ -58,7 +55,7 @@ fastify.post('/users', async (request, reply) => {
 		{
 			throw new ValidationError('Error: email is too long')
 		}		
-		// 1. Créer le user localement dans user.sqlite
+
 		userId = await userRepo.createUserInDB(db, body)		
 		if (!userId)
 		{
@@ -71,7 +68,6 @@ fastify.post('/users', async (request, reply) => {
 
 		const authURL = `http://auth:3001/users/${userId}/credentials`;
 
-		// 3. Appeler le service auth pour créer les credentials
 		const authResponse = await fetch(authURL, {
 			method: "POST",
 			headers: { 
@@ -84,12 +80,9 @@ fastify.post('/users', async (request, reply) => {
 			}),
 		});
 
-		// Gérer les erreurs du service auth
 		if (!authResponse.ok)
 		{
 			const authJson = await authResponse.json().catch(() => ({}));
-
-			// Propoager le code d'erreur du service auth
 			if (authResponse.status >= 400 && authResponse.status < 500)
 			{
 				const error: any = new Error(
@@ -98,7 +91,6 @@ fastify.post('/users', async (request, reply) => {
 				error.statusCode = authResponse.status;
 				throw error;
 			}
-
 			throw new ServiceUnavailableError(`Auth service is unavailable`);
 		}
 
@@ -106,21 +98,19 @@ fastify.post('/users', async (request, reply) => {
 
 		if (authJson.success)
 		{
-
-    		const { refreshToken, accessToken, userId } = authJson;//.data?
+			const { refreshToken, accessToken, userId } = authJson;
 
 			if (!accessToken || !userId) {
 				throw new ServiceUnavailableError("Tokens manquants dans la reponse de l'Auth")
 			}
-    		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
-    		reply.setCookie('refreshToken', refreshToken, {
-    		  path: '/',
-    		  httpOnly: true, // invisible au JS (protection XSS)
-    		  secure: true, // acces au cookie uniquement via https
-    		  sameSite: 'lax', // protection CSRF (cookie envoye que si la requete part de notre site)
-    		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
-    		  signed: true
-    		});
+			reply.setCookie('refreshToken', refreshToken, {
+				path: '/',
+				httpOnly: true,
+				secure: true,
+				sameSite: 'lax',
+				maxAge: 7 * 24 * 3600,
+				signed: true
+			});
 			const statsURL = `http://game:3003/games/users/${userId}/stats`;
 			const statResponse = await fetch(statsURL, {
 				method: "POST",
@@ -132,47 +122,36 @@ fastify.post('/users', async (request, reply) => {
 				}),
 			});
 
-			// Gérer les erreurs du service game
-        	if (!statResponse.ok) 
+			if (!statResponse.ok) 
 			{
-            	const statJson = await statResponse.json().catch(() => ({}));
-				
-            	// Propager le code d'erreur du service game
-            	if (statResponse.status >= 400 && statResponse.status < 500) 
+				const statJson = await statResponse.json().catch(() => ({}));
+				if (statResponse.status >= 400 && statResponse.status < 500) 
 				{
-            	    const error: any = new Error(
-            	        statJson.error?.message || `Game service error: ${statResponse.status}`
-            	    );
-            	    error.statusCode = statResponse.status;
-            	    throw error;
-            	}
+					const error: any = new Error( statJson.error?.message || `Game service error: ${statResponse.status}`);
+					error.statusCode = statResponse.status;
+					throw error;
+				}
 			
-            	throw new ServiceUnavailableError('Game service is unavailable');
-       		}
-        
-        	const statJson = await statResponse.json();
-        
-        	if (!statJson.success) 
+				throw new ServiceUnavailableError('Game service is unavailable');
+	   		}
+		
+			const statJson = await statResponse.json();
+		
+			if (!statJson.success) 
 			{
-            	throw new ServiceUnavailableError(statJson.error?.message || 'Stats creation failed');
-        	}
-
-    		return reply.status(201).send({
-				// success: true,
-					// data: {
-    					accessToken: accessToken,
-    					userId: userId
-					// },
-				// error: null
-    		});
+				throw new ServiceUnavailableError(statJson.error?.message || 'Stats creation failed');
 			}
+
+			return reply.status(201).send({
+				accessToken: accessToken,
+				userId: userId
+			});
+		}
 	}
 	catch (err: any) 
 	{
-		// 5. Rollback
 		if (userId) 
 		{
-		  console.log(`Rollback: delele orphan ID ${userId}`);
 		  await userRepo.rollbackDeleteUser(db, userId);
 		  console.log(`User ID ${userId} successfully deleted`);
 		}	
@@ -195,7 +174,6 @@ fastify.post('/users/guest', async (request, reply) => {
 
 	try 
 	{
-		// 1. Créer le user localement dans user.sqlite
 		userId = await userRepo.createGuestInDB(db)		
 		if (!userId)
 		{
@@ -222,66 +200,39 @@ fastify.post('/users/guest', async (request, reply) => {
 			}),
 		});
 
-		// Gérer les erreurs du service auth
 		if (!authResponse.ok)
 		{
 			const authJson = await authResponse.json().catch(() => ({}));
-
-			// Propoager le code d'erreur du service auth
 			if (authResponse.status >= 400 && authResponse.status < 500)
 			{
-				const error: any = new Error(
-					authJson.error?.message || `Auth service error: ${authResponse.status}`
-				);
+				const error: any = new Error( authJson.error?.message || `Auth service error: ${authResponse.status}`);
 				error.statusCode = authResponse.status;
 				throw error;
 			}
-
 			throw new ServiceUnavailableError(`Auth service is unavailable`);
 		}
 
 		const authJson = await authResponse.json();
-
-		console.log("Objet Response brut:", authResponse);
-		console.log("Reponse de l'Auth:", authJson);
-    	// 4. Renvoyer la réponse du service auth (Tokens) au front. Le user est inscrit et connecté
-    	// MODIFICATION -> renvoyer juste l'access token et pas le refresh token (il est dans un cookie)
-    	// d'abord on extrait les infos recues du service Auth
-
-		// il faut creer un json pour recuperer les donnees du fetch
-		// const data = await authResponse.json();
 		if (authJson.success)
 		{
-			// const authPayload = data; //.data MODIF
-			// if (!authPayload || !authPayload.refreshToken)
-			// 	throw new Error("Auth service response is missing tokens inside data object");
-
-    		const { refreshToken, accessToken, userId } = authJson;//.data?
+			const { refreshToken, accessToken, userId } = authJson;
 
 			if (!accessToken || !userId) {
 				throw new ServiceUnavailableError("Tokens manquants dans la reponse de l'Auth")
 			}
-    		// on stocke le refreshToken dans un cookie httpOnly (pas lisible par le javascript)
-    		reply.setCookie('refreshToken', refreshToken, {
-    		  path: '/',
-    		  httpOnly: true, // invisible au JS (protection XSS)
-    		  secure: true, // acces au cookie uniquement via https
-    		  sameSite: 'lax', // protection CSRF (cookie envoye que si la requete part de notre site)
-    		  maxAge: 7 * 24 * 3600, // 7 jours en secondes
-    		  signed: true
-    		});
+			reply.setCookie('refreshToken', refreshToken, {
+				path: '/',
+				httpOnly: true,
+				secure: true,
+				sameSite: 'lax',
+				maxAge: 7 * 24 * 3600,
+				signed: true
+			});
 
-    		// console.log("data from authResponse: ", data);
-
-    		// on envoit pas le refresh token /!\
-    		return reply.status(201).send({
-				// success: true,
-					// data: {
-    					accessToken: accessToken,
-    					userId: userId
-					// },
-				// error: null
-    		});
+			return reply.status(201).send({
+				accessToken: accessToken,
+				userId: userId
+			});
 		}
 		else {
 			throw new ServiceUnavailableError(`Auth error: ${authJson.error.message}`); 
@@ -291,8 +242,6 @@ fastify.post('/users/guest', async (request, reply) => {
 	catch (err: any) 
 	{
 		const errorMessage = err.message;
-
-		// 5. Rollback
 		if (userId) 
 		{
 		  console.log(`Rollback: delele orphan ID ${userId}`);
@@ -318,7 +267,7 @@ fastify.get('/users/:id', async (request, reply) =>
 	const { id } = request.params as { id: string };
 	const userId = Number(id);
 
-	const user = await userRepo.findUserByID(db, userId);    
+	const user = await userRepo.findUserByID(db, userId);	
 	if (!user) 
 	{
 		return reply.status(404).send({
@@ -328,14 +277,13 @@ fastify.get('/users/:id', async (request, reply) =>
 	  	});
 	}
 
-	// je rajoute ca 
 	let userEmail = "";
 	try {
 		const authResponse = await fetch(`http://auth:3001/users/${userId}/email`);
-        if (authResponse.ok) {
-            const authData = await authResponse.json();
-            userEmail = authData.email || "";
-        }
+		if (authResponse.ok) {
+			const authData = await authResponse.json();
+			userEmail = authData.email || "";
+		}
 
 	} catch (err) {
 		console.error("Error getting email from auth: ", err);
@@ -477,11 +425,11 @@ fastify.patch('/users/:id/email', async (request, reply) =>
 		const authJson = await authResponse.json();
 		if (authJson.success)
 		{
-		    return reply.status(201).send({
+			return reply.status(201).send({
 				success: true,
 				data: authJson,
 				error: null
-		    });
+			});
 		}
 	} 
 	catch (err: any) 
@@ -535,11 +483,11 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 		const authJson = await authResponse.json();
 		if (authJson.success)
 		{
-		    return reply.status(201).send({
+			return reply.status(201).send({
 				success: true,
 				data: authJson,
 				error: null
-		    });
+			});
 		}
 	} 
 	catch (err: any) 
@@ -558,26 +506,26 @@ fastify.patch('/users/:id/password', async (request, reply) =>
 
 /* -- UPDATE AVATAR -- */
 fastify.patch('/users/:id/avatar', async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const userId = Number(id);
-    let { avatar } = request.body as { avatar: string };
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	let { avatar } = request.body as { avatar: string };
 
-    try 
+	try 
 	{
-        if (!avatar) 
+		if (!avatar) 
 			throw new ValidationError("No avatar provided");
 
-        if (avatar.includes('/assets/')) {
-            avatar = avatar.substring(avatar.indexOf('/assets/'));
-        }
-        await userRepo.updateAvatar(db, userId, avatar);
-        
-        return reply.status(200).send({
-            success: true,
-            data: { avatar: avatar },
-            error: null
-        });
-    } 
+		if (avatar.includes('/assets/')) {
+			avatar = avatar.substring(avatar.indexOf('/assets/'));
+		}
+		await userRepo.updateAvatar(db, userId, avatar);
+		
+		return reply.status(200).send({
+			success: true,
+			data: { avatar: avatar },
+			error: null
+		});
+	} 
 	catch (err: any) 
 	{
 		const statusCode = err.statusCode || 503;
@@ -587,30 +535,30 @@ fastify.patch('/users/:id/avatar', async (request, reply) => {
 			data: null, 			  
 			error: { message: (err as Error).message } 		
 		});
-    }
+	}
 });
 
 /* -- UPDATE THEME -- */
 fastify.patch('/users/:id/theme', async (request, reply) => 
 {
-    const { id } = request.params as { id: string };
-    const userId = Number(id);
-    const { theme } = request.body as { theme: string };
+	const { id } = request.params as { id: string };
+	const userId = Number(id);
+	const { theme } = request.body as { theme: string };
 
-    try 
+	try 
 	{
-        if (!theme) 
+		if (!theme) 
 			throw new ValidationError("No theme provided");
 
-        await userRepo.updateTheme(db, userId, theme);
-        
-        return reply.status(200).send(
+		await userRepo.updateTheme(db, userId, theme);
+		
+		return reply.status(200).send(
 		{
-            success: true,
-            data: { theme: theme },
-            error: null
-        });
-    } 
+			success: true,
+			data: { theme: theme },
+			error: null
+		});
+	} 
 	catch (err: any) 
 	{
 		const statusCode = err.statusCode || 503;
@@ -620,7 +568,7 @@ fastify.patch('/users/:id/theme', async (request, reply) =>
 			data: null, 			  
 			error: { message: (err as Error).message } 		
 		});
-    }
+	}
 });
 
 //---------------------------------------
@@ -948,7 +896,6 @@ fastify.get('/users/:id/language', async (request, reply) =>
 
 		return reply.status(statusCode).send({
 			success: false,
-			// language: prefferedLanguage,
 			error: { message: err.message || "Failed to export language"}
 		});
 	}
@@ -1003,7 +950,6 @@ const start = async () =>
 {
 	try 
 	{
-		// on attend que le serveur demaarre avant de continuer sur port 8080
 		await fastify.listen({ port: 3004, host: '0.0.0.0' });
 		console.log('Auth service listening on port 3004');
 	} 
@@ -1015,8 +961,6 @@ const start = async () =>
 }
 
 
-
-// On initialise la DB puis on démarre le serveur
 main().then(start).catch(err => 
 {
 	console.error("Startup error:", err);

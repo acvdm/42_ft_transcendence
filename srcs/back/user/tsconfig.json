@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
-		"target": "ES2020",
-		"module": "ESNext",
+		"target": "ES2020", // modern JavaScript version (to have async/await)
+		"module": "ESNext", // import system
 		"moduleResolution": "node",
 		"outDir": "./dist",
 		"rootDir": "./src",

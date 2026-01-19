@@ -1,7 +1,7 @@
 #----------------------------
 # STEP 1: BUILD APP
 #----------------------------
-        
+		
 FROM node:20-alpine AS build
 
 RUN apk add --no-cache sqlite

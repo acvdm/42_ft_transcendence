@@ -22,11 +22,13 @@ fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: Fa
 	}
 });
 
-// SECURITE
-// code qui s'execute avant chaque requete
-// verifie si premiere authentification -> laisser passer dans auth
-// verifie l'authenticite du JWT -> si ok laisse passer dans laisse passer dans microservices
-// et modifie le header transmis (ne passe pas le JWT aux micro services qui ne le connaisse pas) mais l'id du user
+/*
+SECURITY -> addHook 'onRequest'
+Code that runs before each request
+Checks if first authentication. Let it pass through auth
+Checks the authenticity of the JWT. if ok, let it pass through microservices
+and modifies the transmitted header (does not pass the JWT to microservices that do not know it) but the user ID
+*/
 
 fastify.addHook('onRequest', async (request, reply) => {
 	const url = request.url;
@@ -34,7 +36,6 @@ fastify.addHook('onRequest', async (request, reply) => {
 
 	console.log(`Incoming request: ${url}`);
 
-	// on laisse passer tout ce qui conserne l'auth (login, register, refresh)
 	const publicRoutes = [
 		"/api/users/login",
 		"/api/users/token",
@@ -59,7 +60,7 @@ fastify.addHook('onRequest', async (request, reply) => {
 		console.log(`Public route allowed: ${method} ${url}`);
 		return;
 	}
-	// verification de l'acces token
+
 	try {
 		const authHeader = request.headers['authorization'];
 		if (!authHeader) {
@@ -73,26 +74,22 @@ fastify.addHook('onRequest', async (request, reply) => {
 			scope?: string 
 		};
 
-		// si cest un token 2fa on verifie ou il veut aller
-		if (decoded.scope == '2fa_login'){
-			// on autorise seulement la route de verification du 2FA
+		if (decoded.scope == '2fa_login')
+		{
 			if (!url.includes('/2fa/challenge'))
 				throw new UnauthorizedError("2FA verification pending");
-			console.log(`2FA Token user for verification endpoint -> Allowed`);
 		}
 
-		// request.user = decoded;
-
-		// injection d'identite -> le gateway valide lid et previent les microservices
 		request.headers['x-user-id'] = decoded.sub.toString();
 
-		console.log(`User ${decoded.sub} authorized for ${url}`);
 	} catch (err) {
 		request.log.warn(`Auth failed: ${err}`);
 		return reply.status(401).send({ error: "Unauthorized", message: "Invalid or expired token"});
 	}
 })
 
+
+/* Redirections */ 
 
 fastify.register(fastifyProxy, 
 {
@@ -156,7 +153,7 @@ fastify.register(fastifyProxy,
 	}
 });
 
-// route de test
+
 fastify.get('/health', async () => ({ service: 'gateway', status:'ready' }));
 
 const start = async () => 

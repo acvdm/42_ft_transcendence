@@ -4,7 +4,7 @@
 FROM node:20-alpine AS build
 
 RUN apk add --no-cache python3 make g++ \
-    && ln -sf /usr/bin/python3 /usr/bin/python
+	&& ln -sf /usr/bin/python3 /usr/bin/python
 
 
 #-----------------------DEFINE WORKING DIRECTORY

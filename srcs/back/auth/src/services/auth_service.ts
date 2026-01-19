@@ -31,21 +31,20 @@ export interface authResponse {
 }
 
 export interface LoginResponse {
-	// Cas classique
+	// Classic case
 	accessToken?: string;
 	refreshToken?: string;
 	userId?: number;
 
-	// Cas 2FA requis
+	// 2FA required
 	require2fa?: boolean;
-	tempToken?: string; // Token temporaire special donne pour entrer le code de verification
+	tempToken?: string;
 }
 
 export interface TwoFAGenerateResponse {
-	qrCodeUrl: string; // image en base64
-	manualSecret: string; // code texte au cas ou la camera ne marche pas
+	qrCodeUrl: string;
+	manualSecret: string;
 }
-
 
 
 async function generateTokens (
@@ -55,11 +54,18 @@ async function generateTokens (
 {
 	const accessToken = generateAccessToken(userId, credentialId);
 	const refreshToken = generateRefreshToken(userId);
-	const expiresAt = getExpirationDate(7); // modif ici on passe a 7
-
+	const expiresAt = getExpirationDate(7);
 	return { accessToken, refreshToken, expiresAt}
 }
 
+
+/*  
+	1. Verify that the email address is not already taken
+	2. Password hashing  
+	3. DB insertion 
+	4. Token generation
+	5. Insertion into the DB tokens
+*/
 
 export async function registerUser(
 	db: Database,
@@ -68,15 +74,12 @@ export async function registerUser(
 	password: string
 ): Promise<authResponse>
 {
-    // 1. Vérification que l'email n'est pas déjà pris
-    const existing = await credRepo.findByEmail(db, email);
-    if (existing)
-        throw new ConflictError('registerPage.error_email_already_taken');
+	const existing = await credRepo.findByEmail(db, email);
+	if (existing)
+		throw new ConflictError('registerPage.error_email_already_taken');
 
-	// 2. Hashage, génération 2fa
 	const pwdHashed = await hashPassword(password);
 
-	// 3. Insertion DB
 	const credentialId = await credRepo.createCredentials(db, {
 		userId,
 		email,
@@ -87,10 +90,8 @@ export async function registerUser(
 		emailOtpExpiresAt: null
 	});
 
-	// 4. Génération token
 	const tokens = await generateTokens(userId, credentialId);
 
-	// 5. Insertion dans la DB tokens
 	await tokenRepo.createToken(db, {
 		userId,
 		credentialId,
@@ -105,22 +106,28 @@ export async function registerUser(
 	};
 }
 
+
+/*  
+    1.  Verify that the email address is not already taken
+	2. Generating random password
+	3. DB insertion 
+	4. Token generation
+	5. Insertion into the DB tokens
+*/
+
 export async function registerGuest (
 	db: Database,
 	userId: number,
 	email: string
 ): Promise<authResponse>
 {
-    // 1. Vérification que l'email n'est pas déjà pris
-    const existing = await credRepo.findByEmail(db, email);
-    if (existing)
-        throw new ConflictError('registerPage.error_email_already_taken');
+	const existing = await credRepo.findByEmail(db, email);
+	if (existing)
+		throw new ConflictError('registerPage.error_email_already_taken');
 
-	// Faustine: on doit générer un mdp aléatoire pour le guest car il aime pas ne rien avoir
 	const uniqueGuestPwd = `guestPwd${userId}_${Date.now()}_${Math.random()}`;
 	const uniqueGuestHash = await hashPassword(uniqueGuestPwd);
 
-	// 2. Insertion DB
 	const credentialId = await credRepo.createCredentials(db, {
 		userId,
 		email,
@@ -131,10 +138,8 @@ export async function registerGuest (
 		emailOtpExpiresAt: null
 	});
 
-	// 4. Génération token
 	const tokens = await generateTokens(userId, credentialId);
 
-	// 5. Insertion dans la DB tokens
 	await tokenRepo.createToken(db, {
 		userId,
 		credentialId,
@@ -156,9 +161,9 @@ export async function changeEmailInCredential (
 	email: string
 )
 {
-    const existing = await credRepo.findByEmail(db, email);
-    if (existing)
-        throw new ConflictError('registerPage.error_email_already_taken');
+	const existing = await credRepo.findByEmail(db, email);
+	if (existing)
+		throw new ConflictError('registerPage.error_email_already_taken');
 
 	await credRepo.changeEmail(db, userId, email);
 }
@@ -183,7 +188,6 @@ export async function loginUser(
 	password: string
 ): Promise<LoginResponse>
 {
-
 	const userId = await credRepo.findUserIdByEmail(db, email);
 	if (!userId)
 		throw new NotFoundError('loginPage.error_no_user');
@@ -196,27 +200,21 @@ export async function loginUser(
 	if (!isPasswordValid)
 		throw new UnauthorizedError ('loginPage.error_invalid_pwd');
 
-	// QUELLE EST LA METHODE 2FA ACTIVE
+	/* 2FA active */
 	const method = await credRepo.get2FAMethod(db, userId);
 
-	// CAS 1 : application (Google Authenticator)
 	if (method === 'APP') {
-		// 2FA active -> on ne donne pas les acces (refresk/access token)
-		// mais un tocken temporaire pour acceder a la page pour entrer le num
-		const tempToken = generateTempToken(userId); // dans crypt, duree 5min
+		const tempToken = generateTempToken(userId);
 		return {
 			require2fa: true,
 			tempToken: tempToken
 		};
 	}
 
-	// CAS 2 : email
 	if (method === 'EMAIL')
 	{
-		// generer le code
 		const code = crypt.generateRandomCode(6);
-		const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // Valide 10 min
-		// sauvegarder en DB
+		const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 		await credRepo.saveEmailCode(db, userId, code, expiresAt);
 
 		try {
@@ -226,7 +224,7 @@ export async function loginUser(
 			throw new ServiceUnavailableError("Not possible to send verification email");
 		}
 
-		console.log(`[ACTIVATION] Code envoyé à ${email}`)
+		console.log(`[ACTIVATION] Code sent to ${email}`)
 
 		const tempToken = generateTempToken(userId);
 
@@ -237,13 +235,11 @@ export async function loginUser(
 
 	}
 
-	// CAS 3: pas de 2FA
+	/* 2FA not active */
 	const tokens = await generateTokens(userId, credentialId);
 
-	// on delete l'ancien token
 	await tokenRepo.deleteTokenByCredentialId(db, credentialId);
 
-	// on cree une nouvelle ligne en db
 	await tokenRepo.createToken(db, {
 		userId,
 		credentialId,
@@ -278,55 +274,33 @@ export async function authenticatePassword(
 }
 
 
-// JWT pour refresh le refresh et l'access token
+/* JWT : Refresh the access and refresh token when access token is up to 15min */
 
 export async function refreshUser(
 	db: Database,
 	oldRefreshToken: string
 ): Promise<authResponse> {
 
-	// chercher le token en DB
 	const tokenRecord = await tokenRepo.findByRefreshToken(db, oldRefreshToken);
-	if (!tokenRecord){
+	if (!tokenRecord)
 		throw new NotFoundError('Refresh token not found');
-	}
 
-	// verification expiration
 	const now = new Date();
-	const expiry = new Date(tokenRecord.expiresAt); // comparaison de string
-
-	console.log("Token expiry check:", {
-		now: now.toISOString(),
-		expiryStored: tokenRecord.expiresAt,
-		expiryParsed: expiry.toISOString(),
-		isValidDate: !isNaN(expiry.getTime()),
-		expired: now > expiry
-	});
+	const expiry = new Date(tokenRecord.expiresAt);
 
 	if (isNaN(expiry.getTime()))
-	{
-		console.error("❌ Invalid expiration date in DB:", tokenRecord.expiresAt);
 		throw new UnauthorizedError('Invalid refresh token expiration');
-	}
 
 	if (now > expiry)
-		{
-		console.error("refresh token expired");
 		throw new UnauthorizedError('Refresh token expired');
-	}
 
-	// generation de nv secrets et des tokens
 	const newAccessToken = generateAccessToken(tokenRecord.userId, tokenRecord.credentialId);
 	const newRefreshToken = generateRefreshToken(tokenRecord.userId);
 	const newExpiresAt = getExpirationDate(7);
 
-	console.log("✅ NEW Access Token generated:", newAccessToken);
-	console.log("Token payload:", jwt.decode(newAccessToken));
-
-	// mise a jour de la DB
-	console.log("Updating token in DB...");
+	
 	await tokenRepo.updateToken(db, tokenRecord.credentialId, newRefreshToken, newExpiresAt);
-	console.log("Token updated successfully");
+	console.log("✅ NEW Access Token generated:", newAccessToken);
 
 	return {
 		accessToken: newAccessToken,
@@ -335,42 +309,35 @@ export async function refreshUser(
 	};
 }
 
-// 2FA verification
-// fonction qui genere le secret pour le QR code et le code pour le QRcode et l'email
-// sauvegarde en DB les infos
+/* 2FA : generates the secret for the QR code and the code for the QR code and email */
 
 export async function  generateTwoFA(
 	db: Database,
 	userId: number,
-	type: 'APP' | 'EMAIL' = 'APP' // par defaut APP pour compatibilite
-): Promise<TwoFAGenerateResponse | { message: string }> { //revoir le message
+	type: 'APP' | 'EMAIL' = 'APP'
+): Promise<TwoFAGenerateResponse | { message: string }> {
 
 	if (type == 'APP')
 	{
-		// recuperer email (pour lafficher dans google authenticator)
 		const email = await credRepo.getEmailbyID(db, userId);
 		if (!email)
 			throw new NotFoundError("User not found");
 
-		// creer secret
 		const secret = new Secret({ size: 20});
 
-		// sauvegarder secret en DB (is_2fa_enabled doit rester a 0 ici)
 		await credRepo.update2FASecret(db, userId, secret.base32);
 
-		// generer url avec le secret pour l'appli
 		const totp = new TOTP({
-			issuer: "Transcendence", // etiquette pour lappli
-			label: email, //etiquette pour l'appli
-			algorithm: "SHA1", // fonction qui melange le secret et l'heure
-			digits: 6, // code final a 6 chiffres
-			period: 30, // code change toutes les 30 secondes
+			issuer: "Transcendence",
+			label: email,
+			algorithm: "SHA1",
+			digits: 6,
+			period: 30,
 			secret: secret
-		}); // pas de communication par le reseau entre tel et serveur pour verifier le code, ils font chacun le meme calcul
+		});
 
 		const otpauthUrl = totp.toString();
 
-		// convertir l'url en image qr code (base64)
 		const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
 
 		return {
@@ -393,23 +360,24 @@ export async function  generateTwoFA(
 		try {
 			await send2FAEmail(email, code);
 		} catch (error) {
-			console.error("Erreur d'envoi de mail:", error);
 			throw new ServiceUnavailableError("Not possible to send verification email");
 		}
-
-		console.log(`[ACTIVATION] Code envoyé à ${email}`)
-
 		return { message : 'Code send by email' };
 	}
 
 	throw new ValidationError("Invalid 2FA type");
 }
 
-// fonciton qui verifie le code envoye par lutilisateur et permet lactivation du 2FA
+/* 
+2FA : verifies the code sent by the user and enables 2FA activation
+Convert the string back to a Secret object (it had been converted to a string to be put in the database).
+window = margin of error -> server accepts the current code but also looks at 1 period before and after
+*/
+
 export async function verifyAndEnable2FA(
 	db: Database,
 	userId: number,
-	code: string, // code envoye par lutilisateur
+	code: string,
 	type: 'APP' | 'EMAIL'
 ) : Promise<boolean> {
 
@@ -417,24 +385,20 @@ export async function verifyAndEnable2FA(
 
 	if (type === 'APP')
 	{
-		// 1. Recuperer le secret en DB
 		const secretStr = await credRepo.get2FASecret(db, userId);
 		if (!secretStr)
 			throw new ConflictError("2FA not initiated");
 
-		// 2. Creer l'objet TOTP pour verifier
 		const totp = new TOTP({
 			issuer: "Transcendence",
 			label: "Transcendence",
-			algorithm: "SHA1", // fonction qui melange le secret et l'heure
-			digits: 6, // code final a 6 chiffres
-			period: 30, // code change toutes les 30 secondes
-			secret: Secret.fromBase32(secretStr) // Reconvertir la string en objet Secret (il avait ete convertie en string pour etre mise en DB)
+			algorithm: "SHA1",
+			digits: 6,
+			period: 30,
+			secret: Secret.fromBase32(secretStr)
 		});
 
-			// 3. Valider le code
-			// delta renvoit l'ecart de temps (0 = parfait, -1 = code d'il y a 30s, null = invalide)
-			isValid = totp.validate({ token: code, window: 1}) !== null; // window = marge d'erreur -> serveur accepte le code actuel mais regarde aussi 1 periode avant et apres
+		isValid = totp.validate({ token: code, window: 1}) !== null;
 	}
 	else if (type === 'EMAIL')
 	{
@@ -461,30 +425,29 @@ export async function verifyAndEnable2FA(
 	return false;
 };
 
-// finalizeLogin
-// verifie le code entre au moment du login
-// si ok -> genere les vrais tokens
-// enregistre le refresh token en BDD
+/* 
+2FA : 
+verify the code entered at login
+if ok -> generate the real tokens
+save the refresh token in the database 
+*/
 
 export async function finalizeLogin2FA(
 	db: Database,
 	userId: number,
 	code: string
-): Promise<authResponse | null> // renvoit null si le code est invalide
+): Promise<authResponse | null>
 {
 
-	// 1. Recuperer la methode active
 	const method = await credRepo.get2FAMethod(db, userId);
 	let isValid = false;
 
-	// ----VERIFICATION APP (TOTP)
 	if (method === 'APP')
 	{
 		const secretStr = await credRepo.get2FASecret(db, userId);
 		if (!secretStr)
 			throw new ConflictError("2FA not configured for this user");
 
-		// verifier le code totp
 		const totp = new TOTP({
 			issuer: "Transcendence",
 			label: "Transcendence",
@@ -500,7 +463,6 @@ export async function finalizeLogin2FA(
 		}
 	}
 
-	// ----VERIFICATION EMAIL (OTP)
 	else if (method === 'EMAIL')
 	{
 		const data = await credRepo.getEmailCodeData(db, userId);
@@ -520,20 +482,14 @@ export async function finalizeLogin2FA(
 	if (!isValid)
 		return null;
 
-	// ----LOGIN REUSSI
-
-	// 2. recuperer le credential id necessaire pour la table TOKENS
 	const credential = await credRepo.getCredentialbyUserID(db, userId);
 	if (!credential)
 		throw new NotFoundError("Credential not found");
 
-	// 3. generer les vrais tokens (access + refresh)
 	const tokens = await generateTokens(userId, credential.id);
 
-	// 4. nettoyage : on supprime les vieux tokens de cet utilisateur
 	await tokenRepo.deleteTokenByCredentialId(db, credential.id);
 
-	// 5. sauvegarde: on enregistre le nouveau refresh token
 	await tokenRepo.createToken(db, {
 		userId: userId,
 		credentialId: credential.id,
