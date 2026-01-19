@@ -259,6 +259,7 @@ export class RemoteGameManager {
 				canvas.style.height = '100%';
 				container.appendChild(canvas);
 
+				
 				if (canvas.width === 0) {
 					canvas.width = 800;
 				}
