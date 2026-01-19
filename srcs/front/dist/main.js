@@ -12818,6 +12818,9 @@
             newGame.resetScore();
             this.context.setGame(newGame);
             const spaceHandler = (e) => {
+              const target = e.target;
+              if (target.tagName === "INPUT" || target.tagName === "TEXTAREA")
+                return;
               if (e.code === "Space") {
                 const game = this.context.getGame();
                 if (game && game.isRunning) {

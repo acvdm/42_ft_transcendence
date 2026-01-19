@@ -275,6 +275,9 @@ export class RemoteGameManager {
 					this.context.setGame(newGame);
 
 					const spaceHandler = (e: KeyboardEvent) => {
+						const target = e.target as HTMLElement;
+						if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+							return;
 						if (e.code === 'Space') {
 							const game = this.context.getGame();
 							if (game && game.isRunning) {
