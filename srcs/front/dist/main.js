@@ -11849,7 +11849,7 @@
 
   // scripts/game/Game.ts
   var Game = class {
-    // Pour le délai avant lancement en mode local
+    // Direction du prochain service (-1 = vers player1, 1 = vers player2)
     constructor(canvas, ctx, input, ballImageSrc) {
       this.isRemote = false;
       this.roomId = null;
@@ -11857,6 +11857,8 @@
       this.socket = null;
       this.lastBallSpeed = 0;
       this.ballLaunchAt = null;
+      // Pour le délai avant lancement en mode local
+      this.nextServeDirection = 1;
       this.canvas = canvas;
       this.ctx = ctx;
       this.input = input;
@@ -11981,8 +11983,7 @@
         if (Date.now() < this.ballLaunchAt) {
           return;
         } else {
-          const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
-          this.ball.reset(canvas, direction);
+          this.ball.reset(canvas, this.nextServeDirection);
           this.ballLaunchAt = null;
         }
       }
@@ -12004,9 +12005,7 @@
       const currentBallSpeed = Math.abs(data.ball.vx) + Math.abs(data.ball.vy);
       const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
       this.lastBallSpeed = currentBallSpeed;
-      const distanceMoved = Math.sqrt(
-        Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2)
-      );
+      const distanceMoved = Math.sqrt(Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2));
       const ballTeleported = distanceMoved > 200;
       const paddle1Right = data.paddle1.x + data.paddle1.width;
       const paddle2Left = data.paddle2.x;
@@ -12096,6 +12095,7 @@
         this.ball.y = this.canvas.height / 2;
         this.ball.velocityX = 0;
         this.ball.velocityY = 0;
+        this.nextServeDirection = -1;
         this.ballLaunchAt = Date.now() + 500;
       } else if (this.ball.x > this.canvas.width) {
         this.score.player1++;
@@ -12104,6 +12104,7 @@
         this.ball.y = this.canvas.height / 2;
         this.ball.velocityX = 0;
         this.ball.velocityY = 0;
+        this.nextServeDirection = 1;
         this.ballLaunchAt = Date.now() + 500;
       }
     }
@@ -12128,12 +12129,20 @@
     }
     addEventListeners() {
       window.addEventListener("keydown", (event) => {
+        const target = event.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+          return;
+        }
         if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
           event.preventDefault();
         }
         this.keys[event.key] = true;
       });
       window.addEventListener("keyup", (event) => {
+        const target = event.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+          return;
+        }
         if (["w", "s", "ArrowUp", "ArrowDown"].includes(event.key)) {
           event.preventDefault();
         }

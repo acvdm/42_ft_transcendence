@@ -7,11 +7,11 @@ class Paddle {
 	color: string;
 	image: HTMLImageElement | null = null;
 	constructor(x: number, y: number, imageSrc: string = '/assets/basic/block.png') {
-		this.x = x; // Paddle's x position
-		this.y = y; // Paddle's y position
-		this.width = 10; // Paddle's width
-		this.height = 100; // Paddle's height
-		this.speed = 6; // Paddle's movement speed
+		this.x = x;
+		this.y = y;
+		this.width = 10;
+		this.height = 100;
+		this.speed = 6;
 		this.color = 'white';
 
 		if (imageSrc) {
@@ -22,9 +22,9 @@ class Paddle {
 
 	move(up : boolean) {
 		if (up) {
-			this.y -= this.speed; // Move paddle up
+			this.y -= this.speed; //up
 		} else {
-			this.y += this.speed; // Move paddle down
+			this.y += this.speed; //down
 		}
 	}
 
@@ -32,8 +32,8 @@ class Paddle {
 		if (this.image && this.image.complete && this.image.naturalWidth !== 0) {
 			ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
 		} else {
-			ctx.fillStyle = 'white'; // Paddle color
-			ctx.fillRect(this.x, this.y, this.width, this.height); // Draw paddle
+			ctx.fillStyle = 'white';
+			ctx.fillRect(this.x, this.y, this.width, this.height);
 		}
 	}
 

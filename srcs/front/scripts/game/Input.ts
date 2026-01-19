@@ -7,7 +7,13 @@ class Input {
 
 	addEventListeners() {
 		window.addEventListener('keydown', (event) => {
-			// Empêcher le comportement par défaut pour les touches du jeu
+
+			const target = event.target as HTMLElement;
+
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                return ;
+            }
+
 			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
 				event.preventDefault();
 			}
@@ -15,6 +21,11 @@ class Input {
 		});
 
 		window.addEventListener('keyup', (event) => {
+			const target = event.target as HTMLElement;
+
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+                return ;
+            }
 			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
 				event.preventDefault();
 			}

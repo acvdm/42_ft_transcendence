@@ -55,7 +55,6 @@ class Ball {
 		this.x = canvas.width / 2;
 		this.y = canvas.height / 2;
 		
-		// Même logique qu'en remote : angle aléatoire entre -30° et +30°
 		const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
 		const speed = 7;
 		
