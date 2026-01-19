@@ -1,4 +1,4 @@
-import Fastify from 'fastify';
+import Fastify, { FastifyRequest, FastifyReply, FastifyError} from 'fastify';
 import fastifyProxy from '@fastify/http-proxy';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from './utils/error.js';
@@ -10,6 +10,17 @@ if (!JWT_SECRET){
 }
 
 const fastify = Fastify({ logger: true });
+
+fastify.setErrorHandler((error: FastifyError, request: FastifyRequest, reply: FastifyReply) => {
+	if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEOUT' || error.statusCode === 504) {
+		request.log.error(`Upstream service unavailable: ${error.message}`);
+		return reply.status(503).send({
+			error: "Service Unavailable",
+			message: "Le service demandé est momentanément indisponible.",
+			statusCode: 503
+		});
+	}
+});
 
 // SECURITE
 // code qui s'execute avant chaque requete
@@ -83,51 +94,66 @@ fastify.addHook('onRequest', async (request, reply) => {
 })
 
 
-// 1. On va redirigé vers les bons services quand nécéssaire
-
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://auth:3001', // adresse interne du réseau du docker
-	prefix: '/api/auth', // toutes les requetes api/auth iront au service auth
-	rewritePrefix: '' // on retire le prefixe avant de l'envoyer un service
+	upstream: 'http://auth:3001',
+	prefix: '/api/auth',
+	rewritePrefix: '',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://chat:3002', // adresse interne du réseau du docker
-	prefix: '/socket-chat', // toutes les requetes api/chat iront au service chat
+	upstream: 'http://chat:3002',
+	prefix: '/socket-chat',
 	websocket: true,
-	rewritePrefix: '/socket.io' // on retire le prefixe avant de l'envoyer un service
+	rewritePrefix: '/socket.io',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
-// fastify.register(fastifyProxy, {
-//     upstream: 'http://chat:3002',
-//     prefix: '/api/chat', // Nouveau préfixe pour les requêtes HTTP
-//     websocket: false,    // Pas de websocket ici
-//     rewritePrefix: ''    // On enlève '/api/chat' ou on le garde selon comment votre back est fait
-//     // NOTE : Si dans votre chat/src/index.ts vous avez 'fastify.get('/unread')', 
-//     // alors il faut rewritePrefix: '' pour que le back reçoive juste '/unread'.
-// });
 
 fastify.register(fastifyProxy, {
 	upstream: 'http://game:3003',
 	prefix: '/socket-game',
 	websocket: true,
-	rewritePrefix: '/socket.io'
+	rewritePrefix: '/socket.io',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://game:3003', // adresse interne du réseau du docker
-	prefix: '/api/game', // toutes les requetes api/game iront au service game
-	rewritePrefix: '/games' // on retire le prefixe avant de l'envoyer un service
+	upstream: 'http://game:3003',
+	prefix: '/api/game',
+	rewritePrefix: '/games',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 fastify.register(fastifyProxy, 
 {
-	upstream: 'http://user:3004', // adresse interne du réseau du docker
-	prefix: '/api/user', // toutes les requetes api/user iront au service user
-	rewritePrefix: '/users' // on retire le prefixe avant de l'envoyer un service
+	upstream: 'http://user:3004',
+	prefix: '/api/user',
+	rewritePrefix: '/users',
+	http: {
+		requestOptions: {
+			timeout: 5000
+		}
+	}
 });
 
 // route de test

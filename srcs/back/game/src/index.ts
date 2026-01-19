@@ -197,7 +197,7 @@ fastify.post('/games', async (request, reply) =>
 		if (gameId)
 			await rollbackDeleteGame(db, gameId);
 		
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -242,7 +242,7 @@ fastify.post('/games/tournaments', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -279,7 +279,7 @@ fastify.post('/games/users/:id/stats', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -311,7 +311,7 @@ fastify.get('/games/users/:id/stats', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 
 		return reply.status(statusCode).send({
 			success: false,
@@ -344,7 +344,7 @@ fastify.get('/games/users/:id/history', async (request, reply) =>
 	}
 	catch (err)
 	{
-		return reply.status(500).send({ error: "Failed to fetch history" });
+		return reply.status(503).send({ error: "Failed to fetch history" });
 	}
 
 });
@@ -374,7 +374,7 @@ fastify.get('/users/:id/export', async (request, reply) =>
 	}
 	catch (err: any)
 	{
-		const statusCode = err.statusCode || 500;
+		const statusCode = err.statusCode || 503;
 		return reply.status(statusCode).send({
 			success: false,
 			data: null,
