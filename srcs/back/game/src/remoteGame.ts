@@ -14,9 +14,9 @@ interface GameState {
 	canvasWidth: number;
 	canvasHeight: number;
 	intervalId?: NodeJS.Timeout;
-	startAt?: number; // [FIX] Countdown initial, undefined après démarrage
-	serveDirection: number; // 1 pour droite -1 pour gauche
-	ballLaunchAt?: number; // [FIX] Délai avant lancement de la balle (comme un reset)
+	startAt?: number;
+	serveDirection: number;
+	ballLaunchAt?: number;
 }
 
 let waitingQueue: string[] = []; // ID des sockets en attente
@@ -30,7 +30,7 @@ export function initGameState(roomId: string, p1: string, p2: string): GameState
 		roomId,
 		player1Id: p1,
 		player2Id: p2,
-		canvasWidth: 800, // Taille de référence serveur
+		canvasWidth: 800,
 		canvasHeight: 600,
 		ball: { x: 400, y: 300, vx: 5, vy: 5, radius: 10 },
 		paddle1: { x: 30, y: 250, width: 10, height: 100 },
@@ -45,7 +45,6 @@ function resetBall(game: GameState, dir: number = 1) {
 	game.ball.x = game.canvasWidth / 2;
 	game.ball.y = game.canvasHeight / 2;
 	game.serveDirection = dir;
-	// Vitesse aléatoire mais constante
 	const angle = (Math.random() * Math.PI / 3) - (Math.PI / 6);
 	const speed = 7;
 	const direction = Math.random() > 0.5 ? 1 : -1;
@@ -70,23 +69,21 @@ function stopGame(roomId: string, io: Server) {
 	}
 }
 export function updateGamePhysics(game: GameState, io: Server) {
-	// Gestion du délai de démarrage (countdown)
 	if (game.startAt && Date.now() < game.startAt) {
 		io.to(game.roomId).emit('gameState', {
 			ball: game.ball,
 			paddle1: game.paddle1,
 			paddle2: game.paddle2,
 			score: game.score,
-			waiting: true // Petit indicateur optionnel
+			waiting: true
 		});
 
 		return ;
 	}
 
-	// [FIX] Après countdown, attendre 4.5 secondes avec balle au centre (première balle uniquement)
 	if (game.startAt && !game.ballLaunchAt) {
 		game.startAt = undefined;
-		game.ballLaunchAt = Date.now() + 1000; // Lancer dans 4.5 secondes (première balle)
+		game.ballLaunchAt = Date.now() + 1000;
 		game.ball.x = game.canvasWidth / 2;
 		game.ball.y = game.canvasHeight / 2;
 		game.ball.vx = 0;
@@ -101,7 +98,6 @@ export function updateGamePhysics(game: GameState, io: Server) {
 		return;
 	}
 
-	// [FIX] Attendre ballLaunchAt avant de lancer la balle
 	if (game.ballLaunchAt && Date.now() < game.ballLaunchAt) {
 		io.to(game.roomId).emit('gameState', {
 			ball: game.ball,
@@ -112,7 +108,6 @@ export function updateGamePhysics(game: GameState, io: Server) {
 		return;
 	}
 
-	// [FIX] Lancer la balle maintenant
 	if (game.ballLaunchAt && game.ball.vx === 0 && game.ball.vy === 0) {
 		resetBall(game, game.serveDirection);
 		game.ballLaunchAt = undefined;
@@ -127,18 +122,15 @@ export function updateGamePhysics(game: GameState, io: Server) {
 	}
 
 
-	// 1. On sauvegarde la position AVANT mouvement pour la comparaison
 	const prevX = game.ball.x;
 	const prevY = game.ball.y;
 
-	// 2. On calcule la FUTURE position sans modifier l'objet tout de suite
 	let nextX = prevX + game.ball.vx;
 	let nextY = prevY + game.ball.vy;
 
-	// Collision murs (Haut/Bas)
 	if (nextY - game.ball.radius < 0 || nextY + game.ball.radius > game.canvasHeight) {
 		game.ball.vy = -game.ball.vy;
-		nextY = prevY + game.ball.vy; // On recalcule nextY avec la nouvelle direction
+		nextY = prevY + game.ball.vy;
 	}
 
 	// Pour empecher le tunnelling
@@ -147,24 +139,19 @@ export function updateGamePhysics(game: GameState, io: Server) {
 	// Collision Raquettes
 	// P1 (Gauche)
 	if (game.ball.vx < 0) { 
-		// La balle va vers la gauche. On regarde si elle traverse la face DROITE de la raquette.
 		const paddleRightEdge = game.paddle1.x + game.paddle1.width;
-		const TOLERANCE = 5; // Marge de tolérance pour éviter les cas limites
+		const TOLERANCE = 5;
 
-		// [FIX] Condition assouplie : si la balle était approximativement à droite ET finit à gauche
 		if (prevX - game.ball.radius >= paddleRightEdge - TOLERANCE && 
 			nextX - game.ball.radius <= paddleRightEdge + TOLERANCE) {
 			
-			// [FIX] Vérification verticale avec hitbox élargie de 5px pour être plus permissif
 			const ballTop = Math.min(prevY, nextY) - game.ball.radius;
 			const ballBottom = Math.max(prevY, nextY) + game.ball.radius;
 			const paddleTop = Math.max(0, game.paddle1.y - 5);
 			const paddleBottom = Math.min(game.canvasHeight, game.paddle1.y + game.paddle1.height + 5);
 			
-			// Collision si les zones se chevauchent
 			if (ballBottom >= paddleTop && ballTop <= paddleBottom) {
 				
-				// [FIX] Calcul de l'angle de rebond basé sur où la balle frappe
 				let hitPos = (nextY - (game.paddle1.y + game.paddle1.height / 2)) / (game.paddle1.height / 2);
 				let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
 				
@@ -175,7 +162,6 @@ export function updateGamePhysics(game: GameState, io: Server) {
 				game.ball.vx = speed * Math.cos(angle);
 				game.ball.vy = speed * Math.sin(angle);
 				
-				// On replace la balle juste devant la raquette pour éviter qu'elle reste coincée
 				nextX = paddleRightEdge + game.ball.radius;
 			}
 		}
@@ -183,24 +169,18 @@ export function updateGamePhysics(game: GameState, io: Server) {
 
 	// P2 (Droite)
 	if (game.ball.vx > 0) { 
-		// La balle va vers la droite. On regarde si elle traverse la face GAUCHE de la raquette.
 		const paddleLeftEdge = game.paddle2.x;
-		const TOLERANCE = 5; // Marge de tolérance pour éviter les cas limites
-
-		// [FIX] Condition assouplie : si la balle était approximativement à gauche ET finit à droite
+		const TOLERANCE = 5;
 		if (prevX + game.ball.radius <= paddleLeftEdge + TOLERANCE && 
 			nextX + game.ball.radius >= paddleLeftEdge - TOLERANCE) {
 			
-			// [FIX] Vérification verticale avec hitbox élargie de 5px pour être plus permissif
 			const ballTop = Math.min(prevY, nextY) - game.ball.radius;
 			const ballBottom = Math.max(prevY, nextY) + game.ball.radius;
 			const paddleTop = Math.max(0, game.paddle2.y - 5);
 			const paddleBottom = Math.min(game.canvasHeight, game.paddle2.y + game.paddle2.height + 5);
 			
-			// Collision si les zones se chevauchent
 			if (ballBottom >= paddleTop && ballTop <= paddleBottom) {
 				
-				// [FIX] Calcul de l'angle de rebond basé sur où la balle frappe
 				let hitPos = (nextY - (game.paddle2.y + game.paddle2.height / 2)) / (game.paddle2.height / 2);
 				let angle = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, hitPos * (Math.PI / 4)));
 				
@@ -216,21 +196,17 @@ export function updateGamePhysics(game: GameState, io: Server) {
 		}
 	}
 
-	// [FIX] Collision sur le haut/bas des paddles (pour éviter traversée quand paddle est en bordure)
 	// Paddle 1 (Gauche)
 	const p1Left = game.paddle1.x;
 	const p1Right = game.paddle1.x + game.paddle1.width;
 	const p1Top = game.paddle1.y;
 	const p1Bottom = game.paddle1.y + game.paddle1.height;
 	
-	// Vérifier si la balle est horizontalement dans la zone du paddle1
 	if (nextX - game.ball.radius <= p1Right && nextX + game.ball.radius >= p1Left) {
-		// Collision avec le haut du paddle1
 		if (prevY + game.ball.radius <= p1Top && nextY + game.ball.radius >= p1Top && game.ball.vy > 0) {
 			game.ball.vy = -game.ball.vy;
 			nextY = p1Top - game.ball.radius;
 		}
-		// Collision avec le bas du paddle1
 		else if (prevY - game.ball.radius >= p1Bottom && nextY - game.ball.radius <= p1Bottom && game.ball.vy < 0) {
 			game.ball.vy = -game.ball.vy;
 			nextY = p1Bottom + game.ball.radius;
@@ -243,52 +219,43 @@ export function updateGamePhysics(game: GameState, io: Server) {
 	const p2Top = game.paddle2.y;
 	const p2Bottom = game.paddle2.y + game.paddle2.height;
 	
-	// Vérifier si la balle est horizontalement dans la zone du paddle2
 	if (nextX - game.ball.radius <= p2Right && nextX + game.ball.radius >= p2Left) {
-		// Collision avec le haut du paddle2
 		if (prevY + game.ball.radius <= p2Top && nextY + game.ball.radius >= p2Top && game.ball.vy > 0) {
 			game.ball.vy = -game.ball.vy;
 			nextY = p2Top - game.ball.radius;
 		}
-		// Collision avec le bas du paddle2
 		else if (prevY - game.ball.radius >= p2Bottom && nextY - game.ball.radius <= p2Bottom && game.ball.vy < 0) {
 			game.ball.vy = -game.ball.vy;
 			nextY = p2Bottom + game.ball.radius;
 		}
 	}
 
-	// 3. Mise à jour effective de la balle
 	game.ball.x = nextX;
 	game.ball.y = nextY;
 
-	// Score
 	if (game.ball.x < 0) {
 		game.score.player2++;
-		// [FIX] Programmer le lancement 0.5 seconde plus tard (comme un reset)
 		game.ballLaunchAt = Date.now() + 500;
 		game.ball.x = game.canvasWidth / 2;
 		game.ball.y = game.canvasHeight / 2;
 		game.ball.vx = 0;
 		game.ball.vy = 0;
-		game.serveDirection = -1; // Player1 perd, reçoit le service (vers la gauche)
+		game.serveDirection = -1;
 	} else if (game.ball.x > game.canvasWidth) {
 		game.score.player1++;
-		// [FIX] Programmer le lancement 0.5 seconde plus tard (comme un reset)
 		game.ballLaunchAt = Date.now() + 500;
 		game.ball.x = game.canvasWidth / 2;
 		game.ball.y = game.canvasHeight / 2;
 		game.ball.vx = 0;
 		game.ball.vy = 0;
-		game.serveDirection = +1; // Player2 perd, reçoit le service (vers la droite)
+		game.serveDirection = +1;
 	}
 
-	// Fin de partie
 	if (game.score.player1 >= WINNING_SCORE || game.score.player2 >= WINNING_SCORE) {
 		stopGame(game.roomId, io);
 		return ;
 	}
 
-	// Envoi de l'état
 	io.to(game.roomId).emit('gameState', {
 		ball: game.ball,
 		paddle1: game.paddle1,
@@ -371,7 +338,7 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 			return;
 		}
 
-		//netoayge si on rejoint la auque on quitte les salles privees en attente
+		//nettoyage si on rejoint la queue on quitte les salles privees en attente
 		for (const [roomId, socketId] of privateWaitingRooms.entries()) {
 			if (socketId === socket.id) {
 				privateWaitingRooms.delete(roomId);

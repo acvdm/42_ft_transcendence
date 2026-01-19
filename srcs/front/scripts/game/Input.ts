@@ -7,7 +7,6 @@ class Input {
 
 	addEventListeners() {
 		window.addEventListener('keydown', (event) => {
-			// Empêcher le comportement par défaut pour les touches du jeu
 			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
 				event.preventDefault();
 			}

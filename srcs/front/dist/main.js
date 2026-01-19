@@ -11982,9 +11982,7 @@
       const currentBallSpeed = Math.abs(data.ball.vx) + Math.abs(data.ball.vy);
       const ballJustLaunched = this.lastBallSpeed === 0 && currentBallSpeed > 0;
       this.lastBallSpeed = currentBallSpeed;
-      const distanceMoved = Math.sqrt(
-        Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2)
-      );
+      const distanceMoved = Math.sqrt(Math.pow(newBallX - prevBallX, 2) + Math.pow(newBallY - prevBallY, 2));
       const ballTeleported = distanceMoved > 200;
       const paddle1Right = data.paddle1.x + data.paddle1.width;
       const paddle2Left = data.paddle2.x;
