@@ -10,15 +10,14 @@ WORKDIR /app/front
 #-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
 COPY ./package*.json ./
 
+#-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
 RUN npm install
-
 
 #-----------------------COPY SOURCE CODE
 COPY . .
 
 #-----------------------BUILD STATIC FILES
-RUN npm run build:js
-RUN npm run build:css
+RUN npm run build
 
 #-------------------------------------
 # STEP 2: STATIC SERVER WITH NGINX
@@ -26,14 +25,18 @@ RUN npm run build:css
 
 FROM nginx:alpine-slim
 
+#-----------------------REMOVE NGINX DEFAULT CONFIGURATION
+RUN rm /etc/nginx/conf.d/default.conf
+
+#-----------------------REPLACE DEFAULT CONF
+COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+
 #-----------------------COPY STATIC FILES FROM THE BUILD INSIDE THE DOCKER
 # Copie le JS et le CSS compilés
 COPY --from=build /app/front/dist /usr/share/nginx/html/dist
-COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
-COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
 
-# Copie la configuration NGINX pour remplacer celle par défaut
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copie la page HTML principale (qui est dans /public)
+COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 80
