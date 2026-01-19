@@ -9531,8 +9531,6 @@
             data.msg_history.forEach((msg) => {
               this.addMessage(msg.msg_content, msg.sender_alias);
             });
-          } else {
-            console.log("No former message in this channel");
           }
         }
       });
@@ -13317,7 +13315,7 @@
               clearInterval(checkInterval);
               return;
             }
-            if (activeGame2.score.player1 >= 5 || activeGame2.score.player2 >= 5) {
+            if (activeGame2.score.player1 >= this.WINNING_SCORE || activeGame2.score.player2 >= this.WINNING_SCORE) {
               activeGame2.isRunning = false;
               clearInterval(checkInterval);
               const winnerAlias = activeGame2.score.player1 > activeGame2.score.player2 ? p1.alias : p2.alias;

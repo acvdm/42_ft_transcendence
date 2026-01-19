@@ -1,7 +1,3 @@
-import { Database } from 'sqlite'
-
-// interfaces imbriquees
-
 export interface playerGameStats 
 {
     userId?: number,
