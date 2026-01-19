@@ -7272,7 +7272,7 @@
     dashboardPage: {
       title: "Resumen del panel",
       game_played: "Partidas jugadas",
-      avg_score: "Puntuaci\xF3n media",
+      avg_score: "Punto media",
       time_playing: "Tiempo de juego",
       wins: "Victorias",
       losses: "Derrotas",
@@ -7313,7 +7313,7 @@
       round_1v1: "1v1",
       chart: {
         start: "Inicio",
-        net_score: "Puntuaci\xF3n neta",
+        net_score: "Puntos neta",
         no_data: "Sin datos",
         games_played: "Partidos jugados",
         games_count: "({{count}} partidos)",
@@ -7461,7 +7461,7 @@
       }
     },
     game: {
-      game_over: "\xA1Juego terminado! Puntuaci\xF3n final: {{score1}} - {{score2}}"
+      game_over: "\xA1Juego terminado! Puntos final: {{score1}} - {{score2}}"
     },
     gameUI: {
       winner_message: "\xA1{{name}} gana el partido!",
@@ -11574,6 +11574,24 @@
           if (userId) {
             localStorage.setItem("userId", userId.toString());
           }
+          let currentLang = i18n_default.language;
+          if (currentLang.includes("-")) {
+            currentLang = currentLang.split("-")[0];
+          }
+          if (userId && accessToken && currentLang) {
+            try {
+              await fetch(`/api/user/${userId}/language`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${accessToken}`
+                },
+                body: JSON.stringify({ language: currentLang })
+              });
+            } catch (langErr) {
+              console.error("Failed to save preferred language", langErr);
+            }
+          }
           if (userId) {
             try {
               const userRes = await fetch(`/api/user/${userId}`, {
@@ -11635,7 +11653,14 @@
         const lang = target.getAttribute("data-lang");
         if (lang) {
           await changeLanguage2(lang);
-          window.dispatchEvent(new PopStateEvent("popstate"));
+          if (display) {
+            display.textContent = lang.toUpperCase();
+          }
+          const appElement2 = document.getElementById("app");
+          if (appElement2) {
+            appElement2.innerHTML = render5();
+            registerEvents();
+          }
         }
       });
     });
