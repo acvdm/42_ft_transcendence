@@ -89,8 +89,6 @@ export class Chat {
 					data.msg_history.forEach((msg) => {
 						this.addMessage(msg.msg_content, msg.sender_alias);
 					});
-				} else {
-					console.log("No former message in this channel");
 				}
 			}
 		});

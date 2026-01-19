@@ -23,6 +23,7 @@ class Game {
 	socket: Socket | null = null;
 	lastBallSpeed: number = 0;
 	ballLaunchAt: number | null = null; // Pour le délai avant lancement en mode local
+	nextServeDirection: number = 1; // Direction du prochain service (-1 = vers player1, 1 = vers player2)
 
 
 	constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, input: Input, ballImageSrc?: string) {
@@ -174,8 +175,7 @@ class Game {
 			if (Date.now() < this.ballLaunchAt) {
 				return;
 			} else {
-				const direction = this.ball.x < canvas.width / 2 ? -1 : 1;
-				this.ball.reset(canvas, direction);
+				this.ball.reset(canvas, this.nextServeDirection);
 				this.ballLaunchAt = null;
 			}
 		}
@@ -320,6 +320,7 @@ class Game {
 			this.ball.y = this.canvas.height / 2;
 			this.ball.velocityX = 0;
 			this.ball.velocityY = 0;
+			this.nextServeDirection = -1;
 			this.ballLaunchAt = Date.now() + 500;
 		} else if (this.ball.x > this.canvas.width) {
 			this.score.player1++;
@@ -329,6 +330,7 @@ class Game {
 			this.ball.y = this.canvas.height / 2;
 			this.ball.velocityX = 0;
 			this.ball.velocityY = 0;
+			this.nextServeDirection = 1;
 			this.ballLaunchAt = Date.now() + 500;
 		}
 	}

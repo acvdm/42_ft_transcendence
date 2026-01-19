@@ -24,11 +24,7 @@ export async function saveLocalTournament (
     data: localTournament // corespond a l'interface dans tournament_interface.js
 ): Promise<number>
 {
-
-    // --- DEBUG LOG ---
-    console.log("DEBUG BACKEND - Début sauvegarde tournoi");
-    console.log("Nom du tournoi:", data.tournamentName);
-    
+   
     // Vérifions si 'matchList' existe et sa taille
     if (data.matchList) {
         console.log(`DEBUG BACKEND - Nombre de matches reçus: ${data.matchList.length}`);
@@ -43,15 +39,11 @@ export async function saveLocalTournament (
         [data.tournamentName, data.winner, data.startedAt]
     );
 
-    // lastID = PRIMARY KEY AUTOINCREMENT -> derniere ligne inseree dans le tableau
-    // permet de lier le tournois a une table match
     const tournamentId = tournamentRes.lastID;
     if (!tournamentId)
         throw new ServiceUnavailableError("Failed to save tournament");
 
     // 2. on boucle sur la liste des 3 match dans la table MATCHES
-    // for of --> permet d'iterer sur chaque element de la liste data.matchList
-    // la valeur match prend la valeur du premier objet de la liste
     for (const match of data.matchList)
     {
         let start = null;
@@ -64,9 +56,6 @@ export async function saveLocalTournament (
             continue ;
         }
 
-        console.log(`match.startDate = ${match.startDate}`);
-
-        // creation du match dans la table MATCHES
         const matchId = await createMatch(
             db, "tournament", 
             match.p1.alias, match.p2.alias, 
@@ -93,7 +82,6 @@ export async function saveLocalTournament (
         // On ne sauvegarde que si c'est un user enregistré
         if (match.p1.userId) 
         {
-            console.log("match.p1.userId ", match.p1.userId)
             const p1IsWinner = match.winner === match.p1.alias;
 
             await addPlayerMatch(
@@ -103,7 +91,6 @@ export async function saveLocalTournament (
                 p1IsWinner ? 1 : 0
             );
 
-            console.log(`match.p1.score: ${match.p1.score}`);
             await updateUserStats(
                 db, match.p1.userId,
                 match.p1.score, p1IsWinner ? 1 : 0,
@@ -113,10 +100,8 @@ export async function saveLocalTournament (
 
 
         // -- JOUEUR 2 --
-        // On ne sauvegarde que si c'est un user enregistré
         if (match.p2.userId)
         { 
-            console.log("match.p2.userId ", match.p2.userId)
             const p2IsWinner = match.winner === match.p2.alias;
 
             await addPlayerMatch(
@@ -139,15 +124,6 @@ export async function saveLocalTournament (
 }
 
 
-/* saveLocalTournament()
-    recupere le fichierJSON
-    inserer le tournoi (recup l'ID)
-    boucler sur els 3 matchs
-    inserer les joueurs dans PLAYER_MATCH en gerant le NULL pour le invites
-    appeler create_stat si cest un vria joueur
-
- */
-
 export async function findTournamentById (
     db: Database,
     id: number
@@ -158,7 +134,6 @@ export async function findTournamentById (
         [id]
     );
 
-    // toute petite correction ici
     if (!tournament?.tournament_id)
         throw new NotFoundError(`No tournament matching ${id}`);
 
