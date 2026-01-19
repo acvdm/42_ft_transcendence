@@ -498,11 +498,7 @@ export class TournamentManager {
 
 	private showSummary(champion: string) {
 		launchConfetti(4000);
-		const container = document.getElementById('left');
-		if (container) {
-			container.style.backgroundColor = 'white';
-		}
-		
+
 		const summaryModal = document.getElementById('tournament-summary-modal');
 		
 		if (summaryModal) {
