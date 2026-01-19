@@ -36,7 +36,7 @@ COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/front/dist /usr/share/nginx/html/dist
 
 # Copie la page HTML principale (qui est dans /public)
-COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
+COPY --from=build /app/front/public /usr/share/nginx/html
 
 #-----------------------EXPOSE INTERNAL PORT
 EXPOSE 80
