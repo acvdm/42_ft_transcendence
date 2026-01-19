@@ -110,12 +110,11 @@ function handleRegister() {
 						console.error("Can't get user's profile", err);
 					}
 				}
-				
+
 				window.history.pushState({}, '', '/home');
 				window.dispatchEvent(new PopStateEvent('popstate'));
 
 			} else {
-				// const result = await response.json();
 
 				console.error("Login error:", result.error.message);
 
@@ -145,7 +144,7 @@ export function registerEvents() {
 
 	const toggleBtn = document.getElementById('page-lang-toggle-btn');
 	const menuContent = document.getElementById('page-lang-menu-content');
-	
+
 	if (toggleBtn && menuContent) {
 		toggleBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
@@ -160,7 +159,7 @@ export function registerEvents() {
 	if (display) {
 		display.textContent = i18next.language.toUpperCase();
 	}
-	
+
 	document.querySelectorAll('.page-lang-select').forEach(btn => {
 		btn.addEventListener('click', async (e) => {
 			const target = e.currentTarget as HTMLElement;

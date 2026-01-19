@@ -407,9 +407,8 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
                 }, GAMESPEED);
             } else {
                 console.error(`❌ [MATCH] Failed to start match: ${roomId}. Sock1: ${!!sock1}, Sock2: ${!!sock2}`);
-                // Remettre les joueurs en queue en cas de problème
-                if (!sock1) waitingQueue.push(p1);
-                if (!sock2) waitingQueue.push(p2);
+                if (sock1) waitingQueue.unshift(p1);
+                if (sock2) waitingQueue.unshift(p2);
             }
         }
     });

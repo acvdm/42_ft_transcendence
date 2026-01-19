@@ -1,4 +1,5 @@
 import { Database } from 'sqlite'
+import { ServiceUnavailableError } from '../utils/error.js';
 
 // -- CREATE
 export async function addPlayerMatch(
@@ -34,8 +35,7 @@ export async function addPlayerMatch(
 
     if (!playerMatch?.lastID)
     {
-        console.log("create player game failed");
-        throw new Error("Failed to create player match statistics");
+        throw new ServiceUnavailableError("Failed to create player match statistics");
     }
 
     return (playerMatch?.lastID);

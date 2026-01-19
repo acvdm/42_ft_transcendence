@@ -1,6 +1,6 @@
 import { Database } from 'sqlite';
 import { User } from './users';
-import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../utils/error.js';
+import { NotFoundError, ValidationError, ConflictError, ForbiddenError, ServiceUnavailableError } from '../utils/error.js';
 
 export interface Friendship {
     id: number,
@@ -74,7 +74,7 @@ export async function makeFriendshipRequest (
 
     if (!result || result.changes !== 1)
     {
-        throw new Error('friendship_error.sending');
+        throw new ServiceUnavailableError('friendship_error.sending');
     }
 
     const friendshipId = result.lastID;
