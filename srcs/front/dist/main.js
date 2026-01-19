@@ -8318,7 +8318,7 @@
 					<div class="window-body bg-white border border-gray-300 shadow-inner rounded-sm flex flex-col flex-1">
 						<div class="bg-white p-6 flex flex-col flex-1">
 							<h1 class="theme-label text-xl font-semibold mb-6 text-center text-gray-800 tracking-wide border-b border-gray-300" style="padding-bottom: 25px;">{{homepage.games.title_mode}}</h1>
-							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 25px;">
+							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 20px;">
 								<p>{{homepage.games.choose_mode}}</p>
 							</div>
 							<div class="flex flex-col flex-1 items-center justify-center gap-6 py-8" style="gap: 65px;">
@@ -8337,7 +8337,7 @@
 								<!-- Remote Game -->
 								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.remote_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 20px;">{{homepage.games.remote_describe}}</p>
 										<button id="remote-game" 
 											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.remote}}
@@ -8348,7 +8348,7 @@
 								<!-- Tournament Game -->
 								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
 									<div class="flex flex-col items-center gap-3">
-										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.tournament_describe}}</p>
+										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 20px;">{{homepage.games.tournament_describe}}</p>
 										<button id="tournament-game" 
 											class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm font-semibold px-4 py-1 text-lg shadow-sm hover:from-gray-200 hover:to-gray-400 active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400">
 											{{homepage.games.tournament}}
@@ -8380,7 +8380,7 @@
 				</div>
 
 				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-					<div id="chat-frame" class="relative flex-1 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row items-end bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
+					<div id="chat-frame" class="relative flex-1 bg-gradient-to-b from-blue-50 to-gray-400 rounded-sm flex flex-row bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[400px] min-w-[400px] h-full" style="width: 400px; min-width: 400px;">
 							<div class="flex flex-row items-center justify-between">
 								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
@@ -8420,7 +8420,7 @@
 							<p class="text-gray-400 text-lg font-semibold">{{homepage.chat.placeholder}}</p>
 						</div>
 
-						<div id="channel-chat" class="hidden flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
+						<div id="channel-chat" class="hidden flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
 							<div class="flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 								<div class="flex gap-4 items-center">
 									<div class="relative w-[80px] h-[80px] flex-shrink-0">
