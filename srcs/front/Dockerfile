@@ -1,70 +1,37 @@
 #----------------------------
 # STEP 1: BUILD FRONTEND
 #----------------------------
-        
 FROM node:20-alpine AS build
 
-#-----------------------DEFINE WORKING DIRECTORY
 WORKDIR /app/front
 
-#-----------------------COPY PACKAGE .JSON & PACKAGE-LOCK.JSON
+# Installation des dépendances
 COPY ./package*.json ./
+COPY ./tailwind.config.js ./
+COPY ./tsconfig.json ./
 
-#-----------------------INSTALL DEPENDENCIES (DEVDEPENDENCIES INCLUDED)
 RUN npm ci
 
-#-----------------------COPY SOURCE CODE
+# Copie des sources
 COPY . .
 
-#-----------------------BUILD STATIC FILES
+# Compilation du JS et du CSS (génère les fichiers dans ./dist)
 RUN npm run build
 
-#AJOUT DE TSX WATCH
-# Installation, initialisation et compilation du css avec tailwind
-RUN npx tailwindcss -i ./styles/input.css -o ./dist/style.css --minify
-
-# Vérification que output.css a bien été créé
-RUN test -f ./dist/style.css || (echo "ERROR: dist/style.css not generated!" && exit 1)
-# A SUPPRIMER | Seulement pour le dev
-RUN apk add --no-cache npm inotify-tools
-RUN npm install -g typescript nodemon tailwindcss@3.4.18
-#####################################
-
-
-# A SUPPRIMER ##################################################
-# Copie du script de demarage pour le hot reload
-# 1. On corrige la SOURCE (start_debug.sh est à la racine, watch-content.sh dans scripts/)
-# 2. On corrige la DESTINATION (vers /usr/share/... pour correspondre à votre nginx.conf)
-
-COPY start_debug.sh /usr/share/nginx/html/start_debug.sh
-COPY scripts/watch-content.sh /usr/share/nginx/html/watch-content.sh
-
-RUN chmod +x /usr/share/nginx/html/start_debug.sh /usr/share/nginx/html/watch-content.sh
-
-# CMD pour le dev 
-CMD ["/usr/share/nginx/html/start_debug.sh"]
-# A SUPPRIMER ##################################################
 #-------------------------------------
-# STEP 2: STATIC SERVER WITH NGINX (DEV VERSION)
+# STEP 2: STATIC SERVER WITH NGINX (PRODUCTION)
 #-------------------------------------
 FROM nginx:alpine-slim
 
-# 1. On installe esbuild
-RUN apk add --no-cache nodejs npm inotify-tools
-RUN npm install -g typescript nodemon tailwindcss@3.4.18 esbuild
-
-# 2. On copie les fichiers compilés
+# On copie uniquement les fichiers compilés et les assets depuis l'étape de build
+# Pas besoin de node_modules, npm ou esbuild ici, tout est déjà 'bundlé' dans main.js
 COPY --from=build /app/front/dist /usr/share/nginx/html/dist
 COPY --from=build /app/front/public/index.html /usr/share/nginx/html/index.html
 COPY --from=build /app/front/public/assets /usr/share/nginx/html/assets
 
-# 3. IMPORTANT : On copie les node_modules pour qu'esbuild trouve 'socket.io-client'
-COPY --from=build /app/front/node_modules /usr/share/nginx/html/node_modules
-
-# ... (reste inchangé: COPY nginx.conf, COPY scripts, etc.)
+# Configuration Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY start_debug.sh /usr/share/nginx/html/start_debug.sh
-COPY scripts/watch-content.sh /usr/share/nginx/html/watch-content.sh
-RUN chmod +x /usr/share/nginx/html/start_debug.sh /usr/share/nginx/html/watch-content.sh
+
+# On expose le port 80 et on lance Nginx simplement
 EXPOSE 80
-CMD ["/usr/share/nginx/html/start_debug.sh"]
+CMD ["nginx", "-g", "daemon off;"]

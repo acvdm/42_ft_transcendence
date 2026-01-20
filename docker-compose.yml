@@ -40,17 +40,6 @@ services:
         - gateway
       networks: 
         - frontend
-      # a retirer seulement pour le dev
-      volumes:
-        - ./srcs/front/dist:/usr/share/nginx/html/dist
-        - ./srcs/front/public/index.html:/usr/share/nginx/html/index.html
-        - ./srcs/front/public/assets:/usr/share/nginx/html/assets
-        
-        # AJOUTEZ CES LIGNES POUR LE DEVELOPPEMENT :
-        - ./srcs/front/scripts:/usr/share/nginx/html/scripts
-        - ./srcs/front/styles:/usr/share/nginx/html/styles  # ou /styles selon votre structure
-        - ./srcs/front/tsconfig.json:/usr/share/nginx/html/tsconfig.json
-        - ./srcs/front/tailwind.config.js:/usr/share/nginx/html/tailwind.config.js
 
     auth:
       container_name: auth

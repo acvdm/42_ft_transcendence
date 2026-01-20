@@ -216,8 +216,8 @@ export class LocalGameManager {
 					const scoreBoard = document.getElementById('score-board');
 					const canvas = document.createElement('canvas');
 					canvas.id = 'pong-canvas';
-					canvas.width = canvasContainer ? canvasContainer.clientWidth : 800;
-					canvas.height = canvasContainer ? canvasContainer.clientHeight : 600;
+					canvas.width = canvasContainer ? canvasContainer.clientWidth - 50 : 800;
+					canvas.height = canvasContainer ? canvasContainer.clientHeight - 25 : 600;
 					canvas.style.width = '100%';
 					canvas.style.height = '100%';
 					canvas.style.backgroundColor = selectedBg;

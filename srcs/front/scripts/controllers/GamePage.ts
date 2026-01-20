@@ -108,9 +108,9 @@ export function showExitConfirmationModal(destination = null) {
 	const t_leave = i18next.t('gamePage.exit_modal.leave_btn');
 
 	const modalHtml = `
-		<div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+		<div id="exit-confirm-modal" class="hidden absolute inset-0 z-50 items-center justify-center backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
 			
-			<div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
+			<div class="window w-[600px] bg-white shadow-2xl">
 				
 				<div class="title-bar">
 					<div class="title-bar-text text-white" style="text-shadow: none;">${t_title}</div>

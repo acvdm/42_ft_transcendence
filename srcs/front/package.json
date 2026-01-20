@@ -4,7 +4,8 @@
   "description": "Front part of the website",
   "private": "true",
   "scripts": {
-    "build": "npm run build:js && npm run build:css",
+    "build": "npm run build:js && npm run build:css && npm run build:html",
+    "build:html": "cp public/index.html dist/index.html",
     "build:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --loader:.html=text",
     "build:css": "tailwindcss -i ./styles/input.css -o ./dist/style.css",
     "watch:js": "esbuild scripts/main.ts --bundle --platform=browser --outfile=dist/main.js --watch --loader:.html=text",
