@@ -336,7 +336,7 @@ export class UserProfile {
 			const file = (event.target as HTMLInputElement).files?.[0];
 			if (file) {
 				if (file.size > 2 * 1024 * 1024) {
-					alert(i18next.t('userProfile.avatar_size_error'));
+					alert(i18next.t('userProfile.avatar_error'));
 					return;
 				}
 
