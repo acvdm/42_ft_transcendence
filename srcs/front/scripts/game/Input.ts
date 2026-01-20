@@ -10,9 +10,9 @@ class Input {
 
 			const target = event.target as HTMLElement;
 
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-                return ;
-            }
+			if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+				return ;
+			}
 
 			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
 				event.preventDefault();
@@ -23,9 +23,9 @@ class Input {
 		window.addEventListener('keyup', (event) => {
 			const target = event.target as HTMLElement;
 
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-                return ;
-            }
+			if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+				return ;
+			}
 			if (['w', 's', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
 				event.preventDefault();
 			}

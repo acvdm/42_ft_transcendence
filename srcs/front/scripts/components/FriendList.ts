@@ -23,8 +23,6 @@ export class FriendList {
 		if (!socketService.getGameSocket())
 			socketService.connectGame();
 
-		// SocketService.getInstance().connectChat();
-		// SocketService.getInstance().connectGame();
 		this.loadFriends();
 		this.setupFriendRequests();
 		this.setupNotifications(); 

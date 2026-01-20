@@ -66,7 +66,7 @@ export async function generateRandomAlias(
 		const animal = animals[Math.floor(Math.random() * animals.length)];
 		const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
 		const randomNumber = String(getRandomInt());
-		randomAlias = `${adjective}${animal}${randomNumber}`; // faustine: j'inverse les deux 
+		randomAlias = `${adjective}${animal}${randomNumber}`;
 		checkAlias = await isAliasUsed(db, randomAlias);
 	} while (checkAlias);
 

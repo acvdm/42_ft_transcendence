@@ -288,18 +288,18 @@ export class RemoteGameManager {
 					};
 					document.addEventListener('keydown', spaceHandler);
 
-                    // Rival is leaving the game
-                    gameSocket.off('opponentLeft');
-                    gameSocket.on('opponentLeft', async (eventData: any) => {
-                        const activeGame = this.context.getGame();
-                        if (activeGame) {
-                            activeGame.isRunning = false;
-                            activeGame.stop();
-                            gameSocket.off('gameState');
-                            gameSocket.off('gameEnded');
-                            
-                            // cleaning listener space
-                            document.removeEventListener('keydown', spaceHandler);
+					// Rival is leaving the game
+					gameSocket.off('opponentLeft');
+					gameSocket.on('opponentLeft', async (eventData: any) => {
+						const activeGame = this.context.getGame();
+						if (activeGame) {
+							activeGame.isRunning = false;
+							activeGame.stop();
+							gameSocket.off('gameState');
+							gameSocket.off('gameEnded');
+							
+							// cleaning listener space
+							document.removeEventListener('keydown', spaceHandler);
 
 							let s1 = 0;
 							let s2 = 0;

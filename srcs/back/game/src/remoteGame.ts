@@ -1,8 +1,7 @@
 import { Socket, Server } from 'socket.io';
 
-const privateWaitingRooms = new Map<string, string>(); // faustine
+const privateWaitingRooms = new Map<string, string>();
 
-// --- STRUCTURES JEU REMOTE ---
 interface GameState {
 	roomId: string;
 	player1Id: string;
@@ -19,9 +18,9 @@ interface GameState {
 	ballLaunchAt?: number;
 }
 
-let waitingQueue: string[] = []; // ID des sockets en attente
+let waitingQueue: string[] = [];
 const activeGames = new Map<string, GameState>();
-const GAMESPEED = 1000 / 60; // 60 FPS
+const GAMESPEED = 1000 / 60;
 const WINNING_SCORE = 11;
 
 export function initGameState(roomId: string, p1: string, p2: string): GameState {
@@ -133,11 +132,9 @@ export function updateGamePhysics(game: GameState, io: Server) {
 		nextY = prevY + game.ball.vy;
 	}
 
-	// Pour empecher le tunnelling
+
 	const MAX_SPEED = 10;
 
-	// Collision Raquettes
-	// P1 (Gauche)
 	if (game.ball.vx < 0) { 
 		const paddleRightEdge = game.paddle1.x + game.paddle1.width;
 		const TOLERANCE = 5;
@@ -167,7 +164,6 @@ export function updateGamePhysics(game: GameState, io: Server) {
 		}
 	}
 
-	// P2 (Droite)
 	if (game.ball.vx > 0) { 
 		const paddleLeftEdge = game.paddle2.x;
 		const TOLERANCE = 5;
@@ -196,7 +192,6 @@ export function updateGamePhysics(game: GameState, io: Server) {
 		}
 	}
 
-	// Paddle 1 (Gauche)
 	const p1Left = game.paddle1.x;
 	const p1Right = game.paddle1.x + game.paddle1.width;
 	const p1Top = game.paddle1.y;
@@ -212,8 +207,7 @@ export function updateGamePhysics(game: GameState, io: Server) {
 			nextY = p1Bottom + game.ball.radius;
 		}
 	}
-	
-	// Paddle 2 (Droite)
+
 	const p2Left = game.paddle2.x;
 	const p2Right = game.paddle2.x + game.paddle2.width;
 	const p2Top = game.paddle2.y;
@@ -266,36 +260,27 @@ export function updateGamePhysics(game: GameState, io: Server) {
 
 
 export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets: Map<number, string>) {
-	console.debug("registerRemoteGameEvent")
 
 	socket.on('registerGameSocket', () => {
-		console.log(`[SERVER] Register game socket pour user ${socket.user.sub} -> ${socket.id}`);
 		userSockets.set(socket.user.sub, socket.id);
 	})
-	// 1. Gestion des Invitations
-	socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
-		console.debug(`[SERVER] sendGameInvite reçue de ${socket.id}. Cible: ${data.targetId}`);
-		const targetIdNum = Number(data.targetId);
 
-		console.debug(`[SERVER] UserSockets Map keys:`, [...userSockets.keys()]);
-		console.log(`🔍 [SERVER] Recherche socket pour User ID: ${targetIdNum} (Type: ${typeof targetIdNum})`);
-		
+	socket.on('sendGameInvite', (data: { targetId: string, senderName: string }) => {
+		const targetIdNum = Number(data.targetId);
 		const targetSocketId = userSockets.get(targetIdNum);
 		
 		if (targetSocketId) {
-			console.log(`✅ [SERVER] Envoi à socket ID: ${targetSocketId} pour User ${targetIdNum}`); // <--- REGARDE CET ID
 			io.to(targetSocketId).emit('receiveGameInvite', {
 				senderId: socket.user.sub,
 				senderName: data.senderName
 			});
 		} else {
-		console.error(`❌ [SERVER] Cible introuvable dans userSockets.`);
+		console.error(`[SERVER] Cannot find target in users`);
 	}
 	});
 
 	socket.on('acceptGameInvite', (data: { senderId: string }) => {
-		console.log("accept game invite");
-		waitingQueue = waitingQueue.filter(id => id !== socket.id); // nettoyage pour eviter race condition
+		waitingQueue = waitingQueue.filter(id => id !== socket.id);
 		const senderIdNum = Number(data.senderId);
 		const senderSocketId = userSockets.get(senderIdNum);
 		const acceptorSocketId = socket.id;
@@ -315,7 +300,6 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 					senderSocket.emit('matchFound', { roomId, role: 'player1', opponent: socket.user.sub });
 					socket.emit('matchFound', { roomId, role: 'player2', opponent: senderIdNum });
 
-					console.log(`Friend match started: ${roomId}`);
 					gameState.intervalId = setInterval(() => {
 						updateGamePhysics(gameState, io);
 					}, GAMESPEED);
@@ -331,20 +315,17 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 		}
 	});
 
-	// 2. Gestion de la Queue (Matchmaking)
+
 	socket.on('joinQueue', () => {
 		if (waitingQueue.includes(socket.id)) {
-			console.log(`⚠️ [QUEUE] Player ${socket.id} already in queue, ignoring duplicate join`);
 			return;
 		}
 
-		//nettoyage si on rejoint la queue on quitte les salles privees en attente
 		for (const [roomId, socketId] of privateWaitingRooms.entries()) {
 			if (socketId === socket.id) {
 				privateWaitingRooms.delete(roomId);
 			}
 		}
-		console.log(`✅ [QUEUE] Player ${socket.id} joined Queue. Queue size: ${waitingQueue.length + 1}`);
 		waitingQueue.push(socket.id);
 
 		if (waitingQueue.length >= 2) {
@@ -368,12 +349,11 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 				sock1.emit('matchFound', { roomId, role: 'player1', opponent: p2UserId });
 				sock2.emit('matchFound', { roomId, role: 'player2', opponent: p1UserId });
 
-				console.log(`✅ [MATCH] Match started: ${roomId}`);
 				gameState.intervalId = setInterval(() => {
 					updateGamePhysics(gameState, io);
 				}, GAMESPEED);
 			} else {
-				console.error(`❌ [MATCH] Failed to start match: ${roomId}. Sock1: ${!!sock1}, Sock2: ${!!sock2}`);
+				console.error(`[MATCH] Failed to start match: ${roomId}. Sock1: ${!!sock1}, Sock2: ${!!sock2}`);
 				if (sock1) waitingQueue.unshift(p1);
 				if (sock2) waitingQueue.unshift(p2);
 			}
@@ -384,7 +364,6 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 		waitingQueue = waitingQueue.filter(id => id !== socket.id);
 	});
 
-	// 3. Gestion des Inputs (Raquettes)
 	socket.on('gameInput', (data: { roomId: string, up: boolean, down: boolean }) => {
 		const game = activeGames.get(data.roomId);
 		if (!game) return;
@@ -405,45 +384,32 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 	socket.on('leaveGame', (data: { roomId: string }) => {
 		const game = activeGames.get(data.roomId);
 
-		// Vérifier que le socket fait bien partie du jeu
 		if (game && (game.player1Id === socket.id || game.player2Id === socket.id)) {
-			console.log(`Player ${socket.id} left the game explicitly`);
 
-			// Identifier l'adversaire (celui qui est resté)
 			const opponentSocketId = (game.player1Id === socket.id) ? game.player2Id : game.player1Id;
 
-			// Prévenir l'adversaire IMMÉDIATEMENT qu'il a gagné par forfait
 			io.to(opponentSocketId).emit('opponentLeft', { 
 				roomId: data.roomId, 
 				leaver: socket.id 
 			});
 
-			// Arrêter la partie proprement (clearInterval et suppression de la map)
-			// Note : stopGame émet aussi 'gameEnded', mais ton front gère cela en coupant les écouteurs
-			// dès réception de 'opponentLeft', donc pas de conflit.
 			stopGame(data.roomId, io);
 		}
 	});
 
-	//faustine
 	socket.on('joinPrivateGame', (data: { roomId: string, skin?: string }) => {
 		const { roomId } = data;
 		const mySocketId = socket.id;
 
-		// nettoyage
 		waitingQueue = waitingQueue.filter(id => id !== mySocketId);
 		console.log(`Player ${mySocketId} joining private room ${roomId}`);
 
-		// est-ce que mon ami est deja en train de m'attendre
 		if (privateWaitingRooms.has(roomId)) {
 			const opponentSocketId = privateWaitingRooms.get(roomId);
 
-			// il ne faut pas que ca soit moi (cas potentiel de double clic)
 			if (opponentSocketId && opponentSocketId !== mySocketId) {
-				// lancement du match et nettoyage de la waitroom
 				privateWaitingRooms.delete(roomId);
 
-				// creation de k;udee de la partie
 				const gameId = `private_${Date.now()}_${roomId}`;
 				const gameState = initGameState(gameId, opponentSocketId, mySocketId);
 				activeGames.set(gameId, gameState);
@@ -451,7 +417,6 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 				const sock1 = io.sockets.sockets.get(opponentSocketId);
 				const sock2 = io.sockets.sockets.get(mySocketId);
 
-				// on verifie que les deux sont tjrs connectes
 				if (sock1 && sock2) {
 					sock1.join(gameId);
 					sock2.join(gameId);
@@ -459,11 +424,9 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 					const p1UserId = (sock1 as any).user?.sub;
 					const p2UserId = (sock2 as any).user?.sub;
 
-					// lancement du jeu pour les deux 
 					sock1.emit('matchFound', { roomId: gameId, role: 'player1', opponent: p2UserId });
 					sock2.emit('matchFound', { roomId: gameId, role: 'player2', opponent: p1UserId });
 
-					console.log(`Private Match started: ${gameId}`);
 					gameState.intervalId = setInterval(() => {
 						updateGamePhysics(gameState, io);
 					}, GAMESPEED);
@@ -473,28 +436,21 @@ export function registerRemoteGameEvents(io: Server, socket: Socket, userSockets
 				}
 			}
 		} else {
-			// sinon je dois attendre
 			privateWaitingRooms.set(roomId, mySocketId);
 			console.log(`Player ${mySocketId} is waiting in private room ${roomId}`);
 		}
 	});
 	
-	// 4. Gestion de la Déconnexion (Nettoyage Jeu)
-	// Note: On ne gère pas le userSockets.delete ici car il est souvent géré dans le index.ts principal
-	// Mais on gère le nettoyage des parties actives et de la queue
+
 	socket.on('disconnect', () => {
-		// Retirer de la queue
 		waitingQueue = waitingQueue.filter(id => id !== socket.id);
 		
-		// on nettoie la private room
 		for (const [roomId, socketId] of privateWaitingRooms.entries()) {
 			if (socketId === socket.id) {
 				privateWaitingRooms.delete(roomId);
-				console.log(`Removed private room ${roomId} because waiting player disconnected`);
 			}
 		}
 
-		// Arrêter les parties en cours
 		for (const [roomId, game] of activeGames.entries()) {
 			if (game.player1Id === socket.id || game.player2Id === socket.id) {
 				stopGame(roomId, io);
