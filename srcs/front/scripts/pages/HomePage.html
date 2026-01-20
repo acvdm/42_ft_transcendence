@@ -60,7 +60,7 @@
 										</div>
 									</div>
 									<div id="bio-wrapper">
-										<p id="user-bio" class="text-sm text-gray-600 cursor-text">{{homepage.profile.bio}}</p>
+										<p id="user-bio" class="text-sm text-gray-600 cursor-text break-words">{{homepage.profile.bio}}</p>
 										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
 									</div>
 								</div>
@@ -371,7 +371,7 @@
 		</div>
 	</div>
 
-	<div id="picture-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+	<div id="picture-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center" style="z-index: 9999;">
 		<div class="window bg-white" style="width: 650px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
 			<div class="title-bar">
 				<div class="title-bar-text">{{homepage.modal.change_picture}}</div>
@@ -389,7 +389,7 @@
 				
 				<div class="flex flex-row gap-6">
 					<div class="flex-1">
-						<div class="bg-white border border-gray-200 shadow-inner p-2 h-[350px] overflow-y-auto">
+						<div class="bg-white border border-gray-200 shadow-inner p-2 h-[360px]">
 							<div id="modal-grid" class="grid grid-cols-4 gap-2">
 								<img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
 								<img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
@@ -422,7 +422,7 @@
 							<button id="browse-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.browse}}</button>
 							<button id="delete-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.delete}}</button>
 
-							<div class="mt-auto flex justify-center gap-2 pb-3" style="padding-top:101px">
+							<div class="mt-auto flex justify-center gap-2 pb-3">
 								<button id="validation-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.ok}}</button>
 								<button id="cancel-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.cancel}}</button>
 							</div>

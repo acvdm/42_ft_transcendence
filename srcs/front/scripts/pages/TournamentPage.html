@@ -22,9 +22,9 @@
 					<div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8; height: 560px">
 		
 						<div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-20 bg-gray-50" style="height: 60px; background-color: white;"> 
-							<span id="player-1-name" class="theme-label text-left text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>
+							<span id="player-1-name" class="theme-label text-left text-3xl font-bold text-gray-800">{{tournamentPage.p1}}</span>
 							<span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-							<span id="player-2-name" class="theme-label text-right text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>
+							<span id="player-2-name" class="theme-label text-right text-3xl font-bold text-gray-800">{{tournamentPage.p2}}</span>
 						</div>
 
 						<div id="game-canvas-container" 
@@ -49,7 +49,7 @@
 										<input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">
 									</div>
 
-									<fieldset class="border border-gray-100 p-5 rounded bg-gray-50">
+									<fieldset class="border border-gray-100 p-5 rounded">
 										<legend class="theme-label text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>
 										<div class="grid grid-cols-2 gap-4">
 											<div>
@@ -71,7 +71,7 @@
 										</div>
 									</fieldset>
 
-									<fieldset class="border border-gray-100 p-2 bg-gray-50">
+									<fieldset class="border border-gray-100 p-2">
 										<legend class="theme-label text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>
 										<div class="flex flex-row items-center gap-8 justify-center">
 											<div class="flex flex-row items-center gap-2 relative">
@@ -125,51 +125,43 @@
 								<div class="title-bar">
 									<div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>
 								</div>
-
 								<div class="window-body bg-gray-50 p-8 flex flex-col items-center gap-6">
 									<h2 class="theme-label text-2xl font-semibold text-blue-900 tracking-wide">
 										{{tournamentPage.tournament_bracket_modal.heading}}
 									</h2>
-
 									<div class="flex flex-col gap-6 w-full items-center">
-
 										<div class="flex flex-row justify-between w-full px-8 gap-8">
-											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
+											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg shadow-sm" style="width: 200px;">
 												<span class="theme-label text-xs font-bold text-gray-500 uppercase tracking-wider">
 													{{tournamentPage.tournament_bracket_modal.semi_final_1}}
 												</span>
-												<span id="bracket-sf1" class="match-display"></span>
+												<span id="bracket-sf1" class="match-display" style="word-break: break-word; width: 100%; text-align: center;"></span>
 											</div>
-
-											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
+											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg shadow-sm" style="width: 200px;">
 												<span class="theme-label text-xs font-bold text-gray-500 uppercase tracking-wider">
 													{{tournamentPage.tournament_bracket_modal.semi_final_2}}
 												</span>
-												<span id="bracket-sf2" class="match-display"></span>
+												<span id="bracket-sf2" class="match-display" style="word-break: break-word; width: 100%; text-align: center;"></span>
 											</div>
 										</div>
-
-										<div class="flex flex-col items-center p-6 border border-gray-100 rounded-xl w-[320px] shadow-lg">
+										<div class="flex flex-col items-center p-6 border border-gray-100 rounded-xl w-[320px]">
 											<span class="theme-label text-xs font-bold uppercase tracking-widest">
 												{{tournamentPage.tournament_bracket_modal.final}}
 											</span>
 											<span id="bracket-final" class="match-display final-match"></span>
 										</div>
-
 									</div>
-
 									<div class="w-full border-t border-gray-300 my-2"></div>
-
 									<p id="bracket-status-msg" class="text-gray-600 italic">
 										{{tournamentPage.tournament_bracket_modal.status_ready}}
 									</p>
-
 									<button
 										id="bracket-continue-btn"
 										class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
-															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
-															active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
-															transition-all duration-200 hover:shadow-md" style="width: 200px; padding: 4px;">
+										px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
+										active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
+										transition-all duration-200 hover:shadow-md" 
+										style="width: 200px; padding: 4px;">
 										{{tournamentPage.tournament_bracket_modal.continue_btn}}
 									</button>
 								</div>
@@ -234,7 +226,7 @@
 					</div>
 				</div>
 
-				<div id="right" class="window-body flex flex-row gap-4 min-w-0" style="width: 300px; height: 600px;">
+				<div id="right" class="window-body flex flex-row gap-4 min-w-0" style="width: 355px; height: 600px;">
 					<div id="channel-chat" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 flex-1 relative z-10 min-h-0 h-full">
 						<div class="theme-label flex items-center justify-between border-b border-gray-200 pb-2 mb-2 relative">
 							<p>{{tournamentPage.chat.info}}</p>
