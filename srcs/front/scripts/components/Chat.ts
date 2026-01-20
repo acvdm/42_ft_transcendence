@@ -249,7 +249,7 @@ export class Chat {
 	private addMessage(message: string, author: string) {
 		if (!this.messagesContainer) return;
 		const msgElement = document.createElement('div');
-		msgElement.className = "mb-2 p-2 rounded bg-opacity-20 hover:bg-opacity-30 transition break-words";
+		msgElement.className = "mb-2 p-2 rounded transition break-words bg-blue-50";
 		msgElement.style.overflowWrap = 'anywhere';
 
 		// Inviting a match

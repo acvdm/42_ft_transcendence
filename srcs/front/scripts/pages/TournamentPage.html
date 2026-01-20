@@ -19,9 +19,9 @@
 						</div>
 					</div>
 
-					<div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8;">
+					<div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm" style="background-color: #E8F4F8; height: 560px">
 		
-						<div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
+						<div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-20 bg-gray-50" style="height: 60px; background-color: white;"> 
 							<span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{tournamentPage.p1}}</span>
 							<span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
 							<span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{tournamentPage.p2}}</span>
@@ -32,7 +32,7 @@
 							style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
 						
 
-						<div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" style="padding-top: 100px;">
+						<div id="tournament-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="padding-top: 100px;">
 							<div class="window w-[600px] bg-white shadow-xl">
 								<div class="title-bar">
 									<div class="title-bar-text">{{tournamentPage.setup_modal.title_modal}}</div>
@@ -49,7 +49,7 @@
 										<input type="text" id="tournament-name-input" class="border border-gray-200 px-2 py-1 focus:outline-none focus:border-blue-600" placeholder="{{tournamentPage.setup_modal.placeholder_trnmt}}">
 									</div>
 
-									<fieldset class="border-2 border-gray-300 p-5 rounded bg-gray-50">
+									<fieldset class="border border-gray-100 p-5 rounded bg-gray-50">
 										<legend class="theme-label text-sm font-semibold px-1 text-blue-800" style="padding-bottom: 5px;">{{tournamentPage.setup_modal.participant}}</legend>
 										<div class="grid grid-cols-2 gap-4">
 											<div>
@@ -71,7 +71,7 @@
 										</div>
 									</fieldset>
 
-									<fieldset class="border-2 border-gray-300 p-2 bg-gray-50">
+									<fieldset class="border border-gray-100 p-2 bg-gray-50">
 										<legend class="theme-label text-sm font-semibold px-1 text-blue-800">{{tournamentPage.setup_modal.choose__ball_bg}}</legend>
 										<div class="flex flex-row items-center gap-8 justify-center">
 											<div class="flex flex-row items-center gap-2 relative">
@@ -120,7 +120,7 @@
 							</div>
 						</div>
 
-						<div id="tournament-bracket-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/60 backdrop-blur-md">
+						<div id="tournament-bracket-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center backdrop-blur-md">
 							<div class="window bg-white shadow-2xl" style="width: 500px;">
 								<div class="title-bar">
 									<div class="title-bar-text">{{tournamentPage.tournament_bracket_modal.title}}</div>
@@ -133,7 +133,7 @@
 
 									<div class="flex flex-col gap-6 w-full items-center">
 
-										<div class="flex flex-row justify-between w-full px-8">
+										<div class="flex flex-row justify-between w-full px-8 gap-8">
 											<div class="flex flex-col items-center bg-white p-4 border border-gray-300 rounded-lg w-[220px] shadow-sm" style="width: 200px;">
 												<span class="theme-label text-xs font-bold text-gray-500 uppercase tracking-wider">
 													{{tournamentPage.tournament_bracket_modal.semi_final_1}}
@@ -149,8 +149,8 @@
 											</div>
 										</div>
 
-										<div class="flex flex-col items-center bg-yellow-50 p-6 border-2 border-yellow-400 rounded-xl w-[320px] shadow-lg">
-											<span class="theme-label text-xs font-bold text-yellow-600 uppercase tracking-widest">
+										<div class="flex flex-col items-center p-6 border border-gray-100 rounded-xl w-[320px] shadow-lg">
+											<span class="theme-label text-xs font-bold uppercase tracking-widest">
 												{{tournamentPage.tournament_bracket_modal.final}}
 											</span>
 											<span id="bracket-final" class="match-display final-match"></span>
@@ -176,7 +176,7 @@
 							</div>
 						</div>
 
-						<div id="tournament-next-match-modal" class="hidden absolute inset-0 z-50 items-center justify-center bg-black/70 backdrop-blur-lg">
+						<div id="tournament-next-match-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center backdrop-blur-lg">
 							<div class="window w-[700px] bg-white shadow-2xl animate-bounce-in">
 								<div class="title-bar bg-blue-800">
 									<div class="title-bar-text text-white">{{tournamentPage.tournament_next_match_modal.title}}</div>
@@ -202,14 +202,14 @@
 							</div>
 						</div>
 
-						<div id="tournament-summary-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
-							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-								<div class="title-bar bg-yellow-500">
+						<div id="tournament-summary-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center backdrop-blur-md">
+							<div class="window w-[600px] bg-white shadow-2xl">
+								<div class="title-bar">
 									<div class="title-bar-text text-black">{{tournamentPage.tournament_summary_modal.title}}</div>
 								</div>
-								<div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-									<h1 class="theme-label text-4xl font-black text-yellow-600 uppercase tracking-widest">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>
-									<div class="text-2xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                
+								<div class="window-body p-8 flex flex-col items-center gap-6 text-center">
+									<h1 class="theme-label text-4xl font-black uppercase">{{tournamentPage.tournament_summary_modal.congratulations}}</h1>
+									<div class="text-2xl font-bold text-gray-800 py-6 px-12 bg-white rounded-xl" id="winner-name">{{tournamentPage.tournament_summary_modal.winner_name}}</div>                                
 									<button id="quit-tournament-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
 															active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
@@ -224,7 +224,7 @@
 				</div>
 			</div>
 
-			<div class="window flex flex-col w-[400px] shrink-0" style="height: 600px;">
+			<div class="window flex flex-col w-[370px] shrink-0" style="height: 600px;">
 				<div class="title-bar">
 					<div class="title-bar-text">{{tournamentPage.chat.title}}</div>
 					<div class="title-bar-controls">

@@ -378,9 +378,9 @@ export function afterRender(): void {
 					${dateString} - <span class="text-xs text-gray-400 ml-1">${timeString}</span>
 					</td>
 				<td class="py-2 font-semibold text-gray-700 truncate px-2" title="${opponentName}">${opponentName}</td>
-				<td class="py-2 font-mono text-gray-600 font-bold">${scoreString}</td>
-				<td class="py-2 font-mono text-gray-500 capitalize">${translatedType}</td>
-				<td class="py-2 font-mono text-gray-400 capitalize">${roundString}</td>
+				<td class="py-2 text-gray-600 font-bold">${scoreString}</td>
+				<td class="py-2 text-gray-500 capitalize">${translatedType}</td>
+				<td class="py-2 text-gray-400 capitalize">${roundString}</td>
 				<td class="py-2 font-bold ${resultColor}">${resultText}</td>
 			`;
 
@@ -601,7 +601,7 @@ export function afterRender(): void {
 				scales: { y: { display: false, beginAtZero: true }, x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' }, callback: function(val, index) { 
 					const name = data.labels[index]; 
 					const count = data.realCounts[index]; 
-					const displayName = name.length > 10 ? name.substr(0, 8) + '..' : name; 
+					const displayName = name.length > 10 ? name.substring(0, 8) + '..' : name; 
 					return [`${displayName}`, i18next.t('dashboardPage.chart.games_count', { count: count })]; 
 				} } } }
 			},

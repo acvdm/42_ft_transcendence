@@ -19,19 +19,19 @@
 						</div>
 					</div>
 
-					<div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8;">
+					<div id="left" class="relative window-body flex flex-col h-full shrink-0 bg-transparent border border-gray-300 shadow-inner rounded-sm items-center" style="background-color: #E8F4F8; height: 560px">
 		
-						<div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-24 bg-gray-50" style="height: 60px; background-color: white;"> 
-							<span id="player-1-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{remotePage.p1}}</span>
+						<div class="flex flex-row w-full h-[100px] rounded-sm flex-shrink-0 items-center justify-between px-20 bg-gray-50" style="height: 60px; background-color: white;"> 
+							<span id="player-1-name" class="theme-label text-right text-3xl font-bold text-gray-800" style="margin-left: 30px;">{{remotePage.p1}}</span>
 							<span id="score-board" class="theme-label text-4xl font-bold text-gray-900 absolute left-1/2 transform -translate-x-1/2">0 - 0</span>
-							<span id="player-2-name" class="theme-label text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{remotePage.p2}}</span>
+							<span id="player-2-name" class="theme-label text-left text-3xl font-bold text-gray-800" style="margin-right: 30px;">{{remotePage.p2}}</span>
 						</div>
 
 						<div id="game-canvas-container" 
 							class="w-full flex-1 flex items-center justify-center bg-transparent relative" 
 							style="border-left: 25px solid white; border-right: 25px solid white; border-bottom: 25px solid white;"></div>
 						
-						<div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+						<div id="game-setup-modal" class="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm">
 							<div class="window w-[600px] shadow-xl">
 								<div class="title-bar">
 									<div class="title-bar-text">{{remotePage.start_game}}</div>
@@ -47,7 +47,7 @@
 										<p>{{remotePage.up_down}}</p>
 										<p>{{remotePage.space_bar}}</p>
 									</div>
-									<fieldset class="border-2 border-gray-300 p-2 mt-2">
+									<fieldset class="p-2 mt-2">
 										<div class="flex flex-row items-center gap-2 mb-3 relative">
 											<label class="theme-label text-sm font-semibold">{{remotePage.choose_ball}}</label>
 											
@@ -100,25 +100,25 @@
 							</div>
 						</div>
 
-						<div id="countdown-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
-							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-								<div class="title-bar bg-yellow-500">
+						<div id="countdown-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center backdrop-blur-md">
+							<div class="window w-[600px] bg-white shadow-2xl border-4">
+								<div class="title-bar">
 									<div class="title-bar-text text-black">{{remotePage.countdown_title}}</div>
 								</div>
 								<div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-									<div class="theme-label text-6xl font-bold text-black py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
+									<div class="theme-label text-6xl font-bold text-black py-6 px-12 bg-white rounded-xl" style="color:black; font-size: 106px;" id="countdown-text">3</div>                                
 								</div>
 							</div>
 						</div>
 
-						<div id="local-summary-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-md">
-							<div class="window w-[600px] bg-white shadow-2xl border-4 border-yellow-500">
-								<div class="title-bar bg-yellow-500">
+						<div id="local-summary-modal" class="hidden flex absolute inset-0 z-50 items-center justify-center backdrop-blur-md">
+							<div class="window w-[600px] bg-white shadow-2xl">
+								<div class="title-bar">
 									<div class="title-bar-text text-black">{{remotePage.summary_modal.title}}</div>
 								</div>
-								<div class="window-body bg-yellow-50 p-8 flex flex-col items-center gap-6 text-center">
-									<h1 class="theme-label text-4xl font-black text-yellow-600 uppercase tracking-widest">{{remotePage.summary_modal.congrat}}</h1>
-									<div class="text-2xl font-bold text-gray-800 py-6 px-12 border-4 border-yellow-400 bg-white rounded-xl" id="winner-name">{{remotePage.summary_modal.name}}</div>                                
+								<div class="window-body p-8 flex flex-col items-center gap-6 text-center">
+									<h1 class="theme-label text-4xl font-black uppercase">{{remotePage.summary_modal.congrat}}</h1>
+									<div class="text-2xl font-bold text-gray-800 py-6 px-12 bg-white rounded-xl" id="winner-name">{{remotePage.summary_modal.name}}</div>                                
 									<button id="quit-remote-btn" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm 
 															px-6 py-4 text-base font-semibold shadow-sm hover:from-gray-200 hover:to-gray-400 
 															active:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400
@@ -133,7 +133,7 @@
 				</div>
 			</div>
 
-			<div class="window flex flex-col w-[400px] shrink-0" style="height: 600px;">
+			<div class="window flex flex-col w-[310px] shrink-0" style="height: 600px;">
 				<div class="title-bar">
 					<div class="title-bar-text">{{remotePage.chat.title}}</div>
 					<div class="title-bar-controls">

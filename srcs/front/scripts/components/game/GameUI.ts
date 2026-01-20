@@ -198,7 +198,7 @@ export function launchCountdown(onComplete: () => void) {
 	modal.classList.remove('hidden');
 	let count = 3;
 	text.innerText = count.toString();
-	text.className = "text-[150px] font-black text-white animate-bounce";
+	text.className = "text-[130px] font-black text-white";
 
 	const interval = setInterval(() => {
 		count--;
@@ -206,8 +206,6 @@ export function launchCountdown(onComplete: () => void) {
 			text.innerText = count.toString();
 		} else if (count === 0) {
 			text.innerText = i18next.t('gameUI.go');
-			text.classList.remove('animate-bounce');
-			text.classList.add('animate-ping');
 		} else {
 			clearInterval(interval);
 			modal.classList.add('hidden');

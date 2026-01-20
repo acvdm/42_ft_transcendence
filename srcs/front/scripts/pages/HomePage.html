@@ -20,7 +20,7 @@
 						</div>
 					</div>
 
-					<div id="left" class="window-body flex flex-col h-full w-[650px] min-w-[650px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
+					<div id="left" class="window-body flex flex-col w-[685px] min-w-[685px] shrink-0 bg-white border border-gray-300 shadow-inner rounded-sm" style="background-color: white;">
 						<div class="flex flex-row w-full rounded-sm p-2"> 
 							<div class="flex flex-row w-full bg-transparent rounded-sm p-2" style="flex-shrink: 0;">
 								<div class="relative w-[110px] h-[110px] flex-shrink-0">
@@ -36,7 +36,7 @@
 										<div class="relative">
 											<button id="status-selector" class="flex items-center gap-1 px-2 py-1 text-sm rounded-sm hover:bg-gray-200">
 												<span id="current-status-text">(Available)</span>
-												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-3 h-3">
+												<img src="/assets/chat/arrow.png" alt="Arrow" class="w-2 h-1">
 											</button>
 		
 											<div id="status-dropdown" class="absolute hidden top-full left-0 mt-1 w-70 bg-white border border-gray-300 rounded-md shadow-xl z-50">
@@ -60,7 +60,7 @@
 										</div>
 									</div>
 									<div id="bio-wrapper">
-										<p id="user-bio" class="text-sm text-gray-600 italic cursor-text">{{homepage.profile.bio}}</p>
+										<p id="user-bio" class="text-sm text-gray-600 cursor-text">{{homepage.profile.bio}}</p>
 										<span class="char-count hidden text-xs text-gray-500 self-center">0/70</span>
 									</div>
 								</div>
@@ -70,8 +70,8 @@
 										<img id="notification-icon" src="/assets/basic/no_notification.png" alt="Notifications" class="w-full h-full object-contain">
 											<div id="notification-badge" class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full hidden border border-white"></div>
 									</button>
-									<div id="notification-dropdown" class="absolute hidden top-full right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-[100] overflow-hidden" style="width: 550px; margin-top: 4px;">
-										<div class="bg-gray-50 px-8 py-6 border-b border-gray-200 text-center">
+									<div id="notification-dropdown" class="absolute hidden right-0 mt-2 bg-white border border-gray-300 rounded-md shadow-xl z-[100] overflow-hidden " style="width: 550px;">
+										<div class="bg-gray-50 px-4 py-2 border-b border-gray-200 text-center">
 											<h3 class="font-bold text-lg text-gray-800 tracking-wide">
 												{{homepage.notifications.title}}
 											</h3>
@@ -105,10 +105,10 @@
 							<div class="text-center text-grey-400 border-b border-gray-300" style="color:grey; padding-top: 20px; padding-bottom: 20px;">
 								<p>{{homepage.games.choose_mode}}</p>
 							</div>
-							<div class="flex flex-col flex-1 items-center justify-center gap-6 py-8" style="gap: 65px;">
+							<div class="flex flex-col flex-1 items-center justify-center gap-6 py-8">
 								
 								<!-- Local Game -->
-								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
+								<div class="w-full">
 									<div class="flex flex-col items-center gap-3">
 										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 25px;">{{homepage.games.local_describe}}</p>
 										<button id="local-game" 
@@ -119,7 +119,7 @@
 								</div>
 
 								<!-- Remote Game -->
-								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
+								<div class="w-full">
 									<div class="flex flex-col items-center gap-3">
 										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 20px;">{{homepage.games.remote_describe}}</p>
 										<button id="remote-game" 
@@ -130,7 +130,7 @@
 								</div>
 
 								<!-- Tournament Game -->
-								<div class="w-full max-w-md bg-gradient-to-b from-gray-50 to-white rounded-sm p-5 hover:shadow-md transition-shadow duration-200">
+								<div class="w-full">
 									<div class="flex flex-col items-center gap-3">
 										<p class="text-lg text-gray-600 text-center px-6" style="min-height: 32px; padding-bottom: 20px;">{{homepage.games.tournament_describe}}</p>
 										<button id="tournament-game" 
@@ -164,14 +164,15 @@
 				</div>
 
 				<div id="right" class="window-body flex flex-row gap-4 flex-1 min-w-0">
-					<div id="chat-frame" class="relative flex-1 bg-transparent rounded-sm flex flex-row bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
+					<div id="chat-frame" class="relative flex-1 bg-white rounded-sm flex flex-row bg-cover bg-center transition-all duration-300 min-h-0" style="padding: 40px 40px 40px 40px;">
 						<div id="friend-list" class="flex flex-col bg-white border border-gray-300 rounded-sm shadow-sm p-4 w-[400px] min-w-[400px] h-full" style="width: 400px; min-width: 400px;">
 							<div class="flex flex-row items-center justify-between">
 								<p class="theme-label text-xl text-black font-semibold text-center tracking-wide mb-3 select-none">{{homepage.chat.friends}}</p>
 								
 								<div class="ml-auto flex items-center mb-3 relative">
 									<button id="add-friend-button" class="relative w-9 h-9 cursor-pointer">
-										<img id="add-friend-icon" src="/assets/basic/1441.png" alt="Friends button" class="w-full h-full object-contain">
+										<img id="add-friend-icon" src="/assets/basic/1441.png" alt="Friends button" class="
+										object-contain">
 									</button>
 									<div id="add-friend-dropdown" class="absolute hidden top-full right-0 mt-2 w-72 bg-white border border-gray-300 rounded-md shadow-xl z-50 p-4">
 										<p class="text-sm font-semibold mb-2 text-center">{{homepage.chat.add_friend}}</p>
@@ -191,7 +192,7 @@
 								</div>
 							</div>
 
-							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-500" style="padding-top: 13px;">
+							<div class="flex flex-col gap-3 overflow-y-auto pr-1 select-none border-t border-gray-200" style="padding-top: 13px;">
 								<div class="flex items-center gap-2 cursor-pointer font-semibold text-sm py-1 hover:text-blue-600">
 										{{homepage.chat.contact}}
 								</div>
@@ -210,9 +211,9 @@
 										<img id="chat-header-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[50px] h-[50px] object-cover" src="" alt="User avatar">
 										<img id="chat-header-status" class="absolute inset-0 w-full h-full object-contain" src="/assets/basic/status_online_small.png" alt="Status frame">
 									</div>
-									<div class="flex flex-col justify-start leading-tight">
+									<div class="flex flex-col justify-start leading-tight gap-2">
 										<p id="chat-header-username" class="font-bold text-lg leading-none text-gray-800"></p>
-										<p id="chat-header-bio" class="text-xs text-gray-500 italic"></p>
+										<p id="chat-header-bio" class="text-xs text-gray-500"></p>
 									</div>
 								</div>
 								
@@ -221,16 +222,16 @@
 										<img src="/assets/chat/meatball.png" alt="options" class="w-6 h-6 object-contain" style="width: 15px; height: 15px; vertical-align: -25px;">
 									</button>
 
-									<div id="chat-options-dropdown" class="absolute right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2" style="width: 200px">
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+									<div id="chat-options-dropdown" class="absolute w-[200px] right-0 top-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl z-50 hidden overflow-hidden p-2">
+										<div class="flex flex-row items-center gap-4 px-3 py-1 hover:bg-blue-50 transition cursor-pointer rounded">
 											<img src="/assets/basic/view_profile.png" class="w-6 h-6 object-cover rounded" alt="avatar">
 											<button id="button-view-profile" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.view_profile}}</button>
 										</div>
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+										<div class="flex flex-row items-center gap-4 px-3 py-1 hover:bg-blue-50 transition cursor-pointer rounded">
 											<img src="/assets/basic/game_notification.png" class="w-6 h-6 object-cover rounded" alt="avatar">
 											<button id="button-invite-game" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.invite_game}}</button>
 										</div>
-										<div class="flex flex-row items-center gap-4 px-3 py-3 hover:bg-blue-50 transition cursor-pointer rounded">
+										<div class="flex flex-row items-center gap-4 px-3 py-1 hover:bg-blue-50 transition cursor-pointer rounded">
 											<img src="/assets/basic/block.png" class="w-6 h-6 object-cover rounded" alt="avatar">
 											<button id="button-block-user" class="text-left text-sm text-gray-700 flex-1">{{homepage.chat.block_user}}</button>
 										</div>
@@ -321,7 +322,7 @@
 		</div>
 	</div>
 
-	<div id="friend-profile-modal" class="absolute inset-0 bg-black/40 z-50 hidden items-center justify-center">
+	<div id="friend-profile-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center" style="z-index: 9999;">
 		<div class="window bg-white" style="width: 500px; box-shadow: 0px 0px 20px rgba(0,0,0,0.5);">
 			<div class="title-bar">
 				<div class="title-bar-text">{{homepage.modal.user_profile}}</div>
@@ -337,7 +338,7 @@
 					</div>
 					<div class="flex flex-col justify-center gap-1 flex-1 min-w-0">
 						<h2 id="friend-modal-username" class="text-2xl font-bold text-gray-800 break-words" style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">{{homepage.profile.username}}</h2>
-						<p id="friend-modal-bio" class="text-sm text-gray-600 italic break-words" style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">{{homepage.profile.bio}}</p>
+						<p id="friend-modal-bio" class="text-sm text-gray-600 break-words" style="word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">{{homepage.profile.bio}}</p>
 					</div>  
 				</div>
 
@@ -350,15 +351,15 @@
 						</div>
 						<div class="flex justify-between border-b border-gray-100 pb-1">
 							<span>{{homepage.modal.wins}}</span>
-							<span id="friend-stat-wins" class="font-bold text-green-600">0</span>
+							<span id="friend-stat-wins" class="font-bold">0</span>
 						</div>
 						<div class="flex justify-between border-b border-gray-100 pb-1">
 							<span>{{homepage.modal.losses}}</span>
-							<span id="friend-stat-losses" class="font-bold text-red-600">0</span>
+							<span id="friend-stat-losses" class="font-bold">0</span>
 						</div>
 						<div class="flex justify-between border-b border-gray-100 pb-1">
 							<span>{{homepage.modal.winning_streak}}</span>
-							<span id="friend-stat-streak" class="font-bold text-blue-600">#0</span>
+							<span id="friend-stat-streak" class="font-bold">#0</span>
 						</div>
 					</div>
 				</fieldset>
@@ -388,7 +389,7 @@
 				
 				<div class="flex flex-row gap-6">
 					<div class="flex-1">
-						<div class="bg-white border border-[#828790] shadow-inner p-2 h-[250px] overflow-y-auto">
+						<div class="bg-white border border-gray-200 shadow-inner p-2 h-[350px] overflow-y-auto">
 							<div id="modal-grid" class="grid grid-cols-4 gap-2">
 								<img src="/assets/profile/Beach_Chairs.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
 								<img src="/assets/profile/Chess_Pieces.png" class="w-full aspect-square object-cover border-2 border-transparent hover:border-[#0078D7] cursor-pointer">
@@ -416,7 +417,7 @@
 							<img id="modal-preview-avatar" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[130px] h-[130px] object-cover" src="/assets/basic/default.png">
 						</div>
 
-						<div class="flex flex-col gap-2 w-full mt-2 h-64">
+						<div class="flex flex-col gap-2 w-full h-[170px]">
 							<input type="file" id="file-input" accept="image/*" hidden>
 							<button id="browse-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.browse}}</button>
 							<button id="delete-button" class="bg-gradient-to-b from-gray-100 to-gray-300 border border-gray-400 rounded-sm px-4 py-1 text-sm">{{homepage.modal.delete}}</button>

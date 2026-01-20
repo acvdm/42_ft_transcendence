@@ -100,10 +100,10 @@ export class FriendList {
 				friendItem.innerHTML = `
 				<div class="flex items-center gap-4">
 					<div class="relative w-[40px] h-[40px] flex-shrink-0">
-						 <img class="w-full h-full rounded-full object-cover border border-gray-200"
+						 <img class="w-full h-full object-cover border border-gray-200"
 							 src="${selectedFriend.avatar_url || selectedFriend.avatar || "/assets/basic/default.png"}" alt="avatar">
 						
-						<img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white rounded-full"
+						<img class="absolute bottom-0 right-0 w-[12px] h-[12px] object-cover border border-white"
 							 src="${getStatusDot(status)}" alt="status">
 					</div>
 					<div class="flex flex-col leading-tight">
@@ -463,7 +463,7 @@ export class FriendList {
 			pendingList.forEach((req: Friendship) => {
 				const item = document.createElement('div');
 				item.dataset.friendshipId = req.id.toString();
-				item.className = "flex items-start p-4 border-b border-gray-200 gap-4 hover:bg-gray-50 transition pl-4";
+				item.className = "flex items-start p-4 border-b border-gray-200 gap-4 transition pl-4";
 
 				item.innerHTML = `
 					<div class="relative w-8 h-8 flex-shrink-0 mr-4">
