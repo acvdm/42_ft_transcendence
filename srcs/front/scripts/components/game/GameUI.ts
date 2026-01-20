@@ -133,7 +133,7 @@ export function showRemoteEndModal(winnerName: string, message: string) {
 	const t_return = i18next.t('gameUI.return_menu');
 
 	const modalHtml = `
-		<div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+		<div id="remote-end-modal" class="hidden absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md" style="position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: center;">
 			<div class="window w-[600px] bg-white shadow-2xl animate-bounce-in">
 
 				<div class="title-bar">
@@ -143,7 +143,7 @@ export function showRemoteEndModal(winnerName: string, message: string) {
 
 				<div class="window-body bg-gray-100 p-8 flex flex-col items-center gap-8">
 
-					<h1 class="text-4xl font-black text-yellow-600 uppercase tracking-widest">${t_congrat}</h1>
+					<h1 class="text-4xl font-black uppercase">${t_congrat}</h1>
 
 					<div class="flex flex-col items-center justify-center gap-4 bg-white p-6 rounded-lg w-full">
 						<p class="text-2xl font-bold text-gray-800 text-center">
